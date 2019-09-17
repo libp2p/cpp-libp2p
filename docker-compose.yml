@@ -1,0 +1,17 @@
+version: '3'
+
+# usage:
+# - docker-compose up -d && docker-compose exec dev bash
+# - cd app
+
+services:
+  dev:
+    image: warchantua/dev-essential
+    tty: true
+    stdin_open: true
+    volumes:
+      - .:/app:rw
+    environment:
+      - GITHUB_HUNTER_USERNAME=$GITHUB_HUNTER_USERNAME
+      - GITHUB_HUNTER_TOKEN=$GITHUB_HUNTER_TOKEN
+    command: bash
