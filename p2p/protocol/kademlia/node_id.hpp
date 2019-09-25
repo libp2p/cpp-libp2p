@@ -104,9 +104,10 @@ namespace libp2p::protocol::kademlia {
       NodeId from(hfrom);
       auto d1 = NodeId(a).distance(from);
       auto d2 = NodeId(b).distance(from);
+      constexpr auto size = Hash256().size();
 
       // return true, if distance d1 is less than d2, false otherwise
-      return std::memcmp(d1.data(), d2.data(), Hash256::size()) < 0;
+      return std::memcmp(d1.data(), d2.data(), size) < 0;
     }
 
     Hash256 hfrom;

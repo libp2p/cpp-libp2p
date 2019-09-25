@@ -5,7 +5,7 @@
 
 #include "security/plaintext/exchange_message_marshaller_impl.hpp"
 
-#include "security/plaintext/protobuf/plaintext.pb.h"
+#include "p2p/security/plaintext/protobuf/plaintext.pb.h"
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::plaintext,
                             ExchangeMessageMarshallerImpl::Error,

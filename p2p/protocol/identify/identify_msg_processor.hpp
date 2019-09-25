@@ -21,7 +21,7 @@
 #include "peer/identity_manager.hpp"
 #include "peer/peer_id.hpp"
 #include "protocol/identify/observed_addresses.hpp"
-#include "protocol/identify/protobuf/identify.pb.h"
+#include "p2p/protocol/identify/protobuf/identify.pb.h"
 
 namespace libp2p::protocol {
   /**

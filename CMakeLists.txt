@@ -45,14 +45,12 @@ if (THREADS_HAVE_PTHREAD_ARG)
   add_link_options(-lpthread)
 endif ()
 
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 include(CheckCXXCompilerFlag)
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 include(cmake/san.cmake)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(CLANG_FORMAT "Enable clang-format target" ON)
 option(CLANG_TIDY "Enable clang-tidy checks during compilation" OFF)

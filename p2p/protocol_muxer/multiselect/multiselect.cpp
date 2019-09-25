@@ -77,8 +77,8 @@ namespace libp2p::protocol_muxer {
       case MessageType::NA:
         return handleNaMsg(connection_state);
       default:
-        log_->critical(
-            "type of the message, returned by the parser, is unknown");
+//        log_->critical(
+//            "type of the message, returned by the parser, is unknown");
         return negotiationRoundFailed(connection_state,
                                       MultiselectError::INTERNAL_ERROR);
     }

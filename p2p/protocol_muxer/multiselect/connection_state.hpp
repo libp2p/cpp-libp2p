@@ -11,11 +11,13 @@
 
 #include <boost/asio/streambuf.hpp>
 #include "basic/readwriter.hpp"
+#include "common/types.hpp"
 #include "protocol_muxer/multiselect/multiselect_error.hpp"
 #include "protocol_muxer/protocol_muxer.hpp"
 
 namespace libp2p::protocol_muxer {
   class Multiselect;
+  using ByteArray = libp2p::common::ByteArray;
 
   /**
    * Stores current state of protocol negotiation over the connection
@@ -41,7 +43,7 @@ namespace libp2p::protocol_muxer {
     ProtocolMuxer::ProtocolHandlerFunc proto_callback;
 
     /// write buffer of this connection
-    std::shared_ptr<common::ByteArray> write_buffer;
+    std::shared_ptr<ByteArray> write_buffer;
 
     /// read buffer of this connection
     std::shared_ptr<boost::asio::streambuf> read_buffer;

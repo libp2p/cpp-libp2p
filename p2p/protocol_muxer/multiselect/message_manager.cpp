@@ -53,6 +53,7 @@ namespace {
   const ByteArray kNaMsg = []() -> ByteArray {
     auto vec = UVarint{kNaString.size()}.toVector();
     vec.insert(vec.end(), kNaString.begin(), kNaString.end());
+    return vec;
   }();
 
   /**
