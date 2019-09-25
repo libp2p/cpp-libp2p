@@ -1,0 +1,52 @@
+/**
+ * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#ifndef KAGOME_SECURITY_ADAPTOR_HPP
+#define KAGOME_SECURITY_ADAPTOR_HPP
+
+#include <memory>
+
+#include <outcome/outcome.hpp>
+#include "basic/adaptor.hpp"
+#include "connection/raw_connection.hpp"
+#include "connection/secure_connection.hpp"
+#include "peer/peer_id.hpp"
+
+namespace libp2p::security {
+
+  /**
+   * @brief Adaptor, which is used as base class for all security modules (e.g.
+   * SECIO, Noise, TLS...)
+   */
+  struct SecurityAdaptor : public basic::Adaptor {
+    using SecConnCallbackFunc = std::function<void(
+        outcome::result<std::shared_ptr<connection::SecureConnection>>)>;
+
+    ~SecurityAdaptor() override = default;
+
+    /**
+     * @brief Secure the connection, either locally or by communicating with
+     * opposing node via inbound connection (received in listener).
+     * @param inbound connection
+     * @param cb with secured connection or error
+     */
+    virtual void secureInbound(
+        std::shared_ptr<connection::RawConnection> inbound,
+        SecConnCallbackFunc cb) = 0;
+
+    /**
+     * @brief Secure the connection, either locally or by communicating with
+     * opposing node via outbound connection (we are initiator).
+     * @param outbound connection
+     * @param p remote peer id, we want to establish a secure conn
+     * @param cb with secured connection or error
+     */
+    virtual void secureOutbound(
+        std::shared_ptr<connection::RawConnection> outbound,
+        const peer::PeerId &p, SecConnCallbackFunc cb) = 0;
+  };
+}  // namespace libp2p::security
+
+#endif  // KAGOME_SECURITY_ADAPTOR_HPP

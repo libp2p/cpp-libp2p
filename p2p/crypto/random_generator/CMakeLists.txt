@@ -1,0 +1,13 @@
+#
+# Copyright Soramitsu Co., Ltd. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+
+add_library(random_generator
+    boost_generator.hpp
+    boost_generator.cpp
+    )
+
+target_link_libraries(random_generator
+    Boost::random
+    )

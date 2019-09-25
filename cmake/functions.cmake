@@ -58,7 +58,7 @@ function(compile_proto_to_cpp PB_H PB_CC PROTO)
   get_filename_component(PROTO_ABS "${PROTO}" REALPATH)
   # get relative (to CMAKE_BINARY_DIR) path of current proto file
   file(RELATIVE_PATH SCHEMA_REL "${CMAKE_BINARY_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
-  set(SCHEMA_OUT_DIR ${CMAKE_BINARY_DIR}/generated/${SCHEMA_REL})
+  set(SCHEMA_OUT_DIR ${CMAKE_BINARY_DIR}/generated)
   file(MAKE_DIRECTORY ${SCHEMA_OUT_DIR})
 
   string(REGEX REPLACE "\\.proto$" ".pb.h" GEN_PB_HEADER ${PROTO})
@@ -67,24 +67,32 @@ function(compile_proto_to_cpp PB_H PB_CC PROTO)
   set(GEN_COMMAND ${Protobuf_PROTOC_EXECUTABLE})
   set(GEN_ARGS ${Protobuf_INCLUDE_DIR})
 
+  message(STATUS "oh=${SCHEMA_OUT_DIR}/${SCHEMA_REL}/${GEN_PB_HEADER}")
+  message(STATUS "oc=${SCHEMA_OUT_DIR}/${SCHEMA_REL}/${GEN_PB}")
+
   add_custom_command(
-      OUTPUT ${SCHEMA_OUT_DIR}/${GEN_PB_HEADER} ${SCHEMA_OUT_DIR}/${GEN_PB}
+      OUTPUT ${SCHEMA_OUT_DIR}/${SCHEMA_REL}/${GEN_PB_HEADER} ${SCHEMA_OUT_DIR}/${SCHEMA_REL}/${GEN_PB}
       COMMAND ${GEN_COMMAND}
-      ARGS -I${GEN_ARGS} -I${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=${SCHEMA_OUT_DIR} ${PROTO_ABS}
+      ARGS -I${PROJECT_SOURCE_DIR} -I${GEN_ARGS} --cpp_out=${SCHEMA_OUT_DIR} ${PROTO_ABS}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       DEPENDS protobuf::protoc
       VERBATIM
   )
 
-  set(${PB_H} ${SCHEMA_OUT_DIR}/${GEN_PB_HEADER} PARENT_SCOPE)
-  set(${PB_CC} ${SCHEMA_OUT_DIR}/${GEN_PB} PARENT_SCOPE)
+  set(${PB_H} ${SCHEMA_OUT_DIR}/${SCHEMA_REL}/${GEN_PB_HEADER} PARENT_SCOPE)
+  set(${PB_CC} ${SCHEMA_OUT_DIR}/${SCHEMA_REL}/${GEN_PB} PARENT_SCOPE)
 endfunction()
+
+add_custom_target(generated
+    COMMENT "Building generated files..."
+    )
 
 function(add_proto_library NAME)
   set(SOURCES "")
   foreach (PROTO IN ITEMS ${ARGN})
     compile_proto_to_cpp(H C ${PROTO})
     list(APPEND SOURCES ${H} ${C})
+    message(STATUS "h=${H} c=${C}")
   endforeach ()
 
   add_library(${NAME}
@@ -94,7 +102,10 @@ function(add_proto_library NAME)
       protobuf::libprotobuf
       )
   target_include_directories(${NAME} PUBLIC
-      ${CMAKE_BINARY_DIR}/generated/core
+      #      ${CMAKE_BINARY_DIR}/generated/
+      $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/generated>
       )
   disable_clang_tidy(${NAME})
+
+  add_dependencies(generated ${NAME})
 endfunction()
