@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MULTISELECT_HPP
-#define KAGOME_MULTISELECT_HPP
+#ifndef LIBP2P_MULTISELECT_HPP
+#define LIBP2P_MULTISELECT_HPP
 
 #include "protocol_muxer/multiselect/multiselect.hpp"
 
-#endif  // KAGOME_MULTISELECT_HPP
+#endif  // LIBP2P_MULTISELECT_HPP

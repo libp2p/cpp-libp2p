@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_KADEMLIA_KAD_HPP
-#define KAGOME_KADEMLIA_KAD_HPP
+#ifndef LIBP2P_KADEMLIA_KAD_HPP
+#define LIBP2P_KADEMLIA_KAD_HPP
 
 #include "network/network.hpp"
 #include "protocol/kademlia/config.hpp"
@@ -33,4 +33,4 @@ namespace libp2p::protocol::kademlia {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::kademlia, Kad::Error);
 
-#endif  // KAGOME_KADEMLIA_KAD_HPP
+#endif  // LIBP2P_KADEMLIA_KAD_HPP

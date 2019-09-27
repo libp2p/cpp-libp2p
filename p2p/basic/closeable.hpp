@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_CLOSEABLE_HPP
-#define KAGOME_CLOSEABLE_HPP
+#ifndef LIBP2P_CLOSEABLE_HPP
+#define LIBP2P_CLOSEABLE_HPP
 
 #include <functional>
 
@@ -31,4 +31,4 @@ namespace libp2p::basic {
 
 }  // namespace libp2p::basic
 
-#endif  // KAGOME_CLOSEABLE_HPP
+#endif  // LIBP2P_CLOSEABLE_HPP

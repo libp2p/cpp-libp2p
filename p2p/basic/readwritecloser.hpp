@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_READWRITECLOSER_HPP
-#define KAGOME_READWRITECLOSER_HPP
+#ifndef LIBP2P_READWRITECLOSER_HPP
+#define LIBP2P_READWRITECLOSER_HPP
 
 #include "basic/closeable.hpp"
 #include "basic/readwriter.hpp"
@@ -17,4 +17,4 @@ namespace libp2p::basic {
 
 }  // namespace libp2p::basic
 
-#endif  // KAGOME_READWRITECLOSER_HPP
+#endif  // LIBP2P_READWRITECLOSER_HPP

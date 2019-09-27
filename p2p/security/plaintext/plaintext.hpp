@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PLAINTEXT_ADAPTOR_HPP
-#define KAGOME_PLAINTEXT_ADAPTOR_HPP
+#ifndef LIBP2P_PLAINTEXT_ADAPTOR_HPP
+#define LIBP2P_PLAINTEXT_ADAPTOR_HPP
 
 #include "peer/identity_manager.hpp"
 #include "security/plaintext/exchange_message_marshaller.hpp"
@@ -69,4 +69,4 @@ namespace libp2p::security {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security, Plaintext::Error);
 
-#endif  // KAGOME_PLAINTEXT_ADAPTOR_HPP
+#endif  // LIBP2P_PLAINTEXT_ADAPTOR_HPP

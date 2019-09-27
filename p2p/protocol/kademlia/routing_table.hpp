@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_KAD_ROUTING_TABLE_HPP
-#define KAGOME_KAD_ROUTING_TABLE_HPP
+#ifndef LIBP2P_KAD_ROUTING_TABLE_HPP
+#define LIBP2P_KAD_ROUTING_TABLE_HPP
 
 #include "event/bus.hpp"
 #include "protocol/kademlia/common.hpp"
@@ -52,4 +52,4 @@ namespace libp2p::protocol::kademlia {
 
 }  // namespace libp2p::protocol::kademlia
 
-#endif  // KAGOME_KAD_ROUTING_TABLE_HPP
+#endif  // LIBP2P_KAD_ROUTING_TABLE_HPP

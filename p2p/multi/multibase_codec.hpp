@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MULTIBASE_HPP
-#define KAGOME_MULTIBASE_HPP
+#ifndef LIBP2P_MULTIBASE_HPP
+#define LIBP2P_MULTIBASE_HPP
 
 #include <string>
 #include <string_view>
@@ -53,4 +53,4 @@ namespace libp2p::multi {
 
 }  // namespace libp2p::multi
 
-#endif  // KAGOME_MULTIBASE_HPP
+#endif  // LIBP2P_MULTIBASE_HPP

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_ID_UTILS_HPP
-#define KAGOME_ID_UTILS_HPP
+#ifndef LIBP2P_ID_UTILS_HPP
+#define LIBP2P_ID_UTILS_HPP
 
 #include <functional>
 #include <memory>
@@ -49,4 +49,4 @@ namespace libp2p::protocol::detail {
                                  const Host::StreamResultHandler &handler);
 }  // namespace libp2p::protocol::detail
 
-#endif  // KAGOME_UTILS_HPP
+#endif  // LIBP2P_UTILS_HPP

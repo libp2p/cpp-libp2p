@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_RAW_CONNECTION_MOCK_HPP
-#define KAGOME_RAW_CONNECTION_MOCK_HPP
+#ifndef LIBP2P_RAW_CONNECTION_MOCK_HPP
+#define LIBP2P_RAW_CONNECTION_MOCK_HPP
 
 #include "p2p/connection/raw_connection.hpp"
 
@@ -44,4 +44,4 @@ namespace libp2p::connection {
 
 }  // namespace libp2p::connection
 
-#endif  // KAGOME_RAW_CONNECTION_MOCK_HPP
+#endif  // LIBP2P_RAW_CONNECTION_MOCK_HPP

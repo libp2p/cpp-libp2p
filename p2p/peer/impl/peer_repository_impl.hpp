@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PEER_REPOSITORY_IMPL_HPP
-#define KAGOME_PEER_REPOSITORY_IMPL_HPP
+#ifndef LIBP2P_PEER_REPOSITORY_IMPL_HPP
+#define LIBP2P_PEER_REPOSITORY_IMPL_HPP
 
 #include "peer/peer_repository.hpp"
 
@@ -34,4 +34,4 @@ namespace libp2p::peer {
 
 }  // namespace libp2p::peer
 
-#endif  // KAGOME_PEER_REPOSITORY_IMPL_HPP
+#endif  // LIBP2P_PEER_REPOSITORY_IMPL_HPP

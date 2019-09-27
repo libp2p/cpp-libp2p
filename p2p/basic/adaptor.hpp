@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_ADAPTOR_HPP
-#define KAGOME_ADAPTOR_HPP
+#ifndef LIBP2P_ADAPTOR_HPP
+#define LIBP2P_ADAPTOR_HPP
 
 #include "peer/protocol.hpp"
 
@@ -25,4 +25,4 @@ namespace libp2p::basic {
   };
 }  // namespace libp2p::basic
 
-#endif  // KAGOME_ADAPTOR_HPP
+#endif  // LIBP2P_ADAPTOR_HPP

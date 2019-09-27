@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_VARINT_READER_HPP
-#define KAGOME_VARINT_READER_HPP
+#ifndef LIBP2P_VARINT_READER_HPP
+#define LIBP2P_VARINT_READER_HPP
 
 #include <functional>
 #include <memory>
@@ -35,4 +35,4 @@ namespace libp2p::basic {
   };
 }  // namespace libp2p::basic
 
-#endif  // KAGOME_VARINT_READER_HPP
+#endif  // LIBP2P_VARINT_READER_HPP

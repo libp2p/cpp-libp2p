@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_CRYPTO_COMMON_HPP
-#define KAGOME_CRYPTO_COMMON_HPP
+#ifndef LIBP2P_CRYPTO_COMMON_HPP
+#define LIBP2P_CRYPTO_COMMON_HPP
 
 #include <cstdint>
 #include <functional>
@@ -53,4 +53,4 @@ namespace libp2p::crypto::common {
   enum class CipherType { AES128, AES256 };
 }  // namespace libp2p::crypto::common
 
-#endif  // KAGOME_CRYPTO_COMMON_HPP
+#endif  // LIBP2P_CRYPTO_COMMON_HPP

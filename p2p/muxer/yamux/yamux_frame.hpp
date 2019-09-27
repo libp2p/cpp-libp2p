@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_YAMUX_FRAME_HPP
-#define KAGOME_YAMUX_FRAME_HPP
+#ifndef LIBP2P_YAMUX_FRAME_HPP
+#define LIBP2P_YAMUX_FRAME_HPP
 
 #include <gsl/span>
 #include "common/types.hpp"
@@ -131,4 +131,4 @@ namespace libp2p::connection {
   boost::optional<YamuxFrame> parseFrame(gsl::span<const uint8_t> frame_bytes);
 }  // namespace libp2p::connection
 
-#endif  // KAGOME_YAMUX_FRAME_HPP
+#endif  // LIBP2P_YAMUX_FRAME_HPP

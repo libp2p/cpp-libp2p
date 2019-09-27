@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_READWRITECLOSER_MOCK_HPP
-#define KAGOME_READWRITECLOSER_MOCK_HPP
+#ifndef LIBP2P_READWRITECLOSER_MOCK_HPP
+#define LIBP2P_READWRITECLOSER_MOCK_HPP
 
 #include <gmock/gmock.h>
 #include "common/hexutil.hpp"
@@ -34,4 +34,4 @@ inline std::ostream &operator<<(std::ostream &s,
   return s;
 }
 
-#endif  // KAGOME_READWRITECLOSER_MOCK_HPP
+#endif  // LIBP2P_READWRITECLOSER_MOCK_HPP

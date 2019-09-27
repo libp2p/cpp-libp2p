@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_GARBAGE_COLLECTABLE_HPP
-#define KAGOME_GARBAGE_COLLECTABLE_HPP
+#ifndef LIBP2P_GARBAGE_COLLECTABLE_HPP
+#define LIBP2P_GARBAGE_COLLECTABLE_HPP
 
 namespace libp2p::basic {
 
@@ -28,4 +28,4 @@ namespace libp2p::basic {
 
 }  // namespace libp2p::basic
 
-#endif  // KAGOME_GARBAGE_COLLECTABLE_HPP
+#endif  // LIBP2P_GARBAGE_COLLECTABLE_HPP

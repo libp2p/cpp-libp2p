@@ -4,3 +4,6 @@
 [submodule "deps/hat-trie"]
 	path = deps/hat-trie
 	url = https://github.com/Tessil/hat-trie.git
+[submodule "deps/spdlog"]
+	path = deps/spdlog
+	url = https://github.com/gabime/spdlog

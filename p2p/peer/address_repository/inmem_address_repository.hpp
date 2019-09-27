@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_INMEM_ADDRESS_REPOSITORY_HPP
-#define KAGOME_INMEM_ADDRESS_REPOSITORY_HPP
+#ifndef LIBP2P_INMEM_ADDRESS_REPOSITORY_HPP
+#define LIBP2P_INMEM_ADDRESS_REPOSITORY_HPP
 
 #include <unordered_map>
 #include <vector>
@@ -53,4 +53,4 @@ namespace libp2p::peer {
 
 }  // namespace libp2p::peer
 
-#endif  // KAGOME_INMEM_ADDRESS_REPOSITORY_HPP
+#endif  // LIBP2P_INMEM_ADDRESS_REPOSITORY_HPP

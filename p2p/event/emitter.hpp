@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_EMITTER_HPP
-#define KAGOME_EMITTER_HPP
+#ifndef LIBP2P_EMITTER_HPP
+#define LIBP2P_EMITTER_HPP
 
 #include <functional>
 
@@ -121,4 +121,4 @@ namespace libp2p::event {
 
 }  // namespace libp2p::event
 
-#endif  // KAGOME_EMITTER_HPP
+#endif  // LIBP2P_EMITTER_HPP

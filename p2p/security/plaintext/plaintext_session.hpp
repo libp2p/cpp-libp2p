@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PLAINTEXT_SESSION_HPP
-#define KAGOME_PLAINTEXT_SESSION_HPP
+#ifndef LIBP2P_PLAINTEXT_SESSION_HPP
+#define LIBP2P_PLAINTEXT_SESSION_HPP
 
 #include "connection/raw_connection.hpp"
 #include "crypto/key_marshaller.hpp"
@@ -41,4 +41,4 @@ namespace libp2p::security {
 
 }  // namespace libp2p::security
 
-#endif  // KAGOME_PLAINTEXT_SESSION_HPP
+#endif  // LIBP2P_PLAINTEXT_SESSION_HPP

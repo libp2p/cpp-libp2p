@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PEER_INFO_HPP
-#define KAGOME_PEER_INFO_HPP
+#ifndef LIBP2P_PEER_INFO_HPP
+#define LIBP2P_PEER_INFO_HPP
 
 #include <vector>
 
@@ -36,4 +36,4 @@ namespace std {
   };
 }  // namespace std
 
-#endif  // KAGOME_PEER_INFO_HPP
+#endif  // LIBP2P_PEER_INFO_HPP

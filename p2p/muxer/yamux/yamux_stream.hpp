@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_YAMUX_STREAM_HPP
-#define KAGOME_YAMUX_STREAM_HPP
+#ifndef LIBP2P_YAMUX_STREAM_HPP
+#define LIBP2P_YAMUX_STREAM_HPP
 
 #include <boost/asio/streambuf.hpp>
 #include <boost/noncopyable.hpp>
@@ -142,4 +142,4 @@ namespace libp2p::connection {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, YamuxStream::Error)
 
-#endif  // KAGOME_YAMUX_STREAM_HPP
+#endif  // LIBP2P_YAMUX_STREAM_HPP

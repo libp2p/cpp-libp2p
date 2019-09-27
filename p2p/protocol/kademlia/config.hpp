@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_KADEMLIA_CONFIG_HPP
-#define KAGOME_KADEMLIA_CONFIG_HPP
+#ifndef LIBP2P_KADEMLIA_CONFIG_HPP
+#define LIBP2P_KADEMLIA_CONFIG_HPP
 
 #include <chrono>
 #include <cstddef>
@@ -61,4 +61,4 @@ namespace libp2p::protocol::kademlia {
 
 }  // namespace libp2p::protocol::kademlia
 
-#endif  // KAGOME_KADEMLIA_CONFIG_HPP
+#endif  // LIBP2P_KADEMLIA_CONFIG_HPP

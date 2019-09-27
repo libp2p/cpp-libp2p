@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_BUS_HPP
-#define KAGOME_BUS_HPP
+#ifndef LIBP2P_BUS_HPP
+#define LIBP2P_BUS_HPP
 
 #include <map>
 #include <memory>
@@ -217,4 +217,4 @@ namespace libp2p::event {
   };
 }  // namespace libp2p::event
 
-#endif  // KAGOME_BUS_HPP
+#endif  // LIBP2P_BUS_HPP

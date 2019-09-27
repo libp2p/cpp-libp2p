@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PROTOCOL_ECHO_HPP
-#define KAGOME_PROTOCOL_ECHO_HPP
+#ifndef LIBP2P_PROTOCOL_ECHO_HPP
+#define LIBP2P_PROTOCOL_ECHO_HPP
 
 #include "protocol/echo/echo.hpp"
 
-#endif //KAGOME_PROTOCOL_ECHO_HPP
+#endif //LIBP2P_PROTOCOL_ECHO_HPP

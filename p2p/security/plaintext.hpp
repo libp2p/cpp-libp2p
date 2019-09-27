@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PLAINTEXT_HPP
-#define KAGOME_PLAINTEXT_HPP
+#ifndef LIBP2P_PLAINTEXT_HPP
+#define LIBP2P_PLAINTEXT_HPP
 
 #include "security/plaintext/plaintext.hpp"
 
-#endif  // KAGOME_PLAINTEXT_HPP
+#endif  // LIBP2P_PLAINTEXT_HPP

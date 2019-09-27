@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_IDENTIFY_MSG_PROCESSOR_HPP
-#define KAGOME_IDENTIFY_MSG_PROCESSOR_HPP
+#ifndef LIBP2P_IDENTIFY_MSG_PROCESSOR_HPP
+#define LIBP2P_IDENTIFY_MSG_PROCESSOR_HPP
 
 #include <memory>
 #include <optional>
@@ -12,16 +12,16 @@
 
 #include <gsl/span>
 #include <outcome/outcome.hpp>
-//#include "common/logger.hpp"
+#include "common/logger.hpp"
 #include "connection/stream.hpp"
 #include "crypto/key_marshaller.hpp"
 #include "host/host.hpp"
 #include "multi/multiaddress.hpp"
 #include "network/connection_manager.hpp"
+#include "p2p/protocol/identify/protobuf/identify.pb.h"
 #include "peer/identity_manager.hpp"
 #include "peer/peer_id.hpp"
 #include "protocol/identify/observed_addresses.hpp"
-#include "p2p/protocol/identify/protobuf/identify.pb.h"
 
 namespace libp2p::protocol {
   /**
@@ -33,8 +33,7 @@ namespace libp2p::protocol {
 
    public:
     IdentifyMessageProcessor(
-        Host &host,
-        network::ConnectionManager &conn_manager,
+        Host &host, network::ConnectionManager &conn_manager,
         peer::IdentityManager &identity_manager,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
@@ -130,8 +129,8 @@ namespace libp2p::protocol {
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
     ObservedAddresses observed_addresses_;
 
-//    kagome::common::Logger log_ = kagome::common::createLogger("Identify");
+    libp2p::common::Logger log_ = libp2p::common::createLogger("Identify");
   };
 }  // namespace libp2p::protocol
 
-#endif  // KAGOME_IDENTIFY_MSG_PROCESSOR_HPP
+#endif  // LIBP2P_IDENTIFY_MSG_PROCESSOR_HPP

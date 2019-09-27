@@ -11,3 +11,7 @@ target_link_libraries(hexutil
     Boost::boost
     outcome
     )
+
+add_library(logger
+    logger.cpp
+    )

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_ROUTER_IMPL_HPP
-#define KAGOME_ROUTER_IMPL_HPP
+#ifndef LIBP2P_ROUTER_IMPL_HPP
+#define LIBP2P_ROUTER_IMPL_HPP
 
 #include <tsl/htrie_map.h>
 #include "network/router.hpp"
@@ -46,4 +46,4 @@ namespace libp2p::network {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::network, RouterImpl::Error)
 
-#endif  // KAGOME_ROUTER_IMPL_HPP
+#endif  // LIBP2P_ROUTER_IMPL_HPP

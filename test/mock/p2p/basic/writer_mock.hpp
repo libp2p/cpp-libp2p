@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_WRITER_MOCK_HPP
-#define KAGOME_WRITER_MOCK_HPP
+#ifndef LIBP2P_WRITER_MOCK_HPP
+#define LIBP2P_WRITER_MOCK_HPP
 
 #include <gmock/gmock.h>
 #include "p2p/basic/writer.hpp"
@@ -21,4 +21,4 @@ namespace libp2p::basic {
   };
 }  // namespace libp2p::basic
 
-#endif  // KAGOME_WRITER_MOCK_HPP
+#endif  // LIBP2P_WRITER_MOCK_HPP

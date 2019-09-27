@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MULTISELECT_ERROR_HPP
-#define KAGOME_MULTISELECT_ERROR_HPP
+#ifndef LIBP2P_MULTISELECT_ERROR_HPP
+#define LIBP2P_MULTISELECT_ERROR_HPP
 
 #include <outcome/outcome-register.hpp>
 
@@ -19,4 +19,4 @@ namespace libp2p::protocol_muxer {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol_muxer, MultiselectError)
 
-#endif  // KAGOME_MULTISELECT_ERROR_HPP
+#endif  // LIBP2P_MULTISELECT_ERROR_HPP

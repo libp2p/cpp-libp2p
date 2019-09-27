@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_KAD_QUERY_HPP
-#define KAGOME_KAD_QUERY_HPP
+#ifndef LIBP2P_KAD_QUERY_HPP
+#define LIBP2P_KAD_QUERY_HPP
 
 #include <unordered_set>
 
@@ -30,4 +30,4 @@ namespace libp2p::protocol::kademlia {
 
 }  // namespace libp2p::protocol::kademlia
 
-#endif  // KAGOME_KAD_QUERY_HPP
+#endif  // LIBP2P_KAD_QUERY_HPP

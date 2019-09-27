@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_CORE_LIBP2P_MULTI_CONVERTERS_CONVERSION_ERROR_HPP_
-#define KAGOME_CORE_LIBP2P_MULTI_CONVERTERS_CONVERSION_ERROR_HPP_
+#ifndef LIBP2P_MULTI_CONVERTERS_CONVERSION_ERROR_HPP_
+#define LIBP2P_MULTI_CONVERTERS_CONVERSION_ERROR_HPP_
 
 #include <outcome/outcome.hpp>
 
@@ -20,8 +20,8 @@ namespace libp2p::multi::converters {
     INVALID_ADDRESS,
     NOT_IMPLEMENTED
   };
-}
+}  // namespace libp2p::multi::converters
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi::converters, ConversionError)
 
-#endif  // KAGOME_CORE_LIBP2P_MULTI_CONVERTERS_CONVERSION_ERROR_HPP_
+#endif  // LIBP2P_MULTI_CONVERTERS_CONVERSION_ERROR_HPP_

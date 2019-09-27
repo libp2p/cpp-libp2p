@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_LIBP2P_HPP
-#define KAGOME_LIBP2P_HPP
+#ifndef LIBP2P_LIBP2P_HPP
+#define LIBP2P_LIBP2P_HPP
 
 namespace libp2p {
   // intentionally empty
 }
 
-#endif //KAGOME_LIBP2P_HPP
+#endif //LIBP2P_LIBP2P_HPP

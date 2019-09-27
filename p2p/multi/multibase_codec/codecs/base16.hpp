@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_BASE16_HPP
-#define KAGOME_BASE16_HPP
+#ifndef LIBP2P_BASE16_HPP
+#define LIBP2P_BASE16_HPP
 
 #include <optional>
 
@@ -34,15 +34,13 @@ namespace libp2p::multi::detail {
    * @param string to be decoded
    * @return decoded bytes in case of success
    */
-  outcome::result<common::ByteArray> decodeBase16Upper(
-      std::string_view string);
+  outcome::result<common::ByteArray> decodeBase16Upper(std::string_view string);
   /**
    * Decode base16 lowercase string to bytes
    * @param string to be decoded
    * @return decoded bytes in case of success
    */
-  outcome::result<common::ByteArray> decodeBase16Lower(
-      std::string_view string);
+  outcome::result<common::ByteArray> decodeBase16Lower(std::string_view string);
 }  // namespace libp2p::multi::detail
 
-#endif  // KAGOME_BASE16_HPP
+#endif  // LIBP2P_BASE16_HPP

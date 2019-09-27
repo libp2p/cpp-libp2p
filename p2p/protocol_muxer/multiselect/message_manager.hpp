@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MESSAGE_MANAGER_HPP
-#define KAGOME_MESSAGE_MANAGER_HPP
+#ifndef LIBP2P_MESSAGE_MANAGER_HPP
+#define LIBP2P_MESSAGE_MANAGER_HPP
 
 #include <memory>
 #include <optional>
@@ -92,4 +92,4 @@ namespace libp2p::protocol_muxer {
 
 OUTCOME_HPP_DECLARE_ERROR_2(libp2p::protocol_muxer, MessageManager::ParseError)
 
-#endif  // KAGOME_MESSAGE_MANAGER_HPP
+#endif  // LIBP2P_MESSAGE_MANAGER_HPP

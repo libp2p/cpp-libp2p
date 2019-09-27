@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_UPGRADER_MOCK_HPP
-#define KAGOME_UPGRADER_MOCK_HPP
+#ifndef LIBP2P_UPGRADER_MOCK_HPP
+#define LIBP2P_UPGRADER_MOCK_HPP
 
 #include "p2p/transport/upgrader.hpp"
 
@@ -31,4 +31,4 @@ namespace libp2p::transport {
 
 }  // namespace libp2p::transport
 
-#endif  // KAGOME_UPGRADER_MOCK_HPP
+#endif  // LIBP2P_UPGRADER_MOCK_HPP

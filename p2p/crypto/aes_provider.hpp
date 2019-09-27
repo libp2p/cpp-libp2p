@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_CORE_LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP
-#define KAGOME_CORE_LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP
+#ifndef LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP
+#define LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP
 
 #include <outcome/outcome.hpp>
 #include "common/types.hpp"
@@ -60,4 +60,4 @@ namespace libp2p::crypto::aes {
   };
 }  // namespace libp2p::crypto::aes
 
-#endif  // KAGOME_CORE_LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP
+#endif  // LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP

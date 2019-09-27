@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_SECURITY_ADAPTOR_MOCK_HPP
-#define KAGOME_SECURITY_ADAPTOR_MOCK_HPP
+#ifndef LIBP2P_SECURITY_ADAPTOR_MOCK_HPP
+#define LIBP2P_SECURITY_ADAPTOR_MOCK_HPP
 
 #include <gmock/gmock.h>
 #include "p2p/security/security_adaptor.hpp"
@@ -26,4 +26,4 @@ namespace libp2p::security {
   };
 }  // namespace libp2p::security
 
-#endif  // KAGOME_SECURITY_ADAPTOR_MOCK_HPP
+#endif  // LIBP2P_SECURITY_ADAPTOR_MOCK_HPP

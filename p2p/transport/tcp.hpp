@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_TCP_HPP
-#define KAGOME_TCP_HPP
+#ifndef LIBP2P_TCP_HPP
+#define LIBP2P_TCP_HPP
 
 #include "transport/tcp/tcp_transport.hpp"
 
-#endif //KAGOME_TCP_HPP
+#endif //LIBP2P_TCP_HPP

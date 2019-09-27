@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_IDENTITY_MANAGER_MOCK_HPP
-#define KAGOME_IDENTITY_MANAGER_MOCK_HPP
+#ifndef LIBP2P_IDENTITY_MANAGER_MOCK_HPP
+#define LIBP2P_IDENTITY_MANAGER_MOCK_HPP
 
 #include <gmock/gmock.h>
 #include "p2p/peer/identity_manager.hpp"
@@ -20,4 +20,4 @@ namespace libp2p::peer {
 
 }  // namespace libp2p::peer
 
-#endif  // KAGOME_IDENTITY_MANAGER_MOCK_HPP
+#endif  // LIBP2P_IDENTITY_MANAGER_MOCK_HPP

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_CORE_LIBP2P_CRYPTO_KEY_GENERATOR_HPP
-#define KAGOME_CORE_LIBP2P_CRYPTO_KEY_GENERATOR_HPP
+#ifndef LIBP2P_CRYPTO_KEY_GENERATOR_HPP
+#define LIBP2P_CRYPTO_KEY_GENERATOR_HPP
 
 #include <boost/filesystem.hpp>
 #include <outcome/outcome.hpp>
@@ -58,4 +58,4 @@ namespace libp2p::crypto {
 
 }  // namespace libp2p::crypto
 
-#endif  // KAGOME_CORE_LIBP2P_CRYPTO_KEY_GENERATOR_HPP
+#endif  // LIBP2P_CRYPTO_KEY_GENERATOR_HPP

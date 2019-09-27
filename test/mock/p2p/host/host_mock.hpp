@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_HOST_MOCK_HPP
-#define KAGOME_HOST_MOCK_HPP
+#ifndef LIBP2P_HOST_MOCK_HPP
+#define LIBP2P_HOST_MOCK_HPP
 
 #include <vector>
 
@@ -50,4 +50,4 @@ namespace libp2p {
   };
 }  // namespace libp2p
 
-#endif  // KAGOME_HOST_MOCK_HPP
+#endif  // LIBP2P_HOST_MOCK_HPP

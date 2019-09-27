@@ -9,8 +9,8 @@ namespace libp2p::protocol {
 
   void Echo::handle(StreamResult rstream) {
     if (!rstream) {
-//      log_->info("incoming connection failed due to '{}'",
-//                 rstream.error().message());
+      log_->info("incoming connection failed due to '{}'",
+                 rstream.error().message());
       return;
     }
 

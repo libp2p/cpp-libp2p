@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_READWRITER_HPP
-#define KAGOME_READWRITER_HPP
+#ifndef LIBP2P_READWRITER_HPP
+#define LIBP2P_READWRITER_HPP
 
 #include "basic/reader.hpp"
 #include "basic/writer.hpp"
@@ -15,4 +15,4 @@ namespace libp2p::basic {
   };
 }  // namespace libp2p::basic
 
-#endif  // KAGOME_READWRITER_HPP
+#endif  // LIBP2P_READWRITER_HPP

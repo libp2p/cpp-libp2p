@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PING_SERVER_SESSION_HPP
-#define KAGOME_PING_SERVER_SESSION_HPP
+#ifndef LIBP2P_PING_SERVER_SESSION_HPP
+#define LIBP2P_PING_SERVER_SESSION_HPP
 
 #include <memory>
 #include <vector>
@@ -40,4 +40,4 @@ namespace libp2p::protocol {
   };
 }  // namespace libp2p::protocol
 
-#endif  // KAGOME_PING_SERVER_SESSION_HPP
+#endif  // LIBP2P_PING_SERVER_SESSION_HPP

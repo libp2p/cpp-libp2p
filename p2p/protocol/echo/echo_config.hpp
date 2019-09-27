@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_ECHO_CONFIG_HPP
-#define KAGOME_ECHO_CONFIG_HPP
+#ifndef LIBP2P_ECHO_CONFIG_HPP
+#define LIBP2P_ECHO_CONFIG_HPP
 
 #include <cstddef>
 
@@ -17,4 +17,4 @@ namespace libp2p::protocol {
 
 }  // namespace libp2p::protocol
 
-#endif  // KAGOME_ECHO_CONFIG_HPP
+#endif  // LIBP2P_ECHO_CONFIG_HPP

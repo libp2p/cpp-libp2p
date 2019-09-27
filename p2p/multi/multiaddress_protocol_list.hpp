@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PROTOCOLLIST_HPP
-#define KAGOME_PROTOCOLLIST_HPP
+#ifndef LIBP2P_PROTOCOLLIST_HPP
+#define LIBP2P_PROTOCOLLIST_HPP
 
 #include <array>
 #include <functional>
@@ -146,4 +146,4 @@ namespace libp2p::multi {
   };
 
 }  // namespace libp2p::multi
-#endif  // KAGOME_PROTOCOLLIST_HPP
+#endif  // LIBP2P_PROTOCOLLIST_HPP

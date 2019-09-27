@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_SECURE_CONNECTION_MOCK_HPP
-#define KAGOME_SECURE_CONNECTION_MOCK_HPP
+#ifndef LIBP2P_SECURE_CONNECTION_MOCK_HPP
+#define LIBP2P_SECURE_CONNECTION_MOCK_HPP
 
 #include <gmock/gmock.h>
 #include "p2p/connection/secure_connection.hpp"
@@ -47,4 +47,4 @@ namespace libp2p::connection {
   };
 }  // namespace libp2p::connection
 
-#endif  // KAGOME_SECURE_CONNECTION_MOCK_HPP
+#endif  // LIBP2P_SECURE_CONNECTION_MOCK_HPP

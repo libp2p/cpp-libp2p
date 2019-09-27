@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MULTISTREAM_HPP
-#define KAGOME_MULTISTREAM_HPP
+#ifndef LIBP2P_MULTISTREAM_HPP
+#define LIBP2P_MULTISTREAM_HPP
 
 #include <gsl/span>
 #include <outcome/outcome.hpp>
@@ -109,4 +109,4 @@ namespace libp2p::multi {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi, Multistream::Error)
 
-#endif  // KAGOME_MULTISTREAM_HPP
+#endif  // LIBP2P_MULTISTREAM_HPP

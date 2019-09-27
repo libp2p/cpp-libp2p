@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_STREAM_MOCK_HPP
-#define KAGOME_STREAM_MOCK_HPP
+#ifndef LIBP2P_STREAM_MOCK_HPP
+#define LIBP2P_STREAM_MOCK_HPP
 
 #include <gmock/gmock.h>
 #include "p2p/connection/stream.hpp"
@@ -53,4 +53,4 @@ namespace libp2p::connection {
   };
 }  // namespace libp2p::connection
 
-#endif  // KAGOME_STREAM_MOCK_HPP
+#endif  // LIBP2P_STREAM_MOCK_HPP

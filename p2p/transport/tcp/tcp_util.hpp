@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_TCP_CONNECTION_UTIL_HPP
-#define KAGOME_TCP_CONNECTION_UTIL_HPP
+#ifndef LIBP2P_TCP_CONNECTION_UTIL_HPP
+#define LIBP2P_TCP_CONNECTION_UTIL_HPP
 
 #include <sstream>
 #include <system_error>  // for std::errc
@@ -90,4 +90,4 @@ namespace libp2p::transport::detail {
   }
 }  // namespace libp2p::transport::detail
 
-#endif  // KAGOME_TCP_CONNECTION_UTIL_HPP
+#endif  // LIBP2P_TCP_CONNECTION_UTIL_HPP

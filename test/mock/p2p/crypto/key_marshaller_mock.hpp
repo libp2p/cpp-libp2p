@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_KEY_MARSHALLER_MOCK_HPP
-#define KAGOME_KEY_MARSHALLER_MOCK_HPP
+#ifndef LIBP2P_KEY_MARSHALLER_MOCK_HPP
+#define LIBP2P_KEY_MARSHALLER_MOCK_HPP
 
 #include <gmock/gmock.h>
 #include "p2p/crypto/key_marshaller.hpp"
@@ -31,4 +31,4 @@ namespace libp2p::crypto::marshaller {
 
 }  // namespace libp2p::crypto::marshaller
 
-#endif  // KAGOME_KEY_MARSHALLER_MOCK_HPP
+#endif  // LIBP2P_KEY_MARSHALLER_MOCK_HPP

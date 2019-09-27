@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_SUBSCRIPTION_HPP
-#define KAGOME_SUBSCRIPTION_HPP
+#ifndef LIBP2P_SUBSCRIPTION_HPP
+#define LIBP2P_SUBSCRIPTION_HPP
 
 #include <boost/signals2.hpp>
 
@@ -31,4 +31,4 @@ namespace libp2p::event {
 
 }  // namespace libp2p::event
 
-#endif  // KAGOME_SUBSCRIPTION_HPP
+#endif  // LIBP2P_SUBSCRIPTION_HPP

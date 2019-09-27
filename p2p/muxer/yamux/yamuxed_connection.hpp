@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_YAMUXED_CONNECTION_HPP
-#define KAGOME_YAMUXED_CONNECTION_HPP
+#ifndef LIBP2P_YAMUXED_CONNECTION_HPP
+#define LIBP2P_YAMUXED_CONNECTION_HPP
 
 #include <functional>
 #include <map>
 #include <queue>
 
 #include <boost/asio/streambuf.hpp>
-//#include "common/logger.hpp"
+#include "common/logger.hpp"
 #include "common/types.hpp"
 #include "connection/capable_connection.hpp"
 #include "muxer/muxed_connection_config.hpp"
@@ -50,10 +50,8 @@ namespace libp2p::connection {
      */
     explicit YamuxedConnection(
         std::shared_ptr<SecureConnection> connection,
-        muxer::MuxedConnectionConfig config = {});
-//        kagome::common::Logger logger = kagome::common::createLogger("Yamux"));
-
-    // TODO (yuraz): do something with logger
+        muxer::MuxedConnectionConfig config = {},
+        libp2p::common::Logger logger = libp2p::common::createLogger("Yamux"));
 
     YamuxedConnection(const YamuxedConnection &other) = delete;
     YamuxedConnection &operator=(const YamuxedConnection &other) = delete;
@@ -110,8 +108,8 @@ namespace libp2p::connection {
     bool started_ = false;
 
     /**
-     * Write message to the connection; ensures no more than one wright would be
-     * executed at one time
+     * Write message to the connection; ensures no more than one wright
+     * would be executed at one time
      * @param write_data - data to be written with a callback
      */
     void write(WriteData write_data);
@@ -127,8 +125,8 @@ namespace libp2p::connection {
      */
     void writeCompleted(outcome::result<size_t> res);
 
-    /// buffers to store header and data parts of Yamux frame, which were read
-    /// last
+    /// buffers to store header and data parts of Yamux frame, which were
+    /// read last
     Buffer header_buffer_;
     Buffer data_buffer_;
 
@@ -206,16 +204,16 @@ namespace libp2p::connection {
     /**
      * Process ack message for such stream_id
      * @param stream_id of the stream to be processed
-     * @param cb to be called with stream, if there is one on our side, or with
-     * error after failed write of reset
+     * @param cb to be called with stream, if there is one on our side, or
+     * with error after failed write of reset
      */
     void processAck(
         StreamId stream_id,
         std::function<void(outcome::result<std::shared_ptr<Stream>>)> cb);
 
     /**
-     * Process a window update by notifying a related stream about a change in
-     * window size
+     * Process a window update by notifying a related stream about a change
+     * in window size
      * @param stream to be notified
      * @param window_delta - delta of window size (can be both positive and
      * negative)
@@ -261,7 +259,7 @@ namespace libp2p::connection {
     uint32_t last_created_stream_id_;
     std::unordered_map<StreamId, std::shared_ptr<YamuxStream>> streams_;
 
-//    kagome::common::Logger log_;
+    libp2p::common::Logger log_;
 
     /// YAMUX STREAM API
 
@@ -273,8 +271,8 @@ namespace libp2p::connection {
      * Add a handler function, which is called, when a window update is
      * received
      * @param stream_id of the stream which is to be notified
-     * @param handler to be called; if it returns true, it's removed from the
-     * list of handlers for that stream
+     * @param handler to be called; if it returns true, it's removed from
+     * the list of handlers for that stream
      * @note this is done through a function and not event emitters, as each
      * stream is to receive that event independently based on id
      */
@@ -285,8 +283,8 @@ namespace libp2p::connection {
      * Add a handler function, which is called, when data for a particular
      * stream is received
      * @param stream_id of the stream which is to be notified
-     * @param handler to be called; if it returns true, it's removed from the
-     * list of handlers for that stream
+     * @param handler to be called; if it returns true, it's removed from
+     * the list of handlers for that stream
      * @note this is done through a function and not event emitters, as each
      * stream is to receive that event independently based on id
      */
@@ -318,8 +316,8 @@ namespace libp2p::connection {
                         std::function<void(outcome::result<void>)> cb);
 
     /**
-     * Send a message, which denotes, that this stream is not going to write any
-     * bytes from now on
+     * Send a message, which denotes, that this stream is not going to write
+     * any bytes from now on
      * @param stream_id of the stream
      * @param cb - callback to be called, when operation finishes
      */
@@ -327,8 +325,8 @@ namespace libp2p::connection {
                      std::function<void(outcome::result<void>)> cb);
 
     /**
-     * Send a message, which denotes, that this stream is not going to write or
-     * read any bytes from now on
+     * Send a message, which denotes, that this stream is not going to write
+     * or read any bytes from now on
      * @param stream_id of the stream
      * @param cb - callback to be called, when operation finishes
      */
@@ -339,4 +337,4 @@ namespace libp2p::connection {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, YamuxedConnection::Error)
 
-#endif  // KAGOME_YAMUX_IMPL_HPP
+#endif  // LIBP2P_YAMUX_IMPL_HPP

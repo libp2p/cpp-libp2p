@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_KAD_MESSAGE_READ_WRITER_HPP
-#define KAGOME_KAD_MESSAGE_READ_WRITER_HPP
+#ifndef LIBP2P_KAD_MESSAGE_READ_WRITER_HPP
+#define LIBP2P_KAD_MESSAGE_READ_WRITER_HPP
 
 #include "peer/peer_id.hpp"
 #include "peer/peer_info.hpp"
@@ -27,4 +27,4 @@ namespace libp2p::protocol::kademlia {
 
 }  // namespace libp2p::protocol::kademlia
 
-#endif  // KAGOME_KAD_MESSAGE_READ_WRITER_HPP
+#endif  // LIBP2P_KAD_MESSAGE_READ_WRITER_HPP

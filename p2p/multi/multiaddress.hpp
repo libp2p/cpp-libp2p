@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MULTIADDRESS_HPP
-#define KAGOME_MULTIADDRESS_HPP
+#ifndef LIBP2P_MULTIADDRESS_HPP
+#define LIBP2P_MULTIADDRESS_HPP
 
 #include <functional>
 #include <list>
@@ -199,4 +199,4 @@ namespace std {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi, Multiaddress::Error)
 
-#endif  // KAGOME_MULTIADDRESS_HPP
+#endif  // LIBP2P_MULTIADDRESS_HPP

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_BASE_PROTOCOL_HPP
-#define KAGOME_BASE_PROTOCOL_HPP
+#ifndef LIBP2P_BASE_PROTOCOL_HPP
+#define LIBP2P_BASE_PROTOCOL_HPP
 
 #include <outcome/outcome.hpp>
 #include "basic/adaptor.hpp"
@@ -44,4 +44,4 @@ namespace libp2p::protocol {
 
 }  // namespace libp2p::protocol
 
-#endif  // KAGOME_BASE_PROTOCOL_HPP
+#endif  // LIBP2P_BASE_PROTOCOL_HPP

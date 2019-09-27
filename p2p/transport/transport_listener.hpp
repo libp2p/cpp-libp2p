@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_TRANSPORT_LISTENER_HPP
-#define KAGOME_TRANSPORT_LISTENER_HPP
+#ifndef LIBP2P_TRANSPORT_LISTENER_HPP
+#define LIBP2P_TRANSPORT_LISTENER_HPP
 
 #include <boost/signals2/connection.hpp>
 #include <functional>
@@ -55,4 +55,4 @@ namespace libp2p::transport {
   };
 }  // namespace libp2p::transport
 
-#endif  // KAGOME_TRANSPORT_LISTENER_HPP
+#endif  // LIBP2P_TRANSPORT_LISTENER_HPP

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_HOST_HPP
-#define KAGOME_HOST_HPP
+#ifndef LIBP2P_HOST_HPP
+#define LIBP2P_HOST_HPP
 
 #include <functional>
 #include <string_view>
@@ -173,4 +173,4 @@ namespace libp2p {
   };
 }  // namespace libp2p
 
-#endif  // KAGOME_HOST_HPP
+#endif  // LIBP2P_HOST_HPP

@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_YAMUX_HPP
-#define KAGOME_YAMUX_HPP
+#ifndef LIBP2P_YAMUX_HPP
+#define LIBP2P_YAMUX_HPP
 
 #include "muxer/yamux/yamux.hpp"
 #include "muxer/yamux/yamuxed_connection.hpp"
 
-#endif  // KAGOME_YAMUX_HPP
+#endif  // LIBP2P_YAMUX_HPP

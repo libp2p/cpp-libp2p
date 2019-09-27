@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_OUTCOME_HPP
-#define KAGOME_OUTCOME_HPP
+#ifndef LIBP2P_OUTCOME_HPP
+#define LIBP2P_OUTCOME_HPP
 
 #include <boost/outcome/std_result.hpp>
 #include <boost/outcome/success_failure.hpp>
@@ -33,4 +33,4 @@ namespace outcome {
 
 // @see /docs/result.md
 
-#endif  // KAGOME_OUTCOME_HPP
+#endif  // LIBP2P_OUTCOME_HPP

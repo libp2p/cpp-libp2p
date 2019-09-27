@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_HASH_TYPE_HPP
-#define KAGOME_HASH_TYPE_HPP
+#ifndef LIBP2P_HASH_TYPE_HPP
+#define LIBP2P_HASH_TYPE_HPP
 
 namespace libp2p::multi {
   /// https://github.com/multiformats/js-multihash/blob/master/src/constants.js
@@ -17,4 +17,4 @@ namespace libp2p::multi {
   };
 }  // namespace libp2p::multi
 
-#endif  // KAGOME_HASH_TYPE_HPP
+#endif  // LIBP2P_HASH_TYPE_HPP

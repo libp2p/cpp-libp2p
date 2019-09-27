@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_CORE_LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP
-#define KAGOME_CORE_LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP
+#ifndef LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP
+#define LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP
 
 #include <outcome/outcome.hpp>
 #include "common/types.hpp"
@@ -37,4 +37,4 @@ namespace libp2p::crypto::hmac {
   };
 }  // namespace libp2p::crypto::hmac
 
-#endif  // KAGOME_CORE_LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP
+#endif  // LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP

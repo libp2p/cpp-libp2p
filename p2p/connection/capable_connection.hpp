@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_CAPABLE_CONNECTION_HPP
-#define KAGOME_CAPABLE_CONNECTION_HPP
+#ifndef LIBP2P_CAPABLE_CONNECTION_HPP
+#define LIBP2P_CAPABLE_CONNECTION_HPP
 
 #include <functional>
 
@@ -57,4 +57,4 @@ namespace libp2p::connection {
 
 }  // namespace libp2p::connection
 
-#endif  // KAGOME_CAPABLE_CONNECTION_HPP
+#endif  // LIBP2P_CAPABLE_CONNECTION_HPP

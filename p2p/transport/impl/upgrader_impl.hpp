@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_UPGRADER_IMPL_HPP
-#define KAGOME_UPGRADER_IMPL_HPP
+#ifndef LIBP2P_UPGRADER_IMPL_HPP
+#define LIBP2P_UPGRADER_IMPL_HPP
 
 #include <vector>
 
@@ -61,4 +61,4 @@ namespace libp2p::transport {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::transport, UpgraderImpl::Error)
 
-#endif  // KAGOME_UPGRADER_IMPL_HPP
+#endif  // LIBP2P_UPGRADER_IMPL_HPP

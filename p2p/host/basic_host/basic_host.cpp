@@ -23,7 +23,7 @@ namespace libp2p::host {
   }
 
   std::string_view BasicHost::getLibp2pClientVersion() const {
-    return "kagome";
+    return "libp2p";
   }
 
   peer::PeerId BasicHost::getId() const {

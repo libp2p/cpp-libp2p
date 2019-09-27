@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_CONNECTION_STREAM_HPP
-#define KAGOME_CONNECTION_STREAM_HPP
+#ifndef LIBP2P_CONNECTION_STREAM_HPP
+#define LIBP2P_CONNECTION_STREAM_HPP
 
 #include <outcome/outcome.hpp>
 #include "basic/readwriter.hpp"
@@ -104,4 +104,4 @@ namespace libp2p::connection {
   };
 }  // namespace libp2p::connection
 
-#endif  // KAGOME_CONNECTION_STREAM_HPP
+#endif  // LIBP2P_CONNECTION_STREAM_HPP

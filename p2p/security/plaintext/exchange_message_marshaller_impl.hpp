@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP
-#define KAGOME_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP
+#ifndef LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP
+#define LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP
 
 #include <vector>
 
@@ -42,4 +42,4 @@ namespace libp2p::security::plaintext {
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security::plaintext,
                           ExchangeMessageMarshallerImpl::Error);
 
-#endif  // KAGOME_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP
+#endif  // LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP

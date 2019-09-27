@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_SHA256_HPP
-#define KAGOME_SHA256_HPP
+#ifndef LIBP2P_SHA256_HPP
+#define LIBP2P_SHA256_HPP
 
 #include <string_view>
 
@@ -27,4 +27,4 @@ namespace libp2p::crypto {
   common::Hash256 sha256(gsl::span<const uint8_t> input);
 }  // namespace libp2p::crypto
 
-#endif  // KAGOME_SHA256_HPP
+#endif  // LIBP2P_SHA256_HPP

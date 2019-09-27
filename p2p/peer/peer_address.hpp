@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PEER_ADDRESS_HPP
-#define KAGOME_PEER_ADDRESS_HPP
+#ifndef LIBP2P_PEER_ADDRESS_HPP
+#define LIBP2P_PEER_ADDRESS_HPP
 
 #include <memory>
 #include <string>
@@ -86,4 +86,4 @@ namespace libp2p::peer {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::peer, PeerAddress::FactoryError)
 
-#endif  // KAGOME_PEER_ADDRESS_HPP
+#endif  // LIBP2P_PEER_ADDRESS_HPP

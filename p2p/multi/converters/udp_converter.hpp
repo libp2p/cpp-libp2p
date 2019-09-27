@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_UDP_CONVERTER_HPP
-#define KAGOME_UDP_CONVERTER_HPP
+#ifndef LIBP2P_UDP_CONVERTER_HPP
+#define LIBP2P_UDP_CONVERTER_HPP
 
 #include <outcome/outcome.hpp>
 
@@ -21,4 +21,4 @@ namespace libp2p::multi::converters {
   };
 }  // namespace libp2p::multi::converters
 
-#endif  // KAGOME_UDP_CONVERTER_HPP
+#endif  // LIBP2P_UDP_CONVERTER_HPP

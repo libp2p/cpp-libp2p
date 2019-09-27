@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MULTIHASH_HPP
-#define KAGOME_MULTIHASH_HPP
+#ifndef LIBP2P_MULTIHASH_HPP
+#define LIBP2P_MULTIHASH_HPP
 
 #include <cstdint>
 #include <string>
@@ -125,4 +125,4 @@ namespace std {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi, Multihash::Error);
 
-#endif  // KAGOME_MULTIHASH_HPP
+#endif  // LIBP2P_MULTIHASH_HPP

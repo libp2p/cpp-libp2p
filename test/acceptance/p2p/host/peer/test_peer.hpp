@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_TEST_ACCEPTANCE_LIBP2P_HOST_TEST_PEER_HPP
-#define KAGOME_TEST_ACCEPTANCE_LIBP2P_HOST_TEST_PEER_HPP
+#ifndef LIBP2P_HOST_TEST_PEER_HPP
+#define LIBP2P_HOST_TEST_PEER_HPP
 
 #include <future>
 #include <thread>
@@ -75,4 +75,4 @@ class Peer {
   sptr<crypto::KeyGenerator> key_generator_;  ///< key generator
 };
 
-#endif  // KAGOME_TEST_ACCEPTANCE_LIBP2P_HOST_TEST_PEER_HPP
+#endif  // LIBP2P_HOST_TEST_PEER_HPP

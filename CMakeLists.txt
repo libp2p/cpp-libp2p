@@ -115,10 +115,11 @@ include_directories(
 include_directories(
     SYSTEM
     # system includes
-    deps/outcome
-    deps/hat-trie/include
     deps/di/include
     deps/di/extension/include
+    deps/hat-trie/include
+    deps/outcome
+    deps/spdlog/include
 )
 
 add_subdirectory(p2p)
@@ -168,6 +169,7 @@ libp2p_install(
     hexutil
     keys_proto
     plaintext_protobuf
+    logger
 )
 
 include(CMakePackageConfigHelpers)
@@ -186,4 +188,4 @@ install(FILES
 export(PACKAGE libp2p)
 
 enable_testing()
-add_subdirectory(test)
+#add_subdirectory(test)

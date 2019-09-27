@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_CONTENT_ROUTING_HPP
-#define KAGOME_CONTENT_ROUTING_HPP
+#ifndef LIBP2P_CONTENT_ROUTING_HPP
+#define LIBP2P_CONTENT_ROUTING_HPP
 
 #include "event/subscription.hpp"
 #include "peer/peer_info.hpp"
@@ -40,4 +40,4 @@ namespace libp2p::protocol::kademlia {
 
 }  // namespace libp2p::protocol::kademlia
 
-#endif  // KAGOME_CONTENT_ROUTING_HPP
+#endif  // LIBP2P_CONTENT_ROUTING_HPP

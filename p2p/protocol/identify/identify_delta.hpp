@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_IDENTIFY_DELTA_HPP
-#define KAGOME_IDENTIFY_DELTA_HPP
+#ifndef LIBP2P_IDENTIFY_DELTA_HPP
+#define LIBP2P_IDENTIFY_DELTA_HPP
 
 #include <vector>
 
-//#include "common/logger.hpp"
+#include "common/logger.hpp"
 #include "event/bus.hpp"
 #include "host/host.hpp"
 #include "network/connection_manager.hpp"
 #include "network/router.hpp"
+#include "p2p/protocol/identify/protobuf/identify.pb.h"
 #include "peer/peer_info.hpp"
 #include "peer/protocol_repository.hpp"
 #include "protocol/base_protocol.hpp"
-#include "p2p/protocol/identify/protobuf/identify.pb.h"
 
 namespace libp2p::protocol {
   /**
@@ -82,8 +82,8 @@ namespace libp2p::protocol {
     event::Handle new_protos_sub_;
     event::Handle rm_protos_sub_;
 
-//    kagome::common::Logger log_ = kagome::common::createLogger("IdentifyDelta");
+    libp2p::common::Logger log_ = libp2p::common::createLogger("IdentifyDelta");
   };
 }  // namespace libp2p::protocol
 
-#endif  // KAGOME_IDENTIFY_DELTA_HPP
+#endif  // LIBP2P_IDENTIFY_DELTA_HPP

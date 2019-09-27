@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_KEY_REPOSITORY_MOCK_HPP
-#define KAGOME_KEY_REPOSITORY_MOCK_HPP
+#ifndef LIBP2P_KEY_REPOSITORY_MOCK_HPP
+#define LIBP2P_KEY_REPOSITORY_MOCK_HPP
 
 #include "p2p/peer/key_repository.hpp"
 
@@ -30,4 +30,4 @@ namespace libp2p::peer {
   };
 }  // namespace libp2p::peer
 
-#endif  // KAGOME_KEY_REPOSITORY_MOCK_HPP
+#endif  // LIBP2P_KEY_REPOSITORY_MOCK_HPP

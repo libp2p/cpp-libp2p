@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_KAD_MESSAGE_READ_WRITER_MOCK_HPP
-#define KAGOME_KAD_MESSAGE_READ_WRITER_MOCK_HPP
+#ifndef LIBP2P_KAD_MESSAGE_READ_WRITER_MOCK_HPP
+#define LIBP2P_KAD_MESSAGE_READ_WRITER_MOCK_HPP
 
 #include "p2p/protocol/kademlia/message_read_writer.hpp"
 
@@ -22,4 +22,4 @@ namespace libp2p::protocol::kademlia {
 
 }  // namespace libp2p::protocol::kademlia
 
-#endif  // KAGOME_KAD_MESSAGE_READ_WRITER_MOCK_HPP
+#endif  // LIBP2P_KAD_MESSAGE_READ_WRITER_MOCK_HPP

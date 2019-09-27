@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_HEXUTIL_HPP
-#define KAGOME_HEXUTIL_HPP
+#ifndef LIBP2P_HEXUTIL_HPP
+#define LIBP2P_HEXUTIL_HPP
 
 #include <string_view>
 #include <vector>
@@ -59,4 +59,4 @@ namespace libp2p::common {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::common, UnhexError);
 
-#endif  // KAGOME_HEXUTIL_HPP
+#endif  // LIBP2P_HEXUTIL_HPP

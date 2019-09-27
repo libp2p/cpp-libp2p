@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MUXER_ADAPTOR_MOCK_HPP
-#define KAGOME_MUXER_ADAPTOR_MOCK_HPP
+#ifndef LIBP2P_MUXER_ADAPTOR_MOCK_HPP
+#define LIBP2P_MUXER_ADAPTOR_MOCK_HPP
 
 #include <gmock/gmock.h>
 #include "p2p/muxer/muxer_adaptor.hpp"
@@ -21,4 +21,4 @@ namespace libp2p::muxer {
   };
 }  // namespace libp2p::muxer
 
-#endif  // KAGOME_MUXER_ADAPTOR_MOCK_HPP
+#endif  // LIBP2P_MUXER_ADAPTOR_MOCK_HPP

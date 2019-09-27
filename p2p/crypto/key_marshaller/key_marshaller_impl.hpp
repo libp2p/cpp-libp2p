@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_CORE_LIBP2P_CRYPTO_MARSHALER_KEY_MARSHALER_IMPL_HPP
-#define KAGOME_CORE_LIBP2P_CRYPTO_MARSHALER_KEY_MARSHALER_IMPL_HPP
+#ifndef LIBP2P_CRYPTO_MARSHALER_KEY_MARSHALER_IMPL_HPP
+#define LIBP2P_CRYPTO_MARSHALER_KEY_MARSHALER_IMPL_HPP
 
 #include "crypto/error.hpp"
 #include "crypto/key.hpp"
@@ -36,4 +36,4 @@ namespace libp2p::crypto::marshaller {
   };
 }  // namespace libp2p::crypto::key_marshaller
 
-#endif  // KAGOME_CORE_LIBP2P_CRYPTO_MARSHALER_KEY_MARSHALER_IMPL_HPP
+#endif  // LIBP2P_CRYPTO_MARSHALER_KEY_MARSHALER_IMPL_HPP

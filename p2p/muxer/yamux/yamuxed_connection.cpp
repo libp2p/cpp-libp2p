@@ -34,8 +34,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxedConnection::Error, e) {
 namespace libp2p::connection {
   YamuxedConnection::YamuxedConnection(
       std::shared_ptr<SecureConnection> connection,
-      muxer::MuxedConnectionConfig config)
-      //      kagome::common::Logger logger)
+      muxer::MuxedConnectionConfig config, libp2p::common::Logger logger)
       : header_buffer_(YamuxFrame::kHeaderLength, 0),
         data_buffer_(config.maximum_window_size, 0),
         connection_{std::move(connection)},
@@ -199,20 +198,20 @@ namespace libp2p::connection {
 
     if (!res) {
       if (res.error().value() == boost::asio::error::eof) {
-        //        log_->info("the client has closed a session");
+        log_->info("the client has closed a session");
         return;
       }
-      //      log_->error(
-      //          "cannot read header from the connection: {}; closing the
-      //          session", res.error().message());
+      log_->error(
+          "cannot read header from the connection: {}; closing the session",
+          res.error().message());
       return closeSession();
     }
 
     auto header_opt = parseFrame(header_buffer_);
     if (!header_opt) {
-      //      log_->error(
-      //          "client has sent something, which is not a valid header;
-      //          closing the " "session");
+      log_->error(
+          "client has sent something, which is not a valid header; closing the "
+          "session");
       return closeSession();
     }
 
@@ -230,8 +229,7 @@ namespace libp2p::connection {
         return processGoAwayFrame(*header_opt);
       }
       default:
-        //        log_->critical("garbage in parsed frame's type; closing the
-        //        session");
+        log_->critical("garbage in parsed frame's type; closing the session");
         return closeSession();
     }
   }
@@ -279,8 +277,8 @@ namespace libp2p::connection {
         return write(
             {resetStreamMsg(stream_id), [self{shared_from_this()}](auto &&res) {
                if (!res) {
-                 //                 self->log_->error("cannot reset stream: {}",
-                 //                                   res.error().message());
+                 self->log_->error("cannot reset stream: {}",
+                                   res.error().message());
                }
                self->doReadHeader();
              }});
@@ -304,7 +302,7 @@ namespace libp2p::connection {
         removeStream(stream_id);
         break;
       default:
-        //        log_->critical("garbage in parsed frame's flag");
+        log_->critical("garbage in parsed frame's flag");
         return closeSession();
     }
     doReadHeader();
@@ -333,8 +331,8 @@ namespace libp2p::connection {
         return write(
             {resetStreamMsg(stream_id), [self{shared_from_this()}](auto &&res) {
                if (!res) {
-                 //                 self->log_->error("cannot reset stream: {}",
-                 //                                   res.error().message());
+                 self->log_->error("cannot reset stream: {}",
+                                   res.error().message());
                }
                self->doReadHeader();
              }});
@@ -348,8 +346,8 @@ namespace libp2p::connection {
         return write(
             {resetStreamMsg(stream_id), [self{shared_from_this()}](auto &&res) {
                if (!res) {
-                 //                 self->log_->error("cannot reset stream: {}",
-                 //                                   res.error().message());
+                 self->log_->error("cannot reset stream: {}",
+                                   res.error().message());
                }
                self->doReadHeader();
              }});
@@ -363,7 +361,7 @@ namespace libp2p::connection {
         removeStream(stream_id);
         break;
       default:
-        //        log_->critical("garbage in parsed frame's flag");
+        log_->critical("garbage in parsed frame's flag");
         return closeSession();
     }
     doReadHeader();
@@ -373,8 +371,8 @@ namespace libp2p::connection {
     return write(
         {pingResponseMsg(frame.length), [self{shared_from_this()}](auto &&res) {
            if (!res) {
-             //             self->log_->error("cannot write ping message: {}",
-             //                               res.error().message());
+             self->log_->error("cannot write ping message: {}",
+                               res.error().message());
            }
          }});
   }
@@ -405,8 +403,8 @@ namespace libp2p::connection {
         {ackStreamMsg(stream_id),
          [self{shared_from_this()}, stream_id, cb = std::move(cb)](auto &&res) {
            if (!res) {
-             //             self->log_->error("cannot register new stream: {}",
-             //                               res.error().message());
+             self->log_->error("cannot register new stream: {}",
+                               res.error().message());
              return cb(res.error());
            }
            auto new_stream =
@@ -426,9 +424,8 @@ namespace libp2p::connection {
     }
 
     if (data_len > config_.maximum_window_size) {
-      //      log_->error(
-      //          "too much data was received by this connection; closing the
-      //          session");
+      log_->error(
+          "too much data was received by this connection; closing the session");
       closeSession();
       return true;
     }
@@ -439,17 +436,15 @@ namespace libp2p::connection {
         [self{shared_from_this()}, stream = std::move(stream), data_len,
          frame](auto &&res) {
           if (!res) {
-            //            self->log_->error("cannot read data from the
-            //            connection: {}",
-            //                              res.error().message());
+            self->log_->error("cannot read data from the connection: {} ",
+                              res.error().message());
             return self->closeSession();
           }
           if (auto commit_res =
                   stream->commitData(self->data_buffer_, data_len);
               !commit_res) {
-            //            self->log_->error("cannot commit data to the stream's
-            //            buffer: {}",
-            //                              commit_res.error().message());
+            self->log_->error("cannot commit data to the stream's buffer: {} ",
+                              commit_res.error().message());
             return self->closeSession();
           }
           if (auto stream_data_sub = self->data_subs_.find(frame.stream_id);
@@ -475,8 +470,8 @@ namespace libp2p::connection {
     write({resetStreamMsg(stream_id),
            [self{shared_from_this()}, cb = std::move(cb)](auto &&res) {
              if (!res) {
-               //               self->log_->error("cannot reset stream: {}",
-               //                                 res.error().message());
+               self->log_->error("cannot reset stream: {}",
+                                 res.error().message());
                return cb(res.error());
              }
              cb(nullptr);
@@ -512,9 +507,9 @@ namespace libp2p::connection {
                     [self{shared_from_this()}, cb = std::move(cb), stream_id,
                      stream](auto &&res) {
                       if (!res) {
-                        //               self->log_->error("cannot close stream
-                        //               on the other side: {}",
-                        //                                 res.error().message());
+                        self->log_->error(
+                            "cannot close stream on the other side: {} ",
+                            res.error().message());
                         return cb(res.error());
                       }
                       if (!stream->is_readable_) {
@@ -545,13 +540,11 @@ namespace libp2p::connection {
                   [self{shared_from_this()}](auto &&res) {
                     self->started_ = false;
                     if (!res) {
-                      //                      self->log_->error("cannot close a
-                      //                      Yamux session: {}",
-                      //                                        res.error().message());
+                      self->log_->error("cannot close a Yamux session: {} ",
+                                        res.error().message());
                       return;
                     }
-                    //                    self->log_->info("Yamux session was
-                    //                    closed");
+                    self->log_->info("Yamux session was closed");
                   }});
   }
 
@@ -577,9 +570,9 @@ namespace libp2p::connection {
       return write({dataMsg(stream_id, Buffer{in.data(), in.data() + bytes}),
                     [self{shared_from_this()}, cb = std::move(cb)](auto &&res) {
                       if (!res) {
-                        //               self->log_->error("cannot write data
-                        //               from the stream: {}",
-                        //                                 res.error().message());
+                        self->log_->error(
+                            "cannot write data from the stream: {} ",
+                            res.error().message());
                       }
                       return cb(std::forward<decltype(res)>(res));
                     },
@@ -595,10 +588,9 @@ namespace libp2p::connection {
       return write({windowUpdateMsg(stream_id, bytes),
                     [self{shared_from_this()}, cb = std::move(cb)](auto &&res) {
                       if (!res) {
-                        //                        self->log_->error(
-                        //                            "cannot ack bytes from the
-                        //                            stream: {}",
-                        //                            res.error().message());
+                        self->log_->error(
+                            "cannot ack bytes from the stream: {} ",
+                            res.error().message());
                         return cb(res.error());
                       }
                       cb(outcome::success());
@@ -622,9 +614,8 @@ namespace libp2p::connection {
                     [self{shared_from_this()}, cb = std::move(cb),
                      stream_id](auto &&res) {
                       if (!res) {
-                        //                        self->log_->error("cannot
-                        //                        reset stream: {}",
-                        //                                          res.error().message());
+                        self->log_->error("cannot reset stream: {} ",
+                                          res.error().message());
                         return cb(res.error());
                       }
                       self->removeStream(stream_id);

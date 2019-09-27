@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_CONVERTER_UTILS_HPP
-#define KAGOME_CONVERTER_UTILS_HPP
+#ifndef LIBP2P_CONVERTER_UTILS_HPP
+#define LIBP2P_CONVERTER_UTILS_HPP
 
 #include <string>
 #include <vector>
@@ -40,4 +40,4 @@ namespace libp2p::multi::converters {
 
 }  // namespace libp2p::multi::converters
 
-#endif  // KAGOME_CONVERTER_UTILS_HPP
+#endif  // LIBP2P_CONVERTER_UTILS_HPP

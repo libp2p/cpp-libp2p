@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_READ_WRITER_MOCK_HPP
-#define KAGOME_READ_WRITER_MOCK_HPP
+#ifndef LIBP2P_READ_WRITER_MOCK_HPP
+#define LIBP2P_READ_WRITER_MOCK_HPP
 
 #include "p2p/basic/readwriter.hpp"
 
@@ -26,4 +26,4 @@ namespace libp2p::basic {
   };
 }  // namespace libp2p::basic
 
-#endif  // KAGOME_READ_WRITER_MOCK_HPP
+#endif  // LIBP2P_READ_WRITER_MOCK_HPP

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PEER_ERRORS_HPP
-#define KAGOME_PEER_ERRORS_HPP
+#ifndef LIBP2P_PEER_ERRORS_HPP
+#define LIBP2P_PEER_ERRORS_HPP
 
 #include <outcome/outcome.hpp>
 
@@ -16,4 +16,4 @@ namespace libp2p::peer {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::peer, PeerError)
 
-#endif  // KAGOME_PEER_ERRORS_HPP
+#endif  // LIBP2P_PEER_ERRORS_HPP

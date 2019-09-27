@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP
-#define KAGOME_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP
+#ifndef LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP
+#define LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP
 
 #include <gmock/gmock.h>
 #include "p2p/security/plaintext/exchange_message.hpp"
@@ -22,4 +22,4 @@ namespace libp2p::security::plaintext {
         unmarshal, outcome::result<ExchangeMessage>(gsl::span<const uint8_t>));
   };
 }  // namespace libp2p::security::plaintext
-#endif  // KAGOME_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP
+#endif  // LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP

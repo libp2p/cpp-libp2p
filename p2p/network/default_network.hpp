@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_DEFAULT_NETWORK_HPP
-#define KAGOME_DEFAULT_NETWORK_HPP
+#ifndef LIBP2P_DEFAULT_NETWORK_HPP
+#define LIBP2P_DEFAULT_NETWORK_HPP
 
 // implementations
 #include "crypto/key_generator/key_generator_impl.hpp"
@@ -23,4 +23,4 @@
 #include "transport/impl/upgrader_impl.hpp"
 #include "transport/tcp.hpp"
 
-#endif //KAGOME_DEFAULT_NETWORK_HPP
+#endif //LIBP2P_DEFAULT_NETWORK_HPP

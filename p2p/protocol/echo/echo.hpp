@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_ECHO_IMPL_HPP
-#define KAGOME_ECHO_IMPL_HPP
+#ifndef LIBP2P_ECHO_IMPL_HPP
+#define LIBP2P_ECHO_IMPL_HPP
 
-//#include "common/logger.hpp"
+#include "common/logger.hpp"
 #include "peer/protocol.hpp"
 #include "protocol/base_protocol.hpp"
 #include "protocol/echo/client_echo_session.hpp"
@@ -36,9 +36,9 @@ namespace libp2p::protocol {
 
    private:
     EchoConfig config_;
-//    kagome::common::Logger log_ = kagome::common::createLogger("echo");
+    libp2p::common::Logger log_ = libp2p::common::createLogger("echo");
   };
 
 }  // namespace libp2p::protocol
 
-#endif  // KAGOME_ECHO_IMPL_HPP
+#endif  // LIBP2P_ECHO_IMPL_HPP

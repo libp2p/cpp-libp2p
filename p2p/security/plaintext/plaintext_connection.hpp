@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PLAINTEXT_CONNECTION_HPP
-#define KAGOME_PLAINTEXT_CONNECTION_HPP
+#ifndef LIBP2P_PLAINTEXT_CONNECTION_HPP
+#define LIBP2P_PLAINTEXT_CONNECTION_HPP
 
 #include <memory>
 #include <optional>
@@ -56,4 +56,4 @@ namespace libp2p::connection {
   };
 }  // namespace libp2p::connection
 
-#endif  // KAGOME_PLAINTEXT_CONNECTION_HPP
+#endif  // LIBP2P_PLAINTEXT_CONNECTION_HPP

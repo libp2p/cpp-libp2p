@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_BASE64_HPP
-#define KAGOME_BASE64_HPP
+#ifndef LIBP2P_BASE64_HPP
+#define LIBP2P_BASE64_HPP
 
 #include <optional>
 
@@ -34,4 +34,4 @@ namespace libp2p::multi::detail {
   outcome::result<common::ByteArray> decodeBase64(std::string_view string);
 }  // namespace libp2p::multi::detail
 
-#endif  // KAGOME_BASE64_HPP
+#endif  // LIBP2P_BASE64_HPP

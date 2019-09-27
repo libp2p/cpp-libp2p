@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_YAMUX_IMPL_HPP
-#define KAGOME_YAMUX_IMPL_HPP
+#ifndef LIBP2P_YAMUX_IMPL_HPP
+#define LIBP2P_YAMUX_IMPL_HPP
 
 #include "muxer/muxed_connection_config.hpp"
 #include "muxer/muxer_adaptor.hpp"
@@ -32,4 +32,4 @@ namespace libp2p::muxer {
   };
 }  // namespace libp2p::muxer
 
-#endif  // KAGOME_YAMUX_IMPL_HPP
+#endif  // LIBP2P_YAMUX_IMPL_HPP

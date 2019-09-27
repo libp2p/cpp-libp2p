@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_IDENTITY_MANAGER_HPP
-#define KAGOME_IDENTITY_MANAGER_HPP
+#ifndef LIBP2P_IDENTITY_MANAGER_HPP
+#define LIBP2P_IDENTITY_MANAGER_HPP
 
 #include "crypto/key.hpp"
 #include "event/bus.hpp"
@@ -31,4 +31,4 @@ namespace libp2p::peer {
 
 }  // namespace libp2p::peer
 
-#endif  // KAGOME_IDENTITY_MANAGER_HPP
+#endif  // LIBP2P_IDENTITY_MANAGER_HPP

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_NETWORK_DIALER_HPP
-#define KAGOME_NETWORK_DIALER_HPP
+#ifndef LIBP2P_NETWORK_DIALER_HPP
+#define LIBP2P_NETWORK_DIALER_HPP
 
 #include "connection/capable_connection.hpp"
 #include "peer/peer_info.hpp"
@@ -38,4 +38,4 @@ namespace libp2p::network {
 
 }  // namespace libp2p::network
 
-#endif  // KAGOME_NETWORK_DIALER_HPP
+#endif  // LIBP2P_NETWORK_DIALER_HPP

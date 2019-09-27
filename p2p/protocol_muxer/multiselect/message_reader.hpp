@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MESSAGE_READER_HPP
-#define KAGOME_MESSAGE_READER_HPP
+#ifndef LIBP2P_MESSAGE_READER_HPP
+#define LIBP2P_MESSAGE_READER_HPP
 
 #include <memory>
 
@@ -78,4 +78,4 @@ namespace libp2p::protocol_muxer {
   };
 }  // namespace libp2p::protocol_muxer
 
-#endif  // KAGOME_MESSAGE_READER_HPP
+#endif  // LIBP2P_MESSAGE_READER_HPP

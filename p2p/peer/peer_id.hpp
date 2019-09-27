@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PEER_ID_HPP
-#define KAGOME_PEER_ID_HPP
+#ifndef LIBP2P_PEER_ID_HPP
+#define LIBP2P_PEER_ID_HPP
 
 #include <outcome/outcome.hpp>
 #include "crypto/key.hpp"
@@ -103,4 +103,4 @@ namespace std {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::peer, PeerId::FactoryError)
 
-#endif  // KAGOME_PEER_ID_HPP
+#endif  // LIBP2P_PEER_ID_HPP

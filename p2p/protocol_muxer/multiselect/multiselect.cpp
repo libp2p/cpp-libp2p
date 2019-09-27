@@ -77,8 +77,8 @@ namespace libp2p::protocol_muxer {
       case MessageType::NA:
         return handleNaMsg(connection_state);
       default:
-//        log_->critical(
-//            "type of the message, returned by the parser, is unknown");
+        log_->critical(
+            "type of the message, returned by the parser, is unknown");
         return negotiationRoundFailed(connection_state,
                                       MultiselectError::INTERNAL_ERROR);
     }
@@ -212,15 +212,14 @@ namespace libp2p::protocol_muxer {
 
   void Multiselect::onUnexpectedRequestResponse(
       const std::shared_ptr<ConnectionState> &connection_state) {
-    //    log_->info("got a unexpected request-response combination - sending
-    //    'ls'");
+    log_->info("got a unexpected request-response combination - sending 'ls'");
     negotiationRoundFailed(connection_state,
                            MultiselectError::PROTOCOL_VIOLATION);
   }
 
   void Multiselect::onGarbagedStreamStatus(
       const std::shared_ptr<ConnectionState> &connection_state) {
-    //    log_->critical("there is some garbage in stream state status");
+    log_->critical("there is some garbage in stream state status");
     negotiationRoundFailed(connection_state, MultiselectError::INTERNAL_ERROR);
   }
 

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MULTIBASE_IMPL_HPP
-#define KAGOME_MULTIBASE_IMPL_HPP
+#ifndef LIBP2P_MULTIBASE_IMPL_HPP
+#define LIBP2P_MULTIBASE_IMPL_HPP
 
 #include "multi/multibase_codec.hpp"
 
@@ -28,4 +28,4 @@ namespace libp2p::multi {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi, MultibaseCodecImpl::Error)
 
-#endif  // KAGOME_MULTIBASE_IMPL_HPP
+#endif  // LIBP2P_MULTIBASE_IMPL_HPP

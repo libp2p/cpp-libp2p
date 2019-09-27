@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_SECURITY_ADAPTOR_HPP
-#define KAGOME_SECURITY_ADAPTOR_HPP
+#ifndef LIBP2P_SECURITY_ADAPTOR_HPP
+#define LIBP2P_SECURITY_ADAPTOR_HPP
 
 #include <memory>
 
@@ -49,4 +49,4 @@ namespace libp2p::security {
   };
 }  // namespace libp2p::security
 
-#endif  // KAGOME_SECURITY_ADAPTOR_HPP
+#endif  // LIBP2P_SECURITY_ADAPTOR_HPP

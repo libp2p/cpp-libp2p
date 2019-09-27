@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_VARINT_HPP
-#define KAGOME_VARINT_HPP
+#ifndef LIBP2P_VARINT_HPP
+#define LIBP2P_VARINT_HPP
 
 #include <cstdint>
 #include <string>
@@ -90,4 +90,4 @@ namespace libp2p::multi {
 
 }  // namespace libp2p::multi
 
-#endif  // KAGOME_VARINT_HPP
+#endif  // LIBP2P_VARINT_HPP

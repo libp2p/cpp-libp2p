@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PROTOBUF_MESSAGE_MOCK_HPP
-#define KAGOME_PROTOBUF_MESSAGE_MOCK_HPP
+#ifndef LIBP2P_PROTOBUF_MESSAGE_MOCK_HPP
+#define LIBP2P_PROTOBUF_MESSAGE_MOCK_HPP
 
 #include <gmock/gmock.h>
 
@@ -33,4 +33,4 @@ class ProtobufMessageMock : public ProtobufMessage {
   MOCK_CONST_METHOD0(ByteSize, int());
 };
 
-#endif  // KAGOME_PROTOBUF_MESSAGE_MOCK_HPP
+#endif  // LIBP2P_PROTOBUF_MESSAGE_MOCK_HPP

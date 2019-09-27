@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_UPGRADER_HPP
-#define KAGOME_UPGRADER_HPP
+#ifndef LIBP2P_UPGRADER_HPP
+#define LIBP2P_UPGRADER_HPP
 
 #include <memory>
 
@@ -63,4 +63,4 @@ namespace libp2p::transport {
 
 }  // namespace libp2p::transport
 
-#endif  // KAGOME_UPGRADER_HPP
+#endif  // LIBP2P_UPGRADER_HPP

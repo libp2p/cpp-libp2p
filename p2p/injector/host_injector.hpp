@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_HOST_INJECTOR_HPP
-#define KAGOME_HOST_INJECTOR_HPP
+#ifndef LIBP2P_HOST_INJECTOR_HPP
+#define LIBP2P_HOST_INJECTOR_HPP
 
 #include <boost/di.hpp>
 #include "injector/network_injector.hpp"
@@ -42,4 +42,4 @@ namespace libp2p::injector {
 
 }  // namespace libp2p::injector
 
-#endif  // KAGOME_HOST_INJECTOR_HPP
+#endif  // LIBP2P_HOST_INJECTOR_HPP

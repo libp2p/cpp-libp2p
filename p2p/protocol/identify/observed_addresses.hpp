@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_OBSERVED_ADDRESSES_HPP
-#define KAGOME_OBSERVED_ADDRESSES_HPP
+#ifndef LIBP2P_OBSERVED_ADDRESSES_HPP
+#define LIBP2P_OBSERVED_ADDRESSES_HPP
 
 #include <chrono>
 #include <unordered_map>
@@ -96,4 +96,4 @@ namespace libp2p::protocol {
   };
 }  // namespace libp2p::protocol
 
-#endif  // KAGOME_OBSERVED_ADDRESSES_HPP
+#endif  // LIBP2P_OBSERVED_ADDRESSES_HPP

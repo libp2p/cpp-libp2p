@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_BASE_PROTOCOL_MOCK_HPP
-#define KAGOME_BASE_PROTOCOL_MOCK_HPP
+#ifndef LIBP2P_BASE_PROTOCOL_MOCK_HPP
+#define LIBP2P_BASE_PROTOCOL_MOCK_HPP
 
 #include <gmock/gmock.h>
 #include "p2p/protocol/base_protocol.hpp"
@@ -20,4 +20,4 @@ namespace libp2p::protocol {
 
 }  // namespace libp2p::protocol
 
-#endif  // KAGOME_BASE_PROTOCOL_MOCK_HPP
+#endif  // LIBP2P_BASE_PROTOCOL_MOCK_HPP

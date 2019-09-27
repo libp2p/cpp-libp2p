@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_TRANSPORT_PARSER_HPP
-#define KAGOME_TRANSPORT_PARSER_HPP
+#ifndef LIBP2P_TRANSPORT_PARSER_HPP
+#define LIBP2P_TRANSPORT_PARSER_HPP
 
 #include <boost/asio/ip/address.hpp>
 #include <boost/variant.hpp>
@@ -71,4 +71,4 @@ namespace libp2p::transport {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::transport, MultiaddressParser::Error);
 
-#endif  // KAGOME_TRANSPORT_PARSER_HPP
+#endif  // LIBP2P_TRANSPORT_PARSER_HPP

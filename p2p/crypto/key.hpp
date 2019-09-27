@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_LIBP2P_CRYPTO_KEY_HPP
-#define KAGOME_LIBP2P_CRYPTO_KEY_HPP
+#ifndef LIBP2P_LIBP2P_CRYPTO_KEY_HPP
+#define LIBP2P_LIBP2P_CRYPTO_KEY_HPP
 
 #include "common/types.hpp"
 
@@ -91,4 +91,4 @@ namespace std {
   };
 }  // namespace std
 
-#endif  // KAGOME_LIBP2P_CRYPTO_KEY_HPP
+#endif  // LIBP2P_LIBP2P_CRYPTO_KEY_HPP

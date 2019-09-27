@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_KAD_ROUTING_TABLE_IMPL_HPP
-#define KAGOME_KAD_ROUTING_TABLE_IMPL_HPP
+#ifndef LIBP2P_KAD_ROUTING_TABLE_IMPL_HPP
+#define LIBP2P_KAD_ROUTING_TABLE_IMPL_HPP
 
 #include <deque>
 
@@ -60,4 +60,4 @@ namespace libp2p::protocol::kademlia {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::kademlia, RoutingTableImpl::Error);
 
-#endif  // KAGOME_KAD_ROUTING_TABLE_IMPL_HPP
+#endif  // LIBP2P_KAD_ROUTING_TABLE_IMPL_HPP

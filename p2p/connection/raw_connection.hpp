@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_RAW_CONNECTION_HPP
-#define KAGOME_RAW_CONNECTION_HPP
+#ifndef LIBP2P_RAW_CONNECTION_HPP
+#define LIBP2P_RAW_CONNECTION_HPP
 
 #include "basic/readwritecloser.hpp"
 #include "multi/multiaddress.hpp"
@@ -34,4 +34,4 @@ namespace libp2p::connection {
 
 }  // namespace libp2p::connection
 
-#endif  // KAGOME_RAW_CONNECTION_HPP
+#endif  // LIBP2P_RAW_CONNECTION_HPP

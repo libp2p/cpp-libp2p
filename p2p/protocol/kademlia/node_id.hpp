@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_KAD_NODE_ID_HPP
-#define KAGOME_KAD_NODE_ID_HPP
+#ifndef LIBP2P_KAD_NODE_ID_HPP
+#define LIBP2P_KAD_NODE_ID_HPP
 
 #include <bitset>
 #include <vector>
@@ -115,4 +115,4 @@ namespace libp2p::protocol::kademlia {
 
 }  // namespace libp2p::protocol::kademlia
 
-#endif  // KAGOME_KAD_NODE_ID_HPP
+#endif  // LIBP2P_KAD_NODE_ID_HPP

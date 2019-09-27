@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_RANDOM_GENERATOR_MOCK_HPP
-#define KAGOME_RANDOM_GENERATOR_MOCK_HPP
+#ifndef LIBP2P_RANDOM_GENERATOR_MOCK_HPP
+#define LIBP2P_RANDOM_GENERATOR_MOCK_HPP
 
 #include "p2p/crypto/random_generator.hpp"
 
@@ -24,4 +24,4 @@ namespace libp2p::crypto::random {
   };
 }  // namespace libp2p::crypto::random
 
-#endif  // KAGOME_RANDOM_GENERATOR_MOCK_HPP
+#endif  // LIBP2P_RANDOM_GENERATOR_MOCK_HPP

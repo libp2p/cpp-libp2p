@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MULTISELECT_IMPL_HPP
-#define KAGOME_MULTISELECT_IMPL_HPP
+#ifndef LIBP2P_MULTISELECT_IMPL_HPP
+#define LIBP2P_MULTISELECT_IMPL_HPP
 
 #include <memory>
 #include <queue>
@@ -13,7 +13,7 @@
 
 #include <boost/core/noncopyable.hpp>
 #include <gsl/span>
-//#include "common/logger.hpp"
+#include "common/logger.hpp"
 #include "common/types.hpp"
 #include "protocol_muxer/multiselect/message_manager.hpp"
 #include "protocol_muxer/multiselect/message_reader.hpp"
@@ -114,8 +114,8 @@ namespace libp2p::protocol_muxer {
     std::queue<size_t> free_buffers_;
 
     // TODO(warchant): use logger interface here and inject it PRE-235
-//    kagome::common::Logger log_ = kagome::common::createLogger("multiselect");
+    libp2p::common::Logger log_ = libp2p::common::createLogger("multiselect");
   };
 }  // namespace libp2p::protocol_muxer
 
-#endif  // KAGOME_MULTISELECT_IMPL_HPP
+#endif  // LIBP2P_MULTISELECT_IMPL_HPP

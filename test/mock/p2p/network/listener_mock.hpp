@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_LISTENER_MOCK_HPP
-#define KAGOME_LISTENER_MOCK_HPP
+#ifndef LIBP2P_LISTENER_MOCK_HPP
+#define LIBP2P_LISTENER_MOCK_HPP
 
 #include "p2p/network/listener_manager.hpp"
 
@@ -46,4 +46,4 @@ namespace libp2p::network {
   };
 }  // namespace libp2p::network
 
-#endif  // KAGOME_LISTENER_MOCK_HPP
+#endif  // LIBP2P_LISTENER_MOCK_HPP

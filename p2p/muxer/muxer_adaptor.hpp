@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_MUXER_ADAPTOR_HPP
-#define KAGOME_MUXER_ADAPTOR_HPP
+#ifndef LIBP2P_MUXER_ADAPTOR_HPP
+#define LIBP2P_MUXER_ADAPTOR_HPP
 
 #include <memory>
 
@@ -34,4 +34,4 @@ namespace libp2p::muxer {
   };
 }  // namespace libp2p::muxer
 
-#endif  // KAGOME_MUXER_ADAPTOR_HPP
+#endif  // LIBP2P_MUXER_ADAPTOR_HPP

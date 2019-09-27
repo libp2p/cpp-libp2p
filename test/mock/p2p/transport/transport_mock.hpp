@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_TRANSPORT_MOCK_HPP
-#define KAGOME_TRANSPORT_MOCK_HPP
+#ifndef LIBP2P_TRANSPORT_MOCK_HPP
+#define LIBP2P_TRANSPORT_MOCK_HPP
 
 #include <gmock/gmock.h>
 #include "p2p/transport/transport_adaptor.hpp"
@@ -27,4 +27,4 @@ namespace libp2p::transport {
   };
 }  // namespace libp2p::transport
 
-#endif  // KAGOME_TRANSPORT_MOCK_HPP
+#endif  // LIBP2P_TRANSPORT_MOCK_HPP
