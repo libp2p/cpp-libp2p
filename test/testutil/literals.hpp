@@ -12,13 +12,6 @@
 #include "p2p/multi/multihash.hpp"
 #include "p2p/peer/peer_id.hpp"
 
-/// creates a buffer filled with characters from the original string
-/// mind that it does not perform unhexing, there is ""_unhex for it
-//inline kagome::common::Buffer operator"" _buf(const char *c, size_t s) {
-//  std::vector<uint8_t> chars(c, c + s);
-//  return kagome::common::Buffer(std::move(chars));
-//}
-
 inline libp2p::common::Hash256 operator"" _hash256(const char *c, size_t s) {
   libp2p::common::Hash256 hash{};
   std::copy_n(c, std::min(s, 32ul), hash.rbegin());
@@ -29,10 +22,6 @@ inline std::vector<uint8_t> operator"" _v(const char *c, size_t s) {
   std::vector<uint8_t> chars(c, c + s);
   return chars;
 }
-
-//inline kagome::common::Buffer operator"" _hex2buf(const char *c, size_t s) {
-//  return kagome::common::Buffer::fromHex(std::string_view(c, s)).value();
-//}
 
 inline std::vector<uint8_t> operator""_unhex(const char *c, size_t s) {
   return libp2p::common::unhex(std::string_view(c, s)).value();
