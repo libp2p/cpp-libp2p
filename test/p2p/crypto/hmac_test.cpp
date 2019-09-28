@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "p2p/crypto/hmac_provider/hmac_provider_impl.hpp"
+#include "libp2p/crypto/hmac_provider/hmac_provider_impl.hpp"
 
 #include <gtest/gtest.h>
 #include <outcome/outcome.hpp>
 #include "common/types.hpp"
-#include "p2p/crypto/common.hpp"
-#include "p2p/crypto/error.hpp"
+#include "libp2p/crypto/common.hpp"
+#include "libp2p/crypto/error.hpp"
 #include "testutil/literals.hpp"
 
 using libp2p::common::ByteArray;

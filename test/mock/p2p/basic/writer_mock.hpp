@@ -7,7 +7,7 @@
 #define LIBP2P_WRITER_MOCK_HPP
 
 #include <gmock/gmock.h>
-#include "p2p/basic/writer.hpp"
+#include "include/libp2p/basic/writer.hpp"
 
 namespace libp2p::basic {
   class WriterMock : public Writer {

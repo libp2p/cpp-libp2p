@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "p2p/host/basic_host/basic_host.hpp"
+#include "libp2p/host/basic_host/basic_host.hpp"
 
 #include <gtest/gtest.h>
 

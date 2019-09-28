@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <gmock/gmock.h>
-#include "p2p/host/host.hpp"
+#include "libp2p/host/host.hpp"
 
 namespace libp2p {
   class HostMock : public Host {

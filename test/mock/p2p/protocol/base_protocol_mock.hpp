@@ -7,7 +7,7 @@
 #define LIBP2P_BASE_PROTOCOL_MOCK_HPP
 
 #include <gmock/gmock.h>
-#include "p2p/protocol/base_protocol.hpp"
+#include "libp2p/protocol/base_protocol.hpp"
 
 namespace libp2p::protocol {
 

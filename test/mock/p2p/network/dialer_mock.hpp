@@ -7,7 +7,7 @@
 #define LIBP2P_DIALER_MOCK_HPP
 
 #include <gmock/gmock.h>
-#include "p2p/network/dialer.hpp"
+#include "libp2p/network/dialer.hpp"
 
 namespace libp2p::network {
 

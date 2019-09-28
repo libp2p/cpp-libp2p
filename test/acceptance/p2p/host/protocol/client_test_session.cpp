@@ -6,7 +6,7 @@
 
 #include <gtest/gtest.h>
 #include <boost/assert.hpp>
-#include "p2p/crypto/random_generator/boost_generator.hpp"
+#include "libp2p/crypto/random_generator/boost_generator.hpp"
 
 namespace libp2p::protocol {
 

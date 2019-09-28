@@ -7,8 +7,8 @@
 #define LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP
 
 #include <gmock/gmock.h>
-#include "p2p/security/plaintext/exchange_message.hpp"
-#include "p2p/security/plaintext/exchange_message_marshaller.hpp"
+#include "libp2p/security/plaintext/exchange_message.hpp"
+#include "libp2p/security/plaintext/exchange_message_marshaller.hpp"
 
 namespace libp2p::security::plaintext {
   class ExchangeMessageMarshallerMock : public ExchangeMessageMarshaller {

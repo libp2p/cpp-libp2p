@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "p2p/crypto/key_generator/key_generator_impl.hpp"
+#include "libp2p/crypto/key_generator/key_generator_impl.hpp"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 #include <gsl/gsl_util>
-#include "p2p/crypto/error.hpp"
-#include "p2p/crypto/random_generator/boost_generator.hpp"
+#include "libp2p/crypto/error.hpp"
+#include "libp2p/crypto/random_generator/boost_generator.hpp"
 #include "testutil/outcome.hpp"
 
 using libp2p::common::ByteArray;

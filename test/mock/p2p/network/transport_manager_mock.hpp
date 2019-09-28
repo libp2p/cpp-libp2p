@@ -8,7 +8,7 @@
 
 #include <gmock/gmock.h>
 
-#include "p2p/network/transport_manager.hpp"
+#include "libp2p/network/transport_manager.hpp"
 
 namespace libp2p::network {
 

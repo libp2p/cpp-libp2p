@@ -7,7 +7,7 @@
 #define LIBP2P_SECURE_CONNECTION_MOCK_HPP
 
 #include <gmock/gmock.h>
-#include "p2p/connection/secure_connection.hpp"
+#include "libp2p/connection/secure_connection.hpp"
 
 namespace libp2p::connection {
   class SecureConnectionMock : public SecureConnection {

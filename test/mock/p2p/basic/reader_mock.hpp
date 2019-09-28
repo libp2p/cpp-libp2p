@@ -8,7 +8,7 @@
 
 #include <gmock/gmock.h>
 #include "common/hexutil.hpp"
-#include "p2p/basic/reader.hpp"
+#include "include/libp2p/basic/reader.hpp"
 
 namespace libp2p::basic {
   class ReaderMock : public Reader {

@@ -8,8 +8,8 @@
 
 #include <vector>
 
-#include "p2p/connection/stream.hpp"
-#include "p2p/crypto/random_generator.hpp"
+#include "libp2p/connection/stream.hpp"
+#include "libp2p/crypto/random_generator.hpp"
 
 namespace libp2p::protocol {
 

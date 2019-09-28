@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "p2p/basic/message_read_writer.hpp"
+#include "include/libp2p/basic/message_read_writer.hpp"
 
 #include <gtest/gtest.h>
 #include "mock/p2p/connection/raw_connection_mock.hpp"
-#include "p2p/basic/protobuf_message_read_writer.hpp"
-#include "p2p/multi/uvarint.hpp"
+#include "include/libp2p/basic/protobuf_message_read_writer.hpp"
+#include "libp2p/multi/uvarint.hpp"
 #include "testutil/gmock_actions.hpp"
 
 using namespace libp2p;

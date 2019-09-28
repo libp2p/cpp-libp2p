@@ -6,9 +6,9 @@
 #ifndef LIBP2P_TESTUTIL_PEER_HPP
 #define LIBP2P_TESTUTIL_PEER_HPP
 
-#include "p2p/crypto/key.hpp"
-#include "p2p/multi/multihash.hpp"
-#include "p2p/peer/peer_id.hpp"
+#include "libp2p/crypto/key.hpp"
+#include "libp2p/multi/multihash.hpp"
+#include "libp2p/peer/peer_id.hpp"
 
 namespace testutil {
 

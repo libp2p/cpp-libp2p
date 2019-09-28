@@ -6,7 +6,7 @@
 #ifndef LIBP2P_ROUTER_MOCK_HPP
 #define LIBP2P_ROUTER_MOCK_HPP
 
-#include "p2p/network/router.hpp"
+#include "libp2p/network/router.hpp"
 
 #include <gmock/gmock.h>
 

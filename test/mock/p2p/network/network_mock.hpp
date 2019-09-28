@@ -6,7 +6,7 @@
 #ifndef LIBP2P_NETWORK_MOCK_HPP
 #define LIBP2P_NETWORK_MOCK_HPP
 
-#include "p2p/network/network.hpp"
+#include "libp2p/network/network.hpp"
 
 #include <gmock/gmock.h>
 

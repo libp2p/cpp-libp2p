@@ -5,8 +5,8 @@
 
 #include <gtest/gtest.h>
 #include <outcome/outcome.hpp>
-#include "p2p/crypto/common.hpp"
-#include "p2p/crypto/key.hpp"
+#include "libp2p/crypto/common.hpp"
+#include "libp2p/crypto/key.hpp"
 
 using namespace libp2p::crypto;
 

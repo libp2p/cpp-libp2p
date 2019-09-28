@@ -6,7 +6,7 @@
 #ifndef LIBP2P_READ_WRITER_MOCK_HPP
 #define LIBP2P_READ_WRITER_MOCK_HPP
 
-#include "p2p/basic/readwriter.hpp"
+#include "include/libp2p/basic/readwriter.hpp"
 
 #include <gmock/gmock.h>
 

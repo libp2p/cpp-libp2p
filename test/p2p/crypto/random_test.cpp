@@ -6,7 +6,6 @@
 #include "libp2p/crypto/random_generator/boost_generator.hpp"
 
 #include <gsl/span>
-
 #include <gtest/gtest.h>
 
 using libp2p::crypto::random::BoostRandomGenerator;

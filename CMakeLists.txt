@@ -109,7 +109,7 @@ add_subdirectory(deps)
 
 include_directories(
     # project includes
-    ${PROJECT_SOURCE_DIR}/p2p
+    ${PROJECT_SOURCE_DIR}/include
 )
 
 include_directories(
@@ -122,7 +122,7 @@ include_directories(
     deps/spdlog/include
 )
 
-add_subdirectory(p2p)
+add_subdirectory(src)
 
 include(GNUInstallDirs)
 

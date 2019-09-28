@@ -8,7 +8,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "p2p/crypto/key_validator.hpp"
+#include "libp2p/crypto/key_validator.hpp"
 
 namespace libp2p::crypto::validator {
 

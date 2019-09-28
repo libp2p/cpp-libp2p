@@ -7,7 +7,7 @@
 #define LIBP2P_TRANSPORT_LISTENER_MOCK_HPP
 
 #include <gmock/gmock.h>
-#include "p2p/transport/transport_listener.hpp"
+#include "libp2p/transport/transport_listener.hpp"
 
 namespace libp2p::transport {
 

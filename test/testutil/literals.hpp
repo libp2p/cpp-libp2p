@@ -6,11 +6,11 @@
 #ifndef LIBP2P_TEST_TESTUTIL_LITERALS_HPP_
 #define LIBP2P_TEST_TESTUTIL_LITERALS_HPP_
 
-#include "p2p/common/types.hpp"
-#include "p2p/common/hexutil.hpp"
-#include "p2p/multi/multiaddress.hpp"
-#include "p2p/multi/multihash.hpp"
-#include "p2p/peer/peer_id.hpp"
+#include "libp2p/common/types.hpp"
+#include "libp2p/common/hexutil.hpp"
+#include "libp2p/multi/multiaddress.hpp"
+#include "libp2p/multi/multihash.hpp"
+#include "libp2p/peer/peer_id.hpp"
 
 inline libp2p::common::Hash256 operator"" _hash256(const char *c, size_t s) {
   libp2p::common::Hash256 hash{};

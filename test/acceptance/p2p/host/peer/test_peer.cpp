@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include "acceptance/p2p/host/peer/tick_counter.hpp"
 #include "acceptance/p2p/host/protocol/client_test_session.hpp"
-#include "p2p/security/plaintext/exchange_message_marshaller_impl.hpp"
+#include "libp2p/security/plaintext/exchange_message_marshaller_impl.hpp"
 
 Peer::Peer(Peer::Duration timeout)
     : muxed_config_{1024576, 1000},

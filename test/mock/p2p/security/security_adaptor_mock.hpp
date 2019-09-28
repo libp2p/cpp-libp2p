@@ -7,7 +7,7 @@
 #define LIBP2P_SECURITY_ADAPTOR_MOCK_HPP
 
 #include <gmock/gmock.h>
-#include "p2p/security/security_adaptor.hpp"
+#include "libp2p/security/security_adaptor.hpp"
 
 namespace libp2p::security {
   struct SecurityAdaptorMock : public SecurityAdaptor {

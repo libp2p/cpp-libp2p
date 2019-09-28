@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <gmock/gmock.h>
-#include "p2p/network/connection_manager.hpp"
+#include "libp2p/network/connection_manager.hpp"
 
 namespace libp2p::network {
 

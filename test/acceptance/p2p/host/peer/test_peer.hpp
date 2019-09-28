@@ -9,8 +9,8 @@
 #include <future>
 #include <thread>
 
-#include "p2p/injector/host_injector.hpp"
-#include "p2p/protocol/echo.hpp"
+#include "libp2p/injector/host_injector.hpp"
+#include "libp2p/protocol/echo.hpp"
 #include "testutil/clock/impl/clock_impl.hpp"
 #include "testutil/outcome.hpp"
 
