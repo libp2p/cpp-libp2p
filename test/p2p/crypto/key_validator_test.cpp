@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/crypto/key_validator/key_validator_impl.hpp"
+#include "p2p/crypto/key_validator/key_validator_impl.hpp"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "libp2p/crypto/key_generator/key_generator_impl.hpp"
-#include "libp2p/crypto/key_validator/key_validator_impl.hpp"
-#include "libp2p/crypto/random_generator/boost_generator.hpp"
+#include "p2p/crypto/key_generator/key_generator_impl.hpp"
+#include "p2p/crypto/key_validator/key_validator_impl.hpp"
+#include "p2p/crypto/random_generator/boost_generator.hpp"
 #include "testutil/outcome.hpp"
 
 using ::testing::_;

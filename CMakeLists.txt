@@ -170,6 +170,7 @@ libp2p_install(
     keys_proto
     plaintext_protobuf
     logger
+    sha
 )
 
 include(CMakePackageConfigHelpers)
@@ -188,4 +189,4 @@ install(FILES
 export(PACKAGE libp2p)
 
 enable_testing()
-#add_subdirectory(test)
+add_subdirectory(test)

@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/security/plaintext/plaintext_connection.hpp"
+#include "p2p/security/plaintext/plaintext_connection.hpp"
 
 #include <gtest/gtest.h>
 #include <testutil/outcome.hpp>
-#include "mock/libp2p/connection/raw_connection_mock.hpp"
+#include "mock/p2p/connection/raw_connection_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/literals.hpp"
 

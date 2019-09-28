@@ -9,7 +9,6 @@ addtest(router_test
 target_link_libraries(router_test
     libp2p_router
     multiaddress
-    buffer
     libp2p_peer_id
     )
 

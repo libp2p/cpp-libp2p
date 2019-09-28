@@ -12,5 +12,4 @@ target_link_libraries(message_read_writer_test
     message_read_writer_error
     uvarint
     outcome
-    buffer
     )

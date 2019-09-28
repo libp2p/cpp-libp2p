@@ -5,10 +5,10 @@
 
 #include "libp2p/crypto/random_generator/boost_generator.hpp"
 
-#include <gtest/gtest.h>
-#include "common/buffer.hpp"
+#include <gsl/span>
 
-using kagome::common::Buffer;
+#include <gtest/gtest.h>
+
 using libp2p::crypto::random::BoostRandomGenerator;
 using libp2p::crypto::random::RandomGenerator;
 

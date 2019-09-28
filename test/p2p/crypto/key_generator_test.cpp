@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/crypto/key_generator/key_generator_impl.hpp"
+#include "p2p/crypto/key_generator/key_generator_impl.hpp"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 #include <gsl/gsl_util>
-#include "libp2p/crypto/error.hpp"
-#include "libp2p/crypto/random_generator/boost_generator.hpp"
+#include "p2p/crypto/error.hpp"
+#include "p2p/crypto/random_generator/boost_generator.hpp"
 #include "testutil/outcome.hpp"
 
-using kagome::common::Buffer;
+using libp2p::common::ByteArray;
 using libp2p::crypto::Key;
 using libp2p::crypto::KeyGeneratorError;
 using libp2p::crypto::KeyGeneratorImpl;
@@ -87,7 +87,8 @@ INSTANTIATE_TEST_CASE_P(
                       std::tuple(Key::Type::SECP256K1, 32, 33)));
 
 /**
- * @given key generator and tuple of <key type, private key length, public key length>
+ * @given key generator and tuple of <key type, private key length, public key
+ * length>
  * @when key pair is generated
  * @then public and private key lengths are equal to those in parameters
  */

@@ -30,7 +30,8 @@ target_link_libraries(libp2p_peer_id
     outcome
     multihash
     multibase_codec
-    hasher
+    sha
+#    hasher
     )
 
 add_library(libp2p_peer_address

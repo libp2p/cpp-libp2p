@@ -5,11 +5,12 @@
 
 add_subdirectory(aes_provider)
 add_subdirectory(hmac_provider)
+add_subdirectory(key_generator)
 add_subdirectory(key_marshaller)
+add_subdirectory(key_validator)
 add_subdirectory(protobuf)
 add_subdirectory(random_generator)
-add_subdirectory(key_generator)
-add_subdirectory(key_validator)
+add_subdirectory(sha)
 
 add_library(crypto_error
     error.hpp

@@ -3,21 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/host/basic_host/basic_host.hpp"
+#include "p2p/host/basic_host/basic_host.hpp"
 
 #include <chrono>
 #include <future>
 
 #include <gtest/gtest.h>
-#include "acceptance/libp2p/host/peer/test_peer.hpp"
-#include "acceptance/libp2p/host/peer/tick_counter.hpp"
+#include "acceptance/p2p/host/peer/test_peer.hpp"
+#include "acceptance/p2p/host/peer/tick_counter.hpp"
 #include "testutil/ma_generator.hpp"
 
 using namespace libp2p;
 
 using std::chrono_literals::operator""s;
 using std::chrono_literals::operator""ms;
-using Duration = kagome::clock::SteadyClockImpl::Duration;
+using Duration = libp2p::clock::SteadyClockImpl::Duration;
 
 /**
  * @brief host integration test configuration
@@ -60,11 +60,7 @@ struct HostIntegrationTest
  * @then all clients interact with all servers predefined number of times
  */
 TEST_P(HostIntegrationTest, InteractAllToAllSuccess) {
-  const auto [peer_count,
-              ping_times,
-              start_port,
-              timeout,
-              future_timeout,
+  const auto [peer_count, ping_times, start_port, timeout, future_timeout,
               system_timeout] = GetParam();
   const auto addr_prefix = "/ip4/127.0.0.1/tcp/";
   testutil::MultiaddressGenerator ma_generator(addr_prefix, start_port);
@@ -124,8 +120,7 @@ namespace {
   using Config = HostIntegrationTestConfig;
 }
 
-INSTANTIATE_TEST_CASE_P(AllTestCases,
-                        HostIntegrationTest,
+INSTANTIATE_TEST_CASE_P(AllTestCases, HostIntegrationTest,
                         ::testing::Values(
                             // ports are not freed, so new ports each time
                             Config{1u, 1u, 40510u, 2s, 2s, 200ms},

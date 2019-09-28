@@ -6,9 +6,6 @@
 addtest(keys_test
     keys_test.cpp
     )
-target_link_libraries(keys_test
-    buffer
-    )
 
 addtest(aes_test
     aes_test.cpp
@@ -22,6 +19,7 @@ addtest(hmac_test
     )
 target_link_libraries(hmac_test
     hmac_provider
+    testutil
     )
 
 addtest(random_test

@@ -5,11 +5,9 @@
 
 #include <gtest/gtest.h>
 #include <outcome/outcome.hpp>
-#include "common/buffer.hpp"
-#include "libp2p/crypto/common.hpp"
-#include "libp2p/crypto/key.hpp"
+#include "p2p/crypto/common.hpp"
+#include "p2p/crypto/key.hpp"
 
-using kagome::common::Buffer;
 using namespace libp2p::crypto;
 
 /**

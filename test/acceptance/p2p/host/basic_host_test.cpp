@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/host/basic_host/basic_host.hpp"
+#include "p2p/host/basic_host/basic_host.hpp"
 
 #include <gtest/gtest.h>
 
-#include "mock/libp2p/connection/stream_mock.hpp"
-#include "mock/libp2p/network/dialer_mock.hpp"
-#include "mock/libp2p/network/listener_mock.hpp"
-#include "mock/libp2p/network/network_mock.hpp"
-#include "mock/libp2p/peer/address_repository_mock.hpp"
-#include "mock/libp2p/peer/identity_manager_mock.hpp"
-#include "mock/libp2p/peer/peer_repository_mock.hpp"
+#include "mock/p2p/connection/stream_mock.hpp"
+#include "mock/p2p/network/dialer_mock.hpp"
+#include "mock/p2p/network/listener_mock.hpp"
+#include "mock/p2p/network/network_mock.hpp"
+#include "mock/p2p/peer/address_repository_mock.hpp"
+#include "mock/p2p/peer/identity_manager_mock.hpp"
+#include "mock/p2p/peer/peer_repository_mock.hpp"
 
 #include "testutil/gmock_actions.hpp"
 #include "testutil/literals.hpp"
@@ -78,12 +78,18 @@ TEST_F(BasicHostTest, GetId) {
  * @then peer's info is returned
  */
 TEST_F(BasicHostTest, GetPeerInfo) {
-  EXPECT_CALL(network, getListener()).Times(2).WillRepeatedly(ReturnRef(*listener));
+  EXPECT_CALL(network, getListener())
+      .Times(2)
+      .WillRepeatedly(ReturnRef(*listener));
   EXPECT_CALL(*idmgr, getId()).Times(2).WillRepeatedly(ReturnRef(id));
   EXPECT_CALL(repo, getAddressRepository()).WillOnce(ReturnRef(*addr_repo));
   EXPECT_CALL(*addr_repo, getAddresses(id)).WillOnce(Return(mas));
-  EXPECT_CALL(*listener, getListenAddresses()).Times(1).WillRepeatedly(Return(mas));
-  EXPECT_CALL(*listener, getListenAddressesInterfaces()).Times(1).WillRepeatedly(Return(mas));
+  EXPECT_CALL(*listener, getListenAddresses())
+      .Times(1)
+      .WillRepeatedly(Return(mas));
+  EXPECT_CALL(*listener, getListenAddressesInterfaces())
+      .Times(1)
+      .WillRepeatedly(Return(mas));
 
   auto pinfo = host->getPeerInfo();
   auto expected = peer::PeerInfo{id, mas};
@@ -151,4 +157,3 @@ TEST_F(BasicHostTest, NewStream) {
 
   ASSERT_TRUE(executed);
 }
-

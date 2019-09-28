@@ -9,9 +9,9 @@
 #include <future>
 #include <thread>
 
-#include "clock/impl/clock_impl.hpp"
-#include "libp2p/injector/host_injector.hpp"
-#include "libp2p/protocol/echo.hpp"
+#include "p2p/injector/host_injector.hpp"
+#include "p2p/protocol/echo.hpp"
+#include "testutil/clock/impl/clock_impl.hpp"
 #include "testutil/outcome.hpp"
 
 using namespace libp2p;
@@ -30,7 +30,7 @@ class Peer {
   using Stream = connection::Stream;
 
  public:
-  using Duration = kagome::clock::SteadyClockImpl::Duration;
+  using Duration = libp2p::clock::SteadyClockImpl::Duration;
 
   /**
    * @brief constructs peer
@@ -52,8 +52,7 @@ class Peer {
    * @param message_count number of messages to send
    * @param tester object for testing purposes
    */
-  void startClient(const peer::PeerInfo &pinfo,
-                   size_t message_count,
+  void startClient(const peer::PeerInfo &pinfo, size_t message_count,
                    sptr<TickCounter> tester);
 
   /**

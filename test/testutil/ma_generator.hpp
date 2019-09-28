@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "libp2p/multi/multiaddress.hpp"
+#include "p2p/multi/multiaddress.hpp"
 #include "testutil/outcome.hpp"
 
 namespace testutil {

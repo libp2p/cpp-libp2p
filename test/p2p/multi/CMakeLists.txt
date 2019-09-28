@@ -25,7 +25,6 @@ addtest(multiaddress_test
     )
 target_link_libraries(multiaddress_test
     multiaddress
-    buffer
     )
 
 addtest(multibase_codec_test

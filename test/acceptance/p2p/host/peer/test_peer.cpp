@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "acceptance/libp2p/host/peer/test_peer.hpp"
+#include "acceptance/p2p/host/peer/test_peer.hpp"
 
 #include <gtest/gtest.h>
-#include "acceptance/libp2p/host/peer/tick_counter.hpp"
-#include "acceptance/libp2p/host/protocol/client_test_session.hpp"
-#include "libp2p/security/plaintext/exchange_message_marshaller_impl.hpp"
+#include "acceptance/p2p/host/peer/tick_counter.hpp"
+#include "acceptance/p2p/host/protocol/client_test_session.hpp"
+#include "p2p/security/plaintext/exchange_message_marshaller_impl.hpp"
 
 Peer::Peer(Peer::Duration timeout)
     : muxed_config_{1024576, 1000},
@@ -20,8 +20,7 @@ Peer::Peer(Peer::Duration timeout)
       key_generator_{
           std::make_shared<crypto::KeyGeneratorImpl>(*random_provider_)} {
   EXPECT_OUTCOME_TRUE_MSG(
-      keys,
-      key_generator_->generateKeys(crypto::Key::Type::ED25519),
+      keys, key_generator_->generateKeys(crypto::Key::Type::ED25519),
       "failed to generate keys");
 
   host_ = makeHost(std::move(keys));
@@ -43,39 +42,31 @@ void Peer::startServer(const multi::Multiaddress &address,
   thread_ = std::thread([this] { context_->run_for(timeout_); });
 }
 
-void Peer::startClient(const peer::PeerInfo &pinfo,
-                       size_t message_count,
+void Peer::startClient(const peer::PeerInfo &pinfo, size_t message_count,
                        Peer::sptr<TickCounter> counter) {
-  context_->post([this,
-                  server_id = pinfo.id.toBase58(),
-                  pinfo,
-                  message_count,
+  context_->post([this, server_id = pinfo.id.toBase58(), pinfo, message_count,
                   counter = std::move(counter)]() mutable {
     this->host_->newStream(
-        pinfo,
-        echo_->getProtocolId(),
-        [server_id = std::move(server_id),
-         ping_times = message_count,
+        pinfo, echo_->getProtocolId(),
+        [server_id = std::move(server_id), ping_times = message_count,
          counter = std::move(counter)](
             outcome::result<sptr<Stream>> rstream) mutable {
           // get stream
-          EXPECT_OUTCOME_TRUE_MSG(
-              stream, rstream, "failed to connect to server: " + server_id);
+          EXPECT_OUTCOME_TRUE_MSG(stream, rstream,
+                                  "failed to connect to server: " + server_id);
           // make client session
           auto client =
               std::make_shared<protocol::ClientTestSession>(stream, ping_times);
           // handle session
           client->handle(
-              [server_id = std::move(server_id),
-               client,
+              [server_id = std::move(server_id), client,
                counter = std::move(counter)](
                   outcome::result<std::vector<uint8_t>> res) mutable {
                 // count message exchange
                 counter->tick();
                 // ensure message returned
                 EXPECT_OUTCOME_TRUE_MSG(
-                    vec,
-                    res,
+                    vec, res,
                     "failed to receive response from server: " + server_id);
                 // ensure message is correct
                 ASSERT_EQ(vec.size(), client->bufferSize());  // NOLINT
@@ -145,6 +136,6 @@ Peer::sptr<host::BasicHost> Peer::makeHost(crypto::KeyPair keyPair) {
   auto peer_repo = std::make_unique<peer::PeerRepositoryImpl>(
       std::move(addr_repo), std::move(key_repo), std::move(protocol_repo));
 
-  return std::make_shared<host::BasicHost>(
-      idmgr, std::move(network), std::move(peer_repo));
+  return std::make_shared<host::BasicHost>(idmgr, std::move(network),
+                                           std::move(peer_repo));
 }

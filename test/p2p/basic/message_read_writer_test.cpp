@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/basic/message_read_writer.hpp"
+#include "p2p/basic/message_read_writer.hpp"
 
 #include <gtest/gtest.h>
-#include "libp2p/basic/protobuf_message_read_writer.hpp"
-#include "libp2p/multi/uvarint.hpp"
-#include "mock/libp2p/connection/raw_connection_mock.hpp"
+#include "mock/p2p/connection/raw_connection_mock.hpp"
+#include "p2p/basic/protobuf_message_read_writer.hpp"
+#include "p2p/multi/uvarint.hpp"
 #include "testutil/gmock_actions.hpp"
 
 using namespace libp2p;
@@ -16,7 +16,7 @@ using namespace basic;
 using namespace connection;
 using namespace multi;
 
-using kagome::common::Buffer;
+using libp2p::common::ByteArray;
 using testing::_;
 using testing::Return;
 
@@ -31,10 +31,13 @@ class MessageReadWriterTest : public testing::Test {
   static constexpr uint64_t kMsgLength = 4;
   UVarint len_varint_ = UVarint{kMsgLength};
 
-  Buffer msg_bytes_{0x11, 0x22, 0x33, 0x44};
+  ByteArray msg_bytes_{0x11, 0x22, 0x33, 0x44};
 
-  Buffer msg_with_varint_bytes_ =
-      Buffer{}.put(len_varint_.toBytes()).put(msg_bytes_);
+  ByteArray msg_with_varint_bytes_ = [this]() -> ByteArray {
+    ByteArray buffer = len_varint_.toVector();
+    buffer.insert(buffer.cend(), msg_bytes_.begin(), msg_bytes_.end());
+    return buffer;
+  }();
 
   bool operation_completed_ = false;
 };
@@ -53,7 +56,7 @@ TEST_F(MessageReadWriterTest, Read) {
 
   msg_rw_->read([this](auto &&res) {
     ASSERT_TRUE(res);
-    ASSERT_EQ(*res.value(), msg_bytes_.toVector());
+    ASSERT_EQ(*res.value(), msg_bytes_);
     operation_completed_ = true;
   });
 
