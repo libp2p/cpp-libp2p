@@ -10,6 +10,7 @@
 #include <string>
 #include <utility>
 
+#include <boost/operators.hpp>
 #include <gsl/span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/hash_type.hpp>
@@ -22,9 +23,8 @@ namespace libp2p::multi {
    * outputs of different hash functions. More
    * https://github.com/multiformats/multihash
    */
-  class Multihash {
+  class Multihash : public boost::equality_comparable<Multihash> {
    public:
-    using Hash = common::ByteArray;
     using Buffer = common::ByteArray;
 
     static constexpr uint8_t kMaxHashLength = 127;
@@ -43,7 +43,8 @@ namespace libp2p::multi {
      * @param hash - binary buffer with the hash
      * @return result with the multihash in case of success
      */
-    static outcome::result<Multihash> create(HashType type, Hash hash);
+    static outcome::result<Multihash> create(HashType type,
+                                             gsl::span<const uint8_t> hash);
 
     /**
      * @brief Creates a multihash from a string, which represents a binary
@@ -74,7 +75,7 @@ namespace libp2p::multi {
     /**
      * @return the hash stored in this multihash
      */
-    const Hash &getHash() const;
+    const gsl::span<const uint8_t> getHash() const;
 
     /**
      * @return a string with hexadecimal representation of the multihash
@@ -103,14 +104,15 @@ namespace libp2p::multi {
      * @param type - the info about the hash type
      * @param hash - a binary buffer with the hash
      */
-    Multihash(HashType type, Hash hash);
+    Multihash(HashType type, gsl::span<const uint8_t> hash);
 
     /**
      * Contains a one byte hash type, a one byte hash length, and the stored
      * hash itself
      */
-    Buffer data_;
-    Hash hash_;
+    std::vector<uint8_t> data_;
+    // does not store hash itself, points on data_
+    gsl::span<const uint8_t> hash_;
     HashType type_;
   };
 
