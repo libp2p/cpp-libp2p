@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        toolchain: [gcc-8_cxx17.cmake, clang-8_cxx17.cmake]
+        toolchain: [gcc-7_cxx17.cmake, clang-6_cxx17.cmake]
     steps:
     - uses: actions/checkout@v1
       name: checkout
@@ -34,6 +34,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # has to be included to access other secrets
         GITHUB_HUNTER_USERNAME: ${{ secrets.GITHUB_HUNTER_USERNAME }}
         GITHUB_HUNTER_TOKEN: ${{ secrets.GITHUB_HUNTER_TOKEN }}
-      run: cmake . -GNinja -Bbuild -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/${{ matrix.toolchain }}}
+      run: cmake . -GNinja -Bbuild -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/${{ matrix.toolchain }}
     - name: build
       run: cmake --build build -- -j4
