@@ -6,7 +6,7 @@ version: '3'
 
 services:
   dev:
-    image: warchantua/dev-essential
+    image: soramitsu/kagome-dev:8
     tty: true
     stdin_open: true
     volumes:

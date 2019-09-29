@@ -1,0 +1,33 @@
+name: CI
+
+on: 
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  build:
+    container:
+      image: soramitsu/kagome-dev:8
+      env:
+        TOOLCHAIN: cmake/toolchain/gcc-8_cxx17.cmake
+        BUILD_DIR: /tmp/build
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+      name: checkout
+      with:
+        submodules: true
+        clean: true
+        fetch-depth: 1
+    - name: cmake
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # has to be included to access other secrets
+        GITHUB_HUNTER_USERNAME: ${{ secrets.GITHUB_HUNTER_USERNAME }}
+        GITHUB_HUNTER_TOKEN: ${{ secrets.GITHUB_HUNTER_TOKEN }}
+      run: cmake . -B${BUILD_DIR} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN}
+    - name: build
+      run: cmake --build ${BUILD_DIR} -- -j4

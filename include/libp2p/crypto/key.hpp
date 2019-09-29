@@ -6,6 +6,8 @@
 #ifndef LIBP2P_LIBP2P_CRYPTO_KEY_HPP
 #define LIBP2P_LIBP2P_CRYPTO_KEY_HPP
 
+#include <functional>
+
 #include <libp2p/common/types.hpp>
 
 namespace libp2p::crypto {
