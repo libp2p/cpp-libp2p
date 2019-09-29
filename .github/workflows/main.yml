@@ -19,14 +19,13 @@ jobs:
     strategy:
       matrix:
         # 2 jobs in total
-        cc: [gcc, clang]
-        cxx: [g++, clang++]
-        exclude:
-          # exclude these builds
-          - cc: gcc
-            cxx: clang++
-          - cc: clang
-            cxx: g++
+        compiler: [{
+          "cc": "gcc",
+          "cxx": "g++"
+         }, {
+          "cc": "clang",
+          "cxx": "clang++"
+        }]
     steps:
     - uses: actions/checkout@v1
       name: checkout
@@ -43,8 +42,8 @@ jobs:
         sudo pip3 install scikit-build cmake requests gitpython gcovr pyyaml
     - name: cmake
       env:
-        CC: ${{ matrix.cc }}
-        CXX: ${{ matrix.cxx }}
+        CC: ${{ matrix.compiler.cc }}
+        CXX: ${{ matrix.compiler.cxx }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # has to be included to access other secrets
         GITHUB_HUNTER_USERNAME: ${{ secrets.GITHUB_HUNTER_USERNAME }}
         GITHUB_HUNTER_TOKEN: ${{ secrets.GITHUB_HUNTER_TOKEN }}
