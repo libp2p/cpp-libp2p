@@ -91,7 +91,7 @@ class IdentifyDeltaTest : public testing::Test {
       std::make_shared<CapableConnectionMock>();
   std::shared_ptr<StreamMock> stream_ = std::make_shared<StreamMock>();
 
-  const std::string kIdentifyDeltaProtocol = "/libp2p/id/delta/1.0.0";
+  const std::string kIdentifyDeltaProtocol = "/p2p/id/delta/1.0.0";
   const PeerId kRemotePeerId = "xxxMyPeerIdxxx"_peerid;
   const PeerInfo kPeerInfo{
       kRemotePeerId,
