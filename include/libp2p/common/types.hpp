@@ -10,11 +10,23 @@
 #include <cstdint>
 #include <vector>
 
+#include <gsl/span>
+
 namespace libp2p::common {
   /**
    * Sequence of bytes
    */
   using ByteArray = std::vector<uint8_t>;
+
+  template <typename Collection, typename Item>
+  void append(Collection &c, Item &&g) {
+    c.insert(c.end(), g.begin(), g.end());
+  }
+
+  template <typename Collection>
+  void append(Collection& c, char g) {
+    c.push_back(g);
+  }
 
   /**
    * Hash256 as a sequence of 32 bytes
