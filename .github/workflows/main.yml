@@ -9,12 +9,7 @@ on:
     - master
 
 jobs:
-  build:
-#    container:
-#      image: soramitsu/kagome-dev:8
-#      env:
-#        TOOLCHAIN: cmake/toolchain/${{ matrix.toolchain }}
-#        BUILD_DIR: /tmp/build
+  build-linux:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
@@ -26,6 +21,7 @@ jobs:
           "cc": "clang",
           "cxx": "clang++"
         }]
+        os: [ubuntu-18.04, macOS-10.14]
     steps:
     - uses: actions/checkout@v1
       name: checkout
@@ -36,6 +32,7 @@ jobs:
     - name: install dependencies
       run: |
         set -e
+        printenv
         sudo apt-get update
         sudo apt-get install -y ninja-build
         sudo python3 -m pip install --upgrade pip
