@@ -10,7 +10,6 @@
 #include <string>
 #include <utility>
 
-#include <boost/operators.hpp>
 #include <gsl/span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/hash_type.hpp>
@@ -23,7 +22,7 @@ namespace libp2p::multi {
    * outputs of different hash functions. More
    * https://github.com/multiformats/multihash
    */
-  class Multihash : public boost::equality_comparable<Multihash> {
+  class Multihash {
    public:
     using Buffer = common::ByteArray;
 

@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(aes_provider
+add_library(p2p_aes_provider
     aes_provider_impl.cpp
     )
 
-target_link_libraries(aes_provider
-    crypto_error
+target_link_libraries(p2p_aes_provider
+    p2p_crypto_error
     OpenSSL::Crypto
     )

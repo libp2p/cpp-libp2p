@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(key_validator
+add_library(p2p_key_validator
     key_validator_impl.cpp
     )
-target_link_libraries(key_validator
-    key_generator
-    crypto_error
+target_link_libraries(p2p_key_validator
+    p2p_key_generator
+    p2p_crypto_error
     OpenSSL::Crypto
     )

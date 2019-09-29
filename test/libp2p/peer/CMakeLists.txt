@@ -7,14 +7,14 @@ addtest(peer_id_test
     peer_id_test.cpp
     )
 target_link_libraries(peer_id_test
-    libp2p_peer_id
+    p2p_peer_id
     )
 
 addtest(peer_address_test
     peer_address_test.cpp
     )
 target_link_libraries(peer_address_test
-    libp2p_peer_address
+    p2p_peer_address
     )
 
 add_subdirectory(address_repository)

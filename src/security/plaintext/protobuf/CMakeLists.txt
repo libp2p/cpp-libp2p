@@ -3,6 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_proto_library(plaintext_protobuf
+add_proto_library(p2p_plaintext_protobuf
     plaintext.proto
     )

@@ -8,8 +8,8 @@ addtest(uvarint_test
     )
 
 target_link_libraries(uvarint_test
-    uvarint
-    hexutil
+    p2p_uvarint
+    p2p_hexutil
     )
 
 addtest(protocol_list_test
@@ -21,8 +21,8 @@ addtest(address_converter_test
     )
 
 target_link_libraries(address_converter_test
-    uvarint
-    converter_utils
+    p2p_uvarint
+    p2p_converter_utils
     )
 
 addtest(string_to_bytes_test
@@ -30,5 +30,5 @@ addtest(string_to_bytes_test
     )
 
 target_link_libraries(string_to_bytes_test
-    converter_utils
+    p2p_converter_utils
     )

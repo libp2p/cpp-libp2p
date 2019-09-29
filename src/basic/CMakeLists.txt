@@ -3,31 +3,31 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(varint_reader
+add_library(p2p_varint_reader
     varint_reader.cpp
     )
-target_link_libraries(varint_reader
-    uvarint
+target_link_libraries(p2p_varint_reader
+    p2p_uvarint
     )
 
-add_library(message_read_writer_error
+add_library(p2p_message_read_writer_error
     message_read_writer_error.cpp
     )
-target_link_libraries(message_read_writer_error
+target_link_libraries(p2p_message_read_writer_error
     outcome
     )
 
-add_library(message_read_writer
+add_library(p2p_message_read_writer
     message_read_writer.cpp
     )
-target_link_libraries(message_read_writer
-    message_read_writer_error
-    varint_reader
+target_link_libraries(p2p_message_read_writer
+    p2p_message_read_writer_error
+    p2p_varint_reader
     )
 
-add_library(protobuf_message_read_writer
+add_library(p2p_protobuf_message_read_writer
     protobuf_message_read_writer.cpp
     )
-target_link_libraries(protobuf_message_read_writer
-    message_read_writer
+target_link_libraries(p2p_protobuf_message_read_writer
+    p2p_message_read_writer
     )

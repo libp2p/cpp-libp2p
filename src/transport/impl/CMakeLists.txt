@@ -3,26 +3,26 @@
 
 
 
-add_library(libp2p_transport_parser
+add_library(p2p_transport_parser
     multiaddress_parser.cpp
     )
-target_link_libraries(libp2p_transport_parser
+target_link_libraries(p2p_transport_parser
     Boost::boost
-    multiaddress
+    p2p_multiaddress
     )
 
-add_library(libp2p_upgrader
+add_library(p2p_upgrader
     upgrader_impl.cpp
     )
-target_link_libraries(libp2p_upgrader
+target_link_libraries(p2p_upgrader
     outcome
     )
 
 
-add_library(libp2p_upgrader_session
+add_library(p2p_upgrader_session
     upgrader_session.cpp
     )
-target_link_libraries(libp2p_upgrader_session
+target_link_libraries(p2p_upgrader_session
     outcome
-    libp2p_upgrader
+    p2p_upgrader
     )

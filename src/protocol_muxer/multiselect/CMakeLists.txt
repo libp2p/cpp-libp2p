@@ -3,15 +3,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(multiselect
+add_library(p2p_multiselect
     multiselect.cpp
     message_manager.cpp
     message_reader.cpp
     message_writer.cpp
     multiselect_error.cpp
     )
-target_link_libraries(multiselect
-    uvarint
-    multihash
-    logger
+target_link_libraries(p2p_multiselect
+    p2p_uvarint
+    p2p_multihash
+    p2p_logger
     )

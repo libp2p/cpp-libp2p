@@ -5,7 +5,8 @@ add_library(testutil_peer
     peer.cpp
     )
 target_link_libraries(testutil_peer
-    libp2p_peer_id
+    p2p_peer_id
+    Microsoft.GSL::GSL
     )
 
 add_library(testutil_read_writer_helper
@@ -13,5 +14,5 @@ add_library(testutil_read_writer_helper
     message_read_writer_helper.hpp
     )
 target_link_libraries(testutil_read_writer_helper
-    uvarint
+    p2p_uvarint
     )
