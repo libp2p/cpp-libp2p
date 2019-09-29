@@ -21,11 +21,12 @@ jobs:
         # 2 jobs in total
         cc: [gcc, clang]
         cxx: [g++, clang++]
-        include:
+        exclude:
+          # exclude these builds
           - cc: gcc
-            cxx: g++
-          - cc: clang
             cxx: clang++
+          - cc: clang
+            cxx: g++
     steps:
     - uses: actions/checkout@v1
       name: checkout
