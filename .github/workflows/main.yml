@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-linux:
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         # 2 jobs in total
