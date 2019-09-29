@@ -55,3 +55,7 @@ jobs:
       run: cmake . -GNinja -Bbuild
     - name: build
       run: cmake --build build -- -j4
+    - name: test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+      run: cmake --build build --target test
