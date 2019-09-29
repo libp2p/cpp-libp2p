@@ -13,7 +13,10 @@
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol_muxer/multiselect/multiselect.hpp>
 #include <testutil/outcome.hpp>
+#include <testutil/printers.hpp>
 
+using namespace libp2p;
+using namespace common;
 using libp2p::common::ByteArray;
 using libp2p::multi::Multihash;
 using libp2p::multi::UVarint;
@@ -22,6 +25,17 @@ using libp2p::protocol_muxer::MessageManager;
 using libp2p::protocol_muxer::Multiselect;
 
 using MessageType = MessageManager::MultiselectMessage::MessageType;
+
+std::vector<uint8_t> encodeStringToMsg(std::string s) {
+  std::vector<uint8_t> v = UVarint{s.size() + 1}.toVector();
+  append(v, s);
+  append(v, '\n');
+  return v;
+}
+
+std::vector<uint8_t> operator""_msg(const char *c, size_t s) {
+  return encodeStringToMsg(std::string{c, c + s});
+}
 
 class MessageManagerTest : public ::testing::Test {
   static constexpr std::string_view kMultiselectHeaderProtocol =
@@ -37,68 +51,25 @@ class MessageManagerTest : public ::testing::Test {
   const ByteArray kOpeningMsg = []() -> ByteArray {
     ByteArray buffer =
         UVarint{kMultiselectHeaderProtocol.size() + 1}.toVector();
-    buffer.insert(buffer.end(), kMultiselectHeaderProtocol.begin(),
-                  kMultiselectHeaderProtocol.end());
-    buffer.push_back('\n');
+    append(buffer, kMultiselectHeaderProtocol);
+    append(buffer, '\n');
     return buffer;
   }();
 
-  const ByteArray kLsMsg = []() -> ByteArray {
-    ByteArray buffer = UVarint{3}.toVector();
-    std::string_view ls = "ls\n";
-    buffer.insert(buffer.end(), ls.begin(), ls.end());
-    return buffer;
-  }();
+  const ByteArray kLsMsg = "ls"_msg;
+  const ByteArray kNaMsg = "na"_msg;
 
-  const ByteArray kNaMsg = []() -> ByteArray {
-    ByteArray buffer = UVarint{3}.toVector();
-    std::string_view na = "na\n";
-    buffer.insert(buffer.end(), na.begin(), na.end());
-    return buffer;
-  }();
-
-  const ByteArray kProtocolMsg = [this]() -> ByteArray {
-    ByteArray buffer = UVarint{kDefaultProtocols[0].size() + 1}.toVector();
-    buffer.insert(buffer.end(), kDefaultProtocols[0].begin(),
-                  kDefaultProtocols[0].end());
-    buffer.push_back('\n');
-    return buffer;
-  }();
+  const ByteArray kProtocolMsg = encodeStringToMsg(kDefaultProtocols[0]);
 
   const ByteArray kProtocolsMsg = [this]() -> ByteArray {
     ByteArray buffer = UVarint{kProtocolsVarintsSize}.toVector();
-    {
-      auto &&tmp = UVarint{kProtocolsListBytesSize}.toVector();
-      buffer.insert(buffer.end(), tmp.begin(), tmp.end());
-    }
-    {
-      auto &&tmp = UVarint{kProtocolsNumber}.toVector();
-      buffer.insert(buffer.end(), tmp.begin(), tmp.end());
-    }
-    buffer.push_back('\n');
-    {
-      auto &&tmp = UVarint{kDefaultProtocols[0].size() + 1}.toVector();
-      buffer.insert(buffer.end(), tmp.begin(), tmp.end());
-    }
-    buffer.insert(buffer.end(), kDefaultProtocols[0].begin(),
-                  kDefaultProtocols[0].end());
-    buffer.push_back('\n');
+    append(buffer, UVarint{kProtocolsListBytesSize}.toVector());
+    append(buffer, UVarint{kProtocolsNumber}.toVector());
+    append(buffer, '\n');
 
-    {
-      auto &&tmp = UVarint{kDefaultProtocols[1].size() + 1}.toVector();
-      buffer.insert(buffer.end(), tmp.begin(), tmp.end());
+    for (auto &p : kDefaultProtocols) {
+      append(buffer, encodeStringToMsg(p));
     }
-    buffer.insert(buffer.end(), kDefaultProtocols[1].begin(),
-                  kDefaultProtocols[1].end());
-    buffer.push_back('\n');
-    {
-      auto &&tmp = UVarint{kDefaultProtocols[2].size() + 1}.toVector();
-      buffer.insert(buffer.end(), tmp.begin(), tmp.end());
-    }
-    buffer.insert(buffer.end(), kDefaultProtocols[2].begin(),
-                  kDefaultProtocols[2].end());
-    buffer.push_back('\n');
-
     return buffer;
   }();
 };

@@ -20,7 +20,6 @@ namespace libp2p::muxer {
      */
     explicit Yamux(MuxedConnectionConfig config);
 
-    // NOLINTNEXTLINE(modernize-use-nodiscard)
     peer::Protocol getProtocolId() const noexcept override;
 
     void muxConnection(std::shared_ptr<connection::SecureConnection> conn,

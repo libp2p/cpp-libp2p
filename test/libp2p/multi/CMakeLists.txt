@@ -13,12 +13,6 @@ target_link_libraries(multihash_test
     multihash
     )
 
-addtest(multistream_test
-    multistream_test.cpp
-    )
-target_link_libraries(multistream_test
-    multistream
-    )
 
 addtest(multiaddress_test
     multiaddress_test.cpp

@@ -8,6 +8,5 @@ target_link_libraries(libp2p_inmem_protocol_repository
     outcome
     libp2p_peer_errors
     multihash
-    multistream
     libp2p_peer_id
     )
