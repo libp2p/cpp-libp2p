@@ -14,7 +14,7 @@ add_library(p2p_message_read_writer_error
     message_read_writer_error.cpp
     )
 target_link_libraries(p2p_message_read_writer_error
-    outcome
+    Boost::boost
     )
 
 add_library(p2p_message_read_writer

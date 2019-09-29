@@ -6,7 +6,7 @@
 #include "libp2p/transport/impl/multiaddress_parser.hpp"
 
 #include <gtest/gtest.h>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include "testutil/outcome.hpp"
 #include "testutil/literals.hpp"
 

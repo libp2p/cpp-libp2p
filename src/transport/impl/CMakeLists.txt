@@ -15,7 +15,7 @@ add_library(p2p_upgrader
     upgrader_impl.cpp
     )
 target_link_libraries(p2p_upgrader
-    outcome
+    Boost::boost
     )
 
 
@@ -23,6 +23,6 @@ add_library(p2p_upgrader_session
     upgrader_session.cpp
     )
 target_link_libraries(p2p_upgrader_session
-    outcome
+    Boost::boost
     p2p_upgrader
     )

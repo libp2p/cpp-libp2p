@@ -6,7 +6,7 @@
 #ifndef LIBP2P_PEER_ERRORS_HPP
 #define LIBP2P_PEER_ERRORS_HPP
 
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::peer {
 

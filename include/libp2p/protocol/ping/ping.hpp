@@ -14,7 +14,7 @@
 #include <libp2p/host/host.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
 #include <libp2p/protocol/ping/ping_config.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto::random {
   class RandomGenerator;

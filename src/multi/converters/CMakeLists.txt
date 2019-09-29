@@ -17,7 +17,7 @@ add_library(p2p_conversion_error
     conversion_error.cpp
     )
 target_link_libraries(p2p_conversion_error
-    outcome
+    Boost::boost
     )
 
 add_library(p2p_converters
@@ -28,7 +28,7 @@ add_library(p2p_converters
     ipfs_converter.cpp
     )
 target_link_libraries(p2p_converters
-    outcome
+    Boost::boost
     p2p_hexutil
     p2p_uvarint
     p2p_multibase_codec

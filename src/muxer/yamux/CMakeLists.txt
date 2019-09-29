@@ -17,6 +17,6 @@ add_library(p2p_yamuxed_connection
     yamux_stream.cpp
     )
 target_link_libraries(p2p_yamuxed_connection
-    outcome
+    Boost::boost
     p2p_logger
     )

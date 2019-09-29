@@ -7,7 +7,7 @@ add_library(p2p_router
     router_impl.cpp
     )
 target_link_libraries(p2p_router
-    outcome
+    Boost::boost
     )
 
 
@@ -35,7 +35,7 @@ add_library(p2p_network
     network_impl.cpp
     )
 target_link_libraries(p2p_network
-    outcome
+    Boost::boost
     )
 
 add_library(p2p_transport_manager
@@ -49,5 +49,5 @@ add_library(p2p_connection_manager
     connection_manager_impl.cpp
     )
 target_link_libraries(p2p_connection_manager
-    outcome
+    Boost::boost
     )

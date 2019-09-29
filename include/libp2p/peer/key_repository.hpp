@@ -11,7 +11,7 @@
 
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/peer/peer_id.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::peer {
 

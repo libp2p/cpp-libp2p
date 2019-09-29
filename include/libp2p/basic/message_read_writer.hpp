@@ -11,7 +11,7 @@
 
 #include <gsl/span>
 #include <libp2p/basic/readwriter.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::basic {
   /**

@@ -19,14 +19,14 @@ add_library(p2p_peer_errors
     errors.cpp
     )
 target_link_libraries(p2p_peer_errors
-    outcome
+    Boost::boost
     )
 
 add_library(p2p_peer_id
     peer_id.cpp
     )
 target_link_libraries(p2p_peer_id
-    outcome
+    Boost::boost
     p2p_multihash
     p2p_multibase_codec
     p2p_sha
@@ -36,7 +36,7 @@ add_library(p2p_peer_address
     peer_address.cpp
     )
 target_link_libraries(p2p_peer_address
-    outcome
+    Boost::boost
     p2p_multiaddress
     p2p_multihash
     p2p_multibase_codec

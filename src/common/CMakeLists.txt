@@ -8,7 +8,6 @@ add_library(p2p_hexutil
     )
 target_link_libraries(p2p_hexutil
     Boost::boost
-    outcome
     )
 
 add_library(p2p_logger

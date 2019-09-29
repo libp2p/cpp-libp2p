@@ -10,7 +10,7 @@ add_library(p2p_uvarint
     uvarint.cpp
     )
 target_link_libraries(p2p_uvarint
-    outcome
+    Boost::boost
     p2p_hexutil
     )
 
@@ -22,7 +22,6 @@ target_link_libraries(p2p_multihash
     p2p_hexutil
     p2p_uvarint
     Boost::boost
-    Microsoft.GSL::GSL
     )
 
 
@@ -31,5 +30,5 @@ add_library(p2p_multiaddress
     )
 target_link_libraries(p2p_multiaddress
     p2p_converter_utils
-    outcome
+    Boost::boost
     )
