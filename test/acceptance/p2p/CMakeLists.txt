@@ -13,7 +13,7 @@ target_link_libraries(all_muxers_acceptance_test
     p2p_multiaddress
     p2p_plaintext
     p2p_tcp
-    testutil
+    p2p_testutil
     p2p_key_marshaller
     p2p_identity_manager
     )

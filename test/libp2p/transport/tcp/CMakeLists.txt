@@ -6,7 +6,7 @@ addtest(tcp_integration_test
     )
 target_link_libraries(tcp_integration_test
     p2p_tcp
-    testutil
+    p2p_testutil
     )
 
 

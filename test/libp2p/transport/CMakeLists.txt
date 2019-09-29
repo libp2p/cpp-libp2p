@@ -16,5 +16,5 @@ addtest(libp2p_upgrader_test
 target_link_libraries(libp2p_upgrader_test
     p2p_upgrader
     p2p_multihash
-    testutil
+    p2p_testutil
     )

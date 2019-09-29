@@ -12,7 +12,7 @@ addtest(aes_test
     )
 target_link_libraries(aes_test
     p2p_aes_provider
-    testutil
+    p2p_testutil
     )
 
 addtest(hmac_test
@@ -20,7 +20,7 @@ addtest(hmac_test
     )
 target_link_libraries(hmac_test
     p2p_hmac_provider
-    testutil
+    p2p_testutil
     )
 
 addtest(random_test

@@ -20,5 +20,5 @@ target_link_libraries(multiselect_test
     p2p_yamux
     p2p_tcp
     p2p_plaintext
-    testutil_peer
+    p2p_testutil_peer
     )

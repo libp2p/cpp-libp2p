@@ -17,7 +17,7 @@ addtest(host_integration_test
     host_integration_test.cpp
     )
 target_link_libraries(host_integration_test
-    client_test_session
+    p2p_client_test_session
     p2p_default_network
     p2p_basic_host
     p2p_peer_repository
@@ -26,7 +26,7 @@ target_link_libraries(host_integration_test
     p2p_inmem_protocol_repository
     p2p_protocol_echo
     p2p_multiaddress
-    test_peer
-    testutil
-    testutil_peer
+    p2p_test_peer
+    p2p_testutil
+    p2p_testutil_peer
     )
