@@ -10,8 +10,6 @@
 #include <cstdint>
 #include <vector>
 
-#include <gsl/span>
-
 namespace libp2p::common {
   /**
    * Sequence of bytes

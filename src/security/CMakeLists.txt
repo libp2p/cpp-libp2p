@@ -5,9 +5,9 @@
 
 add_subdirectory(plaintext)
 
-add_library(libp2p_security_error
+add_library(p2p_security_error
     error.cpp
     )
-target_link_libraries(libp2p_security_error
+target_link_libraries(p2p_security_error
     outcome
     )

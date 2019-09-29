@@ -7,18 +7,18 @@ addtest(message_manager_test
     message_manager_test.cpp
     )
 target_link_libraries(message_manager_test
-    multiselect
+    p2p_multiselect
     )
 
 addtest(multiselect_test
     multiselect_test.cpp
     )
 target_link_libraries(multiselect_test
-    multiselect
-    multiaddress
-    libp2p_peer_id
-    libp2p_yamux
-    libp2p_tcp
-    libp2p_plaintext
-    testutil_peer
+    p2p_multiselect
+    p2p_multiaddress
+    p2p_peer_id
+    p2p_yamux
+    p2p_tcp
+    p2p_plaintext
+    p2p_testutil_peer
     )

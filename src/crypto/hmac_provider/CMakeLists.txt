@@ -3,12 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(hmac_provider
-    ../../../include/libp2p/crypto/hmac_provider/hmac_provider_impl.hpp
+add_library(p2p_hmac_provider
     hmac_provider_impl.cpp
     )
-
-target_link_libraries(hmac_provider
-    crypto_error
+target_link_libraries(p2p_hmac_provider
+    p2p_crypto_error
     OpenSSL::Crypto
     )

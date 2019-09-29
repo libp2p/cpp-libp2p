@@ -4,8 +4,8 @@
 add_subdirectory(clock)
 add_subdirectory(libp2p)
 
-add_library(testutil INTERFACE)
-target_link_libraries(testutil INTERFACE
-    testutil_peer
-    clock
+add_library(p2p_testutil INTERFACE)
+target_link_libraries(p2p_testutil INTERFACE
+    p2p_testutil_peer
+    p2p_clock
     )

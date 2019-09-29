@@ -120,48 +120,48 @@ include(cmake/install.cmake)
 
 install_deps_headers()
 
-libp2p_install(
-    TARGETS
-    libp2p
-    libp2p_default_network
-    libp2p_network
-    libp2p_tcp
-    libp2p_yamux
-    libp2p_plaintext
-    libp2p_connection_manager
-    libp2p_transport_manager
-    libp2p_listener_manager
-    libp2p_identity_manager
-    libp2p_dialer
-    libp2p_router
-    multiselect
-    random_generator
-    key_generator
-    key_validator
-    key_marshaller
-    libp2p_tcp_connection
-    libp2p_tcp_listener
-    libp2p_yamuxed_connection
-    libp2p_security_error
-    plaintext_exchange_message_marshaller
-    crypto_error
-    multiaddress
-    libp2p_peer_id
-    uvarint
-    multihash
-    crypto_key
-    libp2p_upgrader
-    libp2p_upgrader_session
-    converter_utils
-    multibase_codec
-    conversion_error
-    converters
-    hexutil
-    keys_proto
-    plaintext_protobuf
-    logger
-    sha
-)
+#libp2p_install(
+#    TARGETS
+#    libp2p
+#    libp2p_default_network
+#    libp2p_network
+#    libp2p_tcp
+#    libp2p_yamux
+#    libp2p_plaintext
+#    libp2p_connection_manager
+#    libp2p_transport_manager
+#    libp2p_listener_manager
+#    libp2p_identity_manager
+#    libp2p_dialer
+#    libp2p_router
+#    multiselect
+#    random_generator
+#    key_generator
+#    key_validator
+#    key_marshaller
+#    libp2p_tcp_connection
+#    libp2p_tcp_listener
+#    libp2p_yamuxed_connection
+#    libp2p_security_error
+#    plaintext_exchange_message_marshaller
+#    crypto_error
+#    multiaddress
+#    libp2p_peer_id
+#    uvarint
+#    multihash
+#    crypto_key
+#    libp2p_upgrader
+#    libp2p_upgrader_session
+#    converter_utils
+#    multibase_codec
+#    conversion_error
+#    converters
+#    hexutil
+#    keys_proto
+#    plaintext_protobuf
+#    logger
+#    sha
+#)
 
 include(CMakePackageConfigHelpers)
 

@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(hexutil
+add_library(p2p_hexutil
     hexutil.cpp
     )
-target_link_libraries(hexutil
+target_link_libraries(p2p_hexutil
     Boost::boost
     outcome
     )
 
-add_library(logger
+add_library(p2p_logger
     logger.cpp
     )

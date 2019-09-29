@@ -5,8 +5,8 @@ addtest(tcp_integration_test
     tcp_integration_test.cpp
     )
 target_link_libraries(tcp_integration_test
-    libp2p_tcp
-    testutil
+    p2p_tcp
+    p2p_testutil
     )
 
 
@@ -14,5 +14,5 @@ addtest(tcp_listener_test
     tcp_listener_test.cpp
     )
 target_link_libraries(tcp_listener_test
-    libp2p_tcp_listener
+    p2p_tcp_listener
     )

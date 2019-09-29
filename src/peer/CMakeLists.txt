@@ -8,38 +8,37 @@ add_subdirectory(key_repository)
 add_subdirectory(protocol_repository)
 add_subdirectory(impl)
 
-add_library(address_repository
+add_library(p2p_address_repository
     address_repository.cpp
     )
-target_link_libraries(address_repository
+target_link_libraries(p2p_address_repository
     Boost::boost
     )
 
-add_library(libp2p_peer_errors
+add_library(p2p_peer_errors
     errors.cpp
     )
-target_link_libraries(libp2p_peer_errors
+target_link_libraries(p2p_peer_errors
     outcome
     )
 
-add_library(libp2p_peer_id
+add_library(p2p_peer_id
     peer_id.cpp
     )
-target_link_libraries(libp2p_peer_id
+target_link_libraries(p2p_peer_id
     outcome
-    multihash
-    multibase_codec
-    sha
-#    hasher
+    p2p_multihash
+    p2p_multibase_codec
+    p2p_sha
     )
 
-add_library(libp2p_peer_address
+add_library(p2p_peer_address
     peer_address.cpp
     )
-target_link_libraries(libp2p_peer_address
+target_link_libraries(p2p_peer_address
     outcome
-    multiaddress
-    multihash
-    multibase_codec
-    libp2p_peer_id
+    p2p_multiaddress
+    p2p_multihash
+    p2p_multibase_codec
+    p2p_peer_id
     )

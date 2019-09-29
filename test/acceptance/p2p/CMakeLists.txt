@@ -9,11 +9,11 @@ addtest(all_muxers_acceptance_test
     muxer.cpp
     )
 target_link_libraries(all_muxers_acceptance_test
-    libp2p_yamux
-    multiaddress
-    libp2p_plaintext
-    libp2p_tcp
-    testutil
-    key_marshaller
-    libp2p_identity_manager
+    p2p_yamux
+    p2p_multiaddress
+    p2p_plaintext
+    p2p_tcp
+    p2p_testutil
+    p2p_key_marshaller
+    p2p_identity_manager
     )

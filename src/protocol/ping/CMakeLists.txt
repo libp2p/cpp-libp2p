@@ -1,11 +1,11 @@
 # Copyright Soramitsu Co., Ltd. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-add_library(libp2p_ping
+add_library(p2p_ping
     ping.cpp
     ping_server_session.cpp
     ping_client_session.cpp
     )
-target_link_libraries(libp2p_ping
+target_link_libraries(p2p_ping
     Boost::boost
     )

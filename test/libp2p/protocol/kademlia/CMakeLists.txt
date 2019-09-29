@@ -5,8 +5,8 @@ addtest(libp2p_protocol_kademlia_test
     libp2p_protocol_kademlia_test.cpp
     )
 target_link_libraries(libp2p_protocol_kademlia_test
-    libp2p_protocol_kademlia
-    multiaddress
+    p2p_protocol_kademlia
+    p2p_multiaddress
     )
 
 
@@ -14,14 +14,14 @@ addtest(node_id
     node_id_test.cpp
     )
 target_link_libraries(node_id
-    sha
-    testutil_peer
+    p2p_sha
+    p2p_testutil_peer
     )
 
 addtest(routing_table_test
     routing_table_test.cpp
     )
 target_link_libraries(routing_table_test
-    libp2p_kad_routing_table
-    testutil_peer
+    p2p_kad_routing_table
+    p2p_testutil_peer
     )

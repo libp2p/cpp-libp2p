@@ -7,29 +7,29 @@ addtest(yamux_integration_test
     yamux_integration_test.cpp
     )
 target_link_libraries(yamux_integration_test
-    libp2p_yamux
-    multiaddress
-    libp2p_plaintext
-    libp2p_tcp
-    testutil
+    p2p_yamux
+    p2p_multiaddress
+    p2p_plaintext
+    p2p_tcp
+    p2p_testutil
     )
 
 addtest(yamux_acceptance_test
     yamux_acceptance_test.cpp
     )
 target_link_libraries(yamux_acceptance_test
-    libp2p_yamux
-    libp2p_yamuxed_connection
-    multiaddress
-    libp2p_plaintext
-    libp2p_tcp
-    testutil
+    p2p_yamux
+    p2p_yamuxed_connection
+    p2p_multiaddress
+    p2p_plaintext
+    p2p_tcp
+    p2p_testutil
     )
 
 addtest(yamux_frame_test
     yamux_frame_test.cpp
     )
 target_link_libraries(yamux_frame_test
-    libp2p_yamuxed_connection
-    testutil
+    p2p_yamuxed_connection
+    p2p_testutil
     )
