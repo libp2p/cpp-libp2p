@@ -4,8 +4,6 @@ else()
   set(POLLY_COMPILER_CLANG_CMAKE 1)
 endif()
 
-include(${CMAKE_CURRENT_LIST_DIR}/../../print.cmake)
-
 if(XCODE_VERSION)
   set(_err "This toolchain is not available for Xcode")
   set(_err "${_err} because Xcode ignores CMAKE_C(XX)_COMPILER variable.")

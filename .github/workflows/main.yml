@@ -10,11 +10,11 @@ on:
 
 jobs:
   build:
-    container:
-      image: soramitsu/kagome-dev:8
-      env:
-        TOOLCHAIN: cmake/toolchain/${{ matrix.toolchain }}
-        BUILD_DIR: /tmp/build
+#    container:
+#      image: soramitsu/kagome-dev:8
+#      env:
+#        TOOLCHAIN: cmake/toolchain/${{ matrix.toolchain }}
+#        BUILD_DIR: /tmp/build
     runs-on: ubuntu-18.04
     strategy:
       matrix:
@@ -31,6 +31,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # has to be included to access other secrets
         GITHUB_HUNTER_USERNAME: ${{ secrets.GITHUB_HUNTER_USERNAME }}
         GITHUB_HUNTER_TOKEN: ${{ secrets.GITHUB_HUNTER_TOKEN }}
-      run: cmake . -B${BUILD_DIR} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN}
+      run: cmake . -Bbuild -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/${TOOLCHAIN}
     - name: build
-      run: cmake --build ${BUILD_DIR} -- -j4
+      run: cmake --build build -- -j4
