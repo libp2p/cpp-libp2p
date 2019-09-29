@@ -18,7 +18,14 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        toolchain: [gcc-7_cxx17.cmake, clang-6_cxx17.cmake]
+        # 2 jobs in total
+        cc: [gcc, clang]
+        cxx: [g++, clang++]
+        include:
+          - cc: gcc
+            cxx: g++
+          - cc: clang
+            cxx: clang++
     steps:
     - uses: actions/checkout@v1
       name: checkout
@@ -31,9 +38,11 @@ jobs:
         sudo apt-get update && sudo apt-get install -y ninja-build
     - name: cmake
       env:
+        CC: ${{ matrix.cc }}
+        CXX: ${{ matrix.cxx }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # has to be included to access other secrets
         GITHUB_HUNTER_USERNAME: ${{ secrets.GITHUB_HUNTER_USERNAME }}
         GITHUB_HUNTER_TOKEN: ${{ secrets.GITHUB_HUNTER_TOKEN }}
-      run: cmake . -GNinja -Bbuild -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/${{ matrix.toolchain }}
+      run: cmake . -GNinja -Bbuild
     - name: build
       run: cmake --build build -- -j4
