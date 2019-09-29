@@ -21,7 +21,7 @@ HunterGate(
     LOCAL
 )
 
-project(libp2p CXX)
+project(libp2p C CXX)
 
 include(cmake/print.cmake)
 print("C flags: ${CMAKE_C_FLAGS}")
