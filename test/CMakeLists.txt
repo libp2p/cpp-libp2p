@@ -8,5 +8,5 @@ include_directories(${PROJECT_SOURCE_DIR})
 
 add_subdirectory(acceptance)
 add_subdirectory(deps)
-add_subdirectory(p2p)
+add_subdirectory(libp2p)
 add_subdirectory(testutil)

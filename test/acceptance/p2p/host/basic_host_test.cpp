@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/host/basic_host/basic_host.hpp"
+#include <libp2p/host/basic_host/basic_host.hpp>
 
 #include <gtest/gtest.h>
 
-#include "mock/p2p/connection/stream_mock.hpp"
-#include "mock/p2p/network/dialer_mock.hpp"
-#include "mock/p2p/network/listener_mock.hpp"
-#include "mock/p2p/network/network_mock.hpp"
-#include "mock/p2p/peer/address_repository_mock.hpp"
-#include "mock/p2p/peer/identity_manager_mock.hpp"
-#include "mock/p2p/peer/peer_repository_mock.hpp"
+#include "mock/libp2p/connection/stream_mock.hpp"
+#include "mock/libp2p/network/dialer_mock.hpp"
+#include "mock/libp2p/network/listener_mock.hpp"
+#include "mock/libp2p/network/network_mock.hpp"
+#include "mock/libp2p/peer/address_repository_mock.hpp"
+#include "mock/libp2p/peer/identity_manager_mock.hpp"
+#include "mock/libp2p/peer/peer_repository_mock.hpp"
 
 #include "testutil/gmock_actions.hpp"
 #include "testutil/literals.hpp"

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "security/plaintext/plaintext_connection.hpp"
+#include <libp2p/security/plaintext/plaintext_connection.hpp>
 
 namespace libp2p::connection {
 

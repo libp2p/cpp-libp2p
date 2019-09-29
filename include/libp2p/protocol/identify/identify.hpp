@@ -11,7 +11,7 @@
 
 #include <libp2p/event/bus.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
-#include <p2p/protocol/identify/identify_msg_processor.hpp>
+#include <libp2p/protocol/identify/identify_msg_processor.hpp>
 
 namespace libp2p::multi {
   class Multiaddress;

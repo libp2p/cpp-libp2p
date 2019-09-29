@@ -12,7 +12,7 @@
 
 #include <gsl/span>
 #include <libp2p/common/types.hpp>
-#include <libp2p/multi/hash_type.hpp>s
+#include <libp2p/multi/hash_type.hpp>
 #include <outcome/outcome.hpp>
 
 namespace libp2p::multi {

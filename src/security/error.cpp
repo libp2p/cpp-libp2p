@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "security/error.hpp"
+#include <libp2p/security/error.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::SecurityError, e) {
   using E = libp2p::security::SecurityError;

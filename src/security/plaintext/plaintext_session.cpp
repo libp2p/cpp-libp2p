@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "security/plaintext/plaintext_session.hpp"
+#include <libp2p/security/plaintext/plaintext_session.hpp>
 
 namespace libp2p::security {
 

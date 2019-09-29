@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "protocol/ping/ping_server_session.hpp"
+#include <libp2p/protocol/ping/ping_server_session.hpp>
 
 #include <boost/assert.hpp>
-#include "protocol/ping/common.hpp"
+#include <libp2p/protocol/ping/common.hpp>
 
 namespace libp2p::protocol {
   PingServerSession::PingServerSession(

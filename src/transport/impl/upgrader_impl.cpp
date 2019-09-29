@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "transport/impl/upgrader_impl.hpp"
+#include <libp2p/transport/impl/upgrader_impl.hpp>
 
 #include <numeric>
 
@@ -57,9 +57,7 @@ namespace libp2p::transport {
     std::transform(
         security_adaptors_.begin(), security_adaptors_.end(),
         std::back_inserter(security_protocols_),
-        [](const auto &adaptor) {
-          return adaptor->getProtocolId();
-        });
+        [](const auto &adaptor) { return adaptor->getProtocolId(); });
 
     std::transform(
         muxer_adaptors.begin(), muxer_adaptors.end(),

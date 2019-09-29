@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "transport/impl/upgrader_session.hpp"
+#include <libp2p/transport/impl/upgrader_session.hpp>
 
 namespace libp2p::transport {
 
@@ -13,8 +13,7 @@ namespace libp2p::transport {
       UpgraderSession::HandlerFunc handler)
       : upgrader_(std::move(upgrader)),
         raw_(std::move(raw)),
-        handler_(std::move(handler)) {
-  }
+        handler_(std::move(handler)) {}
 
   void UpgraderSession::secureOutbound(const peer::PeerId &remoteId) {
     auto self{shared_from_this()};

@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "protocol/kademlia/impl/routing_table_impl.hpp"
+#include <libp2p/protocol/kademlia/impl/routing_table_impl.hpp>
 
 #include <numeric>
 
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia,
-                            RoutingTableImpl::Error,
+OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, RoutingTableImpl::Error,
                             e) {
   using E = libp2p::protocol::kademlia::RoutingTableImpl::Error;
 
@@ -141,14 +140,13 @@ namespace libp2p::protocol::kademlia {
 
   size_t RoutingTableImpl::size() const {
     return std::accumulate(
-        buckets_.begin(), buckets_.end(), 0u, [](size_t num, const Bucket &bucket) {
-          return num + bucket.size();
-        });
+        buckets_.begin(), buckets_.end(), 0u,
+        [](size_t num, const Bucket &bucket) { return num + bucket.size(); });
   }
 
   PeerIdVec RoutingTableImpl::getAllPeers() const {
     PeerIdVec vec;
-    for(auto& bucket : buckets_){
+    for (auto &bucket : buckets_) {
       vec.insert(vec.end(), bucket.begin(), bucket.end());
     }
     return vec;
@@ -156,15 +154,14 @@ namespace libp2p::protocol::kademlia {
 
   RoutingTableImpl::RoutingTableImpl(
       std::shared_ptr<peer::IdentityManager> idmgr,
-      std::shared_ptr<event::Bus> bus,
-      RoutingTable::Config config)
+      std::shared_ptr<event::Bus> bus, RoutingTable::Config config)
       : idmgr_(std::move(idmgr)),
         local_(idmgr_->getId()),
         bus_(std::move(bus)),
         bucket_size_(config.bucket_size) {
     BOOST_ASSERT(idmgr_ != nullptr);
     BOOST_ASSERT(bus_ != nullptr);
-    buckets_.emplace_back(); // create 1 bucket
+    buckets_.emplace_back();  // create 1 bucket
   }
 
 }  // namespace libp2p::protocol::kademlia

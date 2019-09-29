@@ -3,23 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "muxer/yamux/yamux_frame.hpp"
+#include <libp2p/muxer/yamux/yamux_frame.hpp>
 
 namespace {
-  using Buffer = libp2p::common::ByteArray;
+  using ByteArray = libp2p::common::ByteArray;
 
-  Buffer &putUint8(Buffer &buffer, uint8_t number) {
+  ByteArray &putUint8(ByteArray &buffer, uint8_t number) {
     buffer.push_back(number);
     return buffer;
   }
 
-  Buffer &putUint16NetworkOrder(Buffer &buffer, uint16_t number) {
+  ByteArray &putUint16NetworkOrder(ByteArray &buffer, uint16_t number) {
     buffer.push_back(static_cast<unsigned char &&>((number)&0xFFu));
     buffer.push_back(static_cast<unsigned char &&>((number >> 8u) & 0xFFu));
     return buffer;
   }
 
-  Buffer &putUint32NetworkOrder(Buffer &buffer, uint32_t number) {
+  ByteArray &putUint32NetworkOrder(ByteArray &buffer, uint32_t number) {
     buffer.push_back(static_cast<unsigned char &&>((number)&0xFFu));
     buffer.push_back(static_cast<unsigned char &&>((number >> 8u) & 0xFFu));
     buffer.push_back(static_cast<unsigned char &&>((number >> 16u) & 0xFFu));
@@ -29,12 +29,12 @@ namespace {
 }  // namespace
 
 namespace libp2p::connection {
-  Buffer YamuxFrame::frameBytes(uint8_t version, FrameType type, Flag flag,
-                                uint32_t stream_id, uint32_t length,
-                                gsl::span<const uint8_t> data) {
+  ByteArray YamuxFrame::frameBytes(uint8_t version, FrameType type, Flag flag,
+                                   uint32_t stream_id, uint32_t length,
+                                   gsl::span<const uint8_t> data) {
     // TODO(akvinikym) PRE-118 15.04.19: refactor with NetworkOrderEncoder, when
     // implemented
-    Buffer buffer{};
+    ByteArray buffer{};
     putUint32NetworkOrder(
         putUint32NetworkOrder(
             putUint16NetworkOrder(
@@ -47,58 +47,58 @@ namespace libp2p::connection {
     return buffer;
   }
 
-  Buffer newStreamMsg(YamuxFrame::StreamId stream_id) {
+  ByteArray newStreamMsg(YamuxFrame::StreamId stream_id) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
                                   YamuxFrame::Flag::SYN, stream_id, 0);
   }
 
-  Buffer ackStreamMsg(YamuxFrame::StreamId stream_id) {
+  ByteArray ackStreamMsg(YamuxFrame::StreamId stream_id) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
                                   YamuxFrame::Flag::ACK, stream_id, 0);
   }
 
-  Buffer closeStreamMsg(YamuxFrame::StreamId stream_id) {
+  ByteArray closeStreamMsg(YamuxFrame::StreamId stream_id) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
                                   YamuxFrame::Flag::FIN, stream_id, 0);
   }
 
-  Buffer resetStreamMsg(YamuxFrame::StreamId stream_id) {
+  ByteArray resetStreamMsg(YamuxFrame::StreamId stream_id) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
                                   YamuxFrame::Flag::RST, stream_id, 0);
   }
 
-  Buffer pingOutMsg(uint32_t value) {
+  ByteArray pingOutMsg(uint32_t value) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::PING,
                                   YamuxFrame::Flag::SYN, 0, value);
   }
 
-  Buffer pingResponseMsg(uint32_t value) {
+  ByteArray pingResponseMsg(uint32_t value) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::PING,
                                   YamuxFrame::Flag::ACK, 0, value);
   }
 
-  Buffer dataMsg(YamuxFrame::StreamId stream_id,
-                 gsl::span<const uint8_t> data) {
+  ByteArray dataMsg(YamuxFrame::StreamId stream_id,
+                    gsl::span<const uint8_t> data) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
                                   YamuxFrame::Flag::SYN, stream_id,
                                   static_cast<uint32_t>(data.size()), data);
   }
 
-  Buffer goAwayMsg(YamuxFrame::GoAwayError error) {
+  ByteArray goAwayMsg(YamuxFrame::GoAwayError error) {
     return YamuxFrame::frameBytes(
         YamuxFrame::kDefaultVersion, YamuxFrame::FrameType::GO_AWAY,
         YamuxFrame::Flag::SYN, 0, static_cast<uint32_t>(error));
   }
 
-  Buffer windowUpdateMsg(YamuxFrame::StreamId stream_id,
-                         uint32_t window_delta) {
+  ByteArray windowUpdateMsg(YamuxFrame::StreamId stream_id,
+                            uint32_t window_delta) {
     return YamuxFrame::frameBytes(
         YamuxFrame::kDefaultVersion, YamuxFrame::FrameType::WINDOW_UPDATE,
         YamuxFrame::Flag::SYN, stream_id, window_delta);

@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "multi/multibase_codec/codecs/base16.hpp"
+#include <libp2p/multi/multibase_codec/codecs/base16.hpp>
 
 #include <algorithm>
 #include <cctype>
 
-#include "common/hexutil.hpp"
-#include "multi/multibase_codec/codecs/base_error.hpp"
+#include <libp2p/common/hexutil.hpp>
+#include <libp2p/multi/multibase_codec/codecs/base_error.hpp>
 
 namespace {
   /**

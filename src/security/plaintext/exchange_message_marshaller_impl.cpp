@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "security/plaintext/exchange_message_marshaller_impl.hpp"
+#include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 
 #include "p2p/security/plaintext/protobuf/plaintext.pb.h"
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::plaintext,
-                            ExchangeMessageMarshallerImpl::Error,
-                            e) {
+                            ExchangeMessageMarshallerImpl::Error, e) {
   using E = libp2p::security::plaintext::ExchangeMessageMarshallerImpl::Error;
   switch (e) {
     case E::PUBLIC_KEY_SERIALIZING_ERROR:
@@ -55,7 +54,8 @@ namespace libp2p::security::plaintext {
     plaintext::protobuf::Exchange exchange_msg;
     exchange_msg.ParseFromArray(msg_bytes.data(), msg_bytes.size());
     std::vector<uint8_t> pubkey_bytes(exchange_msg.pubkey().ByteSizeLong());
-    exchange_msg.pubkey().SerializeToArray(pubkey_bytes.data(), pubkey_bytes.size());
+    exchange_msg.pubkey().SerializeToArray(pubkey_bytes.data(),
+                                           pubkey_bytes.size());
     OUTCOME_TRY(pubkey, marshaller_->unmarshalPublicKey(pubkey_bytes));
 
     std::vector<uint8_t> peer_id_bytes(exchange_msg.id().begin(),

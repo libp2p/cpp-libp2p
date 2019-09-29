@@ -17,6 +17,10 @@
 #include <libp2p/peer/protocol_repository.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
 
+namespace identify::pb {
+  class Identify;
+}
+
 namespace libp2p::protocol {
   /**
    * Identify-Delta is used to notify other peers about changes in our supported

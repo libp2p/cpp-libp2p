@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "muxer/yamux/yamuxed_connection.hpp"
 #include <boost/asio/error.hpp>
+#include <libp2p/muxer/yamux/yamuxed_connection.hpp>
 
-#include "muxer/yamux/yamux_frame.hpp"
-#include "muxer/yamux/yamux_stream.hpp"
+#include <libp2p/muxer/yamux/yamux_frame.hpp>
+#include <libp2p/muxer/yamux/yamux_stream.hpp>
 
 using Buffer = libp2p::common::ByteArray;
 

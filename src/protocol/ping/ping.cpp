@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "protocol/ping/ping.hpp"
+#include <libp2p/protocol/ping/ping.hpp>
 
-#include "protocol/ping/common.hpp"
-#include "protocol/ping/ping_client_session.hpp"
-#include "protocol/ping/ping_server_session.hpp"
+#include <libp2p/protocol/ping/common.hpp>
+#include <libp2p/protocol/ping/ping_client_session.hpp>
+#include <libp2p/protocol/ping/ping_server_session.hpp>
 
 namespace libp2p::protocol {
   Ping::Ping(Host &host, libp2p::event::Bus &bus,

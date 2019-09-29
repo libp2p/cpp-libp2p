@@ -7,18 +7,18 @@
 #include <random>
 
 #include <gtest/gtest.h>
-#include "connection/stream.hpp"
-#include "crypto/key_marshaller/key_marshaller_impl.hpp"
-#include "mock/p2p/crypto/key_validator_mock.hpp"
-#include "mock/p2p/transport/upgrader_mock.hpp"
-#include "muxer/yamux.hpp"
-#include "peer/impl/identity_manager_impl.hpp"
-#include "security/plaintext.hpp"
-#include "security/plaintext/exchange_message_marshaller_impl.hpp"
+#include <libp2p/connection/stream.hpp>
+#include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
+#include <libp2p/muxer/yamux.hpp>
+#include <libp2p/peer/impl/identity_manager_impl.hpp>
+#include <libp2p/security/plaintext.hpp>
+#include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
+#include <libp2p/transport/tcp.hpp>
+#include <mock/libp2p/crypto/key_validator_mock.hpp>
+#include <mock/libp2p/transport/upgrader_mock.hpp>
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
-#include "transport/tcp.hpp"
 
 using namespace libp2p;
 using namespace transport;

@@ -31,13 +31,13 @@
    Rene Nyffenegger rene.nyffenegger@adp-gmbh.ch
 */
 
-#include "multi/multibase_codec/codecs/base64.hpp"
+#include <libp2p/multi/multibase_codec/codecs/base64.hpp>
 
 #include <array>
 #include <regex>
 
 #include <boost/optional.hpp>
-#include "multi/multibase_codec/codecs/base_error.hpp"
+#include <libp2p/multi/multibase_codec/codecs/base_error.hpp>
 
 namespace {
 

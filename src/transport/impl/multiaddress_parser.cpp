@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "transport/impl/multiaddress_parser.hpp"
+#include <libp2p/transport/impl/multiaddress_parser.hpp>
 
 #include <boost/asio/ip/address.hpp>
 #include <boost/lexical_cast.hpp>

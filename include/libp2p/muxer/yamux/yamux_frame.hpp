@@ -15,7 +15,7 @@ namespace libp2p::connection {
    * Header with optional data, which is sent and accepted with Yamux protocol
    */
   struct YamuxFrame {
-    using Buffer = common::ByteArray;
+    using ByteArray = common::ByteArray;
     using StreamId = YamuxedConnection::StreamId;
     static constexpr uint32_t kHeaderLength = 12;
 
@@ -44,13 +44,13 @@ namespace libp2p::connection {
     Flag flag;
     StreamId stream_id;
     uint32_t length;
-    Buffer data;
+    ByteArray data;
 
     /**
      * Get bytes representation of the Yamux frame with given parameters
      * @return bytes of the frame
      */
-    static Buffer frameBytes(
+    static ByteArray frameBytes(
         uint8_t version, FrameType type, Flag flag, uint32_t stream_id,
         uint32_t length,
         gsl::span<const uint8_t> data = gsl::span<const uint8_t>());

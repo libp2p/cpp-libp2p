@@ -10,8 +10,8 @@
 
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
-#include "connection/raw_connection.hpp"
-#include "multi/multiaddress.hpp"
+#include <libp2p/connection/raw_connection.hpp>
+#include <libp2p/multi/multiaddress.hpp>
 
 namespace libp2p::transport {
 
@@ -51,20 +51,16 @@ namespace libp2p::transport {
      */
     void connect(const ResolverResultsType &iterator, ConnectCallbackFunc cb);
 
-    void read(gsl::span<uint8_t> out,
-              size_t bytes,
+    void read(gsl::span<uint8_t> out, size_t bytes,
               ReadCallbackFunc cb) override;
 
-    void readSome(gsl::span<uint8_t> out,
-                  size_t bytes,
+    void readSome(gsl::span<uint8_t> out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
-    void write(gsl::span<const uint8_t> in,
-               size_t bytes,
+    void write(gsl::span<const uint8_t> in, size_t bytes,
                WriteCallbackFunc cb) override;
 
-    void writeSome(gsl::span<const uint8_t> in,
-                   size_t bytes,
+    void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;

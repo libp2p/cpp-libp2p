@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "multi/multibase_codec/codecs/base_error.hpp"
+#include <libp2p/multi/multibase_codec/codecs/base_error.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi::detail, BaseError, e) {
   using E = libp2p::multi::detail::BaseError;

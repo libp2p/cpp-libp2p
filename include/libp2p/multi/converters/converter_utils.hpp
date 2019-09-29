@@ -9,9 +9,9 @@
 #include <string>
 #include <vector>
 
+#include <libp2p/common/types.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
 #include <outcome/outcome.hpp>
-#include "common/types.hpp"
 
 namespace libp2p::multi::converters {
 

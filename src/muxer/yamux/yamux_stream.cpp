@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "muxer/yamux/yamux_stream.hpp"
+#include <libp2p/muxer/yamux/yamux_stream.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxStream::Error, e) {
   using E = libp2p::connection::YamuxStream::Error;

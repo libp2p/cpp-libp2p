@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "protocol/kademlia/impl/kad_impl.hpp"
+#include <libp2p/protocol/kademlia/impl/kad_impl.hpp>
 
-#include "common/types.hpp"
-#include "crypto/sha/sha256.hpp"
-#include "protocol/kademlia/query.hpp"
+#include <libp2p/common/types.hpp>
+#include <libp2p/crypto/sha/sha256.hpp>
+#include <libp2p/protocol/kademlia/query.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, Kad::Error, e) {
   using E = libp2p::protocol::kademlia::Kad::Error;

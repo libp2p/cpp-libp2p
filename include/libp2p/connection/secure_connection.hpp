@@ -6,9 +6,9 @@
 #ifndef LIBP2P_SECURE_CONNECTION_HPP
 #define LIBP2P_SECURE_CONNECTION_HPP
 
-#include "connection/raw_connection.hpp"
-#include "crypto/key.hpp"
-#include "peer/peer_id.hpp"
+#include <libp2p/connection/raw_connection.hpp>
+#include <libp2p/crypto/key.hpp>
+#include <libp2p/peer/peer_id.hpp>
 
 namespace libp2p::connection {
 

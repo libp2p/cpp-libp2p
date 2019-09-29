@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "muxer/yamux/yamux.hpp"
+#include <libp2p/muxer/yamux/yamux.hpp>
 
-#include "muxer/yamux/yamuxed_connection.hpp"
+#include <libp2p/muxer/yamux/yamuxed_connection.hpp>
 
 namespace libp2p::muxer {
   Yamux::Yamux(MuxedConnectionConfig config) : config_{config} {}
