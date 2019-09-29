@@ -24,14 +24,15 @@ using libp2p::multi::UVarint;
  *         than maximum length
  **/
 TEST(Multihash, Create) {
-  ByteArray hash{2, 3, 4};
+  std::vector<uint8_t> hash{2, 3, 4};
   ASSERT_NO_THROW({
     auto m = Multihash::create(HashType::blake2s128, hash).value();
     ASSERT_EQ(m.getType(), HashType::blake2s128);
-    ASSERT_EQ(m.getHash(), hash);
+    ASSERT_EQ(m.getHash(), gsl::span<const uint8_t>(hash));
   });
 
-  ASSERT_FALSE(Multihash::create(HashType::blake2s128, ByteArray(200, 42)))
+  auto h = ByteArray(200, 42);
+  ASSERT_FALSE(Multihash::create(HashType::blake2s128, h))
       << "The multihash mustn't accept hashes of the size greater than 127";
 }
 

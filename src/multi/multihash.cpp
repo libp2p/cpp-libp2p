@@ -37,21 +37,26 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, Multihash::Error, e) {
 
 namespace libp2p::multi {
 
-  Multihash::Multihash(HashType type, Hash hash)
-      : hash_{std::move(hash)}, type_{type} {
+  Multihash::Multihash(HashType type, gsl::span<const uint8_t> hash) {
+    type_ = type;
     UVarint uvarint{type};
-    data_.insert(data_.end(), uvarint.toBytes().begin(),
-                 uvarint.toBytes().end());
-    data_.push_back(static_cast<uint8_t>(hash_.size()));
-    data_.insert(data_.end(), hash_.begin(), hash_.end());
+    auto &&bytes = uvarint.toBytes();
+    data_.insert(data_.end(), bytes.begin(), bytes.end());
+    data_.push_back(static_cast<uint8_t>(hash.size()));
+    size_t size = data_.size();
+    data_.insert(data_.end(), hash.begin(), hash.end());
+
+    // hash_ points to a data_.begin() + size ... data_.end()
+    hash_ = gsl::span<const uint8_t>(data_).subspan(size);
   }
 
-  outcome::result<Multihash> Multihash::create(HashType type, Hash hash) {
+  outcome::result<Multihash> Multihash::create(HashType type,
+                                               gsl::span<const uint8_t> hash) {
     if (hash.size() > kMaxHashLength) {
       return Error::INPUT_TOO_LONG;
     }
 
-    return Multihash{type, std::move(hash)};
+    return Multihash{type, hash};
   }
 
   outcome::result<Multihash> Multihash::createFromHex(std::string_view hex) {
@@ -69,7 +74,7 @@ namespace libp2p::multi {
 
     const auto type = static_cast<HashType>(varint.toUInt64());
     uint8_t length = b[varint.size()];
-    Hash hash(std::vector<uint8_t>(b.begin() + varint.size() + 1, b.end()));
+    gsl::span<const uint8_t> hash = b.subspan(varint.size() + 1);
 
     if (length == 0) {
       return Error::ZERO_INPUT_LENGTH;
@@ -79,14 +84,14 @@ namespace libp2p::multi {
       return Error::INCONSISTENT_LENGTH;
     }
 
-    return Multihash::create(type, std::move(hash));
+    return Multihash::create(type, hash);
   }
 
   const HashType &Multihash::getType() const {
     return type_;
   }
 
-  const Multihash::Hash &Multihash::getHash() const {
+  const gsl::span<const uint8_t> Multihash::getHash() const {
     return hash_;
   }
 
@@ -100,10 +105,6 @@ namespace libp2p::multi {
 
   bool Multihash::operator==(const Multihash &other) const {
     return this->data_ == other.data_ && this->type_ == other.type_;
-  }
-
-  bool Multihash::operator!=(const Multihash &other) const {
-    return !(*this == other);
   }
 
 }  // namespace libp2p::multi

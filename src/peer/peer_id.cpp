@@ -5,6 +5,7 @@
 
 #include <libp2p/peer/peer_id.hpp>
 
+#include <boost/assert.hpp>
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base58.hpp>
 
@@ -29,10 +30,9 @@ namespace libp2p::peer {
 
   PeerId PeerId::fromPublicKey(const crypto::PublicKey &key) {
     auto hash = crypto::sha256(key.data);
-    auto multihash =
-        Multihash::create(multi::sha256, ByteArray{hash.begin(), hash.end()})
-            .value();
-    return PeerId{std::move(multihash)};
+    auto rmultihash = Multihash::create(multi::sha256, hash);
+    BOOST_ASSERT(rmultihash.has_value());
+    return PeerId{std::move(rmultihash.value())};
   }
 
   PeerId::FactoryResult PeerId::fromBase58(std::string_view id) {

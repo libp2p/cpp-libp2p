@@ -267,8 +267,7 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   // number, which makes tests reproducible
   const int seed = 0;
 
-  std::shared_ptr<boost::asio::io_context> context =
-      std::make_shared<boost::asio::io_context>(1);
+  auto context = std::make_shared<boost::asio::io_context>(1);
   std::default_random_engine randomEngine(seed);
 
   auto serverAddr = "/ip4/127.0.0.1/tcp/40312"_multiaddr;

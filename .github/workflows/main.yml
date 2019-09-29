@@ -10,15 +10,12 @@ on:
 
 jobs:
   build:
-#    container:
-#      image: soramitsu/kagome-dev:8
-#      env:
-#        TOOLCHAIN: cmake/toolchain/${{ matrix.toolchain }}
-#        BUILD_DIR: /tmp/build
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        # 2 jobs in total
+        # 3 jobs in total
+        os: [ubuntu-18.04, macOS-10.14]
         compiler: [{
           "cc": "gcc",
           "cxx": "g++"
@@ -26,6 +23,10 @@ jobs:
           "cc": "clang",
           "cxx": "clang++"
         }]
+        exclude:
+          - os: macOS-10.14
+            compiler:
+              cc: gcc
     steps:
     - uses: actions/checkout@v1
       name: checkout
@@ -36,8 +37,13 @@ jobs:
     - name: install dependencies
       run: |
         set -e
-        sudo apt-get update
-        sudo apt-get install -y ninja-build
+        if [ "$RUNNER_OS" = "macOS" ]; then
+          brew install ninja
+        else
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+        fi
+
         sudo python3 -m pip install --upgrade pip
         sudo pip3 install scikit-build cmake requests gitpython gcovr pyyaml
     - name: cmake
@@ -50,3 +56,7 @@ jobs:
       run: cmake . -GNinja -Bbuild
     - name: build
       run: cmake --build build -- -j4
+    - name: test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+      run: cmake --build build --target test
