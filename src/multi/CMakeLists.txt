@@ -26,15 +26,6 @@ target_link_libraries(multihash
   outcome
   )
 
-add_library(multistream
-  multistream.cpp
-  )
-
-target_link_libraries(multistream
-  uvarint
-  outcome
-  )
-
 
 add_library(multiaddress
   multiaddress.cpp
