@@ -9,8 +9,8 @@
 #include <memory>
 #include <vector>
 
-#include "mock/p2p/basic/read_writer_mock.hpp"
-#include "mock/p2p/connection/stream_mock.hpp"
+#include "mock/libp2p/basic/read_writer_mock.hpp"
+#include "mock/libp2p/connection/stream_mock.hpp"
 
 /**
  * Basically, methods in this file do the same thing as

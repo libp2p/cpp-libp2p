@@ -8,6 +8,6 @@
 
 #include <libp2p/protocol/identify/identify.hpp>
 #include <libp2p/protocol/identify/identify_delta.hpp>
-#include <p2p/protocol/identify/identify_push.hpp>
+#include <libp2p/protocol/identify/identify_push.hpp>
 
 #endif  // LIBP2P_IDENTIFY_HPP

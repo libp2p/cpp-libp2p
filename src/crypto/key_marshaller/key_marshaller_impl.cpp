@@ -7,7 +7,7 @@
 
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key_generator.hpp>
-#include "p2p/crypto/protobuf/keys.pb.h"
+#include "src/crypto/protobuf/keys.pb.h"
 
 namespace libp2p::crypto::marshaller {
   namespace {

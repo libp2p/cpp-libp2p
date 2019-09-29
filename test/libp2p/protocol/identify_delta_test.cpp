@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/protocol/identify/identify_delta.hpp"
+#include <libp2p/protocol/identify/identify_delta.hpp>
 
 #include <gtest/gtest.h>
-#include "libp2p/multi/uvarint.hpp"
-#include "p2p/protocol/identify/identify_push.hpp"
-#include "libp2p/protocol/identify/protobuf/identify.pb.h"
+#include <libp2p/multi/uvarint.hpp>
+#include <libp2p/protocol/identify/identify_push.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/host/host_mock.hpp"
 #include "mock/libp2p/network/connection_manager_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
+#include "src/protocol/identify/protobuf/identify.pb.h"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/literals.hpp"
 
@@ -24,7 +24,7 @@ using namespace crypto;
 using namespace protocol;
 using namespace network;
 using namespace connection;
-using namespace kagome::common;
+using namespace libp2p::common;
 using namespace multi;
 
 using testing::_;

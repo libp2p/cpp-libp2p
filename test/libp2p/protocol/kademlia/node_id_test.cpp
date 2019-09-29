@@ -2,21 +2,25 @@
  * Copyright Soramitsu Co., Ltd. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-#include "libp2p/protocol/kademlia/node_id.hpp"
+
+#include <libp2p/protocol/kademlia/node_id.hpp>
 
 #include <gtest/gtest.h>
 #include <iostream>
+#include <libp2p/common/hexutil.hpp>
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/literals.hpp"
 
-using kagome::common::Hash256;
+using libp2p::common::Hash256;
+using libp2p::common::hex_upper;
 using libp2p::peer::PeerId;
 using libp2p::protocol::kademlia::NodeId;
 using libp2p::protocol::kademlia::xor_distance;
 using libp2p::protocol::kademlia::XorDistanceComparator;
 
 bool is_distance_less(Hash256 a, Hash256 b) {
-  return std::memcmp(a.data(), b.data(), Hash256::size()) < 0;
+  constexpr auto size = Hash256().size();
+  return std::memcmp(a.data(), b.data(), size) < 0;
 }
 
 bool is_xor_distance_sorted(const PeerId &local, std::vector<PeerId> &peers) {
@@ -47,8 +51,8 @@ void print(NodeId from, std::vector<PeerId> &pids) {
   std::cout << "peers: \n";
   for (auto &p : pids) {
     std::cout << "pid: " << p.toHex()
-              << " nodeId: " << NodeId(p).getData().toHex()
-              << " distance: " << from.distance(NodeId(p)).toHex() << "\n";
+              << " nodeId: " << hex_upper(NodeId(p).getData())
+              << " distance: " << hex_upper(from.distance(NodeId(p))) << "\n";
   }
 }
 
@@ -59,9 +63,8 @@ TEST(KadDistance, SortsHashes) {
   XorDistanceComparator comp(us);
 
   std::vector<PeerId> peers;
-  std::generate_n(std::back_inserter(peers), peersTotal, []() {
-    return testutil::randomPeerId();
-  });
+  std::generate_n(std::back_inserter(peers), peersTotal,
+                  []() { return testutil::randomPeerId(); });
   peers.push_back(us);
 
   ASSERT_EQ(peers.size(), peersTotal + 1);

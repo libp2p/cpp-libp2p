@@ -7,16 +7,16 @@
 #include <gtest/gtest.h>
 #include <thread>
 
-#include "libp2p/peer/address_repository.hpp"
-#include "libp2p/peer/address_repository/inmem_address_repository.hpp"
-#include "libp2p/peer/errors.hpp"
-#include "testutil/outcome.hpp"
+#include <libp2p/peer/address_repository.hpp>
+#include <libp2p/peer/address_repository/inmem_address_repository.hpp>
+#include <libp2p/peer/errors.hpp>
 #include "testutil/literals.hpp"
+#include "testutil/outcome.hpp"
 
 using namespace libp2p::peer;
 using namespace libp2p::multi;
 
-using kagome::common::Buffer;
+using libp2p::common::ByteArray;
 using std::literals::chrono_literals::operator""ms;
 
 struct InmemAddressRepository_Test : public ::testing::Test {
@@ -41,21 +41,13 @@ struct InmemAddressRepository_Test : public ::testing::Test {
 
   std::unique_ptr<AddressRepository> db;
 
-  const PeerId p1 =
-      PeerId::fromHash("12051203020304"_multihash)
-          .value();
-  const PeerId p2 =
-      PeerId::fromHash("12051203FFFFFF"_multihash)
-          .value();
+  const PeerId p1 = PeerId::fromHash("12051203020304"_multihash).value();
+  const PeerId p2 = PeerId::fromHash("12051203FFFFFF"_multihash).value();
 
-  const Multiaddress ma1 =
-      "/ip4/127.0.0.1/tcp/8080"_multiaddr;
-  const Multiaddress ma2 =
-      "/ip4/127.0.0.1/tcp/8081"_multiaddr;
-  const Multiaddress ma3 =
-      "/ip4/127.0.0.1/tcp/8082"_multiaddr;
-  const Multiaddress ma4 =
-      "/ip4/127.0.0.1/tcp/8083"_multiaddr;
+  const Multiaddress ma1 = "/ip4/127.0.0.1/tcp/8080"_multiaddr;
+  const Multiaddress ma2 = "/ip4/127.0.0.1/tcp/8081"_multiaddr;
+  const Multiaddress ma3 = "/ip4/127.0.0.1/tcp/8082"_multiaddr;
+  const Multiaddress ma4 = "/ip4/127.0.0.1/tcp/8083"_multiaddr;
 
   template <typename... T>
   std::vector<T...> vec(T &&... arg) {

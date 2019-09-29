@@ -11,7 +11,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "libp2p/transport/tcp.hpp"
+#include <libp2p/transport/tcp.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/transport/upgrader_mock.hpp"
 #include "testutil/gmock_actions.hpp"
@@ -24,7 +24,7 @@ using namespace libp2p::multi;
 using namespace libp2p::connection;
 using std::chrono_literals::operator""s;
 using std::chrono_literals::operator""ms;
-using kagome::common::Buffer;
+using libp2p::common::ByteArray;
 
 using ::testing::_;
 using ::testing::AnyNumber;
@@ -145,8 +145,8 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
       transport->dial(testutil::randomPeerId(), ma, [](auto &&rconn) {
         auto conn = expectConnectionValid(rconn);
 
-        auto readback = std::make_shared<Buffer>(kSize, 0);
-        auto buf = std::make_shared<Buffer>(kSize, 0);
+        auto readback = std::make_shared<ByteArray>(kSize, 0);
+        auto buf = std::make_shared<ByteArray>(kSize, 0);
         std::generate(buf->begin(), buf->end(), []() {
           return rand();  // NOLINT
         });
@@ -156,12 +156,12 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
         conn->write(*buf, buf->size(), [conn, readback, buf](auto &&res) {
           ASSERT_TRUE(res) << res.error().message();
           ASSERT_EQ(res.value(), buf->size());
-          conn->read(
-              *readback, readback->size(), [conn, readback, buf](auto &&res) {
-                ASSERT_TRUE(res) << res.error().message();
-                ASSERT_EQ(res.value(), readback->size());
-                ASSERT_EQ(*buf, *readback);
-              });
+          conn->read(*readback, readback->size(),
+                     [conn, readback, buf](auto &&res) {
+                       ASSERT_TRUE(res) << res.error().message();
+                       ASSERT_EQ(res.value(), readback->size());
+                       ASSERT_EQ(*buf, *readback);
+                     });
         });
       });
 
@@ -170,8 +170,8 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
   });
 
   context->run_for(500ms);
-  std::for_each(
-      clients.begin(), clients.end(), [](std::thread &t) { t.join(); });
+  std::for_each(clients.begin(), clients.end(),
+                [](std::thread &t) { t.join(); });
 
   ASSERT_EQ(counter, kClients) << "not all clients' requests were handled";
 }
@@ -297,12 +297,11 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
 
   transport->dial(
       testutil::randomPeerId(),  // ignore arg
-      ma,
-      [kSize](auto &&rconn) {
+      ma, [kSize](auto &&rconn) {
         auto conn = expectConnectionValid(rconn);
 
-        auto readback = std::make_shared<Buffer>(kSize, 0);
-        auto buf = std::make_shared<Buffer>(kSize, 0);
+        auto readback = std::make_shared<ByteArray>(kSize, 0);
+        auto buf = std::make_shared<ByteArray>(kSize, 0);
         std::generate(buf->begin(), buf->end(), []() {
           return rand();  // NOLINT
         });

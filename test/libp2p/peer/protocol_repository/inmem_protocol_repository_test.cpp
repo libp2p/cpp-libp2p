@@ -5,17 +5,15 @@
 
 #include <gtest/gtest.h>
 
-#include "common/buffer.hpp"
-#include "libp2p/peer/errors.hpp"
-#include "libp2p/peer/protocol_repository.hpp"
-#include "libp2p/peer/protocol_repository/inmem_protocol_repository.hpp"
-#include "testutil/outcome.hpp"
+#include <libp2p/peer/errors.hpp>
+#include <libp2p/peer/protocol_repository.hpp>
+#include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
 #include "testutil/literals.hpp"
+#include "testutil/outcome.hpp"
 
 using namespace libp2p::peer;
-using libp2p::multi::Multihash;
 using libp2p::multi::HashType;
-using kagome::common::Buffer;
+using libp2p::multi::Multihash;
 
 struct InmemProtocolRepository_Test : public ::testing::Test {
   std::unique_ptr<ProtocolRepository> db;
@@ -27,12 +25,8 @@ struct InmemProtocolRepository_Test : public ::testing::Test {
   const Protocol s1 = "/bittorrent.org/1.0";
   const Protocol s2 = "/ipfs/1.0";
 
-  const PeerId p1 =
-      PeerId::fromHash("12051203020304"_multihash)
-          .value();
-  const PeerId p2 =
-      PeerId::fromHash("12051203FFFFFF"_multihash)
-          .value();
+  const PeerId p1 = PeerId::fromHash("12051203020304"_multihash).value();
+  const PeerId p2 = PeerId::fromHash("12051203FFFFFF"_multihash).value();
 
   template <typename... T>
   std::vector<Protocol> vec(T &&... arg) {

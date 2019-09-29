@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/peer/peer_address.hpp"
+#include <libp2p/peer/peer_address.hpp>
 
 #include <gtest/gtest.h>
 #include <libp2p/common/types.hpp>
@@ -20,11 +20,12 @@ class PeerAddressTest : public ::testing::Test {
   std::shared_ptr<MultibaseCodec> codec_ =
       std::make_shared<MultibaseCodecImpl>();
 
+  const std::string_view hash_string =
+      "af85e416fa66390b3c834cb6b7aeafb8b4b484e7245fd9a9d81e7f3f5f95714f";
+
   const Multihash kDefaultMultihash =
-      Multihash::create(
-          HashType::sha256,
-          ByteArray{}.put("af85e416fa66390b3c834cb6b7aeafb8b4b484e72"
-                          "45fd9a9d81e7f3f5f95714f"))
+      Multihash::create(HashType::sha256,
+                        ByteArray(hash_string.begin(), hash_string.end()))
           .value();
 
   const PeerId kDefaultPeerId = PeerId::fromHash(kDefaultMultihash).value();

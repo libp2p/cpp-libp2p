@@ -3,15 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/protocol/identify.hpp"
+#include <libp2p/protocol/identify.hpp>
 
 #include <vector>
 
 #include <gtest/gtest.h>
-#include "libp2p/multi/uvarint.hpp"
-#include "libp2p/network/connection_manager.hpp"
-#include "libp2p/network/network.hpp"
-#include "libp2p/protocol/identify/protobuf/identify.pb.h"
+#include <libp2p/multi/uvarint.hpp>
+#include <libp2p/network/connection_manager.hpp>
+#include <libp2p/network/network.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
@@ -25,6 +24,7 @@
 #include "mock/libp2p/peer/key_repository_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
+#include "src/protocol/identify/protobuf/identify.pb.h"
 #include "testutil/literals.hpp"
 
 using namespace libp2p;
@@ -33,7 +33,7 @@ using namespace crypto;
 using namespace protocol;
 using namespace network;
 using namespace connection;
-using namespace kagome::common;
+using namespace libp2p::common;
 using namespace multi;
 
 using testing::_;

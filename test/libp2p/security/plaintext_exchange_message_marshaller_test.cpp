@@ -5,12 +5,12 @@
 
 #include <gtest/gtest.h>
 
-#include "libp2p/crypto/key.hpp"
-#include "libp2p/peer/peer_id.hpp"
-#include "libp2p/security/plaintext/exchange_message_marshaller_impl.hpp"
+#include <libp2p/crypto/key.hpp>
+#include <libp2p/peer/peer_id.hpp>
+#include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
+#include "src/security/plaintext/protobuf/plaintext.pb.h"
 #include "testutil/outcome.hpp"
-#include "libp2p/security/plaintext/protobuf/plaintext.pb.h"
 
 using libp2p::crypto::Key;
 using libp2p::crypto::PublicKey;

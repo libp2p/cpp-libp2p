@@ -6,7 +6,7 @@
 #ifndef LIBP2P_KAD_QUERY_RUNNER_MOCK_HPP
 #define LIBP2P_KAD_QUERY_RUNNER_MOCK_HPP
 
-#include "p2p/protocol/kademlia/query_runner.hpp"
+#include <libp2p/protocol/kademlia/query_runner.hpp>
 
 #include <gmock/gmock.h>
 

@@ -6,7 +6,7 @@
 #include "libp2p/protocol/echo.hpp"
 
 #include <gtest/gtest.h>
-#include "mock/p2p/connection/stream_mock.hpp"
+#include "mock/libp2p/connection/stream_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/outcome.hpp"
 

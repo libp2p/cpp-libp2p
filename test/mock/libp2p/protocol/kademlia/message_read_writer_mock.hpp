@@ -6,7 +6,7 @@
 #ifndef LIBP2P_KAD_MESSAGE_READ_WRITER_MOCK_HPP
 #define LIBP2P_KAD_MESSAGE_READ_WRITER_MOCK_HPP
 
-#include "p2p/protocol/kademlia/message_read_writer.hpp"
+#include <libp2p/protocol/kademlia/message_read_writer.hpp>
 
 #include <gmock/gmock.h>
 

@@ -8,10 +8,10 @@
 #include <gtest/gtest.h>
 #include <boost/di.hpp>
 #include <boost/di/extension/providers/mocks_provider.hpp>
+#include <libp2p/common/hexutil.hpp>
+#include <libp2p/peer/peer_id.hpp>
 #include <testutil/gmock_actions.hpp>
 #include <testutil/outcome.hpp>
-#include "common/hexutil.hpp"
-#include "libp2p/peer/peer_id.hpp"
 #include "mock/libp2p/connection/raw_connection_mock.hpp"
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
 #include "mock/libp2p/security/exchange_message_marshaller_mock.hpp"
@@ -118,8 +118,7 @@ TEST_F(PlaintextAdaptorTest, SecureOutbound) {
   EXPECT_CALL(*marshaller, unmarshal(_)).WillOnce(Return(remote_msg));
 
   adaptor->secureOutbound(
-      conn,
-      pid,
+      conn, pid,
       [pid, this](outcome::result<std::shared_ptr<SecureConnection>> rc) {
         EXPECT_OUTCOME_TRUE(sec, rc);
 

@@ -6,14 +6,14 @@
 #include <exception>
 
 #include <gtest/gtest.h>
-#include "libp2p/crypto/key.hpp"
-#include "libp2p/peer/key_repository.hpp"
-#include "libp2p/peer/key_repository/inmem_key_repository.hpp"
+#include <libp2p/crypto/key.hpp>
+#include <libp2p/peer/key_repository.hpp>
+#include <libp2p/peer/key_repository/inmem_key_repository.hpp>
 #include "testutil/outcome.hpp"
 
 using namespace libp2p::peer;
 using namespace libp2p::multi;
-using namespace kagome::common;
+using namespace libp2p::common;
 using namespace libp2p::crypto;
 
 struct InmemKeyRepositoryTest : ::testing::Test {
