@@ -13,9 +13,12 @@ jobs:
     container:
       image: soramitsu/kagome-dev:8
       env:
-        TOOLCHAIN: cmake/toolchain/gcc-8_cxx17.cmake
+        TOOLCHAIN: cmake/toolchain/${{ matrix.toolchain }}
         BUILD_DIR: /tmp/build
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        toolchain: [gcc-8_cxx17.cmake, clang-8_cxx17.cmake]
     steps:
     - uses: actions/checkout@v1
       name: checkout
