@@ -9,7 +9,7 @@ on:
     - master
 
 jobs:
-  build-linux:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -22,6 +22,10 @@ jobs:
           "cc": "clang",
           "cxx": "clang++"
         }]
+        exclude:
+          - os: macOS-10.14
+            compiler:
+              cc: gcc
     steps:
     - uses: actions/checkout@v1
       name: checkout
