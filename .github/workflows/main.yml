@@ -12,6 +12,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         # 4 jobs in total
         os: [ubuntu-18.04, macOS-10.14]
