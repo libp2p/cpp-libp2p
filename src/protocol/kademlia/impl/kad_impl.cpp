@@ -80,11 +80,16 @@ namespace libp2p::protocol::kademlia {
                 for (const auto &p : list) {
                   if (p.id == id) {
                     // yey!
-                    return handle(QueryResult{.peer = p, .success = true});
+                    QueryResult q;
+                    q.peer = p;
+                    q.success = true;
+                    return handle(std::move(q));
                   }
                 }
 
-                return handle(QueryResult{.closerPeers = list});
+                QueryResult q;
+                q.closerPeers = list;
+                return handle(std::move(q));
               });
         }};
 
