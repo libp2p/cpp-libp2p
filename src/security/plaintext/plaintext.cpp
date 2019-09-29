@@ -11,6 +11,7 @@
 #include <libp2p/security/error.hpp>
 #include <libp2p/security/plaintext/plaintext_connection.hpp>
 
+// TODO(warchant): why is conn->close() result is not handled?
 #define PLAINTEXT_OUTCOME_TRY(name, res, conn, cb) \
   auto name = (res);                               \
   if (name.has_error()) {                          \

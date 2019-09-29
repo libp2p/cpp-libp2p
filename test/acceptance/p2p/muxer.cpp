@@ -278,10 +278,10 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   auto muxer = GetParam();
   auto idmgr = std::make_shared<IdentityManagerImpl>(serverKeyPair);
   auto key_validator = std::make_shared<KeyValidatorMock>();
-  ON_CALL(*key_validator, validate(::testing::An<const PrivateKey &>()))
-      .WillByDefault(::testing::Return(outcome::success()));
-  ON_CALL(*key_validator, validate(::testing::An<const PublicKey &>()))
-      .WillByDefault(::testing::Return(outcome::success()));
+  EXPECT_CALL(*key_validator, validate(::testing::An<const PrivateKey &>()))
+      .WillRepeatedly(::testing::Return(outcome::success()));
+  EXPECT_CALL(*key_validator, validate(::testing::An<const PublicKey &>()))
+      .WillRepeatedly(::testing::Return(outcome::success()));
 
   auto key_marshaller = std::make_shared<KeyMarshallerImpl>(key_validator);
   auto msg_marshaller =

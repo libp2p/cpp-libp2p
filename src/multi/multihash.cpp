@@ -42,6 +42,7 @@ namespace libp2p::multi {
     UVarint uvarint{type};
     auto &&bytes = uvarint.toBytes();
     data_.insert(data_.end(), bytes.begin(), bytes.end());
+    BOOST_ASSERT(hash.size() <= std::numeric_limits<uint8_t>::max());
     data_.push_back(static_cast<uint8_t>(hash.size()));
     size_t size = data_.size();
     data_.insert(data_.end(), hash.begin(), hash.end());

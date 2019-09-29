@@ -48,10 +48,8 @@ namespace libp2p::connection {
      * @param config to configure this instance
      * @param logger to output messages
      */
-    explicit YamuxedConnection(
-        std::shared_ptr<SecureConnection> connection,
-        muxer::MuxedConnectionConfig config = {},
-        libp2p::common::Logger logger = libp2p::common::createLogger("Yamux"));
+    explicit YamuxedConnection(std::shared_ptr<SecureConnection> connection,
+                               muxer::MuxedConnectionConfig config = {});
 
     YamuxedConnection(const YamuxedConnection &other) = delete;
     YamuxedConnection &operator=(const YamuxedConnection &other) = delete;
@@ -259,7 +257,7 @@ namespace libp2p::connection {
     uint32_t last_created_stream_id_;
     std::unordered_map<StreamId, std::shared_ptr<YamuxStream>> streams_;
 
-    libp2p::common::Logger log_;
+    libp2p::common::Logger log_ = libp2p::common::createLogger("yx-conn");
 
     /// YAMUX STREAM API
 
