@@ -13,7 +13,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # 2 jobs in total
+        # 4 jobs in total
+        os: [ubuntu-18.04, macOS-10.14]
         compiler: [{
           "cc": "gcc",
           "cxx": "g++"
@@ -21,7 +22,6 @@ jobs:
           "cc": "clang",
           "cxx": "clang++"
         }]
-        os: [ubuntu-18.04, macOS-10.14]
     steps:
     - uses: actions/checkout@v1
       name: checkout
@@ -32,9 +32,13 @@ jobs:
     - name: install dependencies
       run: |
         set -e
-        printenv
-        sudo apt-get update
-        sudo apt-get install -y ninja-build
+        if [ "$RUNNER_OS" = "macOS" ]; then
+          brew install ninja
+        else
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+        fi
+
         sudo python3 -m pip install --upgrade pip
         sudo pip3 install scikit-build cmake requests gitpython gcovr pyyaml
     - name: cmake
