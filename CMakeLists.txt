@@ -13,25 +13,15 @@ set(CMAKE_TOOLCHAIN_FILE
     "Default toolchain"
     )
 
-message(STATUS "toolchain = ${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx17.cmake")
 
-set(CMAKE_CXX_STANDARD 17)
-
-if (NOT EXISTS "${CMAKE_TOOLCHAIN_FILE}")
-  message(STATUS "no cmake toolchain file")
-else ()
-  message(STATUS "toolchain presents")
-endif ()
-
-message(STATUS "standard = ${CMAKE_CXX_STANDARD}")
-
-include("cmake/3rdparty/Hunter/init.cmake")
+include("cmake/Hunter/init.cmake")
 HunterGate(
     URL "https://github.com/ruslo/hunter/archive/v0.23.171.tar.gz"
     SHA1 "5d68bcca78eee347239ca5f4d34f4b6c12683154"
+    LOCAL
 )
 
-PROJECT(libp2p CXX)
+project(libp2p C CXX)
 
 include(cmake/print.cmake)
 print("C flags: ${CMAKE_C_FLAGS}")
@@ -42,7 +32,7 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads)
 link_libraries(Threads::Threads)
 if (THREADS_HAVE_PTHREAD_ARG)
-  add_link_options(-lpthread)
+  link_libraries(pthread)
 endif ()
 
 include(CheckCXXCompilerFlag)

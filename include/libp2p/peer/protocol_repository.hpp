@@ -6,6 +6,7 @@
 #ifndef LIBP2P_PROTOCOL_REPOSITORY_HPP
 #define LIBP2P_PROTOCOL_REPOSITORY_HPP
 
+#include <set>
 #include <unordered_set>
 #include <vector>
 

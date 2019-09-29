@@ -1,0 +1,52 @@
+name: CI
+
+on: 
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  build:
+#    container:
+#      image: soramitsu/kagome-dev:8
+#      env:
+#        TOOLCHAIN: cmake/toolchain/${{ matrix.toolchain }}
+#        BUILD_DIR: /tmp/build
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        # 2 jobs in total
+        compiler: [{
+          "cc": "gcc",
+          "cxx": "g++"
+         }, {
+          "cc": "clang",
+          "cxx": "clang++"
+        }]
+    steps:
+    - uses: actions/checkout@v1
+      name: checkout
+      with:
+        submodules: true
+        clean: true
+        fetch-depth: 1
+    - name: install dependencies
+      run: |
+        set -e
+        sudo apt-get update
+        sudo apt-get install -y ninja-build
+        sudo python3 -m pip install --upgrade pip
+        sudo pip3 install scikit-build cmake requests gitpython gcovr pyyaml
+    - name: cmake
+      env:
+        CC: ${{ matrix.compiler.cc }}
+        CXX: ${{ matrix.compiler.cxx }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # has to be included to access other secrets
+        GITHUB_HUNTER_USERNAME: ${{ secrets.GITHUB_HUNTER_USERNAME }}
+        GITHUB_HUNTER_TOKEN: ${{ secrets.GITHUB_HUNTER_TOKEN }}
+      run: cmake . -GNinja -Bbuild
+    - name: build
+      run: cmake --build build -- -j4

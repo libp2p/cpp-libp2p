@@ -67,9 +67,6 @@ function(compile_proto_to_cpp PB_H PB_CC PROTO)
   set(GEN_COMMAND ${Protobuf_PROTOC_EXECUTABLE})
   set(GEN_ARGS ${Protobuf_INCLUDE_DIR})
 
-  message(STATUS "oh=${SCHEMA_OUT_DIR}/${SCHEMA_REL}/${GEN_PB_HEADER}")
-  message(STATUS "oc=${SCHEMA_OUT_DIR}/${SCHEMA_REL}/${GEN_PB}")
-
   add_custom_command(
       OUTPUT ${SCHEMA_OUT_DIR}/${SCHEMA_REL}/${GEN_PB_HEADER} ${SCHEMA_OUT_DIR}/${SCHEMA_REL}/${GEN_PB}
       COMMAND ${GEN_COMMAND}
@@ -92,7 +89,6 @@ function(add_proto_library NAME)
   foreach (PROTO IN ITEMS ${ARGN})
     compile_proto_to_cpp(H C ${PROTO})
     list(APPEND SOURCES ${H} ${C})
-    message(STATUS "h=${H} c=${C}")
   endforeach ()
 
   add_library(${NAME}
