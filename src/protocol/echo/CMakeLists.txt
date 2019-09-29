@@ -1,7 +1,7 @@
 # Copyright Soramitsu Co., Ltd. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-add_library(p2p_protocol_echo
+libp2p_add_library(p2p_protocol_echo
     echo.cpp
     server_echo_session.cpp
     client_echo_session.cpp

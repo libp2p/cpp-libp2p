@@ -3,7 +3,7 @@
 
 
 
-add_library(p2p_transport_parser
+libp2p_add_library(p2p_transport_parser
     multiaddress_parser.cpp
     )
 target_link_libraries(p2p_transport_parser
@@ -11,7 +11,7 @@ target_link_libraries(p2p_transport_parser
     p2p_multiaddress
     )
 
-add_library(p2p_upgrader
+libp2p_add_library(p2p_upgrader
     upgrader_impl.cpp
     )
 target_link_libraries(p2p_upgrader
@@ -19,7 +19,7 @@ target_link_libraries(p2p_upgrader
     )
 
 
-add_library(p2p_upgrader_session
+libp2p_add_library(p2p_upgrader_session
     upgrader_session.cpp
     )
 target_link_libraries(p2p_upgrader_session

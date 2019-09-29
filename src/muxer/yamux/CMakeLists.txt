@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(p2p_yamux
+libp2p_add_library(p2p_yamux
     yamux.cpp
     )
 target_link_libraries(p2p_yamux
@@ -11,7 +11,7 @@ target_link_libraries(p2p_yamux
     )
 
 
-add_library(p2p_yamuxed_connection
+libp2p_add_library(p2p_yamuxed_connection
     yamuxed_connection.cpp
     yamux_frame.cpp
     yamux_stream.cpp

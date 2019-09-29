@@ -28,20 +28,24 @@ print("C flags: ${CMAKE_C_FLAGS}")
 print("CXX flags: ${CMAKE_CXX_FLAGS}")
 print("Using CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
 
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads)
-link_libraries(Threads::Threads)
-if (THREADS_HAVE_PTHREAD_ARG)
-  link_libraries(pthread)
-endif ()
+#set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+#find_package(Threads)
+#link_libraries(Threads::Threads)
+#if (THREADS_HAVE_PTHREAD_ARG)
+#  link_libraries(pthread)
+#endif ()
 
 include(CheckCXXCompilerFlag)
+include(CMakePackageConfigHelpers)
+include(cmake/install.cmake)
+include(cmake/libp2p_add_library.cmake)
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 include(cmake/san.cmake)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(TESTING "Build tests" OFF)
 option(CLANG_FORMAT "Enable clang-format target" ON)
 option(CLANG_TIDY "Enable clang-tidy checks during compilation" OFF)
 option(COVERAGE "Enable generation of coverage info" OFF)
@@ -106,17 +110,13 @@ include_directories(
     deps/di/include
     deps/di/extension/include
     deps/hat-trie/include
-    deps/outcome
     deps/spdlog/include
 )
 
 add_subdirectory(src)
 
-include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
-include(cmake/install.cmake)
 
-install_deps_headers()
-
-enable_testing()
-add_subdirectory(test)
+if(TESTING)
+  enable_testing()
+  add_subdirectory(test)
+endif()

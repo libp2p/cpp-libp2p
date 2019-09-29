@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(p2p_multibase_codec
+libp2p_add_library(p2p_multibase_codec
     multibase_codec_impl.cpp
     codecs/base16.cpp
     codecs/base58.cpp

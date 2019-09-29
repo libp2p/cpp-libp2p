@@ -5,7 +5,7 @@
 
 add_subdirectory(protobuf)
 
-add_library(p2p_identify
+libp2p_add_library(p2p_identify
     identify.cpp
     identify_msg_processor.cpp
     observed_addresses.cpp

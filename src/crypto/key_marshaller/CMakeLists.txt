@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(p2p_key_marshaller
+libp2p_add_library(p2p_key_marshaller
     key_marshaller_impl.cpp
     )
 target_link_libraries(p2p_key_marshaller
