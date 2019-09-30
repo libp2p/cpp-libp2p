@@ -13,14 +13,7 @@ set(CMAKE_TOOLCHAIN_FILE
     "Default toolchain"
     )
 
-
 include("cmake/Hunter/init.cmake")
-HunterGate(
-    URL "https://github.com/cpp-pm/hunter/archive/v0.23.216.tar.gz"
-    SHA1 "a492a1879bee60c29f7af17ef56b45f0d7766241"
-    LOCAL
-)
-
 project(libp2p C CXX)
 
 include(cmake/print.cmake)
@@ -28,15 +21,7 @@ print("C flags: ${CMAKE_C_FLAGS}")
 print("CXX flags: ${CMAKE_CXX_FLAGS}")
 print("Using CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
 
-#set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-#find_package(Threads)
-#link_libraries(Threads::Threads)
-#if (THREADS_HAVE_PTHREAD_ARG)
-#  link_libraries(pthread)
-#endif ()
-
 include(CheckCXXCompilerFlag)
-include(CMakePackageConfigHelpers)
 include(cmake/install.cmake)
 include(cmake/libp2p_add_library.cmake)
 include(cmake/dependencies.cmake)
