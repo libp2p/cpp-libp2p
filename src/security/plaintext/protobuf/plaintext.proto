@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-import "src/crypto/protobuf/keys.proto";
+import "crypto/protobuf/keys.proto";
 
 package libp2p.security.plaintext.protobuf;
 

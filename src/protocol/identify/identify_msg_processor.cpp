@@ -12,7 +12,7 @@
 #include <libp2p/network/network.hpp>
 #include <libp2p/peer/address_repository.hpp>
 #include <libp2p/protocol/identify/utils.hpp>
-#include "src/protocol/identify/protobuf/identify.pb.h"
+#include <generated/protocol/identify/protobuf/identify.pb.h>
 
 namespace libp2p::protocol {
   IdentifyMessageProcessor::IdentifyMessageProcessor(
