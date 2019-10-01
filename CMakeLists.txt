@@ -30,7 +30,7 @@ include(cmake/san.cmake)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(TESTING "Build tests" OFF)
+option(TESTING "Build tests" ON)
 option(CLANG_FORMAT "Enable clang-format target" ON)
 option(CLANG_TIDY "Enable clang-tidy checks during compilation" OFF)
 option(COVERAGE "Enable generation of coverage info" OFF)

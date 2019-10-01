@@ -29,6 +29,6 @@ libp2p_add_library(p2p_multiaddress
     multiaddress.cpp
     )
 target_link_libraries(p2p_multiaddress
-    p2p_converter_utils
+    p2p_converters
     Boost::boost
     )

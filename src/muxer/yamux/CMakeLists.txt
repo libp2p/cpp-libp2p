@@ -8,6 +8,7 @@ libp2p_add_library(p2p_yamux
     )
 target_link_libraries(p2p_yamux
     p2p_yamuxed_connection
+    p2p_peer_id
     )
 
 
@@ -19,4 +20,5 @@ libp2p_add_library(p2p_yamuxed_connection
 target_link_libraries(p2p_yamuxed_connection
     Boost::boost
     p2p_logger
+    p2p_peer_id
     )
