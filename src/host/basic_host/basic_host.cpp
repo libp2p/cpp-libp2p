@@ -5,6 +5,10 @@
 
 #include <libp2p/host/basic_host/basic_host.hpp>
 
+#include <boost/assert.hpp>
+#include <libp2p/common/hexutil.hpp>
+#include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
+
 namespace libp2p::host {
 
   BasicHost::BasicHost(std::shared_ptr<peer::IdentityManager> idmgr,
@@ -74,8 +78,8 @@ namespace libp2p::host {
       const peer::Protocol &proto,
       const std::function<connection::Stream::Handler> &handler,
       const std::function<bool(const peer::Protocol &)> &predicate) {
-    network_->getListener().getRouter().setProtocolHandler(
-        proto, handler, predicate);
+    network_->getListener().getRouter().setProtocolHandler(proto, handler,
+                                                           predicate);
   }
 
   void BasicHost::newStream(const peer::PeerInfo &p,

@@ -26,10 +26,11 @@ namespace libp2p::connection {
       GO_AWAY = 3         // close the session
     };
     enum class Flag : uint16_t {
-      SYN = 1,  // start of a new stream
-      ACK = 2,  // acknowledge start of a new stream
-      FIN = 4,  // half-close of the stream
-      RST = 8   // reset a stream
+      NONE = 0,  // no flag is set
+      SYN = 1,   // start of a new stream
+      ACK = 2,   // acknowledge start of a new stream
+      FIN = 4,   // half-close of the stream
+      RST = 8    // reset a stream
     };
     enum class GoAwayError : uint32_t {
       NORMAL = 0,
@@ -41,7 +42,7 @@ namespace libp2p::connection {
 
     uint8_t version;
     FrameType type;
-    Flag flag;
+    uint16_t flags;
     StreamId stream_id;
     uint32_t length;
     ByteArray data;
@@ -49,11 +50,21 @@ namespace libp2p::connection {
     /**
      * Get bytes representation of the Yamux frame with given parameters
      * @return bytes of the frame
+     *
+     * @note even though Flag should be a number, in our implementation we do
+     * not send messages with more than one flag set, so enum can be accepted as
+     * well
      */
     static ByteArray frameBytes(
         uint8_t version, FrameType type, Flag flag, uint32_t stream_id,
         uint32_t length,
         gsl::span<const uint8_t> data = gsl::span<const uint8_t>());
+
+    /**
+     * Check if the (\param flag) is set in this frame
+     * @return true, if the flag is set, false otherwise
+     */
+    bool flagIsSet(Flag flag) const;
   };
 
   /**

@@ -74,7 +74,7 @@ namespace libp2p::multi {
     /**
      * @return the hash stored in this multihash
      */
-    const gsl::span<const uint8_t> getHash() const;
+    gsl::span<const uint8_t> getHash() const;
 
     /**
      * @return a string with hexadecimal representation of the multihash

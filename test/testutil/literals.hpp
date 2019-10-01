@@ -6,8 +6,9 @@
 #ifndef LIBP2P_TEST_TESTUTIL_LITERALS_HPP_
 #define LIBP2P_TEST_TESTUTIL_LITERALS_HPP_
 
-#include "libp2p/common/types.hpp"
 #include "libp2p/common/hexutil.hpp"
+#include "libp2p/common/types.hpp"
+#include "libp2p/crypto/protobuf/protobuf_key.hpp"
 #include "libp2p/multi/multiaddress.hpp"
 #include "libp2p/multi/multihash.hpp"
 #include "libp2p/peer/peer_id.hpp"
@@ -41,7 +42,9 @@ inline libp2p::multi::Multihash operator""_multihash(const char *c, size_t s) {
 inline libp2p::peer::PeerId operator""_peerid(const char *c, size_t s) {
   libp2p::crypto::PublicKey p;
   p.data = std::vector<uint8_t>(c, c + s);
-  return libp2p::peer::PeerId::fromPublicKey(p);
+  return libp2p::peer::PeerId::fromPublicKey(
+             libp2p::crypto::ProtobufKey{p.data})
+      .value();
 }
 
 #endif  // LIBP2P_TEST_TESTUTIL_LITERALS_HPP_

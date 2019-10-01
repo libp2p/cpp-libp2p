@@ -9,6 +9,7 @@
 namespace libp2p::multi {
   /// https://github.com/multiformats/js-multihash/blob/master/src/constants.js
   enum HashType : uint64_t {
+    identity = 0x0,
     sha1 = 0x11,
     sha256 = 0x12,
     sha512 = 0x13,

@@ -9,7 +9,6 @@
 #include <functional>
 #include <vector>
 
-#include <boost/system/error_code.hpp>
 #include <gsl/span>
 #include <outcome/outcome.hpp>
 

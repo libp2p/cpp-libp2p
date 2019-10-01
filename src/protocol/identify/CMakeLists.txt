@@ -17,4 +17,5 @@ target_link_libraries(p2p_identify
     p2p
     p2p_identify_proto
     p2p_protobuf_message_read_writer
+    p2p_logger
     )

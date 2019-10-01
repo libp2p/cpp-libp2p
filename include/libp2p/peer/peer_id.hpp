@@ -7,6 +7,7 @@
 #define LIBP2P_PEER_ID_HPP
 
 #include <libp2p/crypto/key.hpp>
+#include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include <libp2p/multi/multihash.hpp>
 #include <outcome/outcome.hpp>
 
@@ -33,7 +34,7 @@ namespace libp2p::peer {
      * @param key, from which PeerId is to be created
      * @return instance of PeerId
      */
-    static PeerId fromPublicKey(const crypto::PublicKey &key);
+    static FactoryResult fromPublicKey(const crypto::ProtobufKey &key);
 
     /**
      * Create a PeerId from the byte array (serialized multihash).
@@ -83,6 +84,7 @@ namespace libp2p::peer {
     bool operator!=(const PeerId &other) const;
 
    private:
+    static constexpr size_t kMaxInlineKeyLength = 42;
     /**
      * Create an instance of PeerId
      * @param hash, with which PeerId is to be created

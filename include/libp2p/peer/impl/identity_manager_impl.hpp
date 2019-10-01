@@ -9,13 +9,16 @@
 #include <libp2p/crypto/key_generator.hpp>
 #include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/peer/key_repository.hpp>
+#include <libp2p/crypto/key_marshaller.hpp>
 
 namespace libp2p::peer {
   class IdentityManagerImpl : public IdentityManager {
    public:
     ~IdentityManagerImpl() override = default;
 
-    explicit IdentityManagerImpl(crypto::KeyPair keyPair);
+    IdentityManagerImpl(
+        crypto::KeyPair keyPair,
+        const std::shared_ptr<crypto::marshaller::KeyMarshaller> &marshaller);
 
     const peer::PeerId &getId() const override;
 

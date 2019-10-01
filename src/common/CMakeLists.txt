@@ -14,3 +14,7 @@ target_link_libraries(p2p_hexutil
 add_library(p2p_logger
     logger.cpp
     )
+
+add_library(p2p_byteutil
+    byteutil.cpp
+    )

@@ -24,15 +24,18 @@ class YamuxFrameTest : public ::testing::Test {
   /**
    * Check that all frame's fields are as expected
    */
-  void checkFrame(boost::optional<YamuxFrame> frame_opt, uint8_t version,
-                  YamuxFrame::FrameType type, YamuxFrame::Flag flag,
-                  YamuxedConnection::StreamId stream_id, uint32_t length,
+  void checkFrame(boost::optional<YamuxFrame> frame_opt,
+                  uint8_t version,
+                  YamuxFrame::FrameType type,
+                  YamuxFrame::Flag flag,
+                  YamuxedConnection::StreamId stream_id,
+                  uint32_t length,
                   const ByteArray &frame_data) {
     ASSERT_TRUE(frame_opt);
     auto frame = *frame_opt;
     ASSERT_EQ(frame.version, version);
     ASSERT_EQ(frame.type, type);
-    ASSERT_EQ(frame.flag, flag);
+    ASSERT_EQ(frame.flags, static_cast<uint16_t>(flag));
     ASSERT_EQ(frame.stream_id, stream_id);
     ASSERT_EQ(frame.length, length);
     ASSERT_EQ(frame.data, frame_data);
@@ -49,9 +52,13 @@ TEST_F(YamuxFrameTest, ParseFrameSuccess) {
   auto frame_opt = parseFrame(data_frame_bytes);
 
   SCOPED_TRACE("ParseFrameSuccess");
-  checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::DATA, YamuxFrame::Flag::SYN,
-             default_stream_id, data_length, data);
+  checkFrame(frame_opt,
+             YamuxFrame::kDefaultVersion,
+             YamuxFrame::FrameType::DATA,
+             YamuxFrame::Flag::SYN,
+             default_stream_id,
+             data_length,
+             data);
 }
 
 /**

@@ -10,13 +10,16 @@
 #include <optional>
 
 #include <libp2p/connection/secure_connection.hpp>
+#include <libp2p/crypto/key_marshaller.hpp>
 
 namespace libp2p::connection {
   class PlaintextConnection : public SecureConnection {
    public:
-    PlaintextConnection(std::shared_ptr<RawConnection> raw_connection,
-                        crypto::PublicKey localPubkey,
-                        crypto::PublicKey remotePubkey);
+    PlaintextConnection(
+        std::shared_ptr<RawConnection> raw_connection,
+        crypto::PublicKey localPubkey,
+        crypto::PublicKey remotePubkey,
+        std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
     ~PlaintextConnection() override = default;
 
@@ -32,16 +35,20 @@ namespace libp2p::connection {
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 
-    void read(gsl::span<uint8_t> out, size_t bytes,
+    void read(gsl::span<uint8_t> out,
+              size_t bytes,
               ReadCallbackFunc cb) override;
 
-    void readSome(gsl::span<uint8_t> out, size_t bytes,
+    void readSome(gsl::span<uint8_t> out,
+                  size_t bytes,
                   ReadCallbackFunc cb) override;
 
-    void write(gsl::span<const uint8_t> in, size_t bytes,
+    void write(gsl::span<const uint8_t> in,
+               size_t bytes,
                WriteCallbackFunc cb) override;
 
-    void writeSome(gsl::span<const uint8_t> in, size_t bytes,
+    void writeSome(gsl::span<const uint8_t> in,
+                   size_t bytes,
                    WriteCallbackFunc cb) override;
 
     bool isClosed() const override;
@@ -53,6 +60,8 @@ namespace libp2p::connection {
 
     crypto::PublicKey local_;
     crypto::PublicKey remote_;
+
+    std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
   };
 }  // namespace libp2p::connection
 

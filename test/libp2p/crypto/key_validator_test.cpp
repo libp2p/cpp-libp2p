@@ -98,11 +98,9 @@ TEST_P(GeneratedKeysTest, InvalidPublicKeyInvalidatesPair) {
 }
 
 INSTANTIATE_TEST_CASE_P(GeneratedValidKeysCases, GeneratedKeysTest,
-                        ::testing::Values(Key::Type::RSA1024,
-                                          Key::Type::RSA2048,
-                                          Key::Type::RSA4096,
-                                          Key::Type::ED25519,
-                                          Key::Type::SECP256K1));
+                        ::testing::Values(Key::Type::RSA,
+                                          Key::Type::Ed25519,
+                                          Key::Type::Secp256k1));
 
 class RandomKeyTest : public BaseKeyTest,
                       public ::testing::TestWithParam<Key::Type> {};
@@ -126,8 +124,8 @@ TEST_P(RandomKeyTest, Every32byteIsValidPrivateKey) {
 }
 
 INSTANTIATE_TEST_CASE_P(RandomSequencesCases, RandomKeyTest,
-                        ::testing::Values(Key::Type::ED25519,
-                                          Key::Type::SECP256K1));
+                        ::testing::Values(Key::Type::Ed25519,
+                                          Key::Type::Secp256k1));
 
 class UnspecifiedKeyTest : public BaseKeyTest, public ::testing::Test {};
 

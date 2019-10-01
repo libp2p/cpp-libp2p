@@ -15,6 +15,8 @@ target_link_libraries(p2p_plaintext
     p2p_security_error
     p2p_plaintext_exchange_message_marshaller
     p2p_crypto_error
+    Microsoft.GSL::GSL
+    p2p_logger
     )
 
 add_library(p2p_plaintext_exchange_message_marshaller

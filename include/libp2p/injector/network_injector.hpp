@@ -227,7 +227,7 @@ namespace libp2p::injector {
     auto validator = std::make_shared<crypto::validator::KeyValidatorImpl>(gen);
 
     // assume no error here. otherwise... just blow up executable
-    auto keypair = gen->generateKeys(crypto::Key::Type::ED25519).value();
+    auto keypair = gen->generateKeys(crypto::Key::Type::Ed25519).value();
 
     // clang-format off
     return di::make_injector(

@@ -19,12 +19,11 @@ namespace libp2p::crypto {
      * Supported types of all keys
      */
     enum class Type {
-      UNSPECIFIED,
-      RSA1024,
-      RSA2048,
-      RSA4096,
-      ED25519,
-      SECP256K1
+      UNSPECIFIED = 100,
+      RSA = 0,
+      Ed25519 = 1,
+      Secp256k1 = 2,
+      ECDSA = 3
     };
 
     Type type = Type::UNSPECIFIED;  ///< key type

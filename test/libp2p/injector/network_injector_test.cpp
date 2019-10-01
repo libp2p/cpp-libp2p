@@ -41,8 +41,8 @@ TEST(NetworkBuilder, DefaultBuilds) {
  */
 TEST(NetworkBuilder, CustomKeyPairBuilds) {
   KeyPair keyPair{
-      {{Key::Type::ED25519, {1}}},
-      {{Key::Type::ED25519, {2}}},
+      {{Key::Type::Ed25519, {1}}},
+      {{Key::Type::Ed25519, {2}}},
   };
 
   auto injector = makeNetworkInjector(useKeyPair(keyPair));
