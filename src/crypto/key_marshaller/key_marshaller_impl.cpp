@@ -24,6 +24,8 @@ namespace libp2p::crypto::marshaller {
           return protobuf::KeyType::Ed25519;
         case Key::Type::Secp256k1:
           return protobuf::KeyType::Secp256k1;
+        case Key::Type::ECDSA:
+          return protobuf::KeyType::ECDSA;
       }
 
       return CryptoProviderError::UNKNOWN_KEY_TYPE;

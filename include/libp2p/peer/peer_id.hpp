@@ -85,6 +85,7 @@ namespace libp2p::peer {
 
    private:
     static constexpr size_t kMaxInlineKeyLength = 42;
+
     /**
      * Create an instance of PeerId
      * @param hash, with which PeerId is to be created

@@ -21,10 +21,13 @@ namespace libp2p::crypto {
     using Buffer = std::vector<uint8_t>;
 
     virtual ~KeyGenerator() = default;
+
     /**
      * @brief generates new key pair of specified type
      * @param key_type key type
      * @return new generated key pair of public and private key or error
+     *
+     * @note in case RSA key is chosen, the 2048-bit one will be generated
      */
     virtual outcome::result<KeyPair> generateKeys(Key::Type key_type) const = 0;
 

@@ -39,7 +39,8 @@ func makeBasicHost(listenPort int, insecure bool, randseed int64) (host.Host, er
 
 	// Generate a key pair for this host. We will use it at least
 	// to obtain a valid host ID.
-	priv, _, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+	priv, p, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
+	log.Println("============ %s", p)
 	if err != nil {
 		return nil, err
 	}
@@ -80,8 +81,8 @@ func main() {
 	// LibP2P code uses golog to log messages. They log with different
 	// string IDs (i.e. "swarm"). We can control the verbosity level for
 	// all loggers with:
-	golog.SetAllLoggers(golog.LevelInfo) // Change to DEBUG for extra info
-	//golog.SetDebugLogging()
+	// golog.SetAllLoggers(golog.LevelInfo) // Change to DEBUG for extra info
+	golog.SetDebugLogging()
 
 	// Parse options from the command line
 	listenF := flag.Int("l", 0, "wait for incoming connections")

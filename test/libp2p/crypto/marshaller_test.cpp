@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/crypto/key_marshaller/key_marshaller_impl.hpp"
+#include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -63,6 +63,11 @@ class Privkey : public testing::TestWithParam<KeyCase<PrivateKey>> {
 
 TEST_P(Pubkey, Valid) {
   auto [key, match_prefix] = GetParam();
+  if (key.type == Key::Type::UNSPECIFIED) {
+    // we can't marshal UNSPECIFIED keys
+    ASSERT_FALSE(marshaller_.marshal(key));
+    return;
+  }
 
   Buffer match;
   match.insert(match.begin(), match_prefix.begin(), match_prefix.end());
@@ -86,6 +91,11 @@ TEST_P(Pubkey, Valid) {
 
 TEST_P(Privkey, Valid) {
   auto [key, match_prefix] = GetParam();
+  if (key.type == Key::Type::UNSPECIFIED) {
+    // we can't marshal UNSPECIFIED keys
+    ASSERT_FALSE(marshaller_.marshal(key));
+    return;
+  }
 
   Buffer match;
   match.insert(match.begin(), match_prefix.begin(), match_prefix.end());
@@ -112,17 +122,15 @@ auto makeTestCases() {
   // clang-format off
   return std::vector<KeyCase<T>>{
       {{T{{Key::Type::UNSPECIFIED, randomBuffer(16)}}}, {18, 16}},
-      {{T{{Key::Type::RSA,     randomBuffer(16)}}}, {8, 1, 18, 16}},
-      {{T{{Key::Type::Ed25519,     randomBuffer(16)}}}, {8, 4, 18, 16}},
-      {{T{{Key::Type::Secp256k1,   randomBuffer(16)}}}, {8, 5, 18, 16}},
+      {{T{{Key::Type::RSA,     randomBuffer(16)}}}, {8, 0, 18, 16}},
+      {{T{{Key::Type::Ed25519,     randomBuffer(16)}}}, {8, 1, 18, 16}},
+      {{T{{Key::Type::Secp256k1,   randomBuffer(16)}}}, {8, 2, 18, 16}},
   };
   // clang-format on
 }
 
-INSTANTIATE_TEST_CASE_P(Marshaller,
-                        Pubkey,
+INSTANTIATE_TEST_CASE_P(Marshaller, Pubkey,
                         ::testing::ValuesIn(makeTestCases<PublicKey>()));
 
-INSTANTIATE_TEST_CASE_P(Marshaller,
-                        Privkey,
+INSTANTIATE_TEST_CASE_P(Marshaller, Privkey,
                         ::testing::ValuesIn(makeTestCases<PrivateKey>()));

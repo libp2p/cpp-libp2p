@@ -48,7 +48,8 @@ namespace libp2p::peer {
     OUTCOME_TRY(decoded_id, decodeBase58(id));
     OUTCOME_TRY(hash, Multihash::createFromBuffer(decoded_id));
 
-    if (hash.getType() != multi::HashType::sha256) {
+    if (hash.getType() != multi::HashType::sha256
+        && hash.toBuffer().size() > kMaxInlineKeyLength) {
       return FactoryError::SHA256_EXPECTED;
     }
 
@@ -56,7 +57,8 @@ namespace libp2p::peer {
   }
 
   PeerId::FactoryResult PeerId::fromHash(const Multihash &hash) {
-    if (hash.getType() != multi::HashType::sha256) {
+    if (hash.getType() != multi::HashType::sha256
+        && hash.toBuffer().size() > kMaxInlineKeyLength) {
       return FactoryError::SHA256_EXPECTED;
     }
 

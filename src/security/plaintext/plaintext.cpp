@@ -114,8 +114,7 @@ namespace libp2p::security {
     conn->read(
         *read_bytes, kMaxMsgSize,
         [self{shared_from_this()}, conn, p, cb{std::move(cb)},
-         read_bytes](auto &&r) {
-          // FIXME: use ntohs
+         read_bytes](auto &&r) mutable {
           auto bytes_size = (static_cast<uint32_t>(read_bytes->at(0)) << 24u)
               + (static_cast<uint32_t>(read_bytes->at(1)) << 16u)
               + (static_cast<uint32_t>(read_bytes->at(2)) << 8u)

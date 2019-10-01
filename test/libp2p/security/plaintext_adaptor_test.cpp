@@ -46,7 +46,7 @@ class PlaintextAdaptorTest : public testing::Test {
       std::make_shared<Plaintext>(marshaller, idmgr, key_marshaller);
 
   void SetUp() override {
-    ON_CALL(*conn, readSome(_, _, _)).WillByDefault(Arg2CallbackWithArg(5));
+    ON_CALL(*conn, read(_, _, _)).WillByDefault(Arg2CallbackWithArg(5));
     ON_CALL(*conn, write(_, _, _)).WillByDefault(Arg2CallbackWithArg(5));
 
     ON_CALL(*idmgr, getKeyPair()).WillByDefault(ReturnRef(local_keypair));
@@ -103,6 +103,8 @@ TEST_F(PlaintextAdaptorTest, SecureInbound) {
         EXPECT_OUTCOME_TRUE(sec_remote_pubkey, sec->remotePublicKey());
         EXPECT_EQ(sec_remote_pubkey, remote_pubkey);
 
+        EXPECT_CALL(*key_marshaller, marshal(sec_remote_pubkey))
+            .WillOnce(Return(ProtobufKey{remote_pubkey.data}));
         EXPECT_OUTCOME_TRUE(remote_id, sec->remotePeer());
         EXPECT_OUTCOME_TRUE(
             calculated, PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}))
@@ -137,6 +139,8 @@ TEST_F(PlaintextAdaptorTest, SecureOutbound) {
         EXPECT_OUTCOME_TRUE(sec_remote_pubkey, sec->remotePublicKey());
         EXPECT_EQ(sec_remote_pubkey, remote_pubkey);
 
+        EXPECT_CALL(*key_marshaller, marshal(sec_remote_pubkey))
+            .WillOnce(Return(ProtobufKey{remote_pubkey.data}));
         EXPECT_OUTCOME_TRUE(remote_id, sec->remotePeer());
         EXPECT_OUTCOME_TRUE(
             calculated, PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}))

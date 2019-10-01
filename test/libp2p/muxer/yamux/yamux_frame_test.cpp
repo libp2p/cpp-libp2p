@@ -24,12 +24,9 @@ class YamuxFrameTest : public ::testing::Test {
   /**
    * Check that all frame's fields are as expected
    */
-  void checkFrame(boost::optional<YamuxFrame> frame_opt,
-                  uint8_t version,
-                  YamuxFrame::FrameType type,
-                  YamuxFrame::Flag flag,
-                  YamuxedConnection::StreamId stream_id,
-                  uint32_t length,
+  void checkFrame(boost::optional<YamuxFrame> frame_opt, uint8_t version,
+                  YamuxFrame::FrameType type, YamuxFrame::Flag flag,
+                  YamuxedConnection::StreamId stream_id, uint32_t length,
                   const ByteArray &frame_data) {
     ASSERT_TRUE(frame_opt);
     auto frame = *frame_opt;
@@ -52,13 +49,9 @@ TEST_F(YamuxFrameTest, ParseFrameSuccess) {
   auto frame_opt = parseFrame(data_frame_bytes);
 
   SCOPED_TRACE("ParseFrameSuccess");
-  checkFrame(frame_opt,
-             YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::DATA,
-             YamuxFrame::Flag::SYN,
-             default_stream_id,
-             data_length,
-             data);
+  checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
+             YamuxFrame::FrameType::DATA, YamuxFrame::Flag::NONE,
+             default_stream_id, data_length, data);
 }
 
 /**
@@ -173,7 +166,7 @@ TEST_F(YamuxFrameTest, GoAwayMsg) {
 
   SCOPED_TRACE("GoAwayMsg");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::GO_AWAY, YamuxFrame::Flag::SYN, 0,
+             YamuxFrame::FrameType::GO_AWAY, YamuxFrame::Flag::NONE, 0,
              static_cast<uint32_t>(YamuxFrame::GoAwayError::PROTOCOL_ERROR),
              ByteArray{});
 }

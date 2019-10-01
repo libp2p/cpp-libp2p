@@ -36,7 +36,6 @@ namespace libp2p::crypto::validator {
 
   outcome::result<void> KeyValidatorImpl::validate(
       const PrivateKey &key) const {
-    // TODO(25.09.19) Akvinikym PRE-312: handle ECDSA keys validation
     switch (key.type) {
       case Key::Type::RSA:
         return validateRsa(key);
@@ -44,6 +43,9 @@ namespace libp2p::crypto::validator {
         return validateEd25519(key);
       case Key::Type::Secp256k1:
         return validateSecp256k1(key);
+      case Key::Type::ECDSA:
+        // TODO(25.09.19) Akvinikym PRE-312: handle ECDSA keys validation
+        BOOST_ASSERT_MSG(false, "not implemented");  // NOLINT
       case Key::Type::UNSPECIFIED:  // consider unspecified key valid
         break;
     }
@@ -59,6 +61,8 @@ namespace libp2p::crypto::validator {
         return validateEd25519(key);
       case Key::Type::Secp256k1:
         return validateSecp256k1(key);
+      case Key::Type::ECDSA:
+        BOOST_ASSERT_MSG(false, "not implemented");  // NOLINT
       case Key::Type::UNSPECIFIED:  // consider unspecified key valid
         break;
     }
