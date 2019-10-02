@@ -4,7 +4,7 @@
 #
 
 add_executable(libp2p_echo_server
-    libp2p_server.cpp
+    libp2p_echo_server.cpp
     )
 
 target_link_libraries(libp2p_echo_server

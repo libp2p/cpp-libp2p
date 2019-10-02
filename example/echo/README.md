@@ -1,4 +1,5 @@
 # Example Libp2p Echo Server
+## To be moved into a separate repo and turned into a test
 
 In order to build the C++ Libp2p Echo Server and test its compatibility with the Go Libp2p Echo Client, do the following:
 

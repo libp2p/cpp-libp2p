@@ -10,7 +10,6 @@
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/protocol/echo.hpp>
-#include <libp2p/security/plaintext.hpp>
 
 int main() {
   using libp2p::crypto::Key;
@@ -54,19 +53,28 @@ int main() {
   context->post([host{std::move(host)}] {
     auto ma =
         libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40010").value();
-    auto res = host->listen(ma);
-    if (!res) {
-      std::cerr << res.error().message();
+    auto listen_res = host->listen(ma);
+    if (!listen_res) {
+      std::cerr << "host cannot listen the given multiaddress: "
+                << listen_res.error().message() << "\n";
+      std::terminate();
     }
 
     host->start();
-    std::cout << "Server started. Peer id: ";
-    std::cout << host->getPeerInfo().id.toBase58() << std::endl;
+    std::cout << "Server started\nListening on: " << ma.getStringAddress()
+              << "\nPeer id: " << host->getPeerInfo().id.toBase58() << "\n";
   });
 
   // run the IO context
   context->run_for(std::chrono::seconds(5));
 
-  // close the stream after done, as Go implementation relies on it
-  stream->close([](auto &&) {});
+  if (stream) {
+    // close the stream after done, as Go implementation relies on it
+    stream->close([](auto &&close_res) {
+      if (!close_res) {
+        std::cerr << "stream close errored: " << close_res.error().message()
+                  << "\n";
+      }
+    });
+  }
 }
