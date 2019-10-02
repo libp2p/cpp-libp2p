@@ -7,6 +7,7 @@
 #define KAGOME_PROTOBUF_KEY_HPP
 
 #include <vector>
+#include <cstdint>
 
 namespace libp2p::crypto {
   /**

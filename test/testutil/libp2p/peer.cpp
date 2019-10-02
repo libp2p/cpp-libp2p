@@ -10,7 +10,7 @@ namespace testutil {
   PeerId randomPeerId() {
     std::vector<uint8_t> rand_key(32, 0);
     for (auto i = 0u; i < 32u; i++) {
-      rand_key[i] = (arc4random() & 0xffu);
+      rand_key[i] = (rand() & 0xffu);  // NOLINT
     }
     return PeerId::fromPublicKey(libp2p::crypto::ProtobufKey{rand_key}).value();
   }
