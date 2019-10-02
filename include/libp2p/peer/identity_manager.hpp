@@ -6,15 +6,9 @@
 #ifndef LIBP2P_IDENTITY_MANAGER_HPP
 #define LIBP2P_IDENTITY_MANAGER_HPP
 
-#include <memory>
-
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/peer/peer_id.hpp>
-
-namespace libp2p::crypto::marshaller {
-  class KeyMarshaller;
-}
 
 namespace libp2p::peer {
 

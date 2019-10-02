@@ -220,11 +220,13 @@ namespace libp2p::crypto {
     switch (key_type) {
       case Key::Type::RSA:
         // TODO(akvinikym) 01.10.19 PRE-314: implement
-        throw std::logic_error{"Not implemented"};
+        BOOST_ASSERT_MSG(false, "not implemented");
       case Key::Type::Ed25519:
         return generateEd25519();
       case Key::Type::Secp256k1:
         return generateSecp256k1();
+      case Key::Type::ECDSA:
+        BOOST_ASSERT_MSG(false, "not implemented");
       default:
         return KeyGeneratorError::UNSUPPORTED_KEY_TYPE;
     }
@@ -232,7 +234,7 @@ namespace libp2p::crypto {
 
   outcome::result<KeyPair> KeyGeneratorImpl::generateRsa(
       common::RSAKeyType bits_option) const {
-    throw std::logic_error{"Not implemented"};
+    BOOST_ASSERT_MSG(false, "not implemented");
 
     //    int bits = 0;
     //    Key::Type key_type;

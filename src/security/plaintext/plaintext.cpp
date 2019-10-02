@@ -12,10 +12,10 @@
 #include <libp2p/security/plaintext/plaintext_connection.hpp>
 
 #define PLAINTEXT_OUTCOME_TRY(name, res, conn, cb) \
-  auto name = (res);                               \
-  if (name.has_error()) {                          \
-    closeConnection(conn, name.error());           \
-    cb(name.error());                              \
+  auto(name) = (res);                              \
+  if ((name).has_error()) {                        \
+    closeConnection(conn, (name).error());         \
+    cb((name).error());                            \
     return;                                        \
   }
 
@@ -114,7 +114,7 @@ namespace libp2p::security {
     conn->read(
         *read_bytes, kMaxMsgSize,
         [self{shared_from_this()}, conn, p, cb{std::move(cb)},
-         read_bytes](auto &&r) mutable {
+         read_bytes](auto &&r) {
           auto bytes_size = (static_cast<uint32_t>(read_bytes->at(0)) << 24u)
               + (static_cast<uint32_t>(read_bytes->at(1)) << 16u)
               + (static_cast<uint32_t>(read_bytes->at(2)) << 8u)
@@ -123,15 +123,14 @@ namespace libp2p::security {
           auto received_bytes =
               std::make_shared<std::vector<uint8_t>>(bytes_size);
           conn->read(*received_bytes, received_bytes->size(),
-                     [self, conn, p, cb, received_bytes](auto &&r) mutable {
-                       self->readCallback(std::move(conn), p, cb,
-                                          received_bytes, r);
+                     [self, conn, p, cb, received_bytes](auto &&r) {
+                       self->readCallback(conn, p, cb, received_bytes, r);
                      });
         });
   }
 
   void Plaintext::readCallback(
-      std::shared_ptr<connection::RawConnection> conn,  // NOLINT
+      const std::shared_ptr<connection::RawConnection> &conn,
       const MaybePeerId &p, const SecConnCallbackFunc &cb,
       const std::shared_ptr<std::vector<uint8_t>> &read_bytes,
       outcome::result<size_t> read_call_res) const {
@@ -168,7 +167,7 @@ namespace libp2p::security {
     }
 
     cb(std::make_shared<connection::PlaintextConnection>(
-        std::move(conn), idmgr_->getKeyPair().publicKey, std::move(pkey),
+        conn, idmgr_->getKeyPair().publicKey, std::move(pkey),
         key_marshaller_));
   }
 

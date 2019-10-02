@@ -14,8 +14,6 @@
 #include "testutil/clock/impl/clock_impl.hpp"
 #include "testutil/outcome.hpp"
 
-using namespace libp2p;
-
 struct TickCounter;
 
 /**
@@ -26,8 +24,18 @@ class Peer {
   template <class T>
   using sptr = std::shared_ptr<T>;
 
+  using Multiaddress = libp2p::multi::Multiaddress;
+  using PeerInfo = libp2p::peer::PeerInfo;
+  using Stream = libp2p::connection::Stream;
+  using BasicHost = libp2p::host::BasicHost;
+  using KeyPair = libp2p::crypto::KeyPair;
+  using MuxedConnectionConfig = libp2p::muxer::MuxedConnectionConfig;
+  using Host = libp2p::Host;
+  using Echo = libp2p::protocol::Echo;
+  using BoostRandomGenerator = libp2p::crypto::random::BoostRandomGenerator;
+  using KeyGenerator = libp2p::crypto::KeyGenerator;
+
   using Context = boost::asio::io_context;
-  using Stream = connection::Stream;
 
  public:
   using Duration = libp2p::clock::SteadyClockImpl::Duration;
@@ -43,8 +51,8 @@ class Peer {
    * @param address address to listen
    * @param pp promise to set when peer info is obtained
    */
-  void startServer(const multi::Multiaddress &address,
-                   std::shared_ptr<std::promise<peer::PeerInfo>> promise);
+  void startServer(const Multiaddress &address,
+                   std::shared_ptr<std::promise<PeerInfo>> promise);
 
   /**
    * @brief schedules start of client session
@@ -52,7 +60,7 @@ class Peer {
    * @param message_count number of messages to send
    * @param tester object for testing purposes
    */
-  void startClient(const peer::PeerInfo &pinfo, size_t message_count,
+  void startClient(const PeerInfo &pinfo, size_t message_count,
                    sptr<TickCounter> tester);
 
   /**
@@ -61,17 +69,16 @@ class Peer {
   void wait();
 
  private:
-  sptr<host::BasicHost> makeHost(crypto::KeyPair keyPair);
+  sptr<BasicHost> makeHost(KeyPair keyPair);
 
-  muxer::MuxedConnectionConfig muxed_config_;  ///< muxed connection config
-  const Duration timeout_;                     ///< operations timeout
-  sptr<Context> context_;                      ///< io context
-  std::thread thread_;                         ///< peer working thread
-  sptr<Host> host_;                            ///< host
-  sptr<protocol::Echo> echo_;                  ///< echo protocol
-  sptr<crypto::random::BoostRandomGenerator>
-      random_provider_;                       ///< random provider
-  sptr<crypto::KeyGenerator> key_generator_;  ///< key generator
+  MuxedConnectionConfig muxed_config_;          ///< muxed connection config
+  const Duration timeout_;                      ///< operations timeout
+  sptr<Context> context_;                       ///< io context
+  std::thread thread_;                          ///< peer working thread
+  sptr<Host> host_;                             ///< host
+  sptr<Echo> echo_;                             ///< echo protocol
+  sptr<BoostRandomGenerator> random_provider_;  ///< random provider
+  sptr<KeyGenerator> key_generator_;            ///< key generator
 };
 
 #endif  // LIBP2P_HOST_TEST_PEER_HPP

@@ -84,6 +84,8 @@ namespace libp2p::peer {
     bool operator!=(const PeerId &other) const;
 
    private:
+    /// if key, from which a PeerId is created, does not exceed this size, it's
+    /// put as a PeerId as-is, without SHA-256 hashing
     static constexpr size_t kMaxInlineKeyLength = 42;
 
     /**

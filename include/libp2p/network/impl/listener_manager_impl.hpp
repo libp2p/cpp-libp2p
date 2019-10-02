@@ -63,7 +63,7 @@ namespace libp2p::network {
     std::shared_ptr<ConnectionManager> cmgr_;
 
     void onConnection(
-        outcome::result<std::shared_ptr<connection::CapableConnection>>);
+        outcome::result<std::shared_ptr<connection::CapableConnection>> rconn);
   };
 
 }  // namespace libp2p::network

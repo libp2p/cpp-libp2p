@@ -59,7 +59,7 @@ namespace libp2p::security {
         const MaybePeerId &p, SecConnCallbackFunc cb) const;
 
     // the callback passed to an async read call in receiveExchangeMsg
-    void readCallback(std::shared_ptr<connection::RawConnection> conn,
+    void readCallback(const std::shared_ptr<connection::RawConnection> &conn,
                       const MaybePeerId &p, const SecConnCallbackFunc &cb,
                       const std::shared_ptr<std::vector<uint8_t>> &read_bytes,
                       outcome::result<size_t> read_call_res) const;

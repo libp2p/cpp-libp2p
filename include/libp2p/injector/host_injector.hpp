@@ -28,8 +28,6 @@ namespace libp2p::injector {
 
         di::bind<Host>.template to<host::BasicHost>(),
 
-        //di::bind<context_t>.to<context_t>().in(boost::di::singleton),
-
         di::bind<muxer::MuxedConnectionConfig>.to(muxer::MuxedConnectionConfig()),
 
         // repositories

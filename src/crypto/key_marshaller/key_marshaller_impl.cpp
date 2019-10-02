@@ -26,6 +26,8 @@ namespace libp2p::crypto::marshaller {
           return protobuf::KeyType::Secp256k1;
         case Key::Type::ECDSA:
           return protobuf::KeyType::ECDSA;
+        case Key::Type::UNSPECIFIED:
+          return CryptoProviderError::INVALID_KEY_TYPE;
       }
 
       return CryptoProviderError::UNKNOWN_KEY_TYPE;
@@ -44,6 +46,8 @@ namespace libp2p::crypto::marshaller {
           return Key::Type::Ed25519;
         case protobuf::KeyType::Secp256k1:
           return Key::Type::Secp256k1;
+        case protobuf::KeyType::ECDSA:
+          return Key::Type::ECDSA;
         default:
           return CryptoProviderError::UNKNOWN_KEY_TYPE;
       }
@@ -67,7 +71,6 @@ namespace libp2p::crypto::marshaller {
 
   outcome::result<ProtobufKey> KeyMarshallerImpl::marshal(
       const PrivateKey &key) const {
-    // TODO(Harrm): Check if it's a typo
     protobuf::PrivateKey protobuf_key;
     OUTCOME_TRY(type, marshalKeyType(key.type));
     protobuf_key.set_type(type);

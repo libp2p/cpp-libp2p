@@ -12,13 +12,14 @@
 #include "acceptance/p2p/host/peer/tick_counter.hpp"
 #include "acceptance/p2p/host/protocol/client_test_session.hpp"
 
+using namespace libp2p;  // NOLINT
+
 Peer::Peer(Peer::Duration timeout)
     : muxed_config_{1024576, 1000},
       timeout_{timeout},
       context_{std::make_shared<Context>()},
-      echo_{std::make_shared<protocol::Echo>()},
-      random_provider_{
-          std::make_shared<crypto::random::BoostRandomGenerator>()},
+      echo_{std::make_shared<Echo>()},
+      random_provider_{std::make_shared<BoostRandomGenerator>()},
       key_generator_{
           std::make_shared<crypto::KeyGeneratorImpl>(*random_provider_)} {
   EXPECT_OUTCOME_TRUE_MSG(
@@ -27,10 +28,9 @@ Peer::Peer(Peer::Duration timeout)
 
   host_ = makeHost(std::move(keys));
 
-  host_->setProtocolHandler(echo_->getProtocolId(),
-                            [this](std::shared_ptr<connection::Stream> result) {
-                              echo_->handle(result);
-                            });
+  host_->setProtocolHandler(
+      echo_->getProtocolId(),
+      [this](std::shared_ptr<Stream> result) { echo_->handle(result); });
 }
 
 void Peer::startServer(const multi::Multiaddress &address,
