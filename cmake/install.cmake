@@ -9,7 +9,6 @@ function (libp2p_install targets)
       PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
       FRAMEWORK DESTINATION ${CMAKE_INSTALL_PREFIX}
       )
-  list(APPEND TARGETS_TO_BE_INSTALLED ${targets})
 endfunction()
 
 install(
