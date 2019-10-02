@@ -137,7 +137,7 @@ namespace libp2p::connection {
 
     auto write_lambda = [self{shared_from_this()}, cb = std::move(cb), in,
                          bytes, some]() mutable {
-      if (self->send_window_size_ - bytes >= 0) {
+      if (self->send_window_size_ >= bytes) {
         // we can write - window size on the other side allows us
         auto conn_wptr = self->yamuxed_connection_;
         if (conn_wptr.expired()) {

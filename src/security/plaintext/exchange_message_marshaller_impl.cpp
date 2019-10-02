@@ -79,7 +79,7 @@ namespace libp2p::security::plaintext {
     if (!pubkey_msg->ParseFromString(str_pubkey)) {
       return Error::PUBLIC_KEY_SERIALIZING_ERROR;
     }
-    return pubkey_msg;
+    return outcome::success(std::move(pubkey_msg));
   }
 
 }  // namespace libp2p::security::plaintext
