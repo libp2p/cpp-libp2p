@@ -19,7 +19,7 @@
 #include <libp2p/peer/peer_repository.hpp>
 #include <libp2p/peer/protocol.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p {
   /**

@@ -60,3 +60,12 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
       run: cmake --build build --target test
+# TODO(warchant): on CI (linux/clang) this can not be built, figure out why
+#    - name: install & test
+#      run: |
+#        # install libp2p and include it as a subproject through find_package
+#        sudo cmake --build build --target install
+#        cd example/00-install
+#        mkdir build && cd build
+#        cmake .. && make
+#        ./main

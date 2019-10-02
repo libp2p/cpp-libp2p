@@ -6,7 +6,7 @@
 #ifndef LIBP2P_IPFS_CONVERTER_HPP
 #define LIBP2P_IPFS_CONVERTER_HPP
 
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::multi::converters {
 

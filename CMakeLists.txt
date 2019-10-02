@@ -13,14 +13,7 @@ set(CMAKE_TOOLCHAIN_FILE
     "Default toolchain"
     )
 
-
 include("cmake/Hunter/init.cmake")
-HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.23.171.tar.gz"
-    SHA1 "5d68bcca78eee347239ca5f4d34f4b6c12683154"
-    LOCAL
-)
-
 project(libp2p C CXX)
 
 include(cmake/print.cmake)
@@ -28,20 +21,16 @@ print("C flags: ${CMAKE_C_FLAGS}")
 print("CXX flags: ${CMAKE_CXX_FLAGS}")
 print("Using CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
 
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads)
-link_libraries(Threads::Threads)
-if (THREADS_HAVE_PTHREAD_ARG)
-  link_libraries(pthread)
-endif ()
-
 include(CheckCXXCompilerFlag)
+include(cmake/install.cmake)
+include(cmake/libp2p_add_library.cmake)
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 include(cmake/san.cmake)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(TESTING "Build tests" ON)
 option(CLANG_FORMAT "Enable clang-format target" ON)
 option(CLANG_TIDY "Enable clang-tidy checks during compilation" OFF)
 option(COVERAGE "Enable generation of coverage info" OFF)
@@ -95,8 +84,6 @@ if (CLANG_FORMAT)
   include(cmake/clang-format.cmake)
 endif ()
 
-add_subdirectory(deps)
-
 include_directories(
     # project includes
     ${PROJECT_SOURCE_DIR}/include
@@ -108,75 +95,13 @@ include_directories(
     deps/di/include
     deps/di/extension/include
     deps/hat-trie/include
-    deps/outcome
     deps/spdlog/include
 )
 
 add_subdirectory(src)
 
-include(GNUInstallDirs)
 
-include(cmake/install.cmake)
-
-install_deps_headers()
-
-#libp2p_install(
-#    TARGETS
-#    libp2p
-#    libp2p_default_network
-#    libp2p_network
-#    libp2p_tcp
-#    libp2p_yamux
-#    libp2p_plaintext
-#    libp2p_connection_manager
-#    libp2p_transport_manager
-#    libp2p_listener_manager
-#    libp2p_identity_manager
-#    libp2p_dialer
-#    libp2p_router
-#    multiselect
-#    random_generator
-#    key_generator
-#    key_validator
-#    key_marshaller
-#    libp2p_tcp_connection
-#    libp2p_tcp_listener
-#    libp2p_yamuxed_connection
-#    libp2p_security_error
-#    plaintext_exchange_message_marshaller
-#    crypto_error
-#    multiaddress
-#    libp2p_peer_id
-#    uvarint
-#    multihash
-#    crypto_key
-#    libp2p_upgrader
-#    libp2p_upgrader_session
-#    converter_utils
-#    multibase_codec
-#    conversion_error
-#    converters
-#    hexutil
-#    keys_proto
-#    plaintext_protobuf
-#    logger
-#    sha
-#)
-
-include(CMakePackageConfigHelpers)
-
-set(CONFIG_INCLUDE_DIRS ${CMAKE_INSTALL_FULL_INCLUDEDIR}/libp2p)
-configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/libp2pConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/libp2pConfig.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
-    )
-
-install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/libp2pConfig.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
-    )
-
-export(PACKAGE libp2p)
-
-enable_testing()
-add_subdirectory(test)
+if(TESTING)
+  enable_testing()
+  add_subdirectory(test)
+endif()

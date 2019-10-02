@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(p2p_random_generator
+libp2p_add_library(p2p_random_generator
     boost_generator.cpp
     )
 

@@ -8,7 +8,7 @@
 
 #include <memory>
 
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/basic/readwritecloser.hpp>
 #include <libp2p/protocol_muxer/multiselect/connection_state.hpp>
 #include <libp2p/protocol_muxer/multiselect/message_manager.hpp>

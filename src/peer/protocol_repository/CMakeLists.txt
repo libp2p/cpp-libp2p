@@ -1,11 +1,11 @@
 # Copyright Soramitsu Co., Ltd. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-add_library(p2p_inmem_protocol_repository
+libp2p_add_library(p2p_inmem_protocol_repository
     inmem_protocol_repository.cpp
     )
 target_link_libraries(p2p_inmem_protocol_repository
-    outcome
+    Boost::boost
     p2p_peer_errors
     p2p_multihash
     p2p_peer_id

@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include "testutil/literals.hpp"
 
 using libp2p::common::ByteArray;

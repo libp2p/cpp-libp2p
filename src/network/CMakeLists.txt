@@ -5,7 +5,7 @@
 
 add_subdirectory(impl)
 
-add_library(p2p_default_network
+libp2p_add_library(p2p_default_network
     default_network.cpp
     )
 target_link_libraries(p2p_default_network

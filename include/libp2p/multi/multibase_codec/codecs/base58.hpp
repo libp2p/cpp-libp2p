@@ -9,7 +9,7 @@
 #include <optional>
 
 #include <libp2p/common/types.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 /**
  * Encode/decode to/from base58 format

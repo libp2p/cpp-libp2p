@@ -6,7 +6,7 @@
 #ifndef LIBP2P_MULTI_CONVERTERS_CONVERSION_ERROR_HPP_
 #define LIBP2P_MULTI_CONVERTERS_CONVERSION_ERROR_HPP_
 
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::multi::converters {
 

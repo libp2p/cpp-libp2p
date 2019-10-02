@@ -17,7 +17,7 @@
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/transport/transport_listener.hpp>
-#include <outcome/outcome.hpp>  // for outcome::result
+#include <libp2p/outcome/outcome.hpp>  // for outcome::result
 
 namespace libp2p::transport {
 

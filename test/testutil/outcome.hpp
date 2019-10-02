@@ -7,7 +7,7 @@
 #define LIBP2P_GTEST_OUTCOME_UTIL_HPP
 
 #include <gtest/gtest.h>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 #define PP_CAT(a, b) PP_CAT_I(a, b)
 #define PP_CAT_I(a, b) PP_CAT_II(~, a##b)

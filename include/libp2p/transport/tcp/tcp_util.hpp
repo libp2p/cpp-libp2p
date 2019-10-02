@@ -12,7 +12,7 @@
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 #include <gsl/span>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 
 namespace libp2p::transport::detail {

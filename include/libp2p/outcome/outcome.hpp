@@ -12,7 +12,7 @@
 
 #define OUTCOME_TRY(...) BOOST_OUTCOME_TRY(__VA_ARGS__)
 
-#include <outcome/outcome-register.hpp>
+#include <libp2p/outcome/outcome-register.hpp>
 
 /**
  * __cpp_sized_deallocation macro interferes with protobuf generated files

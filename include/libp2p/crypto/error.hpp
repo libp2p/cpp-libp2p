@@ -6,7 +6,7 @@
 #ifndef LIBP2P_CRYPTO_ERROR_HPP
 #define LIBP2P_CRYPTO_ERROR_HPP
 
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto {
   enum class CryptoProviderError {
