@@ -9,7 +9,7 @@
 #include <libp2p/crypto/aes_provider.hpp>
 
 #include <libp2p/crypto/common.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto::aes {
   class AesProviderImpl : public AesProvider {

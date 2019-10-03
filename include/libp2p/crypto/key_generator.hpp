@@ -9,7 +9,7 @@
 #include <boost/filesystem.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <vector>
 
 namespace libp2p::crypto {

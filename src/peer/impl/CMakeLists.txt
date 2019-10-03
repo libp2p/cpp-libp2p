@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(p2p_identity_manager
+libp2p_add_library(p2p_identity_manager
     identity_manager_impl.cpp
     )
 target_link_libraries(p2p_identity_manager
     p2p_peer_id
     )
 
-add_library(p2p_peer_repository
+libp2p_add_library(p2p_peer_repository
     peer_repository_impl.cpp
     )
 target_link_libraries(p2p_peer_repository

@@ -19,7 +19,7 @@
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
 #include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 using libp2p::common::hex_upper;
 using libp2p::common::unhex;

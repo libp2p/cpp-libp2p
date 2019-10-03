@@ -6,7 +6,7 @@
 #ifndef LIBP2P_CRYPTO_KEY_VALIDATOR_HPP
 #define LIBP2P_CRYPTO_KEY_VALIDATOR_HPP
 
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/crypto/key.hpp>
 
 namespace libp2p::crypto::validator {

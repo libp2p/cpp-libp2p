@@ -12,7 +12,7 @@
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/peer/protocol.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::network {
 

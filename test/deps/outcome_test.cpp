@@ -4,7 +4,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <string>
 
 using std::string_literals::operator""s;

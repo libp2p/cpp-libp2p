@@ -22,7 +22,7 @@ addtest(address_converter_test
 
 target_link_libraries(address_converter_test
     p2p_uvarint
-    p2p_converter_utils
+    p2p_converters
     )
 
 addtest(string_to_bytes_test
@@ -30,5 +30,5 @@ addtest(string_to_bytes_test
     )
 
 target_link_libraries(string_to_bytes_test
-    p2p_converter_utils
+    p2p_converters
     )

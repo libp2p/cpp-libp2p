@@ -12,7 +12,7 @@
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/connection/secure_connection.hpp>
 #include <libp2p/peer/peer_id.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::security {
 

@@ -6,7 +6,6 @@ add_library(p2p_testutil_peer
     )
 target_link_libraries(p2p_testutil_peer
     p2p_peer_id
-    Microsoft.GSL::GSL
     )
 
 add_library(p2p_testutil_read_writer_helper
