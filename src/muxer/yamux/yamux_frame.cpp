@@ -19,6 +19,7 @@ namespace libp2p::connection {
 
     ByteArray bytes;
     bytes.reserve(kHeaderLength);  // minimum header size
+    // TODO(akvinikym) 03.10.19 PRE-319: refine the functions
     putUint32BE(putUint32BE(putUint16BE(putUint8(putUint8(bytes, version),
                                                  static_cast<uint8_t>(type)),
                                         static_cast<uint16_t>(flag)),
@@ -115,16 +116,11 @@ namespace libp2p::connection {
         return {};
     }
 
-    uint16_t flags;
-    memcpy(&flags, &frame_bytes[2], sizeof(flags));
-    frame.flags = ntohs(flags);
+    frame.flags = ntohs(common::convert<uint16_t>(&frame_bytes[2]));
 
-    uint32_t temp32;
-    memcpy(&temp32, &frame_bytes[4], sizeof(temp32));
-    frame.stream_id = ntohl(temp32);
+    frame.stream_id = ntohl(common::convert<uint32_t>(&frame_bytes[4]));
 
-    memcpy(&temp32, &frame_bytes[8], sizeof(temp32));
-    frame.length = ntohl(temp32);
+    frame.length = ntohl(common::convert<uint32_t>(&frame_bytes[8]));
 
     const auto &data_begin = frame_bytes.begin() + YamuxFrame::kHeaderLength;
     if (data_begin != frame_bytes.end()) {

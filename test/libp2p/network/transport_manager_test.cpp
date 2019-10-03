@@ -6,12 +6,13 @@
 #include "libp2p/network/impl/transport_manager_impl.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include "mock/libp2p/transport/transport_mock.hpp"
-#include "testutil/literals.hpp"
 
 using namespace libp2p::network;
 using namespace libp2p::multi;
 using namespace libp2p::transport;
+using namespace libp2p::common;
 
 using testing::AtMost;
 using testing::Return;

@@ -7,6 +7,7 @@
 #include <random>
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/muxer/yamux.hpp>
@@ -17,7 +18,6 @@
 #include <mock/libp2p/crypto/key_validator_mock.hpp>
 #include <mock/libp2p/transport/upgrader_mock.hpp>
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
 
 using namespace libp2p;
@@ -30,6 +30,7 @@ using namespace peer;
 using namespace crypto;
 using namespace marshaller;
 using namespace validator;
+using namespace libp2p::common;
 
 using ::testing::_;
 using ::testing::Mock;

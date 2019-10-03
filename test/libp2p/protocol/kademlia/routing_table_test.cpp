@@ -9,13 +9,14 @@
 
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/literals.hpp"
+#include <libp2p/common/literals.hpp>
 #include "testutil/outcome.hpp"
 
 using namespace libp2p;
 using namespace protocol;
 using namespace kademlia;
 using namespace peer;
+using namespace common;
 using libp2p::event::Bus;
 
 using ::testing::Return;

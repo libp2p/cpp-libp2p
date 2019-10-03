@@ -7,7 +7,7 @@
 #include <iostream>
 #include <memory>
 
-#include <libp2p/common/hexutil.hpp>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/protocol/echo.hpp>
@@ -17,21 +17,16 @@ int main() {
   using libp2p::crypto::KeyPair;
   using libp2p::crypto::PrivateKey;
   using libp2p::crypto::PublicKey;
+  using libp2p::common::operator""_unhex;
 
   // this keypair generates a PeerId
   // "12D3KooWLs7RC93EGXZzn9YdKyZYYx3f9UjTLYNX1reThpCkFb83"
-  KeyPair keypair{
-      PublicKey{{Key::Type::Ed25519,
-                 {libp2p::common::unhex("a4249ea6d62bdd8bccf62257ac4899ff284796"
-                                        "3228b388fda288db5d64e517e0")
-                      .value()}}},
-      PrivateKey{
-          {Key::Type::Ed25519,
-           {libp2p::common::unhex("4a9361c525840f7086b893d584ebbe475b4ec"
-                                  "7069951d2e897e8bceb0a3f35ce")
-                .value()}}}};  // generally it's a bad idea to use .value() on
-                               // the result without check, but here we are
-                               // sure, that the values can be unhexed
+  KeyPair keypair{PublicKey{{Key::Type::Ed25519,
+                             "a4249ea6d62bdd8bccf62257ac4899ff284796"
+                             "3228b388fda288db5d64e517e0"_unhex}},
+                  PrivateKey{{Key::Type::Ed25519,
+                              "4a9361c525840f7086b893d584ebbe475b4ec"
+                              "7069951d2e897e8bceb0a3f35ce"_unhex}}};
 
   // create a default Host via an injector, overriding a random-generated
   // keypair with ours

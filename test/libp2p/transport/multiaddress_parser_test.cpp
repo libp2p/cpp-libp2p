@@ -8,11 +8,12 @@
 #include <gtest/gtest.h>
 #include <libp2p/outcome/outcome.hpp>
 #include "testutil/outcome.hpp"
-#include "testutil/literals.hpp"
+#include <libp2p/common/literals.hpp>
 
 using libp2p::multi::Multiaddress;
 using libp2p::multi::Protocol;
 using libp2p::transport::MultiaddressParser;
+using namespace libp2p::common;
 
 using ::testing::Test;
 using ::testing::TestWithParam;

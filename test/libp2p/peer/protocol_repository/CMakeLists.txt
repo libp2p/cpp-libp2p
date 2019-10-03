@@ -6,4 +6,5 @@ addtest(inmem_protocol_repository_test
     )
 target_link_libraries(inmem_protocol_repository_test
     p2p_inmem_protocol_repository
+    p2p_literals
     )

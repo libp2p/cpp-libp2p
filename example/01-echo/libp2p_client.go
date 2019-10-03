@@ -20,7 +20,6 @@ import (
 
 	golog "github.com/ipfs/go-log"
 	ma "github.com/multiformats/go-multiaddr"
-	//gologging "github.com/whyrusleeping/go-logging"
 )
 
 // makeBasicHost creates a LibP2P host with a random peer ID listening on the

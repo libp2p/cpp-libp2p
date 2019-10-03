@@ -21,4 +21,5 @@ target_link_libraries(multiselect_test
     p2p_tcp
     p2p_plaintext
     p2p_testutil_peer
+    p2p_literals
     )

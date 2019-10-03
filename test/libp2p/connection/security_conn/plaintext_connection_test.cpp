@@ -6,16 +6,17 @@
 #include <libp2p/security/plaintext/plaintext_connection.hpp>
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <testutil/outcome.hpp>
 #include "mock/libp2p/connection/raw_connection_mock.hpp"
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
 #include "testutil/gmock_actions.hpp"
-#include "testutil/literals.hpp"
 
 using namespace libp2p::connection;
 using namespace libp2p::basic;
 using namespace libp2p::crypto;
 using namespace libp2p::peer;
+using namespace libp2p::common;
 
 using testing::_;
 using testing::ByMove;

@@ -15,11 +15,12 @@
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 
+#include <libp2p/common/literals.hpp>
 #include "testutil/gmock_actions.hpp"
-#include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
 
 using namespace libp2p;
+using namespace common;
 
 using ::testing::_;
 using ::testing::Return;

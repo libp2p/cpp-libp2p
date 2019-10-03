@@ -6,14 +6,14 @@
 #include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/outcome/outcome.hpp>
-#include "testutil/literals.hpp"
 
-using libp2p::common::ByteArray;
 using namespace libp2p::crypto;
+using namespace libp2p::common;
 
 class HmacTest : public testing::Test {
  protected:

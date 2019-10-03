@@ -15,7 +15,7 @@
 #include "mock/libp2p/transport/upgrader_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/literals.hpp"
+#include <libp2p/common/literals.hpp>
 #include "testutil/outcome.hpp"
 
 using namespace libp2p::connection;
@@ -142,7 +142,7 @@ TEST(YamuxAcceptanceTest, PingPong) {
   });
 
   // let the streams make their jobs
-  context->run_for(100ms);
+  context->run_for(500ms);
 
   EXPECT_TRUE(stream_read);
   EXPECT_TRUE(stream_wrote);

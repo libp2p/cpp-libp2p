@@ -6,23 +6,24 @@
 #ifndef KAGOME_PROTOBUF_KEY_HPP
 #define KAGOME_PROTOBUF_KEY_HPP
 
-#include <vector>
 #include <cstdint>
+#include <vector>
+
+#include <boost/operators.hpp>
 
 namespace libp2p::crypto {
   /**
    * Strict type for key, which is encoded into Protobuf format
    */
-  struct ProtobufKey {
-    std::vector<uint8_t> key;
-  };
+  struct ProtobufKey : public boost::equality_comparable<ProtobufKey> {
+    explicit ProtobufKey(std::vector<uint8_t> key) : key{std::move(key)} {}
 
-  inline bool operator==(const ProtobufKey &f, const ProtobufKey &s) {
-    return f.key == s.key;
-  }
-  inline bool operator!=(const ProtobufKey &f, const ProtobufKey &s) {
-    return !(f == s);
-  }
+    std::vector<uint8_t> key;
+
+    bool operator==(const ProtobufKey &other) const {
+      return key == other.key;
+    }
+  };
 }  // namespace libp2p::crypto
 
 #endif  // KAGOME_PROTOBUF_KEY_HPP

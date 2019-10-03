@@ -236,6 +236,8 @@ namespace libp2p::crypto {
       common::RSAKeyType bits_option) const {
     BOOST_ASSERT_MSG(false, "not implemented");
 
+    /// previous implementation is commented - it can be used as a hint when
+    /// implementing a new version of the method
     //    int bits = 0;
     //    Key::Type key_type;
     //    switch (bits_option) {

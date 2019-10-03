@@ -97,7 +97,7 @@ namespace libp2p::connection {
     struct WriteData {
       Buffer data{};
       std::function<void(outcome::result<size_t>)> cb{};
-      bool some = false;
+      bool some = false;  // true, if writeSome is to be called over the data
     };
     std::queue<WriteData> write_queue_;
     bool is_writing_ = false;

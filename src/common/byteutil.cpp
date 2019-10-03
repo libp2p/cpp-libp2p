@@ -22,7 +22,7 @@ namespace libp2p::common {
     return putUint16BE(bytes, n);
   }
 
-  ByteArray &putUin64BE(ByteArray &bytes, uint64_t n) {
+  ByteArray &putUint64BE(ByteArray &bytes, uint64_t n) {
     bytes.push_back(static_cast<unsigned char &&>((n >> 56u) & 0xFF));
     bytes.push_back(static_cast<unsigned char &&>((n >> 48u) & 0xFF));
     bytes.push_back(static_cast<unsigned char &&>((n >> 40u) & 0xFF));

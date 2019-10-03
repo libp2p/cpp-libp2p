@@ -15,8 +15,8 @@
 #include "mock/libp2p/protocol/kademlia/query_runner_mock.hpp"
 #include "mock/libp2p/protocol/kademlia/routing_table_mock.hpp"
 
+#include <libp2p/common/literals.hpp>
 #include "testutil/gmock_actions.hpp"
-#include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
 
 using namespace libp2p;
@@ -24,6 +24,7 @@ using namespace protocol;
 using namespace kademlia;
 using namespace network;
 using namespace peer;
+using namespace common;
 
 using ::testing::_;
 using ::testing::Return;
@@ -114,8 +115,7 @@ TEST_F(KadTest, FindPeerNoAddresses) {
 
   // list of peers we observe (2,3,4)
   PeerIdVec weObserve{peer2.id, peer3.id, peer4.id};
-  EXPECT_CALL(*table, getNearestPeers(_, _))
-      .WillOnce(Return(weObserve));
+  EXPECT_CALL(*table, getNearestPeers(_, _)).WillOnce(Return(weObserve));
 
   // run query... and get desired addr
   EXPECT_CALL(*runner, run(_, _, _)).WillOnce(Arg2CallbackWithArg(peer1));

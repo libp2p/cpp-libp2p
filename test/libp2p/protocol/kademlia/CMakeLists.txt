@@ -7,6 +7,7 @@ addtest(libp2p_protocol_kademlia_test
 target_link_libraries(libp2p_protocol_kademlia_test
     p2p_protocol_kademlia
     p2p_multiaddress
+    p2p_literals
     )
 
 
@@ -16,6 +17,7 @@ addtest(node_id
 target_link_libraries(node_id
     p2p_sha
     p2p_testutil_peer
+    p2p_literals
     )
 
 addtest(routing_table_test
@@ -24,4 +26,5 @@ addtest(routing_table_test
 target_link_libraries(routing_table_test
     p2p_kad_routing_table
     p2p_testutil_peer
+    p2p_literals
     )

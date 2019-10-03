@@ -5,13 +5,13 @@
 #include "libp2p/crypto/aes_provider/aes_provider_impl.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/outcome/outcome.hpp>
-#include "testutil/literals.hpp"
 
-using libp2p::common::ByteArray;
 using namespace libp2p::crypto;
+using namespace libp2p::common;
 
 class AesTest : public testing::Test {
  protected:
@@ -25,20 +25,20 @@ class AesTest : public testing::Test {
     plain_text_256.insert(plain_text_256.end(), msg2.begin(), msg2.end());
   }
 
-  Buffer iv{"3dafba429d9eb430b422da802c9fac41"_unhex};
+  ByteArray iv{"3dafba429d9eb430b422da802c9fac41"_unhex};
 
-  Buffer key_128{"06a9214036b8a15b512e03d534120006"_unhex};
+  ByteArray key_128{"06a9214036b8a15b512e03d534120006"_unhex};
 
-  Buffer key_256{
+  ByteArray key_256{
       "78dae34bc0eba813c09cec5c871f3ccb39dcbbe04a2fe1837e169fee896aa208"_unhex};
 
-  Buffer cipher_text_128{"d43130f652c4c81be62fdf5e72e48cbc"_unhex};
+  ByteArray cipher_text_128{"d43130f652c4c81be62fdf5e72e48cbc"_unhex};
 
-  Buffer cipher_text_256{
+  ByteArray cipher_text_256{
       "586a49b4ba0336ffe130c5f27b80d3c9910d7f422687a60b1b833cff3d9ecbe03e4db5653a671fb1a7b2"_unhex};
 
-  Buffer plain_text_128;
-  Buffer plain_text_256;
+  ByteArray plain_text_128;
+  ByteArray plain_text_256;
 
   aes::AesProviderImpl provider;
 };

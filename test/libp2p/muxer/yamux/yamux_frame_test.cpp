@@ -6,7 +6,7 @@
 #include "libp2p/muxer/yamux/yamux_frame.hpp"
 
 #include <gtest/gtest.h>
-#include "testutil/literals.hpp"
+#include <libp2p/common/literals.hpp>
 
 using namespace libp2p::connection;
 using namespace libp2p::common;

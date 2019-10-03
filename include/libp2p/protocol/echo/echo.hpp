@@ -36,7 +36,7 @@ namespace libp2p::protocol {
 
    private:
     EchoConfig config_;
-    common::Logger log_ = common::createLogger("01-echo");
+    common::Logger log_ = common::createLogger("echo");
   };
 
 }  // namespace libp2p::protocol
