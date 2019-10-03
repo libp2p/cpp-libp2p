@@ -12,6 +12,7 @@ target_link_libraries(yamux_integration_test
     p2p_plaintext
     p2p_tcp
     p2p_testutil
+    p2p_literals
     )
 
 addtest(yamux_acceptance_test
@@ -24,6 +25,7 @@ target_link_libraries(yamux_acceptance_test
     p2p_plaintext
     p2p_tcp
     p2p_testutil
+    p2p_literals
     )
 
 addtest(yamux_frame_test
@@ -32,4 +34,5 @@ addtest(yamux_frame_test
 target_link_libraries(yamux_frame_test
     p2p_yamuxed_connection
     p2p_testutil
+    p2p_literals
     )

@@ -6,7 +6,7 @@
 #ifndef LIBP2P_MULTISELECT_ERROR_HPP
 #define LIBP2P_MULTISELECT_ERROR_HPP
 
-#include <outcome/outcome-register.hpp>
+#include <libp2p/outcome/outcome-register.hpp>
 
 namespace libp2p::protocol_muxer {
   enum class MultiselectError {

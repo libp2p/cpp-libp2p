@@ -11,7 +11,7 @@
 #include <utility>
 
 #include <libp2p/common/types.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::multi {
   /**

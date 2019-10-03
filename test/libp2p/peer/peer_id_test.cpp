@@ -6,6 +6,7 @@
 #include "libp2p/peer/peer_id.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base58.hpp>
 #include <testutil/outcome.hpp>
@@ -17,7 +18,8 @@ using namespace libp2p::multi::detail;
 
 class PeerIdTest : public ::testing::Test {
  public:
-  const Buffer kBuffer{0x11, 0x22, 0x33};
+  const Buffer kBuffer =
+      Buffer(43, 1);  // so that the key is not used as an "identity"
 };
 
 /**
@@ -27,7 +29,7 @@ class PeerIdTest : public ::testing::Test {
  */
 TEST_F(PeerIdTest, FromPubkeySuccess) {
   PublicKey pubkey{};
-  pubkey.type = Key::Type::RSA1024;
+  pubkey.type = Key::Type::RSA;
   pubkey.data = kBuffer;
 
   auto hash = libp2p::crypto::sha256(pubkey.data);
@@ -35,7 +37,7 @@ TEST_F(PeerIdTest, FromPubkeySuccess) {
                       Multihash::create(libp2p::multi::sha256,
                                         Buffer{hash.begin(), hash.end()}))
 
-  auto peer_id = PeerId::fromPublicKey(pubkey);
+  EXPECT_OUTCOME_TRUE(peer_id, PeerId::fromPublicKey(ProtobufKey{pubkey.data}))
   EXPECT_EQ(peer_id.toBase58(), encodeBase58(multihash.toBuffer()));
   EXPECT_EQ(peer_id.toMultihash(), multihash);
 }

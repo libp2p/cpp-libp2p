@@ -13,6 +13,7 @@ addtest(aes_test
 target_link_libraries(aes_test
     p2p_aes_provider
     p2p_testutil
+    p2p_literals
     )
 
 addtest(hmac_test
@@ -21,6 +22,7 @@ addtest(hmac_test
 target_link_libraries(hmac_test
     p2p_hmac_provider
     p2p_testutil
+    p2p_literals
     )
 
 addtest(random_test

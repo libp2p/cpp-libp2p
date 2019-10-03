@@ -6,6 +6,7 @@
 #include "libp2p/network/impl/dialer_impl.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/network/connection_manager_mock.hpp"
@@ -15,7 +16,6 @@
 #include "mock/libp2p/protocol_muxer/protocol_muxer_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
 #include "testutil/gmock_actions.hpp"
-#include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
 
 using namespace libp2p;
@@ -23,6 +23,7 @@ using namespace network;
 using namespace connection;
 using namespace transport;
 using namespace protocol_muxer;
+using namespace common;
 
 using ::testing::_;
 using ::testing::ContainerEq;

@@ -3,15 +3,16 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(p2p_router
+libp2p_add_library(p2p_router
     router_impl.cpp
     )
 target_link_libraries(p2p_router
-    outcome
+    Boost::boost
+    p2p_peer_id
     )
 
 
-add_library(p2p_listener_manager
+libp2p_add_library(p2p_listener_manager
     listener_manager_impl.cpp
     )
 target_link_libraries(p2p_listener_manager
@@ -21,7 +22,7 @@ target_link_libraries(p2p_listener_manager
     )
 
 
-add_library(p2p_dialer
+libp2p_add_library(p2p_dialer
     dialer_impl.cpp
     )
 target_link_libraries(p2p_dialer
@@ -31,23 +32,23 @@ target_link_libraries(p2p_dialer
     )
 
 
-add_library(p2p_network
+libp2p_add_library(p2p_network
     network_impl.cpp
     )
 target_link_libraries(p2p_network
-    outcome
+    Boost::boost
     )
 
-add_library(p2p_transport_manager
+libp2p_add_library(p2p_transport_manager
     transport_manager_impl.cpp
     )
 target_link_libraries(p2p_transport_manager
     p2p_multiaddress
     )
 
-add_library(p2p_connection_manager
+libp2p_add_library(p2p_connection_manager
     connection_manager_impl.cpp
     )
 target_link_libraries(p2p_connection_manager
-    outcome
+    Boost::boost
     )

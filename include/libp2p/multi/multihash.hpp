@@ -13,7 +13,7 @@
 #include <gsl/span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/hash_type.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::multi {
 
@@ -74,7 +74,7 @@ namespace libp2p::multi {
     /**
      * @return the hash stored in this multihash
      */
-    const gsl::span<const uint8_t> getHash() const;
+    gsl::span<const uint8_t> getHash() const;
 
     /**
      * @return a string with hexadecimal representation of the multihash

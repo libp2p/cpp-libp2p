@@ -216,18 +216,13 @@ namespace libp2p::connection {
     }
 
     switch (header_opt->type) {
-      case FrameType::DATA: {
-        return processDataFrame(*header_opt);
-      }
-      case FrameType::WINDOW_UPDATE: {
-        return processWindowUpdateFrame(*header_opt);
-      }
-      case FrameType::PING: {
+      case FrameType::DATA:
+      case FrameType::WINDOW_UPDATE:
+        return processDataOrWindowUpdateFrame(*header_opt);
+      case FrameType::PING:
         return processPingFrame(*header_opt);
-      }
-      case FrameType::GO_AWAY: {
+      case FrameType::GO_AWAY:
         return processGoAwayFrame(*header_opt);
-      }
       default:
         log_->critical("garbage in parsed frame's type; closing the session");
         return closeSession();
@@ -236,6 +231,7 @@ namespace libp2p::connection {
 
   void YamuxedConnection::doReadData(size_t data_size,
                                      basic::Reader::ReadCallbackFunc cb) {
+    data_buffer_.clear();
     return connection_->read(
         data_buffer_, data_size,
         [self{shared_from_this()}, cb = std::move(cb)](auto &&res) {
@@ -243,138 +239,87 @@ namespace libp2p::connection {
         });
   }
 
-  void YamuxedConnection::processDataFrame(const YamuxFrame &frame) {
+  void YamuxedConnection::processDataOrWindowUpdateFrame(
+      const YamuxFrame &frame) {
     using Flag = YamuxFrame::Flag;
 
     auto stream_id = frame.stream_id;
-    switch (frame.flag) {
-      case Flag::SYN:
-        // can be start of a new stream, just data or both
-        if (auto stream = findStream(stream_id)) {
-          // this is just data
-          if (processData(stream, frame)) {
-            // there is some data in the frame, and the function will read next
-            // header by itself
-            return;
-          }
-          break;
-        }
-        // this is a new stream request, maybe with data inside
-        if (streams_.size() < config_.maximum_streams || !new_stream_handler_) {
-          return registerNewStream(
-              stream_id, [self{shared_from_this()}, frame](auto &&stream_res) {
-                if (stream_res) {
-                  if (self->processData(std::static_pointer_cast<YamuxStream>(
-                                            stream_res.value()),
-                                        frame)) {
-                    return;
-                  }
-                }
-                self->doReadHeader();
-              });
-        }
-        // if we cannot accept another stream, reset it on the other side
-        return write(
-            {resetStreamMsg(stream_id), [self{shared_from_this()}](auto &&res) {
-               if (!res) {
-                 self->log_->error("cannot reset stream: {}",
-                                   res.error().message());
-               }
-               self->doReadHeader();
-             }});
-      case Flag::ACK:
-        // can be ack of a new stream, just data or both
-        return processAck(
-            stream_id, [self{shared_from_this()}, frame](auto &&stream_res) {
-              if (stream_res) {
-                if (self->processData(std::static_pointer_cast<YamuxStream>(
-                                          stream_res.value()),
-                                      frame)) {
-                  return;
-                }
-              }
-              self->doReadHeader();
-            });
-      case Flag::FIN:
-        closeStreamForRead(stream_id);
-        break;
-      case Flag::RST:
-        removeStream(stream_id);
-        break;
-      default:
-        log_->critical("garbage in parsed frame's flag");
+    auto stream = findStream(stream_id);
+
+    // after the function execution decision to discard either data or window
+    // update can be made
+    auto discard = false;
+
+    if (frame.flagIsSet(Flag::SYN)) {
+      // request to open a new stream
+      if (stream) {
+        // duplicate stream request - critical protocol violation
+        log_->error(
+            "duplicate stream request was sent; closing the Yamux session");
         return closeSession();
-    }
-    doReadHeader();
-  }
+      }
 
-  void YamuxedConnection::processWindowUpdateFrame(const YamuxFrame &frame) {
-    using Flag = YamuxFrame::Flag;
-
-    auto stream_id = frame.stream_id;
-    auto window_delta = frame.length;
-    switch (frame.flag) {
-      case Flag::SYN:
-        // can be start of a new stream or update of a window size
-        if (auto stream = findStream(stream_id)) {
-          processWindowUpdate(stream, window_delta);
-          break;
-        }
-
-        // no such stream found => it's a creation of a new stream
-        if (streams_.size() < config_.maximum_streams || !new_stream_handler_) {
-          return registerNewStream(
-              stream_id,
-              [self{shared_from_this()}](auto &&res) { self->doReadHeader(); });
-        }
+      if (streams_.size() < config_.maximum_streams && new_stream_handler_) {
+        stream = registerNewStream(stream_id);
+      } else {
         // if we cannot accept another stream, reset it on the other side
-        return write(
+        write(
             {resetStreamMsg(stream_id), [self{shared_from_this()}](auto &&res) {
                if (!res) {
                  self->log_->error("cannot reset stream: {}",
                                    res.error().message());
                }
-               self->doReadHeader();
              }});
-      case Flag::ACK:
-        if (auto stream = findStream(stream_id)) {
-          processWindowUpdate(stream, window_delta);
-          break;
-        }
-        // if no such stream found, some error happened - reset the stream on
-        // the other side just in case
-        return write(
-            {resetStreamMsg(stream_id), [self{shared_from_this()}](auto &&res) {
-               if (!res) {
-                 self->log_->error("cannot reset stream: {}",
-                                   res.error().message());
-               }
-               self->doReadHeader();
-             }});
-      case Flag::FIN:
-        if (auto stream = findStream(stream_id)) {
-          processWindowUpdate(stream, window_delta);
-          closeStreamForRead(stream_id);
-        }
-        break;
-      case Flag::RST:
-        removeStream(stream_id);
-        break;
-      default:
-        log_->critical("garbage in parsed frame's flag");
-        return closeSession();
+        discard = true;
+      }
     }
+
+    if (frame.flagIsSet(Flag::ACK)) {
+      // ack of the stream we initiated
+      if (!stream) {
+        // if we don't have such a stream, reset it on the other side
+        write(
+            {resetStreamMsg(stream_id), [self{shared_from_this()}](auto &&res) {
+               if (!res) {
+                 self->log_->error("cannot reset stream: {}",
+                                   res.error().message());
+               }
+             }});
+        discard = true;
+      }
+    }
+
+    if (frame.flagIsSet(Flag::FIN)) {
+      closeStreamForRead(stream_id);
+    }
+
+    if (frame.flagIsSet(Flag::RST)) {
+      removeStream(stream_id);
+      discard = true;
+    }
+
+    if (frame.type == YamuxFrame::FrameType::DATA) {
+      // even if the data is to be discarded, it still must be drawn from the
+      // wire
+      return processData(std::move(stream), frame, discard);
+    }
+
+    if (stream && !discard) {
+      return processWindowUpdate(stream, frame.length);
+    }
+
     doReadHeader();
   }
 
   void YamuxedConnection::processPingFrame(const YamuxFrame &frame) {
-    return write(
+    write(
         {pingResponseMsg(frame.length), [self{shared_from_this()}](auto &&res) {
            if (!res) {
              self->log_->error("cannot write ping message: {}",
                                res.error().message());
            }
          }});
+    doReadHeader();
   }
 
   void YamuxedConnection::resetAllStreams() {
@@ -397,85 +342,73 @@ namespace libp2p::connection {
     return stream->second;
   }
 
-  void YamuxedConnection::registerNewStream(StreamId stream_id,
-                                            StreamHandlerFunc cb) {
-    return write(
-        {ackStreamMsg(stream_id),
-         [self{shared_from_this()}, stream_id, cb = std::move(cb)](auto &&res) {
-           if (!res) {
-             self->log_->error("cannot register new stream: {}",
-                               res.error().message());
-             return cb(res.error());
-           }
-           auto new_stream =
-               std::make_shared<YamuxStream>(self->weak_from_this(), stream_id,
-                                             self->config_.maximum_window_size);
-           self->streams_.insert({stream_id, new_stream});
-           self->new_stream_handler_(new_stream);
-           return cb(std::move(new_stream));
-         }});
+  std::shared_ptr<YamuxStream> YamuxedConnection::registerNewStream(
+      StreamId stream_id) {
+    // optimistic approach: assuming ACK will be successfully written
+    auto new_stream = std::make_shared<YamuxStream>(
+        weak_from_this(), stream_id, config_.maximum_window_size);
+    streams_.insert({stream_id, new_stream});
+    new_stream_handler_(new_stream);
+
+    write({ackStreamMsg(stream_id),
+           [self{shared_from_this()}, stream_id](auto &&res) {
+             if (!res) {
+               self->log_->error("cannot register new stream: {}",
+                                 res.error().message());
+               self->removeStream(stream_id);
+             }
+           }});
+
+    return new_stream;
   }
 
-  bool YamuxedConnection::processData(std::shared_ptr<YamuxStream> stream,
-                                      const YamuxFrame &frame) {
+  void YamuxedConnection::processData(std::shared_ptr<YamuxStream> stream,
+                                      const YamuxFrame &frame,
+                                      bool discard_data) {
     auto data_len = frame.length;
     if (data_len == 0) {
-      return false;
+      return doReadHeader();
     }
 
     if (data_len > config_.maximum_window_size) {
       log_->error(
           "too much data was received by this connection; closing the session");
-      closeSession();
-      return true;
+      return closeSession();
     }
 
     // read the data, commit it to the stream and call handler, if exists
     doReadData(
         data_len,
-        [self{shared_from_this()}, stream = std::move(stream), data_len,
-         frame](auto &&res) {
+        [self{shared_from_this()}, stream = std::move(stream), data_len, frame,
+         discard_data](auto &&res) {
           if (!res) {
-            self->log_->error("cannot read data from the connection: {} ",
+            self->log_->error("cannot read data from the connection: {}",
                               res.error().message());
             return self->closeSession();
           }
-          if (auto commit_res =
-                  stream->commitData(self->data_buffer_, data_len);
-              !commit_res) {
-            self->log_->error("cannot commit data to the stream's buffer: {} ",
-                              commit_res.error().message());
-            return self->closeSession();
+
+          if (stream && !discard_data) {
+            auto commit_res = stream->commitData(self->data_buffer_, data_len);
+            if (!commit_res) {
+              self->log_->error("cannot commit data to the stream's buffer: {}",
+                                commit_res.error().message());
+              return self->closeSession();
+            }
+          } else {
+            // the data is to be discarded
+            return;
           }
+
           if (auto stream_data_sub = self->data_subs_.find(frame.stream_id);
               stream_data_sub != self->data_subs_.end()) {
+            // if someone is waiting for the data from that stream, notify it
             if (stream_data_sub->second()) {
               self->data_subs_.erase(stream_data_sub);
             }
           }
+
           self->doReadHeader();
         });
-    return true;
-  }
-
-  void YamuxedConnection::processAck(
-      StreamId stream_id,
-      std::function<void(outcome::result<std::shared_ptr<Stream>>)> cb) {
-    // acknowledge of start of a new stream; if we don't have such a stream,
-    // a reset should be sent in order to notify the other side about the
-    // problem
-    if (auto stream = findStream(stream_id)) {
-      return cb(std::move(stream));
-    }
-    write({resetStreamMsg(stream_id),
-           [self{shared_from_this()}, cb = std::move(cb)](auto &&res) {
-             if (!res) {
-               self->log_->error("cannot reset stream: {}",
-                                 res.error().message());
-               return cb(res.error());
-             }
-             cb(nullptr);
-           }});
   }
 
   void YamuxedConnection::processWindowUpdate(
@@ -488,6 +421,7 @@ namespace libp2p::connection {
         window_updates_subs_.erase(window_update_sub);
       }
     }
+    doReadHeader();
   }
 
   void YamuxedConnection::closeStreamForRead(StreamId stream_id) {

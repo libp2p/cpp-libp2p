@@ -7,16 +7,16 @@
 #include <gtest/gtest.h>
 #include <thread>
 
+#include <libp2p/common/literals.hpp>
 #include <libp2p/peer/address_repository.hpp>
 #include <libp2p/peer/address_repository/inmem_address_repository.hpp>
 #include <libp2p/peer/errors.hpp>
-#include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
 
 using namespace libp2p::peer;
 using namespace libp2p::multi;
+using namespace libp2p::common;
 
-using libp2p::common::ByteArray;
 using std::literals::chrono_literals::operator""ms;
 
 struct InmemAddressRepository_Test : public ::testing::Test {

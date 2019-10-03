@@ -7,6 +7,7 @@ addtest(tcp_integration_test
 target_link_libraries(tcp_integration_test
     p2p_tcp
     p2p_testutil
+    p2p_literals
     )
 
 
@@ -15,4 +16,5 @@ addtest(tcp_listener_test
     )
 target_link_libraries(tcp_listener_test
     p2p_tcp_listener
+    p2p_literals
     )

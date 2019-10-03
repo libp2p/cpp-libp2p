@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include <boost/assert.hpp>
+#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/protocol/echo/echo_config.hpp>
 
@@ -32,6 +32,10 @@ namespace libp2p::protocol {
    private:
     std::shared_ptr<connection::Stream> stream_;
     std::vector<uint8_t> buf_;
+    EchoConfig config_;
+    common::Logger log_ = common::createLogger("Echo");
+
+    bool repeat_infinitely_;
 
     void doRead();
 

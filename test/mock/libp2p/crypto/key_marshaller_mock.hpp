@@ -14,19 +14,17 @@ namespace libp2p::crypto::marshaller {
   struct KeyMarshallerMock : public KeyMarshaller {
     ~KeyMarshallerMock() override = default;
 
-    MOCK_CONST_METHOD1(
-        marshal, outcome::result<KeyMarshaller::ByteArray>(const PublicKey &));
+    MOCK_CONST_METHOD1(marshal,
+                       outcome::result<ProtobufKey>(const PublicKey &));
 
-    MOCK_CONST_METHOD1(
-        marshal, outcome::result<KeyMarshaller::ByteArray>(const PrivateKey &));
+    MOCK_CONST_METHOD1(marshal,
+                       outcome::result<ProtobufKey>(const PrivateKey &));
 
-    MOCK_CONST_METHOD1(
-        unmarshalPublicKey,
-        outcome::result<PublicKey>(const KeyMarshaller::ByteArray &));
+    MOCK_CONST_METHOD1(unmarshalPublicKey,
+                       outcome::result<PublicKey>(const ProtobufKey &));
 
-    MOCK_CONST_METHOD1(
-        unmarshalPrivateKey,
-        outcome::result<PrivateKey>(const KeyMarshaller::ByteArray &));
+    MOCK_CONST_METHOD1(unmarshalPrivateKey,
+                       outcome::result<PrivateKey>(const ProtobufKey &));
   };
 
 }  // namespace libp2p::crypto::marshaller

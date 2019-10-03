@@ -28,18 +28,28 @@ namespace libp2p::peer {
 
   PeerId::PeerId(multi::Multihash hash) : hash_{std::move(hash)} {}
 
-  PeerId PeerId::fromPublicKey(const crypto::PublicKey &key) {
-    auto hash = crypto::sha256(key.data);
-    auto rmultihash = Multihash::create(multi::sha256, hash);
-    BOOST_ASSERT(rmultihash.has_value());
-    return PeerId{std::move(rmultihash.value())};
+  PeerId::FactoryResult PeerId::fromPublicKey(const crypto::ProtobufKey &key) {
+    std::vector<uint8_t> hash;
+
+    auto algo = multi::sha256;
+    if (key.key.size() <= kMaxInlineKeyLength) {
+      algo = multi::identity;
+      hash = key.key;
+    } else {
+      auto shash = crypto::sha256(key.key);
+      hash = std::vector<uint8_t>{shash.begin(), shash.end()};
+    }
+
+    OUTCOME_TRY(multihash, Multihash::create(algo, hash));
+    return PeerId{std::move(multihash)};
   }
 
   PeerId::FactoryResult PeerId::fromBase58(std::string_view id) {
     OUTCOME_TRY(decoded_id, decodeBase58(id));
     OUTCOME_TRY(hash, Multihash::createFromBuffer(decoded_id));
 
-    if (hash.getType() != multi::HashType::sha256) {
+    if (hash.getType() != multi::HashType::sha256
+        && hash.toBuffer().size() > kMaxInlineKeyLength) {
       return FactoryError::SHA256_EXPECTED;
     }
 
@@ -47,7 +57,8 @@ namespace libp2p::peer {
   }
 
   PeerId::FactoryResult PeerId::fromHash(const Multihash &hash) {
-    if (hash.getType() != multi::HashType::sha256) {
+    if (hash.getType() != multi::HashType::sha256
+        && hash.toBuffer().size() > kMaxInlineKeyLength) {
       return FactoryError::SHA256_EXPECTED;
     }
 

@@ -3,20 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "testutil/libp2p/peer.hpp"
+#include <testutil/libp2p/peer.hpp>
 
 namespace testutil {
 
   PeerId randomPeerId() {
-    PublicKey k;
-
-    k.type = T::ED25519;
-    k.data.resize(32u);
+    std::vector<uint8_t> rand_key(32, 0);
     for (auto i = 0u; i < 32u; i++) {
-      k.data[i] = (rand() & 0xff);
+      rand_key[i] = (rand() & 0xffu);  // NOLINT
     }
-
-    return PeerId::fromPublicKey(k);
+    return PeerId::fromPublicKey(libp2p::crypto::ProtobufKey{rand_key}).value();
   }
 
 }  // namespace testutil

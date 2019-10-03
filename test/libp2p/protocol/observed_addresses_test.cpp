@@ -6,10 +6,11 @@
 #include "libp2p/protocol/identify/observed_addresses.hpp"
 
 #include <gtest/gtest.h>
-#include "testutil/literals.hpp"
+#include <libp2p/common/literals.hpp>
 
 using namespace libp2p;
 using namespace protocol;
+using namespace common;
 
 class ObservedAddressesTest : public testing::Test {
  public:

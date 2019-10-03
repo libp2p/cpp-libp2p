@@ -6,7 +6,7 @@
 #ifndef LIBP2P_CRYPTO_ERROR_HPP
 #define LIBP2P_CRYPTO_ERROR_HPP
 
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto {
   enum class CryptoProviderError {
@@ -54,6 +54,7 @@ namespace libp2p::crypto {
     WRONG_KEY_TYPE,                   ///< incorrect key type
     CANNOT_LOAD_UNSPECIFIED,          ///< cannot load unspecified key
     GET_KEY_BYTES_FAILED,             ///< failed to get key bytes from PKEY
+    INTERNAL_ERROR                    ///< internal error happened
   };
 
   enum class KeyValidatorError {

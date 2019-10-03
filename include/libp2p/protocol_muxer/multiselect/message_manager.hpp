@@ -14,7 +14,7 @@
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/uvarint.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::protocol_muxer {
   /**

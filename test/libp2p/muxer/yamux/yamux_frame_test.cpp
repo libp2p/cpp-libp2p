@@ -6,7 +6,7 @@
 #include "libp2p/muxer/yamux/yamux_frame.hpp"
 
 #include <gtest/gtest.h>
-#include "testutil/literals.hpp"
+#include <libp2p/common/literals.hpp>
 
 using namespace libp2p::connection;
 using namespace libp2p::common;
@@ -32,7 +32,7 @@ class YamuxFrameTest : public ::testing::Test {
     auto frame = *frame_opt;
     ASSERT_EQ(frame.version, version);
     ASSERT_EQ(frame.type, type);
-    ASSERT_EQ(frame.flag, flag);
+    ASSERT_EQ(frame.flags, static_cast<uint16_t>(flag));
     ASSERT_EQ(frame.stream_id, stream_id);
     ASSERT_EQ(frame.length, length);
     ASSERT_EQ(frame.data, frame_data);
@@ -50,7 +50,7 @@ TEST_F(YamuxFrameTest, ParseFrameSuccess) {
 
   SCOPED_TRACE("ParseFrameSuccess");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::DATA, YamuxFrame::Flag::SYN,
+             YamuxFrame::FrameType::DATA, YamuxFrame::Flag::NONE,
              default_stream_id, data_length, data);
 }
 
@@ -166,7 +166,7 @@ TEST_F(YamuxFrameTest, GoAwayMsg) {
 
   SCOPED_TRACE("GoAwayMsg");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::GO_AWAY, YamuxFrame::Flag::SYN, 0,
+             YamuxFrame::FrameType::GO_AWAY, YamuxFrame::Flag::NONE, 0,
              static_cast<uint32_t>(YamuxFrame::GoAwayError::PROTOCOL_ERROR),
              ByteArray{});
 }

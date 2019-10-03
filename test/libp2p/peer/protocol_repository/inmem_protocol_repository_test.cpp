@@ -8,10 +8,11 @@
 #include <libp2p/peer/errors.hpp>
 #include <libp2p/peer/protocol_repository.hpp>
 #include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
-#include "testutil/literals.hpp"
+#include <libp2p/common/literals.hpp>
 #include "testutil/outcome.hpp"
 
 using namespace libp2p::peer;
+using namespace libp2p::common;
 using libp2p::multi::HashType;
 using libp2p::multi::Multihash;
 

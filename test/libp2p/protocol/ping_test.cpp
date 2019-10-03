@@ -16,7 +16,7 @@
 #include "mock/libp2p/crypto/random_generator_mock.hpp"
 #include "mock/libp2p/host/host_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
-#include "testutil/literals.hpp"
+#include <libp2p/common/literals.hpp>
 
 using namespace libp2p;
 using namespace protocol;
@@ -24,6 +24,7 @@ using namespace crypto::random;
 using namespace connection;
 using namespace protocol::detail;
 using namespace peer;
+using namespace common;
 
 using testing::_;
 using testing::InvokeArgument;

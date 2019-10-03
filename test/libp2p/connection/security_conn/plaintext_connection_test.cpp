@@ -3,18 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/security/plaintext/plaintext_connection.hpp"
+#include <libp2p/security/plaintext/plaintext_connection.hpp>
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <testutil/outcome.hpp>
 #include "mock/libp2p/connection/raw_connection_mock.hpp"
+#include "mock/libp2p/crypto/key_marshaller_mock.hpp"
 #include "testutil/gmock_actions.hpp"
-#include "testutil/literals.hpp"
 
 using namespace libp2p::connection;
 using namespace libp2p::basic;
 using namespace libp2p::crypto;
 using namespace libp2p::peer;
+using namespace libp2p::common;
 
 using testing::_;
 using testing::ByMove;
@@ -23,14 +25,18 @@ using testing::Return;
 
 class PlaintextConnectionTest : public testing::Test {
  public:
-  PublicKey local{{Key::Type::SECP256K1, {1}}};
-  PublicKey remote{{Key::Type::ED25519, {2}}};
+  PublicKey local{{Key::Type::Secp256k1, {1}}};
+  PublicKey remote{{Key::Type::Ed25519, {2}}};
 
   std::shared_ptr<RawConnectionMock> connection_ =
       std::make_shared<RawConnectionMock>();
 
+  std::shared_ptr<marshaller::KeyMarshallerMock> key_marshaller_ =
+      std::make_shared<marshaller::KeyMarshallerMock>();
+
   std::shared_ptr<SecureConnection> secure_connection_ =
-      std::make_shared<PlaintextConnection>(connection_, local, remote);
+      std::make_shared<PlaintextConnection>(connection_, local, remote,
+                                            key_marshaller_);
 
   std::vector<uint8_t> bytes_{0x11, 0x22};
 };
@@ -41,7 +47,10 @@ class PlaintextConnectionTest : public testing::Test {
  * @then method behaves as expected
  */
 TEST_F(PlaintextConnectionTest, LocalPeer) {
-  ASSERT_EQ(secure_connection_->localPeer().value(), PeerId::fromPublicKey(local));
+  EXPECT_CALL(*key_marshaller_, marshal(local))
+      .WillOnce(Return(ProtobufKey{local.data}));
+  ASSERT_EQ(secure_connection_->localPeer().value(),
+            PeerId::fromPublicKey(ProtobufKey{local.data}).value());
 }
 
 /**
@@ -50,7 +59,10 @@ TEST_F(PlaintextConnectionTest, LocalPeer) {
  * @then method behaves as expected
  */
 TEST_F(PlaintextConnectionTest, RemotePeer) {
-  ASSERT_EQ(secure_connection_->remotePeer().value(), PeerId::fromPublicKey(remote));
+  EXPECT_CALL(*key_marshaller_, marshal(remote))
+      .WillOnce(Return(ProtobufKey{remote.data}));
+  ASSERT_EQ(secure_connection_->remotePeer().value(),
+            PeerId::fromPublicKey(ProtobufKey{remote.data}).value());
 }
 
 /**

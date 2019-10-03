@@ -6,4 +6,5 @@ addtest(libp2p_inmem_address_repository_test
     )
 target_link_libraries(libp2p_inmem_address_repository_test
     p2p_inmem_address_repository
+    p2p_literals
     )

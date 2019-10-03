@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include <libp2p/common/literals.hpp>
 #include "libp2p/network/connection_manager.hpp"
 #include "libp2p/network/impl/connection_manager_impl.hpp"
 #include "libp2p/peer/errors.hpp"
@@ -13,13 +14,13 @@
 #include "mock/libp2p/network/transport_manager_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/literals.hpp"
 
-using namespace libp2p::network;
-using namespace libp2p::transport;
-using namespace libp2p::connection;
-using namespace libp2p::peer;
 using namespace libp2p;
+using namespace network;
+using namespace transport;
+using namespace connection;
+using namespace peer;
+using namespace common;
 
 using testing::_;
 using testing::NiceMock;

@@ -19,7 +19,9 @@ namespace libp2p::security::plaintext {
         marshal,
         outcome::result<std::vector<uint8_t>>(const ExchangeMessage &));
     MOCK_CONST_METHOD1(
-        unmarshal, outcome::result<ExchangeMessage>(gsl::span<const uint8_t>));
+        unmarshal,
+        outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>>(
+            gsl::span<const uint8_t>));
   };
 }  // namespace libp2p::security::plaintext
 #endif  // LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP

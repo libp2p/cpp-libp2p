@@ -17,15 +17,15 @@ using libp2p::multi::converters::multiaddrToBytes;
 
 #define VALID_STR_TO_BYTES(addr, bytes)                       \
   {                                                           \
-    EXPECT_OUTCOME_TRUE_name(r1, v1, multiaddrToBytes(addr)); \
-    EXPECT_OUTCOME_TRUE_name(r2, v2, unhex(bytes));           \
+    EXPECT_OUTCOME_TRUE_NAME(r1, v1, multiaddrToBytes(addr)); \
+    EXPECT_OUTCOME_TRUE_NAME(r2, v2, unhex(bytes));           \
     ASSERT_EQ(v1, v2);                                        \
   }
 
 #define VALID_BYTES_TO_STR(addr, bytes)                                      \
   {                                                                          \
-    EXPECT_OUTCOME_TRUE_name(r3, v1, unhex(bytes));                          \
-    EXPECT_OUTCOME_TRUE_name(r4, v2, bytesToMultiaddrString(ByteArray{v1})); \
+    EXPECT_OUTCOME_TRUE_NAME(r3, v1, unhex(bytes));                          \
+    EXPECT_OUTCOME_TRUE_NAME(r4, v2, bytesToMultiaddrString(ByteArray{v1})); \
     ASSERT_EQ(v2, addr);                                                     \
   }
 

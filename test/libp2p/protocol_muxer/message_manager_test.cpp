@@ -11,9 +11,7 @@
 #include <gtest/gtest.h>
 #include <libp2p/common/types.hpp>
 #include <libp2p/peer/peer_id.hpp>
-#include <libp2p/protocol_muxer/multiselect/multiselect.hpp>
 #include <testutil/outcome.hpp>
-#include <testutil/printers.hpp>
 
 using namespace libp2p;
 using namespace common;
@@ -22,7 +20,6 @@ using libp2p::multi::Multihash;
 using libp2p::multi::UVarint;
 using libp2p::peer::Protocol;
 using libp2p::protocol_muxer::MessageManager;
-using libp2p::protocol_muxer::Multiselect;
 
 using MessageType = MessageManager::MultiselectMessage::MessageType;
 
@@ -39,7 +36,7 @@ std::vector<uint8_t> operator""_msg(const char *c, size_t s) {
 
 class MessageManagerTest : public ::testing::Test {
   static constexpr std::string_view kMultiselectHeaderProtocol =
-      "/multistream-select/1.0.0";
+      "/multistream/1.0.0\n";
 
  public:
   const std::vector<Protocol> kDefaultProtocols{
@@ -49,10 +46,8 @@ class MessageManagerTest : public ::testing::Test {
   static constexpr uint64_t kProtocolsNumber = 3;
 
   const ByteArray kOpeningMsg = []() -> ByteArray {
-    ByteArray buffer =
-        UVarint{kMultiselectHeaderProtocol.size() + 1}.toVector();
+    ByteArray buffer = UVarint{kMultiselectHeaderProtocol.size()}.toVector();
     append(buffer, kMultiselectHeaderProtocol);
-    append(buffer, '\n');
     return buffer;
   }();
 

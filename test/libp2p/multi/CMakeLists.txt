@@ -11,14 +11,15 @@ addtest(multihash_test
     )
 target_link_libraries(multihash_test
     p2p_multihash
+    p2p_literals
     )
-
 
 addtest(multiaddress_test
     multiaddress_test.cpp
     )
 target_link_libraries(multiaddress_test
     p2p_multiaddress
+    p2p_literals
     )
 
 addtest(multibase_codec_test
@@ -26,4 +27,5 @@ addtest(multibase_codec_test
     )
 target_link_libraries(multibase_codec_test
     p2p_multibase_codec
+    p2p_literals
     )

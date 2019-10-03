@@ -13,6 +13,7 @@
 #include "testutil/outcome.hpp"
 
 using libp2p::crypto::Key;
+using libp2p::crypto::ProtobufKey;
 using libp2p::crypto::PublicKey;
 using libp2p::crypto::marshaller::KeyMarshallerMock;
 using libp2p::crypto::protobuf::KeyType;
@@ -29,8 +30,8 @@ class ExchangeMessageMarshallerTest : public testing::Test {
   void SetUp() {
     key_marshaller = std::make_shared<KeyMarshallerMock>();
     ProbufPubKey pbpk;
-    pbpk.set_key_type(KeyType::ED25519);
-    pbpk.set_key_value(pk.data.data(), pk.data.size());
+    pbpk.set_type(KeyType::Ed25519);
+    pbpk.set_data(pk.data.data(), pk.data.size());
     pubkey_bytes.resize(pbpk.ByteSizeLong());
     pbpk.SerializeToArray(pubkey_bytes.data(), pubkey_bytes.size());
     marshaller =
@@ -39,7 +40,7 @@ class ExchangeMessageMarshallerTest : public testing::Test {
 
   std::shared_ptr<KeyMarshallerMock> key_marshaller;
   std::shared_ptr<ExchangeMessageMarshaller> marshaller;
-  PublicKey pk{{Key::Type::ED25519, std::vector<uint8_t>(255, 1)}};
+  PublicKey pk{{Key::Type::Ed25519, std::vector<uint8_t>(255, 1)}};
   std::vector<uint8_t> pubkey_bytes;
 };
 
@@ -49,14 +50,15 @@ class ExchangeMessageMarshallerTest : public testing::Test {
  * @then the decoded message matches the original one
  */
 TEST_F(ExchangeMessageMarshallerTest, ToProtobufAndBack) {
-  EXPECT_CALL(*key_marshaller, marshal(pk)).WillOnce(Return(pubkey_bytes));
+  EXPECT_CALL(*key_marshaller, marshal(pk))
+      .WillOnce(Return(ProtobufKey{pubkey_bytes}));
   EXPECT_CALL(*key_marshaller, unmarshalPublicKey(_)).WillOnce(Return(pk));
-  auto pid = PeerId::fromPublicKey(pk);
+  EXPECT_OUTCOME_TRUE(pid, PeerId::fromPublicKey(ProtobufKey{pk.data}))
   ExchangeMessage msg{.pubkey = pk, .peer_id = pid};
   EXPECT_OUTCOME_TRUE(bytes, marshaller->marshal(msg));
   EXPECT_OUTCOME_TRUE(dec_msg, marshaller->unmarshal(bytes));
-  ASSERT_EQ(msg.peer_id, dec_msg.peer_id);
-  ASSERT_EQ(msg.pubkey, dec_msg.pubkey);
+  ASSERT_EQ(msg.peer_id, dec_msg.first.peer_id);
+  ASSERT_EQ(msg.pubkey, dec_msg.first.pubkey);
 }
 
 /**
@@ -67,8 +69,8 @@ TEST_F(ExchangeMessageMarshallerTest, ToProtobufAndBack) {
  */
 TEST_F(ExchangeMessageMarshallerTest, MarshalError) {
   EXPECT_CALL(*key_marshaller, marshal(pk))
-      .WillOnce(Return(std::vector<uint8_t>(32, 1)));
-  auto pid = PeerId::fromPublicKey(pk);
+      .WillOnce(Return(ProtobufKey{std::vector<uint8_t>(32, 1)}));
+  EXPECT_OUTCOME_TRUE(pid, PeerId::fromPublicKey(ProtobufKey{pk.data}))
   ExchangeMessage msg{.pubkey = pk, .peer_id = pid};
   EXPECT_OUTCOME_FALSE_1(marshaller->marshal(msg));
 }
@@ -80,11 +82,12 @@ TEST_F(ExchangeMessageMarshallerTest, MarshalError) {
  * @then the message marshaller yields an error
  */
 TEST_F(ExchangeMessageMarshallerTest, UnmarshalError) {
-  EXPECT_CALL(*key_marshaller, marshal(pk)).WillOnce(Return(pubkey_bytes));
+  EXPECT_CALL(*key_marshaller, marshal(pk))
+      .WillOnce(Return(ProtobufKey{pubkey_bytes}));
   EXPECT_CALL(*key_marshaller, unmarshalPublicKey(_))
       .WillOnce(
           Return(libp2p::crypto::CryptoProviderError::FAILED_UNMARSHAL_DATA));
-  auto pid = PeerId::fromPublicKey(pk);
+  EXPECT_OUTCOME_TRUE(pid, PeerId::fromPublicKey(ProtobufKey{pk.data}))
   ExchangeMessage msg{.pubkey = pk, .peer_id = pid};
   EXPECT_OUTCOME_TRUE(bytes, marshaller->marshal(msg));
   EXPECT_OUTCOME_FALSE_1(marshaller->unmarshal(bytes));

@@ -19,6 +19,7 @@ addtest(transport_manager_test
 target_link_libraries(transport_manager_test
     p2p_transport_manager
     p2p_multiaddress
+    p2p_literals
     )
 
 
@@ -32,6 +33,7 @@ target_link_libraries(connection_manager_test
     p2p_peer_id
     p2p_testutil
     p2p_peer_errors
+    p2p_literals
     )
 
 
@@ -40,6 +42,7 @@ addtest(listener_manager_test
     )
 target_link_libraries(listener_manager_test
     p2p_listener_manager
+    p2p_literals
     )
 
 
@@ -48,4 +51,5 @@ addtest(dialer_test
     )
 target_link_libraries(dialer_test
     p2p_dialer
+    p2p_literals
     )

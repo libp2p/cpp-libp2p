@@ -9,7 +9,7 @@
 #include <memory>
 
 #include <gsl/span>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/peer/protocol.hpp>
 

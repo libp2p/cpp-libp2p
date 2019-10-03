@@ -7,9 +7,8 @@ find_package(GMock CONFIG REQUIRED)
 hunter_add_package(Boost COMPONENTS random filesystem)
 find_package(Boost CONFIG REQUIRED  random filesystem)
 
-# https://docs.hunter.sh/en/latest/packages/pkg/Microsoft.GSL.html
-hunter_add_package(Microsoft.GSL)
-find_package(Microsoft.GSL CONFIG REQUIRED)
+# added from hunter_config
+hunter_add_package(GSL)
 
 # https://www.openssl.org/
 hunter_add_package(OpenSSL)

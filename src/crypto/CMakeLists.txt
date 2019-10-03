@@ -12,14 +12,14 @@ add_subdirectory(protobuf)
 add_subdirectory(random_generator)
 add_subdirectory(sha)
 
-add_library(p2p_crypto_error
+libp2p_add_library(p2p_crypto_error
     error.cpp
     )
 target_link_libraries(p2p_crypto_error
-    outcome
+    Boost::boost
     )
 
-add_library(p2p_crypto_key
+libp2p_add_library(p2p_crypto_key
     key.cpp
     )
 target_link_libraries(p2p_crypto_key

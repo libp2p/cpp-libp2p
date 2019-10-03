@@ -9,9 +9,8 @@
 #include <functional>
 #include <vector>
 
-#include <boost/system/error_code.hpp>
 #include <gsl/span>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::basic {
 

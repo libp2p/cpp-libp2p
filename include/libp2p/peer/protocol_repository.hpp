@@ -14,7 +14,7 @@
 #include <libp2p/basic/garbage_collectable.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/protocol.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::peer {
 

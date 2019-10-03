@@ -33,7 +33,7 @@ namespace libp2p::common {
     static std::mutex mutex;
     std::lock_guard<std::mutex> lock(mutex);
     auto logger = spdlog::get(tag);
-    if (logger == nullptr) {
+    if (logger == nullptr) {  // NOLINT
       logger = ::createLogger(tag);
     }
     return logger;

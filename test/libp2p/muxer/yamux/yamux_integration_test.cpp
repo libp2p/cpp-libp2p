@@ -7,6 +7,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/muxer/yamux.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
@@ -17,7 +18,6 @@
 #include "mock/libp2p/transport/upgrader_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
 
 using namespace libp2p::connection;

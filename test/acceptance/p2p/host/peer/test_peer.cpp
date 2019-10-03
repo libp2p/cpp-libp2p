@@ -6,29 +6,31 @@
 #include "acceptance/p2p/host/peer/test_peer.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
+#include <libp2p/crypto/key_validator/key_validator_impl.hpp>
+#include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include "acceptance/p2p/host/peer/tick_counter.hpp"
 #include "acceptance/p2p/host/protocol/client_test_session.hpp"
-#include "libp2p/security/plaintext/exchange_message_marshaller_impl.hpp"
+
+using namespace libp2p;  // NOLINT
 
 Peer::Peer(Peer::Duration timeout)
     : muxed_config_{1024576, 1000},
       timeout_{timeout},
       context_{std::make_shared<Context>()},
-      echo_{std::make_shared<protocol::Echo>()},
-      random_provider_{
-          std::make_shared<crypto::random::BoostRandomGenerator>()},
+      echo_{std::make_shared<Echo>()},
+      random_provider_{std::make_shared<BoostRandomGenerator>()},
       key_generator_{
           std::make_shared<crypto::KeyGeneratorImpl>(*random_provider_)} {
   EXPECT_OUTCOME_TRUE_MSG(
-      keys, key_generator_->generateKeys(crypto::Key::Type::ED25519),
+      keys, key_generator_->generateKeys(crypto::Key::Type::Ed25519),
       "failed to generate keys");
 
   host_ = makeHost(std::move(keys));
 
-  host_->setProtocolHandler(echo_->getProtocolId(),
-                            [this](std::shared_ptr<connection::Stream> result) {
-                              echo_->handle(result);
-                            });
+  host_->setProtocolHandler(
+      echo_->getProtocolId(),
+      [this](std::shared_ptr<Stream> result) { echo_->handle(result); });
 }
 
 void Peer::startServer(const multi::Multiaddress &address,
@@ -82,12 +84,6 @@ void Peer::wait() {
 }
 
 Peer::sptr<host::BasicHost> Peer::makeHost(crypto::KeyPair keyPair) {
-  auto idmgr = std::make_shared<peer::IdentityManagerImpl>(keyPair);
-
-  auto multiselect = std::make_shared<protocol_muxer::Multiselect>();
-
-  auto router = std::make_shared<network::RouterImpl>();
-
   auto key_generator =
       std::make_shared<crypto::KeyGeneratorImpl>(*random_provider_);
 
@@ -97,13 +93,20 @@ Peer::sptr<host::BasicHost> Peer::makeHost(crypto::KeyPair keyPair) {
   auto key_marshaller = std::make_shared<crypto::marshaller::KeyMarshallerImpl>(
       std::move(key_validator));
 
+  auto idmgr =
+      std::make_shared<peer::IdentityManagerImpl>(keyPair, key_marshaller);
+
+  auto multiselect = std::make_shared<protocol_muxer::Multiselect>();
+
+  auto router = std::make_shared<network::RouterImpl>();
+
   auto exchange_msg_marshaller =
       std::make_shared<security::plaintext::ExchangeMessageMarshallerImpl>(
-          std::move(key_marshaller));
+          key_marshaller);
 
   std::vector<std::shared_ptr<security::SecurityAdaptor>> security_adaptors = {
       std::make_shared<security::Plaintext>(std::move(exchange_msg_marshaller),
-                                            idmgr)};
+                                            idmgr, std::move(key_marshaller))};
 
   std::vector<std::shared_ptr<muxer::MuxerAdaptor>> muxer_adaptors = {
       std::make_shared<muxer::Yamux>(muxed_config_)};

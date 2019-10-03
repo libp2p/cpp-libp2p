@@ -56,7 +56,8 @@ namespace libp2p::protocol {
           marshalled_pubkey_res.error().message());
     } else {
       auto &&marshalled_pubkey = marshalled_pubkey_res.value();
-      msg.set_publickey(marshalled_pubkey.data(), marshalled_pubkey.size());
+      msg.set_publickey(marshalled_pubkey.key.data(),
+                        marshalled_pubkey.key.size());
     }
 
     // set versions of Libp2p and our implementation
@@ -197,7 +198,8 @@ namespace libp2p::protocol {
     // unmarshal a received public key
     std::vector<uint8_t> pubkey_buf;
     pubkey_buf.insert(pubkey_buf.end(), pubkey_str.begin(), pubkey_str.end());
-    auto pubkey_res = key_marshaller_->unmarshalPublicKey(pubkey_buf);
+    auto pubkey_res =
+        key_marshaller_->unmarshalPublicKey(crypto::ProtobufKey{pubkey_buf});
     if (!pubkey_res) {
       log_->info("cannot unmarshal public key for peer {}: {}",
                  stream_peer_id ? stream_peer_id->toBase58() : "",
@@ -206,8 +208,16 @@ namespace libp2p::protocol {
     }
     pubkey = std::move(pubkey_res.value());
 
-    // derive a peer id from the received public key
-    auto msg_peer_id = peer::PeerId::fromPublicKey(*pubkey);
+    // derive a peer id from the received public key; PeerId is made from
+    // Protobuf-marshalled key, so we use it here
+    auto msg_peer_id_res =
+        peer::PeerId::fromPublicKey(crypto::ProtobufKey{pubkey_buf});
+    if (!msg_peer_id_res) {
+      log_->info("cannot derive PeerId from the received key: {}",
+                 msg_peer_id_res.error().message());
+      return stream_peer_id;
+    }
+    auto msg_peer_id = std::move(msg_peer_id_res.value());
 
     auto &key_repo = host_.getPeerRepository().getKeyRepository();
     if (!stream_peer_id) {

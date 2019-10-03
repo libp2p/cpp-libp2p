@@ -3,16 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/crypto/key_marshaller/key_marshaller_impl.hpp"
+#include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <libp2p/crypto/common.hpp>
+#include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include "mock/libp2p/crypto/key_validator_mock.hpp"
 
 using Buffer = std::vector<uint8_t>;
 using libp2p::crypto::Key;
 using libp2p::crypto::PrivateKey;
+using libp2p::crypto::ProtobufKey;
 using libp2p::crypto::PublicKey;
 using libp2p::crypto::marshaller::KeyMarshallerImpl;
 using libp2p::crypto::validator::KeyValidator;
@@ -61,6 +63,11 @@ class Privkey : public testing::TestWithParam<KeyCase<PrivateKey>> {
 
 TEST_P(Pubkey, Valid) {
   auto [key, match_prefix] = GetParam();
+  if (key.type == Key::Type::UNSPECIFIED) {
+    // we can't marshal UNSPECIFIED keys
+    ASSERT_FALSE(marshaller_.marshal(key));
+    return;
+  }
 
   Buffer match;
   match.insert(match.begin(), match_prefix.begin(), match_prefix.end());
@@ -71,10 +78,10 @@ TEST_P(Pubkey, Valid) {
     ASSERT_TRUE(res);
     auto &&val = res.value();
 
-    ASSERT_EQ(val, match);
+    ASSERT_EQ(val.key, match);
   }
   {
-    auto &&res = marshaller_.unmarshalPublicKey(match);
+    auto &&res = marshaller_.unmarshalPublicKey(ProtobufKey{match});
     ASSERT_TRUE(res);
     auto &&val = res.value();
     ASSERT_EQ(val.type, key.type);
@@ -84,6 +91,11 @@ TEST_P(Pubkey, Valid) {
 
 TEST_P(Privkey, Valid) {
   auto [key, match_prefix] = GetParam();
+  if (key.type == Key::Type::UNSPECIFIED) {
+    // we can't marshal UNSPECIFIED keys
+    ASSERT_FALSE(marshaller_.marshal(key));
+    return;
+  }
 
   Buffer match;
   match.insert(match.begin(), match_prefix.begin(), match_prefix.end());
@@ -94,10 +106,10 @@ TEST_P(Privkey, Valid) {
     ASSERT_TRUE(res);
     auto &&val = res.value();
 
-    ASSERT_EQ(val, match);
+    ASSERT_EQ(val.key, match);
   }
   {
-    auto &&res = marshaller_.unmarshalPrivateKey(match);
+    auto &&res = marshaller_.unmarshalPrivateKey(ProtobufKey{match});
     ASSERT_TRUE(res);
     auto &&val = res.value();
     ASSERT_EQ(val.type, key.type);
@@ -110,11 +122,9 @@ auto makeTestCases() {
   // clang-format off
   return std::vector<KeyCase<T>>{
       {{T{{Key::Type::UNSPECIFIED, randomBuffer(16)}}}, {18, 16}},
-      {{T{{Key::Type::RSA1024,     randomBuffer(16)}}}, {8, 1, 18, 16}},
-      {{T{{Key::Type::RSA2048,     randomBuffer(16)}}}, {8, 2, 18, 16}},
-      {{T{{Key::Type::RSA4096,     randomBuffer(16)}}}, {8, 3, 18, 16}},
-      {{T{{Key::Type::ED25519,     randomBuffer(16)}}}, {8, 4, 18, 16}},
-      {{T{{Key::Type::SECP256K1,   randomBuffer(16)}}}, {8, 5, 18, 16}},
+      {{T{{Key::Type::RSA,     randomBuffer(16)}}}, {8, 0, 18, 16}},
+      {{T{{Key::Type::Ed25519,     randomBuffer(16)}}}, {8, 1, 18, 16}},
+      {{T{{Key::Type::Secp256k1,   randomBuffer(16)}}}, {8, 2, 18, 16}},
   };
   // clang-format on
 }

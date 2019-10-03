@@ -23,7 +23,8 @@ namespace libp2p::security {
 
   void PlaintextSession::recvKey(PlaintextSession::PubkeyFunc f) {
     conn_->readSome(
-        recvbuf_, recvbuf_.size(),
+        recvbuf_,
+        recvbuf_.size(),
         [self{shared_from_this()}, f{std::move(f)}](outcome::result<size_t> r) {
           if (!r) {
             return self->handler_(r.error());
@@ -31,7 +32,8 @@ namespace libp2p::security {
 
           self->recvbuf_.resize(r.value());
 
-          auto rpub = self->marshaller_->unmarshalPublicKey(self->recvbuf_);
+          auto rpub = self->marshaller_->unmarshalPublicKey(
+              crypto::ProtobufKey{self->recvbuf_});
           if (!rpub) {
             return self->handler_(rpub.error());
           }
@@ -46,9 +48,10 @@ namespace libp2p::security {
     if (!r) {
       return handler_(r.error());
     }
-    sendbuf_ = r.value();
+    sendbuf_ = r.value().key;
 
-    conn_->write(sendbuf_, sendbuf_.size(),
+    conn_->write(sendbuf_,
+                 sendbuf_.size(),
                  [self{this->shared_from_this()},
                   then{std::move(then)}](outcome::result<size_t> r) {
                    if (!r) {

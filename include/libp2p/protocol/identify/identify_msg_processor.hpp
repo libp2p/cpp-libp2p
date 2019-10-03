@@ -20,7 +20,7 @@
 #include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/identify/observed_addresses.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace identify::pb {
   class Identify;
@@ -132,7 +132,7 @@ namespace libp2p::protocol {
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
     ObservedAddresses observed_addresses_;
 
-    libp2p::common::Logger log_ = libp2p::common::createLogger("Identify");
+    common::Logger log_ = common::createLogger("IdentifyMsgProcessor");
   };
 }  // namespace libp2p::protocol
 

@@ -3,24 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-syntax = "proto3";
+syntax = "proto2";
 package libp2p.crypto.protobuf;
 
 enum KeyType {
-  UNSPECIFIED = 0;
-  RSA1024 = 1;
-  RSA2048 = 2;
-  RSA4096 = 3;
-  ED25519 = 4;
-  SECP256K1 = 5;
-}
-
-message PrivateKey {
-  KeyType key_type = 1;
-  bytes key_value = 2;
+  RSA = 0;
+  Ed25519 = 1;
+  Secp256k1 = 2;
+  ECDSA = 3;
 }
 
 message PublicKey {
-  KeyType key_type = 1;
-  bytes key_value = 2;
+  required KeyType Type = 1;
+  required bytes Data = 2;
+}
+
+message PrivateKey {
+  required KeyType Type = 1;
+  required bytes Data = 2;
 }
