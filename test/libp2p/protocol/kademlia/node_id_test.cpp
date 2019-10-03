@@ -8,11 +8,11 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <libp2p/common/hexutil.hpp>
+#include <libp2p/common/literals.hpp>
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/literals.hpp"
 
-using libp2p::common::Hash256;
-using libp2p::common::hex_upper;
+using namespace libp2p::common;
+
 using libp2p::peer::PeerId;
 using libp2p::protocol::kademlia::NodeId;
 using libp2p::protocol::kademlia::xor_distance;

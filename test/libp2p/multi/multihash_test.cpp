@@ -6,12 +6,11 @@
 #include <gtest/gtest.h>
 
 #include <libp2p/common/hexutil.hpp>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/multi/multihash.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include "testutil/literals.hpp"
 
-using libp2p::common::ByteArray;
-using libp2p::common::hex_upper;
+using namespace libp2p::common;
 
 using libp2p::multi::HashType;
 using libp2p::multi::Multihash;

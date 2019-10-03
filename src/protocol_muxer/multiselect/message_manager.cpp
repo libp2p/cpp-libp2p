@@ -33,8 +33,7 @@ namespace {
       libp2p::protocol_muxer::MessageManager::MultiselectMessage;
 
   /// header of Multiselect protocol
-  constexpr std::string_view kMultiselectHeaderString =
-      "/multistream-select/1.0.0\n";
+  constexpr std::string_view kMultiselectHeaderString = "/multistream/1.0.0\n";
 
   /// string of ls message
   constexpr std::string_view kLsString = "ls\n";

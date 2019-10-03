@@ -7,6 +7,7 @@
 #include <random>
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/muxer/yamux.hpp>
@@ -17,7 +18,6 @@
 #include <mock/libp2p/crypto/key_validator_mock.hpp>
 #include <mock/libp2p/transport/upgrader_mock.hpp>
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
 
 using namespace libp2p;
@@ -30,6 +30,7 @@ using namespace peer;
 using namespace crypto;
 using namespace marshaller;
 using namespace validator;
+using namespace libp2p::common;
 
 using ::testing::_;
 using ::testing::Mock;
@@ -96,7 +97,7 @@ struct Server : public std::enable_shared_from_this<Server> {
           this->println("readSome ", read, " bytes");
           this->streamReads++;
 
-          // echo back read data
+          // 01-echo back read data
           stream->write(
               *buf, read,
               [buf, read, stream, this](outcome::result<size_t> rwrite) {
@@ -272,22 +273,24 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
 
   auto serverAddr = "/ip4/127.0.0.1/tcp/40312"_multiaddr;
 
-  KeyPair serverKeyPair = {{{Key::Type ::ED25519, {1}}},
-                           {{Key::Type ::ED25519, {2}}}};
+  KeyPair serverKeyPair = {{{Key::Type::Ed25519, {1}}},
+                           {{Key::Type::Ed25519, {2}}}};
 
-  auto muxer = GetParam();
-  auto idmgr = std::make_shared<IdentityManagerImpl>(serverKeyPair);
   auto key_validator = std::make_shared<KeyValidatorMock>();
+  auto key_marshaller = std::make_shared<KeyMarshallerImpl>(key_validator);
   EXPECT_CALL(*key_validator, validate(::testing::An<const PrivateKey &>()))
       .WillRepeatedly(::testing::Return(outcome::success()));
   EXPECT_CALL(*key_validator, validate(::testing::An<const PublicKey &>()))
       .WillRepeatedly(::testing::Return(outcome::success()));
 
-  auto key_marshaller = std::make_shared<KeyMarshallerImpl>(key_validator);
+  auto muxer = GetParam();
+  auto idmgr =
+      std::make_shared<IdentityManagerImpl>(serverKeyPair, key_marshaller);
   auto msg_marshaller =
       std::make_shared<plaintext::ExchangeMessageMarshallerImpl>(
           key_marshaller);
-  auto plaintext = std::make_shared<Plaintext>(msg_marshaller, idmgr);
+  auto plaintext =
+      std::make_shared<Plaintext>(msg_marshaller, idmgr, key_marshaller);
   auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
   auto transport = std::make_shared<TcpTransport>(context, upgrader);
   auto server = std::make_shared<Server>(transport);
@@ -300,22 +303,26 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
     clients.emplace_back([&, localSeed]() {
       auto context = std::make_shared<boost::asio::io_context>(1);
 
-      KeyPair clientKeyPair = {{{Key::Type ::ED25519, {3}}},
-                               {{Key::Type ::ED25519, {4}}}};
+      KeyPair clientKeyPair = {{{Key::Type::Ed25519, {3}}},
+                               {{Key::Type::Ed25519, {4}}}};
 
       auto muxer = GetParam();
-      auto idmgr = std::make_shared<IdentityManagerImpl>(clientKeyPair);
       auto key_marshaller = std::make_shared<KeyMarshallerImpl>(key_validator);
+      auto idmgr =
+          std::make_shared<IdentityManagerImpl>(clientKeyPair, key_marshaller);
       auto msg_marshaller =
           std::make_shared<plaintext::ExchangeMessageMarshallerImpl>(
               key_marshaller);
-      auto plaintext = std::make_shared<Plaintext>(msg_marshaller, idmgr);
+      auto plaintext =
+          std::make_shared<Plaintext>(msg_marshaller, idmgr, key_marshaller);
       auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
       auto transport = std::make_shared<TcpTransport>(context, upgrader);
       auto client = std::make_shared<Client>(transport, localSeed, context,
                                              streams, rounds);
 
-      auto p = PeerId::fromPublicKey(serverKeyPair.publicKey);
+      EXPECT_OUTCOME_TRUE(marshalled_key,
+                          key_marshaller->marshal(serverKeyPair.publicKey))
+      EXPECT_OUTCOME_TRUE(p, PeerId::fromPublicKey(marshalled_key))
       client->connect(p, serverAddr);
 
       context->run_for(2000ms);

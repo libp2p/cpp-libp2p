@@ -11,6 +11,7 @@ target_link_libraries(basic_host_test
     p2p_basic_host
     p2p_peer_id
     p2p_multiaddress
+    p2p_literals
     )
 
 addtest(host_integration_test
@@ -29,4 +30,5 @@ target_link_libraries(host_integration_test
     p2p_test_peer
     p2p_testutil
     p2p_testutil_peer
+    p2p_literals
     )

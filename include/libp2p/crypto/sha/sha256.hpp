@@ -17,14 +17,14 @@ namespace libp2p::crypto {
    * @param input to be hashed
    * @return hashed bytes
    */
-  common::Hash256 sha256(std::string_view input);
+  libp2p::common::Hash256 sha256(std::string_view input);
 
   /**
    * Take a SHA-256 hash from bytes
    * @param input to be hashed
    * @return hashed bytes
    */
-  common::Hash256 sha256(gsl::span<const uint8_t> input);
+  libp2p::common::Hash256 sha256(gsl::span<const uint8_t> input);
 }  // namespace libp2p::crypto
 
 #endif  // LIBP2P_SHA256_HPP

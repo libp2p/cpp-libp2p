@@ -28,6 +28,8 @@ namespace libp2p::injector {
 
         di::bind<Host>.template to<host::BasicHost>(),
 
+        di::bind<muxer::MuxedConnectionConfig>.to(muxer::MuxedConnectionConfig()),
+
         // repositories
         di::bind<peer::PeerRepository>.template to<peer::PeerRepositoryImpl>(),
         di::bind<peer::AddressRepository>.template to<peer::InmemAddressRepository>(),

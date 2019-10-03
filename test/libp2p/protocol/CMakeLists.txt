@@ -10,6 +10,7 @@ addtest(identify_test
     )
 target_link_libraries(identify_test
     p2p_identify
+    p2p_literals
     )
 
 addtest(identify_delta_test
@@ -17,6 +18,7 @@ addtest(identify_delta_test
     )
 target_link_libraries(identify_delta_test
     p2p_identify
+    p2p_literals
     )
 
 addtest(observed_addresses_test
@@ -24,6 +26,7 @@ addtest(observed_addresses_test
     )
 target_link_libraries(observed_addresses_test
     p2p_identify
+    p2p_literals
     )
 
 addtest(echo_test
@@ -31,6 +34,7 @@ addtest(echo_test
     )
 target_link_libraries(echo_test
     p2p_protocol_echo
+    p2p_literals
     )
 
 addtest(ping_test
@@ -40,4 +44,5 @@ target_link_libraries(ping_test
     p2p_ping
     p2p_peer_id
     p2p_multiaddress
+    p2p_literals
     )

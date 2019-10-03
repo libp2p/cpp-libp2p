@@ -6,8 +6,8 @@
 #include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
-#include "testutil/literals.hpp"
 
 using namespace libp2p::multi;
 using namespace libp2p::common;

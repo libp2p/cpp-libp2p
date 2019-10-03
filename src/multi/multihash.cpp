@@ -92,7 +92,7 @@ namespace libp2p::multi {
     return type_;
   }
 
-  const gsl::span<const uint8_t> Multihash::getHash() const {
+  gsl::span<const uint8_t> Multihash::getHash() const {
     return hash_;
   }
 

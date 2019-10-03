@@ -15,6 +15,7 @@ target_link_libraries(p2p_plaintext
     p2p_security_error
     p2p_plaintext_exchange_message_marshaller
     p2p_crypto_error
+    p2p_logger
     )
 
 libp2p_add_library(p2p_plaintext_exchange_message_marshaller

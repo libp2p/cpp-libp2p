@@ -13,6 +13,7 @@
 #include <testutil/gmock_actions.hpp>
 #include <testutil/outcome.hpp>
 #include "mock/libp2p/connection/raw_connection_mock.hpp"
+#include "mock/libp2p/crypto/key_marshaller_mock.hpp"
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
 #include "mock/libp2p/security/exchange_message_marshaller_mock.hpp"
 
@@ -21,6 +22,7 @@ using namespace connection;
 using namespace security;
 using namespace peer;
 using namespace crypto;
+using namespace marshaller;
 
 using libp2p::peer::PeerId;
 using testing::_;
@@ -37,11 +39,14 @@ class PlaintextAdaptorTest : public testing::Test {
   std::shared_ptr<plaintext::ExchangeMessageMarshallerMock> marshaller =
       std::make_shared<plaintext::ExchangeMessageMarshallerMock>();
 
+  std::shared_ptr<KeyMarshallerMock> key_marshaller =
+      std::make_shared<KeyMarshallerMock>();
+
   std::shared_ptr<Plaintext> adaptor =
-      std::make_shared<Plaintext>(marshaller, idmgr);
+      std::make_shared<Plaintext>(marshaller, idmgr, key_marshaller);
 
   void SetUp() override {
-    ON_CALL(*conn, readSome(_, _, _)).WillByDefault(Arg2CallbackWithArg(5));
+    ON_CALL(*conn, read(_, _, _)).WillByDefault(Arg2CallbackWithArg(5));
     ON_CALL(*conn, write(_, _, _)).WillByDefault(Arg2CallbackWithArg(5));
 
     ON_CALL(*idmgr, getKeyPair()).WillByDefault(ReturnRef(local_keypair));
@@ -55,13 +60,15 @@ class PlaintextAdaptorTest : public testing::Test {
 
   constexpr static size_t ED25519_PUB_KEY_SIZE = 32;
   PublicKey remote_pubkey{
-      {Key::Type::ED25519, std::vector<uint8_t>(ED25519_PUB_KEY_SIZE, 1)}};
+      {Key::Type::Ed25519, std::vector<uint8_t>(ED25519_PUB_KEY_SIZE, 1)}};
   KeyPair local_keypair{
-      {{Key::Type::ED25519, std::vector<uint8_t>(ED25519_PUB_KEY_SIZE, 2)}},
-      {{Key::Type::ED25519, std::vector<uint8_t>(ED25519_PUB_KEY_SIZE, 3)}},
+      {{Key::Type::Ed25519, std::vector<uint8_t>(ED25519_PUB_KEY_SIZE, 2)}},
+      {{Key::Type::Ed25519, std::vector<uint8_t>(ED25519_PUB_KEY_SIZE, 3)}},
   };
-  PeerId local_pid{PeerId::fromPublicKey(local_keypair.publicKey)};
-  PeerId remote_pid{PeerId::fromPublicKey(remote_pubkey)};
+  PeerId local_pid{
+      PeerId::fromPublicKey(ProtobufKey{local_keypair.publicKey.data}).value()};
+  PeerId remote_pid{
+      PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}).value()};
 };
 
 /**
@@ -85,7 +92,9 @@ TEST_F(PlaintextAdaptorTest, SecureInbound) {
           "/ip4/127.0.0.1/ipfs/"
           "QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC/")));
   plaintext::ExchangeMessage remote_msg{remote_pubkey, remote_pid};
-  EXPECT_CALL(*marshaller, unmarshal(_)).WillOnce(Return(remote_msg));
+  EXPECT_CALL(*marshaller, unmarshal(_))
+      .WillOnce(
+          Return(std::make_pair(remote_msg, ProtobufKey{remote_pubkey.data})));
 
   adaptor->secureInbound(
       conn, [this](outcome::result<std::shared_ptr<SecureConnection>> rc) {
@@ -94,9 +103,11 @@ TEST_F(PlaintextAdaptorTest, SecureInbound) {
         EXPECT_OUTCOME_TRUE(sec_remote_pubkey, sec->remotePublicKey());
         EXPECT_EQ(sec_remote_pubkey, remote_pubkey);
 
+        EXPECT_CALL(*key_marshaller, marshal(sec_remote_pubkey))
+            .WillOnce(Return(ProtobufKey{remote_pubkey.data}));
         EXPECT_OUTCOME_TRUE(remote_id, sec->remotePeer());
-        auto calculated = PeerId::fromPublicKey(remote_pubkey);
-
+        EXPECT_OUTCOME_TRUE(
+            calculated, PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}))
         EXPECT_EQ(remote_id, calculated);
       });
 }
@@ -107,7 +118,8 @@ TEST_F(PlaintextAdaptorTest, SecureInbound) {
  * @then connection is secured
  */
 TEST_F(PlaintextAdaptorTest, SecureOutbound) {
-  const PeerId pid = PeerId::fromPublicKey(remote_pubkey);
+  const PeerId pid =
+      PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}).value();
   ON_CALL(*conn, close()).WillByDefault(Return(outcome::success()));
   ON_CALL(*conn, remoteMultiaddr())
       .WillByDefault(Return(libp2p::multi::Multiaddress::create(
@@ -115,7 +127,9 @@ TEST_F(PlaintextAdaptorTest, SecureOutbound) {
           "QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC/")));
   plaintext::ExchangeMessage remote_msg{.pubkey = remote_pubkey,
                                         .peer_id = remote_pid};
-  EXPECT_CALL(*marshaller, unmarshal(_)).WillOnce(Return(remote_msg));
+  EXPECT_CALL(*marshaller, unmarshal(_))
+      .WillOnce(
+          Return(std::make_pair(remote_msg, ProtobufKey{remote_pubkey.data})));
 
   adaptor->secureOutbound(
       conn, pid,
@@ -125,9 +139,11 @@ TEST_F(PlaintextAdaptorTest, SecureOutbound) {
         EXPECT_OUTCOME_TRUE(sec_remote_pubkey, sec->remotePublicKey());
         EXPECT_EQ(sec_remote_pubkey, remote_pubkey);
 
+        EXPECT_CALL(*key_marshaller, marshal(sec_remote_pubkey))
+            .WillOnce(Return(ProtobufKey{remote_pubkey.data}));
         EXPECT_OUTCOME_TRUE(remote_id, sec->remotePeer());
-        auto calculated = PeerId::fromPublicKey(remote_pubkey);
-
+        EXPECT_OUTCOME_TRUE(
+            calculated, PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}))
         EXPECT_EQ(remote_id, calculated);
         EXPECT_EQ(remote_id, pid);
       });

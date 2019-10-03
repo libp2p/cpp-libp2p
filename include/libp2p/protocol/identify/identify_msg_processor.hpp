@@ -132,7 +132,7 @@ namespace libp2p::protocol {
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
     ObservedAddresses observed_addresses_;
 
-    libp2p::common::Logger log_ = libp2p::common::createLogger("Identify");
+    common::Logger log_ = common::createLogger("IdentifyMsgProcessor");
   };
 }  // namespace libp2p::protocol
 

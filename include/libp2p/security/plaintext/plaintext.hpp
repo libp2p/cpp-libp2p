@@ -6,6 +6,8 @@
 #ifndef LIBP2P_PLAINTEXT_ADAPTOR_HPP
 #define LIBP2P_PLAINTEXT_ADAPTOR_HPP
 
+#include <libp2p/common/logger.hpp>
+#include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller.hpp>
 #include <libp2p/security/security_adaptor.hpp>
@@ -27,15 +29,16 @@ namespace libp2p::security {
     enum class Error {
       EXCHANGE_SEND_ERROR = 1,
       EXCHANGE_RECEIVE_ERROR,
-      INVALID_PEER_ID,  // peer id in an exchange message doesn't much actual
-                        // peer id
-      EMPTY_PEER_ID     // remote multiaddr doesn't contain a peer id
+      INVALID_PEER_ID,
+      EMPTY_PEER_ID
     };
 
     ~Plaintext() override = default;
 
-    Plaintext(std::shared_ptr<plaintext::ExchangeMessageMarshaller> marshaller,
-              std::shared_ptr<peer::IdentityManager> idmgr);
+    Plaintext(
+        std::shared_ptr<plaintext::ExchangeMessageMarshaller> marshaller,
+        std::shared_ptr<peer::IdentityManager> idmgr,
+        std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
     peer::Protocol getProtocolId() const override;
 
@@ -56,13 +59,22 @@ namespace libp2p::security {
         const MaybePeerId &p, SecConnCallbackFunc cb) const;
 
     // the callback passed to an async read call in receiveExchangeMsg
-    void readCallback(std::shared_ptr<connection::RawConnection> conn,
+    void readCallback(const std::shared_ptr<connection::RawConnection> &conn,
                       const MaybePeerId &p, const SecConnCallbackFunc &cb,
                       const std::shared_ptr<std::vector<uint8_t>> &read_bytes,
                       outcome::result<size_t> read_call_res) const;
 
+    /**
+     * Close (\param conn) and report error in case of failure
+     */
+    void closeConnection(
+        const std::shared_ptr<libp2p::connection::RawConnection> &conn,
+        const std::error_code &err) const;
+
     std::shared_ptr<plaintext::ExchangeMessageMarshaller> marshaller_;
     std::shared_ptr<peer::IdentityManager> idmgr_;
+    std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
+    common::Logger log_ = common::createLogger("Plaintext");
   };
 }  // namespace libp2p::security
 

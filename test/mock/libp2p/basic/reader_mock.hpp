@@ -7,8 +7,8 @@
 #define LIBP2P_READER_MOCK_HPP
 
 #include <gmock/gmock.h>
-#include "common/hexutil.hpp"
-#include "include/libp2p/basic/reader.hpp"
+#include <libp2p/basic/reader.hpp>
+#include <libp2p/common/hexutil.hpp>
 
 namespace libp2p::basic {
   class ReaderMock : public Reader {
@@ -22,7 +22,7 @@ namespace libp2p::basic {
 
 inline std::ostream &operator<<(std::ostream &s,
                                 const std::vector<unsigned char> &v) {
-  s << kagome::common::hex_upper(v) << "\n";
+  s << common::hex_upper(v) << "\n";
   return s;
 }
 

@@ -16,4 +16,5 @@ target_link_libraries(all_muxers_acceptance_test
     p2p_testutil
     p2p_key_marshaller
     p2p_identity_manager
+    p2p_literals
     )

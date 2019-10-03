@@ -15,12 +15,11 @@
 #include "mock/libp2p/transport/upgrader_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/literals.hpp"
+#include <libp2p/common/literals.hpp>
 #include "testutil/ma_generator.hpp"
 #include "testutil/outcome.hpp"
 
 using libp2p::basic::ReadWriteCloser;
-using libp2p::common::ByteArray;
 using libp2p::connection::CapableConnBasedOnRawConnMock;
 using libp2p::connection::CapableConnection;
 using libp2p::connection::RawConnection;
@@ -34,6 +33,8 @@ using libp2p::transport::TcpTransport;
 using libp2p::transport::Upgrader;
 using libp2p::transport::UpgraderMock;
 using testutil::MultiaddressGenerator;
+
+using namespace libp2p::common;
 
 using ::testing::_;
 

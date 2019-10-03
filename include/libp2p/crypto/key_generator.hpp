@@ -21,6 +21,7 @@ namespace libp2p::crypto {
     using Buffer = std::vector<uint8_t>;
 
     virtual ~KeyGenerator() = default;
+
     /**
      * @brief generates new key pair of specified type
      * @param key_type key type

@@ -25,7 +25,7 @@
 #include "mock/libp2p/peer/key_repository_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
-#include "testutil/literals.hpp"
+#include <libp2p/common/literals.hpp>
 
 using namespace libp2p;
 using namespace peer;
@@ -33,7 +33,7 @@ using namespace crypto;
 using namespace protocol;
 using namespace network;
 using namespace connection;
-using namespace libp2p::common;
+using namespace common;
 using namespace multi;
 
 using testing::_;
@@ -109,10 +109,11 @@ class IdentifyTest : public testing::Test {
 
   std::vector<uint8_t> marshalled_pubkey_{0x11, 0x22, 0x33, 0x44},
       pubkey_data_{0x55, 0x66, 0x77, 0x88};
-  PublicKey pubkey_{{Key::Type::RSA2048, pubkey_data_}};
+  PublicKey pubkey_{{Key::Type::RSA, pubkey_data_}};
   KeyPair key_pair_{pubkey_, PrivateKey{}};
 
-  const peer::PeerId kRemotePeerId = PeerId::fromPublicKey(pubkey_);
+  const peer::PeerId kRemotePeerId =
+      PeerId::fromPublicKey(ProtobufKey{marshalled_pubkey_}).value();
   multi::Multiaddress remote_multiaddr_ = "/ip4/93.32.12.54/tcp/228"_multiaddr;
   const peer::PeerInfo kPeerInfo{
       kRemotePeerId, std::vector<multi::Multiaddress>{remote_multiaddr_}};
@@ -167,7 +168,7 @@ TEST_F(IdentifyTest, Send) {
   EXPECT_CALL(
       *std::static_pointer_cast<marshaller::KeyMarshallerMock>(key_marshaller_),
       marshal(pubkey_))
-      .WillOnce(Return(marshalled_pubkey_));
+      .WillOnce(Return(ProtobufKey{marshalled_pubkey_}));
 
   EXPECT_CALL(host_, getLibp2pVersion()).WillOnce(Return(kLibp2pVersion));
   EXPECT_CALL(host_, getLibp2pClientVersion()).WillOnce(Return(kClientVersion));
@@ -225,7 +226,7 @@ TEST_F(IdentifyTest, Receive) {
   // consumePublicKey
   EXPECT_CALL(
       *std::static_pointer_cast<marshaller::KeyMarshallerMock>(key_marshaller_),
-      unmarshalPublicKey(marshalled_pubkey_))
+      unmarshalPublicKey(ProtobufKey{marshalled_pubkey_}))
       .WillOnce(Return(pubkey_));
 
   EXPECT_CALL(host_, getPeerRepository())

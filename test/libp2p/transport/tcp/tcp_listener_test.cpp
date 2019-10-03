@@ -5,9 +5,9 @@
 
 #include <gtest/gtest.h>
 
+#include <libp2p/common/literals.hpp>
 #include "libp2p/transport/tcp/tcp_listener.hpp"
 #include "testutil/gmock_actions.hpp"
-#include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
 
 #include "mock/libp2p/transport/upgrader_mock.hpp"
@@ -15,6 +15,7 @@
 using namespace libp2p;
 using namespace transport;
 using namespace connection;
+using namespace common;
 using std::chrono_literals::operator""ms;
 
 using ::testing::_;

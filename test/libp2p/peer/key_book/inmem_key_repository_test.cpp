@@ -38,14 +38,14 @@ struct InmemKeyRepositoryTest : ::testing::Test {
 };
 
 TEST_F(InmemKeyRepositoryTest, PubkeyStore) {
-  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::ED25519, {'a'}}}));
-  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::ED25519, {'b'}}}));
+  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::Ed25519, {'a'}}}));
+  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::Ed25519, {'b'}}}));
   // insert same pubkey. it should not be inserted
-  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::ED25519, {'b'}}}));
+  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::Ed25519, {'b'}}}));
   // same pubkey but different type
-  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::RSA1024, {'b'}}}));
+  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::RSA, {'b'}}}));
   // put pubkey to different peer
-  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p2_, {{Key::Type::RSA4096, {'c'}}}));
+  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p2_, {{Key::Type::RSA, {'c'}}}));
 
   EXPECT_OUTCOME_TRUE(v, db_->getPublicKeys(p1_));
   EXPECT_EQ(v->size(), 3);
@@ -56,8 +56,8 @@ TEST_F(InmemKeyRepositoryTest, PubkeyStore) {
 }
 
 TEST_F(InmemKeyRepositoryTest, KeyPairStore) {
-  PublicKey pub = {{Key::Type::RSA1024, {'a'}}};
-  PrivateKey priv = {{Key::Type::RSA1024, {'b'}}};
+  PublicKey pub = {{Key::Type::RSA, {'a'}}};
+  PrivateKey priv = {{Key::Type::RSA, {'b'}}};
   KeyPair kp{pub, priv};
   EXPECT_OUTCOME_TRUE_1(db_->addKeyPair({pub, priv}));
 

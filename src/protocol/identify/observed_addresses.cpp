@@ -115,7 +115,6 @@ namespace libp2p::protocol {
       const multi::Multiaddress &addr) const {
     // for now, we only use the root part of the multiaddress; in most cases, it
     // is IP4, and this is the behaviour we want
-    auto [observer_group, rest] = addr.splitFirst();
-    return observer_group;
+    return addr.splitFirst().first;
   }
 }  // namespace libp2p::protocol

@@ -45,10 +45,14 @@ namespace __libp2p {
       return c;
     }
 
+    ~Category() override = default;
+    Category(const Category &) = delete;
+    Category &operator=(const Category &) = delete;
+    Category(Category &&) = delete;
+    Category &operator=(Category &&) = delete;
+
    private:
     Category() = default;
-    Category(const Category &) = delete;
-    Category(Category &&) = delete;
   }; /* end of class */
 
 }  // namespace __libp2p

@@ -95,9 +95,9 @@ namespace libp2p::connection {
 
    private:
     struct WriteData {
-      Buffer data;
-      std::function<void(outcome::result<size_t>)> cb;
-      bool some = false;
+      Buffer data{};
+      std::function<void(outcome::result<size_t>)> cb{};
+      bool some = false;  // true, if writeSome is to be called over the data
     };
     std::queue<WriteData> write_queue_;
     bool is_writing_ = false;
@@ -147,16 +147,10 @@ namespace libp2p::connection {
     void doReadData(size_t data_size, basic::Reader::ReadCallbackFunc cb);
 
     /**
-     * Process frame of data type
+     * Process frame of data or window update type
      * @param frame to be processed
      */
-    void processDataFrame(const YamuxFrame &frame);
-
-    /**
-     * Process frame of window size update type
-     * @param frame to be processed
-     */
-    void processWindowUpdateFrame(const YamuxFrame &frame);
+    void processDataOrWindowUpdateFrame(const YamuxFrame &frame);
 
     /**
      * Process frame of ping type
@@ -185,9 +179,9 @@ namespace libp2p::connection {
     /**
      * Register a new stream in this instance, making it active
      * @param stream_id to be registered
-     * @param cb - callback with registered stream or error
+     * @return pointer to a newly registered stream
      */
-    void registerNewStream(StreamId stream_id, StreamHandlerFunc cb);
+    std::shared_ptr<YamuxStream> registerNewStream(StreamId stream_id);
 
     /**
      * If there is data in this length, buffer it to the according stream
@@ -195,19 +189,11 @@ namespace libp2p::connection {
      * @param frame, which can have some data inside
      * @return true if there is some data in the frame, and the function is
      * going to read it, false otherwise
+     * @param discard_data - set to true, if the data is to be discarded after
+     * read
      */
-    bool processData(std::shared_ptr<YamuxStream> stream,
-                     const YamuxFrame &frame);
-
-    /**
-     * Process ack message for such stream_id
-     * @param stream_id of the stream to be processed
-     * @param cb to be called with stream, if there is one on our side, or
-     * with error after failed write of reset
-     */
-    void processAck(
-        StreamId stream_id,
-        std::function<void(outcome::result<std::shared_ptr<Stream>>)> cb);
+    void processData(std::shared_ptr<YamuxStream> stream,
+                     const YamuxFrame &frame, bool discard_data);
 
     /**
      * Process a window update by notifying a related stream about a change

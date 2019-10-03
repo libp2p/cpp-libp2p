@@ -8,6 +8,7 @@ addtest(libp2p_transport_parser_test
     )
 target_link_libraries(libp2p_transport_parser_test
     p2p_transport_parser
+    p2p_literals
     )
 
 addtest(libp2p_upgrader_test

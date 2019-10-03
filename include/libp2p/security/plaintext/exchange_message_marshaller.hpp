@@ -6,8 +6,12 @@
 #ifndef LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_HPP
 #define LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_HPP
 
+#include <utility>
 #include <vector>
 
+#include <gsl/span>
+#include <libp2p/crypto/protobuf/protobuf_key.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/plaintext/exchange_message.hpp>
 
 namespace libp2p::security::plaintext {
@@ -31,10 +35,11 @@ namespace libp2p::security::plaintext {
     /**
      * @param msg_bytes a byte array containing a Protobuf representation of an
      * exchange message
-     * @returns a deserialized exchange message
+     * @returns a deserialized exchange message and a Protobuf representation of
+     * the public key
      */
-    virtual outcome::result<ExchangeMessage> unmarshal(
-        gsl::span<const uint8_t> msg_bytes) const = 0;
+    virtual outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>>
+    unmarshal(gsl::span<const uint8_t> msg_bytes) const = 0;
   };
 
 }  // namespace libp2p::security::plaintext

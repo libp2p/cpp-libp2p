@@ -16,7 +16,7 @@
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
 #include "testutil/gmock_actions.hpp"
-#include "testutil/literals.hpp"
+#include <libp2p/common/literals.hpp>
 
 using namespace libp2p;
 using namespace peer;
@@ -24,7 +24,7 @@ using namespace crypto;
 using namespace protocol;
 using namespace network;
 using namespace connection;
-using namespace libp2p::common;
+using namespace common;
 using namespace multi;
 
 using testing::_;

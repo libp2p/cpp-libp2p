@@ -15,7 +15,7 @@ namespace libp2p::connection {
     ~StreamMock() override = default;
 
     StreamMock() = default;
-    StreamMock(uint8_t id) : stream_id{id} {}
+    explicit StreamMock(uint8_t id) : stream_id{id} {}
 
     /// this field here is for easier testing
     uint8_t stream_id = 137;

@@ -11,16 +11,17 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/transport/tcp.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/transport/upgrader_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
 
 using namespace libp2p::transport;
 using namespace libp2p::multi;
+using namespace libp2p::common;
 using namespace libp2p::connection;
 using std::chrono_literals::operator""s;
 using std::chrono_literals::operator""ms;

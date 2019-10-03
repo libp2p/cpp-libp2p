@@ -5,25 +5,15 @@
 
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 
-#include <openssl/rsa.h>
+#include <openssl/x509.h>
 #include <gsl/gsl_util>
+#include <libp2p/common/hexutil.hpp>
 #include <libp2p/crypto/error.hpp>
 
 namespace libp2p::crypto::validator {
 
   namespace {
-    constexpr int getRsaBitsCount(Key::Type key_type) {
-      switch (key_type) {
-        case Key::Type::RSA1024:
-          return 1024;
-        case Key::Type::RSA2048:
-          return 2048;
-        case Key::Type::RSA4096:
-          return 4096;
-        default:
-          return 0;
-      }
-    }
+    constexpr int kMinimumRSABitsCount = 2048;
 
     // ed25519 private key has fixed size
     constexpr size_t ED25519_PRIVATE_KEY_SIZE = 32u;
@@ -47,14 +37,15 @@ namespace libp2p::crypto::validator {
   outcome::result<void> KeyValidatorImpl::validate(
       const PrivateKey &key) const {
     switch (key.type) {
-      case Key::Type::RSA1024:
-      case Key::Type::RSA2048:
-      case Key::Type::RSA4096:
+      case Key::Type::RSA:
         return validateRsa(key);
-      case Key::Type::ED25519:
+      case Key::Type::Ed25519:
         return validateEd25519(key);
-      case Key::Type::SECP256K1:
+      case Key::Type::Secp256k1:
         return validateSecp256k1(key);
+      case Key::Type::ECDSA:
+        // TODO(25.09.19) Akvinikym PRE-312: handle ECDSA keys validation
+        BOOST_ASSERT_MSG(false, "not implemented");  // NOLINT
       case Key::Type::UNSPECIFIED:  // consider unspecified key valid
         break;
     }
@@ -64,14 +55,14 @@ namespace libp2p::crypto::validator {
 
   outcome::result<void> KeyValidatorImpl::validate(const PublicKey &key) const {
     switch (key.type) {
-      case Key::Type::RSA1024:
-      case Key::Type::RSA2048:
-      case Key::Type::RSA4096:
+      case Key::Type::RSA:
         return validateRsa(key);
-      case Key::Type::ED25519:
+      case Key::Type::Ed25519:
         return validateEd25519(key);
-      case Key::Type::SECP256K1:
+      case Key::Type::Secp256k1:
         return validateSecp256k1(key);
+      case Key::Type::ECDSA:
+        BOOST_ASSERT_MSG(false, "not implemented");  // NOLINT
       case Key::Type::UNSPECIFIED:  // consider unspecified key valid
         break;
     }
@@ -108,7 +99,7 @@ namespace libp2p::crypto::validator {
     }
     auto cleanup_rsa = gsl::finally([rsa]() { RSA_free(rsa); });
     int bits = RSA_bits(rsa);
-    if (bits != getRsaBitsCount(key.type)) {
+    if (bits < kMinimumRSABitsCount) {
       return KeyValidatorError::INVALID_PRIVATE_KEY;
     }
 
@@ -118,13 +109,13 @@ namespace libp2p::crypto::validator {
   outcome::result<void> KeyValidatorImpl::validateRsa(
       const PublicKey &key) const {
     const unsigned char *data_pointer = key.data.data();
-    RSA *rsa = d2i_RSAPublicKey(nullptr, &data_pointer, key.data.size());
+    RSA *rsa = d2i_RSA_PUBKEY(nullptr, &data_pointer, key.data.size());
     if (nullptr == rsa) {
       return KeyValidatorError::INVALID_PUBLIC_KEY;
     }
     auto cleanup_rsa = gsl::finally([rsa]() { RSA_free(rsa); });
     int bits = RSA_bits(rsa);
-    if (bits != getRsaBitsCount(key.type)) {
+    if (bits < kMinimumRSABitsCount) {
       return KeyValidatorError::INVALID_PRIVATE_KEY;
     }
 

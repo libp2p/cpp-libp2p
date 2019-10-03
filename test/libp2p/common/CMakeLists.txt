@@ -8,4 +8,5 @@ addtest(hexutil_test
   )
 target_link_libraries(hexutil_test
   p2p_hexutil
+  p2p_literals
   )
