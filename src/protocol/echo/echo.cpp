@@ -20,7 +20,7 @@ namespace libp2p::protocol {
   }
 
   peer::Protocol Echo::getProtocolId() const {
-    return "/01-echo/1.0.0";
+    return "/echo/1.0.0";
   }
 
   Echo::Echo(EchoConfig config) : config_(config) {}

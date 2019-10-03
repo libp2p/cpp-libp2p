@@ -10,8 +10,8 @@
 #include <vector>
 
 #include <gsl/span>
-#include <outcome/outcome.hpp>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/plaintext/exchange_message.hpp>
 
 namespace libp2p::security::plaintext {

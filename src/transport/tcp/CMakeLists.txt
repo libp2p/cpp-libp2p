@@ -6,7 +6,6 @@ target_link_libraries(p2p_tcp_connection
     Boost::boost
     p2p_multiaddress
     p2p_upgrader_session
-    Microsoft.GSL::GSL
     )
 
 libp2p_add_library(p2p_tcp_listener tcp_listener.cpp)
