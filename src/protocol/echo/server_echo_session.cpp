@@ -11,9 +11,12 @@ namespace libp2p::protocol {
 
   ServerEchoSession::ServerEchoSession(
       std::shared_ptr<connection::Stream> stream, EchoConfig config)
-      : stream_(std::move(stream)), buf_(config.max_recv_size, 0) {
+      : stream_(std::move(stream)),
+        buf_(config.max_recv_size, 0),
+        config_{config},
+        repeat_infinitely_{config.max_server_repeats == 0} {
     BOOST_ASSERT(stream_ != nullptr);
-    BOOST_ASSERT(config.max_recv_size > 0);
+    BOOST_ASSERT(config_.max_recv_size > 0);
   }
 
   void ServerEchoSession::start() {
@@ -29,7 +32,8 @@ namespace libp2p::protocol {
   }
 
   void ServerEchoSession::doRead() {
-    if (stream_->isClosedForRead()) {
+    if (stream_->isClosedForRead()
+        || (!repeat_infinitely_ && config_.max_server_repeats == 0)) {
       return stop();
     }
 
@@ -70,6 +74,10 @@ namespace libp2p::protocol {
 
     log_->info("written message: {}",
                std::string{buf_.begin(), buf_.begin() + rwrite.value()});
+
+    if (!repeat_infinitely_) {
+      --config_.max_server_repeats;
+    }
     doRead();
   }
 }  // namespace libp2p::protocol

@@ -32,7 +32,10 @@ namespace libp2p::protocol {
    private:
     std::shared_ptr<connection::Stream> stream_;
     std::vector<uint8_t> buf_;
+    EchoConfig config_;
     common::Logger log_ = common::createLogger("Echo");
+
+    bool repeat_infinitely_;
 
     void doRead();
 

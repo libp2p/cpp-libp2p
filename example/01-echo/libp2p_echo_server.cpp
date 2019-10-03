@@ -40,13 +40,10 @@ int main() {
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
 
   // set a handler for Echo protocol
-  std::shared_ptr<libp2p::connection::Stream> stream;
-  libp2p::protocol::Echo echo;
+  libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{1}};
   host->setProtocolHandler(
       echo.getProtocolId(),
-      [&echo, &stream](
-          std::shared_ptr<libp2p::connection::Stream> received_stream) mutable {
-        stream = received_stream;
+      [&echo](std::shared_ptr<libp2p::connection::Stream> received_stream) {
         echo.handle(std::move(received_stream));
       });
 
@@ -69,14 +66,4 @@ int main() {
 
   // run the IO context
   context->run_for(std::chrono::seconds(5));
-
-  if (stream) {
-    // close the stream after done, as Go implementation relies on it
-    stream->close([](auto &&close_res) {
-      if (!close_res) {
-        std::cerr << "stream close errored: " << close_res.error().message()
-                  << "\n";
-      }
-    });
-  }
 }

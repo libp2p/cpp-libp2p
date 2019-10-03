@@ -11,6 +11,10 @@
 namespace libp2p::protocol {
 
   struct EchoConfig {
+    // number of times echo server will repeat the cycle <listen-respond>; 0
+    // means infinite number of times
+    size_t max_server_repeats = 0;
+
     // maximum size of message we can receive
     size_t max_recv_size = 4096;
   };
