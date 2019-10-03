@@ -4,3 +4,4 @@
 #
 
 add_subdirectory(yamux)
+add_subdirectory(mplex)
