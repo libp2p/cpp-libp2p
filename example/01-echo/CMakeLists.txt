@@ -15,5 +15,5 @@ target_link_libraries(libp2p_echo_server
     p2p_inmem_key_repository
     p2p_inmem_protocol_repository
     p2p_protocol_echo
-    Microsoft.GSL::GSL
+    p2p_hexutil
     )

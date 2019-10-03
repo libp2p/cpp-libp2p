@@ -13,16 +13,17 @@ namespace libp2p::connection {
                                                Flag flag, uint32_t stream_id,
                                                uint32_t length,
                                                gsl::span<const uint8_t> data) {
+    using common::putUint16BE;
+    using common::putUint32BE;
+    using common::putUint8;
+
     ByteArray bytes;
     bytes.reserve(kHeaderLength);  // minimum header size
-    common::putUint32BE(
-        common::putUint32BE(
-            common::putUint16BE(
-                common::putUint8(common::putUint8(bytes, version),
-                                 static_cast<uint8_t>(type)),
-                static_cast<uint16_t>(flag)),
-            stream_id),
-        length);
+    putUint32BE(putUint32BE(putUint16BE(putUint8(putUint8(bytes, version),
+                                                 static_cast<uint8_t>(type)),
+                                        static_cast<uint16_t>(flag)),
+                            stream_id),
+                length);
     bytes.insert(bytes.end(), data.begin(), data.end());
     return bytes;
   }

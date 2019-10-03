@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 
+#include <libp2p/common/hexutil.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/protocol/echo.hpp>
@@ -20,16 +21,17 @@ int main() {
   // this keypair generates a PeerId
   // "12D3KooWLs7RC93EGXZzn9YdKyZYYx3f9UjTLYNX1reThpCkFb83"
   KeyPair keypair{
-      PublicKey{
-          {Key::Type::Ed25519,
-           {0xa4, 0x24, 0x9e, 0xa6, 0xd6, 0x2b, 0xdd, 0x8b, 0xcc, 0xf6, 0x22,
-            0x57, 0xac, 0x48, 0x99, 0xff, 0x28, 0x47, 0x96, 0x32, 0x28, 0xb3,
-            0x88, 0xfd, 0xa2, 0x88, 0xdb, 0x5d, 0x64, 0xe5, 0x17, 0xe0}}},
+      PublicKey{{Key::Type::Ed25519,
+                 {libp2p::common::unhex("a4249ea6d62bdd8bccf62257ac4899ff284796"
+                                        "3228b388fda288db5d64e517e0")
+                      .value()}}},
       PrivateKey{
           {Key::Type::Ed25519,
-           {0x4a, 0x93, 0x61, 0xc5, 0x25, 0x84, 0x0f, 0x70, 0x86, 0xb8, 0x93,
-            0xd5, 0x84, 0xeb, 0xbe, 0x47, 0x5b, 0x4e, 0xc7, 0x06, 0x99, 0x51,
-            0xd2, 0xe8, 0x97, 0xe8, 0xbc, 0xeb, 0x0a, 0x3f, 0x35, 0xce}}}};
+           {libp2p::common::unhex("4a9361c525840f7086b893d584ebbe475b4ec"
+                                  "7069951d2e897e8bceb0a3f35ce")
+                .value()}}}};  // generally it's a bad idea to use .value() on
+                               // the result without check, but here we are
+                               // sure, that the values can be unhexed
 
   // create a default Host via an injector, overriding a random-generated
   // keypair with ours
@@ -57,7 +59,7 @@ int main() {
     if (!listen_res) {
       std::cerr << "host cannot listen the given multiaddress: "
                 << listen_res.error().message() << "\n";
-      std::terminate();
+      std::exit(EXIT_FAILURE);
     }
 
     host->start();
