@@ -299,7 +299,7 @@ namespace libp2p::connection {
     }
 
     if (frame.type == YamuxFrame::FrameType::DATA) {
-      // even if the data is to be discarded, it still must be drown from the
+      // even if the data is to be discarded, it still must be drawn from the
       // wire
       return processData(std::move(stream), frame, discard);
     }
