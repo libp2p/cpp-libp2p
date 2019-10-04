@@ -71,8 +71,8 @@ namespace libp2p::connection {
     virtual void reset() = 0;
 
     /**
-     * Set a new receive window size of this stream - how much unacknowledged
-     * (not read) bytes can we on our side of the stream
+     * Set a new receive window size of this stream - how much unread bytes can
+     * we have on our side of the stream
      * @param new_size for the window
      * @param cb to be called, when the operation succeeds of fails
      */

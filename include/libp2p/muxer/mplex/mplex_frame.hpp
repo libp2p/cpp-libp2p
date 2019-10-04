@@ -14,7 +14,7 @@
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
-#include <outcome/outcome.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::connection {
   /**
@@ -33,7 +33,7 @@ namespace libp2p::connection {
     using Length = uint64_t;
 
     Flag flag;
-    MplexedConnection::StreamId stream_id;
+    MplexedConnection::StreamNumber stream_number;
     Length length;
     common::ByteArray data;
 
@@ -48,9 +48,9 @@ namespace libp2p::connection {
    * Create an MplexFrame and return its bytes representation
    * @return bytes of the MplexFrame
    */
-  common::ByteArray createFrameBytes(MplexFrame::Flag flag,
-                                     MplexedConnection::StreamId stream_id,
-                                     common::ByteArray data = {});
+  common::ByteArray createFrameBytes(
+      MplexFrame::Flag flag, MplexedConnection::StreamNumber stream_number,
+      common::ByteArray data = {});
 
   /**
    * Create an MplexFrame

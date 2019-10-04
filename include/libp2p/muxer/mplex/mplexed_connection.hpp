@@ -21,7 +21,23 @@ namespace libp2p::connection {
       : public CapableConnection,
         public std::enable_shared_from_this<MplexedConnection> {
    public:
-    using StreamId = uint32_t;
+    /**
+     * In mplex streams are identified by both number and side, which initiated
+     * the stream, so that two stream can have the same id number, given they
+     * were opened from two different sides
+     */
+    using StreamNumber = uint32_t;
+    struct StreamId {
+      StreamNumber number;
+      bool initiator;
+
+      /// for convenient logging
+      std::string toString() const {
+        auto initiator_str = initiator ? "true" : "false";
+        return "StreamId{" + std::to_string(number) + ", " + initiator_str
+            + "}";
+      }
+    };
 
     /**
      * Create a new instance of MplexedConnection
@@ -91,27 +107,45 @@ namespace libp2p::connection {
     /**
      * Process a new stream (\package frame)
      */
-    void processNewStreamFrame(const MplexFrame &frame);
+    void processNewStreamFrame(const MplexFrame &frame, StreamId stream_id);
 
     /**
      * Process a message stream (\package frame)
      */
-    void processMessageFrame(const MplexFrame &frame);
+    void processMessageFrame(const MplexFrame &frame, StreamId stream_id);
 
     /**
      * Process a close stream (\package frame)
      */
-    void processCloseFrame(const MplexFrame &frame);
+    void processCloseFrame(const MplexFrame &frame, StreamId stream_id);
 
     /**
      * Process a reset stream (\package frame)
      */
-    void processResetFrame(const MplexFrame &frame);
+    void processResetFrame(const MplexFrame &frame, StreamId stream_id);
+
+    /**
+     * Find a stream with (\param id)
+     * @return found stream or nothing
+     */
+    boost::optional<std::shared_ptr<MplexStream>> findStream(
+        const StreamId &id) const;
+
+    /**
+     * Remove the stream from this connection and make it both non-readable and
+     * non-writable
+     */
+    void removeStream(StreamId stream_id);
+
+    /**
+     * Send a reset to stream with (\param stream_id)
+     */
+    void resetStream(StreamId stream_id);
 
     /**
      * Send a reset over all streams over this connection
      */
-    void resetAllStreams() const;
+    void resetAllStreams();
 
     /**
      * Close this Mplex session and the underlying connection
@@ -121,42 +155,15 @@ namespace libp2p::connection {
     std::shared_ptr<SecureConnection> connection_;
     muxer::MuxedConnectionConfig config_;
 
-    /// two streams can hold the same StreamId, so they are differentiated also
-    /// by the side, who opened them
-    std::unordered_map<std::pair<StreamId, bool>, MplexStream> streams_;
-    StreamId last_issued_stream_id_ = 1;
+    std::unordered_map<StreamId, std::shared_ptr<MplexStream>> streams_;
+    StreamNumber last_issued_stream_number_ = 1;
     NewStreamHandlerFunc new_stream_handler_;
 
     bool is_active_ = false;
     common::Logger log_ = common::createLogger("MplexedConnection");
 
     /// MPLEX STREAM API
-
-    using NotifyeeCallback = std::function<bool()>;
-
-    /**
-     * Add a handler function, which is called, when a window update is
-     * received
-     * @param stream_id of the stream which is to be notified
-     * @param handler to be called; if it returns true, it's removed from
-     * the list of handlers for that stream
-     * @note this is done through a function and not event emitters, as each
-     * stream is to receive that event independently based on id
-     */
-    void streamOnWindowUpdate(StreamId stream_id, NotifyeeCallback cb);
-    std::map<StreamId, NotifyeeCallback> window_updates_subs_;
-
-    /**
-     * Add a handler function, which is called, when data for a particular
-     * stream is received
-     * @param stream_id of the stream which is to be notified
-     * @param handler to be called; if it returns true, it's removed from
-     * the list of handlers for that stream
-     * @note this is done through a function and not event emitters, as each
-     * stream is to receive that event independently based on id
-     */
-    void streamOnAddData(StreamId stream_id, NotifyeeCallback cb);
-    std::map<StreamId, NotifyeeCallback> data_subs_;
+    friend class MplexStream;
 
     /**
      * Write bytes to the connection; before calling this method, the stream

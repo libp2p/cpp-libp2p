@@ -76,7 +76,6 @@ namespace libp2p::connection {
     is_active_ = false;
     resetAllStreams();
     streams_.clear();
-    data_subs_.clear();
     return connection_->close();
   }
 
@@ -126,21 +125,29 @@ namespace libp2p::connection {
   void MplexedConnection::processFrame(MplexFrame frame) {
     using Flag = MplexFrame::Flag;
 
+    // we are initiators of this connection, if the other side is a receiver of
+    // this connection (o rly?)
+    auto this_side_is_initiator = (frame.flag != Flag::NEW_STREAM)
+        && (frame.flag == Flag::MESSAGE_RECEIVER
+            || frame.flag == Flag::CLOSE_RECEIVER
+            || frame.flag == Flag::RESET_RECEIVER);
+    StreamId stream_id{frame.stream_number, this_side_is_initiator};
+
     switch (frame.flag) {
       case Flag::NEW_STREAM:
-        processNewStreamFrame(frame);
+        processNewStreamFrame(frame, stream_id);
         break;
       case Flag::MESSAGE_RECEIVER:
       case Flag::MESSAGE_INITIATOR:
-        processMessageFrame(frame);
+        processMessageFrame(frame, stream_id);
         break;
       case Flag::CLOSE_RECEIVER:
       case Flag::CLOSE_INITIATOR:
-        processCloseFrame(frame);
+        processCloseFrame(frame, stream_id);
         break;
       case Flag::RESET_RECEIVER:
       case Flag::RESET_INITIATOR:
-        processResetFrame(frame);
+        processResetFrame(frame, stream_id);
         break;
       default:
         log_->critical("garbage in frame's flag");
@@ -150,23 +157,88 @@ namespace libp2p::connection {
     readNextFrame();
   }
 
-  void MplexedConnection::processNewStreamFrame(const MplexFrame &frame) {
+  void MplexedConnection::processNewStreamFrame(const MplexFrame &frame,
+                                                StreamId stream_id) {
     if (streams_.size() >= config_.maximum_streams) {
       // reset the stream immediately
-      return write(
-          createFrameBytes(MplexFrame::Flag::RESET_RECEIVER, frame.stream_id));
+      return write(createFrameBytes(MplexFrame::Flag::RESET_RECEIVER,
+                                    frame.stream_number));
     }
 
     // TODO: create a stream
   }
 
-  void MplexedConnection::processMessageFrame(const MplexFrame &frame) {}
+  /**
+   * Find stream with such stream_id or reset it in case no such stream was
+   * found
+   */
+#define FIND_STREAM_OR_RESET(stream_var_name, stream_id) \
+  auto stream_opt = findStream(stream_id);               \
+  if (!stream_opt) {                                     \
+    return resetStream(stream_id);                       \
+  }                                                      \
+  auto stream_var_name = std::move(*stream_opt);
 
-  void MplexedConnection::processCloseFrame(const MplexFrame &frame) {}
+  void MplexedConnection::processMessageFrame(const MplexFrame &frame,
+                                              StreamId stream_id) {
+    FIND_STREAM_OR_RESET(stream, stream_id)
 
-  void MplexedConnection::processResetFrame(const MplexFrame &frame) {}
+    // there is some data for this stream - commit it
+    auto commit_res = stream->commitData(frame.data, frame.data.size());
+    if (!commit_res) {
+      return log_->error("failed to commit data for stream {}: {}", stream_id,
+                         commit_res.error().message());
+    }
+  }
 
-  void MplexedConnection::resetAllStreams() const {}
+  void MplexedConnection::processCloseFrame(const MplexFrame &frame,
+                                            StreamId stream_id) {
+    FIND_STREAM_OR_RESET(stream, stream_id)
+
+    // half-close the stream for reads; if it is already closed for writes as
+    // well, remove it
+    if (!stream->is_writable_) {
+      return removeStream(stream_id);
+    }
+    stream->is_readable_ = true;
+  }
+
+  void MplexedConnection::processResetFrame(const MplexFrame &frame,
+                                            StreamId stream_id) {
+    if (auto stream_opt = findStream(stream_id); stream_opt) {
+      (*stream_opt)->is_reset_ = true;
+    }
+    removeStream(stream_id);
+  }
+
+  boost::optional<std::shared_ptr<MplexStream>> MplexedConnection::findStream(
+      const StreamId &id) const {
+    if (auto stream_it = streams_.find(id); stream_it != streams_.end()) {
+      return stream_it->second;
+    }
+    return {};
+  }
+
+  void MplexedConnection::removeStream(StreamId stream_id) {
+    if (auto stream_opt = findStream(stream_id); stream_opt) {
+      streams_.erase(stream_id);
+      (*stream_opt)->is_writable_ = false;
+      (*stream_opt)->is_readable_ = false;
+    }
+  }
+
+  void MplexedConnection::resetStream(StreamId stream_id) {
+    write(createFrameBytes(stream_id.initiator
+                               ? MplexFrame::Flag::RESET_INITIATOR
+                               : MplexFrame::Flag::RESET_RECEIVER,
+                           stream_id.number));
+  }
+
+  void MplexedConnection::resetAllStreams() {
+    for (const auto &id_stream_pair : streams_) {
+      resetStream(id_stream_pair.first);
+    }
+  }
 
   void MplexedConnection::closeSession() {
     auto close_res = close();
@@ -175,12 +247,6 @@ namespace libp2p::connection {
                   close_res.error().message());
     }
   }
-
-  void MplexedConnection::streamOnWindowUpdate(StreamId stream_id,
-                                               NotifyeeCallback cb) {}
-
-  void MplexedConnection::streamOnAddData(StreamId stream_id,
-                                          NotifyeeCallback cb) {}
 
   void MplexedConnection::streamWrite(StreamId stream_id,
                                       gsl::span<const uint8_t> in, size_t bytes,

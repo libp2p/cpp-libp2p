@@ -13,7 +13,7 @@ namespace libp2p::connection {
   common::ByteArray MplexFrame::toBytes() const {
     common::ByteArray result;
 
-    uint64_t id_and_flag = (stream_id << 3) | static_cast<uint8_t>(flag);
+    uint64_t id_and_flag = (stream_number << 3) | static_cast<uint8_t>(flag);
     multi::UVarint id_and_flag_varint{id_and_flag}, length_varint{length};
 
     result.insert(result.end(), id_and_flag_varint.toVector().begin(),
@@ -24,10 +24,11 @@ namespace libp2p::connection {
     return result;
   }
 
-  common::ByteArray createFrameBytes(MplexFrame::Flag flag,
-                                     MplexedConnection::StreamId stream_id,
-                                     common::ByteArray data) {
-    return MplexFrame{flag, stream_id, data.size(), std::move(data)}.toBytes();
+  common::ByteArray createFrameBytes(
+      MplexFrame::Flag flag, MplexedConnection::StreamNumber stream_number,
+      common::ByteArray data) {
+    return MplexFrame{flag, stream_number, data.size(), std::move(data)}
+        .toBytes();
   }
 
   outcome::result<MplexFrame> createFrame(uint64_t id_flag,
@@ -61,9 +62,9 @@ namespace libp2p::connection {
         return MplexError::BAD_FRAME_FORMAT;
     }
 
-    return MplexFrame{flag,
-                      static_cast<MplexedConnection::StreamId>(id_flag >> 3),
-                      data.size(), std::move(data)};
+    return MplexFrame{
+        flag, static_cast<MplexedConnection::StreamNumber>(id_flag >> 3),
+        data.size(), std::move(data)};
   }
 
   void readFrame(std::shared_ptr<basic::ReadWriter> reader,
