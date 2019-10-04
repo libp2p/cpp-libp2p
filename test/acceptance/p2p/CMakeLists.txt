@@ -10,6 +10,7 @@ addtest(all_muxers_acceptance_test
     )
 target_link_libraries(all_muxers_acceptance_test
     p2p_yamux
+    p2p_mplex
     p2p_multiaddress
     p2p_plaintext
     p2p_tcp

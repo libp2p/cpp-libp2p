@@ -35,7 +35,6 @@ namespace libp2p::connection {
   void MplexedConnection::start() {
     BOOST_ASSERT_MSG(!is_active_,
                      "trying to start an active MplexedConnection");
-    BOOST_ASSERT_MSG(new_stream_handler_, "no stream handler is set");
 
     is_active_ = true;
     log_->info("starting an mplex connection");
@@ -226,7 +225,7 @@ namespace libp2p::connection {
 
   void MplexedConnection::processNewStreamFrame(const MplexFrame &frame,
                                                 StreamId stream_id) {
-    if (streams_.size() >= config_.maximum_streams) {
+    if (streams_.size() >= config_.maximum_streams || !new_stream_handler_) {
       return resetStream(stream_id);
     }
 

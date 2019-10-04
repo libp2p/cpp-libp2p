@@ -16,7 +16,6 @@ libp2p_add_library(p2p_mplexed_connection
     mplex_stream.cpp
     )
 target_link_libraries(p2p_mplexed_connection
-    outcome
     p2p_logger
     p2p_uvarint
     p2p_varint_reader

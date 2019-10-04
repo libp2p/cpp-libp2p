@@ -11,6 +11,7 @@
 
 namespace libp2p::muxer {
   class Mplex : public MuxerAdaptor {
+   public:
     explicit Mplex(MuxedConnectionConfig config);
 
     peer::Protocol getProtocolId() const noexcept override;
