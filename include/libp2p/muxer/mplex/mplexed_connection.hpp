@@ -6,37 +6,26 @@
 #ifndef LIBP2P_MPLEXED_CONNECTION_HPP
 #define LIBP2P_MPLEXED_CONNECTION_HPP
 
+#include <queue>
 #include <unordered_map>
 #include <utility>
 
 #include <libp2p/common/logger.hpp>
 #include <libp2p/connection/capable_connection.hpp>
+#include <libp2p/muxer/mplex/mplex_stream.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
 
 namespace libp2p::connection {
-  class MplexStream;
   struct MplexFrame;
 
   class MplexedConnection
       : public CapableConnection,
         public std::enable_shared_from_this<MplexedConnection> {
    public:
-    /**
-     * In mplex streams are identified by both number and side, which initiated
-     * the stream, so that two stream can have the same id number, given they
-     * were opened from two different sides
-     */
-    using StreamNumber = uint32_t;
-    struct StreamId {
-      StreamNumber number;
-      bool initiator;
-
-      /// for convenient logging
-      std::string toString() const {
-        auto initiator_str = initiator ? "true" : "false";
-        return "StreamId{" + std::to_string(number) + ", " + initiator_str
-            + "}";
-      }
+    enum class Error {
+      BAD_FRAME_FORMAT = 1,
+      TOO_MANY_STREAMS,
+      CONNECTION_INACTIVE
     };
 
     /**
@@ -89,10 +78,27 @@ namespace libp2p::connection {
                    WriteCallbackFunc cb) override;
 
    private:
+    struct WriteData {
+      common::ByteArray data;
+      WriteCallbackFunc cb;
+    };
+    std::queue<WriteData> write_queue_;
+    bool is_writing_ = true;
+
     /**
-     * Write (\param bytes) to the connection
+     * Write (\param data) to the connection
      */
-    void write(common::ByteArray bytes);
+    void write(WriteData data);
+
+    /**
+     * Write next message from the queue
+     */
+    void doWrite();
+
+    /**
+     * Called, when write is complete
+     */
+    void onWriteCompleted(outcome::result<size_t> write_res);
 
     /**
      * Read next frame from the connection
@@ -107,40 +113,44 @@ namespace libp2p::connection {
     /**
      * Process a new stream (\package frame)
      */
-    void processNewStreamFrame(const MplexFrame &frame, StreamId stream_id);
+    void processNewStreamFrame(const MplexFrame &frame,
+                               MplexStream::StreamId stream_id);
 
     /**
      * Process a message stream (\package frame)
      */
-    void processMessageFrame(const MplexFrame &frame, StreamId stream_id);
+    void processMessageFrame(const MplexFrame &frame,
+                             MplexStream::StreamId stream_id);
 
     /**
      * Process a close stream (\package frame)
      */
-    void processCloseFrame(const MplexFrame &frame, StreamId stream_id);
+    void processCloseFrame(const MplexFrame &frame,
+                           MplexStream::StreamId stream_id);
 
     /**
      * Process a reset stream (\package frame)
      */
-    void processResetFrame(const MplexFrame &frame, StreamId stream_id);
+    void processResetFrame(const MplexFrame &frame,
+                           MplexStream::StreamId stream_id);
 
     /**
      * Find a stream with (\param id)
      * @return found stream or nothing
      */
     boost::optional<std::shared_ptr<MplexStream>> findStream(
-        const StreamId &id) const;
+        const MplexStream::StreamId &id) const;
 
     /**
      * Remove the stream from this connection and make it both non-readable and
      * non-writable
      */
-    void removeStream(StreamId stream_id);
+    void removeStream(MplexStream::StreamId stream_id);
 
     /**
      * Send a reset to stream with (\param stream_id)
      */
-    void resetStream(StreamId stream_id);
+    void resetStream(MplexStream::StreamId stream_id);
 
     /**
      * Send a reset over all streams over this connection
@@ -155,8 +165,9 @@ namespace libp2p::connection {
     std::shared_ptr<SecureConnection> connection_;
     muxer::MuxedConnectionConfig config_;
 
-    std::unordered_map<StreamId, std::shared_ptr<MplexStream>> streams_;
-    StreamNumber last_issued_stream_number_ = 1;
+    std::unordered_map<MplexStream::StreamId, std::shared_ptr<MplexStream>>
+        streams_;
+    MplexStream::StreamNumber last_issued_stream_number_ = 1;
     NewStreamHandlerFunc new_stream_handler_;
 
     bool is_active_ = false;
@@ -175,19 +186,9 @@ namespace libp2p::connection {
      * @param cb - callback to be called after write attempt with number of
      * bytes written or error
      */
-    void streamWrite(StreamId stream_id, gsl::span<const uint8_t> in,
-                     size_t bytes, bool some,
+    void streamWrite(MplexStream::StreamId stream_id,
+                     gsl::span<const uint8_t> in, size_t bytes,
                      basic::Writer::WriteCallbackFunc cb);
-
-    /**
-     * Send an acknowledgement, that a number of bytes was consumed by the
-     * stream
-     * @param stream_id of the stream
-     * @param bytes - number of consumed bytes
-     * @param cb - callback to be called, when operation finishes
-     */
-    void streamAckBytes(StreamId stream_id, uint32_t bytes,
-                        std::function<void(outcome::result<void>)> cb);
 
     /**
      * Send a message, which denotes, that this stream is not going to write
@@ -195,18 +196,18 @@ namespace libp2p::connection {
      * @param stream_id of the stream
      * @param cb - callback to be called, when operation finishes
      */
-    void streamClose(StreamId stream_id,
+    void streamClose(MplexStream::StreamId stream_id,
                      std::function<void(outcome::result<void>)> cb);
 
     /**
      * Send a message, which denotes, that this stream is not going to write
      * or read any bytes from now on
      * @param stream_id of the stream
-     * @param cb - callback to be called, when operation finishes
      */
-    void streamReset(StreamId stream_id,
-                     std::function<void(outcome::result<void>)> cb);
+    void streamReset(MplexStream::StreamId stream_id);
   };
 }  // namespace libp2p::connection
+
+OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, MplexedConnection::Error)
 
 #endif  // LIBP2P_MPLEXED_CONNECTION_HPP

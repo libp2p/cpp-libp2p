@@ -7,6 +7,9 @@
 
 #include <algorithm>
 
+#include <boost/container_hash/hash.hpp>
+#include <libp2p/muxer/mplex/mplexed_connection.hpp>
+
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, MplexStream::Error, e) {
   using E = libp2p::connection::MplexStream::Error;
   switch (e) {
@@ -47,8 +50,17 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, MplexStream::Error, e) {
   auto conn_var_name = connection_.lock();
 
 namespace libp2p::connection {
+  std::string MplexStream::StreamId::toString() const {
+    auto initiator_str = initiator ? "true" : "false";
+    return "StreamId{" + std::to_string(number) + ", " + initiator_str + "}";
+  }
+
+  bool MplexStream::StreamId::operator==(const StreamId &other) const {
+    return number == other.number && initiator == other.initiator;
+  }
+
   MplexStream::MplexStream(std::weak_ptr<MplexedConnection> connection,
-                           MplexedConnection::StreamId stream_id)
+                           StreamId stream_id)
       : connection_{std::move(connection)}, stream_id_{stream_id} {}
 
   void MplexStream::read(gsl::span<uint8_t> out, size_t bytes,
@@ -116,16 +128,6 @@ namespace libp2p::connection {
 
   void MplexStream::write(gsl::span<const uint8_t> in, size_t bytes,
                           WriteCallbackFunc cb) {
-    write(in, bytes, std::move(cb), false);
-  }
-
-  void MplexStream::writeSome(gsl::span<const uint8_t> in, size_t bytes,
-                              WriteCallbackFunc cb) {
-    write(in, bytes, std::move(cb), true);
-  }
-
-  void MplexStream::write(gsl::span<const uint8_t> in, size_t bytes,
-                          WriteCallbackFunc cb, bool some) {
     if (is_reset_) {
       return cb(Error::IS_RESET);
     }
@@ -144,15 +146,21 @@ namespace libp2p::connection {
 
     is_writing_ = true;
     connection_.lock()->streamWrite(
-        stream_id_, in, bytes, some,
+        stream_id_, in, bytes,
         [self{shared_from_this()}, cb{std::move(cb)}](auto &&write_res) {
           self->is_writing_ = false;
           if (!write_res) {
             self->log_->error("write for stream {} failed: {}",
-                              self->stream_id_, write_res.error().message());
+                              self->stream_id_.toString(),
+                              write_res.error().message());
           }
           cb(std::forward<decltype(write_res)>(write_res));
         });
+  }
+
+  void MplexStream::writeSome(gsl::span<const uint8_t> in, size_t bytes,
+                              WriteCallbackFunc cb) {
+    write(in, bytes, std::move(cb));
   }
 
   bool MplexStream::isClosed() const noexcept {
@@ -166,7 +174,8 @@ namespace libp2p::connection {
         [self{shared_from_this()}, cb{std::move(cb)}](auto &&close_res) {
           if (!close_res) {
             self->log_->error("cannot close stream {} for writes: {}",
-                              self->stream_id_, close_res.error().message());
+                              self->stream_id_.toString(),
+                              close_res.error().message());
             return cb(close_res.error());
           }
 
@@ -190,12 +199,7 @@ namespace libp2p::connection {
     }
 
     is_reset_ = true;
-    conn->streamReset(stream_id_, [self{shared_from_this()}](auto &&reset_res) {
-      if (!reset_res) {
-        self->log_->error("cannot reset stream {}: {}", self->stream_id_,
-                          reset_res.error().message());
-      }
-    });
+    conn->streamReset(stream_id_);
   }
 
   void MplexStream::adjustWindowSize(uint32_t new_size,
@@ -248,3 +252,13 @@ namespace libp2p::connection {
     return outcome::success();
   }
 }  // namespace libp2p::connection
+
+size_t std::hash<libp2p::connection::MplexStream::StreamId>::operator()(
+    const libp2p::connection::MplexStream::StreamId &id) const {
+  size_t seed = 0;
+  boost::hash_combine(
+      seed,
+      std::hash<libp2p::connection::MplexStream::StreamNumber>()(id.number));
+  boost::hash_combine(seed, std::hash<bool>()(id.initiator));
+  return seed;
+}

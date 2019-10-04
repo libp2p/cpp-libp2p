@@ -7,7 +7,7 @@
 
 #include <libp2p/basic/varint_reader.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <libp2p/muxer/mplex/mplex_error.hpp>
+#include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 namespace libp2p::connection {
   common::ByteArray MplexFrame::toBytes() const {
@@ -24,9 +24,9 @@ namespace libp2p::connection {
     return result;
   }
 
-  common::ByteArray createFrameBytes(
-      MplexFrame::Flag flag, MplexedConnection::StreamNumber stream_number,
-      common::ByteArray data) {
+  common::ByteArray createFrameBytes(MplexFrame::Flag flag,
+                                     MplexStream::StreamNumber stream_number,
+                                     common::ByteArray data) {
     return MplexFrame{flag, stream_number, data.size(), std::move(data)}
         .toBytes();
   }
@@ -59,12 +59,12 @@ namespace libp2p::connection {
         flag = Flag::RESET_INITIATOR;
         break;
       default:
-        return MplexError::BAD_FRAME_FORMAT;
+        return MplexedConnection::Error::BAD_FRAME_FORMAT;
     }
 
-    return MplexFrame{
-        flag, static_cast<MplexedConnection::StreamNumber>(id_flag >> 3),
-        data.size(), std::move(data)};
+    return MplexFrame{flag,
+                      static_cast<MplexStream::StreamNumber>(id_flag >> 3),
+                      data.size(), std::move(data)};
   }
 
   void readFrame(std::shared_ptr<basic::ReadWriter> reader,
@@ -73,7 +73,7 @@ namespace libp2p::connection {
     basic::VarintReader::readVarint(
         reader, [reader, cb{std::move(cb)}](auto &&varint_opt) mutable {
           if (!varint_opt) {
-            return cb(MplexError::BAD_FRAME_FORMAT);
+            return cb(MplexedConnection::Error::BAD_FRAME_FORMAT);
           }
 
           // read second varint
@@ -82,7 +82,7 @@ namespace libp2p::connection {
               [reader, cb{std::move(cb)},
                id_flag = varint_opt->toUInt64()](auto &&varint_opt) mutable {
                 if (!varint_opt) {
-                  return cb(MplexError::BAD_FRAME_FORMAT);
+                  return cb(MplexedConnection::Error::BAD_FRAME_FORMAT);
                 }
 
                 auto length = varint_opt->toUInt64();

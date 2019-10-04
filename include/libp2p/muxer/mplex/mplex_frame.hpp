@@ -13,7 +13,7 @@
 #include <boost/optional.hpp>
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/common/types.hpp>
-#include <libp2p/muxer/mplex/mplexed_connection.hpp>
+#include <libp2p/muxer/mplex/mplex_stream.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::connection {
@@ -33,7 +33,7 @@ namespace libp2p::connection {
     using Length = uint64_t;
 
     Flag flag;
-    MplexedConnection::StreamNumber stream_number;
+    MplexStream::StreamNumber stream_number;
     Length length;
     common::ByteArray data;
 
@@ -48,9 +48,9 @@ namespace libp2p::connection {
    * Create an MplexFrame and return its bytes representation
    * @return bytes of the MplexFrame
    */
-  common::ByteArray createFrameBytes(
-      MplexFrame::Flag flag, MplexedConnection::StreamNumber stream_number,
-      common::ByteArray data = {});
+  common::ByteArray createFrameBytes(MplexFrame::Flag flag,
+                                     MplexStream::StreamNumber stream_number,
+                                     common::ByteArray data = {});
 
   /**
    * Create an MplexFrame

@@ -10,9 +10,10 @@
 #include <boost/noncopyable.hpp>
 #include <libp2p/common/logger.hpp>
 #include <libp2p/connection/stream.hpp>
-#include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 namespace libp2p::connection {
+  class MplexedConnection;
+
   /**
    * Stream implementation, used by Mplex multiplexer
    */
@@ -20,7 +21,21 @@ namespace libp2p::connection {
                       public std::enable_shared_from_this<MplexStream>,
                       private boost::noncopyable {
    public:
-    ~MplexStream() override = default;
+    /**
+     * In mplex streams are identified by both number and side, which initiated
+     * the stream, so that two stream can have the same id number, given they
+     * were opened from two different sides
+     */
+    using StreamNumber = uint32_t;
+    struct StreamId {
+      StreamNumber number;
+      bool initiator;
+
+      /// for convenient logging
+      std::string toString() const;
+
+      bool operator==(const StreamId &other) const;
+    };
 
     /**
      * Create an instance of Mplex stream
@@ -28,7 +43,9 @@ namespace libp2p::connection {
      * @param stream_id of this stream
      */
     MplexStream(std::weak_ptr<MplexedConnection> connection,
-                MplexedConnection::StreamId stream_id);
+                StreamId stream_id);
+
+    ~MplexStream() override = default;
 
     enum class Error {
       CONNECTION_IS_DEAD = 1,
@@ -83,15 +100,8 @@ namespace libp2p::connection {
     void read(gsl::span<uint8_t> out, size_t bytes, ReadCallbackFunc cb,
               bool some);
 
-    /**
-     * Internal proxy method for writes; (\param some) denotes if the write
-     * should write 'some' or 'all' bytes
-     */
-    void write(gsl::span<const uint8_t> in, size_t bytes, WriteCallbackFunc cb,
-               bool some);
-
     std::weak_ptr<MplexedConnection> connection_;
-    MplexedConnection::StreamId stream_id_;
+    StreamId stream_id_;
     common::Logger log_ = common::createLogger("MplexStream");
 
     /// data, received for this stream, comes here
@@ -128,6 +138,14 @@ namespace libp2p::connection {
                                      size_t data_size);
   };
 }  // namespace libp2p::connection
+
+namespace std {
+  template <>
+  struct hash<libp2p::connection::MplexStream::StreamId> {
+    size_t operator()(
+        const libp2p::connection::MplexStream::StreamId &id) const;
+  };
+}  // namespace std
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, MplexStream::Error)
 

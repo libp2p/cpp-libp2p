@@ -14,7 +14,6 @@ libp2p_add_library(p2p_mplexed_connection
     mplexed_connection.cpp
     mplex_frame.cpp
     mplex_stream.cpp
-    mplex_error.cpp
     )
 target_link_libraries(p2p_mplexed_connection
     outcome

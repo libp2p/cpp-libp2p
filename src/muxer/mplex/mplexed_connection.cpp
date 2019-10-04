@@ -6,11 +6,25 @@
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 #include <boost/assert.hpp>
-#include <libp2p/muxer/mplex/mplex_error.hpp>
 #include <libp2p/muxer/mplex/mplex_frame.hpp>
-#include <libp2p/muxer/mplex/mplex_stream.hpp>
+
+OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, MplexedConnection::Error, e) {
+  using E = libp2p::connection::MplexedConnection::Error;
+  switch (e) {
+    case E::BAD_FRAME_FORMAT:
+      return "the other side has sent something, which is not a valid Mplex "
+             "frame";
+    case E::TOO_MANY_STREAMS:
+      return "number of streams exceeds the maximum";
+    case E::CONNECTION_INACTIVE:
+      return "connection is not active";
+  }
+  return "unknown MplexError";
+}
 
 namespace libp2p::connection {
+  using StreamId = MplexStream::StreamId;
+
   MplexedConnection::MplexedConnection(
       std::shared_ptr<SecureConnection> connection,
       muxer::MuxedConnectionConfig config)
@@ -21,6 +35,8 @@ namespace libp2p::connection {
   void MplexedConnection::start() {
     BOOST_ASSERT_MSG(!is_active_,
                      "trying to start an active MplexedConnection");
+    BOOST_ASSERT_MSG(new_stream_handler_, "no stream handler is set");
+
     is_active_ = true;
     log_->info("starting an mplex connection");
     readNextFrame();
@@ -34,13 +50,30 @@ namespace libp2p::connection {
   }
 
   void MplexedConnection::newStream(StreamHandlerFunc cb) {
-    BOOST_ASSERT_MSG(
-        is_active_,
-        "trying to open a stream over an inactive MplexedConnection");
-
-    if (streams_.size() >= config_.maximum_streams) {
-      return cb(MplexError::TOO_MANY_STREAMS);
+    if (!is_active_) {
+      return cb(Error::CONNECTION_INACTIVE);
     }
+    if (streams_.size() >= config_.maximum_streams) {
+      return cb(Error::TOO_MANY_STREAMS);
+    }
+
+    StreamId new_stream_id{last_issued_stream_number_++, true};
+    auto new_stream_frame =
+        createFrameBytes(MplexFrame::Flag::NEW_STREAM, new_stream_id.number);
+    write({std::move(new_stream_frame),
+           [self{shared_from_this()}, cb{std::move(cb)},
+            new_stream_id](auto &&create_res) {
+             if (!create_res) {
+               self->log_->error("stream creation failed: {}",
+                                 create_res.error().message());
+               return cb(create_res.error());
+             }
+
+             auto new_stream =
+                 std::make_shared<MplexStream>(self, new_stream_id);
+             self->streams_[new_stream_id] = new_stream;
+             cb(std::move(new_stream));
+           }});
   }
 
   void MplexedConnection::onStream(NewStreamHandlerFunc cb) {
@@ -103,7 +136,41 @@ namespace libp2p::connection {
     connection_->writeSome(in, bytes, std::move(cb));
   }
 
-  void MplexedConnection::write(common::ByteArray bytes) {}
+  void MplexedConnection::write(WriteData data) {
+    write_queue_.push(std::move(data));
+    if (is_writing_) {
+      return;
+    }
+    doWrite();
+  }
+
+  void MplexedConnection::doWrite() {
+    auto queue_empty = write_queue_.empty();
+    if (queue_empty || isClosed()) {
+      if (!queue_empty) {
+        decltype(write_queue_){}.swap(write_queue_);
+      }
+      is_writing_ = false;
+      return;
+    }
+
+    const auto &write_data = write_queue_.front();
+    return connection_->write(
+        write_data.data, write_data.data.size(),
+        [self{shared_from_this()}](auto &&res) {
+          self->onWriteCompleted(std::forward<decltype(res)>(res));
+        });
+  }
+
+  void MplexedConnection::onWriteCompleted(outcome::result<size_t> write_res) {
+    if (!write_res) {
+      log_->error("data write failed: {}", write_res.error().message());
+    }
+
+    write_queue_.front().cb(std::forward<decltype(write_res)>(write_res));
+    write_queue_.pop();
+    doWrite();
+  }
 
   void MplexedConnection::readNextFrame() {
     if (isClosed()) {
@@ -160,12 +227,14 @@ namespace libp2p::connection {
   void MplexedConnection::processNewStreamFrame(const MplexFrame &frame,
                                                 StreamId stream_id) {
     if (streams_.size() >= config_.maximum_streams) {
-      // reset the stream immediately
-      return write(createFrameBytes(MplexFrame::Flag::RESET_RECEIVER,
-                                    frame.stream_number));
+      return resetStream(stream_id);
     }
 
-    // TODO: create a stream
+    log_->info("accepting a new stream with {}", stream_id.toString());
+    auto new_stream =
+        std::make_shared<MplexStream>(weak_from_this(), stream_id);
+    streams_[stream_id] = new_stream;
+    new_stream_handler_(std::move(new_stream));
   }
 
   /**
@@ -186,8 +255,8 @@ namespace libp2p::connection {
     // there is some data for this stream - commit it
     auto commit_res = stream->commitData(frame.data, frame.data.size());
     if (!commit_res) {
-      return log_->error("failed to commit data for stream {}: {}", stream_id,
-                         commit_res.error().message());
+      return log_->error("failed to commit data for stream {}: {}",
+                         stream_id.toString(), commit_res.error().message());
     }
   }
 
@@ -228,10 +297,17 @@ namespace libp2p::connection {
   }
 
   void MplexedConnection::resetStream(StreamId stream_id) {
-    write(createFrameBytes(stream_id.initiator
-                               ? MplexFrame::Flag::RESET_INITIATOR
-                               : MplexFrame::Flag::RESET_RECEIVER,
-                           stream_id.number));
+    write({createFrameBytes(stream_id.initiator
+                                ? MplexFrame::Flag::RESET_INITIATOR
+                                : MplexFrame::Flag::RESET_RECEIVER,
+                            stream_id.number),
+           [self{shared_from_this()}, stream_id](auto &&reset_res) {
+             if (!reset_res) {
+               self->log_->error("cannot reset stream {}: {}",
+                                 stream_id.toString(),
+                                 reset_res.error().message());
+             }
+           }});
   }
 
   void MplexedConnection::resetAllStreams() {
@@ -250,16 +326,35 @@ namespace libp2p::connection {
 
   void MplexedConnection::streamWrite(StreamId stream_id,
                                       gsl::span<const uint8_t> in, size_t bytes,
-                                      bool some,
-                                      basic::Writer::WriteCallbackFunc cb) {}
-
-  void MplexedConnection::streamAckBytes(
-      StreamId stream_id, uint32_t bytes,
-      std::function<void(outcome::result<void>)> cb) {}
+                                      basic::Writer::WriteCallbackFunc cb) {
+    common::ByteArray data{in.begin(), in.begin() + bytes};
+    auto data_frame = createFrameBytes(stream_id.initiator
+                                           ? MplexFrame::Flag::MESSAGE_INITIATOR
+                                           : MplexFrame::Flag::MESSAGE_RECEIVER,
+                                       stream_id.number, std::move(data));
+    write({std::move(data_frame), [cb{std::move(cb)}, bytes](auto &&write_res) {
+             if (!write_res) {
+               return cb(write_res.error());
+             }
+             cb(bytes);
+           }});
+  }
 
   void MplexedConnection::streamClose(
-      StreamId stream_id, std::function<void(outcome::result<void>)> cb) {}
+      StreamId stream_id, std::function<void(outcome::result<void>)> cb) {
+    auto close_frame =
+        createFrameBytes(stream_id.initiator ? MplexFrame::Flag::CLOSE_INITIATOR
+                                             : MplexFrame::Flag::CLOSE_RECEIVER,
+                         stream_id.number);
+    write({std::move(close_frame), [cb{std::move(cb)}](auto &&write_res) {
+             if (!write_res) {
+               return cb(write_res.error());
+             }
+             cb(outcome::success());
+           }});
+  }
 
-  void MplexedConnection::streamReset(
-      StreamId stream_id, std::function<void(outcome::result<void>)> cb) {}
+  void MplexedConnection::streamReset(StreamId stream_id) {
+    resetStream(stream_id);
+  }
 }  // namespace libp2p::connection
