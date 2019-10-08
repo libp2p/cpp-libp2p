@@ -81,6 +81,15 @@ namespace libp2p::multi {
     return *this;
   }
 
+  bool UVarint::operator==(const UVarint &r) const {
+    return std::equal(bytes_.begin(), bytes_.end(), r.bytes_.begin(),
+                      r.bytes_.end());
+  }
+
+  bool UVarint::operator!=(const UVarint &r) const {
+    return !(*this == r);
+  }
+
   size_t UVarint::calculateSize(gsl::span<const uint8_t> varint_bytes) {
     size_t s = 0;
 

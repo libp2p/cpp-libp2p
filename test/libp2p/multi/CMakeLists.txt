@@ -29,3 +29,12 @@ target_link_libraries(multibase_codec_test
     p2p_multibase_codec
     p2p_literals
     )
+
+addtest(cid_test
+    cid_test.cpp
+    )
+target_link_libraries(cid_test
+    p2p_cid
+    p2p_multibase_codec
+    p2p_literals
+    )

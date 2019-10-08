@@ -46,7 +46,7 @@ namespace libp2p::peer {
 
   PeerId::FactoryResult PeerId::fromBase58(std::string_view id) {
     OUTCOME_TRY(decoded_id, decodeBase58(id));
-    OUTCOME_TRY(hash, Multihash::createFromBuffer(decoded_id));
+    OUTCOME_TRY(hash, Multihash::createFromBytes(decoded_id));
 
     if (hash.getType() != multi::HashType::sha256
         && hash.toBuffer().size() > kMaxInlineKeyLength) {
@@ -90,7 +90,7 @@ namespace libp2p::peer {
   }
 
   PeerId::FactoryResult PeerId::fromBytes(gsl::span<const uint8_t> v) {
-    OUTCOME_TRY(mh, Multihash::createFromBuffer(v));
+    OUTCOME_TRY(mh, Multihash::createFromBytes(v));
     return fromHash(mh);
   }
 }  // namespace libp2p::peer

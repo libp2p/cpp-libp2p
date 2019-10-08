@@ -63,7 +63,7 @@ namespace libp2p::multi {
      * @param b - the buffer with the multihash
      * @return result with the multihash in case of success
      */
-    static outcome::result<Multihash> createFromBuffer(
+    static outcome::result<Multihash> createFromBytes(
         gsl::span<const uint8_t> b);
 
     /**
