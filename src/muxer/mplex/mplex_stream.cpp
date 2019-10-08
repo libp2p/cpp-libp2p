@@ -99,21 +99,21 @@ namespace libp2p::connection {
         if (boost::asio::buffer_copy(boost::asio::buffer(out.data(), to_read),
                                      self->read_buffer_.data(), to_read)
             != to_read) {
-          cb(Error::INTERNAL_ERROR);
-          return false;
+          return cb(Error::INTERNAL_ERROR);
         }
 
         self->is_reading_ = false;
         self->read_buffer_.consume(to_read);
         self->receive_window_size_ += to_read;
+        self->data_notified_ = true;
         cb(to_read);
-        return true;
       }
-      return false;
     };
 
     // return immediately, if there's enough data in the buffer
-    if (read_lambda()) {
+    data_notified_ = false;
+    read_lambda();
+    if (data_notified_) {
       return;
     }
 
@@ -246,8 +246,11 @@ namespace libp2p::connection {
       return Error::INTERNAL_ERROR;
     }
     read_buffer_.commit(data_size);
-
     receive_window_size_ -= data_size;
+
+    if (data_notifyee_ && !data_notified_) {
+      data_notifyee_();
+    }
 
     return outcome::success();
   }

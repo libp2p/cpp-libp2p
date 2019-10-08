@@ -153,6 +153,7 @@ namespace libp2p::connection {
       return;
     }
 
+    is_writing_ = true;
     const auto &write_data = write_queue_.front();
     return connection_->write(
         write_data.data, write_data.data.size(),

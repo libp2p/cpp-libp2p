@@ -83,7 +83,7 @@ namespace libp2p::connection {
       WriteCallbackFunc cb;
     };
     std::queue<WriteData> write_queue_;
-    bool is_writing_ = true;
+    bool is_writing_ = false;
 
     /**
      * Write (\param data) to the connection

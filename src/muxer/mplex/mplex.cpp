@@ -13,7 +13,7 @@ namespace libp2p::muxer {
   Mplex::Mplex(MuxedConnectionConfig config) : config_{config} {}
 
   peer::Protocol Mplex::getProtocolId() const noexcept {
-    return "/mplex/1.0.0";
+    return "/mplex/6.7.0";
   }
 
   void Mplex::muxConnection(std::shared_ptr<connection::SecureConnection> conn,
