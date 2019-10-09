@@ -127,7 +127,7 @@ namespace libp2p::multi {
         {Protocol::Code::UDT, 0, "udt"},
         {Protocol::Code::UTP, 0, "utp"},
         {Protocol::Code::UNIX, Protocol::kVarLen, "unix"},
-        {Protocol::Code::P2P, Protocol::kVarLen, "p2p"},
+        // {Protocol::Code::P2P, Protocol::kVarLen, "p2p"},
         {Protocol::Code::P2P, Protocol::kVarLen, "ipfs"},
         {Protocol::Code::ONION, 96, "onion"},
         {Protocol::Code::ONION3, 296, "onion3"},
