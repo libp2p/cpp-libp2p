@@ -28,6 +28,9 @@ namespace libp2p::connection {
     /**
      * Start to process incoming messages for this connection
      * @note non-blocking
+     *
+     * @note make sure onStream(..) was called, so that new streams are accepted
+     * by this connection - call to start() will fail otherwise
      */
     virtual void start() = 0;
 

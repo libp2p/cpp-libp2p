@@ -81,15 +81,14 @@ namespace libp2p::connection {
 
     bool isClosed() const override;
 
+    /// usage of these four methods is highly not recommended or even forbidden:
+    /// use stream over this connection instead
     void read(gsl::span<uint8_t> out, size_t bytes,
               ReadCallbackFunc cb) override;
-
     void readSome(gsl::span<uint8_t> out, size_t bytes,
                   ReadCallbackFunc cb) override;
-
     void write(gsl::span<const uint8_t> in, size_t bytes,
                WriteCallbackFunc cb) override;
-
     void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
 

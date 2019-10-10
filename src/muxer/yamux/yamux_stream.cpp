@@ -279,7 +279,7 @@ namespace libp2p::connection {
 
   outcome::result<void> YamuxStream::commitData(gsl::span<const uint8_t> data,
                                                 size_t data_size) {
-    if (data_size + read_buffer_.size() > receive_window_size_) {
+    if (data_size > receive_window_size_) {
       return Error::RECEIVE_OVERFLOW;
     }
 

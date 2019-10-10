@@ -13,6 +13,7 @@
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
+#include <libp2p/muxer/mplex.hpp>
 #include <libp2p/muxer/yamux.hpp>
 #include <libp2p/network/impl/connection_manager_impl.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
@@ -251,7 +252,7 @@ namespace libp2p::injector {
 
         // default adaptors
         di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext>(),  // NOLINT
-        di::bind<muxer::MuxerAdaptor *[]>().template to<muxer::Yamux>(),  // NOLINT
+        di::bind<muxer::MuxerAdaptor *[]>().template to<muxer::Yamux, muxer::Mplex>(),  // NOLINT
         di::bind<transport::TransportAdaptor *[]>().template to<transport::TcpTransport>(),  // NOLINT
 
         // user-defined overrides...

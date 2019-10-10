@@ -10,7 +10,7 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
-#include <libp2p/muxer/yamux.hpp>
+#include <libp2p/muxer/muxed_connection_config.hpp>
 #include <libp2p/peer/impl/identity_manager_impl.hpp>
 #include <libp2p/security/plaintext.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
@@ -19,6 +19,10 @@
 #include <mock/libp2p/transport/upgrader_mock.hpp>
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/outcome.hpp"
+
+/// tested muxers
+#include <libp2p/muxer/mplex.hpp>
+#include <libp2p/muxer/yamux.hpp>
 
 using namespace libp2p;
 using namespace transport;
@@ -350,5 +354,6 @@ INSTANTIATE_TEST_CASE_P(
     AllMuxers, MuxerAcceptanceTest,
     ::testing::Values(
         // list here all muxers
-        std::make_shared<Yamux>(muxer::MuxedConnectionConfig{1048576, 1000})),
+        std::make_shared<Yamux>(muxer::MuxedConnectionConfig{1048576, 1000}),
+        std::make_shared<Mplex>(muxer::MuxedConnectionConfig{})),
     MuxerAcceptanceTest::PrintToStringParamName());
