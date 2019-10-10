@@ -156,7 +156,6 @@ namespace libp2p::multi {
 
   boost::optional<std::string> Multiaddress::getPeerId() const {
     auto peer_id = getValuesForProtocol(Protocol::Code::P2P);
-    auto peer_id = getValuesForProtocol(Protocol::Code::P2P);
     if (peer_id.empty()) {
       return {};
     }

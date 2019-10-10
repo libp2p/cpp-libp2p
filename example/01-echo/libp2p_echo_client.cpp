@@ -60,7 +60,7 @@ int main() {
 
     auto server_ma_res = libp2p::multi::Multiaddress::create(
         "/ip4/127.0.0.1/tcp/40011/ipfs/"
-        "QmXPz2SzFTpzo5VNzeWeuBZTuEymsnNZrkEXyYxG8fiCbQ");
+        "Qmd2RyQrh7HhJRNSLaYd4sxEDELwZrmLg8ZgV4hfuHL9VV");
     // "/ip4/127.0.0.1/tcp/40010/ipfs/"
     // "12D3KooWLs7RC93EGXZzn9YdKyZYYx3f9UjTLYNX1reThpCkFb83");
     if (!server_ma_res) {

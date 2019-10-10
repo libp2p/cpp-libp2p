@@ -110,10 +110,6 @@ namespace libp2p::protocol_muxer {
       return;
     }
 
-    // here, we assume that protocols header - two varints + '\n' - cannot be
-    // longer or equal to the shortest protocol length; varints should be very
-    // big for it to happen; thus, continue parsing depending on the length of
-    // the current string
     if (read_bytes < kShortestProtocolLength) {
       auto proto_header_res = MessageManager::parseProtocolsHeader(msg_span);
       if (proto_header_res) {
