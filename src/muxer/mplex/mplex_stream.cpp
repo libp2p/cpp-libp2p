@@ -37,12 +37,6 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, MplexStream::Error, e) {
   return "unknown error";
 }
 
-#define TRY_GET_CONNECTION_CB(conn_var_name, cb) \
-  if (connection_.expired()) {                   \
-    return cb(Error::CONNECTION_IS_DEAD);        \
-  }                                              \
-  auto conn_var_name = connection_.lock();
-
 #define TRY_GET_CONNECTION(conn_var_name) \
   if (connection_.expired()) {            \
     return Error::CONNECTION_IS_DEAD;     \
@@ -168,8 +162,10 @@ namespace libp2p::connection {
   }
 
   void MplexStream::close(VoidResultHandlerFunc cb) {
-    TRY_GET_CONNECTION_CB(conn, cb)
-    conn->streamClose(
+    if (connection_.expired()) {
+      return cb(Error::CONNECTION_IS_DEAD);
+    }
+    connection_.lock()->streamClose(
         stream_id_,
         [self{shared_from_this()}, cb{std::move(cb)}](auto &&close_res) {
           if (!close_res) {
