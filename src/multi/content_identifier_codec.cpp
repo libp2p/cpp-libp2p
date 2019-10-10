@@ -4,6 +4,8 @@
  */
 
 #include <libp2p/multi/content_identifier_codec.hpp>
+#include <libp2p/multi/multicodec_type.hpp>
+#include <libp2p/multi/uvarint.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, ContentIdentifierCodec::EncodeError,
                             e) {
@@ -42,15 +44,16 @@ namespace libp2p::multi {
     std::vector<uint8_t> bytes;
     if (cid.version == ContentIdentifier::Version::V1) {
       UVarint version(static_cast<uint64_t>(cid.version));
-      bytes.insert(bytes.end(), version.toBytes().begin(),
-                   version.toBytes().end());
-      auto type = cid.content_type.toBytes();
-      bytes.insert(bytes.end(), type.begin(), type.end());
+      auto version_span = version.toBytes();
+      bytes.insert(bytes.end(), version_span.begin(), version_span.end());
+      UVarint type(cid.content_type);
+      auto type_span = type.toBytes();
+      bytes.insert(bytes.end(), type_span.begin(), type_span.end());
       auto const &hash = cid.content_address.toBuffer();
       bytes.insert(bytes.end(), hash.begin(), hash.end());
 
     } else if (cid.version == ContentIdentifier::Version::V0) {
-      if (cid.content_type != /* dag-protobuf */ UVarint(0x70)) {
+      if (cid.content_type != MulticodecType::DAG_PB) {
         return EncodeError::INVALID_CONTENT_TYPE;
       }
       if (cid.content_address.getType() != HashType::sha256) {
@@ -70,8 +73,7 @@ namespace libp2p::multi {
     if (bytes.size() == 34 and bytes[0] == 0x12 and bytes[1] == 0x20) {
       OUTCOME_TRY(hash, Multihash::createFromBytes(bytes));
       return ContentIdentifier(ContentIdentifier::Version::V0,
-                               /* dag-protobuf */ UVarint(0x70),
-                               std::move(hash));
+                               MulticodecType::DAG_PB, std::move(hash));
     } else {
       auto version_opt = UVarint::create(bytes);
       if (!version_opt) {
@@ -89,8 +91,10 @@ namespace libp2p::multi {
         OUTCOME_TRY(hash,
                     Multihash::createFromBytes(
                         bytes.subspan(version_length + multicodec_length)));
-        return ContentIdentifier(ContentIdentifier::Version::V1,
-                                 multicodec_opt.value(), std::move(hash));
+        return ContentIdentifier(
+            ContentIdentifier::Version::V1,
+            MulticodecType::Code(multicodec_opt.value().toUInt64()),
+            std::move(hash));
       } else if (version <= 0) {
         return DecodeError::MALFORMED_VERSION;
       } else if (version > 1) {

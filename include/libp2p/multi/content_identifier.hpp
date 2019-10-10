@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <libp2p/multi/multihash.hpp>
-#include <libp2p/multi/uvarint.hpp>
+#include <libp2p/multi/multicodec_type.hpp>
 
 namespace libp2p::multi {
 
@@ -22,12 +22,10 @@ namespace libp2p::multi {
    */
   class ContentIdentifier {
    public:
-    using MulticodecCode = UVarint;
-
     enum class Version { V0 = 0, V1 = 1};
 
     ContentIdentifier(Version version,
-                      MulticodecCode content_type,
+                      MulticodecType::Code content_type,
                       Multihash content_address);
 
     std::string toPrettyString(std::string_view base);
@@ -36,7 +34,7 @@ namespace libp2p::multi {
     bool operator!=(const ContentIdentifier &c) const;
 
     Version version;
-    MulticodecCode content_type;
+    MulticodecType::Code content_type;
     Multihash content_address;
   };
 
