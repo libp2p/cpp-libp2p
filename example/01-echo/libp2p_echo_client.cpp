@@ -12,14 +12,6 @@
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/protocol/echo.hpp>
 
-std::shared_ptr<libp2p::Host> createHost() {
-  // create a default Host via an injector, overriding a random-generated
-  // keypair with ours
-  auto injector =
-      libp2p::injector::makeHostInjector(libp2p::injector::useKeyPair(keypair));
-  auto host = injector.create<std::shared_ptr<libp2p::Host>>();
-}
-
 int main(int argc, char *argv[]) {
   using libp2p::crypto::Key;
   using libp2p::crypto::KeyPair;
@@ -32,23 +24,18 @@ int main(int argc, char *argv[]) {
     std::exit(EXIT_FAILURE);
   }
 
-  // this keypair generates a PeerId
-  // "12D3KooWLs7RC93EGXZzn9YdKyZYYx3f9UjTLYNX1reThpCkFb83"
-  KeyPair keypair{PublicKey{{Key::Type::Ed25519,
-                             "a4249ea6d62bdd8bccf62257ac4899ff284796"
-                             "3228b388fda288db5d64e517e0"_unhex}},
-                  PrivateKey{{Key::Type::Ed25519,
-                              "4a9361c525840f7086b893d584ebbe475b4ec"
-                              "7069951d2e897e8bceb0a3f35ce"_unhex}}};
-
   // create Echo protocol object - it implement the logic of both server and
   // client, but in this example it's used as a client-only
   libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{1}};
 
+  // create a default Host via an injector
+  auto injector = libp2p::injector::makeHostInjector();
+  auto host = injector.create<std::shared_ptr<libp2p::Host>>();
+
   // create io_context - in fact, thing, which allows us to execute async
   // operations
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
-  context->post([&echo, argv] {
+  context->post([host{std::move(host)}, &echo, argv] {
     auto server_ma_res = libp2p::multi::Multiaddress::create(argv[1]);
     if (!server_ma_res) {
       std::cerr << "unable to create server multiaddress: "
@@ -76,7 +63,6 @@ int main(int argc, char *argv[]) {
     auto peer_info = libp2p::peer::PeerInfo{server_peer_id, {server_ma}};
 
     // create Host object an open a stream through it
-    auto host = createHost();
     host->newStream(
         peer_info, echo.getProtocolId(), [&echo](auto &&stream_res) {
           if (!stream_res) {
