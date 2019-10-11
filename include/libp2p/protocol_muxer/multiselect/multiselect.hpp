@@ -79,7 +79,7 @@ namespace libp2p::protocol_muxer {
         const std::vector<peer::Protocol> &protocols,
         const std::shared_ptr<ConnectionState> &connection_state);
 
-    void onProtocolAfterOpeningOrLs(
+    void onProtocolAfterOpeningLsOrNa(
         std::shared_ptr<ConnectionState> connection_state,
         const peer::Protocol &protocol);
 

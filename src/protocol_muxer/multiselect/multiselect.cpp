@@ -111,7 +111,7 @@ namespace libp2p::protocol_muxer {
 
     switch (connection_state->status) {
       case Status::OPENING_SENT:
-        return onProtocolAfterOpeningOrLs(connection_state, protocol);
+        return onProtocolAfterOpeningLsOrNa(connection_state, protocol);
       case Status::PROTOCOL_SENT:
         // this is ack that the protocol we want to communicate over is
         // supported by the other side; round is finished
@@ -121,9 +121,9 @@ namespace libp2p::protocol_muxer {
         // ack, and round is finished
         return MessageWriter::sendProtocolAck(connection_state, protocol);
       case Status::LS_SENT:
-        return onProtocolAfterOpeningOrLs(connection_state, protocol);
-      case Status::NOTHING_SENT:
       case Status::NA_SENT:
+        return onProtocolAfterOpeningLsOrNa(connection_state, protocol);
+      case Status::NOTHING_SENT:
         return onUnexpectedRequestResponse(connection_state);
       default:
         return onGarbagedStreamStatus(connection_state);
@@ -172,7 +172,7 @@ namespace libp2p::protocol_muxer {
     MessageWriter::sendProtocolMsg(protos->front(), connection_state);
   }
 
-  void Multiselect::onProtocolAfterOpeningOrLs(
+  void Multiselect::onProtocolAfterOpeningLsOrNa(
       std::shared_ptr<ConnectionState> connection_state,
       const peer::Protocol &protocol) {
     // the other side wants to communicate over that protocol; if it's available

@@ -12,6 +12,7 @@ target_link_libraries(p2p_default_network
     p2p_network
     p2p_tcp
     p2p_yamux
+    p2p_mplex
     p2p_plaintext
     p2p_connection_manager
     p2p_transport_manager
