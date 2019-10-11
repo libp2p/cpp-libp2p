@@ -10,6 +10,12 @@
 
 namespace libp2p::multi {
 
+  /**
+   * LibP2P uses "protocol tables" to agree upon the mapping from one multicodec
+   * code. These tables can be application specific, though, like with other
+   * multiformats, there is a globally agreed upon table with common protocols
+   * and formats.
+   */
   class MulticodecType {
    public:
     /// TODO(Harrm) add more codes
@@ -47,9 +53,8 @@ namespace libp2p::multi {
           return "dag-pb";
       }
     }
-
   };
 
-}
+}  // namespace libp2p::multi
 
 #endif  // LIBP2P_MULTICODECTYPE_HPP
