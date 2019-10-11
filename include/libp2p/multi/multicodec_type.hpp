@@ -6,6 +6,8 @@
 #ifndef LIBP2P_MULTICODECTYPE_HPP
 #define LIBP2P_MULTICODECTYPE_HPP
 
+#include <string>
+
 namespace libp2p::multi {
 
   class MulticodecType {

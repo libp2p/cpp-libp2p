@@ -10,6 +10,11 @@
 
 namespace libp2p::multi {
 
+  /**
+   * Serializes and deserializes CID to byte representation.
+   * To serialize it to a multibase encoded string, use MultibaseCodec
+   * @see MultibaseCodec
+   */
   class ContentIdentifierCodec {
    public:
     enum class EncodeError {
