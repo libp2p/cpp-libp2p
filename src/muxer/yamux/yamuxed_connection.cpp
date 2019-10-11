@@ -40,7 +40,7 @@ namespace libp2p::connection {
         connection_{std::move(connection)},
         config_{config} {
     // client uses odd numbers, server - even
-    last_created_stream_id_ = connection_->isInitiator() ? 1 : 0;
+    last_created_stream_id_ = connection_->isInitiator() ? 1 : 2;
   }
 
   void YamuxedConnection::start() {
@@ -183,6 +183,7 @@ namespace libp2p::connection {
 
   void YamuxedConnection::doReadHeader() {
     if (!started_ || connection_->isClosed()) {
+      log_->info("connection was closed");
       return;
     }
 
@@ -396,7 +397,7 @@ namespace libp2p::connection {
             }
           } else {
             // the data is to be discarded
-            return;
+            return self->doReadHeader();
           }
 
           if (auto stream_data_sub = self->data_subs_.find(frame.stream_id);
@@ -465,8 +466,9 @@ namespace libp2p::connection {
   }
 
   YamuxedConnection::StreamId YamuxedConnection::getNewStreamId() {
+    auto id = last_created_stream_id_;
     last_created_stream_id_ += 2;
-    return last_created_stream_id_;
+    return id;
   }
 
   void YamuxedConnection::closeSession() {

@@ -16,7 +16,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol_muxer, MultiselectError, e) {
     case Errors::INTERNAL_ERROR:
       return "internal error happened in this multiselect instance";
     case Errors::PROTOCOL_VIOLATION:
-      return "other side has violated a protocol and sent expected message";
+      return "other side has violated a protocol and sent an unexpected "
+             "message";
   }
   return "unknown";
 }

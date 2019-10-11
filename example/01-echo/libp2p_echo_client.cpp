@@ -34,46 +34,30 @@ int main() {
       libp2p::injector::makeHostInjector(libp2p::injector::useKeyPair(keypair));
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
 
-  // set a handler for Echo protocol
+  // create Echo protocol object - it implement the logic of both server and
+  // client, but in this example it's used as a client-only
   libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{1}};
-  // host->setProtocolHandler(
-  //     echo.getProtocolId(),
-  //     [&echo](std::shared_ptr<libp2p::connection::Stream> received_stream) {
-  //       echo.handle(std::move(received_stream));
-  //     });
 
-  // launch a Listener part of the Host
+  // create Host; we use it to create Echo stream
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
   context->post([host{std::move(host)}, &echo] {
-    // auto ma =
-    //     libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40010").value();
-    // auto listen_res = host->listen(ma);
-    // if (!listen_res) {
-    //   std::cerr << "host cannot listen the given multiaddress: "
-    //             << listen_res.error().message() << "\n";
-    //   std::exit(EXIT_FAILURE);
-    // }
-
-    // // host->start();
-    // std::cout << "Server started\nListening on: " << ma.getStringAddress()
-    //           << "\nPeer id: " << host->getPeerInfo().id.toBase58() << "\n";
-
+    // this address is to be substituted with an address of server
     auto server_ma_res = libp2p::multi::Multiaddress::create(
-        "/ip4/127.0.0.1/tcp/40011/ipfs/"
-        "Qmd2RyQrh7HhJRNSLaYd4sxEDELwZrmLg8ZgV4hfuHL9VV");
-    // "/ip4/127.0.0.1/tcp/40010/ipfs/"
-    // "12D3KooWLs7RC93EGXZzn9YdKyZYYx3f9UjTLYNX1reThpCkFb83");
+        "/ip4/127.0.0.1/tcp/40010/ipfs/"
+        "12D3KooWLs7RC93EGXZzn9YdKyZYYx3f9UjTLYNX1reThpCkFb83");
     if (!server_ma_res) {
-      std::cerr << "Unable to create server multiaddress: "
+      std::cerr << "unable to create server multiaddress: "
                 << server_ma_res.error().message() << std::endl;
       std::exit(EXIT_FAILURE);
     }
     auto server_ma = std::move(server_ma_res.value());
+
     auto server_peer_id_str = server_ma.getPeerId();
     if (!server_peer_id_str) {
       std::cerr << "unable to get peer id" << std::endl;
       std::exit(EXIT_FAILURE);
     }
+
     auto server_peer_id_res =
         libp2p::peer::PeerId::fromBase58(*server_peer_id_str);
     if (!server_peer_id_res) {
@@ -95,17 +79,18 @@ int main() {
           auto stream_p = std::move(stream_res.value());
 
           auto echo_client = echo.createClient(stream_p);
+          std::cout << "SENDING 'Hello from C++!'\n";
           echo_client->sendAnd(
-              "PAVEL DID THE WRONG CHAT",
+              "Hello from C++!\n",
               [stream = std::move(stream_p)](auto &&response_result) {
                 std::cout << "RESPONSE " << response_result.value()
                           << std::endl;
                 stream->close([](auto &&) { std::exit(EXIT_SUCCESS); });
               });
-          // echo.handle(std::forward<decltype(stream_res)>(stream_res));
         });
   });
 
   // run the IO context
-  context->run_for(std::chrono::seconds(5));
+  //  context->run_for(std::chrono::seconds(5));
+  context->run();
 }

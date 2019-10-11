@@ -47,13 +47,6 @@ namespace libp2p::protocol_muxer {
         const std::shared_ptr<ConnectionState> &connection_state);
 
     /**
-     * Send a message, containing an ls
-     * @param connection_state - state of the connection
-     */
-    static void sendLsMsg(
-        const std::shared_ptr<ConnectionState> &connection_state);
-
-    /**
      * Send a message, containing an na
      * @param connection_state - state of the connection
      */

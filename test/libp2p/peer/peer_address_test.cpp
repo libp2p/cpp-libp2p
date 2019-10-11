@@ -36,7 +36,7 @@ class PeerAddressTest : public ::testing::Test {
       Multiaddress::create("/ip4/192.168.0.1/tcp/228").value();
 
   const std::string kaddressString =
-      std::string{kDefaultAddress.getStringAddress()} + "/p2p/"
+      std::string{kDefaultAddress.getStringAddress()} + "/ipfs/"
       + kEncodedDefaultPeerId;
 };
 
@@ -67,7 +67,7 @@ TEST_F(PeerAddressTest, FromStringNoId) {
  * @then creation fails
  */
 TEST_F(PeerAddressTest, FromStringIllFormedAddress) {
-  EXPECT_FALSE(PeerAddress::create("/192.168.0.1/p2p/something"));
+  EXPECT_FALSE(PeerAddress::create("/192.168.0.1/ipfs/something"));
 }
 
 /**
@@ -77,7 +77,7 @@ TEST_F(PeerAddressTest, FromStringIllFormedAddress) {
  */
 TEST_F(PeerAddressTest, FromStringIdNotB58) {
   EXPECT_FALSE(PeerAddress::create(
-      std::string{kDefaultAddress.getStringAddress()} + "/p2p/something"));
+      std::string{kDefaultAddress.getStringAddress()} + "/ipfs/something"));
 }
 
 /**
@@ -91,7 +91,7 @@ TEST_F(PeerAddressTest, FromStringIdNotSha256) {
       codec_->encode(ByteArray{0x11, 0x22}, MultibaseCodec::Encoding::BASE58);
   EXPECT_FALSE(
       PeerAddress::create(std::string{kDefaultAddress.getStringAddress()}
-                          + "/p2p/" + some_str_b58));
+                          + "/ipfs/" + some_str_b58));
 }
 
 /**

@@ -6,6 +6,7 @@
 #include <libp2p/protocol_muxer/multiselect.hpp>
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/multi/multiaddress.hpp>
@@ -15,7 +16,6 @@
 #include "mock/libp2p/transport/upgrader_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include <libp2p/common/literals.hpp>
 #include "testutil/ma_generator.hpp"
 #include "testutil/outcome.hpp"
 
@@ -215,6 +215,32 @@ class MultiselectTest : public ::testing::Test {
   }
 
   /**
+   * Read a protocol and send NA as a response
+   * @param conn
+   * @param proto_to_send
+   */
+  static void negotiationProtocolNaInitiator(
+      const std::shared_ptr<ReadWriteCloser> &conn,
+      const Protocol &expected_protocol) {
+    auto protocol_msg = MessageManager::protocolMsg(expected_protocol);
+    auto read_msg = std::make_shared<ByteArray>(protocol_msg.size(), 0);
+
+    conn->read(*read_msg, read_msg->size(),
+               [conn, read_msg, protocol_msg](auto &&read_bytes_res) {
+                 EXPECT_TRUE(read_bytes_res);
+                 EXPECT_EQ(*read_msg, protocol_msg);
+
+                 auto na_msg = MessageManager::naMsg();
+                 conn->write(na_msg, na_msg.size(),
+                             [conn, na_msg](auto &&written_bytes_res) {
+                               EXPECT_TRUE(written_bytes_res);
+                               EXPECT_EQ(written_bytes_res.value(),
+                                         na_msg.size());
+                             });
+               });
+  }
+
+  /**
    * Send a protocol and expect NA as a response
    */
   static void negotiationProtocolNaListener(
@@ -309,14 +335,9 @@ TEST_F(MultiselectTest, NegotiateAsInitiator) {
         EXPECT_OUTCOME_TRUE(conn, rconn);
         // first, we expect an exchange of opening messages
         negotiationOpeningsInitiator(conn, [this, conn] {
-          // second, ls message will be sent to us; respond with a list of
-          // encryption protocols we know
-          negotiationLsInitiator(conn, protocols_, [this, conn] {
-            // finally, we expect that the second of the protocols will
-            // be sent back to us, as it is the common one; after that,
-            // we should send an ack
-            negotiationProtocolsInitiator(conn, kDefaultEncryptionProtocol2);
-          });
+          // finally, we expect that the protocol we support will
+          // be sent to us; after that, we should send an ack
+          negotiationProtocolsInitiator(conn, kDefaultEncryptionProtocol2);
         });
       });
 
@@ -427,8 +448,7 @@ TEST_F(MultiselectTest, NegotiateFailure) {
       [this](outcome::result<std::shared_ptr<CapableConnection>> rconn) {
         EXPECT_OUTCOME_TRUE(conn, rconn);
         negotiationOpeningsInitiator(conn, [this, conn] {
-          negotiationLsInitiator(
-              conn, std::vector<Protocol>{kDefaultEncryptionProtocol2}, [] {});
+          negotiationProtocolNaInitiator(conn, kDefaultEncryptionProtocol1);
         });
       });
 

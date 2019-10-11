@@ -87,9 +87,9 @@ TEST_F(MultiaddressTest, CreateFromBytesInvalid) {
  */
 TEST_F(MultiaddressTest, Encapsulate) {
   auto address1 = "/ip4/192.168.0.1/udp/228"_multiaddr;
-  auto address2 = "/p2p/mypeer"_multiaddr;
+  auto address2 = "/ipfs/mypeer"_multiaddr;
 
-  auto joined_string_address = "/ip4/192.168.0.1/udp/228"s + "/p2p/mypeer";
+  auto joined_string_address = "/ip4/192.168.0.1/udp/228"s + "/ipfs/mypeer";
 
   auto joined_byte_address = address1.getBytesAddress();
   auto &address2_bytes = address2.getBytesAddress();
@@ -127,7 +127,7 @@ TEST_F(MultiaddressTest, DecapsulateValid) {
  */
 TEST_F(MultiaddressTest, DecapsulateInvalid) {
   auto initial_address = "/ip4/192.168.0.1/udp/228"_multiaddr;
-  auto address_to_decapsulate = "/p2p/mypeer"_multiaddr;
+  auto address_to_decapsulate = "/ipfs/mypeer"_multiaddr;
 
   ASSERT_FALSE(initial_address.decapsulate(address_to_decapsulate));
 }
@@ -158,7 +158,7 @@ TEST_F(MultiaddressTest, GetBytes) {
  * @then it exists @and is equal to the expected one
  */
 TEST_F(MultiaddressTest, GetPeerIdExists) {
-  auto address = "/p2p/mypeer"_multiaddr;
+  auto address = "/ipfs/mypeer"_multiaddr;
   ASSERT_EQ(*address.getPeerId(), "mypeer");
 }
 
@@ -209,7 +209,7 @@ TEST_F(MultiaddressTest, GetProtocols) {
               ::testing::ElementsAre(*ProtocolList::get("ip4"),
                                      *ProtocolList::get("udp")));
 
-  address = "/p2p/mypeer"_multiaddr;
+  address = "/ipfs/mypeer"_multiaddr;
   ASSERT_THAT(address.getProtocols(),
               ::testing::ElementsAre(*ProtocolList::get("ipfs")));
 
@@ -233,7 +233,7 @@ TEST_F(MultiaddressTest, GetProtocolsWithValues) {
                   std::make_pair(*ProtocolList::get("ip4"), "192.168.0.1"),
                   std::make_pair(*ProtocolList::get("udp"), "228")));
 
-  address = "/p2p/mypeer"_multiaddr;
+  address = "/ipfs/mypeer"_multiaddr;
   ASSERT_THAT(address.getProtocolsWithValues(),
               ::testing::ElementsAre(
                   std::make_pair(*ProtocolList::get("ipfs"), "mypeer")));
