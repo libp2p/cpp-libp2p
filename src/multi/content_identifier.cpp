@@ -5,6 +5,7 @@
 
 #include <libp2p/multi/content_identifier.hpp>
 
+#include <boost/format.hpp>
 #include <libp2p/common/hexutil.hpp>
 
 namespace libp2p::multi {
@@ -25,8 +26,10 @@ namespace libp2p::multi {
     std::string hash_length =
         std::to_string(content_address.getHash().size() * 8);
     std::string v = "cidv" + std::to_string(static_cast<uint64_t>(version));
-    return base + " - " + v + " - " + MulticodecType::getName(content_type)
-        + " - " + hash_type + "-" + hash_length + "-" + hash_hex;
+    return (boost::format("%1% - %2% - %3% - %4%-%5%-%6%") % base % v
+            % MulticodecType::getName(content_type) % hash_type % hash_length
+            % hash_hex)
+        .str();
   }
 
   bool ContentIdentifier::operator==(const ContentIdentifier &c) const {
