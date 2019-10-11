@@ -12,12 +12,25 @@
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/protocol/echo.hpp>
 
-int main() {
+std::shared_ptr<libp2p::Host> createHost() {
+  // create a default Host via an injector, overriding a random-generated
+  // keypair with ours
+  auto injector =
+      libp2p::injector::makeHostInjector(libp2p::injector::useKeyPair(keypair));
+  auto host = injector.create<std::shared_ptr<libp2p::Host>>();
+}
+
+int main(int argc, char *argv[]) {
   using libp2p::crypto::Key;
   using libp2p::crypto::KeyPair;
   using libp2p::crypto::PrivateKey;
   using libp2p::crypto::PublicKey;
   using libp2p::common::operator""_unhex;
+
+  if (argc != 2) {
+    std::cerr << "please, provide an address of the server\n";
+    std::exit(EXIT_FAILURE);
+  }
 
   // this keypair generates a PeerId
   // "12D3KooWLs7RC93EGXZzn9YdKyZYYx3f9UjTLYNX1reThpCkFb83"
@@ -28,23 +41,15 @@ int main() {
                               "4a9361c525840f7086b893d584ebbe475b4ec"
                               "7069951d2e897e8bceb0a3f35ce"_unhex}}};
 
-  // create a default Host via an injector, overriding a random-generated
-  // keypair with ours
-  auto injector =
-      libp2p::injector::makeHostInjector(libp2p::injector::useKeyPair(keypair));
-  auto host = injector.create<std::shared_ptr<libp2p::Host>>();
-
   // create Echo protocol object - it implement the logic of both server and
   // client, but in this example it's used as a client-only
   libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{1}};
 
-  // create Host; we use it to create Echo stream
+  // create io_context - in fact, thing, which allows us to execute async
+  // operations
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
-  context->post([host{std::move(host)}, &echo] {
-    // this address is to be substituted with an address of server
-    auto server_ma_res = libp2p::multi::Multiaddress::create(
-        "/ip4/127.0.0.1/tcp/40010/ipfs/"
-        "12D3KooWLs7RC93EGXZzn9YdKyZYYx3f9UjTLYNX1reThpCkFb83");
+  context->post([&echo, argv] {
+    auto server_ma_res = libp2p::multi::Multiaddress::create(argv[1]);
     if (!server_ma_res) {
       std::cerr << "unable to create server multiaddress: "
                 << server_ma_res.error().message() << std::endl;
@@ -69,6 +74,9 @@ int main() {
     auto server_peer_id = std::move(server_peer_id_res.value());
 
     auto peer_info = libp2p::peer::PeerInfo{server_peer_id, {server_ma}};
+
+    // create Host object an open a stream through it
+    auto host = createHost();
     host->newStream(
         peer_info, echo.getProtocolId(), [&echo](auto &&stream_res) {
           if (!stream_res) {

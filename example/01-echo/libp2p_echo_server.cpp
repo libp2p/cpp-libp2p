@@ -60,6 +60,5 @@ int main() {
   });
 
   // run the IO context
-//  context->run_for(std::chrono::seconds(5));
   context->run();
 }

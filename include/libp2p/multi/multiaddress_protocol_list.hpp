@@ -78,9 +78,6 @@ namespace libp2p::multi {
      * otherwise
      */
     static constexpr auto get(std::string_view name) -> Protocol const * {
-      if (name == "") {
-        return nullptr;
-      }
       for (Protocol const &protocol : protocols_) {
         if (protocol.name == name) {
           return &protocol;
