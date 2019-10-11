@@ -8,7 +8,6 @@
 
 #include <functional>
 #include <memory>
-#include <queue>
 
 #include <boost/asio/streambuf.hpp>
 #include <gsl/span>

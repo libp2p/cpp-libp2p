@@ -14,7 +14,7 @@
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/uvarint.hpp>
 #include <libp2p/outcome/outcome.hpp>
-#include <libp2p/protocol_muxer/protocol_muxer.hpp>
+#include <libp2p/peer/protocol.hpp>
 
 namespace libp2p::protocol_muxer {
   /**
@@ -35,11 +35,6 @@ namespace libp2p::protocol_muxer {
       MessageType type;
       /// zero or more protocols in that message
       std::vector<std::string> protocols{};
-    };
-
-    struct ProtocolsMessageHeader {
-      uint64_t size_of_protocols;
-      uint64_t number_of_protocols;
     };
 
     enum class ParseError {
