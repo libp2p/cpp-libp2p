@@ -90,7 +90,7 @@ namespace libp2p::protocol_muxer {
     void handleLsMsg(const std::shared_ptr<ConnectionState> &connection_state);
 
     void handleNaMsg(
-        const std::shared_ptr<ConnectionState> &connection_state) const;
+        const std::shared_ptr<ConnectionState> &connection_state);
 
     void onUnexpectedRequestResponse(
         const std::shared_ptr<ConnectionState> &connection_state);

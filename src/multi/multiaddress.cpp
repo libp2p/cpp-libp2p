@@ -78,17 +78,13 @@ namespace libp2p::multi {
   }
 
   Multiaddress::Multiaddress(std::string &&address, ByteBuffer &&bytes)
-      : stringified_address_{std::move(address)}, bytes_{std::move(bytes)} {
-    calculatePeerId();
-  }
+      : stringified_address_{std::move(address)}, bytes_{std::move(bytes)} {}
 
   void Multiaddress::encapsulate(const Multiaddress &address) {
     stringified_address_ += address.stringified_address_;
 
     const auto &other_bytes = address.bytes_;
     bytes_.insert(bytes_.end(), other_bytes.begin(), other_bytes.end());
-
-    calculatePeerId();
   }
 
   bool Multiaddress::decapsulate(const Multiaddress &address) {
@@ -142,7 +138,6 @@ namespace libp2p::multi {
                                    other_bytes.begin(), other_bytes.end());
     bytes_ = ByteBuffer{this_bytes.begin(), bytes_pos};
 
-    calculatePeerId();
     return true;
   }
 
@@ -155,7 +150,11 @@ namespace libp2p::multi {
   }
 
   boost::optional<std::string> Multiaddress::getPeerId() const {
-    return peer_id_;
+    auto peer_id = getValuesForProtocol(Protocol::Code::P2P);
+    if (peer_id.empty()) {
+      return {};
+    }
+    return peer_id[0];
   }
 
   std::vector<std::string> Multiaddress::getValuesForProtocol(
@@ -223,22 +222,6 @@ namespace libp2p::multi {
       }
     }
     return pvs;
-  }
-
-  void Multiaddress::calculatePeerId() {
-    auto ipfs_name =
-        "/"s + std::string(ProtocolList::get(Protocol::Code::P2P)->name);
-    auto ipfs_beginning = stringified_address_.find(ipfs_name);
-    if (ipfs_beginning == std::string_view::npos) {
-      peer_id_ = boost::none;
-      return;
-    }
-
-    auto id_beginning = ipfs_beginning + ipfs_name.size() + 1;
-    auto id_size = stringified_address_.find_first_of('/', id_beginning + 1)
-        - id_beginning;
-
-    peer_id_ = stringified_address_.substr(id_beginning, id_size);
   }
 
   bool Multiaddress::operator==(const Multiaddress &other) const {

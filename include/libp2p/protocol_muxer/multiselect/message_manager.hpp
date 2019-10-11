@@ -13,8 +13,8 @@
 #include <gsl/span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <libp2p/protocol_muxer/protocol_muxer.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <libp2p/peer/protocol.hpp>
 
 namespace libp2p::protocol_muxer {
   /**
@@ -24,6 +24,10 @@ namespace libp2p::protocol_muxer {
    public:
     using ByteArray = common::ByteArray;
 
+    /// header of Multiselect protocol
+    static constexpr std::string_view kMultiselectHeader =
+        "/multistream/1.0.0\n";
+
     struct MultiselectMessage {
       enum class MessageType { OPENING, PROTOCOL, PROTOCOLS, LS, NA };
 
@@ -31,11 +35,6 @@ namespace libp2p::protocol_muxer {
       MessageType type;
       /// zero or more protocols in that message
       std::vector<std::string> protocols{};
-    };
-
-    struct ProtocolsMessageHeader {
-      uint64_t size_of_protocols;
-      uint64_t number_of_protocols;
     };
 
     enum class ParseError {
@@ -47,13 +46,10 @@ namespace libp2p::protocol_muxer {
     static outcome::result<MultiselectMessage> parseConstantMsg(
         gsl::span<const uint8_t> bytes);
 
-    static outcome::result<ProtocolsMessageHeader> parseProtocolsHeader(
+    static outcome::result<MultiselectMessage> parseProtocols(
         gsl::span<const uint8_t> bytes);
 
-    static outcome::result<MultiselectMessage> parseProtocols(
-        gsl::span<const uint8_t> bytes, uint64_t expected_protocols_number);
-
-    static outcome::result<MultiselectMessage> parseProtocol(
+    static outcome::result<std::string> parseProtocol(
         gsl::span<const uint8_t> bytes);
 
     /**

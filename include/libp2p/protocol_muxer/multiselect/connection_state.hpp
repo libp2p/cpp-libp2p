@@ -10,6 +10,7 @@
 #include <memory>
 
 #include <boost/asio/streambuf.hpp>
+#include <gsl/span>
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/protocol_muxer/multiselect/multiselect_error.hpp>
@@ -37,6 +38,10 @@ namespace libp2p::protocol_muxer {
 
     /// protocols to be selected
     std::shared_ptr<std::vector<peer::Protocol>> protocols;
+
+    /// protocols, which were left for negotiation (if send one of the protocols
+    /// and receive NA, it's removed from this queue)
+    std::shared_ptr<std::vector<peer::Protocol>> left_protocols;
 
     /// callback, which is to be called, when a protocol is established over the
     /// connection
@@ -102,14 +107,17 @@ namespace libp2p::protocol_muxer {
 
     ConnectionState(
         std::shared_ptr<basic::ReadWriter> conn,
-        std::shared_ptr<std::vector<peer::Protocol>> protocols,
+        gsl::span<const peer::Protocol> protocols,
         std::function<void(const outcome::result<peer::Protocol> &)> proto_cb,
         std::shared_ptr<common::ByteArray> write_buffer,
         std::shared_ptr<boost::asio::streambuf> read_buffer,
         size_t buffers_index, std::shared_ptr<Multiselect> multiselect,
         NegotiationStatus status = NegotiationStatus::NOTHING_SENT)
         : connection{std::move(conn)},
-          protocols{std::move(protocols)},
+          protocols{std::make_shared<std::vector<peer::Protocol>>(
+              protocols.begin(), protocols.end())},
+          left_protocols{
+              std::make_shared<std::vector<peer::Protocol>>(*this->protocols)},
           proto_callback{std::move(proto_cb)},
           write_buffer{std::move(write_buffer)},
           read_buffer{std::move(read_buffer)},

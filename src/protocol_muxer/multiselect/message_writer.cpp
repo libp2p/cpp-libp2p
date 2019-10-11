@@ -54,14 +54,6 @@ namespace libp2p::protocol_muxer {
         connection_state, ConnectionState::NegotiationStatus::PROTOCOLS_SENT));
   }
 
-  void MessageWriter::sendLsMsg(
-      const std::shared_ptr<ConnectionState> &connection_state) {
-    *connection_state->write_buffer = MessageManager::lsMsg();
-    const auto &state = connection_state;
-    state->write(getWriteCallback(connection_state,
-                                  ConnectionState::NegotiationStatus::LS_SENT));
-  }
-
   void MessageWriter::sendNaMsg(
       const std::shared_ptr<ConnectionState> &connection_state) {
     *connection_state->write_buffer = MessageManager::naMsg();

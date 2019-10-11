@@ -28,16 +28,12 @@ namespace libp2p::protocol_muxer {
 
     if (is_initiator) {
       MessageWriter::sendOpeningMsg(std::make_shared<ConnectionState>(
-          connection,
-          std::make_shared<std::vector<peer::Protocol>>(
-              supported_protocols.begin(), supported_protocols.end()),
-          handler, write_buffer, read_buffer, index, shared_from_this()));
+          connection, supported_protocols, handler, write_buffer, read_buffer,
+          index, shared_from_this()));
     } else {
       MessageReader::readNextMessage(std::make_shared<ConnectionState>(
-          connection,
-          std::make_shared<std::vector<peer::Protocol>>(
-              supported_protocols.begin(), supported_protocols.end()),
-          handler, write_buffer, read_buffer, index, shared_from_this(),
+          connection, supported_protocols, handler, write_buffer, read_buffer,
+          index, shared_from_this(),
           ConnectionState::NegotiationStatus::NOTHING_SENT));
     }
   }
@@ -94,9 +90,10 @@ namespace libp2p::protocol_muxer {
         // an opening as well
         return MessageWriter::sendOpeningMsg(std::move(connection_state));
       case Status::OPENING_SENT:
-        // if opening is received as a response to ours, we can send ls to see
-        // available protocols
-        return MessageWriter::sendLsMsg(connection_state);
+        // if opening is received as a response to ours, we send one of the
+        // protocols we consider
+        return MessageWriter::sendProtocolMsg(
+            connection_state->left_protocols->front(), connection_state);
       case Status::PROTOCOL_SENT:
       case Status::PROTOCOLS_SENT:
       case Status::LS_SENT:
@@ -163,10 +160,16 @@ namespace libp2p::protocol_muxer {
   }
 
   void Multiselect::handleNaMsg(
-      const std::shared_ptr<ConnectionState> &connection_state) const {
-    // if we receive na message, just send an ls to understand, which protocols
-    // the other side supports
-    MessageWriter::sendLsMsg(connection_state);
+      const std::shared_ptr<ConnectionState> &connection_state) {
+    // if we receive na message, send next protocol we consider; if none is
+    // left, negotiation failed
+    auto protos = connection_state->left_protocols;
+    protos->erase(protos->begin());
+    if (protos->empty()) {
+      return negotiationRoundFailed(connection_state,
+                                    MultiselectError::NEGOTIATION_FAILED);
+    }
+    MessageWriter::sendProtocolMsg(protos->front(), connection_state);
   }
 
   void Multiselect::onProtocolAfterOpeningLsOrNa(

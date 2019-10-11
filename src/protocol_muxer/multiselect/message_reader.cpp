@@ -17,6 +17,12 @@ namespace {
     return UVarint::create(gsl::make_span(
         static_cast<const uint8_t *>(buffer.data().data()), buffer.size()));
   }
+
+  // in Reader's code we want this header without '\n' char
+  using libp2p::protocol_muxer::MessageManager;
+  const std::string_view kMultiselectHeader =
+      MessageManager::kMultiselectHeader.substr(
+          0, MessageManager::kMultiselectHeader.size() - 1);
 }  // namespace
 
 namespace libp2p::protocol_muxer {
@@ -82,8 +88,7 @@ namespace libp2p::protocol_muxer {
   void MessageReader::onReadLineCompleted(
       const std::shared_ptr<ConnectionState> &connection_state,
       uint64_t read_bytes) {
-    // '/tls/1.3.0\n' - the shortest protocol, which could be found
-    static constexpr size_t kShortestProtocolLength = 11;
+    using Message = MessageManager::MultiselectMessage;
 
     auto multiselect = connection_state->multiselect;
 
@@ -100,9 +105,8 @@ namespace libp2p::protocol_muxer {
                                    std::move(const_msg_res.value()));
       return;
     }
-    if (!const_msg_res
-        && const_msg_res.error()
-            != MessageManager::ParseError::MSG_IS_ILL_FORMED) {
+    if (const_msg_res.error()
+        != MessageManager::ParseError::MSG_IS_ILL_FORMED) {
       // MSG_IS_ILL_FORMED allows us to continue parsing; otherwise, it's an
       // error
       multiselect->negotiationRoundFailed(connection_state,
@@ -110,55 +114,35 @@ namespace libp2p::protocol_muxer {
       return;
     }
 
-    // here, we assume that protocols header - two varints + '\n' - cannot be
-    // longer or equal to the shortest protocol length; varints should be very
-    // big for it to happen; thus, continue parsing depending on the length of
-    // the current string
-    if (read_bytes < kShortestProtocolLength) {
-      auto proto_header_res = MessageManager::parseProtocolsHeader(msg_span);
-      if (proto_header_res) {
-        auto proto_header = proto_header_res.value();
-        readNextBytes(connection_state, proto_header.size_of_protocols,
-                      [proto_header](std::shared_ptr<ConnectionState> state) {
-                        onReadProtocolsCompleted(
-                            std::move(state), proto_header.size_of_protocols,
-                            proto_header.number_of_protocols);
-                      });
-      } else {
-        multiselect->negotiationRoundFailed(connection_state,
-                                            proto_header_res.error());
+    // if it's not a constant message, it contains one or more protocols;
+    // firstly assume the first case - it contains one protocol - we can just
+    // parse it till the '\n' char, and if length of this parsed protocol + 1
+    // (for the '\n') is equal to the length of the read message, it's a
+    // one-protocol message; if not, parse it as a several-protocols message
+    auto parsed_protocol_res = MessageManager::parseProtocol(msg_span);
+    if (parsed_protocol_res
+        && (parsed_protocol_res.value().size() + 1)
+            == static_cast<size_t>(msg_span.size())) {
+      // it's a single-protocol message; check against an opening protocol
+      auto parsed_protocol = std::move(parsed_protocol_res.value());
+      if (parsed_protocol == kMultiselectHeader) {
+        return multiselect->onReadCompleted(
+            connection_state, Message{Message::MessageType::OPENING});
       }
-      return;
+      return multiselect->onReadCompleted(
+          connection_state,
+          Message{Message::MessageType::PROTOCOL, {parsed_protocol}});
     }
 
-    auto proto_res = MessageManager::parseProtocol(msg_span);
-    if (!proto_res) {
-      multiselect->negotiationRoundFailed(connection_state, proto_res.error());
-      return;
+    // it's a several-protocols message
+    auto protocols_msg_res = MessageManager::parseProtocols(msg_span);
+    if (!protocols_msg_res) {
+      // message cannot be parsed
+      return multiselect->negotiationRoundFailed(connection_state,
+                                          protocols_msg_res.error());
     }
 
-    multiselect->onReadCompleted(connection_state,
-                                 std::move(proto_res.value()));
-  }
-
-  void MessageReader::onReadProtocolsCompleted(
-      std::shared_ptr<ConnectionState> connection_state,
-      uint64_t expected_protocols_size, uint64_t expected_protocols_number) {
-    auto multiselect = connection_state->multiselect;
-
-    auto msg_res = MessageManager::parseProtocols(
-        gsl::make_span(static_cast<const uint8_t *>(
-                           connection_state->read_buffer->data().data()),
-                       expected_protocols_size),
-        expected_protocols_number);
-    connection_state->read_buffer->consume(expected_protocols_size);
-    if (!msg_res) {
-      multiselect->negotiationRoundFailed(connection_state, msg_res.error());
-      return;
-    }
-
-    multiselect->onReadCompleted(std::move(connection_state),
-                                 std::move(msg_res.value()));
+    multiselect->onReadCompleted(connection_state, std::move(protocols_msg_res.value()));
   }
 
 }  // namespace libp2p::protocol_muxer

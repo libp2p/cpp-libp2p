@@ -172,11 +172,6 @@ namespace libp2p::multi {
     Multiaddress(std::string &&address, ByteBuffer &&bytes);
 
     /**
-     * Recalculate peer_id inside this address (the first one, if exists)
-     */
-    void calculatePeerId();
-
-    /**
      * Decapsulate a given string, which represents a protocol, from the address
      * @return true, if it was found and removed, false otherwise
      */
