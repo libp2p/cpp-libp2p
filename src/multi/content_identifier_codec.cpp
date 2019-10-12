@@ -44,13 +44,11 @@ namespace libp2p::multi {
     std::vector<uint8_t> bytes;
     if (cid.version == ContentIdentifier::Version::V1) {
       UVarint version(static_cast<uint64_t>(cid.version));
-      auto version_span = version.toBytes();
-      bytes.insert(bytes.end(), version_span.begin(), version_span.end());
+      common::append(bytes, version.toBytes());
       UVarint type(cid.content_type);
-      auto type_span = type.toBytes();
-      bytes.insert(bytes.end(), type_span.begin(), type_span.end());
+      common::append(bytes, type.toBytes());
       auto const &hash = cid.content_address.toBuffer();
-      bytes.insert(bytes.end(), hash.begin(), hash.end());
+      common::append(bytes, hash);
 
     } else if (cid.version == ContentIdentifier::Version::V0) {
       if (cid.content_type != MulticodecType::DAG_PB) {
@@ -63,7 +61,7 @@ namespace libp2p::multi {
         return EncodeError::INVALID_HASH_LENGTH;
       }
       auto const &hash = cid.content_address.toBuffer();
-      bytes.insert(bytes.end(), hash.begin(), hash.end());
+      common::append(bytes, hash);
     }
     return bytes;
   }
@@ -97,7 +95,7 @@ namespace libp2p::multi {
             std::move(hash));
       } else if (version <= 0) {
         return DecodeError::MALFORMED_VERSION;
-      } else if (version > 1) {
+      } else {
         return DecodeError::RESERVED_VERSION;
       }
     }
