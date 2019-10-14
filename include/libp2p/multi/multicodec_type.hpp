@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include <boost/optional.hpp>
+
 namespace libp2p::multi {
 
   /**
@@ -31,27 +33,29 @@ namespace libp2p::multi {
       DAG_PB = 0x70
     };
 
-    static std::string getName(Code code) {
+    static boost::optional<std::string> getName(Code code) {
+      using std::string_literals::operator""s;
       switch (code) {
         case Code::IDENTITY:
-          return "raw";
+          return "raw"s;
         case Code::SHA1:
-          return "sha1";
+          return "sha1"s;
         case Code::SHA2_256:
-          return "sha2-256";
+          return "sha2-256"s;
         case Code::SHA2_512:
-          return "sha2-512";
+          return "sha2-512"s;
         case Code::SHA3_224:
-          return "sha3-224";
+          return "sha3-224"s;
         case Code::SHA3_256:
-          return "sha3-256";
+          return "sha3-256"s;
         case Code::SHA3_384:
-          return "sha3-384";
+          return "sha3-384"s;
         case Code::SHA3_512:
-          return "sha3-512";
+          return "sha3-512"s;
         case Code::DAG_PB:
-          return "dag-pb";
+          return "dag-pb"s;
       }
+      return boost::none;
     }
   };
 
