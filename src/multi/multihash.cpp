@@ -62,10 +62,10 @@ namespace libp2p::multi {
 
   outcome::result<Multihash> Multihash::createFromHex(std::string_view hex) {
     OUTCOME_TRY(buf, unhex(hex));
-    return Multihash::createFromBuffer(buf);
+    return Multihash::createFromBytes(buf);
   }
 
-  outcome::result<Multihash> Multihash::createFromBuffer(
+  outcome::result<Multihash> Multihash::createFromBytes(
       gsl::span<const uint8_t> b) {
     if (b.size() < kHeaderSize) {
       return Error::INPUT_TOO_SHORT;

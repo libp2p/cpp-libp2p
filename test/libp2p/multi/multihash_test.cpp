@@ -76,11 +76,11 @@ TEST(Multihash, FromToBuffer) {
   auto hash = "8203020304"_unhex;
 
   ASSERT_NO_THROW({
-    auto m = Multihash::createFromBuffer(hash).value();
+    auto m = Multihash::createFromBytes(hash).value();
     ASSERT_EQ(m.toBuffer(), hash);
   });
 
   ByteArray v{2, 3, 1, 3};
-  ASSERT_FALSE(Multihash::createFromBuffer(v))
+  ASSERT_FALSE(Multihash::createFromBytes(v))
       << "Length in the header does not equal actual length";
 }

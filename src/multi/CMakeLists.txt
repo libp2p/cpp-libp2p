@@ -32,3 +32,13 @@ target_link_libraries(p2p_multiaddress
     p2p_converters
     Boost::boost
     )
+
+libp2p_add_library(p2p_cid
+    content_identifier.cpp
+    content_identifier_codec.cpp
+    )
+
+target_link_libraries(p2p_cid
+    p2p_uvarint
+    p2p_multihash
+    )
