@@ -232,34 +232,34 @@ namespace libp2p::crypto {
     }
   }
 
-  outcome::result<KeyPair> KeyGeneratorImpl::generateRsa(
-      common::RSAKeyType bits_option) const {
-    BOOST_ASSERT_MSG(false, "not implemented");
-
-    /// previous implementation is commented - it can be used as a hint when
-    /// implementing a new version of the method
-    //    int bits = 0;
-    //    Key::Type key_type;
-    //    switch (bits_option) {
-    //      case common::RSAKeyType::RSA1024:
-    //        bits = 1024;
-    //        key_type = Key::Type::RSA1024;
-    //        break;
-    //      case common::RSAKeyType::RSA2048:
-    //        bits = 2048;
-    //        key_type = Key::Type::RSA2048;
-    //        break;
-    //      case common::RSAKeyType::RSA4096:
-    //        bits = 4096;
-    //        key_type = Key::Type::RSA4096;
-    //        break;
-    //    }
-    //
-    //    OUTCOME_TRY(keys, detail::generateRsaKeys(bits));
-    //
-    //    return KeyPair{{{key_type, std::move(keys.first)}},
-    //                   {{key_type, std::move(keys.second)}}};
-  }
+  /// previous implementation is commented - it can be used as a hint when
+  /// implementing a new version of the method
+  //  outcome::result<KeyPair> KeyGeneratorImpl::generateRsa(
+  //      common::RSAKeyType bits_option) const {
+  //    BOOST_ASSERT_MSG(false, "not implemented");
+  //
+  //    int bits = 0;
+  //    Key::Type key_type;
+  //    switch (bits_option) {
+  //      case common::RSAKeyType::RSA1024:
+  //        bits = 1024;
+  //        key_type = Key::Type::RSA1024;
+  //        break;
+  //      case common::RSAKeyType::RSA2048:
+  //        bits = 2048;
+  //        key_type = Key::Type::RSA2048;
+  //        break;
+  //      case common::RSAKeyType::RSA4096:
+  //        bits = 4096;
+  //        key_type = Key::Type::RSA4096;
+  //        break;
+  //    }
+  //
+  //    OUTCOME_TRY(keys, detail::generateRsaKeys(bits));
+  //
+  //    return KeyPair{{{key_type, std::move(keys.first)}},
+  //                   {{key_type, std::move(keys.second)}}};
+  //  }
 
   outcome::result<KeyPair> KeyGeneratorImpl::generateEd25519() const {
     EVP_PKEY *pkey = nullptr;

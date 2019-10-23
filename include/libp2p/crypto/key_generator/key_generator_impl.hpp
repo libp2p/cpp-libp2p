@@ -34,7 +34,8 @@ namespace libp2p::crypto {
    private:
     void initialize();
 
-    outcome::result<KeyPair> generateRsa(common::RSAKeyType key_type) const;
+    //    outcome::result<KeyPair> generateRsa(common::RSAKeyType key_type)
+    //    const;
     outcome::result<KeyPair> generateEd25519() const;
     outcome::result<KeyPair> generateSecp256k1() const;
 
