@@ -13,6 +13,9 @@ target_link_libraries(p2p_hexutil
 libp2p_add_library(p2p_logger
     logger.cpp
     )
+target_link_libraries(p2p_logger
+    spdlog::spdlog
+    )
 
 libp2p_add_library(p2p_byteutil
     byteutil.cpp

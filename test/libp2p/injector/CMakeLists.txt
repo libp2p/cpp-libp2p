@@ -5,6 +5,7 @@ addtest(network_injector_test
     network_injector_test.cpp
     )
 target_link_libraries(network_injector_test
+    di
     p2p_default_network
     )
 
@@ -13,6 +14,7 @@ addtest(host_injector_test
     host_injector_test.cpp
     )
 target_link_libraries(host_injector_test
+    di
     p2p_default_network
     p2p_basic_host
     p2p_peer_repository

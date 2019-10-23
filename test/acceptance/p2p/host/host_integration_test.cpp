@@ -67,9 +67,6 @@ TEST_P(HostIntegrationTest, InteractAllToAllSuccess) {
 
   // create peers
   peers.reserve(peer_count);
-  for (size_t i = 0; i < peer_count; ++i) {
-  }
-
   peerinfo_futures.reserve(peer_count);
 
   // initialize `peer info` promises and futures and addresses
@@ -79,7 +76,7 @@ TEST_P(HostIntegrationTest, InteractAllToAllSuccess) {
 
     auto peer = std::make_shared<Peer>(timeout);
     auto ma = ma_generator.nextMultiaddress();
-    peer->startServer(std::move(ma), std::move(promise));
+    peer->startServer(ma, std::move(promise));
     peers.push_back(std::move(peer));
   }
 
