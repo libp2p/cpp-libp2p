@@ -6,6 +6,8 @@ add_library(p2p_test_peer
     test_peer.cpp
     )
 target_link_libraries(p2p_test_peer
+    di
+    hat_trie
     Boost::boost
     p2p_basic_host
     p2p_peer_repository

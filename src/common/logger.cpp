@@ -5,6 +5,8 @@
 
 #include <libp2p/common/logger.hpp>
 
+#include <boost/scoped_ptr.hpp>
+#include <spdlog/fmt/ostr.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace {

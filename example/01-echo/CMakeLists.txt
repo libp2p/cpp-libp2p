@@ -6,8 +6,8 @@
 add_executable(libp2p_echo_server
     libp2p_echo_server.cpp
     )
-
 target_link_libraries(libp2p_echo_server
+    di
     p2p_basic_host
     p2p_default_network
     p2p_peer_repository
@@ -23,6 +23,7 @@ add_executable(libp2p_echo_client
     )
 
 target_link_libraries(libp2p_echo_client
+    di
     p2p_basic_host
     p2p_default_network
     p2p_peer_repository
