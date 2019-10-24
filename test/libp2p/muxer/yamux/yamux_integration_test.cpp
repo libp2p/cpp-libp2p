@@ -228,7 +228,7 @@ TEST_F(YamuxIntegrationTest, StreamFromServer) {
                        });
           });
         });
-        return outcome::success();
+        return libp2p::outcome::success();
       });
 
   launchContext();
@@ -274,7 +274,7 @@ TEST_F(YamuxIntegrationTest, StreamWrite) {
                                      });
                      });
         });
-        return outcome::success();
+        return libp2p::outcome::success();
       });
 
   launchContext();
@@ -315,7 +315,7 @@ TEST_F(YamuxIntegrationTest, StreamRead) {
                     });
               });
         });
-        return outcome::success();
+        return libp2p::outcome::success();
       });
 
   launchContext();
@@ -364,7 +364,7 @@ TEST_F(YamuxIntegrationTest, CloseForWrites) {
                 });
               });
         });
-        return outcome::success();
+        return libp2p::outcome::success();
       });
 
   launchContext();
@@ -400,7 +400,7 @@ TEST_F(YamuxIntegrationTest, CloseForReads) {
                     });
               });
         });
-        return outcome::success();
+        return libp2p::outcome::success();
       });
 
   launchContext();
@@ -457,7 +457,7 @@ TEST_F(YamuxIntegrationTest, CloseEntirely) {
                 });
               });
         });
-        return outcome::success();
+        return libp2p::outcome::success();
       });
 
   launchContext();
@@ -534,7 +534,7 @@ TEST_F(YamuxIntegrationTest, Reset) {
                            });
                      });
         });
-        return outcome::success();
+        return libp2p::outcome::success();
       });
 
   launchContext();

@@ -108,21 +108,22 @@ class MultiselectTest : public ::testing::Test {
     conn->read(
         *read_msg, read_msg->size(),
         [conn, read_msg, expected_opening_msg,
-         next_step](const outcome::result<size_t> &read_bytes) {
+         next_step](const libp2p::outcome::result<size_t> &read_bytes) {
           EXPECT_TRUE(read_bytes) << read_bytes.error().message();
           EXPECT_EQ(*read_msg, expected_opening_msg);
 
           auto write_msg =
               std::make_shared<ByteArray>(0, expected_opening_msg.size());
 
-          conn->write(expected_opening_msg, expected_opening_msg.size(),
-                      [conn, expected_opening_msg, next_step](
-                          const outcome::result<size_t> &written_bytes_res) {
-                        EXPECT_OUTCOME_TRUE(written_bytes, written_bytes_res)
-                        EXPECT_EQ(written_bytes, expected_opening_msg.size());
+          conn->write(
+              expected_opening_msg, expected_opening_msg.size(),
+              [conn, expected_opening_msg, next_step](
+                  const libp2p::outcome::result<size_t> &written_bytes_res) {
+                EXPECT_OUTCOME_TRUE(written_bytes, written_bytes_res)
+                EXPECT_EQ(written_bytes, expected_opening_msg.size());
 
-                        next_step();
-                      });
+                next_step();
+              });
         });
   }
 
@@ -138,21 +139,22 @@ class MultiselectTest : public ::testing::Test {
     conn->write(
         expected_opening_msg, expected_opening_msg.size(),
         [conn, expected_opening_msg,
-         next_step](const outcome::result<size_t> &written_bytes_res) {
+         next_step](const libp2p::outcome::result<size_t> &written_bytes_res) {
           EXPECT_OUTCOME_TRUE(written_bytes, written_bytes_res)
           ASSERT_EQ(written_bytes, expected_opening_msg.size());
 
           auto read_msg =
               std::make_shared<ByteArray>(expected_opening_msg.size(), 0);
-          conn->read(*read_msg, expected_opening_msg.size(),
-                     [read_msg, expected_opening_msg, next_step](
-                         const outcome::result<size_t> &read_bytes_res) {
-                       EXPECT_OUTCOME_TRUE(read_bytes, read_bytes_res);
-                       EXPECT_EQ(read_bytes, expected_opening_msg.size());
+          conn->read(
+              *read_msg, expected_opening_msg.size(),
+              [read_msg, expected_opening_msg, next_step](
+                  const libp2p::outcome::result<size_t> &read_bytes_res) {
+                EXPECT_OUTCOME_TRUE(read_bytes, read_bytes_res);
+                EXPECT_EQ(read_bytes, expected_opening_msg.size());
 
-                       EXPECT_EQ(*read_msg, expected_opening_msg);
-                       next_step();
-                     });
+                EXPECT_EQ(*read_msg, expected_opening_msg);
+                next_step();
+              });
         });
   }
 
@@ -170,21 +172,22 @@ class MultiselectTest : public ::testing::Test {
     conn->read(
         *read_msg, expected_ls_msg.size(),
         [conn, read_msg, expected_ls_msg, protocols_msg,
-         next_step](const outcome::result<size_t> &read_bytes_res) {
+         next_step](const libp2p::outcome::result<size_t> &read_bytes_res) {
           EXPECT_TRUE(read_bytes_res) << read_bytes_res.error().message();
           EXPECT_OUTCOME_TRUE(read_bytes, read_bytes_res)
           EXPECT_EQ(read_bytes, expected_ls_msg.size());
 
           EXPECT_EQ(*read_msg, expected_ls_msg);
 
-          conn->write(protocols_msg, protocols_msg.size(),
-                      [conn, protocols_msg, next_step](
-                          const outcome::result<size_t> &written_bytes_res) {
-                        EXPECT_OUTCOME_TRUE(written_bytes, written_bytes_res)
-                        ASSERT_EQ(written_bytes, protocols_msg.size());
+          conn->write(
+              protocols_msg, protocols_msg.size(),
+              [conn, protocols_msg, next_step](
+                  const libp2p::outcome::result<size_t> &written_bytes_res) {
+                EXPECT_OUTCOME_TRUE(written_bytes, written_bytes_res)
+                ASSERT_EQ(written_bytes, protocols_msg.size());
 
-                        next_step();
-                      });
+                next_step();
+              });
         });
   }
 
@@ -198,19 +201,20 @@ class MultiselectTest : public ::testing::Test {
     conn->write(
         ls_msg, ls_msg.size(),
         [conn, ls_msg, protocols_msg,
-         next_step](const outcome::result<size_t> &written_bytes_res) {
+         next_step](const libp2p::outcome::result<size_t> &written_bytes_res) {
           EXPECT_OUTCOME_TRUE(written_bytes, written_bytes_res)
           EXPECT_EQ(written_bytes, ls_msg.size());
 
           auto read_msg = std::make_shared<ByteArray>(protocols_msg.size(), 0);
-          conn->read(*read_msg, read_msg->size(),
-                     [conn, read_msg, protocols_msg, next_step](
-                         const outcome::result<size_t> &read_bytes_res) {
-                       EXPECT_TRUE(read_bytes_res);
-                       EXPECT_EQ(*read_msg, protocols_msg);
+          conn->read(
+              *read_msg, read_msg->size(),
+              [conn, read_msg, protocols_msg, next_step](
+                  const libp2p::outcome::result<size_t> &read_bytes_res) {
+                EXPECT_TRUE(read_bytes_res);
+                EXPECT_EQ(*read_msg, protocols_msg);
 
-                       next_step();
-                     });
+                next_step();
+              });
         });
   }
 
@@ -249,22 +253,23 @@ class MultiselectTest : public ::testing::Test {
     auto na_msg = MessageManager::naMsg();
     auto protocol_msg = MessageManager::protocolMsg(proto_to_send);
 
-    conn->write(protocol_msg, protocol_msg.size(),
-                [conn, protocol_msg, na_msg,
-                 next_step](const outcome::result<size_t> written_bytes_res) {
-                  EXPECT_OUTCOME_TRUE(written_bytes, written_bytes_res)
-                  EXPECT_EQ(written_bytes, protocol_msg.size());
+    conn->write(
+        protocol_msg, protocol_msg.size(),
+        [conn, protocol_msg, na_msg,
+         next_step](const libp2p::outcome::result<size_t> written_bytes_res) {
+          EXPECT_OUTCOME_TRUE(written_bytes, written_bytes_res)
+          EXPECT_EQ(written_bytes, protocol_msg.size());
 
-                  auto read_msg = std::make_shared<ByteArray>(na_msg.size(), 0);
-                  conn->read(*read_msg, read_msg->size(),
-                             [conn, read_msg, na_msg, next_step](
-                                 const outcome::result<size_t> read_bytes_res) {
-                               EXPECT_TRUE(read_bytes_res);
-                               EXPECT_EQ(*read_msg, na_msg);
+          auto read_msg = std::make_shared<ByteArray>(na_msg.size(), 0);
+          conn->read(*read_msg, read_msg->size(),
+                     [conn, read_msg, na_msg, next_step](
+                         const libp2p::outcome::result<size_t> read_bytes_res) {
+                       EXPECT_TRUE(read_bytes_res);
+                       EXPECT_EQ(*read_msg, na_msg);
 
-                               next_step();
-                             });
-                });
+                       next_step();
+                     });
+        });
   }
 
   /**
@@ -279,14 +284,15 @@ class MultiselectTest : public ::testing::Test {
     auto read_msg = std::make_shared<ByteArray>(expected_proto_msg.size(), 0);
     conn->read(
         *read_msg, expected_proto_msg.size(),
-        [conn, read_msg,
-         expected_proto_msg](const outcome::result<size_t> &read_bytes_res) {
+        [conn, read_msg, expected_proto_msg](
+            const libp2p::outcome::result<size_t> &read_bytes_res) {
           EXPECT_TRUE(read_bytes_res);
           EXPECT_EQ(*read_msg, expected_proto_msg);
 
           conn->write(
               *read_msg, read_msg->size(),
-              [read_msg](const outcome::result<size_t> &written_bytes_res) {
+              [read_msg](
+                  const libp2p::outcome::result<size_t> &written_bytes_res) {
                 EXPECT_OUTCOME_TRUE(written_bytes, written_bytes_res);
                 EXPECT_EQ(written_bytes, read_msg->size());
               });
@@ -303,20 +309,20 @@ class MultiselectTest : public ::testing::Test {
 
     conn->write(
         expected_proto_msg, expected_proto_msg.size(),
-        [conn,
-         expected_proto_msg](const outcome::result<size_t> &written_bytes_res) {
+        [conn, expected_proto_msg](
+            const libp2p::outcome::result<size_t> &written_bytes_res) {
           EXPECT_OUTCOME_TRUE(written_bytes, written_bytes_res)
           EXPECT_EQ(written_bytes, expected_proto_msg.size());
 
           auto read_msg =
               std::make_shared<ByteArray>(expected_proto_msg.size(), 0);
-          conn->read(*read_msg, read_msg->size(),
-                     [conn, read_msg, expected_proto_msg](
-                         const outcome::result<size_t> &read_bytes_res) {
-                       EXPECT_TRUE(read_bytes_res)
-                           << read_bytes_res.error().message();
-                       EXPECT_EQ(*read_msg, expected_proto_msg);
-                     });
+          conn->read(
+              *read_msg, read_msg->size(),
+              [conn, read_msg, expected_proto_msg](
+                  const libp2p::outcome::result<size_t> &read_bytes_res) {
+                EXPECT_TRUE(read_bytes_res) << read_bytes_res.error().message();
+                EXPECT_EQ(*read_msg, expected_proto_msg);
+              });
         });
   }
 };
@@ -330,7 +336,8 @@ class MultiselectTest : public ::testing::Test {
 TEST_F(MultiselectTest, NegotiateAsInitiator) {
   auto negotiated = false;
   auto transport_listener = transport_->createListener(
-      [this](outcome::result<std::shared_ptr<CapableConnection>> rconn) {
+      [this](
+          libp2p::outcome::result<std::shared_ptr<CapableConnection>> rconn) {
         ASSERT_TRUE(rconn) << rconn.error().message();
         EXPECT_OUTCOME_TRUE(conn, rconn);
         // first, we expect an exchange of opening messages
@@ -350,13 +357,13 @@ TEST_F(MultiselectTest, NegotiateAsInitiator) {
   transport_->dial(
       testutil::randomPeerId(), ma,
       [this, &negotiated, &protocol_vec](
-          outcome::result<std::shared_ptr<CapableConnection>> rconn) {
+          libp2p::outcome::result<std::shared_ptr<CapableConnection>> rconn) {
         EXPECT_OUTCOME_TRUE(conn, rconn);
 
         multiselect_->selectOneOf(
             protocol_vec, conn, true,
             [this, &negotiated,
-             conn](const outcome::result<Protocol> &protocol_res) {
+             conn](const libp2p::outcome::result<Protocol> &protocol_res) {
               EXPECT_OUTCOME_TRUE(protocol, protocol_res);
               EXPECT_EQ(protocol, kDefaultEncryptionProtocol2);
               negotiated = true;
@@ -373,11 +380,13 @@ TEST_F(MultiselectTest, NegotiateAsListener) {
   std::vector<Protocol> protocol_vec{kDefaultEncryptionProtocol2};
   auto transport_listener = transport_->createListener(
       [this, &negotiated, &protocol_vec](
-          outcome::result<std::shared_ptr<CapableConnection>> rconn) mutable {
+          libp2p::outcome::result<std::shared_ptr<CapableConnection>>
+              rconn) mutable {
         EXPECT_OUTCOME_TRUE(conn, rconn);
         multiselect_->selectOneOf(
             protocol_vec, conn, false,
-            [this, &negotiated](const outcome::result<Protocol> &protocol_res) {
+            [this, &negotiated](
+                const libp2p::outcome::result<Protocol> &protocol_res) {
               EXPECT_OUTCOME_TRUE(protocol, protocol_res);
               EXPECT_EQ(protocol, kDefaultEncryptionProtocol2);
               negotiated = true;
@@ -390,7 +399,8 @@ TEST_F(MultiselectTest, NegotiateAsListener) {
 
   transport_->dial(
       testutil::randomPeerId(), ma,
-      [this](outcome::result<std::shared_ptr<CapableConnection>> rconn) {
+      [this](
+          libp2p::outcome::result<std::shared_ptr<CapableConnection>> rconn) {
         EXPECT_OUTCOME_TRUE(conn, rconn);
         // first, we expect an exchange of opening messages
         negotiationOpeningsListener(conn, [this, conn] {
@@ -428,12 +438,13 @@ TEST_F(MultiselectTest, NegotiateFailure) {
   std::vector<Protocol> protocol_vec{kDefaultEncryptionProtocol1};
   auto transport_listener = transport_->createListener(
       [this, &negotiated, &protocol_vec](
-          outcome::result<std::shared_ptr<CapableConnection>> rconn) mutable {
+          libp2p::outcome::result<std::shared_ptr<CapableConnection>>
+              rconn) mutable {
         EXPECT_OUTCOME_TRUE(conn, rconn);
 
         multiselect_->selectOneOf(
             protocol_vec, conn, true,
-            [](const outcome::result<Protocol> &protocol_result) {
+            [](const libp2p::outcome::result<Protocol> &protocol_result) {
               EXPECT_FALSE(protocol_result);
             });
         negotiated = true;
@@ -445,7 +456,8 @@ TEST_F(MultiselectTest, NegotiateFailure) {
 
   transport_->dial(
       testutil::randomPeerId(), ma,
-      [this](outcome::result<std::shared_ptr<CapableConnection>> rconn) {
+      [this](
+          libp2p::outcome::result<std::shared_ptr<CapableConnection>> rconn) {
         EXPECT_OUTCOME_TRUE(conn, rconn);
         negotiationOpeningsInitiator(conn, [this, conn] {
           negotiationProtocolNaInitiator(conn, kDefaultEncryptionProtocol1);
@@ -465,8 +477,9 @@ TEST_F(MultiselectTest, NegotiateFailure) {
 TEST_F(MultiselectTest, NoProtocols) {
   std::shared_ptr<RawConnection> conn = std::make_shared<RawConnectionMock>();
   std::vector<Protocol> empty_vec{};
-  multiselect_->selectOneOf(empty_vec, conn, true,
-                            [](const outcome::result<Protocol> &protocol_res) {
-                              EXPECT_FALSE(protocol_res);
-                            });
+  multiselect_->selectOneOf(
+      empty_vec, conn, true,
+      [](const libp2p::outcome::result<Protocol> &protocol_res) {
+        EXPECT_FALSE(protocol_res);
+      });
 }

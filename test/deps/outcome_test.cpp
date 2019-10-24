@@ -9,6 +9,8 @@
 
 using std::string_literals::operator""s;
 
+using namespace libp2p;
+
 #define ILLEGAL_CHAR_MSG "illegal char"s
 #define DIV_0_MSG "division by 0"s
 

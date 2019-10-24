@@ -20,9 +20,11 @@
  * since it is not necessary outside of outcome internals
  * it can be safely undefined
  */
+#ifdef __cpp_sized_deallocation
 #undef __cpp_sized_deallocation
+#endif
 
-namespace outcome {
+namespace libp2p::outcome {
   using namespace BOOST_OUTCOME_V2_NAMESPACE;  // NOLINT
 
   template <class R, class S = std::error_code,
