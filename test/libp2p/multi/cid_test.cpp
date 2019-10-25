@@ -44,9 +44,8 @@ TEST(CidTest, PrettyString) {
 }
 
 class CidEncodeTest
-    : public testing::TestWithParam<
-          std::pair<ContentIdentifier, outcome::result<std::vector<uint8_t>>>> {
-};
+    : public testing::TestWithParam<std::pair<
+          ContentIdentifier, libp2p::outcome::result<std::vector<uint8_t>>>> {};
 
 TEST(CidTest, Create) {
   ContentIdentifier c(ContentIdentifier::Version::V0, MulticodecType::IDENTITY,
@@ -69,8 +68,8 @@ TEST_P(CidEncodeTest, Encode) {
 }
 
 class CidDecodeTest
-    : public testing::TestWithParam<
-          std::pair<std::vector<uint8_t>, outcome::result<ContentIdentifier>>> {
+    : public testing::TestWithParam<std::pair<
+          std::vector<uint8_t>, libp2p::outcome::result<ContentIdentifier>>> {
  public:
   void SetUp() {
     base_codec = std::make_shared<MultibaseCodecImpl>();
@@ -99,7 +98,7 @@ TEST_P(CidEncodeDecodeTest, DecodedMatchesOriginal) {
 }
 
 const std::vector<
-    std::pair<ContentIdentifier, outcome::result<std::vector<uint8_t>>>>
+    std::pair<ContentIdentifier, libp2p::outcome::result<std::vector<uint8_t>>>>
     encodeSuite{{ContentIdentifier(ContentIdentifier::Version::V0,
                                    MulticodecType::SHA1, ZERO_MULTIHASH),
                  ContentIdentifierCodec::EncodeError::INVALID_CONTENT_TYPE},
@@ -111,7 +110,7 @@ INSTANTIATE_TEST_CASE_P(EncodeTests, CidEncodeTest,
                         testing::ValuesIn(encodeSuite));
 
 const std::vector<
-    std::pair<std::vector<uint8_t>, outcome::result<ContentIdentifier>>>
+    std::pair<std::vector<uint8_t>, libp2p::outcome::result<ContentIdentifier>>>
     decodeSuite{{EXAMPLE_MULTIHASH.toBuffer(),
                  ContentIdentifier(ContentIdentifier::Version::V0,
                                    MulticodecType::DAG_PB, EXAMPLE_MULTIHASH)}};

@@ -35,7 +35,7 @@ using ::testing::Return;
 
 namespace {
   std::shared_ptr<CapableConnection> expectConnectionValid(
-      outcome::result<std::shared_ptr<CapableConnection>> rconn) {
+      libp2p::outcome::result<std::shared_ptr<CapableConnection>> rconn) {
     EXPECT_TRUE(rconn) << rconn.error();
     auto conn = rconn.value();
 
