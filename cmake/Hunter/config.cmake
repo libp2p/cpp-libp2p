@@ -12,5 +12,5 @@ hunter_config(GSL
 hunter_config(
     spdlog
     URL https://github.com/gabime/spdlog/archive/v1.4.2.zip
-    SHA1 f71ea50c7c50ecb7ca0502983ce4542aa6dba0c4
+    SHA1 4b10e9aa17f7d568e24f464b48358ab46cb6f39c
 )
