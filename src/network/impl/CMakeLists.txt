@@ -8,8 +8,8 @@ libp2p_add_library(p2p_router
     )
 target_link_libraries(p2p_router
     PRIVATE Boost::boost
-    PUBLIC hat_trie
-    PUBLIC p2p_peer_id
+    PRIVATE hat_trie
+    PRIVATE p2p_peer_id
     )
 
 
