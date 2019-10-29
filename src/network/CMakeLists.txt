@@ -9,7 +9,6 @@ libp2p_add_library(p2p_default_network
     default_network.cpp
     )
 target_link_libraries(p2p_default_network
-    hat_trie
     p2p_network
     p2p_tcp
     p2p_yamux
