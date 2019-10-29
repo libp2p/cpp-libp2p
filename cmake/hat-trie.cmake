@@ -33,7 +33,11 @@ externalproject_add(hat-trie-imp
 add_dependencies(hat_trie hat-trie-imp)
 
 externalproject_get_property(hat-trie-imp source_dir)
+externalproject_get_property(hat-trie-imp install_dir)
+message("tsl source dir = ${source_dir}")
+message("tsl install dir = ${install_dir}")
 set(hat-trie_INCLUDE_DIR ${source_dir}/include)
 file(MAKE_DIRECTORY ${hat-trie_INCLUDE_DIR})
 
 target_include_directories(hat_trie INTERFACE ${hat-trie_INCLUDE_DIR})
+find_library(ht NAMES hat_trie)
