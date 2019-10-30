@@ -10,7 +10,7 @@
 include(FeatureSummary)
 include(ExternalProject)
 
-add_library(hat_trie INTERFACE IMPORTED)
+libp2p_add_library(hat_trie INTERFACE)
 
 set(GIT_URL https://github.com/Tessil/hat-trie.git)
 set(HAT_TRIE_VERSION master)
@@ -36,4 +36,4 @@ externalproject_get_property(hat-trie-imp source_dir)
 set(hat-trie_INCLUDE_DIR ${source_dir}/include)
 file(MAKE_DIRECTORY ${hat-trie_INCLUDE_DIR})
 
-target_include_directories(hat_trie INTERFACE ${hat-trie_INCLUDE_DIR})
+target_include_directories(hat_trie INTERFACE $<BUILD_INTERFACE:${hat-trie_INCLUDE_DIR}>)

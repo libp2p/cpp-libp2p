@@ -8,6 +8,6 @@
 namespace libp2p::network::detail {
 
   // suppresses "no symbols" warning from linker
-  const char *$name = "default network implementation";
+  const char *__library_name = "default network implementation";
 
 }  // namespace libp2p::network::detail
