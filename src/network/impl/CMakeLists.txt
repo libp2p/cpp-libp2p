@@ -7,9 +7,9 @@ libp2p_add_library(p2p_router
     router_impl.cpp
     )
 target_link_libraries(p2p_router
-    PRIVATE Boost::boost
-    PUBLIC hat_trie
-    PRIVATE p2p_peer_id
+    Boost::boost
+    hat_trie
+    p2p_peer_id
     )
 
 
