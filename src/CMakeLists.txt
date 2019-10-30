@@ -20,6 +20,7 @@ add_library(p2p
     libp2p.cpp
     )
 target_link_libraries(p2p INTERFACE
+    p2p_default_host
     p2p_default_network
     )
 libp2p_install(p2p)
