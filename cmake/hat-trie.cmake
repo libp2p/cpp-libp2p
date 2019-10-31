@@ -23,11 +23,13 @@ set_package_properties(hat-trie-imp
     )
 
 externalproject_add(hat-trie-imp
-    GIT_REPOSITORY  ${GIT_URL}
-    GIT_TAG         ${GIT_TAG}
-    GIT_SHALLOW     1
+    GIT_REPOSITORY ${GIT_URL}
+    GIT_TAG ${GIT_TAG}
+    GIT_SHALLOW 1
     TLS_VERIFY true
     INSTALL_COMMAND "" # remove install step
+    BUILD_COMMAND "" # remove build step
+    TEST_COMMAND "" # remove test step
     )
 
 add_dependencies(hat_trie hat-trie-imp)

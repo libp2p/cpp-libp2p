@@ -23,11 +23,13 @@ set_package_properties(boost_di
     )
 
 externalproject_add(boost_di
-    GIT_REPOSITORY  ${GIT_URL}
-    GIT_TAG         ${GIT_TAG}
-    GIT_SHALLOW     1
+    GIT_REPOSITORY ${GIT_URL}
+    GIT_TAG ${GIT_TAG}
+    GIT_SHALLOW 1
     TLS_VERIFY true
     INSTALL_COMMAND "" # remove install step
+    BUILD_COMMAND "" # remove build step
+    TEST_COMMAND "" # remove test step
     )
 
 add_dependencies(di boost_di)
