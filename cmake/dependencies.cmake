@@ -25,5 +25,6 @@ find_package(spdlog CONFIG REQUIRED)
 # load boost di package
 include(cmake/boost_di.cmake)
 
-#load tsl hat-trie package
-include(cmake/hat-trie.cmake)
+# https://github.com/masterjedy/hat-trie
+hunter_add_package(tsl_hat_trie)
+find_package(tsl_hat_trie CONFIG REQUIRED)
