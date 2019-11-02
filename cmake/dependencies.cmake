@@ -22,9 +22,10 @@ find_package(Protobuf CONFIG REQUIRED)
 hunter_add_package(spdlog)
 find_package(spdlog CONFIG REQUIRED)
 
-# load boost di package
-include(cmake/boost_di.cmake)
-
 # https://github.com/masterjedy/hat-trie
 hunter_add_package(tsl_hat_trie)
 find_package(tsl_hat_trie CONFIG REQUIRED)
+
+# https://github.com/masterjedy/di
+hunter_add_package(Boost.DI)
+find_package(Boost.DI CONFIG REQUIRED)
