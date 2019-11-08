@@ -6,7 +6,7 @@ Libp2p is a modular networking stack described in [spec](https://github.com/libp
 
 ## Dependencies
 
-All dependencies are managed using [Hunter](hunter.sh). It uses cmake to download required libraries and do not require to download and install packages manually.
+All dependencies are managed using [Hunter](hunter.sh). It uses cmake to download required libraries and does not require downloading and installing packages manually.
 Target C++ compilers are:
 * GCC 7.4
 * Clang 6.0.1
@@ -29,14 +29,14 @@ git clone https://github.com/soramitsu/libp2p.git
 
 ### Build cpp-libp2p
 
-First build will likely take long time. However, you can cache binaries to [hunter-binary-cache](https://github.com/soramitsu/hunter-binary-cache) or even download binaries from the cache in case someone has already compiled project with the same compiler. To this end, you need to set up two environment variables:
+First build will likely take long time. However, you can cache binaries to [hunter-binary-cache](https://github.com/soramitsu/hunter-binary-cache) or even download binaries from the cache in case someone has already compiled project with the same compiler. To do so you need to set up two environment variables:
 ```
 GITHUB_HUNTER_USERNAME=<github account name>
 GITHUB_HUNTER_TOKEN=<github token>
 ```
 To generate github token follow the [instructions](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line). Make sure `read:packages` and `write:packages` permissions are granted (step 7 in instructions).
 
-This project is can be built with
+This project can be built with
 
 ```
 mkdir build && cd build
@@ -60,7 +60,7 @@ Please use provided [.clang-format](.clang-format) file to autoformat the code.
 
 ## Examples
 
-Please follow [example](example) section to read examples of how to use the library
+Please explore [example](example) section to read examples of how to use the library
 
 ## Adding cpp-libp2p to the project
 
@@ -79,6 +79,7 @@ hunter_config(libp2p
     )
 ``` 
 Where URL is the link to archive of certain commit in cpp-libp2p repo and SHA1 is the checksum of this archive.
+By simply updating URL and SHA1 it is possible to change the version of cpp-libp2p in another project. 
 
 Example of adding cpp-libp2p to other project can be found [here](https://github.com/soramitsu/kagome/blob/3edda60f27d378a21fc57cd8bec7f0f519203318/cmake/dependencies.cmake#L59) and [here](https://github.com/soramitsu/kagome/blob/3edda60f27d378a21fc57cd8bec7f0f519203318/cmake/Hunter/config.cmake#L24)
 
@@ -89,6 +90,13 @@ Example of adding cpp-libp2p to other project can be found [here](https://github
 
 ## Maintenance
 
-Maintainers: [@Warchant], [@kamilsa], [@harrm], [@masterjedy], [@igor-egorov], [@art-gor] 
+Maintainers: [@Warchant], [@kamilsa], [@harrm], [@masterjedy], [@igor-egorov], [@art-gor]
 
+[@Warchant] : https://github.com/Warchant 
+[@kamilsa] : https://github.com/kamilsa 
+[@harrm] : https://github.com/harrm 
+[@masterjedy] : https://github.com/masterjedy 
+[@igor-egorov] : https://github.com/igor-egorov 
+[@art-gor] : https://github.com/art-gor 
+    
 Tickets: Can be opened in Github Issues.
