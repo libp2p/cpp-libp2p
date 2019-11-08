@@ -35,8 +35,9 @@ int main(int argc, char *argv[]) {
   // create io_context - in fact, thing, which allows us to execute async
   // operations
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
-  context->post([host{std::move(host)}, &echo, argv] {
-    auto server_ma_res = libp2p::multi::Multiaddress::create(argv[1]);
+  context->post([host{std::move(host)}, &echo, argv] {  // NOLINT
+    auto server_ma_res =
+        libp2p::multi::Multiaddress::create(argv[1]);  // NOLINT
     if (!server_ma_res) {
       std::cerr << "unable to create server multiaddress: "
                 << server_ma_res.error().message() << std::endl;
