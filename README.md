@@ -92,11 +92,11 @@ Example of adding cpp-libp2p to other project can be found [here](https://github
 
 Maintainers: [@Warchant], [@kamilsa], [@harrm], [@masterjedy], [@igor-egorov], [@art-gor]
 
-[@Warchant] : https://github.com/Warchant 
-[@kamilsa] : https://github.com/kamilsa 
-[@harrm] : https://github.com/harrm 
-[@masterjedy] : https://github.com/masterjedy 
-[@igor-egorov] : https://github.com/igor-egorov 
-[@art-gor] : https://github.com/art-gor 
+[@Warchant]: https://github.com/Warchant 
+[@kamilsa]: https://github.com/kamilsa 
+[@harrm]: https://github.com/harrm 
+[@masterjedy]: https://github.com/masterjedy 
+[@igor-egorov]: https://github.com/igor-egorov 
+[@art-gor]: https://github.com/art-gor 
     
 Tickets: Can be opened in Github Issues.
