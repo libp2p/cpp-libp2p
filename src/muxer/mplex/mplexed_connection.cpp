@@ -189,7 +189,7 @@ namespace libp2p::connection {
               });
   }
 
-  void MplexedConnection::processFrame(MplexFrame frame) {
+  void MplexedConnection::processFrame(const MplexFrame &frame) {
     using Flag = MplexFrame::Flag;
 
     // we are initiators of this connection, if the other side is a receiver of

@@ -108,7 +108,7 @@ namespace libp2p::connection {
     /**
      * Process a received (\param frame)
      */
-    void processFrame(MplexFrame frame);
+    void processFrame(const MplexFrame &frame);
 
     /**
      * Process a new stream (\package frame)

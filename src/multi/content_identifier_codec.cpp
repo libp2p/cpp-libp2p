@@ -72,32 +72,31 @@ namespace libp2p::multi {
       OUTCOME_TRY(hash, Multihash::createFromBytes(bytes));
       return ContentIdentifier(ContentIdentifier::Version::V0,
                                MulticodecType::DAG_PB, std::move(hash));
-    } else {
-      auto version_opt = UVarint::create(bytes);
-      if (!version_opt) {
-        return DecodeError::EMPTY_VERSION;
-      }
-      auto version = version_opt.value().toUInt64();
-      if (version == 1) {
-        auto version_length = UVarint::calculateSize(bytes);
-        auto multicodec_opt = UVarint::create(bytes.subspan(version_length));
-        if (!multicodec_opt) {
-          return DecodeError::EMPTY_MULTICODEC;
-        }
-        auto multicodec_length =
-            UVarint::calculateSize(bytes.subspan(version_length));
-        OUTCOME_TRY(hash,
-                    Multihash::createFromBytes(
-                        bytes.subspan(version_length + multicodec_length)));
-        return ContentIdentifier(
-            ContentIdentifier::Version::V1,
-            MulticodecType::Code(multicodec_opt.value().toUInt64()),
-            std::move(hash));
-      } else if (version <= 0) {
-        return DecodeError::MALFORMED_VERSION;
-      } else {
-        return DecodeError::RESERVED_VERSION;
-      }
     }
+    auto version_opt = UVarint::create(bytes);
+    if (!version_opt) {
+      return DecodeError::EMPTY_VERSION;
+    }
+    auto version = version_opt.value().toUInt64();
+    if (version == 1) {
+      auto version_length = UVarint::calculateSize(bytes);
+      auto multicodec_opt = UVarint::create(bytes.subspan(version_length));
+      if (!multicodec_opt) {
+        return DecodeError::EMPTY_MULTICODEC;
+      }
+      auto multicodec_length =
+          UVarint::calculateSize(bytes.subspan(version_length));
+      OUTCOME_TRY(hash,
+                  Multihash::createFromBytes(
+                      bytes.subspan(version_length + multicodec_length)));
+      return ContentIdentifier(
+          ContentIdentifier::Version::V1,
+          MulticodecType::Code(multicodec_opt.value().toUInt64()),
+          std::move(hash));
+    }
+    if (version <= 0) {
+      return DecodeError::MALFORMED_VERSION;
+    }
+    return DecodeError::RESERVED_VERSION;
   }
 }  // namespace libp2p::multi
