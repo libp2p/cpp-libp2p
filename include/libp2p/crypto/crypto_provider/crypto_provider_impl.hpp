@@ -3,26 +3,33 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_KEY_GENERATOR_KEY_GENERATOR_IMPL_HPP
-#define LIBP2P_CRYPTO_KEY_GENERATOR_KEY_GENERATOR_IMPL_HPP
+#ifndef LIBP2P_CRYPTO_PROVIDER_CRYPTO_PROVIDER_IMPL_HPP
+#define LIBP2P_CRYPTO_PROVIDER_CRYPTO_PROVIDER_IMPL_HPP
 
-#include <libp2p/crypto/key_generator.hpp>
+#include <libp2p/crypto/crypto_provider.hpp>
 
 namespace libp2p::crypto {
   namespace random {
     class CSPRNG;
   }
 
-  class KeyGeneratorImpl : public KeyGenerator {
+  class CryptoProviderImpl : public CryptoProvider {
    public:
-    ~KeyGeneratorImpl() override = default;
+    ~CryptoProviderImpl() override = default;
 
-    explicit KeyGeneratorImpl(random::CSPRNG &random_provider);
+    explicit CryptoProviderImpl(random::CSPRNG &random_provider);
 
     outcome::result<KeyPair> generateKeys(Key::Type key_type) const override;
 
     outcome::result<PublicKey> derivePublicKey(
         const PrivateKey &private_key) const override;
+
+    outcome::result<Buffer> sign(gsl::span<uint8_t> message,
+                                 const PrivateKey &private_key) const override;
+
+    outcome::result<bool> verify(gsl::span<uint8_t> message,
+                                 gsl::span<uint8_t> signature,
+                                 const PublicKey &public_key) const override;
 
     outcome::result<EphemeralKeyPair> generateEphemeralKeyPair(
         common::CurveType curve) const override;
@@ -43,4 +50,4 @@ namespace libp2p::crypto {
   };
 }  // namespace libp2p::crypto
 
-#endif  // LIBP2P_CRYPTO_KEY_GENERATOR_KEY_GENERATOR_IMPL_HPP
+#endif  // LIBP2P_CRYPTO_PROVIDER_CRYPTO_PROVIDER_IMPL_HPP

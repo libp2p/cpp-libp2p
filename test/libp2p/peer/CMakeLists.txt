@@ -8,7 +8,7 @@ addtest(peer_id_test
     )
 target_link_libraries(peer_id_test
     p2p_peer_id
-    p2p_key_generator
+    p2p_crypto_provider
     p2p_key_marshaller
     p2p_random_generator
     p2p_key_validator

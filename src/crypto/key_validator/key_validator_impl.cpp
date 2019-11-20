@@ -31,7 +31,7 @@ namespace libp2p::crypto::validator {
   }  // namespace
 
   KeyValidatorImpl::KeyValidatorImpl(
-      std::shared_ptr<KeyGenerator> key_generator)
+      std::shared_ptr<CryptoProvider> key_generator)
       : key_generator_{std::move(key_generator)} {}
 
   outcome::result<void> KeyValidatorImpl::validate(

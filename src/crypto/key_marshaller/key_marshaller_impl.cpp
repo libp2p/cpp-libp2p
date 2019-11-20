@@ -5,9 +5,9 @@
 
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 
-#include <libp2p/crypto/common.hpp>
-#include <libp2p/crypto/key_generator.hpp>
 #include <generated/crypto/protobuf/keys.pb.h>
+#include <libp2p/crypto/common.hpp>
+#include <libp2p/crypto/crypto_provider.hpp>
 
 namespace libp2p::crypto::marshaller {
   namespace {

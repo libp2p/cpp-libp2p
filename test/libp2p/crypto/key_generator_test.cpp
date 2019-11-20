@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/crypto/key_generator/key_generator_impl.hpp"
+#include "libp2p/crypto/crypto_provider/crypto_provider_impl.hpp"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -14,15 +14,15 @@
 #include "testutil/outcome.hpp"
 
 using libp2p::common::ByteArray;
+using libp2p::crypto::CryptoProviderImpl;
 using libp2p::crypto::Key;
 using libp2p::crypto::KeyGeneratorError;
-using libp2p::crypto::KeyGeneratorImpl;
 using libp2p::crypto::random::BoostRandomGenerator;
 
 class KeyGeneratorTest : public ::testing::TestWithParam<Key::Type> {
  protected:
   BoostRandomGenerator random_;
-  KeyGeneratorImpl keygen_{random_};
+  CryptoProviderImpl keygen_{random_};
 };
 
 /**
@@ -86,7 +86,7 @@ class KeyLengthTest
           std::tuple<Key::Type, const uint32_t, const uint32_t>> {
  protected:
   BoostRandomGenerator random_;
-  KeyGeneratorImpl keygen_{random_};
+  CryptoProviderImpl keygen_{random_};
 };
 
 INSTANTIATE_TEST_CASE_P(

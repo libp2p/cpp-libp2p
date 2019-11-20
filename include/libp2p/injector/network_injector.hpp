@@ -9,7 +9,7 @@
 #include <boost/di.hpp>
 
 // implementations
-#include <libp2p/crypto/key_generator/key_generator_impl.hpp>
+#include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
@@ -224,7 +224,7 @@ namespace libp2p::injector {
     using namespace boost;  // NOLINT
 
     auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();
-    auto gen = std::make_shared<crypto::KeyGeneratorImpl>(*csprng);
+    auto gen = std::make_shared<crypto::CryptoProviderImpl>(*csprng);
     auto validator = std::make_shared<crypto::validator::KeyValidatorImpl>(gen);
 
     // assume no error here. otherwise... just blow up executable
@@ -234,7 +234,7 @@ namespace libp2p::injector {
     return di::make_injector(
         di::bind<crypto::KeyPair>().template to(std::move(keypair)),
         di::bind<crypto::random::CSPRNG>().template to(std::move(csprng)),
-        di::bind<crypto::KeyGenerator>().template to(std::move(gen)),
+        di::bind<crypto::CryptoProvider>().template to(std::move(gen)),
         di::bind<crypto::marshaller::KeyMarshaller>().template to<crypto::marshaller::KeyMarshallerImpl>(),
         di::bind<peer::IdentityManager>().template to<peer::IdentityManagerImpl>(),
         di::bind<crypto::validator::KeyValidator>().template to<crypto::validator::KeyValidatorImpl>(),

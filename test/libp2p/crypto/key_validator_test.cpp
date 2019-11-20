@@ -7,7 +7,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "libp2p/crypto/key_generator/key_generator_impl.hpp"
+#include "libp2p/crypto/crypto_provider/crypto_provider_impl.hpp"
 #include "libp2p/crypto/key_validator/key_validator_impl.hpp"
 #include "libp2p/crypto/random_generator/boost_generator.hpp"
 #include "testutil/outcome.hpp"
@@ -18,9 +18,9 @@ using ::testing::DoAll;
 using ::testing::Invoke;
 using ::testing::Return;
 
+using libp2p::crypto::CryptoProvider;
+using libp2p::crypto::CryptoProviderImpl;
 using libp2p::crypto::Key;
-using libp2p::crypto::KeyGenerator;
-using libp2p::crypto::KeyGeneratorImpl;
 using libp2p::crypto::KeyPair;
 using libp2p::crypto::PrivateKey;
 using libp2p::crypto::PublicKey;
@@ -30,8 +30,8 @@ using libp2p::crypto::validator::KeyValidatorImpl;
 
 struct BaseKeyTest {
   BoostRandomGenerator random;
-  std::shared_ptr<KeyGenerator> generator =
-      std::make_shared<KeyGeneratorImpl>(random);
+  std::shared_ptr<CryptoProvider> generator =
+      std::make_shared<CryptoProviderImpl>(random);
   std::shared_ptr<KeyValidator> validator =
       std::make_shared<KeyValidatorImpl>(generator);
 };

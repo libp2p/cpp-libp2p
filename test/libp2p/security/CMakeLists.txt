@@ -13,7 +13,7 @@ target_link_libraries(plaintext_adaptor_test
     p2p_multihash
     p2p_multiaddress
     p2p_random_generator
-    p2p_key_generator
+    p2p_crypto_provider
     p2p_key_marshaller
     )
 
