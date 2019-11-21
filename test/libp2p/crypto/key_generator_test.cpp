@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 #include <gsl/gsl_util>
+#include "libp2p/common/literals.hpp"
 #include "libp2p/crypto/error.hpp"
 #include "libp2p/crypto/random_generator/boost_generator.hpp"
 #include "testutil/outcome.hpp"
@@ -17,7 +18,9 @@ using libp2p::common::ByteArray;
 using libp2p::crypto::CryptoProviderImpl;
 using libp2p::crypto::Key;
 using libp2p::crypto::KeyGeneratorError;
+using libp2p::crypto::PrivateKey;
 using libp2p::crypto::random::BoostRandomGenerator;
+using libp2p::common::operator""_unhex;
 
 class KeyGeneratorTest : public ::testing::TestWithParam<Key::Type> {
  protected:
@@ -80,7 +83,8 @@ TEST_P(KeyGeneratorTest, DerivePublicKeySuccess) {
 
 INSTANTIATE_TEST_CASE_P(TestAllKeyTypes, KeyGeneratorTest,
                         ::testing::Values(Key::Type::RSA, Key::Type::Ed25519,
-                                          Key::Type::Secp256k1));
+                                          Key::Type::Secp256k1,
+                                          Key::Type::ECDSA));
 
 class KeyLengthTest
     : public ::testing::TestWithParam<
@@ -93,7 +97,8 @@ class KeyLengthTest
 INSTANTIATE_TEST_CASE_P(
     TestSomeKeyLengths, KeyLengthTest,
     ::testing::Values(std::tuple(Key::Type::Ed25519, 32, 32),
-                      std::tuple(Key::Type::Secp256k1, 32, 33)));
+                      std::tuple(Key::Type::Secp256k1, 32, 33),
+                      std::tuple(Key::Type::ECDSA, 32, 33)));
 
 /**
  * @given key generator and tuple of <key type, private key length, public key
@@ -106,4 +111,23 @@ TEST_P(KeyLengthTest, KeyLengthCorrect) {
 
   EXPECT_OUTCOME_TRUE_2(val, keygen_.generateKeys(key_type))
   ASSERT_EQ(val.privateKey.data.size(), private_key_length);
+}
+
+// TODO(turuslan): convert to TestWithParam and test more key types
+class KeyGoCompatibility : public ::testing::Test {
+ protected:
+  BoostRandomGenerator random_;
+  CryptoProviderImpl keygen_{random_};
+};
+
+TEST_F(KeyGoCompatibility, ECDSA) {
+  PrivateKey privateKey{
+      {Key::Type::ECDSA,
+       "325153c93c647c8b7645f69f5a91aba5bb0a0c6c9256264a3cd7f860e9916c28"_unhex}};
+
+  auto derivedPublicKey = keygen_.derivePublicKey(privateKey).value();
+
+  EXPECT_EQ(
+      derivedPublicKey.data,
+      "033571844d75a74a49a3b5e2953261078ff60cacd270cab134c8b70ded6d26e5cd"_unhex);
 }

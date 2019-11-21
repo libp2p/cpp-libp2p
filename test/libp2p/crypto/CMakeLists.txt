@@ -44,6 +44,7 @@ addtest(keygen_test
     )
 target_link_libraries(keygen_test
     p2p_crypto_provider
+    p2p_literals
     )
 
 addtest(key_validator_test
