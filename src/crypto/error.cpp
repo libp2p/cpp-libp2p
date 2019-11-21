@@ -14,6 +14,10 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::crypto, CryptoProviderError, e) {
       return "failed to unmarshal key";
     case CryptoProviderError::FAILED_UNMARSHAL_DATA:
       return "google protobuf error, failed to unmarshal data";
+    case CryptoProviderError::SIGNATURE_GENERATION_FAILED:
+      return "error while signing data";
+    case CryptoProviderError::SIGNATURE_VERIFICATION_FAILED:
+      return "error while verifying signature";
   }
   return "unknown CryptoProviderError code";
 }

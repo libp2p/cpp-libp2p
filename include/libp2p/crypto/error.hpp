@@ -10,9 +10,11 @@
 
 namespace libp2p::crypto {
   enum class CryptoProviderError {
-    INVALID_KEY_TYPE = 1,   ///< failed to unmarshal key type, wrong value
-    UNKNOWN_KEY_TYPE,       ///< failed to unmarshal key
-    FAILED_UNMARSHAL_DATA,  ///< protobuf error, failed to unmarshal data
+    INVALID_KEY_TYPE = 1,         ///< failed to unmarshal key type, wrong value
+    UNKNOWN_KEY_TYPE,             ///< failed to unmarshal key
+    FAILED_UNMARSHAL_DATA,        ///< protobuf error, failed to unmarshal data
+    SIGNATURE_GENERATION_FAILED,  ///< general signature creation failure
+    SIGNATURE_VERIFICATION_FAILED,  ///< general signature verification failure
   };
 
   enum class OpenSslError {

@@ -371,13 +371,13 @@ namespace libp2p::crypto {
 
   outcome::result<Buffer> CryptoProviderImpl::sign(
       gsl::span<uint8_t> message, const PrivateKey &private_key) const {
-    return KeyGeneratorError::KEY_GENERATION_FAILED;
+    return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
   }
 
   outcome::result<bool> CryptoProviderImpl::verify(
       gsl::span<uint8_t> message, gsl::span<uint8_t> signature,
       const PublicKey &public_key) const {
-    return KeyGeneratorError::KEY_GENERATION_FAILED;
+    return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
   }
 
   outcome::result<EphemeralKeyPair>
