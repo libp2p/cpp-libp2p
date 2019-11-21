@@ -22,7 +22,7 @@ using libp2p::crypto::random::BoostRandomGenerator;
 class KeyGeneratorTest : public ::testing::TestWithParam<Key::Type> {
  protected:
   BoostRandomGenerator random_;
-  CryptoProviderImpl keygen_{random_};
+  CryptoProviderImpl crypto_provider_{random_};
 };
 
 /**
@@ -36,7 +36,7 @@ TEST_P(KeyGeneratorTest, GenerateKeyPairSuccess) {
     return;
   }
 
-  EXPECT_OUTCOME_TRUE_2(val, keygen_.generateKeys(key_type))
+  EXPECT_OUTCOME_TRUE_2(val, crypto_provider_.generateKeys(key_type))
   ASSERT_EQ(val.privateKey.type, key_type);
   ASSERT_EQ(val.publicKey.type, key_type);
 }
@@ -52,8 +52,8 @@ TEST_P(KeyGeneratorTest, TwoKeysAreDifferent) {
     return;
   }
 
-  EXPECT_OUTCOME_TRUE_2(val1, keygen_.generateKeys(key_type));
-  EXPECT_OUTCOME_TRUE_2(val2, keygen_.generateKeys(key_type));
+  EXPECT_OUTCOME_TRUE_2(val1, crypto_provider_.generateKeys(key_type));
+  EXPECT_OUTCOME_TRUE_2(val2, crypto_provider_.generateKeys(key_type));
   ASSERT_NE(val1.privateKey.data, val2.privateKey.data);
   ASSERT_NE(val1.publicKey.data, val2.privateKey.data);
 }
@@ -71,8 +71,9 @@ TEST_P(KeyGeneratorTest, DerivePublicKeySuccess) {
     return;
   }
 
-  EXPECT_OUTCOME_TRUE_2(keys, keygen_.generateKeys(key_type));
-  EXPECT_OUTCOME_TRUE_2(derived, keygen_.derivePublicKey(keys.privateKey));
+  EXPECT_OUTCOME_TRUE_2(keys, crypto_provider_.generateKeys(key_type));
+  EXPECT_OUTCOME_TRUE_2(derived,
+                        crypto_provider_.derivePublicKey(keys.privateKey));
   ASSERT_EQ(derived.type, key_type);
   ASSERT_EQ(keys.publicKey.data, derived.data);
 }

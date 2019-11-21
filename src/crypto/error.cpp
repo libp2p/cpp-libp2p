@@ -103,7 +103,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::crypto, KeyGeneratorError, e) {
     case KeyGeneratorError::INTERNAL_ERROR:
       return "internal error happened";
   }
-  return "unknown KeyGenerator error";
+  return "unknown key generation error";
 }
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::crypto, KeyValidatorError, e) {

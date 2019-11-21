@@ -30,10 +30,10 @@ using libp2p::crypto::validator::KeyValidatorImpl;
 
 struct BaseKeyTest {
   BoostRandomGenerator random;
-  std::shared_ptr<CryptoProvider> generator =
+  std::shared_ptr<CryptoProvider> crypto_provider =
       std::make_shared<CryptoProviderImpl>(random);
   std::shared_ptr<KeyValidator> validator =
-      std::make_shared<KeyValidatorImpl>(generator);
+      std::make_shared<KeyValidatorImpl>(crypto_provider);
 };
 
 class GeneratedKeysTest : public BaseKeyTest,
@@ -55,7 +55,7 @@ TEST_P(GeneratedKeysTest, GeneratedKeysAreValid) {
     // RSA generation is not implemented yet
     return;
   }
-  EXPECT_OUTCOME_TRUE(key_pair, generator->generateKeys(key_type))
+  EXPECT_OUTCOME_TRUE(key_pair, crypto_provider->generateKeys(key_type))
   EXPECT_OUTCOME_TRUE_1(validator->validate(key_pair.publicKey))
   EXPECT_OUTCOME_TRUE_1(validator->validate(key_pair.privateKey))
   EXPECT_OUTCOME_TRUE_1(validator->validate(key_pair))
@@ -99,7 +99,7 @@ TEST_P(GeneratedKeysTest, InvalidPublicKeyInvalidatesPair) {
     return;
   }
 
-  EXPECT_OUTCOME_TRUE(key_pair, generator->generateKeys(key_type))
+  EXPECT_OUTCOME_TRUE(key_pair, crypto_provider->generateKeys(key_type))
   auto public_key = PublicKey{{key_type, random.randomBytes(64)}};
   EXPECT_OUTCOME_FALSE_1(validator->validate(public_key))
   auto invalid_pair = KeyPair{public_key, key_pair.privateKey};
@@ -128,7 +128,7 @@ TEST_P(RandomKeyTest, Every32byteIsValidPrivateKey) {
   auto sequence = random.randomBytes(32);
   auto private_key = PrivateKey{{key_type, sequence}};
   EXPECT_OUTCOME_TRUE_1(validator->validate(private_key))
-  EXPECT_OUTCOME_TRUE_1(generator->derivePublicKey(private_key))
+  EXPECT_OUTCOME_TRUE_1(crypto_provider->derivePublicKey(private_key))
 }
 
 INSTANTIATE_TEST_CASE_P(RandomSequencesCases, RandomKeyTest,

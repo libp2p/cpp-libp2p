@@ -14,7 +14,7 @@
 namespace libp2p::crypto::validator {
   class KeyValidatorImpl : public KeyValidator {
    public:
-    explicit KeyValidatorImpl(std::shared_ptr<CryptoProvider> key_generator);
+    explicit KeyValidatorImpl(std::shared_ptr<CryptoProvider> crypto_provider);
 
     outcome::result<void> validate(const PrivateKey &key) const override;
 
@@ -32,7 +32,7 @@ namespace libp2p::crypto::validator {
     outcome::result<void> validateSecp256k1(const PrivateKey &key) const;
     outcome::result<void> validateSecp256k1(const PublicKey &key) const;
 
-    std::shared_ptr<CryptoProvider> key_generator_;
+    std::shared_ptr<CryptoProvider> crypto_provider_;
   };
 }  // namespace libp2p::crypto::validator
 
