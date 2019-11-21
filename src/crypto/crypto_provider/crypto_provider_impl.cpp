@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/crypto/key_generator/key_generator_impl.hpp>
+#include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
 
 #include <exception>
 #include <iostream>
@@ -20,16 +20,16 @@
 #include <libp2p/crypto/random_generator.hpp>
 
 namespace libp2p::crypto {
-  KeyGeneratorImpl::KeyGeneratorImpl(random::CSPRNG &random_provider)
+  CryptoProviderImpl::CryptoProviderImpl(random::CSPRNG &random_provider)
       : random_provider_(random_provider) {
     initialize();
   }
 
-  void KeyGeneratorImpl::initialize() {
+  void CryptoProviderImpl::initialize() {
     constexpr size_t kSeedBytesCount = 128 * 4;  // ripple uses such number
     auto bytes = random_provider_.randomBytes(kSeedBytesCount);
-    // seeding random generator is required prior to calling RSA_generate_key
-    // NOLINTNEXTLINE
+    // seeding random crypto_provider is required prior to calling
+    // RSA_generate_key NOLINTNEXTLINE
     RAND_seed(static_cast<const void *>(bytes.data()), bytes.size());
   }
 
@@ -177,7 +177,7 @@ namespace libp2p::crypto {
      *  https://www.openssl.org/docs/man1.0.2/man3/i2d_RSAPrivateKey.html
      *  d2i_RSAPrivateKey(), i2d_RSAPrivateKey() decode and encode a PKCS#1
      */
-    outcome::result<std::pair<KeyGenerator::Buffer, KeyGenerator::Buffer>>
+    outcome::result<std::pair<CryptoProvider::Buffer, CryptoProvider::Buffer>>
     generateRsaKeys(int bits) {
       int ret = 0;
       RSA *rsa = nullptr;
@@ -215,7 +215,7 @@ namespace libp2p::crypto {
     }
   }  // namespace detail
 
-  outcome::result<KeyPair> KeyGeneratorImpl::generateKeys(
+  outcome::result<KeyPair> CryptoProviderImpl::generateKeys(
       Key::Type key_type) const {
     switch (key_type) {
       case Key::Type::RSA:
@@ -234,7 +234,7 @@ namespace libp2p::crypto {
 
   /// previous implementation is commented - it can be used as a hint when
   /// implementing a new version of the method
-  //  outcome::result<KeyPair> KeyGeneratorImpl::generateRsa(
+  //  outcome::result<KeyPair> CryptoProviderImpl::generateRsa(
   //      common::RSAKeyType bits_option) const {
   //    BOOST_ASSERT_MSG(false, "not implemented");
   //
@@ -261,7 +261,7 @@ namespace libp2p::crypto {
   //                   {{key_type, std::move(keys.second)}}};
   //  }
 
-  outcome::result<KeyPair> KeyGeneratorImpl::generateEd25519() const {
+  outcome::result<KeyPair> CryptoProviderImpl::generateEd25519() const {
     EVP_PKEY *pkey = nullptr;
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr);
 
@@ -293,7 +293,7 @@ namespace libp2p::crypto {
                    {{Key::Type::Ed25519, std::move(private_key_bytes)}}};
   }
 
-  outcome::result<KeyPair> KeyGeneratorImpl::generateSecp256k1() const {
+  outcome::result<KeyPair> CryptoProviderImpl::generateSecp256k1() const {
     EC_KEY *key = EC_KEY_new();
     if (nullptr == key) {
       return KeyGeneratorError::KEY_GENERATION_FAILED;
@@ -352,7 +352,7 @@ namespace libp2p::crypto {
                    {{Key::Type::Secp256k1, std::move(private_bytes)}}};
   }
 
-  outcome::result<PublicKey> KeyGeneratorImpl::derivePublicKey(
+  outcome::result<PublicKey> CryptoProviderImpl::derivePublicKey(
       const PrivateKey &private_key) const {
     switch (private_key.type) {
       case Key::Type::RSA:
@@ -369,13 +369,24 @@ namespace libp2p::crypto {
     return KeyGeneratorError::UNSUPPORTED_KEY_TYPE;
   }
 
-  outcome::result<EphemeralKeyPair> KeyGeneratorImpl::generateEphemeralKeyPair(
-      common::CurveType curve) const {
+  outcome::result<Buffer> CryptoProviderImpl::sign(
+      gsl::span<uint8_t> message, const PrivateKey &private_key) const {
+    return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+  }
+
+  outcome::result<bool> CryptoProviderImpl::verify(
+      gsl::span<uint8_t> message, gsl::span<uint8_t> signature,
+      const PublicKey &public_key) const {
+    return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+  }
+
+  outcome::result<EphemeralKeyPair>
+  CryptoProviderImpl::generateEphemeralKeyPair(common::CurveType curve) const {
     // TODO(yuraz): pre-140 implement
     return KeyGeneratorError::KEY_GENERATION_FAILED;
   }
 
-  std::vector<StretchedKey> KeyGeneratorImpl::stretchKey(
+  std::vector<StretchedKey> CryptoProviderImpl::stretchKey(
       common::CipherType cipher_type, common::HashType hash_type,
       const Buffer &secret) const {
     // TODO(yuraz): pre-140 implement

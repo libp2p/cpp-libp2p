@@ -33,7 +33,7 @@ class Peer {
   using Host = libp2p::Host;
   using Echo = libp2p::protocol::Echo;
   using BoostRandomGenerator = libp2p::crypto::random::BoostRandomGenerator;
-  using KeyGenerator = libp2p::crypto::KeyGenerator;
+  using CryptoProvider = libp2p::crypto::CryptoProvider;
 
   using Context = boost::asio::io_context;
 
@@ -78,7 +78,7 @@ class Peer {
   sptr<Host> host_;                             ///< host
   sptr<Echo> echo_;                             ///< echo protocol
   sptr<BoostRandomGenerator> random_provider_;  ///< random provider
-  sptr<KeyGenerator> key_generator_;            ///< key generator
+  sptr<CryptoProvider> crypto_provider_;        ///< crypto provider
 };
 
 #endif  // LIBP2P_HOST_TEST_PEER_HPP

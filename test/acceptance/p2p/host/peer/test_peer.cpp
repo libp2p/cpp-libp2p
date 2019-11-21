@@ -20,10 +20,10 @@ Peer::Peer(Peer::Duration timeout)
       context_{std::make_shared<Context>()},
       echo_{std::make_shared<Echo>()},
       random_provider_{std::make_shared<BoostRandomGenerator>()},
-      key_generator_{
-          std::make_shared<crypto::KeyGeneratorImpl>(*random_provider_)} {
+      crypto_provider_{
+          std::make_shared<crypto::CryptoProviderImpl>(*random_provider_)} {
   EXPECT_OUTCOME_TRUE_MSG(
-      keys, key_generator_->generateKeys(crypto::Key::Type::Ed25519),
+      keys, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
       "failed to generate keys");
 
   host_ = makeHost(std::move(keys));
@@ -84,11 +84,11 @@ void Peer::wait() {
 }
 
 Peer::sptr<host::BasicHost> Peer::makeHost(crypto::KeyPair keyPair) {
-  auto key_generator =
-      std::make_shared<crypto::KeyGeneratorImpl>(*random_provider_);
+  auto crypto_provider =
+      std::make_shared<crypto::CryptoProviderImpl>(*random_provider_);
 
   auto key_validator = std::make_shared<crypto::validator::KeyValidatorImpl>(
-      std::move(key_generator));
+      std::move(crypto_provider));
 
   auto key_marshaller = std::make_shared<crypto::marshaller::KeyMarshallerImpl>(
       std::move(key_validator));

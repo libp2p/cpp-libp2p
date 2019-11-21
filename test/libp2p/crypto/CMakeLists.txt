@@ -43,7 +43,7 @@ addtest(keygen_test
     key_generator_test.cpp
     )
 target_link_libraries(keygen_test
-    p2p_key_generator
+    p2p_crypto_provider
     )
 
 addtest(key_validator_test
