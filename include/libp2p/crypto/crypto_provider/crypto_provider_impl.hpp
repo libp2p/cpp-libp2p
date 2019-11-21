@@ -45,6 +45,10 @@ namespace libp2p::crypto {
     //    const;
     outcome::result<KeyPair> generateEd25519() const;
     outcome::result<KeyPair> generateSecp256k1() const;
+    outcome::result<KeyPair> generateEcdsa() const;
+
+    outcome::result<KeyPair> generateEcdsa256WithCurve(Key::Type key_type,
+                                                       int curve_nid) const;
 
     random::CSPRNG &random_provider_;  ///< random bytes generator
   };

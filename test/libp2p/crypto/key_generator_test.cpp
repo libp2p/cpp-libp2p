@@ -80,7 +80,8 @@ TEST_P(KeyGeneratorTest, DerivePublicKeySuccess) {
 
 INSTANTIATE_TEST_CASE_P(TestAllKeyTypes, KeyGeneratorTest,
                         ::testing::Values(Key::Type::RSA, Key::Type::Ed25519,
-                                          Key::Type::Secp256k1));
+                                          Key::Type::Secp256k1,
+                                          Key::Type::ECDSA));
 
 class KeyLengthTest
     : public ::testing::TestWithParam<
@@ -93,7 +94,8 @@ class KeyLengthTest
 INSTANTIATE_TEST_CASE_P(
     TestSomeKeyLengths, KeyLengthTest,
     ::testing::Values(std::tuple(Key::Type::Ed25519, 32, 32),
-                      std::tuple(Key::Type::Secp256k1, 32, 33)));
+                      std::tuple(Key::Type::Secp256k1, 32, 33),
+                      std::tuple(Key::Type::ECDSA, 32, 33)));
 
 /**
  * @given key generator and tuple of <key type, private key length, public key

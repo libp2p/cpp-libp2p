@@ -107,7 +107,8 @@ namespace libp2p::crypto {
       return PublicKey{{key.type, std::move(public_buffer)}};
     }
 
-    outcome::result<PublicKey> deriveSecp256k1(const PrivateKey &key) {
+    outcome::result<PublicKey> deriveEcdsa256WithCurve(const PrivateKey &key,
+                                                       int curve_nid) {
       // put private key bytes to internal representation
 
       // create new bignum for storing private key
@@ -124,10 +125,10 @@ namespace libp2p::crypto {
         return KeyGeneratorError::KEY_DERIVATION_FAILED;
       }
 
-      // generate public key from private using bitcoin curve
+      // generate public key from private using curve
 
-      // get bitcoin curve group
-      EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp256k1);
+      // get curve group
+      EC_GROUP *group = EC_GROUP_new_by_curve_name(curve_nid);
       if (nullptr == group) {
         return KeyGeneratorError::KEY_DERIVATION_FAILED;
       }
@@ -162,6 +163,14 @@ namespace libp2p::crypto {
       std::vector<uint8_t> public_buffer(span.begin(), span.end());
 
       return PublicKey{{key.type, std::move(public_buffer)}};
+    }
+
+    outcome::result<PublicKey> deriveSecp256k1(const PrivateKey &key) {
+      return deriveEcdsa256WithCurve(key, NID_secp256k1);
+    }
+
+    outcome::result<PublicKey> deriveEcdsa(const PrivateKey &key) {
+      return deriveEcdsa256WithCurve(key, NID_X9_62_prime256v1);
     }
 
     /**
@@ -226,7 +235,7 @@ namespace libp2p::crypto {
       case Key::Type::Secp256k1:
         return generateSecp256k1();
       case Key::Type::ECDSA:
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return generateEcdsa();
       default:
         return KeyGeneratorError::UNSUPPORTED_KEY_TYPE;
     }
@@ -294,6 +303,15 @@ namespace libp2p::crypto {
   }
 
   outcome::result<KeyPair> CryptoProviderImpl::generateSecp256k1() const {
+    return generateEcdsa256WithCurve(Key::Type::Secp256k1, NID_secp256k1);
+  }
+
+  outcome::result<KeyPair> CryptoProviderImpl::generateEcdsa() const {
+    return generateEcdsa256WithCurve(Key::Type::ECDSA, NID_X9_62_prime256v1);
+  }
+
+  outcome::result<KeyPair> CryptoProviderImpl::generateEcdsa256WithCurve(
+      Key::Type key_type, int curve_nid) const {
     EC_KEY *key = EC_KEY_new();
     if (nullptr == key) {
       return KeyGeneratorError::KEY_GENERATION_FAILED;
@@ -306,8 +324,8 @@ namespace libp2p::crypto {
       }
     });
 
-    // get bitcoin curve group
-    EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp256k1);
+    // get curve group
+    EC_GROUP *group = EC_GROUP_new_by_curve_name(curve_nid);
     if (nullptr == group) {
       return KeyGeneratorError::KEY_GENERATION_FAILED;
     }
@@ -348,8 +366,8 @@ namespace libp2p::crypto {
       return KeyGeneratorError::KEY_GENERATION_FAILED;
     }
 
-    return KeyPair{{{Key::Type::Secp256k1, std::move(public_bytes)}},
-                   {{Key::Type::Secp256k1, std::move(private_bytes)}}};
+    return KeyPair{{{key_type, std::move(public_bytes)}},
+                   {{key_type, std::move(private_bytes)}}};
   }
 
   outcome::result<PublicKey> CryptoProviderImpl::derivePublicKey(
@@ -362,7 +380,7 @@ namespace libp2p::crypto {
       case Key::Type::Secp256k1:
         return detail::deriveSecp256k1(private_key);
       case Key::Type::ECDSA:
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return detail::deriveEcdsa(private_key);
       case Key::Type::UNSPECIFIED:
         return KeyGeneratorError::WRONG_KEY_TYPE;
     }
