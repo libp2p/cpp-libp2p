@@ -53,6 +53,10 @@ namespace libp2p::protocol::kademlia {
    public:
     explicit NodeId(const Hash256 &h) : data_(h) {}
 
+    explicit NodeId(const void* bytes) {
+      memcpy(data_.data(), bytes, 32);
+    }
+
     explicit NodeId(const peer::PeerId &pid) : data_(sha256(pid.toVector())) {}
 
     inline bool operator==(const NodeId &other) const {

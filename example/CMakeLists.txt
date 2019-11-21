@@ -4,3 +4,4 @@
 #
 
 add_subdirectory(01-echo)
+add_subdirectory(02-kad)

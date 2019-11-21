@@ -161,6 +161,8 @@ namespace libp2p::security {
     }
     if (p.has_value()) {
       if (received_pid != p.value()) {
+        auto s = p.value().toBase58();
+        log_->error("XXX: received_pid={}, p.value()={}", received_pid.toBase58(), s);
         closeConnection(conn, Error::INVALID_PEER_ID);
         return cb(Error::INVALID_PEER_ID);
       }

@@ -28,7 +28,8 @@ namespace libp2p::protocol::kademlia {
    */
   struct RoutingTable {
     struct Config {
-      size_t bucket_size = 20;
+      size_t bucket_size;
+      Config() : bucket_size(20) {} // XXX: boost::di initializes integer members to 0 (???)
     };
 
     virtual ~RoutingTable() = default;

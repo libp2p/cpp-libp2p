@@ -13,13 +13,16 @@ namespace libp2p::host {
 
   BasicHost::BasicHost(std::shared_ptr<peer::IdentityManager> idmgr,
                        std::unique_ptr<network::Network> network,
-                       std::unique_ptr<peer::PeerRepository> repo)
+                       std::unique_ptr<peer::PeerRepository> repo,
+                       std::shared_ptr<event::Bus> bus)
       : idmgr_(std::move(idmgr)),
         network_(std::move(network)),
-        repo_(std::move(repo)) {
+        repo_(std::move(repo)),
+        bus_(std::move(bus)) {
     BOOST_ASSERT(idmgr_ != nullptr);
     BOOST_ASSERT(network_ != nullptr);
     BOOST_ASSERT(repo_ != nullptr);
+    BOOST_ASSERT(bus_ != nullptr);
   }
 
   std::string_view BasicHost::getLibp2pVersion() const {
@@ -123,7 +126,7 @@ namespace libp2p::host {
   }
 
   event::Bus &BasicHost::getBus() {
-    return bus_;
+    return *bus_;
   }
 
   void BasicHost::connect(const peer::PeerInfo &p) {

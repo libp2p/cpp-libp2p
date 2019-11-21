@@ -22,8 +22,6 @@ namespace libp2p::protocol::kademlia {
   using std::chrono_literals::operator""min;  // minutes
   using std::chrono_literals::operator""s;    // seconds
 
-  constexpr std::string_view protocolId = "/ipfs/kad/1.0.0";
-
   struct RandomWalk {
     bool enabled = true;
     size_t queries_per_period = 1;
@@ -36,6 +34,8 @@ namespace libp2p::protocol::kademlia {
     RandomWalk randomWalk{};
 
     std::chrono::seconds max_record_age = 36h;
+
+    std::string_view protocolId = "/ipfs/kad/1.0.0";
 
     std::string_view providers_prefix = "/providers/";
 

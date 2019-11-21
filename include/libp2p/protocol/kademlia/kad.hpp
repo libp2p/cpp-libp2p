@@ -23,7 +23,7 @@ namespace libp2p::protocol::kademlia {
       : public PeerRouting /*, public ContentRouting, public ValueStore */ {
     ~Kad() override = default;
 
-    enum class Error { SUCCESS = 0, NO_PEERS = 1 };
+    enum class Error { SUCCESS = 0, NO_PEERS = 1, MESSAGE_PARSE_ERROR = 2, MESSAGE_SERIALIZE_ERROR = 3 };
   };
 
 }  // namespace libp2p::protocol::kademlia
