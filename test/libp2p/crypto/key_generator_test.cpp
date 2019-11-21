@@ -127,5 +127,7 @@ TEST_F(KeyGoCompatibility, ECDSA) {
 
   auto derivedPublicKey = keygen_.derivePublicKey(privateKey).value();
 
-  EXPECT_EQ(derivedPublicKey.data, "033571844d75a74a49a3b5e2953261078ff60cacd270cab134c8b70ded6d26e5cd"_unhex);
+  EXPECT_EQ(
+      derivedPublicKey.data,
+      "033571844d75a74a49a3b5e2953261078ff60cacd270cab134c8b70ded6d26e5cd"_unhex);
 }
