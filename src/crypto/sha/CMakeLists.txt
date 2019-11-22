@@ -5,6 +5,7 @@
 
 libp2p_add_library(p2p_sha
     sha256.cpp
+    sha512.cpp
     )
 target_link_libraries(p2p_sha
     PUBLIC

@@ -25,6 +25,8 @@ namespace libp2p {
   namespace common {
     Hash256 operator""_hash256(const char *c, size_t s);
 
+    Hash512 operator""_hash512(const char *c, size_t s);
+
     std::vector<uint8_t> operator""_v(const char *c, size_t s);
 
     std::vector<uint8_t> operator""_unhex(const char *c, size_t s);

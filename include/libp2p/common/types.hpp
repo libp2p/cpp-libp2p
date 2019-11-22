@@ -22,14 +22,17 @@ namespace libp2p::common {
   }
 
   template <typename Collection>
-  void append(Collection& c, char g) {
+  void append(Collection &c, char g) {
     c.push_back(g);
   }
 
   /**
    * Hash256 as a sequence of 32 bytes
+   * and
+   * Hash512 as a sequence of 64 bytes
    */
   using Hash256 = std::array<uint8_t, 32u>;
+  using Hash512 = std::array<uint8_t, 64u>;
 }  // namespace libp2p::common
 
 #endif  // LIBP2P_P2P_COMMON_TYPES_HPP
