@@ -3,29 +3,42 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/crypto/crypto_provider/crypto_provider_impl.hpp"
+#include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 #include <gsl/gsl_util>
-#include "libp2p/common/literals.hpp"
-#include "libp2p/crypto/error.hpp"
-#include "libp2p/crypto/random_generator/boost_generator.hpp"
-#include "testutil/outcome.hpp"
+#include <libp2p/common/literals.hpp>
+#include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
+#include <libp2p/crypto/error.hpp>
+#include <libp2p/crypto/random_generator/boost_generator.hpp>
+#include <testutil/outcome.hpp>
 
 using libp2p::common::ByteArray;
+using libp2p::crypto::CryptoProvider;
 using libp2p::crypto::CryptoProviderImpl;
 using libp2p::crypto::Key;
 using libp2p::crypto::KeyGeneratorError;
 using libp2p::crypto::PrivateKey;
+using libp2p::crypto::ed25519::Ed25519Provider;
+using libp2p::crypto::ed25519::Ed25519ProviderImpl;
 using libp2p::crypto::random::BoostRandomGenerator;
+using libp2p::crypto::random::CSPRNG;
 using libp2p::common::operator""_unhex;
 
 class KeyGeneratorTest : public ::testing::TestWithParam<Key::Type> {
+ public:
+  KeyGeneratorTest()
+      : random_{std::make_shared<BoostRandomGenerator>()},
+        ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
+        crypto_provider_{
+            std::make_shared<CryptoProviderImpl>(random_, ed25519_provider_)} {}
+
  protected:
-  BoostRandomGenerator random_;
-  CryptoProviderImpl crypto_provider_{random_};
+  std::shared_ptr<CSPRNG> random_;
+  std::shared_ptr<Ed25519Provider> ed25519_provider_;
+  std::shared_ptr<CryptoProvider> crypto_provider_;
 };
 
 /**
@@ -39,7 +52,7 @@ TEST_P(KeyGeneratorTest, GenerateKeyPairSuccess) {
     return;
   }
 
-  EXPECT_OUTCOME_TRUE_2(val, crypto_provider_.generateKeys(key_type))
+  EXPECT_OUTCOME_TRUE_2(val, crypto_provider_->generateKeys(key_type))
   ASSERT_EQ(val.privateKey.type, key_type);
   ASSERT_EQ(val.publicKey.type, key_type);
 }
@@ -55,8 +68,8 @@ TEST_P(KeyGeneratorTest, TwoKeysAreDifferent) {
     return;
   }
 
-  EXPECT_OUTCOME_TRUE_2(val1, crypto_provider_.generateKeys(key_type));
-  EXPECT_OUTCOME_TRUE_2(val2, crypto_provider_.generateKeys(key_type));
+  EXPECT_OUTCOME_TRUE_2(val1, crypto_provider_->generateKeys(key_type));
+  EXPECT_OUTCOME_TRUE_2(val2, crypto_provider_->generateKeys(key_type));
   ASSERT_NE(val1.privateKey.data, val2.privateKey.data);
   ASSERT_NE(val1.publicKey.data, val2.privateKey.data);
 }
@@ -74,9 +87,9 @@ TEST_P(KeyGeneratorTest, DerivePublicKeySuccess) {
     return;
   }
 
-  EXPECT_OUTCOME_TRUE_2(keys, crypto_provider_.generateKeys(key_type));
+  EXPECT_OUTCOME_TRUE_2(keys, crypto_provider_->generateKeys(key_type));
   EXPECT_OUTCOME_TRUE_2(derived,
-                        crypto_provider_.derivePublicKey(keys.privateKey));
+                        crypto_provider_->derivePublicKey(keys.privateKey));
   ASSERT_EQ(derived.type, key_type);
   ASSERT_EQ(keys.publicKey.data, derived.data);
 }
@@ -89,9 +102,17 @@ INSTANTIATE_TEST_CASE_P(TestAllKeyTypes, KeyGeneratorTest,
 class KeyLengthTest
     : public ::testing::TestWithParam<
           std::tuple<Key::Type, const uint32_t, const uint32_t>> {
+ public:
+  KeyLengthTest()
+      : random_{std::make_shared<BoostRandomGenerator>()},
+        ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
+        crypto_provider_{
+            std::make_shared<CryptoProviderImpl>(random_, ed25519_provider_)} {}
+
  protected:
-  BoostRandomGenerator random_;
-  CryptoProviderImpl keygen_{random_};
+  std::shared_ptr<CSPRNG> random_;
+  std::shared_ptr<Ed25519Provider> ed25519_provider_;
+  std::shared_ptr<CryptoProvider> crypto_provider_;
 };
 
 INSTANTIATE_TEST_CASE_P(
@@ -109,15 +130,23 @@ INSTANTIATE_TEST_CASE_P(
 TEST_P(KeyLengthTest, KeyLengthCorrect) {
   auto [key_type, private_key_length, public_key_length] = GetParam();
 
-  EXPECT_OUTCOME_TRUE_2(val, keygen_.generateKeys(key_type))
+  EXPECT_OUTCOME_TRUE_2(val, crypto_provider_->generateKeys(key_type))
   ASSERT_EQ(val.privateKey.data.size(), private_key_length);
 }
 
 // TODO(turuslan): convert to TestWithParam and test more key types
 class KeyGoCompatibility : public ::testing::Test {
+ public:
+  KeyGoCompatibility()
+      : random_{std::make_shared<BoostRandomGenerator>()},
+        ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
+        crypto_provider_{
+            std::make_shared<CryptoProviderImpl>(random_, ed25519_provider_)} {}
+
  protected:
-  BoostRandomGenerator random_;
-  CryptoProviderImpl keygen_{random_};
+  std::shared_ptr<CSPRNG> random_;
+  std::shared_ptr<Ed25519Provider> ed25519_provider_;
+  std::shared_ptr<CryptoProvider> crypto_provider_;
 };
 
 TEST_F(KeyGoCompatibility, ECDSA) {
@@ -125,7 +154,7 @@ TEST_F(KeyGoCompatibility, ECDSA) {
       {Key::Type::ECDSA,
        "325153c93c647c8b7645f69f5a91aba5bb0a0c6c9256264a3cd7f860e9916c28"_unhex}};
 
-  auto derivedPublicKey = keygen_.derivePublicKey(privateKey).value();
+  auto derivedPublicKey = crypto_provider_->derivePublicKey(privateKey).value();
 
   EXPECT_EQ(
       derivedPublicKey.data,

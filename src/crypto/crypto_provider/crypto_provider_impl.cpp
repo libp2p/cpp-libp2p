@@ -16,18 +16,22 @@
 #include <gsl/gsl_util>
 #include <gsl/pointers>
 #include <gsl/span>
+#include <libp2p/crypto/ed25519_provider.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/random_generator.hpp>
 
 namespace libp2p::crypto {
-  CryptoProviderImpl::CryptoProviderImpl(random::CSPRNG &random_provider)
-      : random_provider_(random_provider) {
+  CryptoProviderImpl::CryptoProviderImpl(
+      std::shared_ptr<random::CSPRNG> random_provider,
+      std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider)
+      : random_provider_{std::move(random_provider)},
+        ed25519_provider_{std::move(ed25519_provider)} {
     initialize();
   }
 
   void CryptoProviderImpl::initialize() {
     constexpr size_t kSeedBytesCount = 128 * 4;  // ripple uses such number
-    auto bytes = random_provider_.randomBytes(kSeedBytesCount);
+    auto bytes = random_provider_->randomBytes(kSeedBytesCount);
     // seeding random crypto_provider is required prior to calling
     // RSA_generate_key NOLINTNEXTLINE
     RAND_seed(static_cast<const void *>(bytes.data()), bytes.size());

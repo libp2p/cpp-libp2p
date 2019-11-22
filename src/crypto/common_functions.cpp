@@ -5,6 +5,8 @@
 
 #include <libp2p/crypto/common_functions.hpp>
 
+#include <iostream>
+
 #include <gsl/gsl_util>
 #include <libp2p/crypto/error.hpp>
 
@@ -92,5 +94,8 @@ namespace libp2p::crypto {
     }
     return key;
   }
+
+  template outcome::result<std::shared_ptr<EVP_PKEY>> NewEvpPkeyFromBytes(
+      int, gsl::span<const uint8_t>, decltype(EVP_PKEY_new_raw_public_key) *);
 
 }  // namespace libp2p::crypto

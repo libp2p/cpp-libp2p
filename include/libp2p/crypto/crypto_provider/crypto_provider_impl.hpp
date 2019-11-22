@@ -12,12 +12,17 @@ namespace libp2p::crypto {
   namespace random {
     class CSPRNG;
   }
+  namespace ed25519 {
+    class Ed25519Provider;
+  }
 
   class CryptoProviderImpl : public CryptoProvider {
    public:
     ~CryptoProviderImpl() override = default;
 
-    explicit CryptoProviderImpl(random::CSPRNG &random_provider);
+    explicit CryptoProviderImpl(
+        std::shared_ptr<random::CSPRNG> random_provider,
+        std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider);
 
     outcome::result<KeyPair> generateKeys(Key::Type key_type) const override;
 
@@ -50,7 +55,8 @@ namespace libp2p::crypto {
     outcome::result<KeyPair> generateEcdsa256WithCurve(Key::Type key_type,
                                                        int curve_nid) const;
 
-    random::CSPRNG &random_provider_;  ///< random bytes generator
+    std::shared_ptr<random::CSPRNG> random_provider_;
+    std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider_;
   };
 }  // namespace libp2p::crypto
 

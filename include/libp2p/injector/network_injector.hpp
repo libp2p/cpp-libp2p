@@ -10,6 +10,7 @@
 
 // implementations
 #include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
+#include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
@@ -224,8 +225,10 @@ namespace libp2p::injector {
     using namespace boost;  // NOLINT
 
     auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();
+    auto ed25519_provider =
+        std::make_shared<crypto::ed25519::Ed25519ProviderImpl>();
     auto crypto_provider =
-        std::make_shared<crypto::CryptoProviderImpl>(*csprng);
+        std::make_shared<crypto::CryptoProviderImpl>(csprng, ed25519_provider);
     auto validator =
         std::make_shared<crypto::validator::KeyValidatorImpl>(crypto_provider);
 
@@ -237,7 +240,8 @@ namespace libp2p::injector {
     return di::make_injector(
         di::bind<crypto::KeyPair>().template to(std::move(keypair)),
         di::bind<crypto::random::CSPRNG>().template to(std::move(csprng)),
-        di::bind<crypto::CryptoProvider>().template to(std::move(crypto_provider)),
+        di::bind<crypto::ed25519::Ed25519Provider>().template to(std::move(ed25519_provider)),
+        di::bind<crypto::CryptoProvider>().template to<crypto::CryptoProviderImpl>(),
         di::bind<crypto::marshaller::KeyMarshaller>().template to<crypto::marshaller::KeyMarshallerImpl>(),
         di::bind<peer::IdentityManager>().template to<peer::IdentityManagerImpl>(),
         di::bind<crypto::validator::KeyValidator>().template to<crypto::validator::KeyValidatorImpl>(),

@@ -38,6 +38,15 @@ namespace libp2p::crypto {
   outcome::result<std::shared_ptr<EVP_PKEY>> NewEvpPkeyFromBytes(
       int type, gsl::span<const uint8_t> key_bytes, ReaderFunc *reader);
 
+  /*
+   * The following template instantiation serves for both -
+   * EVP_PKEY_new_raw_private_key and EVP_PKEY_new_raw_public_key
+   * since their types are identical.
+   */
+  extern template outcome::result<std::shared_ptr<EVP_PKEY>>
+  NewEvpPkeyFromBytes(int, gsl::span<const uint8_t>,
+                      decltype(EVP_PKEY_new_raw_public_key) *);
+
 }  // namespace libp2p::crypto
 
 #endif  // LIBP2P_COMMON_FUNCTIONS_HPP
