@@ -1,10 +1,10 @@
 ---
-Checks:          '-*,clang-analyzer-*,clang-diagnostic-*,readability-*,modernize-*,boost-*,bugprone-*,cppcoreguidelines-*,google-*,hicpp-*,performance-*,readability-*,-google-readability-namespace-comments,-readability-inconsistent-declaration-parameter-name,-readability-braces-around-statements,-hicpp-signed-bitwise,-google-runtime-references,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-pro-type-vararg,-readability-magic-numbers,-hicpp-explicit-conversions,-hicpp-uppercase-literal-suffix,-hicpp-member-init,-readability-uppercase-literal-suffix,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-type-member-init,-hicpp-vararg,-hicpp-no-array-decay,-hicpp-static-assert,-hicpp-special-member-functions,-bugprone-narrowing-conversions,-modernize-use-nodiscard'
+Checks:          '-*,clang-analyzer-*,clang-diagnostic-*,readability-*,modernize-*,-modernize-use-trailing-return-type,boost-*,bugprone-*,cppcoreguidelines-*,google-*,hicpp-*,performance-*,readability-*,-google-readability-namespace-comments,-readability-inconsistent-declaration-parameter-name,-readability-braces-around-statements,-hicpp-signed-bitwise,-google-runtime-references,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-readability-magic-numbers,-hicpp-explicit-conversions,-hicpp-uppercase-literal-suffix,-readability-uppercase-literal-suffix,-hicpp-no-array-decay,-hicpp-special-member-functions,-bugprone-narrowing-conversions,-modernize-use-nodiscard,-google-readability-braces-around-statements,-hicpp-braces-around-statements,-bugprone-suspicious-semicolon,-readability-named-parameter,-hicpp-named-parameter,-readability-identifier-naming'
 WarningsAsErrors: 'modernize-*,cppcoreguidelines-*,boost-*,performance-*,google-build-using-namespace,readability-else-after-return,google-readability-todo'
 HeaderFilterRegex: 'libp2p/.*\.hpp'
 AnalyzeTemporaryDtors: false
 FormatStyle:     .clang-format
-User:            bogdan
+User:            user
 CheckOptions:
   - key:             bugprone-argument-comment.StrictMode
     value:           '0'
@@ -260,5 +260,3 @@ CheckOptions:
     value:           '3'
   - key:             cppcoreguidelines-macro-usage.CheckCapsOnly
     value:           '1'
-...
-
