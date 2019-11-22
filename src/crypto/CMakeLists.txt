@@ -11,6 +11,7 @@ add_subdirectory(key_validator)
 add_subdirectory(protobuf)
 add_subdirectory(random_generator)
 add_subdirectory(sha)
+add_subdirectory(ed25519_provider)
 
 libp2p_add_library(p2p_crypto_error
     error.cpp
@@ -24,4 +25,11 @@ libp2p_add_library(p2p_crypto_key
     )
 target_link_libraries(p2p_crypto_key
     Boost::boost
+    )
+
+libp2p_add_library(p2p_crypto_common
+    common_functions.cpp
+    )
+target_link_libraries(p2p_crypto_common
+    p2p_crypto_error
     )
