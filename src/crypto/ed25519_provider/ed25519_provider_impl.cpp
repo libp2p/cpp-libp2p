@@ -70,7 +70,6 @@ namespace libp2p::crypto::ed25519 {
                 NewEvpPkeyFromBytes(EVP_PKEY_ED25519, private_key,
                                     EVP_PKEY_new_raw_private_key));
     constexpr auto FAILED{CryptoProviderError::SIGNATURE_GENERATION_FAILED};
-    auto digest = sha512(message);
 
     std::shared_ptr<EVP_MD_CTX> mctx{EVP_MD_CTX_new(), EVP_MD_CTX_free};
     if (nullptr == mctx) {
@@ -87,7 +86,7 @@ namespace libp2p::crypto::ed25519 {
     size_t signature_len{signature.size()};
     if (1
         != EVP_DigestSign(mctx.get(), signature.data(), &signature_len,
-                          digest.data(), digest.size())) {
+                          message.data(), message.size())) {
       return FAILED;
     }
     return signature;
@@ -100,7 +99,6 @@ namespace libp2p::crypto::ed25519 {
                 NewEvpPkeyFromBytes(EVP_PKEY_ED25519, public_key,
                                     EVP_PKEY_new_raw_public_key));
     constexpr auto FAILED{CryptoProviderError::SIGNATURE_VERIFICATION_FAILED};
-    auto digest = sha512(message);
 
     std::shared_ptr<EVP_MD_CTX> mctx{EVP_MD_CTX_new(), EVP_MD_CTX_free};
     if (nullptr == mctx) {
@@ -113,7 +111,7 @@ namespace libp2p::crypto::ed25519 {
       return FAILED;
     }
     int valid = EVP_DigestVerify(mctx.get(), signature.data(), signature.size(),
-                                 digest.data(), digest.size());
+                                 message.data(), message.size());
     if (1 == valid || 0 == valid) {
       return valid;
     }
