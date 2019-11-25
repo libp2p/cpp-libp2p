@@ -15,9 +15,8 @@ target_link_libraries(kad_peer_discovery_example
     p2p_inmem_address_repository
     p2p_inmem_key_repository
     p2p_inmem_protocol_repository
-    p2p_kad_routing_table
     p2p_literals
-    p2p_kad2
+    p2p_kad
     )
 
 add_executable(kad_sandbox

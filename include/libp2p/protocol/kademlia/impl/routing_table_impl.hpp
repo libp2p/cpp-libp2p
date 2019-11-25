@@ -11,8 +11,7 @@
 #include <boost/assert.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/peer/identity_manager.hpp>
-#include <libp2p/protocol/kademlia/bucket.hpp>
-#include <libp2p/protocol/kademlia/node_id.hpp>
+#include <libp2p/protocol/kademlia/impl/bucket.hpp>
 #include <libp2p/protocol/kademlia/routing_table.hpp>
 
 namespace libp2p::protocol::kademlia {

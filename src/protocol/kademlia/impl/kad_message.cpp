@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/kademlia/kad_message.hpp>
+#include <libp2p/protocol/kademlia/impl/kad_message.hpp>
 #include <generated/protocol/kademlia/protobuf/kad.pb.h>
+#include <libp2p/multi/uvarint.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -101,10 +102,7 @@ namespace libp2p::protocol::kademlia {
     if (!assign_peers(closer_peers, pb_msg.closerpeers())) {
       return false;
     }
-    if (!assign_peers(provider_peers, pb_msg.providerpeers())) {
-      return false;
-    }
-    return true;
+    return assign_peers(provider_peers, pb_msg.providerpeers());
   }
 
   bool Message::serialize(std::vector<uint8_t>& buffer) const {
@@ -139,9 +137,29 @@ namespace libp2p::protocol::kademlia {
         pb_peer->set_connection(kad::pb::Message_ConnectionType(p.conn_status));
       }
     }
-    size_t sz = pb_msg.ByteSizeLong();
-    buffer.resize(sz);
-    return pb_msg.SerializeToArray(buffer.data(), sz);
+    size_t msg_sz = pb_msg.ByteSizeLong();
+    auto varint_len = multi::UVarint{msg_sz};
+    auto varint_vec = varint_len.toVector();
+    size_t prefix_sz = varint_vec.size();
+    buffer.resize(prefix_sz + msg_sz);
+    memcpy(buffer.data(), varint_vec.data(), prefix_sz);
+    return pb_msg.SerializeToArray(buffer.data() + prefix_sz, msg_sz);
   }
 
-}
+  void Message::selfAnnounce(libp2p::peer::PeerInfo self) {
+    closer_peers = Message::Peers{
+      { Message::Peer{ std::move(self), Message::Connectedness::CAN_CONNECT } }
+    };
+  }
+
+  Message createFindNodeRequest(const peer::PeerId& node, std::optional<peer::PeerInfo> self_announce) {
+    Message msg;
+    msg.type = Message::kFindNode;
+    msg.key = node.toVector();
+    if (self_announce) {
+      msg.selfAnnounce(std::move(self_announce.value()));
+    }
+    return msg;
+  }
+
+} //namespace

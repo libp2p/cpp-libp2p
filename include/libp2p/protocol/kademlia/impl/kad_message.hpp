@@ -6,12 +6,12 @@
 #ifndef LIBP2P_KAD_MESSAGE_HPP
 #define LIBP2P_KAD_MESSAGE_HPP
 
-#include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/network/connection_manager.hpp>
+#include <libp2p/protocol/kademlia/common.hpp>
 
 namespace libp2p::protocol::kademlia {
 
-  /// Message from wire protocol. Maybe either request or response
+  /// Wire protocol message. May be either request or response
   struct Message {
     enum Type {
       kPutValue = 0,
@@ -19,7 +19,9 @@ namespace libp2p::protocol::kademlia {
       kAddProvider = 2,
       kGetProviders = 3,
       kFindNode = 4,
-      kPing = 5
+      kPing = 5,
+
+      kTableSize
     };
 
     struct Record {
@@ -28,10 +30,11 @@ namespace libp2p::protocol::kademlia {
       std::string time_received;
     };
 
+    using Connectedness = network::ConnectionManager::Connectedness;
+
     struct Peer {
       peer::PeerInfo info;
-      network::ConnectionManager::Connectedness conn_status
-        = network::ConnectionManager::Connectedness::NOT_CONNECTED;
+      Connectedness conn_status = Connectedness::NOT_CONNECTED;
     };
     using Peers = std::vector<Peer>;
 
@@ -42,10 +45,19 @@ namespace libp2p::protocol::kademlia {
     std::optional<Peers> provider_peers;
 
     void clear();
+
+    // tries to deserialize message from byte array
     bool deserialize(const void* data, size_t sz);
+
+    // serializes varint(message length) + message into buffer
     bool serialize(std::vector<uint8_t>& buffer) const;
+
+    // adds this peer listening address to closer_peers
+    void selfAnnounce(peer::PeerInfo self);
   };
 
-  using MessageCallback = std::function<void(outcome::result<Message>)>;
+  // self is a protocol extension if this is server (i.e. announce)
+  Message createFindNodeRequest(const peer::PeerId& node, std::optional<peer::PeerInfo> self_announce);
+
 }
 #endif //LIBP2P_KAD_MESSAGE_HPP

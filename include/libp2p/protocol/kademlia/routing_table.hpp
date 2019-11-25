@@ -8,6 +8,7 @@
 
 #include <libp2p/event/bus.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
+#include <libp2p/protocol/kademlia/node_id.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -29,7 +30,7 @@ namespace libp2p::protocol::kademlia {
   struct RoutingTable {
     struct Config {
       size_t bucket_size;
-      Config() : bucket_size(20) {} // XXX: boost::di initializes integer members to 0 (???)
+      Config() : bucket_size(20) {} // XXX: boost::di initializes integer members to 0 (???) - yes...
     };
 
     virtual ~RoutingTable() = default;

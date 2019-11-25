@@ -9,12 +9,12 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
 #include <libp2p/network/connection_manager.hpp>
-#include "../../src/protocol/kademlia/kad2/kad2_common.hpp"
-#include "../../src/protocol/kademlia/kad2/low_res_timer.hpp"
+#include <libp2p/protocol/kademlia/impl/asio_scheduler_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/kad_impl.hpp>
 #include "factory.hpp"
 
 using namespace libp2p::kad_example;
-using namespace libp2p::kad2;
+using namespace libp2p::protocol::kademlia;
 static const uint16_t kPortBase = 40000;
 
 libp2p::common::Logger logger;
@@ -31,10 +31,10 @@ struct Hosts {
     std::shared_ptr<Kad> kad;
     std::string listen_to;
     std::string connect_to;
-    LowResTimer* timer = nullptr;
+    Scheduler* timer = nullptr;
     std::optional<libp2p::peer::PeerId> find_id;
-    LowResTimer::Handle htimer;
-    LowResTimer::Handle hbootstrap;
+    Scheduler::Handle htimer;
+    Scheduler::Handle hbootstrap;
     bool found = false;
     bool verbose = true;
     bool request_sent = false;
@@ -45,7 +45,7 @@ struct Hosts {
     )
         : index(i), o(std::move(obj))
     {
-      kad = createDefaultKadImpl(o.host, o.routing_table);
+      kad = std::make_shared<KadImpl>(*o.host, o.routing_table);
 
     }
 
@@ -84,15 +84,15 @@ struct Hosts {
       kad->addPeer(std::move(pi.value()), true);
     }
 
-    void findPeer(LowResTimer& t, const libp2p::peer::PeerId& id) {
+    void findPeer(Scheduler& t, const libp2p::peer::PeerId& id) {
       find_id = id;
       timer = &t;
-      htimer = timer->create(20000, [this] { onFindPeerTimer(); });
-      hbootstrap = timer->create(100, [this] { onBootstrapTimer(); });
+      htimer = timer->schedule(20000, [this] { onFindPeerTimer(); });
+      hbootstrap = timer->schedule(100, [this] { onBootstrapTimer(); });
     }
 
     void onBootstrapTimer() {
-      hbootstrap = timer->create(2000, [this] { onBootstrapTimer(); });
+      hbootstrap = timer->schedule(2000, [this] { onBootstrapTimer(); });
       if (!request_sent) {
         request_sent = kad->findPeer(genRandomPeerId(*o.key_gen, *o.key_marshaller),
                                      [this](const libp2p::peer::PeerId &peer, Kad::FindPeerQueryResult res) {
@@ -143,7 +143,7 @@ struct Hosts {
 
       //auto& peers = res.closer_peers;
 
-      htimer = timer->create(1000, [this, peers = std::move(res.closer_peers)] {
+      htimer = timer->schedule(1000, [this, peers = std::move(res.closer_peers)] {
 
       kad->findPeer(find_id.value(), [this](const libp2p::peer::PeerId& peer, Kad::FindPeerQueryResult res) {
         onFindPeer(peer, std::move(res));
@@ -203,7 +203,7 @@ struct Hosts {
     }
   }
 
-  void findPeers(LowResTimer& timer) {
+  void findPeers(Scheduler& timer) {
     for (auto& h : hosts) {
       auto half = hosts.size() / 2;
       auto index = h.index;
@@ -254,7 +254,7 @@ int main(int argc, char* argv[]) {
   setupLoggers(kad_log_debug);
 
   auto io = libp2p::kad_example::createIOContext();
-  LowResTimerAsioImpl timer(*io, 1000);
+  AsioSchedulerImpl timer(*io, 1000);
 
   Hosts hosts(hosts_count);
 

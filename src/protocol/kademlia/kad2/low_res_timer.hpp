@@ -99,7 +99,7 @@ namespace libp2p::kad2 {
     std::map<Ticket, HandleImpl *> table_;
     uint64_t last_tick_;
     uint64_t counter_;
-    libp2p::common::Logger log_ = libp2p::common::createLogger("kad");
+//    libp2p::common::Logger log_ = libp2p::common::createLogger("kad");
   };
 
   class LowResTimerAsioImpl : public LowResTimer {

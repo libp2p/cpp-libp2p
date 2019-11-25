@@ -11,7 +11,6 @@
 
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/peer_info.hpp>
-#include <libp2p/protocol/kademlia/node_id.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -29,11 +28,8 @@ namespace libp2p::protocol::kademlia {
   /// Vector of peer Ids
   using PeerIdVec = std::vector<peer::PeerId>;
 
-  /// Vector of peer Infos
-  using PeerInfoVec = std::vector<peer::PeerInfo>;
-
-  /// Vector of Node Ids
-  using NodeIdVec = std::vector<NodeId>;
+  /// Set of peer Infos
+  using PeerInfoSet = std::unordered_set<peer::PeerInfo>;
 
   /// Content Id
   struct Cid {
