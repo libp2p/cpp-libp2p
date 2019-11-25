@@ -19,27 +19,38 @@ static const uint16_t kPortBase = 40000;
 
 libp2p::common::Logger logger;
 
+libp2p::peer::PeerId genRandomPeerId(libp2p::crypto::KeyGenerator& gen, libp2p::crypto::marshaller::KeyMarshaller& marshaller) {
+  auto keypair = gen.generateKeys(libp2p::crypto::Key::Type::Ed25519).value();
+  return libp2p::peer::PeerId::fromPublicKey(marshaller.marshal(keypair.publicKey).value()).value();
+}
+
 struct Hosts {
   struct Host {
     size_t index;
-    std::shared_ptr<libp2p::Host> host;
+    PerHostObjects o;
     std::shared_ptr<Kad> kad;
     std::string listen_to;
     std::string connect_to;
     LowResTimer* timer = nullptr;
     std::optional<libp2p::peer::PeerId> find_id;
     LowResTimer::Handle htimer;
+    LowResTimer::Handle hbootstrap;
     bool found = false;
-//    libp2p::event::Handle new_channel_subscription;
+    bool verbose = true;
+    bool request_sent = false;
 
-    Host(size_t i, std::shared_ptr<libp2p::Host> h, RoutingTablePtr rt) : index(i), host(std::move(h))
+    Host(
+      size_t i,
+      PerHostObjects obj
+    )
+        : index(i), o(std::move(obj))
     {
-      kad = createDefaultKadImpl(host, std::move(rt));
+      kad = createDefaultKadImpl(o.host, o.routing_table);
 
     }
 
     void checkPeers() {
-      auto peers = host->getPeerRepository().getPeers();
+      auto peers = o.host->getPeerRepository().getPeers();
       logger->info("host {}: peers in repo: {}, found: {}", index, peers.size(), found);
     }
 
@@ -51,13 +62,13 @@ struct Hosts {
     void onListen() {
       auto ma =
         libp2p::multi::Multiaddress::create(listen_to).value();
-      auto listen_res = host->listen(ma);
+      auto listen_res = o.host->listen(ma);
       if (!listen_res) {
         logger->error("Server {} cannot listen the given multiaddress: {}", index, listen_res.error().message());
       }
 
-      host->start();
-      logger->info("server {} listening to: {} peerId={}", index, ma.getStringAddress(), host->getPeerInfo().id.toBase58());
+      o.host->start();
+      logger->info("server {} listening to: {} peerId={}", index, ma.getStringAddress(), o.host->getPeerInfo().id.toBase58());
 
       kad->start(true);
     }
@@ -76,23 +87,74 @@ struct Hosts {
     void findPeer(LowResTimer& t, const libp2p::peer::PeerId& id) {
       find_id = id;
       timer = &t;
-      htimer = timer->create(200, [this] {
+      htimer = timer->create(20000, [this] { onFindPeerTimer(); });
+      hbootstrap = timer->create(100, [this] { onBootstrapTimer(); });
+    }
+
+    void onBootstrapTimer() {
+      hbootstrap = timer->create(2000, [this] { onBootstrapTimer(); });
+      if (!request_sent) {
+        request_sent = kad->findPeer(genRandomPeerId(*o.key_gen, *o.key_marshaller),
+                                     [this](const libp2p::peer::PeerId &peer, Kad::FindPeerQueryResult res) {
+                                        logger->info("bootstrap return from findPeer, i={}, peer={} peers={} ({})", index, peer.toBase58(), res.closer_peers.size(), res.success);
+                                       request_sent = false;
+        });
+        logger->info("bootstrap sent request, i={}, request_sent={}", index, request_sent);
+      } else {
+        logger->info("bootstrap waiting for result, i={}", index);
+      }
+      o.host->getNetwork().getConnectionManager().collectGarbage();
+    }
+
+    void onFindPeerTimer() {
+      logger->info("find peer timer callback, i={}", index);
+      if (!found) {
         kad->findPeer(find_id.value(), [this](const libp2p::peer::PeerId& peer, Kad::FindPeerQueryResult res) {
           onFindPeer(peer, std::move(res));
         });
-      });
+      }
     }
 
     void onFindPeer(const libp2p::peer::PeerId& peer, Kad::FindPeerQueryResult res) {
-      logger->info("onFindPeer: i={}, res: success={}, peers={}", index, res.success, res.closer_peers.size());
+      if (found) return;
       if (res.success) {
         found = true;
+        logger->info("onFindPeer: i={}, res: success={}, peers={}", index, res.success, res.closer_peers.size());
         return;
+      } else {
+        if (verbose) logger->info("onFindPeer: i={}, res: success={}, peers={}", index, res.success, res.closer_peers.size());
       }
-      htimer = timer->create(1200, [this] {
-        kad->findPeer(find_id.value(), [this](const libp2p::peer::PeerId& peer, Kad::FindPeerQueryResult res) {
-          onFindPeer(peer, std::move(res));
-        });
+
+      /*
+      if (verbose) {
+        //auto all = o.routing_table->getAllPeers();
+        auto all = o.host->getPeerRepository().getAddressRepository().getPeers(); //routing_table->getAllPeers();
+        //auto it = std::find(all.begin(), all.end(), peer);
+        auto it = all.find(peer);
+        auto found_or_not = (it == all.end()) ? "not" : "";
+        std::string s;
+        for (const auto& p: all) {
+          s += " ";
+          s += p.toBase58();
+        }
+        logger->info("i={}, peer {} {} found among{}", index, peer.toBase58(), found_or_not, s);
+      }
+       */
+
+      //auto& peers = res.closer_peers;
+
+      htimer = timer->create(1000, [this, peers = std::move(res.closer_peers)] {
+
+      kad->findPeer(find_id.value(), [this](const libp2p::peer::PeerId& peer, Kad::FindPeerQueryResult res) {
+        onFindPeer(peer, std::move(res));
+      });
+
+      if (!found && !peers.empty()) {
+          kad->findPeer(find_id.value(), peers,[this](const libp2p::peer::PeerId& peer, Kad::FindPeerQueryResult res) {
+            onFindPeer(peer, std::move(res));
+          });
+        }
+
       });
     }
   };
@@ -111,12 +173,10 @@ struct Hosts {
 
   void newHost() {
     size_t index = hosts.size();
-    std::shared_ptr<libp2p::Host> host;
-    RoutingTablePtr table;
-    createHostAndRoutingTable(host, table);
-    assert(host && table);
-    libp2p::kad_example::createHostAndRoutingTable(host, table);
-    hosts.emplace_back(index, std::move(host), std::move(table));
+    PerHostObjects o;
+    createPerHostObjects(o);
+    assert(o.host && o.routing_table);
+    hosts.emplace_back(index, std::move(o));
   }
 
   void makeConnectTopologyCircle() {
@@ -126,7 +186,7 @@ struct Hosts {
     for (auto& h : hosts) {
       Host& server = hosts[(h.index > 0) ? h.index-1 : hosts.size()-1];
       if (!server.listen_to.empty()) {
-        h.connect_to = server.listen_to + "/ipfs/" + server.host->getId().toBase58();
+        h.connect_to = server.listen_to + "/ipfs/" + server.o.host->getId().toBase58();
       }
     }
   }
@@ -153,7 +213,7 @@ struct Hosts {
         index += (half - 1);
       }
       Host& server = hosts[index];
-      h.findPeer(timer, server.host->getId());
+      h.findPeer(timer, server.o.host->getId());
     }
   }
 
@@ -161,6 +221,7 @@ struct Hosts {
     for (auto& h : hosts) {
       h.checkPeers();
     }
+    hosts.clear();
   }
 };
 
@@ -175,9 +236,16 @@ void setupLoggers(bool kad_log_debug) {
   if (kad_log_debug) {
     kad_logger->set_level(spdlog::level::debug);
   }
+
+  auto debug_logger = libp2p::common::createLogger("debug");
+  debug_logger->set_pattern(kPattern);
+  debug_logger->set_level(spdlog::level::debug);
 }
 
 int main(int argc, char* argv[]) {
+
+
+
   size_t hosts_count = 6;
   bool kad_log_debug = false;
   if (argc > 1) hosts_count = atoi(argv[1]);
@@ -186,7 +254,7 @@ int main(int argc, char* argv[]) {
   setupLoggers(kad_log_debug);
 
   auto io = libp2p::kad_example::createIOContext();
-  LowResTimerAsioImpl timer(*io, 200);
+  LowResTimerAsioImpl timer(*io, 1000);
 
   Hosts hosts(hosts_count);
 

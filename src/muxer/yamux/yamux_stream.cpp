@@ -61,7 +61,7 @@ namespace libp2p::connection {
 
     is_reading_ = true;
 
-    auto read_lambda = [self{shared_from_this()}, cb = std::move(cb), out,
+    auto read_lambda = [self{shared_from_this()}, cb, out,
                         bytes, some]() mutable {
       // if there is enough data in our buffer (depending if we want to read
       // some or all bytes), read it

@@ -54,6 +54,8 @@ namespace libp2p::protocol::kademlia {
     size_t bucket_size_;
 
     void nextBucket();
+
+    libp2p::common::Logger log_ = libp2p::common::createLogger("kad");
   };
 
 }  // namespace libp2p::protocol::kademlia

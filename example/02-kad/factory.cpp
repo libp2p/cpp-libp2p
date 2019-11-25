@@ -82,6 +82,7 @@ namespace libp2p::kad_example {
 
       // clang-format off
       return di::make_injector<boost::di::extension::shared_config>(
+        di::bind<crypto::KeyGenerator>().to(gen)[boost::di::override],
         di::bind<crypto::KeyPair>().template to(std::move(keypair)),
         di::bind<crypto::random::CSPRNG>().template to(std::move(csprng)),
         di::bind<crypto::KeyGenerator>().template to(std::move(gen)),
@@ -123,19 +124,14 @@ namespace libp2p::kad_example {
     }
   }
 
-  std::shared_ptr<libp2p::Host> createHost() {
-    return makeInjector(boost::di::bind<boost::asio::io_context>.to(
-      createIOContext())[boost::di::override])
-      .create<std::shared_ptr<libp2p::Host>>();
-  }
-
-  void createHostAndRoutingTable(std::shared_ptr<libp2p::Host>& host,
-    std::shared_ptr<libp2p::protocol::kademlia::RoutingTable>& table) {
+  void createPerHostObjects(PerHostObjects& objects) {
     auto injector = makeInjector(boost::di::bind<boost::asio::io_context>.to(
       createIOContext())[boost::di::override]);
 
-    host = injector.create<std::shared_ptr<libp2p::Host>>();
-    table = injector.create<std::shared_ptr<libp2p::protocol::kademlia::RoutingTableImpl>>();
+    objects.host = injector.create<std::shared_ptr<libp2p::Host>>();
+    objects.routing_table = injector.create<std::shared_ptr<libp2p::protocol::kademlia::RoutingTableImpl>>();
+    objects.key_gen = injector.create<std::shared_ptr<libp2p::crypto::KeyGenerator>>();
+    objects.key_marshaller = injector.create<std::shared_ptr<libp2p::crypto::marshaller::KeyMarshaller>>();
   }
 
   std::shared_ptr<boost::asio::io_context> createIOContext() {

@@ -84,6 +84,8 @@ namespace libp2p::kad2 {
     using FindPeerQueryResultFunc = std::function<void(const peer::PeerId& peer, FindPeerQueryResult)>;
 
     virtual bool findPeer(const peer::PeerId& peer, FindPeerQueryResultFunc f) = 0;
+
+    virtual bool findPeer(const peer::PeerId& peer, const std::unordered_set<peer::PeerInfo>& closer_peers, FindPeerQueryResultFunc f) = 0;
   };
 
   std::shared_ptr<Kad> createDefaultKadImpl(const std::shared_ptr<libp2p::Host>& h, RoutingTablePtr rt);

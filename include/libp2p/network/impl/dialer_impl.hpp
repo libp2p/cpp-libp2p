@@ -33,6 +33,8 @@ namespace libp2p::network {
     std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect_;
     std::shared_ptr<TransportManager> tmgr_;
     std::shared_ptr<ConnectionManager> cmgr_;
+
+    common::Logger log_ = common::createLogger("debug"); // XXX
   };
 
 }  // namespace libp2p::network

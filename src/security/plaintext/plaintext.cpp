@@ -56,7 +56,7 @@ namespace libp2p::security {
   void Plaintext::secureInbound(
       std::shared_ptr<connection::RawConnection> inbound,
       SecConnCallbackFunc cb) {
-    log_->info("securing inbound connection");
+    log_->debug("securing inbound connection");
     sendExchangeMsg(inbound, cb);
     receiveExchangeMsg(inbound, boost::none, cb);
   }
@@ -64,7 +64,7 @@ namespace libp2p::security {
   void Plaintext::secureOutbound(
       std::shared_ptr<connection::RawConnection> outbound,
       const peer::PeerId &p, SecConnCallbackFunc cb) {
-    log_->info("securing outbound connection");
+    log_->debug("securing outbound connection");
     sendExchangeMsg(outbound, cb);
     receiveExchangeMsg(outbound, p, cb);
   }

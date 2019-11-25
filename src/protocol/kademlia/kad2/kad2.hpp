@@ -84,6 +84,8 @@ namespace libp2p::kad2 {
 
     bool findPeer(const peer::PeerId& peer, FindPeerQueryResultFunc f) override;
 
+    bool findPeer(const peer::PeerId& peer, const std::unordered_set<peer::PeerInfo>& closer_peers, FindPeerQueryResultFunc f) override;
+
    private:
     enum SessionState {
       closed = KadProtocolSession::CLOSED_STATE,

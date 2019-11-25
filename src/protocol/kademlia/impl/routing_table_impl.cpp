@@ -55,11 +55,11 @@ namespace libp2p::protocol::kademlia {
       // In the case of an unusual split, one bucket may be short or empty.
       // if this happens, search both surrounding buckets for nearby peers
       if (bucketId > 0) {
-        auto &left = buckets_.at(cpl - 1);
+        auto &left = buckets_.at(bucketId - 1);
         bucket.insertEnd(left.begin(), left.end());
       }
       if (bucketId < buckets_.size() - 1) {
-        auto &right = buckets_.at(cpl + 1);
+        auto &right = buckets_.at(bucketId + 1);
         bucket.insertEnd(right.begin(), right.end());
       }
     }

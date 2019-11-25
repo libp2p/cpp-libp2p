@@ -48,12 +48,12 @@ namespace libp2p::kad2 {
       return;
     }
     if (!rstream) {
-      log_->info("KadImpl: incoming connection failed due to '{}'",
+      log_->info("KadImpl {}: incoming connection failed due to '{}'", (void*)this,
                  rstream.error().message());
       return;
     }
 
-    log_->info("KadImpl: incoming connection from '{}'",
+    log_->debug("KadImpl {}: incoming connection from '{}'", (void*)this,
                rstream.value()->remoteMultiaddr().value().getStringAddress());
 
     newServerSession(std::move(rstream.value()));
@@ -61,6 +61,7 @@ namespace libp2p::kad2 {
 
   void KadImpl::newServerSession(std::shared_ptr<connection::Stream> stream) {
     connection::Stream *s = stream.get();
+    assert(sessions_.find(s) == sessions_.end());
     auto session = std::make_shared<KadProtocolSession>(weak_from_this(),
                                                         std::move(stream));
     if (!session->read()) {
@@ -83,7 +84,7 @@ namespace libp2p::kad2 {
         if (auto c = conn.lock()) {
           // adding outbound connections only
           if (c->isInitiator()) {
-            log_->debug("KadImpl: new outbound connection");
+            log_->debug("KadImpl {}: new outbound connection", (void*)this);
             auto remote_peer_res = c->remotePeer();
             if (!remote_peer_res) {
               return;
@@ -113,16 +114,16 @@ namespace libp2p::kad2 {
     }
     std::string id_str = peer_info.id.toBase58();
     if (res) {
-      log_->debug("KadImpl: successfully added peer to table: {}", id_str);
+      log_->debug("KadImpl {}: successfully added peer to table: {}", (void*)this, id_str);
     } else {
-      log_->warn("KadImpl: failed to add peer to table: {} : {}", id_str, res.error().message());
+      log_->debug("KadImpl {}: failed to add peer to table: {} : {}", (void*)this, id_str, res.error().message());
     }
   }
 
   KadImpl::Session* KadImpl::findSession(connection::Stream* from) {
     auto it = sessions_.find(from);
     if (it == sessions_.end()) {
-      log_->warn("KadImpl: cannot find session by stream");
+      log_->warn("KadImpl {}: cannot find session by stream", (void*)this);
       return nullptr;
     }
     return &it->second;
@@ -148,7 +149,7 @@ namespace libp2p::kad2 {
     } else {
       // this is a server session
 
-      log_->debug("KadImpl: request from '{}', type = {}",
+      log_->debug("KadImpl {}: request from '{}', type = {}", (void*)this,
                   from->remoteMultiaddr().value().getStringAddress(), msg.type);
 
       bool close_session =
@@ -186,11 +187,11 @@ namespace libp2p::kad2 {
       assert(peer_res); //???? check
 
       session->response_handler->onResult(peer_res.value(), outcome::failure(res.error()));
-      log_->debug("KadImpl: client session completed, total sessions: {}", sessions_.size()-1);
+      log_->debug("KadImpl {}: client session completed, total sessions: {}", (void*)this,sessions_.size()-1);
 
     } else {
       // this is a server session
-      log_->debug("KadImpl: server session completed, total sessions: {}", sessions_.size()-1);
+      log_->debug("KadImpl {}: server session completed, total sessions: {}", (void*)this,sessions_.size()-1);
     }
     closeSession(from);
   }
@@ -208,27 +209,27 @@ namespace libp2p::kad2 {
   }
 
   bool KadImpl::onPutValue(Message& msg) {
-    log_->warn("KadImpl: {} NYI", __FUNCTION__);
+    log_->warn("KadImpl {}: {} NYI", (void*)this, __FUNCTION__);
     return false;
   }
 
   bool KadImpl::onGetValue(Message& msg) {
-    log_->warn("KadImpl: {} NYI", __FUNCTION__);
+    log_->warn("KadImpl {}: {} NYI", (void*)this,__FUNCTION__);
     return false;
   }
 
   bool KadImpl::onAddProvider(Message& msg) {
-    log_->warn("KadImpl: {} NYI", __FUNCTION__);
+    log_->warn("KadImpl {}: {} NYI", (void*)this,__FUNCTION__);
     return false;
   }
 
   bool KadImpl::onGetProviders(Message& msg) {
-    log_->warn("KadImpl: {} NYI", __FUNCTION__);
+    log_->warn("KadImpl {}: {} NYI", (void*)this,__FUNCTION__);
     return false;
   }
 
   bool KadImpl::onFindNode(Message& msg) {
-    log_->debug("KadImpl: {}", __FUNCTION__);
+    log_->debug("KadImpl {}: {}", (void*)this,__FUNCTION__);
 
     if (msg.closer_peers) {
       for (auto& p : msg.closer_peers.value()) {
@@ -262,7 +263,7 @@ namespace libp2p::kad2 {
   }
 
   bool KadImpl::onPing(Message& msg) {
-    log_->debug("KadImpl: {}", __FUNCTION__);
+    log_->debug("KadImpl {}: {}", (void*)this,__FUNCTION__);
 
     if (msg.closer_peers) {
       for (auto& p : msg.closer_peers.value()) {
@@ -290,9 +291,10 @@ namespace libp2p::kad2 {
     Message::Type expectedResponseType() override { return Message::kFindNode; }
 
     void onResult(const peer::PeerId& from, outcome::result<Message> result) override {
+      log_->debug("{} : findPeer: {} waiting for {} responses", (void*)&kad_, from.toBase58(), waiting_for_.size());
       waiting_for_.erase(from);
       if (!result) {
-        log_->warn("findPeer request to {} failed: {}", from.toBase58(), result.error().message());
+        log_->warn("{}: findPeer request to {} failed: {}", (void*)&kad_, from.toBase58(), result.error().message());
       } else {
         Message& msg = result.value();
         size_t n = 0;
@@ -316,11 +318,13 @@ namespace libp2p::kad2 {
             }
           }
         }
-        log_->debug("findPeer: {} returned {} records", from.toBase58(), n);
+        log_->debug("{} : findPeer: {} returned {} records, waiting for {} responses", (void*)&kad_, from.toBase58(), n, waiting_for_.size());
       }
       if (callback_ && (result_.success || waiting_for_.empty())) {
         callback_(key_, std::move(result_));
         callback_ = Kad::FindPeerQueryResultFunc();
+      } else {
+        log_->debug("{} : ...", (void*)&kad_);
       }
     }
 
@@ -334,14 +338,31 @@ namespace libp2p::kad2 {
   };
 
   bool KadImpl::findPeer(const peer::PeerId& peer, Kad::FindPeerQueryResultFunc f) {
-    log_->debug("KadImpl: new {} request", __FUNCTION__);
+    log_->debug("KadImpl {}: new {} request", (void*)this,__FUNCTION__);
+
+    auto pi = host_->getPeerInfo(peer);
+    if (!pi.addresses.empty()) {
+      // found locally, ids are sorted by distance
+      Kad::FindPeerQueryResult result;
+      result.success = true;
+      result.peer = std::move(pi);
+      // TODO result.closer_peers needed here? probably not
+      // TODO decouple f() call in async manner!
+      f(peer, std::move(result));
+      log_->info("KadImpl {}: {} found locally from host!", (void*)this, peer.toBase58());
+      return true;
+    }
 
     auto ids = table_->getNearestPeers(kad1::NodeId(peer), 20);
     if (ids.empty()) {
+      log_->info("KadImpl {}: {} : no peers", (void*)this, peer.toBase58());
       return false;
     }
 
-    if (ids[0] == peer) {
+    //  TODO check comparator
+    auto it = std::find(ids.begin(), ids.end(), peer);
+    //if (ids[0] == peer) {
+    if (it != ids.end()) {
       // found locally, ids are sorted by distance
       Kad::FindPeerQueryResult result;
       result.success = true;
@@ -349,11 +370,11 @@ namespace libp2p::kad2 {
       // TODO result.closer_peers needed here? probably not
       // TODO decouple f() call in async manner!
       f(peer, std::move(result));
+      log_->info("KadImpl {}: {} found locally", (void*)this, peer.toBase58());
       return true;
     }
 
-    std::vector<peer::PeerInfo> v;
-    v.reserve(config_.ALPHA);
+    std::unordered_set<peer::PeerInfo> v;
 
     for (const auto& p : ids) {
       auto info = host_->getPeerInfo(p);
@@ -364,7 +385,7 @@ namespace libp2p::kad2 {
       if (connectedness == Message::Connectedness::CONNECTED
         || connectedness == Message::Connectedness::CAN_CONNECT)
       {
-        v.push_back(std::move(info));
+        v.insert(std::move(info));
         if (v.size() >= config_.ALPHA) {
           break;
         }
@@ -372,9 +393,16 @@ namespace libp2p::kad2 {
     }
 
     if (v.empty()) {
+      log_->info("KadImpl {}: {} : no peers to connect to", (void*)this, peer.toBase58());
       return false;
     }
 
+    return findPeer(peer, v, std::move(f));
+  }
+
+  bool KadImpl::findPeer(const peer::PeerId& peer, const std::unordered_set<peer::PeerInfo>& closer_peers,
+    Kad::FindPeerQueryResultFunc f)
+  {
     std::optional<peer::PeerInfo> self_announce;
     peer::PeerInfo self = host_->thisPeerInfo();
     if (is_server_) {
@@ -385,12 +413,13 @@ namespace libp2p::kad2 {
 
     KadProtocolSession::Buffer buffer = std::make_shared<std::vector<uint8_t>>();
     if (!request.serialize(*buffer)) {
+      log_->error("KadImpl {}: serialize error", (void*)this);
       return false;
     }
 
     auto handler = std::make_shared<FindPeerBatchHandler>(self.id, peer, std::move(f), *this);
 
-    for (const auto& pi : v) {
+    for (const auto& pi : closer_peers) {
       connect(pi, handler, buffer);
       handler->wait_for(pi.id);
     }
@@ -402,7 +431,9 @@ namespace libp2p::kad2 {
     const peer::PeerInfo& pi, const std::shared_ptr<KadResponseHandler>& handler,
     const KadProtocolSession::Buffer& request
   ) {
-    size_t id = ++connecting_sessions_counter_;
+    uint64_t id = ++connecting_sessions_counter_;
+
+    log_->debug("KadImpl {}: connecting to {}, {}", (void*)this, pi.id.toBase58(), handler.use_count());
 
     host_->dial(
       pi, getProtocolId(),
@@ -422,28 +453,29 @@ namespace libp2p::kad2 {
   ) {
     auto it = connecting_sessions_.find(id);
     if (it == connecting_sessions_.end()) {
-      log_->warn("KadImpl: cannot find connecting session {}", id);
+      log_->warn("KadImpl {}: cannot find connecting session {}", (void*)this, id);
       return;
     }
     auto handler = it->second;
     connecting_sessions_.erase(it);
 
     if (!stream_res) {
-      log_->warn("KadImpl: cannot connect to server: {}", stream_res.error().message());
+      log_->warn("KadImpl {}: cannot connect to server: {}", (void*)this, stream_res.error().message());
       handler->onResult(peerId, outcome::failure(stream_res.error()));
       return;
     }
 
     auto stream = stream_res.value().get();
     assert(stream->remoteMultiaddr());
+    assert(sessions_.find(stream) == sessions_.end());
 
     std::string addr(stream->remoteMultiaddr().value().getStringAddress());
-    log_->debug("KadImpl: connected to {}, {}", addr, stream_res.value().use_count());
+    log_->debug("KadImpl {}: connected to {}, ({} - {})", (void*)this, addr, stream_res.value().use_count(), connecting_sessions_.size());
 
 
     auto protocol_session = std::make_shared<KadProtocolSession>(weak_from_this(), std::move(stream_res.value()));
     if (!protocol_session->write(std::move(request))) {
-      log_->warn("KadImpl: write to {} failed", addr);
+      log_->warn("KadImpl {}: write to {} failed", (void*)this, addr);
       assert(stream->remotePeerId());
       handler->onResult(peerId, Error::STREAM_RESET);
       return;
@@ -451,7 +483,7 @@ namespace libp2p::kad2 {
     protocol_session->state(writing_to_peer);
 
     sessions_[stream] = Session { std::move(protocol_session), std::move(handler) };
-    log_->debug("KadImpl: total sessions: {}", sessions_.size());
+    log_->debug("KadImpl {}: total sessions: {}", (void*)this,sessions_.size());
   }
 
   std::shared_ptr<Kad> createDefaultKadImpl(const std::shared_ptr<libp2p::Host>& h, RoutingTablePtr rt) {

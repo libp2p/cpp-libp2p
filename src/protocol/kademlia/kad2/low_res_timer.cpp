@@ -1,8 +1,13 @@
-#ifndef LIBP2P_LOW_RES_TIMER_HPP
-#define LIBP2P_LOW_RES_TIMER_HPP
+/**
+ * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+//#include "low_res_timer.hpp"
 
 namespace libp2p::kad2 {
 
+  /*
   class LowResTimer {
    public:
     using Ticks = uint64_t;
@@ -32,6 +37,7 @@ namespace libp2p::kad2 {
       void onTimer() {
         timer_ = nullptr;
         cb_();
+        cb_ = Callback();
       }
 
       void done() {
@@ -56,13 +62,11 @@ namespace libp2p::kad2 {
       Ticket ticket(now() + interval, ++counter_);
       Handle h(new HandleImpl(ticket, this, std::move(cb)));
       table_[ticket] = h.get();
-  //    log_->info("Timer create: now={}, table size={}", last_tick_, table_.size());
       return h;
     }
 
     void cancel(const Ticket &ticket) {
       table_.erase(ticket);
- //     log_->info("Timer cancel: now={}, table size={}", last_tick_, table_.size());
     }
 
    protected:
@@ -71,9 +75,9 @@ namespace libp2p::kad2 {
     virtual Ticks now() = 0;
 
     void pulse() {
+      std::cerr << ".\n";
       last_tick_ = now();
       for (;;) {
-     //   log_->info("Timer pulse: now={}, table size={}", last_tick_, table_.size());
         HandleImpl *h = getHandle();
         if (!h) {
           break;
@@ -99,7 +103,6 @@ namespace libp2p::kad2 {
     std::map<Ticket, HandleImpl *> table_;
     uint64_t last_tick_;
     uint64_t counter_;
-    libp2p::common::Logger log_ = libp2p::common::createLogger("kad");
   };
 
   class LowResTimerAsioImpl : public LowResTimer {
@@ -131,7 +134,6 @@ namespace libp2p::kad2 {
     boost::posix_time::ptime started_;
     std::function<void(const boost::system::error_code &)> cb_;
   };
+   */
 
 } //namespace
-
-#endif //LIBP2P_LOW_RES_TIMER_HPP

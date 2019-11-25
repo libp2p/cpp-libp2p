@@ -5,6 +5,7 @@ libp2p_add_library(p2p_kad2
     kad2.cpp
     kad_message.cpp
     kad_protocol_session.cpp
+    low_res_timer.cpp
     )
 
 target_link_libraries(p2p_kad2

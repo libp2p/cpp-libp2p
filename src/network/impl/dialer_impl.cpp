@@ -12,7 +12,12 @@ namespace libp2p::network {
   void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb) {
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
-      return cb(std::move(c));
+      log_->debug("dialer: found reusable connection");
+
+      if (c->isInitiator()) {
+        // TODO dont reuse connections in opposite direction temporarily
+        return cb(std::move(c));
+      }
     }
 
     // we don't have a connection to this peer.
@@ -64,15 +69,20 @@ namespace libp2p::network {
           }
           auto &&conn = rconn.value();
 
+          if (!conn->isInitiator()) {
+            log_->debug("dialer: opening outbound stream inside inbound connection");
+          }
+
           // 2. open new stream on that connection
           conn->newStream(
-              [this, cb{std::move(cb)},
-               protocol](outcome::result<std::shared_ptr<connection::Stream>>
-                             rstream) mutable {
+              [this, cb{std::move(cb)}, protocol]
+              (outcome::result<std::shared_ptr<connection::Stream>> rstream) mutable {
                 if (!rstream) {
                   return cb(rstream.error());
                 }
                 auto &&stream = rstream.value();
+
+                log_->debug("dialer: inside newStream callback");
 
                 // 3. negotiate a protocol over that stream
                 std::vector<peer::Protocol> protocols{protocol};
@@ -83,6 +93,7 @@ namespace libp2p::network {
                       if (!rproto) {
                         return cb(rproto.error());
                       }
+
 
                       // 4. return stream back to the user
                       cb(std::move(stream));
