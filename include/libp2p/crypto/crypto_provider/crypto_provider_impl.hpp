@@ -52,6 +52,13 @@ namespace libp2p::crypto {
     outcome::result<KeyPair> generateSecp256k1() const;
     outcome::result<KeyPair> generateEcdsa() const;
 
+    outcome::result<PublicKey> deriveEd25519(const PrivateKey &key) const;
+    outcome::result<Buffer> signEd25519(gsl::span<uint8_t> message,
+                                        const PrivateKey &private_key) const;
+    outcome::result<bool> verifyEd25519(gsl::span<uint8_t> message,
+                                        gsl::span<uint8_t> signature,
+                                        const PublicKey &public_key) const;
+
     outcome::result<KeyPair> generateEcdsa256WithCurve(Key::Type key_type,
                                                        int curve_nid) const;
 
