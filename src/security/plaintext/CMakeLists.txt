@@ -8,7 +8,6 @@ add_subdirectory(protobuf)
 libp2p_add_library(p2p_plaintext
     plaintext.cpp
     plaintext_connection.cpp
-    plaintext_session.cpp
     )
 target_link_libraries(p2p_plaintext
     Boost::boost
