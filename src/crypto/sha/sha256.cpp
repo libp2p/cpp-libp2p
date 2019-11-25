@@ -9,7 +9,7 @@
 
 namespace libp2p::crypto {
   common::Hash256 sha256(std::string_view input) {
-    std::vector<const uint8_t> bytes{input.begin(), input.end()};
+    std::vector<uint8_t> bytes{input.begin(), input.end()};
     return sha256(bytes);
   }
 
@@ -19,7 +19,7 @@ namespace libp2p::crypto {
     SHA256_Init(&ctx);
     SHA256_Update(&ctx, input.data(), input.size());
     SHA256_Final(out.data(), &ctx);
-    // TODO igor-egorov FIL-67 Try to add checks for SHA-X return values
+    // TODO(igor-egorov) FIL-67 Try to add checks for SHA-X return values
     return out;
   }
 }  // namespace libp2p::crypto

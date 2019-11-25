@@ -219,7 +219,7 @@ namespace libp2p::crypto {
     switch (key_type) {
       case Key::Type::RSA:
         // TODO(akvinikym) 01.10.19 PRE-314: implement
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return KeyGeneratorError::KEY_GENERATION_FAILED;
       case Key::Type::Ed25519:
         return generateEd25519();
       case Key::Type::Secp256k1:
@@ -369,13 +369,13 @@ namespace libp2p::crypto {
       gsl::span<uint8_t> message, const PrivateKey &private_key) const {
     switch (private_key.type) {
       case Key::Type::RSA:
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
       case Key::Type::Ed25519:
         return signEd25519(message, private_key);
       case Key::Type::Secp256k1:
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
       case Key::Type::ECDSA:
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
       case Key::Type::UNSPECIFIED:
         return KeyGeneratorError::WRONG_KEY_TYPE;
       default:
@@ -396,13 +396,13 @@ namespace libp2p::crypto {
       const PublicKey &public_key) const {
     switch (public_key.type) {
       case Key::Type::RSA:
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
       case Key::Type::Ed25519:
         return verifyEd25519(message, signature, public_key);
       case Key::Type::Secp256k1:
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
       case Key::Type::ECDSA:
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
       case Key::Type::UNSPECIFIED:
         return KeyGeneratorError::WRONG_KEY_TYPE;
       default:

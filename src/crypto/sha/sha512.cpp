@@ -9,7 +9,7 @@
 
 namespace libp2p::crypto {
   common::Hash512 sha512(std::string_view input) {
-    std::vector<const uint8_t> bytes{input.begin(), input.end()};
+    std::vector<uint8_t> bytes{input.begin(), input.end()};
     return sha512(bytes);
   }
 
@@ -19,7 +19,7 @@ namespace libp2p::crypto {
     SHA512_Init(&ctx);
     SHA512_Update(&ctx, input.data(), input.size());
     SHA512_Final(out.data(), &ctx);
-    // TODO igor-egorov FIL-67 Try to add checks for SHA-X return values
+    // TODO(igor-egorov) FIL-67 Try to add checks for SHA-X return values
     return out;
   }
 }  // namespace libp2p::crypto

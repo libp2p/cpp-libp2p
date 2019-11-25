@@ -29,7 +29,7 @@ namespace libp2p::crypto {
      * be used as a return value in case of success.
      */
     std::shared_ptr<EC_KEY> key{EC_KEY_new(), EC_KEY_free};
-    if (nullptr == key.get()) {
+    if (nullptr == key) {
       return FAILED;
     }
 
@@ -93,7 +93,7 @@ namespace libp2p::crypto {
         reader(type, nullptr, key_bytes.data(), key_bytes.size()),
         EVP_PKEY_free};
 
-    if (nullptr == key.get()) {
+    if (nullptr == key) {
       return KeyGeneratorError::INTERNAL_ERROR;
     }
     return key;
