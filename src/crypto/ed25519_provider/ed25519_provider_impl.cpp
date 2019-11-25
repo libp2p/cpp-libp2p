@@ -25,7 +25,7 @@ namespace libp2p::crypto::ed25519 {
       return FAILED;
     }
 
-    EVP_PKEY *pkey;
+    EVP_PKEY *pkey{nullptr};  // it is mandatory to nullify the pointer!
     if (1 != EVP_PKEY_keygen(pctx, &pkey)) {
       return FAILED;
     }
