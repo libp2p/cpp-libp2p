@@ -23,7 +23,11 @@ namespace libp2p {
   }
 
   namespace common {
+    /// Only for type casting in tests. No hash is computed
     Hash256 operator""_hash256(const char *c, size_t s);
+
+    /// Only for type casting in tests. No hash is computed
+    Hash512 operator""_hash512(const char *c, size_t s);
 
     std::vector<uint8_t> operator""_v(const char *c, size_t s);
 

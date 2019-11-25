@@ -7,10 +7,11 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "libp2p/crypto/crypto_provider/crypto_provider_impl.hpp"
-#include "libp2p/crypto/key_validator/key_validator_impl.hpp"
-#include "libp2p/crypto/random_generator/boost_generator.hpp"
-#include "testutil/outcome.hpp"
+#include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
+#include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
+#include <libp2p/crypto/key_validator/key_validator_impl.hpp>
+#include <libp2p/crypto/random_generator/boost_generator.hpp>
+#include <testutil/outcome.hpp>
 
 using ::testing::_;
 using ::testing::An;
@@ -24,14 +25,19 @@ using libp2p::crypto::Key;
 using libp2p::crypto::KeyPair;
 using libp2p::crypto::PrivateKey;
 using libp2p::crypto::PublicKey;
+using libp2p::crypto::ed25519::Ed25519Provider;
+using libp2p::crypto::ed25519::Ed25519ProviderImpl;
 using libp2p::crypto::random::BoostRandomGenerator;
+using libp2p::crypto::random::CSPRNG;
 using libp2p::crypto::validator::KeyValidator;
 using libp2p::crypto::validator::KeyValidatorImpl;
 
 struct BaseKeyTest {
-  BoostRandomGenerator random;
+  std::shared_ptr<CSPRNG> random = std::make_shared<BoostRandomGenerator>();
+  std::shared_ptr<Ed25519Provider> ed25519 =
+      std::make_shared<Ed25519ProviderImpl>();
   std::shared_ptr<CryptoProvider> crypto_provider =
-      std::make_shared<CryptoProviderImpl>(random);
+      std::make_shared<CryptoProviderImpl>(random, ed25519);
   std::shared_ptr<KeyValidator> validator =
       std::make_shared<KeyValidatorImpl>(crypto_provider);
 };
@@ -74,10 +80,10 @@ TEST_P(GeneratedKeysTest, GeneratedKeysAreValid) {
  */
 TEST_P(GeneratedKeysTest, ArbitraryKeyInvalid) {
   Key::Type key_type = GetParam();
-  auto public_key = PublicKey{{key_type, random.randomBytes(64)}};
+  auto public_key = PublicKey{{key_type, random->randomBytes(64)}};
   EXPECT_OUTCOME_FALSE_1(validator->validate(public_key))
 
-  auto private_key = PrivateKey{{key_type, random.randomBytes(64)}};
+  auto private_key = PrivateKey{{key_type, random->randomBytes(64)}};
   EXPECT_OUTCOME_FALSE_1(validator->validate(private_key))
 }
 
@@ -100,7 +106,7 @@ TEST_P(GeneratedKeysTest, InvalidPublicKeyInvalidatesPair) {
   }
 
   EXPECT_OUTCOME_TRUE(key_pair, crypto_provider->generateKeys(key_type))
-  auto public_key = PublicKey{{key_type, random.randomBytes(64)}};
+  auto public_key = PublicKey{{key_type, random->randomBytes(64)}};
   EXPECT_OUTCOME_FALSE_1(validator->validate(public_key))
   auto invalid_pair = KeyPair{public_key, key_pair.privateKey};
   EXPECT_OUTCOME_FALSE_1(validator->validate(invalid_pair))
@@ -125,7 +131,7 @@ class RandomKeyTest : public BaseKeyTest,
  */
 TEST_P(RandomKeyTest, Every32byteIsValidPrivateKey) {
   auto key_type = GetParam();
-  auto sequence = random.randomBytes(32);
+  auto sequence = random->randomBytes(32);
   auto private_key = PrivateKey{{key_type, sequence}};
   EXPECT_OUTCOME_TRUE_1(validator->validate(private_key))
   EXPECT_OUTCOME_TRUE_1(crypto_provider->derivePublicKey(private_key))
@@ -145,9 +151,10 @@ class UnspecifiedKeyTest : public BaseKeyTest, public ::testing::Test {};
  */
 TEST_F(UnspecifiedKeyTest, UnspecifiedAlwaysValid) {
   auto private_key =
-      PrivateKey{{Key::Type::UNSPECIFIED, random.randomBytes(64)}};
+      PrivateKey{{Key::Type::UNSPECIFIED, random->randomBytes(64)}};
   EXPECT_OUTCOME_TRUE_1(validator->validate(private_key))
-  auto public_key = PublicKey{{Key::Type::UNSPECIFIED, random.randomBytes(64)}};
+  auto public_key =
+      PublicKey{{Key::Type::UNSPECIFIED, random->randomBytes(64)}};
   EXPECT_OUTCOME_TRUE_1(validator->validate(public_key))
   EXPECT_OUTCOME_TRUE_1(validator->validate(KeyPair{public_key, private_key}));
 }

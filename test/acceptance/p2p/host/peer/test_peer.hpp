@@ -9,10 +9,10 @@
 #include <future>
 #include <thread>
 
-#include "libp2p/injector/host_injector.hpp"
-#include "libp2p/protocol/echo.hpp"
-#include "testutil/clock/impl/clock_impl.hpp"
-#include "testutil/outcome.hpp"
+#include <libp2p/injector/host_injector.hpp>
+#include <libp2p/protocol/echo.hpp>
+#include <testutil/clock/impl/clock_impl.hpp>
+#include <testutil/outcome.hpp>
 
 struct TickCounter;
 
@@ -33,6 +33,7 @@ class Peer {
   using Host = libp2p::Host;
   using Echo = libp2p::protocol::Echo;
   using BoostRandomGenerator = libp2p::crypto::random::BoostRandomGenerator;
+  using Ed25519Provider = libp2p::crypto::ed25519::Ed25519Provider;
   using CryptoProvider = libp2p::crypto::CryptoProvider;
 
   using Context = boost::asio::io_context;
@@ -78,6 +79,7 @@ class Peer {
   sptr<Host> host_;                             ///< host
   sptr<Echo> echo_;                             ///< echo protocol
   sptr<BoostRandomGenerator> random_provider_;  ///< random provider
+  sptr<Ed25519Provider> ed25519_provider_;      ///< ed25519 provider
   sptr<CryptoProvider> crypto_provider_;        ///< crypto provider
 };
 
