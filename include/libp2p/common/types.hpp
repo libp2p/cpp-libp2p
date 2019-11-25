@@ -26,12 +26,9 @@ namespace libp2p::common {
     c.push_back(g);
   }
 
-  /**
-   * Hash256 as a sequence of 32 bytes
-   * and
-   * Hash512 as a sequence of 64 bytes
-   */
+  /// Hash256 as a sequence of 32 bytes
   using Hash256 = std::array<uint8_t, 32u>;
+  /// Hash512 as a sequence of 64 bytes
   using Hash512 = std::array<uint8_t, 64u>;
 }  // namespace libp2p::common
 

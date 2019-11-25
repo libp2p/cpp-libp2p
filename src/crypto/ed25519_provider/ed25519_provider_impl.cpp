@@ -31,7 +31,7 @@ namespace libp2p::crypto::ed25519 {
     }
     auto free_pkey = gsl::finally([pkey] { EVP_PKEY_free(pkey); });
 
-    Keypair keypair{.private_key = {0}, .public_key = {0}};
+    Keypair keypair;
     size_t priv_len{keypair.private_key.size()};
     size_t pub_len{keypair.public_key.size()};
     if (1

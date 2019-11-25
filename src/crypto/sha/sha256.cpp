@@ -9,9 +9,8 @@
 
 namespace libp2p::crypto {
   common::Hash256 sha256(std::string_view input) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    const auto *bytes_ptr = reinterpret_cast<const uint8_t *>(input.data());
-    return sha256(gsl::make_span(bytes_ptr, input.length()));
+    std::vector<const uint8_t> bytes{input.begin(), input.end()};
+    return sha256(bytes);
   }
 
   common::Hash256 sha256(gsl::span<const uint8_t> input) {
@@ -20,6 +19,7 @@ namespace libp2p::crypto {
     SHA256_Init(&ctx);
     SHA256_Update(&ctx, input.data(), input.size());
     SHA256_Final(out.data(), &ctx);
+    // TODO igor-egorov FIL-67 Try to add checks for SHA-X return values
     return out;
   }
 }  // namespace libp2p::crypto

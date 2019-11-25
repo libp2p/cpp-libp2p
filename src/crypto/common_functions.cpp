@@ -23,7 +23,11 @@ namespace libp2p::crypto {
     }
     auto free_curve = gsl::finally([curve] { EC_GROUP_free(curve); });
 
-    // allocate the key
+    /*
+     * Allocate the key.
+     * Here we use shared pointer instead of gsl::finally since this is going to
+     * be used as a return value in case of success.
+     */
     std::shared_ptr<EC_KEY> key{EC_KEY_new(), EC_KEY_free};
     if (nullptr == key.get()) {
       return FAILED;

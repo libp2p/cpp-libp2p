@@ -21,6 +21,9 @@ namespace libp2p::crypto::ed25519 {
   };
   using Signature = std::array<uint8_t, 64u>;
 
+  /**
+   * An interface for Ed25519 private/public key cryptography operations.
+   */
   class Ed25519Provider {
    public:
     /**
