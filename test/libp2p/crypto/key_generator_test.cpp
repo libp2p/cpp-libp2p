@@ -26,6 +26,7 @@ using libp2p::crypto::ed25519::Ed25519ProviderImpl;
 using libp2p::crypto::random::BoostRandomGenerator;
 using libp2p::crypto::random::CSPRNG;
 using libp2p::common::operator""_unhex;
+using libp2p::common::operator""_v;
 
 class KeyGeneratorTest : public ::testing::TestWithParam<Key::Type> {
  public:
@@ -159,4 +160,31 @@ TEST_F(KeyGoCompatibility, ECDSA) {
   EXPECT_EQ(
       derivedPublicKey.data,
       "033571844d75a74a49a3b5e2953261078ff60cacd270cab134c8b70ded6d26e5cd"_unhex);
+}
+
+TEST_F(KeyGoCompatibility, Ed25519) {
+  PrivateKey private_key{
+      {Key::Type::Ed25519,
+       "6d8e72d53e0f8582f52169bf7f6c60ddb7e0fbb83af97a11cff02f1bf21bbf7c"_unhex}};
+
+  auto derived = crypto_provider_->derivePublicKey(private_key).value();
+  EXPECT_EQ(
+      derived.data,
+      "821dc9f866442249e26985c7fadca424de7df4534f50383bec9a92f538a2063b"_unhex);
+
+  auto message{"think of the rapture!"_v};
+  const size_t message_len{21};  // here we do not count terminating null char
+  ASSERT_EQ(message.size(), message_len);
+
+  auto msg_span = gsl::make_span(message.data(), message_len);
+  auto signature = crypto_provider_->sign(msg_span, private_key).value();
+  ASSERT_EQ(signature.size(), 64);
+  EXPECT_EQ(
+      signature,
+      "575304fbd0f8096439ca18e588beffc67218e3d117a14cb41cecf3bc180f9496"
+      "90e5be626ae678a23ac5dfcccc516acc0527f67e0f0a696525a31d667305d406"_unhex);
+
+  auto verify_result =
+      crypto_provider_->verify(msg_span, signature, derived).value();
+  ASSERT_TRUE(verify_result);
 }
