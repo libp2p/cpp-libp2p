@@ -137,7 +137,7 @@ namespace libp2p::crypto {
 
       int public_length = EC_POINT_point2buf(
           group, point, POINT_CONVERSION_COMPRESSED, &data_pointer, nullptr);
-      if (public_length < 0) {
+      if (public_length == 0) {
         return KeyGeneratorError::KEY_GENERATION_FAILED;
       }
 
