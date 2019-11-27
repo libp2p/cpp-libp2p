@@ -85,22 +85,13 @@ if (CLANG_FORMAT)
 endif ()
 
 include_directories(
+    SYSTEM
     # project includes
     ${PROJECT_SOURCE_DIR}/include
 )
 
-include_directories(
-    SYSTEM
-    # system includes
-    deps/di/include
-    deps/di/extension/include
-    deps/hat-trie/include
-    deps/spdlog/include
-)
-
 add_subdirectory(src)
 add_subdirectory(example)
-
 
 if(TESTING)
   enable_testing()

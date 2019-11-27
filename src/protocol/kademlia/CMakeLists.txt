@@ -5,4 +5,3 @@
 
 add_subdirectory(protobuf)
 add_subdirectory(impl)
-add_subdirectory(kad2)

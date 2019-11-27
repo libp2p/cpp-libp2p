@@ -31,8 +31,8 @@ namespace libp2p::crypto::validator {
   }  // namespace
 
   KeyValidatorImpl::KeyValidatorImpl(
-      std::shared_ptr<KeyGenerator> key_generator)
-      : key_generator_{std::move(key_generator)} {}
+      std::shared_ptr<CryptoProvider> crypto_provider)
+      : crypto_provider_{std::move(crypto_provider)} {}
 
   outcome::result<void> KeyValidatorImpl::validate(
       const PrivateKey &key) const {
@@ -82,7 +82,7 @@ namespace libp2p::crypto::validator {
     OUTCOME_TRY(validate(keys.privateKey));
     OUTCOME_TRY(validate(keys.publicKey));
 
-    OUTCOME_TRY(public_key, key_generator_->derivePublicKey(keys.privateKey));
+    OUTCOME_TRY(public_key, crypto_provider_->derivePublicKey(keys.privateKey));
     if (public_key != keys.publicKey) {
       return KeyValidatorError::KEYS_DONT_MATCH;
     }

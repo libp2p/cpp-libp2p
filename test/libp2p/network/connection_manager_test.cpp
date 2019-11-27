@@ -30,9 +30,12 @@ using C = ConnectionManager::Connectedness;
 struct ConnectionManagerTest : public ::testing::Test {
   void SetUp() override {
     t = std::make_shared<TransportMock>();
+
+    bus = std::make_shared<libp2p::event::Bus>();
+
     tmgr = std::make_shared<TransportManagerMock>();
 
-    cmgr = std::make_shared<ConnectionManagerImpl>(tmgr);
+    cmgr = std::make_shared<ConnectionManagerImpl>(bus, tmgr);
 
     conn = std::make_shared<CapableConnectionMock>();
 
@@ -42,6 +45,7 @@ struct ConnectionManagerTest : public ::testing::Test {
     cmgr->addConnectionToPeer(p2, conn);
   }
 
+  std::shared_ptr<libp2p::event::Bus> bus;
   std::shared_ptr<TransportManagerMock> tmgr;
   std::shared_ptr<TransportMock> t;
 

@@ -44,7 +44,8 @@ struct BasicHostTest : public ::testing::Test {
 
   std::unique_ptr<Host> host = std::make_unique<host::BasicHost>(
       idmgr, std::make_unique<network::NetworkMock>(),
-      std::make_unique<peer::PeerRepositoryMock>());
+      std::make_unique<peer::PeerRepositoryMock>(),
+      std::make_shared<libp2p::event::Bus>());
 
   peer::PeerRepositoryMock &repo =
       (peer::PeerRepositoryMock &)host->getPeerRepository();

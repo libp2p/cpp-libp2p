@@ -8,6 +8,7 @@ libp2p_add_library(p2p_router
     )
 target_link_libraries(p2p_router
     Boost::boost
+    tsl::tsl_hat_trie
     p2p_peer_id
     )
 
@@ -29,6 +30,7 @@ target_link_libraries(p2p_dialer
     Boost::boost
     p2p_multiaddress
     p2p_peer_id
+    p2p_logger
     )
 
 

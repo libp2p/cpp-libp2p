@@ -29,6 +29,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol_muxer, MessageManager::ParseError,
 namespace {
   using libp2p::common::ByteArray;
   using libp2p::multi::UVarint;
+  using libp2p::outcome::result;
   using MultiselectMessage =
       libp2p::protocol_muxer::MessageManager::MultiselectMessage;
 
@@ -57,7 +58,7 @@ namespace {
    * @param line to be seeked
    * @return varint, if it was retrieved; error otherwise
    */
-  outcome::result<UVarint> getVarint(std::string_view line) {
+  result<UVarint> getVarint(std::string_view line) {
     using ParseError = libp2p::protocol_muxer::MessageManager::ParseError;
 
     if (line.empty()) {
@@ -80,7 +81,7 @@ namespace {
    * @param msg of the specified format
    * @return pure protocol string with \n thrown away
    */
-  outcome::result<std::string> parseProtocolLine(std::string_view msg) {
+  result<std::string> parseProtocolLine(std::string_view msg) {
     using ParseError = libp2p::protocol_muxer::MessageManager::ParseError;
 
     auto new_line_byte = msg.find('\n');
@@ -96,7 +97,7 @@ namespace {
    * @param line of the specified format
    * @return pure protocol with varint and \n thrown away
    */
-  outcome::result<std::string> parseProtocolsLine(std::string_view line) {
+  result<std::string> parseProtocolsLine(std::string_view line) {
     using ParseError = libp2p::protocol_muxer::MessageManager::ParseError;
 
     auto varint_res = getVarint(line);

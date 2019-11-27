@@ -18,6 +18,12 @@ namespace libp2p::common {
     return hash;
   }
 
+  libp2p::common::Hash512 operator""_hash512(const char *c, size_t s) {
+    libp2p::common::Hash512 hash{};
+    std::copy_n(c, std::min(s, 64ul), hash.rbegin());
+    return hash;
+  }
+
   std::vector<uint8_t> operator""_v(const char *c, size_t s) {
     std::vector<uint8_t> chars(c, c + s);  // NOLINT
     return chars;

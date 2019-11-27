@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_KEY_GENERATOR_HPP
-#define LIBP2P_CRYPTO_KEY_GENERATOR_HPP
+#ifndef LIBP2P_CRYPTO_PROVIDER_HPP
+#define LIBP2P_CRYPTO_PROVIDER_HPP
 
 #include <boost/filesystem.hpp>
+#include <gsl/span>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -14,13 +15,14 @@
 
 namespace libp2p::crypto {
   /**
-   * @class KeyGenerator provides interface for key generation functions
+   * @class CryptoProvider provides interface for key generation, singing,
+   * signature verification functions for private/public key cryptography
    */
-  class KeyGenerator {
+  class CryptoProvider {
    public:
     using Buffer = std::vector<uint8_t>;
 
-    virtual ~KeyGenerator() = default;
+    virtual ~CryptoProvider() = default;
 
     /**
      * @brief generates new key pair of specified type
@@ -36,9 +38,30 @@ namespace libp2p::crypto {
      */
     virtual outcome::result<PublicKey> derivePublicKey(
         const PrivateKey &private_key) const = 0;
+
     /**
-     * Generate an ephemeral public key and return a function that will compute
-     * the shared secret key
+     * @brief signs a given message using passed private key
+     * @param message bytes to be signed
+     * @param private_key a part of keypair used for signature generation
+     * @return signature bytes
+     */
+    virtual outcome::result<Buffer> sign(
+        gsl::span<uint8_t> message, const PrivateKey &private_key) const = 0;
+
+    /**
+     * @brief verifies validness of the signature for a given message and public
+     * key
+     * @param message that was signed
+     * @param signature to be validated
+     * @param public_key to validate against
+     * @return true - if the signature matches the message and the public key
+     */
+    virtual outcome::result<bool> verify(gsl::span<uint8_t> message,
+                                         gsl::span<uint8_t> signature,
+                                         const PublicKey &public_key) const = 0;
+    /**
+     * Generate an ephemeral public key and return a function that will
+     * compute the shared secret key
      * @param curve to be used in this ECDH
      * @return ephemeral key pair
      */
@@ -59,4 +82,4 @@ namespace libp2p::crypto {
 
 }  // namespace libp2p::crypto
 
-#endif  // LIBP2P_CRYPTO_KEY_GENERATOR_HPP
+#endif  // LIBP2P_CRYPTO_PROVIDER_HPP

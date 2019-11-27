@@ -4,7 +4,7 @@
  */
 
 #include <libp2p/network/impl/dialer_impl.hpp>
-
+#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/stream.hpp>
 
 namespace libp2p::network {

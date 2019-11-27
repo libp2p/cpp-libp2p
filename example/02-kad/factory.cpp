@@ -7,7 +7,8 @@
 #include "boost/di/extension/scopes/shared.hpp"
 
 // implementations
-#include <libp2p/crypto/key_generator/key_generator_impl.hpp>
+#include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
+#include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
@@ -74,18 +75,21 @@ namespace libp2p::kad_example {
       using namespace boost;  // NOLINT
 
       auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();
-      auto gen = std::make_shared<crypto::KeyGeneratorImpl>(*csprng);
-      auto validator = std::make_shared<crypto::validator::KeyValidatorImpl>(gen);
+      auto ed25519_provider =
+        std::make_shared<crypto::ed25519::Ed25519ProviderImpl>();
+      auto crypto_provider =
+        std::make_shared<crypto::CryptoProviderImpl>(csprng, ed25519_provider);
+      auto validator =
+        std::make_shared<crypto::validator::KeyValidatorImpl>(crypto_provider);
 
       // assume no error here. otherwise... just blow up executable
-      auto keypair = gen->generateKeys(crypto::Key::Type::Ed25519).value();
+      auto keypair = crypto_provider->generateKeys(crypto::Key::Type::Ed25519).value();
 
       // clang-format off
       return di::make_injector<boost::di::extension::shared_config>(
-        di::bind<crypto::KeyGenerator>().to(gen)[boost::di::override],
+        di::bind<crypto::CryptoProvider>().to(crypto_provider)[boost::di::override],
         di::bind<crypto::KeyPair>().template to(std::move(keypair)),
         di::bind<crypto::random::CSPRNG>().template to(std::move(csprng)),
-        di::bind<crypto::KeyGenerator>().template to(std::move(gen)),
         di::bind<crypto::marshaller::KeyMarshaller>().template to<crypto::marshaller::KeyMarshallerImpl>(),
         di::bind<peer::IdentityManager>().template to<peer::IdentityManagerImpl>(),
         di::bind<crypto::validator::KeyValidator>().template to<crypto::validator::KeyValidatorImpl>(),
@@ -130,7 +134,7 @@ namespace libp2p::kad_example {
 
     objects.host = injector.create<std::shared_ptr<libp2p::Host>>();
     objects.routing_table = injector.create<std::shared_ptr<libp2p::protocol::kademlia::RoutingTableImpl>>();
-    objects.key_gen = injector.create<std::shared_ptr<libp2p::crypto::KeyGenerator>>();
+    objects.key_gen = injector.create<std::shared_ptr<libp2p::crypto::CryptoProvider>>();
     objects.key_marshaller = injector.create<std::shared_ptr<libp2p::crypto::marshaller::KeyMarshaller>>();
   }
 

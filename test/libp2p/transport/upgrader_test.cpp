@@ -32,6 +32,9 @@ using testing::_;
 using testing::NiceMock;
 using testing::Return;
 
+using libp2p::outcome::failure;
+using libp2p::outcome::success;
+
 class UpgraderTest : public testing::Test {
  protected:
   void SetUp() override {
@@ -103,11 +106,11 @@ TEST_F(UpgraderTest, UpgradeSecureNotInitiator) {
       *multiselect_mock_,
       selectOneOf(gsl::span<const Protocol>(security_protos_),
                   std::static_pointer_cast<ReadWriter>(raw_conn_), false, _))
-      .WillOnce(Arg3CallbackWithArg(outcome::success(security_protos_[1])));
+      .WillOnce(Arg3CallbackWithArg(success(security_protos_[1])));
   EXPECT_CALL(
       *std::static_pointer_cast<SecurityAdaptorMock>(security_mocks_[1]),
       secureInbound(std::static_pointer_cast<RawConnection>(raw_conn_), _))
-      .WillOnce(Arg1CallbackWithArg(outcome::success(sec_conn_)));
+      .WillOnce(Arg1CallbackWithArg(success(sec_conn_)));
 
   upgrader_->upgradeToSecureInbound(
       raw_conn_, [this](auto &&upgraded_conn_res) {
@@ -122,7 +125,7 @@ TEST_F(UpgraderTest, UpgradeSecureFail) {
       *multiselect_mock_,
       selectOneOf(gsl::span<const Protocol>(security_protos_),
                   std::static_pointer_cast<ReadWriter>(raw_conn_), false, _))
-      .WillOnce(Arg3CallbackWithArg(outcome::failure(std::error_code())));
+      .WillOnce(Arg3CallbackWithArg(failure(std::error_code())));
 
   upgrader_->upgradeToSecureInbound(raw_conn_, [](auto &&upgraded_conn_res) {
     ASSERT_FALSE(upgraded_conn_res);
@@ -135,7 +138,7 @@ TEST_F(UpgraderTest, UpgradeMux) {
       *multiselect_mock_,
       selectOneOf(gsl::span<const Protocol>(muxer_protos_),
                   std::static_pointer_cast<ReadWriter>(sec_conn_), true, _))
-      .WillOnce(Arg3CallbackWithArg(outcome::success(muxer_protos_[0])));
+      .WillOnce(Arg3CallbackWithArg(success(muxer_protos_[0])));
   EXPECT_CALL(
       *std::static_pointer_cast<MuxerAdaptorMock>(muxer_mocks_[0]),
       muxConnection(std::static_pointer_cast<SecureConnection>(sec_conn_), _))
@@ -153,7 +156,7 @@ TEST_F(UpgraderTest, UpgradeMuxFail) {
       *multiselect_mock_,
       selectOneOf(gsl::span<const Protocol>(muxer_protos_),
                   std::static_pointer_cast<ReadWriter>(sec_conn_), true, _))
-      .WillOnce(Arg3CallbackWithArg(outcome::failure(std::error_code())));
+      .WillOnce(Arg3CallbackWithArg(failure(std::error_code())));
 
   upgrader_->upgradeToMuxed(sec_conn_, [](auto &&upgraded_conn_res) {
     ASSERT_FALSE(upgraded_conn_res);

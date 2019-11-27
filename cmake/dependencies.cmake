@@ -17,3 +17,15 @@ find_package(OpenSSL REQUIRED)
 # https://developers.google.com/protocol-buffers/
 hunter_add_package(Protobuf)
 find_package(Protobuf CONFIG REQUIRED)
+
+# https://docs.hunter.sh/en/latest/packages/pkg/spdlog.html
+hunter_add_package(spdlog)
+find_package(spdlog CONFIG REQUIRED)
+
+# https://github.com/masterjedy/hat-trie
+hunter_add_package(tsl_hat_trie)
+find_package(tsl_hat_trie CONFIG REQUIRED)
+
+# https://github.com/masterjedy/di
+hunter_add_package(Boost.DI)
+find_package(Boost.DI CONFIG REQUIRED)

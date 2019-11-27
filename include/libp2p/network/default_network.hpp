@@ -7,7 +7,7 @@
 #define LIBP2P_DEFAULT_NETWORK_HPP
 
 // implementations
-#include <libp2p/crypto/key_generator/key_generator_impl.hpp>
+#include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include <libp2p/muxer/yamux.hpp>
@@ -23,4 +23,4 @@
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp.hpp>
 
-#endif //LIBP2P_DEFAULT_NETWORK_HPP
+#endif  // LIBP2P_DEFAULT_NETWORK_HPP

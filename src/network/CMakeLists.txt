@@ -22,7 +22,7 @@ target_link_libraries(p2p_default_network
     p2p_router
     p2p_multiselect
     p2p_random_generator
-    p2p_key_generator
+    p2p_crypto_provider
     p2p_key_validator
     p2p_key_marshaller
     )

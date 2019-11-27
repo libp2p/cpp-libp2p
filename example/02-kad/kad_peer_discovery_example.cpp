@@ -19,7 +19,7 @@ static const uint16_t kPortBase = 40000;
 
 libp2p::common::Logger logger;
 
-libp2p::peer::PeerId genRandomPeerId(libp2p::crypto::KeyGenerator& gen, libp2p::crypto::marshaller::KeyMarshaller& marshaller) {
+libp2p::peer::PeerId genRandomPeerId(libp2p::crypto::CryptoProvider& gen, libp2p::crypto::marshaller::KeyMarshaller& marshaller) {
   auto keypair = gen.generateKeys(libp2p::crypto::Key::Type::Ed25519).value();
   return libp2p::peer::PeerId::fromPublicKey(marshaller.marshal(keypair.publicKey).value()).value();
 }
@@ -76,11 +76,6 @@ struct Hosts {
     void connect() {
       if (connect_to.empty()) return;
       auto pi = str2peerInfo(connect_to);
-
-//      if (pi) {
-//        host->connect(pi.value());
-//      }
-
       kad->addPeer(std::move(pi.value()), true);
     }
 

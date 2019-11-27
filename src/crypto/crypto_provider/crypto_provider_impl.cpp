@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/crypto/key_generator/key_generator_impl.hpp>
+#include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
 
 #include <exception>
 #include <iostream>
@@ -16,20 +16,24 @@
 #include <gsl/gsl_util>
 #include <gsl/pointers>
 #include <gsl/span>
+#include <libp2p/crypto/ed25519_provider.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/random_generator.hpp>
 
 namespace libp2p::crypto {
-  KeyGeneratorImpl::KeyGeneratorImpl(random::CSPRNG &random_provider)
-      : random_provider_(random_provider) {
+  CryptoProviderImpl::CryptoProviderImpl(
+      std::shared_ptr<random::CSPRNG> random_provider,
+      std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider)
+      : random_provider_{std::move(random_provider)},
+        ed25519_provider_{std::move(ed25519_provider)} {
     initialize();
   }
 
-  void KeyGeneratorImpl::initialize() {
+  void CryptoProviderImpl::initialize() {
     constexpr size_t kSeedBytesCount = 128 * 4;  // ripple uses such number
-    auto bytes = random_provider_.randomBytes(kSeedBytesCount);
-    // seeding random generator is required prior to calling RSA_generate_key
-    // NOLINTNEXTLINE
+    auto bytes = random_provider_->randomBytes(kSeedBytesCount);
+    // seeding random crypto_provider is required prior to calling
+    // RSA_generate_key NOLINTNEXTLINE
     RAND_seed(static_cast<const void *>(bytes.data()), bytes.size());
   }
 
@@ -93,21 +97,8 @@ namespace libp2p::crypto {
       return PublicKey{{key.type, std::move(public_bytes)}};
     }
 
-    outcome::result<PublicKey> deriveEd25519(const PrivateKey &key) {
-      EVP_PKEY *pkey = EVP_PKEY_new_raw_private_key(
-          EVP_PKEY_ED25519, nullptr, key.data.data(), key.data.size());
-      if (nullptr == pkey) {
-        return KeyGeneratorError::KEY_DERIVATION_FAILED;
-      }
-      auto free_pkey = gsl::finally([pkey] { EVP_PKEY_free(pkey); });
-
-      OUTCOME_TRY(public_buffer,
-                  getEvpPkeyRawBytes(pkey, EVP_PKEY_get_raw_public_key));
-
-      return PublicKey{{key.type, std::move(public_buffer)}};
-    }
-
-    outcome::result<PublicKey> deriveSecp256k1(const PrivateKey &key) {
+    outcome::result<PublicKey> deriveEcdsa256WithCurve(const PrivateKey &key,
+                                                       int curve_nid) {
       // put private key bytes to internal representation
 
       // create new bignum for storing private key
@@ -124,10 +115,10 @@ namespace libp2p::crypto {
         return KeyGeneratorError::KEY_DERIVATION_FAILED;
       }
 
-      // generate public key from private using bitcoin curve
+      // generate public key from private using curve
 
-      // get bitcoin curve group
-      EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp256k1);
+      // get curve group
+      EC_GROUP *group = EC_GROUP_new_by_curve_name(curve_nid);
       if (nullptr == group) {
         return KeyGeneratorError::KEY_DERIVATION_FAILED;
       }
@@ -164,6 +155,14 @@ namespace libp2p::crypto {
       return PublicKey{{key.type, std::move(public_buffer)}};
     }
 
+    outcome::result<PublicKey> deriveSecp256k1(const PrivateKey &key) {
+      return deriveEcdsa256WithCurve(key, NID_secp256k1);
+    }
+
+    outcome::result<PublicKey> deriveEcdsa(const PrivateKey &key) {
+      return deriveEcdsa256WithCurve(key, NID_X9_62_prime256v1);
+    }
+
     /**
      * according to libp2p specification:
      *  https://github.com/libp2p/specs/blob/master/peer-ids/peer-ids.md#how-keys-are-encoded-and-messages-signed
@@ -177,7 +176,7 @@ namespace libp2p::crypto {
      *  https://www.openssl.org/docs/man1.0.2/man3/i2d_RSAPrivateKey.html
      *  d2i_RSAPrivateKey(), i2d_RSAPrivateKey() decode and encode a PKCS#1
      */
-    outcome::result<std::pair<KeyGenerator::Buffer, KeyGenerator::Buffer>>
+    outcome::result<std::pair<CryptoProvider::Buffer, CryptoProvider::Buffer>>
     generateRsaKeys(int bits) {
       int ret = 0;
       RSA *rsa = nullptr;
@@ -215,85 +214,73 @@ namespace libp2p::crypto {
     }
   }  // namespace detail
 
-  outcome::result<KeyPair> KeyGeneratorImpl::generateKeys(
+  outcome::result<KeyPair> CryptoProviderImpl::generateKeys(
       Key::Type key_type) const {
     switch (key_type) {
       case Key::Type::RSA:
         // TODO(akvinikym) 01.10.19 PRE-314: implement
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return KeyGeneratorError::KEY_GENERATION_FAILED;
       case Key::Type::Ed25519:
         return generateEd25519();
       case Key::Type::Secp256k1:
         return generateSecp256k1();
       case Key::Type::ECDSA:
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return generateEcdsa();
       default:
         return KeyGeneratorError::UNSUPPORTED_KEY_TYPE;
     }
   }
 
-  outcome::result<KeyPair> KeyGeneratorImpl::generateRsa(
-      common::RSAKeyType bits_option) const {
-    BOOST_ASSERT_MSG(false, "not implemented");
+  /// previous implementation is commented - it can be used as a hint when
+  /// implementing a new version of the method
+  //  outcome::result<KeyPair> CryptoProviderImpl::generateRsa(
+  //      common::RSAKeyType bits_option) const {
+  //    BOOST_ASSERT_MSG(false, "not implemented");
+  //
+  //    int bits = 0;
+  //    Key::Type key_type;
+  //    switch (bits_option) {
+  //      case common::RSAKeyType::RSA1024:
+  //        bits = 1024;
+  //        key_type = Key::Type::RSA1024;
+  //        break;
+  //      case common::RSAKeyType::RSA2048:
+  //        bits = 2048;
+  //        key_type = Key::Type::RSA2048;
+  //        break;
+  //      case common::RSAKeyType::RSA4096:
+  //        bits = 4096;
+  //        key_type = Key::Type::RSA4096;
+  //        break;
+  //    }
+  //
+  //    OUTCOME_TRY(keys, detail::generateRsaKeys(bits));
+  //
+  //    return KeyPair{{{key_type, std::move(keys.first)}},
+  //                   {{key_type, std::move(keys.second)}}};
+  //  }
 
-    /// previous implementation is commented - it can be used as a hint when
-    /// implementing a new version of the method
-    //    int bits = 0;
-    //    Key::Type key_type;
-    //    switch (bits_option) {
-    //      case common::RSAKeyType::RSA1024:
-    //        bits = 1024;
-    //        key_type = Key::Type::RSA1024;
-    //        break;
-    //      case common::RSAKeyType::RSA2048:
-    //        bits = 2048;
-    //        key_type = Key::Type::RSA2048;
-    //        break;
-    //      case common::RSAKeyType::RSA4096:
-    //        bits = 4096;
-    //        key_type = Key::Type::RSA4096;
-    //        break;
-    //    }
-    //
-    //    OUTCOME_TRY(keys, detail::generateRsaKeys(bits));
-    //
-    //    return KeyPair{{{key_type, std::move(keys.first)}},
-    //                   {{key_type, std::move(keys.second)}}};
+  outcome::result<KeyPair> CryptoProviderImpl::generateEd25519() const {
+    OUTCOME_TRY(ed, ed25519_provider_->generate());
+
+    auto &&pub = ed.public_key;
+    auto &&priv = ed.private_key;
+    return KeyPair{.publicKey = {{.type = Key::Type::Ed25519,
+                                  .data = {pub.begin(), pub.end()}}},
+                   .privateKey = {{.type = Key::Type::Ed25519,
+                                   .data = {priv.begin(), priv.end()}}}};
   }
 
-  outcome::result<KeyPair> KeyGeneratorImpl::generateEd25519() const {
-    EVP_PKEY *pkey = nullptr;
-    EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr);
-
-    auto cleanup = gsl::finally([&]() {
-      if (pkey != nullptr) {
-        EVP_PKEY_free(pkey);
-      }
-      if (pctx != nullptr) {
-        EVP_PKEY_CTX_free(pctx);
-      }
-    });
-
-    auto ret = EVP_PKEY_keygen_init(pctx);
-    if (ret != 1) {
-      return KeyGeneratorError::KEY_GENERATION_FAILED;
-    }
-
-    ret = EVP_PKEY_keygen(pctx, &pkey);
-    if (ret != 1) {
-      return KeyGeneratorError::KEY_GENERATION_FAILED;
-    }
-
-    OUTCOME_TRY(private_key_bytes,
-                detail::getEvpPkeyRawBytes(pkey, EVP_PKEY_get_raw_private_key));
-    OUTCOME_TRY(public_key_bytes,
-                detail::getEvpPkeyRawBytes(pkey, EVP_PKEY_get_raw_public_key));
-
-    return KeyPair{{{Key::Type::Ed25519, std::move(public_key_bytes)}},
-                   {{Key::Type::Ed25519, std::move(private_key_bytes)}}};
+  outcome::result<KeyPair> CryptoProviderImpl::generateSecp256k1() const {
+    return generateEcdsa256WithCurve(Key::Type::Secp256k1, NID_secp256k1);
   }
 
-  outcome::result<KeyPair> KeyGeneratorImpl::generateSecp256k1() const {
+  outcome::result<KeyPair> CryptoProviderImpl::generateEcdsa() const {
+    return generateEcdsa256WithCurve(Key::Type::ECDSA, NID_X9_62_prime256v1);
+  }
+
+  outcome::result<KeyPair> CryptoProviderImpl::generateEcdsa256WithCurve(
+      Key::Type key_type, int curve_nid) const {
     EC_KEY *key = EC_KEY_new();
     if (nullptr == key) {
       return KeyGeneratorError::KEY_GENERATION_FAILED;
@@ -306,8 +293,8 @@ namespace libp2p::crypto {
       }
     });
 
-    // get bitcoin curve group
-    EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp256k1);
+    // get curve group
+    EC_GROUP *group = EC_GROUP_new_by_curve_name(curve_nid);
     if (nullptr == group) {
       return KeyGeneratorError::KEY_GENERATION_FAILED;
     }
@@ -348,34 +335,101 @@ namespace libp2p::crypto {
       return KeyGeneratorError::KEY_GENERATION_FAILED;
     }
 
-    return KeyPair{{{Key::Type::Secp256k1, std::move(public_bytes)}},
-                   {{Key::Type::Secp256k1, std::move(private_bytes)}}};
+    return KeyPair{{{key_type, std::move(public_bytes)}},
+                   {{key_type, std::move(private_bytes)}}};
   }
 
-  outcome::result<PublicKey> KeyGeneratorImpl::derivePublicKey(
+  outcome::result<PublicKey> CryptoProviderImpl::derivePublicKey(
       const PrivateKey &private_key) const {
     switch (private_key.type) {
       case Key::Type::RSA:
         return detail::deriveRsa(private_key);
       case Key::Type::Ed25519:
-        return detail::deriveEd25519(private_key);
+        return deriveEd25519(private_key);
       case Key::Type::Secp256k1:
         return detail::deriveSecp256k1(private_key);
       case Key::Type::ECDSA:
-        BOOST_ASSERT_MSG(false, "not implemented");
+        return detail::deriveEcdsa(private_key);
       case Key::Type::UNSPECIFIED:
         return KeyGeneratorError::WRONG_KEY_TYPE;
     }
     return KeyGeneratorError::UNSUPPORTED_KEY_TYPE;
   }
 
-  outcome::result<EphemeralKeyPair> KeyGeneratorImpl::generateEphemeralKeyPair(
-      common::CurveType curve) const {
+  outcome::result<PublicKey> CryptoProviderImpl::deriveEd25519(
+      const PrivateKey &key) const {
+    ed25519::PrivateKey private_key;
+    std::copy_n(key.data.begin(), private_key.size(), private_key.begin());
+    OUTCOME_TRY(ed_pub, ed25519_provider_->derive(private_key));
+
+    return PublicKey{{key.type, {ed_pub.begin(), ed_pub.end()}}};
+  }
+
+  outcome::result<Buffer> CryptoProviderImpl::sign(
+      gsl::span<uint8_t> message, const PrivateKey &private_key) const {
+    switch (private_key.type) {
+      case Key::Type::RSA:
+        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+      case Key::Type::Ed25519:
+        return signEd25519(message, private_key);
+      case Key::Type::Secp256k1:
+        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+      case Key::Type::ECDSA:
+        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+      case Key::Type::UNSPECIFIED:
+        return KeyGeneratorError::WRONG_KEY_TYPE;
+      default:
+        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+    }
+  }
+
+  outcome::result<Buffer> CryptoProviderImpl::signEd25519(
+      gsl::span<uint8_t> message, const PrivateKey &private_key) const {
+    ed25519::PrivateKey priv_key;
+    std::copy_n(private_key.data.begin(), priv_key.size(), priv_key.begin());
+    OUTCOME_TRY(signature, ed25519_provider_->sign(message, priv_key));
+    return {signature.begin(), signature.end()};
+  }
+
+  outcome::result<bool> CryptoProviderImpl::verify(
+      gsl::span<uint8_t> message, gsl::span<uint8_t> signature,
+      const PublicKey &public_key) const {
+    switch (public_key.type) {
+      case Key::Type::RSA:
+        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+      case Key::Type::Ed25519:
+        return verifyEd25519(message, signature, public_key);
+      case Key::Type::Secp256k1:
+        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+      case Key::Type::ECDSA:
+        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+      case Key::Type::UNSPECIFIED:
+        return KeyGeneratorError::WRONG_KEY_TYPE;
+      default:
+        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+    }
+  }
+
+  outcome::result<bool> CryptoProviderImpl::verifyEd25519(
+      gsl::span<uint8_t> message, gsl::span<uint8_t> signature,
+      const PublicKey &public_key) const {
+    ed25519::PrivateKey ed_pub;
+    std::copy_n(public_key.data.begin(), ed_pub.size(), ed_pub.begin());
+
+    ed25519::Signature ed_sig;
+    std::copy_n(signature.begin(), ed_sig.size(), ed_sig.begin());
+
+    OUTCOME_TRY(result, ed25519_provider_->verify(message, ed_sig, ed_pub));
+    return result;
+  }
+
+  outcome::result<EphemeralKeyPair>
+  CryptoProviderImpl::generateEphemeralKeyPair(common::CurveType curve) const {
     // TODO(yuraz): pre-140 implement
     return KeyGeneratorError::KEY_GENERATION_FAILED;
   }
 
-  std::vector<StretchedKey> KeyGeneratorImpl::stretchKey(
+  std::vector<StretchedKey> CryptoProviderImpl::stretchKey(
       common::CipherType cipher_type, common::HashType hash_type,
       const Buffer &secret) const {
     // TODO(yuraz): pre-140 implement

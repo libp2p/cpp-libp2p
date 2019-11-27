@@ -1,0 +1,38 @@
+name: Clang Tidy
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  build:
+    runs-on: macOS-10.14
+    steps:
+    - uses: actions/checkout@v1
+      name: checkout
+      with:
+        submodules: true
+        clean: true
+        fetch-depth: 1
+    - name: install
+      run: |
+        brew install ninja llvm
+        sudo python3 -m pip install --upgrade pip
+        sudo python3 -m pip install scikit-build cmake requests gitpython gcovr pyyaml
+    - name: run checks
+      run: |
+        #!/bin/bash
+        LLVM_DIR=/usr/local/Cellar/llvm
+        test -d $LLVM_DIR || echo $(echo "llvm is absent, cannot continue" && exit 1)
+        VER_COUNT=$(ls -1 ${LLVM_DIR} | wc -l)
+        test ${VER_COUNT} -eq 0 && echo "no llvm version detected" && exit 1
+        test $VER_COUNT -gt 1 && echo "wrong llvm installation" && exit 1
+        LLVM_VER=$(ls -1 ${LLVM_DIR})
+        export LLVM_ROOT=${LLVM_DIR}/${LLVM_VER}
+        export PATH=${LLVM_ROOT}/bin:${LLVM_ROOT}/share/clang:${PATH}
+        cmake . -GNinja -Bbuild
+        housekeeping/clang-tidy.sh build
