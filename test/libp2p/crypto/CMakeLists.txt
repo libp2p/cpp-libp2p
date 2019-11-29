@@ -60,3 +60,11 @@ addtest(key_validator_test
 target_link_libraries(key_validator_test
     p2p_key_validator
     )
+
+addtest(secp256k1_test
+    secp256k1_test.cpp
+    )
+target_link_libraries(secp256k1_test
+    p2p_secp256k1_provider
+    p2p_multibase_codec
+    )

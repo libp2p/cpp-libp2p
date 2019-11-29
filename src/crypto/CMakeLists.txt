@@ -12,6 +12,7 @@ add_subdirectory(key_marshaller)
 add_subdirectory(key_validator)
 add_subdirectory(protobuf)
 add_subdirectory(random_generator)
+add_subdirectory(secp256k1_provider)
 add_subdirectory(sha)
 
 libp2p_add_library(p2p_crypto_error
