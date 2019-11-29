@@ -16,6 +16,13 @@ target_link_libraries(aes_test
     p2p_literals
     )
 
+addtest(ecdsa_test
+    ecdsa_provider_test.cpp
+    )
+target_link_libraries(ecdsa_test
+    p2p_ecdsa_provider
+    )
+
 addtest(hmac_test
     hmac_test.cpp
     )

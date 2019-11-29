@@ -5,6 +5,7 @@
 
 add_subdirectory(aes_provider)
 add_subdirectory(crypto_provider)
+add_subdirectory(ecdsa_provider)
 add_subdirectory(ed25519_provider)
 add_subdirectory(hmac_provider)
 add_subdirectory(key_marshaller)
