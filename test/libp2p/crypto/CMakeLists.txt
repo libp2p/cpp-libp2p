@@ -16,6 +16,13 @@ target_link_libraries(aes_test
     p2p_literals
     )
 
+addtest(ecdsa_test
+    ecdsa_provider_test.cpp
+    )
+target_link_libraries(ecdsa_test
+    p2p_ecdsa_provider
+    )
+
 addtest(hmac_test
     hmac_test.cpp
     )
@@ -52,4 +59,19 @@ addtest(key_validator_test
     )
 target_link_libraries(key_validator_test
     p2p_key_validator
+    )
+
+addtest(rsa_provider_test
+    rsa_provider_test.cpp
+    )
+target_link_libraries(rsa_provider_test
+    p2p_rsa
+    )
+
+addtest(secp256k1_test
+    secp256k1_test.cpp
+    )
+target_link_libraries(secp256k1_test
+    p2p_secp256k1_provider
+    p2p_multibase_codec
     )

@@ -77,14 +77,6 @@ namespace libp2p::crypto {
     }
 
     outcome::result<PublicKey> deriveRsa(const PrivateKey &key) {
-      BIO *bio_private = BIO_new_mem_buf(
-          static_cast<const void *>(key.data.data()), key.data.size());
-      if (nullptr == bio_private) {
-        return KeyGeneratorError::KEY_DERIVATION_FAILED;
-      }
-      auto free_bio =
-          gsl::finally([bio_private]() { BIO_free_all(bio_private); });
-
       const unsigned char *data_pointer = key.data.data();
       RSA *rsa = d2i_RSAPrivateKey(nullptr, &data_pointer, key.data.size());
       if (nullptr == rsa) {
@@ -92,7 +84,7 @@ namespace libp2p::crypto {
       }
       auto cleanup_rsa = gsl::finally([rsa]() { RSA_free(rsa); });
 
-      OUTCOME_TRY(public_bytes, detail::encodeKeyDer(rsa, i2d_RSAPublicKey));
+      OUTCOME_TRY(public_bytes, detail::encodeKeyDer(rsa, i2d_RSA_PUBKEY));
 
       return PublicKey{{key.type, std::move(public_bytes)}};
     }
@@ -170,10 +162,10 @@ namespace libp2p::crypto {
      *  We encode the private key as a PKCS1 key using ASN.1 DER.
      *
      *  according to openssl manual:
-     *  https://www.openssl.org/docs/man1.0.2/man3/i2d_RSAPublicKey.html
-     *  d2i_RSAPublicKey() and i2d_RSAPublicKey() decode and encode a PKCS#1
+     *  https://www.openssl.org/docs/man1.1.1/man3/i2d_RSA_PUBKEY.html
+     *  d2i_RSA_PUBKEY() and i2d_RSA_PUBKEY() decode and encode a PKIX
      *
-     *  https://www.openssl.org/docs/man1.0.2/man3/i2d_RSAPrivateKey.html
+     *  https://www.openssl.org/docs/man1.1.1/man3/i2d_RSAPrivateKey.html
      *  d2i_RSAPrivateKey(), i2d_RSAPrivateKey() decode and encode a PKCS#1
      */
     outcome::result<std::pair<CryptoProvider::Buffer, CryptoProvider::Buffer>>
@@ -207,7 +199,7 @@ namespace libp2p::crypto {
         return KeyGeneratorError::KEY_GENERATION_FAILED;
       }
 
-      OUTCOME_TRY(public_bytes, detail::encodeKeyDer(rsa, i2d_RSAPublicKey));
+      OUTCOME_TRY(public_bytes, detail::encodeKeyDer(rsa, i2d_RSA_PUBKEY));
       OUTCOME_TRY(private_bytes, detail::encodeKeyDer(rsa, i2d_RSAPrivateKey));
 
       return {std::move(public_bytes), std::move(private_bytes)};

@@ -5,8 +5,6 @@
 
 #include <libp2p/crypto/common_functions.hpp>
 
-#include <iostream>
-
 #include <gsl/gsl_util>
 #include <libp2p/crypto/error.hpp>
 
@@ -16,25 +14,13 @@ namespace libp2p::crypto {
       int nid, gsl::span<const uint8_t> private_key) {
     auto FAILED = KeyGeneratorError::INTERNAL_ERROR;
 
-    // try initialize requested curve group
-    EC_GROUP *curve = EC_GROUP_new_by_curve_name(nid);
-    if (nullptr == curve) {
-      return CryptoProviderError::UNKNOWN_KEY_TYPE;
-    }
-    auto free_curve = gsl::finally([curve] { EC_GROUP_free(curve); });
-
     /*
      * Allocate the key.
      * Here we use shared pointer instead of gsl::finally since this is going to
      * be used as a return value in case of success.
      */
-    std::shared_ptr<EC_KEY> key{EC_KEY_new(), EC_KEY_free};
+    std::shared_ptr<EC_KEY> key{EC_KEY_new_by_curve_name(nid), EC_KEY_free};
     if (nullptr == key) {
-      return FAILED;
-    }
-
-    // associate the curve with the key
-    if (1 != EC_KEY_set_group(key.get(), curve)) {
       return FAILED;
     }
 
@@ -54,7 +40,8 @@ namespace libp2p::crypto {
 
     // EC_KEY that has a private key but do not has public key assumed invalid
     // thus we are generating its public key part
-    EC_POINT *public_key_point{EC_POINT_new(curve)};
+    const EC_GROUP *group = EC_KEY_get0_group(key.get());
+    EC_POINT *public_key_point{EC_POINT_new(group)};
     if (nullptr == public_key_point) {
       return FAILED;
     }
@@ -63,13 +50,15 @@ namespace libp2p::crypto {
 
     // derive the public key
     if (1
-        != EC_POINT_mul(curve, public_key_point, private_bignum, nullptr,
-                        nullptr, nullptr)) {
+        != EC_POINT_mul(EC_KEY_get0_group(key.get()), public_key_point,
+                        private_bignum, nullptr, nullptr, nullptr)) {
       return FAILED;
     }
 
     // check the public key
-    if (1 != EC_POINT_is_on_curve(curve, public_key_point, nullptr)) {
+    if (1
+        != EC_POINT_is_on_curve(EC_KEY_get0_group(key.get()), public_key_point,
+                                nullptr)) {
       return KeyValidatorError::INVALID_PUBLIC_KEY;
     }
 
@@ -101,5 +90,36 @@ namespace libp2p::crypto {
 
   template outcome::result<std::shared_ptr<EVP_PKEY>> NewEvpPkeyFromBytes(
       int, gsl::span<const uint8_t>, decltype(EVP_PKEY_new_raw_public_key) *);
+
+  outcome::result<std::vector<uint8_t>> GenerateEcSignature(
+      gsl::span<const uint8_t> digest,
+      const std::shared_ptr<EC_KEY> &key) {
+    std::shared_ptr<ECDSA_SIG> signature{
+        ECDSA_do_sign(digest.data(), digest.size(), key.get()), ECDSA_SIG_free};
+    if (signature == nullptr) {
+      return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+    }
+    int signature_length = i2d_ECDSA_SIG(signature.get(), nullptr);
+    if (signature_length < 0) {
+      return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+    }
+    std::vector<uint8_t> signature_bytes;
+    signature_bytes.resize(signature_length);
+    uint8_t *signature_bytes_ptr = signature_bytes.data();
+    i2d_ECDSA_SIG(signature.get(), &signature_bytes_ptr);
+    return std::move(signature_bytes);
+  }
+
+  outcome::result<bool> VerifyEcSignature(
+      gsl::span<const uint8_t> digest,
+      gsl::span<const uint8_t> signature,
+      const std::shared_ptr<EC_KEY> &key) {
+    int result = ECDSA_verify(0, digest.data(), digest.size(), signature.data(),
+                              signature.size(), key.get());
+    if (result < 0) {
+      return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+    }
+    return result == 1;
+  }
 
 }  // namespace libp2p::crypto

@@ -7,6 +7,8 @@
 #define LIBP2P_COMMON_FUNCTIONS_HPP
 
 #include <memory>
+#include <vector>
+#include <array>
 
 #include <openssl/ec.h>
 #include <openssl/evp.h>
@@ -46,6 +48,28 @@ namespace libp2p::crypto {
   extern template outcome::result<std::shared_ptr<EVP_PKEY>>
   NewEvpPkeyFromBytes(int, gsl::span<const uint8_t>,
                       decltype(EVP_PKEY_new_raw_public_key) *);
+
+  /**
+   * @brief Generate EC signature based on key type
+   * @param digest - message hash
+   * @param key - private key
+   * @param output - signature result
+   * @return EC signature or error code
+   */
+  outcome::result<std::vector<uint8_t>> GenerateEcSignature(
+      gsl::span<const uint8_t> digest, const std::shared_ptr<EC_KEY> &key);
+
+  /**
+   * @brief Verify EC signature based on key type
+   * @param digest - message hash
+   * @param signature - bytes of the EC signature
+   * @param key - EC public key
+   * @return signature status or error code
+   */
+  outcome::result<bool> VerifyEcSignature(
+      gsl::span<const uint8_t> digest,
+      gsl::span<const uint8_t> signature,
+      const std::shared_ptr<EC_KEY> &key);
 
 }  // namespace libp2p::crypto
 
