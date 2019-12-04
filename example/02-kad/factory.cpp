@@ -12,6 +12,7 @@
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
+#include <libp2p/host/basic_host.hpp>
 #include <libp2p/muxer/mplex.hpp>
 #include <libp2p/muxer/yamux.hpp>
 #include <libp2p/network/impl/connection_manager_impl.hpp>
@@ -20,18 +21,16 @@
 #include <libp2p/network/impl/network_impl.hpp>
 #include <libp2p/network/impl/router_impl.hpp>
 #include <libp2p/network/impl/transport_manager_impl.hpp>
+#include <libp2p/peer/address_repository/inmem_address_repository.hpp>
 #include <libp2p/peer/impl/identity_manager_impl.hpp>
+#include <libp2p/peer/impl/peer_repository_impl.hpp>
+#include <libp2p/peer/key_repository/inmem_key_repository.hpp>
+#include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
 #include <libp2p/protocol_muxer/multiselect.hpp>
 #include <libp2p/security/plaintext.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp.hpp>
-#include <libp2p/host/basic_host.hpp>
-#include <libp2p/peer/address_repository/inmem_address_repository.hpp>
-#include <libp2p/peer/impl/peer_repository_impl.hpp>
-#include <libp2p/peer/key_repository/inmem_key_repository.hpp>
-#include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
-
 
 #include <libp2p/protocol/kademlia/impl/routing_table_impl.hpp>
 
@@ -39,9 +38,9 @@
 
 #include "factory.hpp"
 
-namespace libp2p::kad_example {
+namespace libp2p::protocol::kademlia::example {
 
-  std::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string& str) {
+  std::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str) {
     using R = std::optional<libp2p::peer::PeerInfo>;
 
     auto server_ma_res = libp2p::multi::Multiaddress::create(str);
@@ -59,14 +58,14 @@ namespace libp2p::kad_example {
     }
 
     auto server_peer_id_res =
-      libp2p::peer::PeerId::fromBase58(*server_peer_id_str);
+        libp2p::peer::PeerId::fromBase58(*server_peer_id_str);
     if (!server_peer_id_res) {
       std::cerr << "Unable to decode peer id from base 58: "
                 << server_peer_id_res.error().message() << std::endl;
       return R();
     }
 
-    return libp2p::peer::PeerInfo{server_peer_id_res.value(), {server_ma} };
+    return libp2p::peer::PeerInfo{server_peer_id_res.value(), {server_ma}};
   }
 
   namespace {
@@ -76,14 +75,15 @@ namespace libp2p::kad_example {
 
       auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();
       auto ed25519_provider =
-        std::make_shared<crypto::ed25519::Ed25519ProviderImpl>();
-      auto crypto_provider =
-        std::make_shared<crypto::CryptoProviderImpl>(csprng, ed25519_provider);
-      auto validator =
-        std::make_shared<crypto::validator::KeyValidatorImpl>(crypto_provider);
+          std::make_shared<crypto::ed25519::Ed25519ProviderImpl>();
+      auto crypto_provider = std::make_shared<crypto::CryptoProviderImpl>(
+          csprng, ed25519_provider);
+      auto validator = std::make_shared<crypto::validator::KeyValidatorImpl>(
+          crypto_provider);
 
       // assume no error here. otherwise... just blow up executable
-      auto keypair = crypto_provider->generateKeys(crypto::Key::Type::Ed25519).value();
+      auto keypair =
+          crypto_provider->generateKeys(crypto::Key::Type::Ed25519).value();
 
       // clang-format off
       return di::make_injector<boost::di::extension::shared_config>(
@@ -126,21 +126,25 @@ namespace libp2p::kad_example {
       );
       // clang-format on
     }
-  }
+  }  // namespace
 
-  void createPerHostObjects(PerHostObjects& objects) {
+  void createPerHostObjects(PerHostObjects &objects) {
     auto injector = makeInjector(boost::di::bind<boost::asio::io_context>.to(
-      createIOContext())[boost::di::override]);
+        createIOContext())[boost::di::override]);
 
     objects.host = injector.create<std::shared_ptr<libp2p::Host>>();
-    objects.routing_table = injector.create<std::shared_ptr<libp2p::protocol::kademlia::RoutingTableImpl>>();
-    objects.key_gen = injector.create<std::shared_ptr<libp2p::crypto::CryptoProvider>>();
-    objects.key_marshaller = injector.create<std::shared_ptr<libp2p::crypto::marshaller::KeyMarshaller>>();
+    objects.routing_table = injector.create<
+        std::shared_ptr<libp2p::protocol::kademlia::RoutingTableImpl>>();
+    objects.key_gen =
+        injector.create<std::shared_ptr<libp2p::crypto::CryptoProvider>>();
+    objects.key_marshaller = injector.create<
+        std::shared_ptr<libp2p::crypto::marshaller::KeyMarshaller>>();
   }
 
   std::shared_ptr<boost::asio::io_context> createIOContext() {
-    static std::shared_ptr<boost::asio::io_context> c = std::make_shared<boost::asio::io_context>();
+    static std::shared_ptr<boost::asio::io_context> c =
+        std::make_shared<boost::asio::io_context>();
     return c;
   }
 
-} //namespace
+}  // namespace libp2p::kad_example

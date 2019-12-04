@@ -8,3 +8,4 @@ BinPackArguments: true
 BinPackParameters: true
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: false
+IncludeBlocks: Preserve

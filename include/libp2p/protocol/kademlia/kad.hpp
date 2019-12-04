@@ -7,32 +7,20 @@
 #define LIBP2P_KADEMLIA_KAD_HPP
 
 #include <libp2p/network/network.hpp>
-#include <libp2p/protocol/kademlia/config.hpp>
-#include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
-//#include <libp2p/protocol/kademlia/value_store.hpp>
-//#include <libp2p/routing/content_routing.hpp>
-//#include <libp2p/routing/peer_routing.hpp>
+#include <libp2p/protocol/kademlia/value_store_backend.hpp>
+#include <libp2p/protocol/kademlia/config.hpp>
 
 namespace libp2p::protocol::kademlia {
-
-  enum class Error {
-    SUCCESS = 0,
-    NO_PEERS = 1,
-    MESSAGE_PARSE_ERROR = 2,
-    MESSAGE_SERIALIZE_ERROR = 3,
-    UNEXPECTED_MESSAGE_TYPE = 4,
-    STREAM_RESET = 5
-  };
 
   /**
    * @class Kad
    *
    * Entrypoint to a kademlia network.
    */
-  class Kad : public protocol::BaseProtocol {
+  class Kad {
    public:
-    ~Kad() override = default;
+    virtual ~Kad() = default;
 
     virtual void start(bool start_server) = 0;
 
@@ -45,15 +33,30 @@ namespace libp2p::protocol::kademlia {
       bool success = false;
     };
 
-    using FindPeerQueryResultFunc = std::function<void(const peer::PeerId& peer, FindPeerQueryResult)>;
+    using FindPeerQueryResultFunc =
+        std::function<void(const peer::PeerId &peer, FindPeerQueryResult)>;
 
-    virtual bool findPeer(const peer::PeerId& peer, FindPeerQueryResultFunc f) = 0;
+    virtual bool findPeer(const peer::PeerId &peer,
+                          FindPeerQueryResultFunc f) = 0;
 
-    virtual bool findPeer(const peer::PeerId& peer, const PeerInfoSet& closer_peers, FindPeerQueryResultFunc f) = 0;
+    virtual bool findPeer(const peer::PeerId &peer,
+                          const PeerInfoSet &closer_peers,
+                          FindPeerQueryResultFunc f) = 0;
+
+    using PutValueResult = outcome::result<void>;
+    using PutValueResultFunc = std::function<void(PutValueResult)>;
+
+    using GetValueResult = outcome::result<Value>;
+    using GetValueResultFunc = std::function<void(GetValueResult)>;
+
+    /// PutValue adds value corresponding to given Key.
+    virtual void putValue(const ContentAddress& key, Value value,
+        PutValueResultFunc f) = 0;
+
+    /// GetValue searches for the value corresponding to given Key.
+    virtual void getValue(const ContentAddress& key, GetValueResultFunc f) = 0;
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::kademlia, Error);
 
 #endif  // LIBP2P_KADEMLIA_KAD_HPP

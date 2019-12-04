@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/network/impl/dialer_impl.hpp>
 #include <libp2p/common/logger.hpp>
 #include <libp2p/connection/stream.hpp>
+#include <libp2p/network/impl/dialer_impl.hpp>
 
 namespace libp2p::network {
 
@@ -15,7 +15,7 @@ namespace libp2p::network {
       log_->debug("dialer: found reusable connection");
 
       if (c->isInitiator()) {
-        // TODO dont reuse connections in opposite direction temporarily
+        // TODO(artem): dont reuse connections in opposite direction temporarily
         return cb(std::move(c));
       }
     }
@@ -70,13 +70,15 @@ namespace libp2p::network {
           auto &&conn = rconn.value();
 
           if (!conn->isInitiator()) {
-            log_->debug("dialer: opening outbound stream inside inbound connection");
+            log_->debug(
+                "dialer: opening outbound stream inside inbound connection");
           }
 
           // 2. open new stream on that connection
           conn->newStream(
-              [this, cb{std::move(cb)}, protocol]
-              (outcome::result<std::shared_ptr<connection::Stream>> rstream) mutable {
+              [this, cb{std::move(cb)},
+               protocol](outcome::result<std::shared_ptr<connection::Stream>>
+                             rstream) mutable {
                 if (!rstream) {
                   return cb(rstream.error());
                 }
@@ -93,7 +95,6 @@ namespace libp2p::network {
                       if (!rproto) {
                         return cb(rproto.error());
                       }
-
 
                       // 4. return stream back to the user
                       cb(std::move(stream));

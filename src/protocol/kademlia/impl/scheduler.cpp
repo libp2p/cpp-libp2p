@@ -3,30 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/kademlia/scheduler.hpp>
 #include <cassert>
+#include <libp2p/protocol/kademlia/scheduler.hpp>
 
 namespace libp2p::protocol::kademlia {
 
-  Scheduler::Scheduler() : last_tick_(0), counter_(0) {}
+  Scheduler::Scheduler() : counter_(0) {}
 
-  Scheduler::~Scheduler() {
-    for (auto &p : table_) {
-      p.second->done();
-    }
+  Scheduler::Handle Scheduler::schedule(Scheduler::Ticks delay,
+                                        Scheduler::Callback cb) {
+    assert(cb);
+    return Handle(newTicket(delay, std::move(cb)), weak_from_this());
   }
 
-  Scheduler::Handle Scheduler::schedule(Scheduler::Ticks delay, Scheduler::Callback cb) {
-    assert(cb);
+  Scheduler::Ticket Scheduler::newTicket(Scheduler::Ticks delay,
+                                         Scheduler::Callback cb) {
     auto abs_delay = (delay != 0) ? now() + delay : 0;
     Ticket ticket(abs_delay, ++counter_);
-    Handle h(new scheduler::Handle(ticket, this, std::move(cb)));
-    table_[ticket] = h.get();
-    //    log_->info("Timer create: now={}, table size={}", last_tick_, table_.size());
+    table_[ticket] = std::move(cb);
     if (delay == 0) {
       scheduleImmediate();
     }
-    return h;
+    return ticket;
   }
 
   Scheduler::Handle Scheduler::schedule(Scheduler::Callback cb) {
@@ -35,39 +33,42 @@ namespace libp2p::protocol::kademlia {
 
   void Scheduler::cancel(const Ticket &ticket) {
     table_.erase(ticket);
-    //     log_->info("Timer cancel: now={}, table size={}", last_tick_, table_.size());
+  }
+
+  Scheduler::Ticket Scheduler::reschedule(const Ticket &ticket, Ticks delay) {
+    assert(ticket.second);
+    if (ticket.second == counter_in_progress_) {
+      // recheduling from inside current callback
+      return newTicket(delay, cb_in_progress_);
+    }
+    auto it = table_.find(ticket);
+    assert (it != table_.end());
+    auto cb = std::move(it->second);
+    table_.erase(it);
+    return newTicket(delay, std::move(cb));
   }
 
   void Scheduler::pulse(bool immediate) {
-    if (!immediate) {
-      last_tick_ = now();
+    Ticks time = immediate ? 0 : now();
+    while (nextCallback(time)) {
+      cb_in_progress_();
     }
-    for (;;) {
-      //   log_->info("Timer pulse: now={}, table size={}", last_tick_, table_.size());
-      scheduler::Handle *h = getHandle(immediate);
-      if (!h) {
-        break;
-      }
-      h->call();
-    }
+    counter_in_progress_ = 0;
+    cb_in_progress_ = Callback();
   }
 
-  scheduler::Handle *Scheduler::getHandle(bool immediate) {
+  bool Scheduler::nextCallback(Ticks time) {
     if (table_.empty()) {
-      return nullptr;
+      return false;
     }
     auto it = table_.begin();
-    auto time = it->first.first;
-    if (immediate) {
-      if (time != 0) {
-        return nullptr;
-      }
-    } else if (time > last_tick_) {
-      return nullptr;
+    if (it->first.first > time) {
+      return false;
     }
-    scheduler::Handle *h = it->second;
+    counter_in_progress_ = it->first.first;
+    cb_in_progress_ = std::move(it->second);
     table_.erase(it);
-    return h;
+    return true;
   }
 
-} //namespace
+}  // namespace libp2p::protocol::kademlia

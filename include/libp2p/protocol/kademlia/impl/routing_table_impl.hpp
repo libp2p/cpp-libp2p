@@ -28,7 +28,7 @@ namespace libp2p::protocol::kademlia {
 
     RoutingTableImpl(std::shared_ptr<peer::IdentityManager> idmgr,
                      std::shared_ptr<event::Bus> bus,
-                     RoutingTable::Config config = {});
+                     const KademliaConfig& config);
 
     outcome::result<void> update(const peer::PeerId &pid) override;
 

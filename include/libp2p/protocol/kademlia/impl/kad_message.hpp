@@ -25,7 +25,7 @@ namespace libp2p::protocol::kademlia {
     };
 
     struct Record {
-      Key key;
+      ContentAddress key;
       Value value;
       std::string time_received;
     };
@@ -39,7 +39,7 @@ namespace libp2p::protocol::kademlia {
     using Peers = std::vector<Peer>;
 
     Type type = kPing;
-    Key key;
+    std::vector<uint8_t> key;
     std::optional<Record> record;
     std::optional<Peers> closer_peers;
     std::optional<Peers> provider_peers;
@@ -47,17 +47,25 @@ namespace libp2p::protocol::kademlia {
     void clear();
 
     // tries to deserialize message from byte array
-    bool deserialize(const void* data, size_t sz);
+    bool deserialize(const void *data, size_t sz);
 
     // serializes varint(message length) + message into buffer
-    bool serialize(std::vector<uint8_t>& buffer) const;
+    bool serialize(std::vector<uint8_t> &buffer) const;
 
     // adds this peer listening address to closer_peers
     void selfAnnounce(peer::PeerInfo self);
   };
 
   // self is a protocol extension if this is server (i.e. announce)
-  Message createFindNodeRequest(const peer::PeerId& node, std::optional<peer::PeerInfo> self_announce);
+  Message createFindNodeRequest(const peer::PeerId &node,
+                                std::optional<peer::PeerInfo> self_announce);
 
-}
-#endif //LIBP2P_KAD_MESSAGE_HPP
+  Message createPutValueRequest(const ContentAddress &key,
+                                Value value);
+
+  Message createGetValueRequest(const ContentAddress &key);
+
+  Message createAddProviderRequest(peer::PeerInfo self, const ContentAddress &key);
+
+}  // namespace libp2p::protocol::kademlia
+#endif  // LIBP2P_KAD_MESSAGE_HPP

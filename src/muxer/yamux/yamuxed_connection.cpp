@@ -469,7 +469,7 @@ namespace libp2p::connection {
       streams_.erase(stream_id);
       stream->resetStream();
 
-      // TODO temporarily cleanup itself!
+      // TODO(artem): temporarily cleanup itself!
 //      if (streams_.empty() && !new_stream_pending_) {
 //        auto res = close();
 //        if (!res) {

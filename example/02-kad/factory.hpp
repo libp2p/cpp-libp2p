@@ -6,12 +6,12 @@
 #ifndef LIBP2P_KAD_EXAMPLE_FACTORY_HPP
 #define LIBP2P_KAD_EXAMPLE_FACTORY_HPP
 
-#include <libp2p/host/host.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
+#include <libp2p/host/host.hpp>
 #include <memory>
 
-namespace libp2p::kad_example {
+namespace libp2p::protocol::kademlia::example {
   std::shared_ptr<boost::asio::io_context> createIOContext();
 
   struct PerHostObjects {
@@ -21,10 +21,10 @@ namespace libp2p::kad_example {
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller;
   };
 
-  void createPerHostObjects(PerHostObjects& objects);
+  void createPerHostObjects(PerHostObjects &objects);
 
-  std::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string& str);
+  std::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str);
 
-} //namespace
+}  // namespace libp2p::protocol::kademlia::example
 
-#endif //LIBP2P_KAD_EXAMPLE_FACTORY_HPP
+#endif  // LIBP2P_KAD_EXAMPLE_FACTORY_HPP

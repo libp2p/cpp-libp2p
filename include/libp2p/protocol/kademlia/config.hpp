@@ -56,6 +56,8 @@ namespace libp2p::protocol::kademlia {
     /// Alpha is the concurrency for asynchronous requests
     size_t ALPHA = 3;
 
+    size_t closer_peers_count = 6;
+
     size_t max_message_size = 2u << 22u;  // 4 MB
   };
 

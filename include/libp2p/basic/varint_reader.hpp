@@ -10,8 +10,9 @@
 #include <memory>
 
 #include <boost/optional.hpp>
-#include <libp2p/multi/uvarint.hpp>
+
 #include <libp2p/basic/readwriter.hpp>
+#include <libp2p/multi/uvarint.hpp>
 
 namespace libp2p::basic {
   class VarintReader {

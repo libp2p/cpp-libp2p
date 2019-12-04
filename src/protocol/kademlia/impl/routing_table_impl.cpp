@@ -156,11 +156,11 @@ namespace libp2p::protocol::kademlia {
 
   RoutingTableImpl::RoutingTableImpl(
       std::shared_ptr<peer::IdentityManager> idmgr,
-      std::shared_ptr<event::Bus> bus, RoutingTable::Config config)
+      std::shared_ptr<event::Bus> bus, const KademliaConfig &config)
       : idmgr_(std::move(idmgr)),
         local_(idmgr_->getId()),
         bus_(std::move(bus)),
-        bucket_size_(config.bucket_size) {
+        bucket_size_(config.K) {
     BOOST_ASSERT(idmgr_ != nullptr);
     BOOST_ASSERT(bus_ != nullptr);
     buckets_.emplace_back();  // create 1 bucket

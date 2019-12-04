@@ -3,20 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/kademlia/kad.hpp>
-#include <libp2p/protocol/kademlia/impl/kad_protocol_session.hpp>
-#include <libp2p/protocol/kademlia/impl/kad_message.hpp>
 #include <libp2p/basic/varint_reader.hpp>
+#include <libp2p/protocol/kademlia/impl/kad_message.hpp>
+#include <libp2p/protocol/kademlia/impl/kad_protocol_session.hpp>
+#include <libp2p/protocol/kademlia/kad.hpp>
 
 namespace libp2p::protocol::kademlia {
 
   KadProtocolSession::KadProtocolSession(
       std::weak_ptr<KadSessionHost> host,
-      std::shared_ptr<connection::Stream> stream
-  ) :
-    host_(std::move(host)),
-    stream_(std::move(stream))
-  {}
+      std::shared_ptr<connection::Stream> stream,
+      scheduler::Ticks operations_timeout)
+      : host_(std::move(host)), stream_(std::move(stream)),
+      operations_timeout_(operations_timeout) {}
 
   bool KadProtocolSession::read() {
     if (reading_ || stream_->isClosedForRead() || host_.expired()) {
@@ -25,17 +24,18 @@ namespace libp2p::protocol::kademlia {
     reading_ = true;
     libp2p::basic::VarintReader::readVarint(
         stream_,
-        [host_wptr = host_, self_wptr = weak_from_this(), this]
-          (boost::optional<multi::UVarint> varint_opt) {
+        [host_wptr = host_, self_wptr = weak_from_this(),
+         this](boost::optional<multi::UVarint> varint_opt) {
           if (host_wptr.expired() || self_wptr.expired()) {
             return;
           }
           onLengthRead(std::move(varint_opt));
         });
+    setTimeout();
     return true;
   }
 
-  bool KadProtocolSession::write(const Message& msg) {
+  bool KadProtocolSession::write(const Message &msg) {
     auto buffer = std::make_shared<std::vector<uint8_t>>();
     if (!msg.serialize(*buffer)) {
       return false;
@@ -50,25 +50,26 @@ namespace libp2p::protocol::kademlia {
     auto data = buffer->data();
     auto sz = buffer->size();
     stream_->write(
-      gsl::span(data, sz),
-      sz,
-      [host_wptr = host_, self_wptr = weak_from_this(), this, buffer = std::move(buffer)]
-        (outcome::result<size_t> result) {
-        if (host_wptr.expired() || self_wptr.expired()) {
-          return;
-        }
-        onMessageWritten(result);
-      }
-    );
+        gsl::span(data, sz), sz,
+        [host_wptr = host_, self_wptr = weak_from_this(), this,
+         buffer = std::move(buffer)](outcome::result<size_t> result) {
+          if (host_wptr.expired() || self_wptr.expired()) {
+            return;
+          }
+          onMessageWritten(result);
+        });
+    setTimeout();
     return true;
   }
 
-  void KadProtocolSession::onLengthRead(boost::optional<multi::UVarint> varint_opt) {
+  void KadProtocolSession::onLengthRead(
+      boost::optional<multi::UVarint> varint_opt) {
     auto host = host_.lock();
     if (!host || state_ == CLOSED_STATE) {
       return;
     }
     if (!varint_opt) {
+      cancelTimeout();
       host->onCompleted(stream_.get(), Error::MESSAGE_PARSE_ERROR);
       return;
     }
@@ -78,18 +79,18 @@ namespace libp2p::protocol::kademlia {
     } else {
       buffer_->resize(msg_len);
     }
-    stream_->read(
-        gsl::span(buffer_->data(), msg_len),
-        msg_len,
-        [host_wptr = host_, self_wptr = weak_from_this(), this, buffer = buffer_](auto &&res) {
-          if (host_wptr.expired() || self_wptr.expired()) {
-            return;
-          }
-          onMessageRead(std::forward<decltype(res)>(res));
-        });
+    stream_->read(gsl::span(buffer_->data(), msg_len), msg_len,
+                  [host_wptr = host_, self_wptr = weak_from_this(), this,
+                   buffer = buffer_](auto &&res) {
+                    if (host_wptr.expired() || self_wptr.expired()) {
+                      return;
+                    }
+                    onMessageRead(std::forward<decltype(res)>(res));
+                  });
   }
 
   void KadProtocolSession::onMessageRead(outcome::result<size_t> res) {
+    cancelTimeout();
     auto host = host_.lock();
     if (!host || state_ == CLOSED_STATE) {
       return;
@@ -112,6 +113,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   void KadProtocolSession::onMessageWritten(outcome::result<size_t> res) {
+    cancelTimeout();
     auto host = host_.lock();
     if (!host || state_ == CLOSED_STATE) {
       return;
@@ -125,7 +127,30 @@ namespace libp2p::protocol::kademlia {
 
   void KadProtocolSession::close() {
     state_ = CLOSED_STATE;
-    stream_->close([self{shared_from_this()}](outcome::result<void>){});
+    cancelTimeout();
+    stream_->close([self{shared_from_this()}](outcome::result<void>) {});
   }
 
-} //namespace
+  void KadProtocolSession::setTimeout() {
+    if (operations_timeout_ == 0) {
+      return;
+    }
+    auto host = host_.lock();
+    if (!host) {
+      return;
+    }
+    timeout_handle_ = host->scheduler().schedule(
+      operations_timeout_,
+      [host_wptr = host_, this] {
+        if (host_wptr.expired()) {
+          return;
+        }
+        host_wptr.lock()->onCompleted(stream_.get(), Error::TIMEOUT);
+      });
+  }
+
+  void KadProtocolSession::cancelTimeout() {
+    timeout_handle_.cancel();
+  }
+
+}  // namespace libp2p::protocol::kademlia

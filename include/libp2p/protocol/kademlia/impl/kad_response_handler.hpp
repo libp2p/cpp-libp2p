@@ -12,16 +12,20 @@
 
 namespace libp2p::protocol::kademlia {
 
-  class KadResponseHandler : public std::enable_shared_from_this<KadResponseHandler> {
+  class KadResponseHandler
+      : public std::enable_shared_from_this<KadResponseHandler> {
    public:
     using Ptr = std::shared_ptr<KadResponseHandler>;
     virtual ~KadResponseHandler() = default;
 
     virtual Message::Type expectedResponseType() = 0;
 
-    virtual void onResult(const peer::PeerId& from, outcome::result<Message> result) = 0;
+    virtual bool needResponse() = 0;
+
+    virtual void onResult(const peer::PeerId &from,
+                          outcome::result<Message> result) = 0;
   };
 
-} //namespace
+}  // namespace libp2p::protocol::kademlia
 
-#endif //LIBP2P_KAD_RESPONSE_HANDLER_HPP
+#endif  // LIBP2P_KAD_RESPONSE_HANDLER_HPP

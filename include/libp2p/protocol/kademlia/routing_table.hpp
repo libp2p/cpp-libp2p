@@ -8,6 +8,7 @@
 
 #include <libp2p/event/bus.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
+#include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
 
 namespace libp2p::protocol::kademlia {
@@ -28,11 +29,6 @@ namespace libp2p::protocol::kademlia {
    * https://sourcegraph.com/github.com/libp2p/go-libp2p-kbucket
    */
   struct RoutingTable {
-    struct Config {
-      size_t bucket_size;
-      Config(size_t bs=20) : bucket_size(bs) {} // XXX: boost::di initializes integer members to 0 (???) - yes...
-    };
-
     virtual ~RoutingTable() = default;
 
     /// Update adds or moves the given peer to the front of its respective

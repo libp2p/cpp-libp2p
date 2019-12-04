@@ -29,7 +29,7 @@ Peer::Peer(Peer::Duration timeout)
       keys, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
       "failed to generate keys");
 
-  host_ = makeHost(std::move(keys));
+  host_ = makeHost(keys);
 
   host_->setProtocolHandler(
       echo_->getProtocolId(),
@@ -86,7 +86,7 @@ void Peer::wait() {
   }
 }
 
-Peer::sptr<host::BasicHost> Peer::makeHost(crypto::KeyPair keyPair) {
+Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto crypto_provider = std::make_shared<crypto::CryptoProviderImpl>(
       random_provider_, ed25519_provider_);
 

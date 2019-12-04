@@ -7,9 +7,9 @@
 #include <gtest/gtest.h>
 #include <unordered_set>
 
+#include <libp2p/common/literals.hpp>
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include <libp2p/common/literals.hpp>
 #include "testutil/outcome.hpp"
 
 using namespace libp2p;
@@ -25,7 +25,7 @@ using ::testing::ReturnRef;
 struct RoutingTableFixture : public ::testing::Test {
   RoutingTableFixture() {
     EXPECT_CALL(*idmgr, getId()).WillRepeatedly(ReturnRef(local));
-    rt = std::make_shared<RoutingTableImpl>(idmgr, bus);
+    rt = std::make_shared<RoutingTableImpl>(idmgr, bus, KademliaConfig{});
   }
 
   std::shared_ptr<Bus> bus = std::make_shared<Bus>();
@@ -82,7 +82,7 @@ TEST_F(RoutingTableFixture, BusWorks) {
  * https://sourcegraph.com/github.com/libp2p/go-libp2p-kbucket@HEAD/-/blob/table_test.go#L168
  */
 TEST_F(RoutingTableFixture, FindMultiple) {
-  rt = std::make_shared<RoutingTableImpl>(idmgr, bus, RoutingTable::Config{20});
+  rt = std::make_shared<RoutingTableImpl>(idmgr, bus, KademliaConfig{});
   srand(0);  // to make test deterministic
 
   std::vector<PeerId> peers;
@@ -104,7 +104,9 @@ TEST_F(RoutingTableFixture, FindMultiple) {
  * https://sourcegraph.com/github.com/libp2p/go-libp2p-kbucket@HEAD/-/blob/table_test.go
  */
 TEST_F(RoutingTableFixture, EldestPreferred) {
-  rt = std::make_shared<RoutingTableImpl>(idmgr, bus, RoutingTable::Config{10});
+  KademliaConfig conf;
+  conf.K = 10;
+  rt = std::make_shared<RoutingTableImpl>(idmgr, bus, conf);
   srand(0);  // to make test deterministic
 
   std::vector<PeerId> peers;
@@ -136,7 +138,9 @@ TEST_F(RoutingTableFixture, EldestPreferred) {
  * https://sourcegraph.com/github.com/libp2p/go-libp2p-kbucket@HEAD/-/blob/table_test.go#L97
  */
 TEST_F(RoutingTableFixture, DISABLED_TableUpdate) {
-  rt = std::make_shared<RoutingTableImpl>(idmgr, bus, RoutingTable::Config{10});
+  KademliaConfig conf;
+  conf.K = 10;
+  rt = std::make_shared<RoutingTableImpl>(idmgr, bus, conf);
   srand(0);  // to make test deterministic
 
   std::vector<PeerId> peers;
@@ -163,7 +167,9 @@ TEST_F(RoutingTableFixture, DISABLED_TableUpdate) {
 TEST_F(RoutingTableFixture, TableFind) {
   const auto nPeers = 5;
 
-  rt = std::make_shared<RoutingTableImpl>(idmgr, bus, RoutingTable::Config{10});
+  KademliaConfig conf;
+  conf.K = 10;
+  rt = std::make_shared<RoutingTableImpl>(idmgr, bus, conf);
   srand(0);  // to make test deterministic
 
   std::vector<PeerId> peers;
