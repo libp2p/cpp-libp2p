@@ -55,16 +55,13 @@ namespace libp2p::connection {
     if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
       return cb(Error::INVALID_ARGUMENT);
     }
-    if (!is_readable_) {
-      return cb(Error::NOT_READABLE);
-    }
     if (is_reading_) {
       return cb(Error::IS_READING);
     }
 
     is_reading_ = true;
 
-    auto read_lambda = [self{shared_from_this()}, cb = std::move(cb), out,
+    auto read_lambda = [self{shared_from_this()}, cb, out,
                         bytes, some]() mutable {
       // if there is enough data in our buffer (depending if we want to read
       // some or all bytes), read it
@@ -102,6 +99,12 @@ namespace libp2p::connection {
     // return immediately, if there's enough data in the buffer
     if (read_lambda()) {
       return;
+    }
+
+    // is_readable_ flag is set due to FIN flag from the other side.
+    // Nevertheless, read and unconsumed data may exist at the moment
+    if (!is_readable_) {
+      return cb(Error::NOT_READABLE);
     }
 
     // else, set a callback, which is called each time a new data arrives

@@ -70,7 +70,7 @@ class Peer {
   void wait();
 
  private:
-  sptr<BasicHost> makeHost(KeyPair keyPair);
+  sptr<BasicHost> makeHost(const KeyPair &keyPair);
 
   MuxedConnectionConfig muxed_config_;          ///< muxed connection config
   const Duration timeout_;                      ///< operations timeout

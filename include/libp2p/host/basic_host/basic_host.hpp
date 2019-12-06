@@ -25,7 +25,8 @@ namespace libp2p::host {
 
     BasicHost(std::shared_ptr<peer::IdentityManager> idmgr,
               std::unique_ptr<network::Network> network,
-              std::unique_ptr<peer::PeerRepository> repo);
+              std::unique_ptr<peer::PeerRepository> repo,
+              std::shared_ptr<event::Bus> bus);
 
     std::string_view getLibp2pVersion() const override;
 
@@ -78,8 +79,7 @@ namespace libp2p::host {
     std::shared_ptr<peer::IdentityManager> idmgr_;
     std::unique_ptr<network::Network> network_;
     std::unique_ptr<peer::PeerRepository> repo_;
-
-    event::Bus bus_;
+    std::shared_ptr<event::Bus> bus_;
   };
 
 }  // namespace libp2p::host

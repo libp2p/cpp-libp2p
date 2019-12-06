@@ -18,6 +18,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, RoutingTableImpl::Error,
       return "peer has been rejected - no capacity";
     case E::PEER_REJECTED_HIGH_LATENCY:
       return "peer has been rejected - high latency";
+    default:
+      break;
   }
 
   return "unknown error";
@@ -52,12 +54,12 @@ namespace libp2p::protocol::kademlia {
     if (bucket.size() < count) {
       // In the case of an unusual split, one bucket may be short or empty.
       // if this happens, search both surrounding buckets for nearby peers
-      if (cpl > 0) {
-        auto &left = buckets_.at(cpl - 1);
+      if (bucketId > 0) {
+        auto &left = buckets_.at(bucketId - 1);
         bucket.insertEnd(left.begin(), left.end());
       }
-      if (cpl < buckets_.size() - 1) {
-        auto &right = buckets_.at(cpl + 1);
+      if (bucketId < buckets_.size() - 1) {
+        auto &right = buckets_.at(bucketId + 1);
         bucket.insertEnd(right.begin(), right.end());
       }
     }
@@ -154,11 +156,11 @@ namespace libp2p::protocol::kademlia {
 
   RoutingTableImpl::RoutingTableImpl(
       std::shared_ptr<peer::IdentityManager> idmgr,
-      std::shared_ptr<event::Bus> bus, RoutingTable::Config config)
+      std::shared_ptr<event::Bus> bus, const KademliaConfig &config)
       : idmgr_(std::move(idmgr)),
         local_(idmgr_->getId()),
         bus_(std::move(bus)),
-        bucket_size_(config.bucket_size) {
+        bucket_size_(config.K) {
     BOOST_ASSERT(idmgr_ != nullptr);
     BOOST_ASSERT(bus_ != nullptr);
     buckets_.emplace_back();  // create 1 bucket

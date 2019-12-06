@@ -65,7 +65,10 @@ namespace libp2p::connection {
     }
 
     auto stream_id = getNewStreamId();
-    return write(
+
+    new_stream_pending_ = true;
+
+    write(
         {newStreamMsg(stream_id),
          [self{shared_from_this()}, cb = std::move(cb), stream_id](auto &&res) {
            if (!res) {
@@ -75,6 +78,9 @@ namespace libp2p::connection {
                std::make_shared<YamuxStream>(self->weak_from_this(), stream_id,
                                              self->config_.maximum_window_size);
            self->streams_.insert({stream_id, created_stream});
+
+           self->new_stream_pending_ = false;
+
            return cb(std::move(created_stream));
          }});
   }
@@ -462,6 +468,14 @@ namespace libp2p::connection {
     if (auto stream = findStream(stream_id)) {
       streams_.erase(stream_id);
       stream->resetStream();
+
+      // TODO(artem): temporarily cleanup itself!
+//      if (streams_.empty() && !new_stream_pending_) {
+//        auto res = close();
+//        if (!res) {
+//          log_->error("cannot close connection: {} ", res.error().message());
+//        }
+//      }
     }
   }
 

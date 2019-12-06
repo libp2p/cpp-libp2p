@@ -11,8 +11,7 @@
 #include <boost/assert.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/peer/identity_manager.hpp>
-#include <libp2p/protocol/kademlia/bucket.hpp>
-#include <libp2p/protocol/kademlia/node_id.hpp>
+#include <libp2p/protocol/kademlia/impl/bucket.hpp>
 #include <libp2p/protocol/kademlia/routing_table.hpp>
 
 namespace libp2p::protocol::kademlia {
@@ -29,7 +28,7 @@ namespace libp2p::protocol::kademlia {
 
     RoutingTableImpl(std::shared_ptr<peer::IdentityManager> idmgr,
                      std::shared_ptr<event::Bus> bus,
-                     RoutingTable::Config config = {});
+                     const KademliaConfig& config);
 
     outcome::result<void> update(const peer::PeerId &pid) override;
 
@@ -54,6 +53,8 @@ namespace libp2p::protocol::kademlia {
     size_t bucket_size_;
 
     void nextBucket();
+
+    libp2p::common::Logger log_ = libp2p::common::createLogger("kad");
   };
 
 }  // namespace libp2p::protocol::kademlia

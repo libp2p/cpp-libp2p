@@ -7,14 +7,14 @@
 #define LIBP2P_KAD_NODE_ID_HPP
 
 #include <bitset>
-#include <vector>
-#include <memory>
 #include <cstring>
-
+#include <memory>
+#include <vector>
 
 #include <gsl/span>
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/peer/peer_id.hpp>
+#include <libp2p/protocol/kademlia/common.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -53,7 +53,13 @@ namespace libp2p::protocol::kademlia {
    public:
     explicit NodeId(const Hash256 &h) : data_(h) {}
 
+    explicit NodeId(const void *bytes) {
+      memcpy(data_.data(), bytes, 32);
+    }
+
     explicit NodeId(const peer::PeerId &pid) : data_(sha256(pid.toVector())) {}
+
+    explicit NodeId(const ContentAddress& ca) : data_(sha256(ca.data)) {}
 
     inline bool operator==(const NodeId &other) const {
       return data_ == other.data_;

@@ -29,7 +29,7 @@ Peer::Peer(Peer::Duration timeout)
       keys, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
       "failed to generate keys");
 
-  host_ = makeHost(std::move(keys));
+  host_ = makeHost(keys);
 
   host_->setProtocolHandler(
       echo_->getProtocolId(),
@@ -86,7 +86,7 @@ void Peer::wait() {
   }
 }
 
-Peer::sptr<host::BasicHost> Peer::makeHost(crypto::KeyPair keyPair) {
+Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto crypto_provider = std::make_shared<crypto::CryptoProviderImpl>(
       random_provider_, ed25519_provider_);
 
@@ -123,7 +123,9 @@ Peer::sptr<host::BasicHost> Peer::makeHost(crypto::KeyPair keyPair) {
   auto tmgr =
       std::make_shared<network::TransportManagerImpl>(std::move(transports));
 
-  auto cmgr = std::make_shared<network::ConnectionManagerImpl>(tmgr);
+  auto bus = std::make_shared<libp2p::event::Bus>();
+
+  auto cmgr = std::make_shared<network::ConnectionManagerImpl>(bus, tmgr);
 
   auto listener = std::make_unique<network::ListenerManagerImpl>(
       multiselect, std::move(router), tmgr, cmgr);
@@ -143,5 +145,5 @@ Peer::sptr<host::BasicHost> Peer::makeHost(crypto::KeyPair keyPair) {
       std::move(addr_repo), std::move(key_repo), std::move(protocol_repo));
 
   return std::make_shared<host::BasicHost>(idmgr, std::move(network),
-                                           std::move(peer_repo));
+                                           std::move(peer_repo), std::move(bus));
 }

@@ -3,16 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/network/impl/dialer_impl.hpp>
-
+#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/stream.hpp>
+#include <libp2p/network/impl/dialer_impl.hpp>
 
 namespace libp2p::network {
 
   void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb) {
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
-      return cb(std::move(c));
+      log_->debug("dialer: found reusable connection");
+
+      if (c->isInitiator()) {
+        // TODO(artem): dont reuse connections in opposite direction temporarily
+        return cb(std::move(c));
+      }
     }
 
     // we don't have a connection to this peer.
@@ -64,6 +69,11 @@ namespace libp2p::network {
           }
           auto &&conn = rconn.value();
 
+          if (!conn->isInitiator()) {
+            log_->debug(
+                "dialer: opening outbound stream inside inbound connection");
+          }
+
           // 2. open new stream on that connection
           conn->newStream(
               [this, cb{std::move(cb)},
@@ -73,6 +83,8 @@ namespace libp2p::network {
                   return cb(rstream.error());
                 }
                 auto &&stream = rstream.value();
+
+                log_->debug("dialer: inside newStream callback");
 
                 // 3. negotiate a protocol over that stream
                 std::vector<peer::Protocol> protocols{protocol};

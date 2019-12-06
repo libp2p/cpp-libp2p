@@ -10,6 +10,7 @@
 
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_id.hpp>
+#include <libp2p/common/logger.hpp>
 
 namespace libp2p::peer {
 

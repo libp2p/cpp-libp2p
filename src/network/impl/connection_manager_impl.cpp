@@ -36,10 +36,14 @@ namespace libp2p::network {
     auto it = connections_.find(p.id);
     if (it != connections_.end()) {
       // if all connections are nullptr or closed
-      if (it->second.empty()
-          || std::all_of(it->second.begin(), it->second.end(), [](auto &&conn) {
+      if (it->second.empty() ||
+          std::all_of(
+            it->second.begin(), it->second.end(),
+            [](auto &&conn) {
                return conn == nullptr || conn->isClosed();
-             })) {
+            }
+          )
+      ) {
         return Connectedness::NOT_CONNECTED;
       }
 
@@ -69,11 +73,11 @@ namespace libp2p::network {
       const peer::PeerId &p, ConnectionManager::ConnectionSPtr c) {
     auto it = connections_.find(p);
     if (it == connections_.end()) {
-      connections_.insert({p, {std::move(c)}});
-      return;
+      connections_.insert({p, {c}});
+    } else {
+      connections_[p].push_back(c);
     }
-
-    return connections_[p].push_back(std::move(c));
+    bus_->getChannel<event::OnNewConnectionChannel>().publish(c);
   }
 
   std::vector<ConnectionManager::ConnectionSPtr>
@@ -89,8 +93,9 @@ namespace libp2p::network {
   }
 
   ConnectionManagerImpl::ConnectionManagerImpl(
+      std::shared_ptr<libp2p::event::Bus> bus,
       std::shared_ptr<TransportManager> tmgr)
-      : transport_manager_(std::move(tmgr)) {
+      : transport_manager_(std::move(tmgr)), bus_(std::move(bus)) {
     BOOST_ASSERT(transport_manager_ != nullptr);
   }
 

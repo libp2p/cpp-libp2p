@@ -11,14 +11,23 @@
 
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/peer_info.hpp>
-#include <libp2p/protocol/kademlia/node_id.hpp>
+#include <libp2p/protocol/kademlia/content_address.hpp>
 
 namespace libp2p::protocol::kademlia {
 
-  using libp2p::common::Hash256;
+  enum class Error {
+    SUCCESS = 0,
+    NO_PEERS = 1,
+    MESSAGE_PARSE_ERROR = 2,
+    MESSAGE_SERIALIZE_ERROR = 3,
+    UNEXPECTED_MESSAGE_TYPE = 4,
+    STREAM_RESET = 5,
+    VALUE_NOT_FOUND = 6,
+    CONTENT_VALIDATION_FAILED = 7,
+    TIMEOUT = 8
+  };
 
-  /// DHT key
-  using Key = std::vector<uint8_t>;
+  using libp2p::common::Hash256;
 
   /// DHT value
   using Value = std::vector<uint8_t>;
@@ -29,22 +38,11 @@ namespace libp2p::protocol::kademlia {
   /// Vector of peer Ids
   using PeerIdVec = std::vector<peer::PeerId>;
 
-  /// Vector of peer Infos
-  using PeerInfoVec = std::vector<peer::PeerInfo>;
-
-  /// Vector of Node Ids
-  using NodeIdVec = std::vector<NodeId>;
-
-  /// Content Id
-  struct Cid {
-    // TODO(warchant): tbd
-  };
-
-  struct ReceivedValue {
-    Value value;
-    peer::PeerId from;
-  };
+  /// Set of peer Infos
+  using PeerInfoSet = std::unordered_set<peer::PeerInfo>;
 
 }  // namespace libp2p::protocol::kademlia
+
+OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::kademlia, Error);
 
 #endif  // LIBP2P_KADEMLIA_COMMON_HPP

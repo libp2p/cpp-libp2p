@@ -72,7 +72,7 @@ namespace libp2p::peer {
     /**
      * Creates a vector representation of PeerId.
      */
-    std::vector<uint8_t> toVector() const;
+    const std::vector<uint8_t>& toVector() const;
 
     /**
      * Get a SHA256 multihash of the peer's ID

@@ -33,8 +33,12 @@ namespace libp2p::multi {
     static outcome::result<std::vector<uint8_t>> encode(
         const ContentIdentifier &cid);
 
+    /// Encodes arbitrary byte buffer into CID v.0 wire format
+    static std::vector<uint8_t> encodeCIDV0(
+        const void* byte_buffer, size_t sz);
+
     static outcome::result<ContentIdentifier> decode(
-        gsl::span<uint8_t> bytes);
+        gsl::span<const uint8_t> bytes);
   };
 
 }  // namespace libp2p::multi
