@@ -35,4 +35,6 @@ jobs:
         export LLVM_ROOT=${LLVM_DIR}/${LLVM_VER}
         export PATH=${LLVM_ROOT}/bin:${LLVM_ROOT}/share/clang:${PATH}
         cmake . -GNinja -Bbuild
+        cmake --build build --target generated
         housekeeping/clang-tidy.sh build
+
