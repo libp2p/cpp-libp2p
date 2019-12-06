@@ -25,8 +25,9 @@ namespace libp2p::protocol::kademlia {
       // stub by default
     }
 
-    virtual void getNearestPeers(const NodeId& id, PeerIdVec& out) {
+    virtual PeerIdVec getNearestPeers(const NodeId& id) {
       // stub by default
+      return PeerIdVec();
     }
   };
 

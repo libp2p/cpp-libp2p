@@ -4,12 +4,14 @@
  */
 
 #include <chrono>
+#include <memory>
+
 #include <libp2p/common/literals.hpp>
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/protocol/kademlia/impl/asio_scheduler_impl.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_impl.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
-#include <memory>
+
 #include "factory.hpp"
 
 namespace libp2p::protocol::kademlia::example {
@@ -27,7 +29,7 @@ namespace libp2p::protocol::kademlia::example {
         .value();
   }
 
-  KademliaConfig getConfig() {
+  const KademliaConfig& getConfig() {
     static KademliaConfig config = ([] {
       KademliaConfig c;
       c.randomWalk.delay = 5s;
@@ -88,6 +90,7 @@ namespace libp2p::protocol::kademlia::example {
         kad->start(true);
       }
 
+
       void connect() {
         if (connect_to.empty())
           return;
@@ -102,7 +105,7 @@ namespace libp2p::protocol::kademlia::example {
       }
 
       void onBootstrapTimer() {
-        hbootstrap = kad->scheduler().schedule(2000, [this] { onBootstrapTimer(); });
+        hbootstrap.reschedule(2000);
         if (!request_sent) {
           request_sent =
               kad->findPeer(genRandomPeerId(*o.key_gen, *o.key_marshaller),
@@ -148,27 +151,6 @@ namespace libp2p::protocol::kademlia::example {
           logger->info("onFindPeer: i={}, res: success={}, peers={}", index,
                        res.success, res.closer_peers.size());
 
-        /*
-        if (verbose) {
-          //auto all = o.routing_table->getAllPeers();
-          auto all =
-        o.host->getPeerRepository().getAddressRepository().getPeers();
-        //routing_table->getAllPeers();
-          //auto it = std::find(all.begin(), all.end(), peer);
-          auto it = all.find(peer);
-          auto found_or_not = (it == all.end()) ? "not" : "";
-          std::string s;
-          for (const auto& p: all) {
-            s += " ";
-            s += p.toBase58();
-          }
-          logger->info("i={}, peer {} {} found among{}", index, peer.toBase58(),
-        found_or_not, s);
-        }
-         */
-
-        // auto& peers = res.closer_peers;
-
         htimer =
             kad->scheduler().schedule(1000, [this, peers = std::move(res.closer_peers)] {
               kad->findPeer(find_id.value(),
@@ -203,7 +185,7 @@ namespace libp2p::protocol::kademlia::example {
     void newHost(const std::shared_ptr<Scheduler>& sch) {
       size_t index = hosts.size();
       PerHostObjects o;
-      createPerHostObjects(o);
+      createPerHostObjects(o, getConfig());
       assert(o.host && o.routing_table);
       hosts.emplace_back(index, sch, std::move(o));
     }

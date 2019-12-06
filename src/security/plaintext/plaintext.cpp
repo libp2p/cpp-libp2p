@@ -11,6 +11,10 @@
 #include <libp2p/security/error.hpp>
 #include <libp2p/security/plaintext/plaintext_connection.hpp>
 
+#if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
+#	pragma GCC diagnostic ignored "-Wparentheses"
+#endif
+
 #define PLAINTEXT_OUTCOME_TRY(name, res, conn, cb) \
   auto(name) = (res);                              \
   if ((name).has_error()) {                        \
@@ -162,7 +166,8 @@ namespace libp2p::security {
     if (p.has_value()) {
       if (received_pid != p.value()) {
         auto s = p.value().toBase58();
-        log_->error("XXX: received_pid={}, p.value()={}", received_pid.toBase58(), s);
+        log_->error("received_pid={}, p.value()={}", received_pid.toBase58(),
+                    s);
         closeConnection(conn, Error::INVALID_PEER_ID);
         return cb(Error::INVALID_PEER_ID);
       }

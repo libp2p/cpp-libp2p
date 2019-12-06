@@ -34,6 +34,7 @@ namespace libp2p::protocol::kademlia {
       scheduler::Ticks updated_at = scheduler::Ticks{};
     };
 
+    /// Table of Record indexed by key, expire time and refresh time
     using Table = boost::multi_index_container<
         Record,
         mi::indexed_by<
@@ -49,6 +50,7 @@ namespace libp2p::protocol::kademlia {
 
   }  // namespace lvs_table
 
+  /// Manages key-value pairs stored on this host, and their lifetime (expiration)
   class LocalValueStore {
    public:
     using Ticks = scheduler::Ticks;

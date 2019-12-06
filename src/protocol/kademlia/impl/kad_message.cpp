@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <generated/protocol/kademlia/protobuf/kad.pb.h>
+
 #include <libp2p/multi/uvarint.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_message.hpp>
+
+#include <generated/protocol/kademlia/protobuf/kad.pb.h>
 
 namespace libp2p::protocol::kademlia {
 
@@ -30,7 +32,7 @@ namespace libp2p::protocol::kademlia {
         return R();
       }
 
-      auto peer_id_res = libp2p::peer::PeerId::fromBase58(src.id());
+      auto peer_id_res = peer::PeerId::fromBase58(src.id());
       if (!peer_id_res) {
         // TODO(artem): log
         return R();
@@ -38,7 +40,7 @@ namespace libp2p::protocol::kademlia {
 
       std::vector<multi::Multiaddress> addresses;
       for (const auto &addr : src.addrs()) {
-        auto res = libp2p::multi::Multiaddress::create(addr);
+        auto res = multi::Multiaddress::create(addr);
         if (!res) {
           // TODO(artem): log
           return R();
@@ -47,7 +49,7 @@ namespace libp2p::protocol::kademlia {
       }
 
       return Message::Peer{
-          libp2p::peer::PeerInfo{peer_id_res.value(), std::move(addresses)},
+          peer::PeerInfo{peer_id_res.value(), std::move(addresses)},
           ConnStatus(src.connection())};
     }
 
@@ -68,6 +70,18 @@ namespace libp2p::protocol::kademlia {
         }
       }
       return true;
+    }
+
+    template <class PbContainer>
+    std::optional<Message::Record> assign_record(const PbContainer &src) {
+      auto ca_res = ContentAddress::fromWire(src.key());
+      if (!ca_res) {
+        return {};
+      }
+      std::optional<Message::Record> record = Message::Record
+          { std::move(ca_res.value()), Value(), src.timereceived() };
+      assign_blob(record.value().value, src.value());
+      return record;
     }
 
   }  // namespace
@@ -92,12 +106,10 @@ namespace libp2p::protocol::kademlia {
     }
     assign_blob(key, pb_msg.key());
     if (pb_msg.has_record()) {
-      record = Record();
-      Record &dst = record.value();
-      const kad::pb::Record &src = pb_msg.record();
-      assign_blob(dst.key.data, src.key());
-      assign_blob(dst.value, src.value());
-      dst.time_received = src.timereceived();
+      record = assign_record(pb_msg.record());
+      if (!record) {
+        return false;
+      }
     }
     if (!assign_peers(closer_peers, pb_msg.closerpeers())) {
       return false;
@@ -148,7 +160,7 @@ namespace libp2p::protocol::kademlia {
     msg_sz);
   }
 
-  void Message::selfAnnounce(libp2p::peer::PeerInfo self) {
+  void Message::selfAnnounce(peer::PeerInfo self) {
     closer_peers = Message::Peers{
         {Message::Peer{std::move(self), Message::Connectedness::CAN_CONNECT}}};
   }

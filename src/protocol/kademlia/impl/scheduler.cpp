@@ -65,7 +65,7 @@ namespace libp2p::protocol::kademlia {
     if (it->first.first > time) {
       return false;
     }
-    counter_in_progress_ = it->first.first;
+    counter_in_progress_ = it->first.second;
     cb_in_progress_ = std::move(it->second);
     table_.erase(it);
     return true;

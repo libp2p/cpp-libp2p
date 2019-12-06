@@ -75,7 +75,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   outcome::result<void> LocalValueStore::putValue(const ContentAddress &key,
-                                 libp2p::protocol::kademlia::Value value) {
+                                 Value value) {
     if (!local_storage_->putValue(key, std::move(value))) {
       return Error::CONTENT_VALIDATION_FAILED;
     }

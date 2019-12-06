@@ -116,10 +116,11 @@ namespace libp2p::connection {
         return {};
     }
 
+    // NOLINTNEXTLINE
     frame.flags = ntohs(common::convert<uint16_t>(&frame_bytes[2]));
-
+    // NOLINTNEXTLINE
     frame.stream_id = ntohl(common::convert<uint32_t>(&frame_bytes[4]));
-
+    // NOLINTNEXTLINE
     frame.length = ntohl(common::convert<uint32_t>(&frame_bytes[8]));
 
     const auto &data_begin = frame_bytes.begin() + YamuxFrame::kHeaderLength;

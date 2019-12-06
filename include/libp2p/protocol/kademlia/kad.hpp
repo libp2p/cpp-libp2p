@@ -24,7 +24,8 @@ namespace libp2p::protocol::kademlia {
 
     virtual void start(bool start_server) = 0;
 
-    // permanent==true for bootstrap peers
+    /// Adds \param peer_info into address store and routing table.
+    /// \param permanent true for bootstrap peers
     virtual void addPeer(peer::PeerInfo peer_info, bool permanent) = 0;
 
     struct FindPeerQueryResult {
@@ -32,6 +33,8 @@ namespace libp2p::protocol::kademlia {
       boost::optional<peer::PeerInfo> peer{};
       bool success = false;
     };
+
+    // TODO(artem) : subscriptions instead of callbacks
 
     using FindPeerQueryResultFunc =
         std::function<void(const peer::PeerId &peer, FindPeerQueryResult)>;

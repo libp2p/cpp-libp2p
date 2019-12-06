@@ -29,12 +29,15 @@ namespace libp2p::protocol::kademlia {
       scheduler::Ticks expire_time = scheduler::Ticks{};
     };
 
+    /// Table of Record with 2 indices (by key and expire time)
     using Table = boost::multi_index_container<
         Record,
         mi::indexed_by<
+            // hashed_non_unique by key means unordered index, non-unique
             mi::hashed_non_unique<mi::tag<ByKey>,
                 mi::member<Record, ContentAddress, &Record::key>,
                 std::hash<ContentAddress>>,
+            // ordered_non_unique by expire time means accending order
             mi::ordered_non_unique<
                 mi::tag<ByExpireTime>,
                 mi::member<Record, scheduler::Ticks, &Record::expire_time>>>>;
@@ -50,7 +53,7 @@ namespace libp2p::protocol::kademlia {
 
     ~ContentProvidersStore();
 
-    void getProvidersFor(const ContentAddress& key, PeerIdVec& out) const;
+    PeerIdVec getProvidersFor(const ContentAddress& key) const;
 
     void addProvider(const ContentAddress& key, const peer::PeerId& peer);
 

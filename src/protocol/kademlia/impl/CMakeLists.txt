@@ -10,6 +10,7 @@ libp2p_add_library(p2p_kad
     kad_protocol_session.cpp
     local_value_store.cpp
     content_providers_store.cpp
+    content_address.cpp
     )
 target_link_libraries(p2p_kad
     Boost::boost

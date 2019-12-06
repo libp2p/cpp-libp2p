@@ -38,7 +38,7 @@ namespace libp2p::multi {
         const void* byte_buffer, size_t sz);
 
     static outcome::result<ContentIdentifier> decode(
-        gsl::span<uint8_t> bytes);
+        gsl::span<const uint8_t> bytes);
   };
 
 }  // namespace libp2p::multi

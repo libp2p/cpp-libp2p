@@ -33,11 +33,9 @@ namespace libp2p::protocol::kademlia {
     Scheduler &scheduler() override {
       return kad_.scheduler();
     }
-    void broadcastThisProvider(const ContentAddress& key) override {
-      // stub. Not a server logic
-    }
-    void getNearestPeers(const NodeId& id, PeerIdVec& out) override {
-      kad_.getNearestPeers(id, out);
+
+    PeerIdVec getNearestPeers(const NodeId& id) override {
+      return kad_.getNearestPeers(id);
     }
 
     enum SessionState {
@@ -70,7 +68,7 @@ namespace libp2p::protocol::kademlia {
     using Sessions = std::map<connection::Stream *, KadProtocolSession::Ptr>;
     Sessions sessions_;
 
-    common::Logger log_ = common::createLogger("kad");
+    SubLogger log_;
 
     using RequestHandler = bool (KadServer::*)(Message &);
     static std::array<RequestHandler, Message::kTableSize> request_handlers_table;

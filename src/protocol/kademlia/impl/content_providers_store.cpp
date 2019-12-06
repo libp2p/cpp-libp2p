@@ -29,14 +29,15 @@ namespace libp2p::protocol::kademlia {
 
   ContentProvidersStore::~ContentProvidersStore() = default;
 
-  void ContentProvidersStore::getProvidersFor(
-      const ContentAddress &key, PeerIdVec & out) const {
-    out.clear();
+  PeerIdVec ContentProvidersStore::getProvidersFor(
+      const ContentAddress &key) const {
+    PeerIdVec v;
     auto& idx = table_->get<ByKey>();
     auto [b, e] = idx.equal_range(key);
     for (auto it = b; it != e; ++it) {
-      out.push_back(it->peer);
+      v.push_back(it->peer);
     }
+    return v;
   }
 
   void ContentProvidersStore::addProvider(

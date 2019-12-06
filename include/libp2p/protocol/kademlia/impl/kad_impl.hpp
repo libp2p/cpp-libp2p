@@ -6,13 +6,13 @@
 #ifndef LIBP2P_KAD_IMPL_HPP
 #define LIBP2P_KAD_IMPL_HPP
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/host/host.hpp>
+#include <libp2p/protocol/kademlia/impl/content_providers_store.hpp>
+#include <libp2p/protocol/kademlia/impl/helpers.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_protocol_session.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_response_handler.hpp>
-#include <libp2p/protocol/kademlia/impl/local_value_store.hpp>
-#include <libp2p/protocol/kademlia/impl/content_providers_store.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_session_host.hpp>
+#include <libp2p/protocol/kademlia/impl/local_value_store.hpp>
 #include <libp2p/protocol/kademlia/kad.hpp>
 #include <libp2p/protocol/kademlia/routing_table.hpp>
 #include <libp2p/protocol/kademlia/scheduler.hpp>
@@ -25,12 +25,9 @@ namespace libp2p::protocol::kademlia {
                   public KadSessionHost,
                   public std::enable_shared_from_this<KadImpl> {
    public:
-    KadImpl(
-        std::shared_ptr<Host> host,
-        std::shared_ptr<Scheduler> scheduler,
-        std::shared_ptr<RoutingTable> table,
-        std::unique_ptr<ValueStoreBackend> storage,
-        KademliaConfig config);
+    KadImpl(std::shared_ptr<Host> host, std::shared_ptr<Scheduler> scheduler,
+            std::shared_ptr<RoutingTable> table,
+            std::unique_ptr<ValueStoreBackend> storage, KademliaConfig config);
 
     ~KadImpl() override;
 
@@ -44,11 +41,12 @@ namespace libp2p::protocol::kademlia {
                   const std::unordered_set<peer::PeerInfo> &closer_peers,
                   FindPeerQueryResultFunc f) override;
 
-    void putValue(const ContentAddress& key, Value value, PutValueResultFunc f) override;
+    void putValue(const ContentAddress &key, Value value,
+                  PutValueResultFunc f) override;
 
-    void getValue(const ContentAddress& key, GetValueResultFunc f) override;
+    void getValue(const ContentAddress &key, GetValueResultFunc f) override;
 
-    void broadcastThisProvider(const ContentAddress& key) override;
+    void broadcastThisProvider(const ContentAddress &key) override;
 
     const KademliaConfig &config() override {
       return config_;
@@ -58,13 +56,13 @@ namespace libp2p::protocol::kademlia {
       return *scheduler_;
     }
 
-    void getNearestPeers(const NodeId& id, PeerIdVec& out) override;
+    PeerIdVec getNearestPeers(const NodeId &id) override;
 
-    LocalValueStore& getLocalValueStore() {
+    LocalValueStore &getLocalValueStore() {
       return *local_store_;
     }
 
-    ContentProvidersStore& getContentProvidersStore() {
+    ContentProvidersStore &getContentProvidersStore() {
       return providers_store_;
     }
 
@@ -119,8 +117,8 @@ namespace libp2p::protocol::kademlia {
     uint64_t connecting_sessions_counter_ = 0;
 
     event::Handle new_channel_subscription_;
-    common::Logger log_ = common::createLogger("kad");
- };
+    SubLogger log_;
+  };
 
 }  // namespace libp2p::protocol::kademlia
 
