@@ -32,7 +32,7 @@ namespace libp2p::multi {
       SHA3_224 = 0x17,
       RAW = 0x55,
       DAG_PB = 0x70,
-      DAG_CBOR = 0x71
+      DAG_CBOR = 0x71,
     };
 
     static std::string getName(Code code) {
