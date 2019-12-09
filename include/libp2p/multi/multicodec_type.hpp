@@ -36,7 +36,7 @@ namespace libp2p::multi {
     static std::string getName(Code code) {
       switch (code) {
         case Code::IDENTITY:
-          return "raw";
+          return "identity";
         case Code::SHA1:
           return "sha1";
         case Code::SHA2_256:
