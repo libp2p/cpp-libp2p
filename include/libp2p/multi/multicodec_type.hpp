@@ -31,7 +31,8 @@ namespace libp2p::multi {
       SHA3_256 = 0x16,
       SHA3_224 = 0x17,
       RAW = 0x55,
-      DAG_PB = 0x70
+      DAG_PB = 0x70,
+      DAG_CBOR = 0x71
     };
 
     static std::string getName(Code code) {
@@ -56,6 +57,8 @@ namespace libp2p::multi {
           return "raw";
         case Code::DAG_PB:
           return "dag-pb";
+        case Code::DAG_CBOR:
+          return "dag-cbor";
       }
       return "unknown";
     }
