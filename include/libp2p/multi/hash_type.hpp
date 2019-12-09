@@ -17,6 +17,7 @@ namespace libp2p::multi {
     sha1 = 0x11,
     sha256 = 0x12,
     sha512 = 0x13,
+    blake2b_256 = 0xb220,
     blake2s128 = 0xb250,
     blake2s256 = 0xb260
   };

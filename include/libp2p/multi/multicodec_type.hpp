@@ -30,13 +30,15 @@ namespace libp2p::multi {
       SHA3_384 = 0x15,
       SHA3_256 = 0x16,
       SHA3_224 = 0x17,
-      DAG_PB = 0x70
+      RAW = 0x55,
+      DAG_PB = 0x70,
+      DAG_CBOR = 0x71,
     };
 
     static std::string getName(Code code) {
       switch (code) {
         case Code::IDENTITY:
-          return "raw";
+          return "identity";
         case Code::SHA1:
           return "sha1";
         case Code::SHA2_256:
@@ -51,8 +53,12 @@ namespace libp2p::multi {
           return "sha3-384";
         case Code::SHA3_512:
           return "sha3-512";
+        case Code::RAW:
+          return "raw";
         case Code::DAG_PB:
           return "dag-pb";
+        case Code::DAG_CBOR:
+          return "dag-cbor";
       }
       return "unknown";
     }

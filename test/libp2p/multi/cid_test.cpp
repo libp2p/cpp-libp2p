@@ -34,7 +34,7 @@ TEST(CidTest, PrettyString) {
   ContentIdentifier c1(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
                        ZERO_MULTIHASH);
   ASSERT_EQ(c1.toPrettyString("base58"),
-            "base58 - cidv1 - raw - sha2-256-256-"
+            "base58 - cidv1 - identity - sha2-256-256-"
                 + libp2p::common::hex_lower(ZERO_MULTIHASH.getHash()));
   ContentIdentifier c2(ContentIdentifier::Version::V0, MulticodecType::DAG_PB,
                        EXAMPLE_MULTIHASH);
