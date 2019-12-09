@@ -30,6 +30,7 @@ namespace libp2p::multi {
       SHA3_384 = 0x15,
       SHA3_256 = 0x16,
       SHA3_224 = 0x17,
+      RAW = 0x55,
       DAG_PB = 0x70
     };
 
@@ -51,6 +52,8 @@ namespace libp2p::multi {
           return "sha3-384";
         case Code::SHA3_512:
           return "sha3-512";
+        case Code::RAW:
+          return "raw";
         case Code::DAG_PB:
           return "dag-pb";
       }
