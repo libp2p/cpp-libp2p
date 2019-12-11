@@ -6,22 +6,18 @@
 #ifndef LIBP2P_GOSSIP_WIRE_PROTOCOL_HPP
 #define LIBP2P_GOSSIP_WIRE_PROTOCOL_HPP
 
-#include <cstdint>
-#include <vector>
-#include <string>
+#include <map>
 
 #include <gsl/span>
-#include <boost/optional.hpp>
+
+#include "common.hpp"
+
+namespace pubsub::pb {
+  class RPC;
+  class ControlMessage;
+}  // namespace pubsub::pb
 
 namespace libp2p::protocol::gossip {
-
-  using Bytes = std::vector<uint8_t>;
-  template <typename T> using Optional = boost::optional<T>;
-  template <typename T> using Repeated = std::vector<T>;
-  using TopicId = std::string;
-
-  // TODO(artem): check if message id == from + seq_no (???)
-  using MessageId = std::string;
 
   /// Subscribe-unsubscribe request
   struct SubOpts {
@@ -32,32 +28,16 @@ namespace libp2p::protocol::gossip {
     TopicId topic_id;
   };
 
-  /// Message being published
-  struct TopicMessage {
-    // TODO(artem): peerId or whatever?
-    Bytes from;
+  /// Announces about topic messages available on a host
+  using IHaveTable = std::map<TopicId, Repeated<MessageId>>;
 
-    Bytes data;
+  /// General wire protocol message
+  struct RPCMessage {
+    /// Subscribe-unsubscribe requests
+    Repeated<SubOpts> subscriptions;
 
-    // TODO(artem): why sequence number is not integer?
-    Bytes seq_no;
-
-    Repeated<TopicId> topic_ids;
-
-    Optional<Bytes> signature;
-    Optional<Bytes> key;
-  };
-
-  /// Announce about topic messages presented on this host
-  struct IHave {
-    TopicId topic_id;
-    Repeated<MessageId> message_ids;
-  };
-
-  /// Pub-sub subnet control message
-  struct ControlMessage {
-    /// Announces by topics
-    Repeated<IHave> i_have;
+    /// "I have" announces by topics
+    IHaveTable i_have;
 
     /// Requests for messages
     Repeated<MessageId> i_want;
@@ -68,21 +48,8 @@ namespace libp2p::protocol::gossip {
     /// Requests to leave per-topic mesh
     Repeated<TopicId> prune;
 
-    bool empty() const;
-
-    void clear();
-  };
-
-  /// General wire protocol message
-  struct GossipMessage {
-    /// Subscribe-unsubscribe requests
-    Repeated<SubOpts> subscriptions;
-
     /// Messages to publish
-    Repeated<TopicMessage> publish;
-
-    /// Control messages
-    Optional<ControlMessage> control;
+    Repeated<TopicMessage::Ptr> publish;
 
     bool empty() const;
 
@@ -90,13 +57,86 @@ namespace libp2p::protocol::gossip {
 
     bool deserialize(gsl::span<const uint8_t> bytes);
 
-    bool serialize(std::vector<uint8_t>& buffer) const;
+    bool serialize(std::vector<uint8_t> &buffer) const;
   };
 
+  /// Interface for accepting sub messages being read from wire
+  class MessageReceiver {
+   public:
+    virtual ~MessageReceiver() = default;
 
-  // TODO(artem): TopicDescriptor
+    /// Topic subscribe-unsubscribe request received
+    virtual void onSubscription(const PeerId &from, bool subscribe,
+                                const TopicId &topic) = 0;
 
-} //namespace libp2p::protocol::gossip
+    /// "I have message ids" notification received
+    virtual void onIHave(const PeerId &from, const TopicId &topic,
+                         MessageId &&msg_id) = 0;
 
+    /// "I want message" request received
+    virtual void onIWant(const PeerId &from, MessageId &&msg_id) = 0;
+
+    /// Graft request received (gossip mesh control)
+    virtual void onGraft(const PeerId &from, const TopicId &topic) = 0;
+
+    /// Prune request received (gossip mesh control)
+    virtual void onPrune(const PeerId &from, const TopicId &topic) = 0;
+
+    /// Message received
+    virtual void onMessage(const PeerId &from, TopicMessage::Ptr msg) = 0;
+  };
+
+  /// Parses RPC protobuf message received from wire
+  bool parseRPCMessage(const PeerId &from, gsl::span<const uint8_t> bytes,
+                       MessageReceiver &receiver);
+
+  /// Constructs RPC message as new fields added and serializes it
+  /// into bytes before sending into wire
+  class MessageBuilder {
+   public:
+    MessageBuilder(MessageBuilder&&) = default;
+    MessageBuilder& operator=(MessageBuilder&&) = default;
+    MessageBuilder(const MessageBuilder&) = delete;
+    MessageBuilder& operator=(const MessageBuilder&) = delete;
+
+    MessageBuilder();
+
+    ~MessageBuilder();
+
+    /// Clears constructed message
+    void clear();
+
+    /// Serializes into byte buffer (appends to existing buffer) and clears
+    bool serialize(std::vector<uint8_t> &buffer);
+
+    /// Adds subsciption request to message
+    void addSubscription(bool subscribe, const TopicId &topic);
+
+    void addIHave(const TopicId &topic, const MessageId &msg_id);
+
+    void addIWant(const MessageId &msg_id);
+
+    void addGraft(const TopicId &topic);
+
+    void addPrune(const TopicId &topic);
+
+    void addMessage(const TopicMessage &msg);
+
+   private:
+    /// Protobuf message being constructed
+    std::unique_ptr<pubsub::pb::RPC> pb_msg_;
+    std::unique_ptr<pubsub::pb::ControlMessage> control_pb_msg_;
+    bool control_not_empty_;
+
+    /// Intermediate struct for building IHave messages
+    IHaveTable ihaves_;
+
+    /// Intermediate struct for building IWant request
+    Repeated<MessageId> iwant_;
+  };
+
+  // TODO(artem): TopicDescriptor and rendezvous points
+
+}  // namespace libp2p::protocol::gossip
 
 #endif  // LIBP2P_GOSSIP_WIRE_PROTOCOL_HPP
