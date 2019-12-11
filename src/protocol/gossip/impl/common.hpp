@@ -17,11 +17,17 @@
 
 namespace libp2p::protocol::gossip {
 
+  /// Time may be any monotonic counter
+  using Time = uint64_t;
+
+  // TODO(artem): move to gsl::span+shared_ptr<const uint8_t[]>
   using Bytes = std::vector<uint8_t>;
 
-  template <typename T> using Optional = boost::optional<T>;
+  template <typename T>
+  using Optional = boost::optional<T>;
 
-  template <typename T> using Repeated = std::vector<T>;
+  template <typename T>
+  using Repeated = std::vector<T>;
 
   using TopicId = std::string;
 
@@ -46,7 +52,8 @@ namespace libp2p::protocol::gossip {
     /// Topic ids
     Repeated<TopicId> topic_ids;
 
-    // TODO(artem): signing and protobuf issue
+    // TODO(artem): signing and protobuf issue. Seems they didn't try their
+    // kitchen
     Optional<Bytes> signature;
     Optional<Bytes> key;
   };
@@ -61,13 +68,13 @@ namespace libp2p::protocol::gossip {
   }
 
   /// Tries to cast from message field to peer id
-  outcome::result<PeerId> peerFrom(const TopicMessage& msg);
+  outcome::result<PeerId> peerFrom(const TopicMessage &msg);
 
   /// Creates seq number byte representation as per pub-sub spec
   Bytes createSeqNo(uint64_t seq);
 
   /// Creates message id as per pub-sub spec
-  MessageId createMessageId(const TopicMessage& msg);
+  MessageId createMessageId(const TopicMessage &msg);
 
   /// Uniform random generator interface
   class UniformRandomGen {
@@ -81,6 +88,13 @@ namespace libp2p::protocol::gossip {
     virtual size_t operator()(size_t n) = 0;
   };
 
-} //namespace libp2p::protocol::gossip
+}  // namespace libp2p::protocol::gossip
+
+namespace std {
+  template <>
+  struct hash<libp2p::protocol::gossip::Bytes> {
+    size_t operator()(const libp2p::protocol::gossip::Bytes &x) const;
+  };
+}  // namespace std
 
 #endif  // LIBP2P_PROTOCOL_GOSSIP_COMMON_HPP

@@ -9,26 +9,41 @@
 #include <set>
 #include <algorithm>
 
+#include <libp2p/multi/multiaddress.hpp>
+
 #include "ptr_key_wrapper.hpp"
 #include "common.hpp"
 
 namespace libp2p::protocol::gossip {
 
+  /// Builds outbound message for wire protocol
+  class MessageBuilder;
+
   /// Data related to peer needed by pub-sub protocols
   struct PeerContext {
+    /// Used by shared ptr only
+    using Ptr = std::shared_ptr<PeerContext>;
+
+    /// The key
+    using key_type = PeerId;
+    const PeerId peer_id;
+
+    /// Set of topics this peer is subscribed to
+    std::set<TopicId> subscribed_to;
+
+    /// Builds message to be sent to this peer
+    std::shared_ptr<MessageBuilder> message_to_send;
+
+    /// Not null iff this peer can be dialed to
+    boost::optional<multi::Multiaddress> dial_to;
+
     ~PeerContext() = default;
-    PeerContext(const PeerContext&) = default;
-    PeerContext(PeerContext&&) = default;
+    PeerContext(PeerContext&&) = delete;
+    PeerContext(const PeerContext&) = delete;
     PeerContext& operator=(const PeerContext&) = delete;
     PeerContext& operator=(PeerContext&&) = delete;
 
-    using Ptr = std::shared_ptr<PeerContext>;
-    using key_type = PeerId;
-
     explicit PeerContext(PeerId id) : peer_id(std::move(id)) {}
-
-    const PeerId peer_id;
-    std::set<TopicId> subscribed_to;
 
     bool operator<(const PeerContext& other) const {
       return less(peer_id, other.peer_id);
@@ -41,7 +56,6 @@ namespace libp2p::protocol::gossip {
     friend bool operator<(const PeerId& peer, const PeerContext& ctx) {
       return less(peer, ctx.peer_id);
     }
-
   };
 
   /// Peer set for pub-sub protocols

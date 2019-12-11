@@ -8,6 +8,7 @@
 #include <random>
 
 #include <boost/endian/conversion.hpp>
+#include <boost/container_hash/hash.hpp>
 
 namespace libp2p::protocol::gossip {
 
@@ -67,7 +68,6 @@ namespace libp2p::protocol::gossip {
     return Bytes(seq_buf.bytes.begin(), seq_buf.bytes.end());
   }
 
-  /// Creates message id as per pub-sub spec
   MessageId createMessageId(const TopicMessage& msg) {
     MessageId msg_id(msg.seq_no);
     msg_id.reserve(msg.seq_no.size() + msg.from.size());
@@ -80,3 +80,8 @@ namespace libp2p::protocol::gossip {
   }
 
 } //namespace libp2p::protocol::gossip
+
+size_t std::hash<libp2p::protocol::gossip::Bytes>::operator()(
+    const libp2p::protocol::gossip::Bytes &x) const {
+  return boost::hash_range(x.begin(), x.end());
+}
