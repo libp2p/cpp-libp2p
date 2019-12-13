@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "message_cache.hpp"
+#include <libp2p/protocol/gossip/impl/message_cache.hpp>
 
 #include <cassert>
 
@@ -79,11 +79,11 @@ namespace libp2p::protocol::gossip {
     assert(oldest_in_seen_ > 0);
 
     if (oldest_in_seen_ < seen_expires) {
-      auto start = idx.upper_bound(oldest_in_seen_);
+      auto start = idx.lower_bound(oldest_in_seen_);
 
       assert(start != idx.end());
 
-      auto stop = idx.lower_bound(seen_expires);
+      auto stop = idx.upper_bound(seen_expires);
       for (auto it = start; it != stop; ++it) {
         // shift seen table
         for (const auto &topic : it->message->topic_ids) {

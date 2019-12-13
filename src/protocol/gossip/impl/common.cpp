@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "common.hpp"
+#include <libp2p/protocol/gossip/common.hpp>
 
 #include <random>
 
-#include <boost/endian/conversion.hpp>
 #include <boost/container_hash/hash.hpp>
+#include <boost/endian/conversion.hpp>
 
 namespace libp2p::protocol::gossip {
 
@@ -27,6 +27,7 @@ namespace libp2p::protocol::gossip {
 
     class MTRandom : public UniformRandomGen {
       using Distr = std::uniform_int_distribution<size_t>;
+
      public:
       MTRandom() : eng_(rd_()) {}
 
@@ -40,14 +41,20 @@ namespace libp2p::protocol::gossip {
       Distr distr_;
     };
 
-  } //namespace
+    template <class T>
+    struct SPtrHack : public T {
+      template <typename... Args>
+      explicit SPtrHack(Args... args) : T(std::forward<Args>(args)...) {}
+    };
+
+  }  // namespace
 
   const PeerId &getEmptyPeer() {
     static const PeerId peer(createEmptyPeer());
     return peer;
   }
 
-  outcome::result<PeerId> peerFrom(const TopicMessage& msg) {
+  outcome::result<PeerId> peerFrom(const TopicMessage &msg) {
     return PeerId::fromBytes(msg.from);
   }
 
@@ -68,18 +75,44 @@ namespace libp2p::protocol::gossip {
     return Bytes(seq_buf.bytes.begin(), seq_buf.bytes.end());
   }
 
-  MessageId createMessageId(const TopicMessage& msg) {
+  Bytes fromString(const std::string &s) {
+    Bytes ret{};
+    auto sz = s.size();
+    if (sz > 0) {
+      ret.reserve(sz);
+      ret.assign(s.begin(), s.end());
+    }
+    return ret;
+  }
+
+  MessageId createMessageId(const TopicMessage &msg) {
     MessageId msg_id(msg.seq_no);
     msg_id.reserve(msg.seq_no.size() + msg.from.size());
     msg_id.insert(msg_id.end(), msg.from.begin(), msg.from.end());
     return msg_id;
   }
 
+  TopicMessage::TopicMessage(Bytes _from, Bytes _seq, Bytes _data)
+      : from(std::move(_from)),
+        seq_no(std::move(_seq)),
+        data(std::move(_data)) {}
+
+  TopicMessage::Ptr TopicMessage::fromWire(Bytes _from, Bytes _seq,
+                                           Bytes _data) {
+    return std::make_shared<SPtrHack<TopicMessage>>(
+        std::move(_from), std::move(_seq), std::move(_data));
+  }
+
+  TopicMessage::Ptr TopicMessage::fromScratch(const PeerId& _from, uint64_t _seq,
+                                           Bytes _data) {
+    return fromWire(_from.toVector(), createSeqNo(_seq), std::move(_data));
+  }
+
   std::shared_ptr<UniformRandomGen> UniformRandomGen::createDefault() {
     return std::make_shared<MTRandom>();
   }
 
-} //namespace libp2p::protocol::gossip
+}  // namespace libp2p::protocol::gossip
 
 size_t std::hash<libp2p::protocol::gossip::Bytes>::operator()(
     const libp2p::protocol::gossip::Bytes &x) const {

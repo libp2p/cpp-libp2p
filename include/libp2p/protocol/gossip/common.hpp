@@ -38,16 +38,22 @@ namespace libp2p::protocol::gossip {
 
   /// Message being published
   struct TopicMessage {
-    using Ptr = std::shared_ptr<const TopicMessage>;
+    using Ptr = std::shared_ptr<TopicMessage>;
+
+    /// Creates a new message from wire or storage
+    static TopicMessage::Ptr fromWire(Bytes _from, Bytes _seq, Bytes _data);
+
+    /// Creates a new message before publishing
+    static TopicMessage::Ptr fromScratch(const PeerId& _from, uint64_t _seq, Bytes _data);
 
     /// Peer id of creator
-    Bytes from;
-
-    /// Arbitrary data
-    Bytes data;
+    const Bytes from;
 
     /// Sequence number: big endian uint64_t converted to string
-    Bytes seq_no;
+    const Bytes seq_no;
+
+    /// Arbitrary data
+    const Bytes data;
 
     /// Topic ids
     Repeated<TopicId> topic_ids;
@@ -56,6 +62,9 @@ namespace libp2p::protocol::gossip {
     // kitchen
     Optional<Bytes> signature;
     Optional<Bytes> key;
+
+   protected:
+    TopicMessage(Bytes _from, Bytes _seq, Bytes _data);
   };
 
   /// Returns "zero" peer id, needed for consistency purposes
@@ -73,6 +82,9 @@ namespace libp2p::protocol::gossip {
   /// Creates seq number byte representation as per pub-sub spec
   Bytes createSeqNo(uint64_t seq);
 
+  /// Helper for text messages creation and protobuf
+  Bytes fromString(const std::string &s);
+
   /// Creates message id as per pub-sub spec
   MessageId createMessageId(const TopicMessage &msg);
 
@@ -84,7 +96,7 @@ namespace libp2p::protocol::gossip {
 
     virtual ~UniformRandomGen() = default;
 
-    /// Returns random size_t in range [0, n)
+    /// Returns random size_t in range [0, n]. N.B. n is included!
     virtual size_t operator()(size_t n) = 0;
   };
 

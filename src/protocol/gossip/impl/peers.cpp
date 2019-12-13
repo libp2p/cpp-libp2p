@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <cassert>
+#include <libp2p/protocol/gossip/impl/peers.hpp>
 
-#include "peers.hpp"
+#include <cassert>
 
 namespace libp2p::protocol::gossip {
 
@@ -55,15 +55,15 @@ namespace libp2p::protocol::gossip {
     return peer_ids_.size();
   }
 
-  std::vector<PeerContext::Ptr> PeerSet::select(size_t n,
-                                                UniformRandomGen &gen) const {
+  std::vector<PeerContext::Ptr> PeerSet::selectRandomPeers(
+      size_t n, UniformRandomGen &gen) const {
     std::vector<PeerContext::Ptr> ret;
     if (n > 0) {
       size_t sz = size();
       ret.reserve(n > sz ? sz : n);
       if (n >= sz) {
         // return all peers as vector
-        for (auto& p : peers_) {
+        for (auto &p : peers_) {
           ret.push_back(p.ptr);
         }
       } else if (n == 1) {
@@ -73,8 +73,8 @@ namespace libp2p::protocol::gossip {
         ret.push_back(ptr);
       } else {
         // shuffle and return n first peers
-        for (size_t i=0; i<n-1; ++i) {
-          auto r = i + gen(n - i);
+        for (size_t i = 0; i < n; ++i) {
+          auto r = i + gen(sz - i - 1);
           if (r != i) {
             std::swap(peer_ids_[i], peer_ids_[r]);
           }

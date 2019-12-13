@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "gossip_wire_protocol.hpp"
+#include <libp2p/protocol/gossip/impl/gossip_wire_protocol.hpp>
 
 #include <array>
 #include <cassert>
@@ -17,19 +17,9 @@ namespace libp2p::protocol::gossip {
 
   namespace {
 
-    inline Bytes fromString(const std::string &s) {
-      Bytes ret;
-      auto sz = s.size();
-      if (sz > 0) {
-        ret.reserve(sz);
-        ret.assign(s.begin(), s.end());
-      }
-      return ret;
-    }
-
-    inline const char* toString(const Bytes& bytes) {
+    inline const char *toString(const Bytes &bytes) {
       // NOLINTNEXTLINE
-      return reinterpret_cast<const char*>(bytes.data());
+      return reinterpret_cast<const char *>(bytes.data());
     }
 
     class RPCMessageDeserializer : public MessageReceiver {
@@ -281,10 +271,8 @@ namespace libp2p::protocol::gossip {
           || m.topicids_size() == 0) {
         continue;
       }
-      auto message = std::make_shared<TopicMessage>();
-      message->from = fromString(m.from());
-      message->data = fromString(m.data());
-      message->seq_no = fromString(m.seqno());
+      auto message = TopicMessage::fromWire(fromString(m.from()), fromString(m.seqno()),
+                                   fromString(m.data()));
       for (auto &tid : m.topicids()) {
         message->topic_ids.push_back(tid);
       }

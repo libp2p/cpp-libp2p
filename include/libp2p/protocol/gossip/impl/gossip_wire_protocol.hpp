@@ -6,11 +6,11 @@
 #ifndef LIBP2P_GOSSIP_WIRE_PROTOCOL_HPP
 #define LIBP2P_GOSSIP_WIRE_PROTOCOL_HPP
 
+#include <libp2p/protocol/gossip/common.hpp>
+
 #include <map>
 
 #include <gsl/span>
-
-#include "common.hpp"
 
 namespace pubsub::pb {
   class RPC;
