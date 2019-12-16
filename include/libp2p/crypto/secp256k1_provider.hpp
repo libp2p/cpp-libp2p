@@ -38,7 +38,7 @@ namespace libp2p::crypto::secp256k1 {
      * @return Secp256k1 signature or error code
      */
     virtual outcome::result<Signature> sign(
-        gsl::span<uint8_t> message, const PrivateKey &key) const = 0;
+        gsl::span<const uint8_t> message, const PrivateKey &key) const = 0;
 
     /**
      * @brief Verify signature for a message
@@ -47,7 +47,7 @@ namespace libp2p::crypto::secp256k1 {
      * @param key - public key for signature verifying
      * @return Result of the verification or error code
      */
-    virtual outcome::result<bool> verify(gsl::span<uint8_t> message,
+    virtual outcome::result<bool> verify(gsl::span<const uint8_t> message,
                                          const Signature &signature,
                                          const PublicKey &key) const = 0;
 
