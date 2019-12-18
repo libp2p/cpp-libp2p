@@ -11,53 +11,39 @@ namespace libp2p::multi {
   using common::hex_upper;
 
   UVarint::UVarint(uint64_t number) {
-    bytes_.resize(8);
-    size_t i = 0;
-    size_t size = 0;
-    for (; i < 8; i++) {
-      bytes_[i] = static_cast<uint8_t>((number & 0xFFul) | 0x80ul);
-      number >>= 7ul;
-      if (number == 0) {
-        bytes_[i] &= 0x7Ful;
-        size = i + 1;
-        break;
-      }
-    }
-    bytes_.resize(size);
+    do {
+      uint8_t byte = static_cast<uint8_t>(number) & 0x7f;
+      number >>= 7;
+      if (number != 0)
+        byte |= 0x80;
+      bytes_.push_back(byte);
+    } while (number != 0);
   }
 
   UVarint::UVarint(gsl::span<const uint8_t> varint_bytes)
       : bytes_(varint_bytes.begin(),
                varint_bytes.begin() + calculateSize(varint_bytes)) {}
 
-  UVarint::UVarint(gsl::span<const uint8_t> varint_bytes, int64_t varint_size)
+  UVarint::UVarint(gsl::span<const uint8_t> varint_bytes, size_t varint_size)
       : bytes_(varint_bytes.begin(), varint_bytes.begin() + varint_size) {}
 
   boost::optional<UVarint> UVarint::create(
       gsl::span<const uint8_t> varint_bytes) {
-    if (varint_bytes.empty()) {
-      return {};
+    size_t size = calculateSize(varint_bytes);
+    if (size > 0) {
+      return UVarint{varint_bytes, size};
     }
-    // no use of calculateSize(..), as it is unsafe in this case
-    int64_t s = 0;
-    while ((varint_bytes[s] & 0x80u) != 0) {
-      ++s;
-      if (s >= varint_bytes.size()) {
-        return {};
-      }
-    }
-    return UVarint{varint_bytes, s + 1};
+    return {};
   }
 
   uint64_t UVarint::toUInt64() const {
     uint64_t res = 0;
-    for (size_t i = 0; i < 8 && i < bytes_.size(); i++) {
-      res |= ((bytes_[i] & 0x7ful) << (7 * i));
-      if ((bytes_[i] & 0x80ul) == 0) {
-        return res;
-      }
+    size_t index = 0;
+    for (const auto &byte : bytes_) {
+      res += static_cast<uint64_t>((byte & 0x7f)) << index;
+      index += 7;
     }
-    return -1;
+    return res;
   }
 
   gsl::span<const uint8_t> UVarint::toBytes() const {
@@ -91,12 +77,24 @@ namespace libp2p::multi {
   }
 
   size_t UVarint::calculateSize(gsl::span<const uint8_t> varint_bytes) {
-    size_t s = 0;
-
-    while ((varint_bytes[s] & 0x80u) != 0) {
-      s++;
+    size_t size = 0;
+    size_t shift = 0;
+    constexpr size_t capacity = sizeof(uint64_t) * 8;
+    bool last_byte_found = false;
+    for (const auto &byte : varint_bytes) {
+      ++size;
+      uint64_t slice = byte & 0x7f;
+      if (shift >= capacity || slice << shift >> shift != slice) {
+        size = 0;
+        break;
+      }
+      if ((byte & 0x80) == 0) {
+        last_byte_found = true;
+        break;
+      }
+      shift += 7;
     }
-    return s + 1;
+    return last_byte_found ? size : 0;
   }
 
 }  // namespace libp2p::multi
