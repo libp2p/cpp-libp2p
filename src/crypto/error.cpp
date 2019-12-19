@@ -39,6 +39,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::crypto, OpenSslError, e) {
       return "failed to finalize decryption";
     case OpenSslError::WRONG_IV_SIZE:
       return "wrong iv size";
+    case OpenSslError::WRONG_KEY_SIZE:
+      return "wrong key size";
   }
   return "unknown CryptoProviderError code";
 }
@@ -106,6 +108,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::crypto, KeyGeneratorError, e) {
       return "failed to get key bytes from PKEY";
     case KeyGeneratorError::INTERNAL_ERROR:
       return "internal error happened";
+    case KeyGeneratorError::UNSUPPORTED_CURVE_TYPE:
+      return "cannot init requested curve for key generation";
   }
   return "unknown key generation error";
 }

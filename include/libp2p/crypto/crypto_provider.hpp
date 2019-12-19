@@ -75,7 +75,7 @@ namespace libp2p::crypto {
      * @param secret to be used
      * @return objects of type StretchedKey
      */
-    virtual std::vector<StretchedKey> stretchKey(
+    virtual outcome::result<std::pair<StretchedKey, StretchedKey>> stretchKey(
         common::CipherType cipher_type, common::HashType hash_type,
         const Buffer &secret) const = 0;
   };

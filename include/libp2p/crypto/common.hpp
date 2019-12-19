@@ -40,7 +40,7 @@ namespace libp2p::crypto::common {
   /**
    * Supported types of RSA keys
    */
-  enum class RSAKeyType { RSA1024 = 0, RSA2048 = 1, RSA4096 = 2 };
+  enum class RSAKeyType { RSA1024, RSA2048, RSA4096 };
 
   /**
    * Supported ECDH curves

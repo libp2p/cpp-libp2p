@@ -12,6 +12,7 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/error.hpp>
+#include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include <testutil/outcome.hpp>
 
@@ -23,6 +24,8 @@ using libp2p::crypto::KeyGeneratorError;
 using libp2p::crypto::PrivateKey;
 using libp2p::crypto::ed25519::Ed25519Provider;
 using libp2p::crypto::ed25519::Ed25519ProviderImpl;
+using libp2p::crypto::hmac::HmacProvider;
+using libp2p::crypto::hmac::HmacProviderImpl;
 using libp2p::crypto::random::BoostRandomGenerator;
 using libp2p::crypto::random::CSPRNG;
 using libp2p::common::operator""_unhex;
@@ -33,12 +36,14 @@ class KeyGeneratorTest : public ::testing::TestWithParam<Key::Type> {
   KeyGeneratorTest()
       : random_{std::make_shared<BoostRandomGenerator>()},
         ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
-        crypto_provider_{
-            std::make_shared<CryptoProviderImpl>(random_, ed25519_provider_)} {}
+        hmac_provider_{std::make_shared<HmacProviderImpl>()},
+        crypto_provider_{std::make_shared<CryptoProviderImpl>(
+            random_, ed25519_provider_, hmac_provider_)} {}
 
  protected:
   std::shared_ptr<CSPRNG> random_;
   std::shared_ptr<Ed25519Provider> ed25519_provider_;
+  std::shared_ptr<HmacProvider> hmac_provider_;
   std::shared_ptr<CryptoProvider> crypto_provider_;
 };
 
@@ -107,12 +112,14 @@ class KeyLengthTest
   KeyLengthTest()
       : random_{std::make_shared<BoostRandomGenerator>()},
         ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
-        crypto_provider_{
-            std::make_shared<CryptoProviderImpl>(random_, ed25519_provider_)} {}
+        hmac_provider_{std::make_shared<HmacProviderImpl>()},
+        crypto_provider_{std::make_shared<CryptoProviderImpl>(
+            random_, ed25519_provider_, hmac_provider_)} {}
 
  protected:
   std::shared_ptr<CSPRNG> random_;
   std::shared_ptr<Ed25519Provider> ed25519_provider_;
+  std::shared_ptr<HmacProvider> hmac_provider_;
   std::shared_ptr<CryptoProvider> crypto_provider_;
 };
 
@@ -141,12 +148,14 @@ class KeyGoCompatibility : public ::testing::Test {
   KeyGoCompatibility()
       : random_{std::make_shared<BoostRandomGenerator>()},
         ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
-        crypto_provider_{
-            std::make_shared<CryptoProviderImpl>(random_, ed25519_provider_)} {}
+        hmac_provider_{std::make_shared<HmacProviderImpl>()},
+        crypto_provider_{std::make_shared<CryptoProviderImpl>(
+            random_, ed25519_provider_, hmac_provider_)} {}
 
  protected:
   std::shared_ptr<CSPRNG> random_;
   std::shared_ptr<Ed25519Provider> ed25519_provider_;
+  std::shared_ptr<HmacProvider> hmac_provider_;
   std::shared_ptr<CryptoProvider> crypto_provider_;
 };
 

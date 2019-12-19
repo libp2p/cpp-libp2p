@@ -4,6 +4,7 @@
 #
 
 add_subdirectory(plaintext)
+add_subdirectory(secio)
 
 libp2p_add_library(p2p_security_error
     error.cpp

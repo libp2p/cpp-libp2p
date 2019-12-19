@@ -18,14 +18,28 @@
 #include <gsl/span>
 #include <libp2p/crypto/ed25519_provider.hpp>
 #include <libp2p/crypto/error.hpp>
+#include <libp2p/crypto/hmac_provider.hpp>
 #include <libp2p/crypto/random_generator.hpp>
+
+OUTCOME_CPP_DEFINE_CATEGORY(libp2p::crypto, CryptoProviderImpl::Error, e) {
+  using E = libp2p::crypto::CryptoProviderImpl::Error;
+  switch (e) {
+    case E::UNKNOWN_CIPHER_TYPE:
+      return "Unsupported cipher algorithm type was specified";
+    case E::UNKNOWN_HASH_TYPE:
+      return "Unsupported hash algorithm type was specified";
+  }
+  return "Unknown error";
+}
 
 namespace libp2p::crypto {
   CryptoProviderImpl::CryptoProviderImpl(
       std::shared_ptr<random::CSPRNG> random_provider,
-      std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider)
+      std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider,
+      std::shared_ptr<hmac::HmacProvider> hmac_provider)
       : random_provider_{std::move(random_provider)},
-        ed25519_provider_{std::move(ed25519_provider)} {
+        ed25519_provider_{std::move(ed25519_provider)},
+        hmac_provider_{std::move(hmac_provider)} {
     initialize();
   }
 
@@ -417,14 +431,275 @@ namespace libp2p::crypto {
 
   outcome::result<EphemeralKeyPair>
   CryptoProviderImpl::generateEphemeralKeyPair(common::CurveType curve) const {
-    // TODO(yuraz): pre-140 implement
-    return KeyGeneratorError::KEY_GENERATION_FAILED;
+    const auto FAILED{KeyGeneratorError::KEY_GENERATION_FAILED};
+    int nid;
+    size_t private_key_length_in_bytes;
+    switch (curve) {
+      case common::CurveType::P256:
+        nid = NID_secp256k1;
+        private_key_length_in_bytes = 32;
+        break;
+      case common::CurveType::P384:
+        nid = NID_secp384r1;
+        private_key_length_in_bytes = 48;
+        break;
+      case common::CurveType::P521:
+        nid = NID_secp521r1;
+        private_key_length_in_bytes = 66;  // 66 * 8 = 528 > 521
+        break;
+      default:
+        return KeyGeneratorError::UNSUPPORTED_CURVE_TYPE;
+    }
+
+    // allocate key
+    EC_KEY *key = EC_KEY_new();
+    if (nullptr == key) {
+      return FAILED;
+    }
+    auto free_private_key = gsl::finally([key] { EC_KEY_free(key); });
+
+    // create curve
+    EC_GROUP *curve_group = EC_GROUP_new_by_curve_name(nid);
+    if (nullptr == curve_group) {
+      return FAILED;
+    }
+    auto free_curve_group =
+        gsl::finally([curve_group] { EC_GROUP_free(curve_group); });
+
+    // assign curve to the key
+    if (1 != EC_KEY_set_group(key, curve_group)) {
+      return FAILED;
+    }
+    // generate the key
+    if (1 != EC_KEY_generate_key(key)) {
+      return FAILED;
+    }
+
+    // check that private key field is set
+    const BIGNUM *private_key_bignum = EC_KEY_get0_private_key(key);
+    if (nullptr == private_key_bignum) {
+      return FAILED;
+    }
+
+    // serialize private key bytes and move them later to shared secret
+    // generator
+    std::vector<uint8_t> private_bytes(private_key_length_in_bytes, 0);
+    // serialize to buffer
+    if (BN_bn2binpad(private_key_bignum, private_bytes.data(),
+                     private_key_length_in_bytes)
+        < 0) {
+      return FAILED;
+    }
+
+    // check that public key field is also set
+    const EC_POINT *public_key_point = EC_KEY_get0_public_key(key);
+    if (nullptr == public_key_point) {
+      /*
+       * Try to compute valid public key if it was not created by keygen for
+       * some reason.
+       *
+       * This is written for safety purposes since EC_KEY_generate_key docstring
+       * says the following: "Creates a new ec private (and optional a new
+       * public) key."
+       */
+      EC_POINT *computed_public_key_point{nullptr};
+      if (1
+          != EC_POINT_mul(curve_group, computed_public_key_point,
+                          private_key_bignum, nullptr, nullptr, nullptr)) {
+        return FAILED;
+      }
+      if (1 != EC_KEY_set_public_key(key, computed_public_key_point)) {
+        return FAILED;
+      }
+    }
+
+    // marshall pubkey point to bytes buffer (uncompressed form)
+    const EC_POINT *public_key{EC_KEY_get0_public_key(key)};
+    uint8_t *pubkey_bytes_buffer{nullptr};
+    auto free_pubkey_bytes_buffer =
+        gsl::finally([pptr = &pubkey_bytes_buffer]() {
+          if (*pptr != nullptr) {
+            OPENSSL_free(*pptr);
+          }
+        });
+
+    size_t pubkey_bytes_length{0};
+    if (0
+        == (pubkey_bytes_length = EC_POINT_point2buf(
+                curve_group, public_key, POINT_CONVERSION_UNCOMPRESSED,
+                &pubkey_bytes_buffer, nullptr))) {
+      return FAILED;
+    }
+
+    auto pubkey_span = gsl::span(pubkey_bytes_buffer, pubkey_bytes_length);
+    Buffer pubkey_buffer(pubkey_span.begin(), pubkey_span.end());
+
+    return EphemeralKeyPair{
+        .ephemeral_public_key = std::move(pubkey_buffer),
+        .shared_secret_generator =
+            prepareSharedSecretGenerator(nid, std::move(private_bytes))};
   }
 
-  std::vector<StretchedKey> CryptoProviderImpl::stretchKey(
-      common::CipherType cipher_type, common::HashType hash_type,
-      const Buffer &secret) const {
-    // TODO(yuraz): pre-140 implement
-    return {};
+  std::function<outcome::result<Buffer>(Buffer)>
+  CryptoProviderImpl::prepareSharedSecretGenerator(
+      int curve_nid, Buffer own_private_key) const {
+    return [nid{std::move(curve_nid)},
+            private_bytes{std::move(own_private_key)}](
+               Buffer their_epubkey) -> outcome::result<Buffer> {
+      const auto FAILED{KeyGeneratorError::KEY_DERIVATION_FAILED};
+      // init curve
+      EC_GROUP *curve_group = EC_GROUP_new_by_curve_name(nid);
+      if (nullptr == curve_group) {
+        return FAILED;
+      }
+      auto free_curve_group =
+          gsl::finally([curve_group] { EC_GROUP_free(curve_group); });
+
+      // create empty key
+      EC_KEY *their_key = EC_KEY_new();
+      if (nullptr == their_key) {
+        return FAILED;
+      }
+      auto free_their_key =
+          gsl::finally([their_key] { EC_KEY_free(their_key); });
+
+      // assign curve type to the key
+      if (1 != EC_KEY_set_group(their_key, curve_group)) {
+        return FAILED;
+      }
+
+      // restore their epubkey from bytes
+      const unsigned char *their_epubkey_buffer{their_epubkey.data()};
+      if (nullptr
+          == o2i_ECPublicKey(&their_key, &their_epubkey_buffer,
+                             their_epubkey.size())) {
+        return FAILED;
+      }
+
+      // get pubkey in format of point for future computations
+      const EC_POINT *their_pubkey_point{EC_KEY_get0_public_key(their_key)};
+      if (nullptr == their_pubkey_point) {
+        return FAILED;
+      }
+
+      if (1 != EC_POINT_is_on_curve(curve_group, their_pubkey_point, nullptr)) {
+        return FAILED;
+      }
+
+      // restore private key bignum from bytes
+      // create new bignum for storing private key
+      BIGNUM *private_bignum = BN_new();
+      if (nullptr == private_bignum) {
+        return FAILED;
+      }
+      // auto cleanup for bignum
+      auto free_private_bignum =
+          gsl::finally([private_bignum]() { BN_free(private_bignum); });
+      // convert private key bytes to BIGNUM
+      const unsigned char *private_key_buffer = private_bytes.data();
+      if (nullptr
+          == BN_bin2bn(private_key_buffer, private_bytes.size(),
+                       private_bignum)) {
+        return FAILED;
+      }
+
+      EC_KEY *our_private_key = EC_KEY_new_by_curve_name(nid);
+      if (nullptr == our_private_key) {
+        return FAILED;
+      }
+      auto free_our_private_key =
+          gsl::finally([our_private_key] { EC_KEY_free(our_private_key); });
+
+      if (1 != EC_KEY_set_private_key(our_private_key, private_bignum)) {
+        return FAILED;
+      }
+
+      // calculate the size of the buffer for the shared secret
+      int field_size{EC_GROUP_get_degree(curve_group)};
+      int secret_len{(field_size + 7) / 8};
+      uint8_t *secret_buffer{(uint8_t *)OPENSSL_malloc(secret_len)};
+      if (nullptr == secret_buffer) {
+        return FAILED;
+      }
+
+      secret_len =
+          ECDH_compute_key(secret_buffer, secret_len, their_pubkey_point,
+                           our_private_key, nullptr);
+      if (secret_len <= 0) {
+        OPENSSL_free(secret_buffer);
+        // ^ comment to the condition above:
+        // doc says it might be negative when error,
+        // openssl sources show it will be zero when error
+        return FAILED;
+      }
+
+      auto secret_span = gsl::span(secret_buffer, secret_len);
+      Buffer secret(secret_span.begin(), secret_span.end());
+      OPENSSL_free(secret_buffer);
+      return secret;
+    };
   }
+
+  outcome::result<std::pair<StretchedKey, StretchedKey>>
+  CryptoProviderImpl::stretchKey(common::CipherType cipher_type,
+                                 common::HashType hash_type,
+                                 const Buffer &secret) const {
+    size_t cipher_key_size;
+    size_t iv_size;
+    switch (cipher_type) {
+      case common::CipherType::AES128:
+        cipher_key_size = 16;
+        iv_size = 16;
+        break;
+      case common::CipherType::AES256:
+        cipher_key_size = 32;
+        iv_size = 16;
+        break;
+      default:
+        return Error::UNKNOWN_CIPHER_TYPE;
+    }
+
+    constexpr size_t hmac_key_size{20};
+    Buffer seed{'k', 'e', 'y', ' ', 'e', 'x', 'p',
+                'a', 'n', 's', 'i', 'o', 'n'};
+
+    size_t output_size{2 * (iv_size + cipher_key_size + hmac_key_size)};
+    Buffer result;
+    result.reserve(output_size);
+
+    OUTCOME_TRY(a, hmac_provider_->calculateDigest(hash_type, secret, seed));
+    while (result.size() < output_size) {
+      Buffer input;
+      input.reserve(a.size() + seed.size());
+      input.insert(input.end(), a.begin(), a.end());
+      input.insert(input.end(), seed.begin(), seed.end());
+
+      OUTCOME_TRY(b, hmac_provider_->calculateDigest(hash_type, secret, input));
+      size_t todo = b.size();
+      if (result.size() + todo > output_size) {
+        todo = output_size - result.size();
+      }
+      std::copy_n(b.begin(), todo, std::back_inserter(result));
+      OUTCOME_TRY(c, hmac_provider_->calculateDigest(hash_type, secret, a));
+      a = std::move(c);
+    }
+
+    auto iter = result.begin();
+    Buffer k1_iv{iter, iter += iv_size};
+    Buffer k1_cipher_key{iter, iter += cipher_key_size};
+    Buffer k1_mac_key{iter, iter += hmac_key_size};
+
+    Buffer k2_iv{iter, iter += iv_size};
+    Buffer k2_cipher_key{iter, iter += cipher_key_size};
+    Buffer k2_mac_key{iter, iter += hmac_key_size};
+
+    return std::make_pair<StretchedKey, StretchedKey>(
+        {.iv = std::move(k1_iv),
+         .cipher_key = std::move(k1_cipher_key),
+         .mac_key = std::move(k1_mac_key)},
+        {.iv = std::move(k2_iv),
+         .cipher_key = std::move(k2_cipher_key),
+         .mac_key = std::move(k2_mac_key)});
+  }
+
 }  // namespace libp2p::crypto

@@ -8,6 +8,7 @@
 #include <openssl/hmac.h>
 #include <gsl/gsl_util>
 #include <libp2p/crypto/error.hpp>
+#include <gsl/span>
 
 namespace libp2p::crypto::hmac {
   using ByteArray = libp2p::common::ByteArray;
@@ -38,7 +39,7 @@ namespace libp2p::crypto::hmac {
 
   outcome::result<ByteArray> HmacProviderImpl::calculateDigest(
       HashType hash_type, const ByteArray &key,
-      const ByteArray &message) const {
+      gsl::span<const uint8_t> message) const {
     const evp_md_st *evp_md = makeHashTraits(hash_type);
     auto digest_size = digestSize(hash_type);
     if (evp_md == nullptr || digest_size == 0) {
