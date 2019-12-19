@@ -43,6 +43,62 @@ TEST(CidTest, PrettyString) {
                 + libp2p::common::hex_lower(EXAMPLE_MULTIHASH.getHash()));
 }
 
+/**
+ * @given CID of different versions
+ * @when compare CIDs
+ * @then lesser version is always less
+ */
+TEST(CidTest, CompareDifferentVersion) {
+  ContentIdentifier c0_v0(ContentIdentifier::Version::V0, MulticodecType::IDENTITY,
+                          ZERO_MULTIHASH);
+  ContentIdentifier c0_v1(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
+                       ZERO_MULTIHASH);
+  ASSERT_TRUE(c0_v0 < c0_v1);
+  ASSERT_FALSE(c0_v0 < c0_v0);
+  ASSERT_FALSE(c0_v1 < c0_v1);
+
+  ContentIdentifier c1_v1(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
+                          ZERO_MULTIHASH);
+  ASSERT_TRUE(c0_v0 < c1_v1);
+
+  ContentIdentifier c2_v0(ContentIdentifier::Version::V0, MulticodecType::SHA1,
+                          ZERO_MULTIHASH);
+  ASSERT_TRUE(c0_v0 < c2_v0);
+  ASSERT_TRUE(c0_v0 < c0_v1);
+}
+
+/**
+ * @given CID of different types
+ * @when compare CIDs
+ * @then lesser type is always less
+ */
+TEST(CidTest, CompareDifferentTypes) {
+  ContentIdentifier c1(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
+                          ZERO_MULTIHASH);
+  ContentIdentifier c2(ContentIdentifier::Version::V1, MulticodecType::SHA1,
+                          ZERO_MULTIHASH);
+  ASSERT_TRUE(c1 < c2);
+  ASSERT_FALSE(c2 < c1);
+  ASSERT_FALSE(c1 < c1);
+  ASSERT_FALSE(c2 < c2);
+}
+
+/**
+ * @given CID of different hashes
+ * @when compare CIDs
+ * @then lesser hash is always less
+ */
+TEST(CidTest, CompareDifferentHashes) {
+  ContentIdentifier c1(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
+                       ZERO_MULTIHASH);
+  ContentIdentifier c2(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
+                       EXAMPLE_MULTIHASH);
+  ASSERT_TRUE(c1 < c2);
+  ASSERT_FALSE(c2 < c1);
+  ASSERT_FALSE(c1 < c1);
+  ASSERT_FALSE(c2 < c2);
+}
+
 class CidEncodeTest
     : public testing::TestWithParam<std::pair<
           ContentIdentifier, libp2p::outcome::result<std::vector<uint8_t>>>> {};
