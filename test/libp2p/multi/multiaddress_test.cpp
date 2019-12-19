@@ -38,11 +38,15 @@ class MultiaddressTest : public ::testing::Test {
  * @then creation succeeds
  */
 TEST_F(MultiaddressTest, CreateFromStringValid) {
-  auto result = Multiaddress::create(valid_ip_udp);
+  /*auto result = Multiaddress::create(valid_ip_udp);
   ASSERT_TRUE(result);
   auto &&address = result.value();
   ASSERT_EQ(address.getStringAddress(), valid_ip_udp);
   ASSERT_EQ(address.getBytesAddress(), valid_ip_udp_bytes);
+*/
+  auto s = "/dns4/kusama-bootnode-1.paritytech.net/tcp/30333/p2p/QmV32G18YzenpNFmhqg2n7TtdjYRK7oU6FhLbDL4oRgsbe"s;
+  EXPECT_OUTCOME_TRUE(result1, Multiaddress::create(s));
+  ASSERT_EQ(result1.getStringAddress(), s);
 }
 
 /**

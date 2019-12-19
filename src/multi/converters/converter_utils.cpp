@@ -14,6 +14,7 @@
 #include <libp2p/multi/converters/ip_v4_converter.hpp>
 #include <libp2p/multi/converters/ip_v6_converter.hpp>
 #include <libp2p/multi/converters/ipfs_converter.hpp>
+#include <libp2p/multi/converters/dns_converter.hpp>
 #include <libp2p/multi/converters/tcp_converter.hpp>
 #include <libp2p/multi/converters/udp_converter.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
@@ -89,12 +90,14 @@ namespace libp2p::multi::converters {
       case Protocol::Code::P2P:
         return IpfsConverter::addressToHex(addr);
 
-      case Protocol::Code::IP6_ZONE:
       case Protocol::Code::DNS:
       case Protocol::Code::DNS4:
       case Protocol::Code::DNS6:
       case Protocol::Code::DNS_ADDR:
       case Protocol::Code::UNIX:
+        return DnsConverter::addressToHex(addr);
+
+      case Protocol::Code::IP6_ZONE:
       case Protocol::Code::ONION3:
       case Protocol::Code::GARLIC64:
       case Protocol::Code::QUIC:

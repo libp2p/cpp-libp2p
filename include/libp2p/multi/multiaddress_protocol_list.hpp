@@ -120,7 +120,7 @@ namespace libp2p::multi {
         {Protocol::Code::IP6, 128, "ip6"},
         {Protocol::Code::IP6_ZONE, Protocol::kVarLen, "ip6zone"},
         {Protocol::Code::DNS, Protocol::kVarLen, "dns"},
-        {Protocol::Code::DNS4, Protocol::kVarLen, "dns64"},
+        {Protocol::Code::DNS4, Protocol::kVarLen, "dns4"},
         {Protocol::Code::DNS6, Protocol::kVarLen, "dns6"},
         {Protocol::Code::DNS_ADDR, Protocol::kVarLen, "dnsaddr"},
         {Protocol::Code::SCTP, 16, "sctp"},
