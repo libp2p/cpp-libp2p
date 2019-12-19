@@ -78,6 +78,9 @@ namespace libp2p::multi {
      * otherwise
      */
     static constexpr auto get(std::string_view name) -> Protocol const * {
+      if(name == "ipfs") {
+        name = "p2p";  // IPFS is a legacy name, P2P is the preferred one
+      }
       for (Protocol const &protocol : protocols_) {
         if (protocol.name == name) {
           return &protocol;
@@ -127,8 +130,8 @@ namespace libp2p::multi {
         {Protocol::Code::UDT, 0, "udt"},
         {Protocol::Code::UTP, 0, "utp"},
         {Protocol::Code::UNIX, Protocol::kVarLen, "unix"},
-        // {Protocol::Code::P2P, Protocol::kVarLen, "p2p"},
-        {Protocol::Code::P2P, Protocol::kVarLen, "ipfs"},
+        {Protocol::Code::P2P, Protocol::kVarLen, "p2p"},
+//        {Protocol::Code::P2P, Protocol::kVarLen, "ipfs"},
         {Protocol::Code::ONION, 96, "onion"},
         {Protocol::Code::ONION3, 296, "onion3"},
         {Protocol::Code::GARLIC64, Protocol::kVarLen, "garlic64"},
