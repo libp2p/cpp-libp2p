@@ -36,7 +36,7 @@ class PeerAddressTest : public ::testing::Test {
       Multiaddress::create("/ip4/192.168.0.1/tcp/228").value();
 
   const std::string kaddressString =
-      std::string{kDefaultAddress.getStringAddress()} + "/ipfs/"
+      std::string{kDefaultAddress.getStringAddress()} + "/p2p/"
       + kEncodedDefaultPeerId;
 };
 
