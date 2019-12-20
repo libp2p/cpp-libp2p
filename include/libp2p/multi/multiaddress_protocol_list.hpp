@@ -78,6 +78,9 @@ namespace libp2p::multi {
      * otherwise
      */
     static constexpr auto get(std::string_view name) -> Protocol const * {
+      if(name == "ipfs") {
+        name = "p2p";  // IPFS is a legacy name, P2P is the preferred one
+      }
       for (Protocol const &protocol : protocols_) {
         if (protocol.name == name) {
           return &protocol;
@@ -120,15 +123,15 @@ namespace libp2p::multi {
         {Protocol::Code::IP6, 128, "ip6"},
         {Protocol::Code::IP6_ZONE, Protocol::kVarLen, "ip6zone"},
         {Protocol::Code::DNS, Protocol::kVarLen, "dns"},
-        {Protocol::Code::DNS4, Protocol::kVarLen, "dns64"},
+        {Protocol::Code::DNS4, Protocol::kVarLen, "dns4"},
         {Protocol::Code::DNS6, Protocol::kVarLen, "dns6"},
         {Protocol::Code::DNS_ADDR, Protocol::kVarLen, "dnsaddr"},
         {Protocol::Code::SCTP, 16, "sctp"},
         {Protocol::Code::UDT, 0, "udt"},
         {Protocol::Code::UTP, 0, "utp"},
         {Protocol::Code::UNIX, Protocol::kVarLen, "unix"},
-        // {Protocol::Code::P2P, Protocol::kVarLen, "p2p"},
-        {Protocol::Code::P2P, Protocol::kVarLen, "ipfs"},
+        {Protocol::Code::P2P, Protocol::kVarLen, "p2p"},
+        // Also P2P protocol may have a legacy name "ipfs"
         {Protocol::Code::ONION, 96, "onion"},
         {Protocol::Code::ONION3, 296, "onion3"},
         {Protocol::Code::GARLIC64, Protocol::kVarLen, "garlic64"},

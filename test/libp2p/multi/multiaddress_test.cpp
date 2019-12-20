@@ -38,9 +38,7 @@ class MultiaddressTest : public ::testing::Test {
  * @then creation succeeds
  */
 TEST_F(MultiaddressTest, CreateFromStringValid) {
-  auto result = Multiaddress::create(valid_ip_udp);
-  ASSERT_TRUE(result);
-  auto &&address = result.value();
+  EXPECT_OUTCOME_TRUE(address, Multiaddress::create(valid_ip_udp));
   ASSERT_EQ(address.getStringAddress(), valid_ip_udp);
   ASSERT_EQ(address.getBytesAddress(), valid_ip_udp_bytes);
 }
@@ -244,4 +242,16 @@ TEST_F(MultiaddressTest, GetProtocolsWithValues) {
                   std::make_pair(*ProtocolList::get("udp"), "322"),
                   std::make_pair(*ProtocolList::get("ip4"), "127.0.0.1"),
                   std::make_pair(*ProtocolList::get("udp"), "3232")));
+}
+
+/**
+ * @given a multiaddr containing DNS and P2P entries
+ * @when parsing it
+ * @then it is accepted
+ */
+TEST_F(MultiaddressTest, DnsAndIpfs) {
+  auto addr = "/dns4/kusama-bootnode-1.paritytech.net/tcp/30333/p2p/QmV32G18YzenpNFmhqg2n7TtdjYRK7oU6FhLbDL4oRgsbe"s;
+  EXPECT_OUTCOME_TRUE(address, Multiaddress::create(addr));
+  ASSERT_EQ(address.getStringAddress(), addr);
+
 }
