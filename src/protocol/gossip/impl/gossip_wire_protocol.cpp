@@ -17,7 +17,7 @@ namespace libp2p::protocol::gossip {
 
   namespace {
 
-    inline const char *toString(const Bytes &bytes) {
+    inline const char *toString(const ByteArray &bytes) {
       // NOLINTNEXTLINE
       return reinterpret_cast<const char *>(bytes.data());
     }
@@ -26,32 +26,41 @@ namespace libp2p::protocol::gossip {
      public:
       explicit RPCMessageDeserializer(RPCMessage &msg) : msg_(msg) {}
 
+      bool parse(gsl::span<const uint8_t> bytes) {
+        return parser_.parse(bytes);
+      }
+
+      void dispatch() {
+        parser_.dispatch(getEmptyPeer(), *this);
+      }
+
      private:
       RPCMessage &msg_;
+      MessageParser parser_;
 
-      void onSubscription(const PeerId &, bool subscribe,
+      void onSubscription(const peer::PeerId &, bool subscribe,
                           const TopicId &topic) override {
         msg_.subscriptions.push_back({subscribe, topic});
       }
 
-      void onIHave(const PeerId &, const TopicId &topic,
+      void onIHave(const peer::PeerId &, const TopicId &topic,
                    MessageId &&msg_id) override {
         msg_.i_have[topic].push_back(std::move(msg_id));
       }
 
-      void onIWant(const PeerId &, MessageId &&msg_id) override {
+      void onIWant(const peer::PeerId &, MessageId &&msg_id) override {
         msg_.i_want.push_back(std::move(msg_id));
       }
 
-      void onGraft(const PeerId &, const TopicId &topic) override {
+      void onGraft(const peer::PeerId &, const TopicId &topic) override {
         msg_.graft.push_back(topic);
       }
 
-      void onPrune(const PeerId &, const TopicId &topic) override {
+      void onPrune(const peer::PeerId &, const TopicId &topic) override {
         msg_.prune.push_back(topic);
       }
 
-      void onMessage(const PeerId &, TopicMessage::Ptr msg) override {
+      void onMessage(const peer::PeerId &, TopicMessage::Ptr msg) override {
         msg_.publish.push_back(std::move(msg));
       }
     };
@@ -75,7 +84,9 @@ namespace libp2p::protocol::gossip {
   bool RPCMessage::deserialize(gsl::span<const uint8_t> bytes) {
     clear();
     RPCMessageDeserializer des(*this);
-    return parseRPCMessage(getEmptyPeer(), bytes, des) && !empty();
+    if (!des.parse(bytes)) return false;
+    des.dispatch();
+    return !empty();
   }
 
   bool RPCMessage::serialize(std::vector<uint8_t> &buffer) const {
@@ -209,22 +220,30 @@ namespace libp2p::protocol::gossip {
     }
   }
 
-  bool parseRPCMessage(const PeerId &from, gsl::span<const uint8_t> bytes,
-                       MessageReceiver &receiver) {
-    pubsub::pb::RPC pb_msg;
-    if (!pb_msg.ParseFromArray(bytes.data(), bytes.size())) {
-      return false;
+  MessageParser::MessageParser() = default;
+
+  MessageParser::~MessageParser() = default;
+
+  bool MessageParser::parse(gsl::span<const uint8_t> bytes) {
+    pb_msg_ = std::make_unique<pubsub::pb::RPC>();
+    return pb_msg_->ParseFromArray(bytes.data(), bytes.size());
+  }
+
+  void MessageParser::dispatch(const peer::PeerId &from,
+                               MessageReceiver &receiver) {
+    if (!pb_msg_) {
+      return;
     }
 
-    for (auto &s : pb_msg.subscriptions()) {
+    for (auto &s : pb_msg_->subscriptions()) {
       if (!s.has_subscribe() || !s.has_topicid()) {
         continue;
       }
       receiver.onSubscription(from, s.subscribe(), s.topicid());
     }
 
-    if (pb_msg.has_control()) {
-      auto &c = pb_msg.control();
+    if (pb_msg_->has_control()) {
+      auto &c = pb_msg_->control();
 
       for (auto &h : c.ihave()) {
         if (!h.has_topicid() || h.messageids_size() == 0) {
@@ -266,13 +285,13 @@ namespace libp2p::protocol::gossip {
       }
     }
 
-    for (auto &m : pb_msg.publish()) {
+    for (auto &m : pb_msg_->publish()) {
       if (!m.has_from() || !m.has_data() || !m.has_seqno()
           || m.topicids_size() == 0) {
         continue;
       }
-      auto message = TopicMessage::fromWire(fromString(m.from()), fromString(m.seqno()),
-                                   fromString(m.data()));
+      auto message = TopicMessage::fromWire(
+          fromString(m.from()), fromString(m.seqno()), fromString(m.data()));
       for (auto &tid : m.topicids()) {
         message->topic_ids.push_back(tid);
       }
@@ -284,8 +303,6 @@ namespace libp2p::protocol::gossip {
       }
       receiver.onMessage(from, std::move(message));
     }
-
-    return true;
   }
 
 }  // namespace libp2p::protocol::gossip

@@ -66,29 +66,43 @@ namespace libp2p::protocol::gossip {
     virtual ~MessageReceiver() = default;
 
     /// Topic subscribe-unsubscribe request received
-    virtual void onSubscription(const PeerId &from, bool subscribe,
+    virtual void onSubscription(const peer::PeerId &from, bool subscribe,
                                 const TopicId &topic) = 0;
 
     /// "I have message ids" notification received
-    virtual void onIHave(const PeerId &from, const TopicId &topic,
+    virtual void onIHave(const peer::PeerId &from, const TopicId &topic,
                          MessageId &&msg_id) = 0;
 
     /// "I want message" request received
-    virtual void onIWant(const PeerId &from, MessageId &&msg_id) = 0;
+    virtual void onIWant(const peer::PeerId &from, MessageId &&msg_id) = 0;
 
     /// Graft request received (gossip mesh control)
-    virtual void onGraft(const PeerId &from, const TopicId &topic) = 0;
+    virtual void onGraft(const peer::PeerId &from, const TopicId &topic) = 0;
 
     /// Prune request received (gossip mesh control)
-    virtual void onPrune(const PeerId &from, const TopicId &topic) = 0;
+    virtual void onPrune(const peer::PeerId &from, const TopicId &topic) = 0;
 
     /// Message received
-    virtual void onMessage(const PeerId &from, TopicMessage::Ptr msg) = 0;
+    virtual void onMessage(const peer::PeerId &from, TopicMessage::Ptr msg) = 0;
   };
 
-  /// Parses RPC protobuf message received from wire
-  bool parseRPCMessage(const PeerId &from, gsl::span<const uint8_t> bytes,
-                       MessageReceiver &receiver);
+  /// Protobuf message parser.
+  /// It doesn't need to be stateful, but people want
+  class MessageParser {
+   public:
+    MessageParser();
+    ~MessageParser();
+
+    /// Parses RPC protobuf message received from wire
+    bool parse(gsl::span<const uint8_t> bytes);
+
+    /// Dispatches parts of parsed aggregate message to receiver
+    void dispatch(const peer::PeerId &from, MessageReceiver &receiver);
+
+   private:
+    /// Parsed protobuf message
+    std::unique_ptr<pubsub::pb::RPC> pb_msg_;
+  };
 
   /// Constructs RPC message as new fields added and serializes it
   /// into bytes before sending into wire

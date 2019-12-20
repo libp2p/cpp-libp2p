@@ -9,6 +9,7 @@ libp2p_add_library(p2p_gossip
     )
 target_link_libraries(p2p_gossip
     Boost::boost
+    p2p_byteutil
     p2p_peer_id
     p2p_cid
     p2p_gossip_proto

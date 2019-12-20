@@ -13,6 +13,7 @@
 
 #include <boost/optional.hpp>
 
+#include <libp2p/common/byteutil.hpp>
 #include <libp2p/peer/peer_id.hpp>
 
 namespace libp2p::protocol::gossip {
@@ -21,92 +22,68 @@ namespace libp2p::protocol::gossip {
   using Time = uint64_t;
 
   // TODO(artem): move to gsl::span+shared_ptr<const uint8_t[]>
-  using Bytes = std::vector<uint8_t>;
-
-  template <typename T>
-  using Optional = boost::optional<T>;
+  using common::ByteArray;
 
   template <typename T>
   using Repeated = std::vector<T>;
 
   using TopicId = std::string;
 
-  using peer::PeerId;
-
   // message id == string(seq_no + from)
-  using MessageId = Bytes;
+  using MessageId = ByteArray;
 
   /// Message being published
   struct TopicMessage {
     using Ptr = std::shared_ptr<TopicMessage>;
 
     /// Creates a new message from wire or storage
-    static TopicMessage::Ptr fromWire(Bytes _from, Bytes _seq, Bytes _data);
+    static TopicMessage::Ptr fromWire(ByteArray _from, ByteArray _seq, ByteArray _data);
 
     /// Creates a new message before publishing
-    static TopicMessage::Ptr fromScratch(const PeerId& _from, uint64_t _seq, Bytes _data);
+    static TopicMessage::Ptr fromScratch(const peer::PeerId& _from, uint64_t _seq, ByteArray _data);
 
     /// Peer id of creator
-    const Bytes from;
+    const ByteArray from;
 
     /// Sequence number: big endian uint64_t converted to string
-    const Bytes seq_no;
+    const ByteArray seq_no;
 
     /// Arbitrary data
-    const Bytes data;
+    const ByteArray data;
 
     /// Topic ids
     Repeated<TopicId> topic_ids;
 
     // TODO(artem): signing and protobuf issue. Seems they didn't try their
     // kitchen
-    Optional<Bytes> signature;
-    Optional<Bytes> key;
+    boost::optional<ByteArray> signature;
+    boost::optional<ByteArray> key;
 
    protected:
-    TopicMessage(Bytes _from, Bytes _seq, Bytes _data);
+    TopicMessage(ByteArray _from, ByteArray _seq, ByteArray _data);
   };
 
   /// Returns "zero" peer id, needed for consistency purposes
-  const PeerId &getEmptyPeer();
+  const peer::PeerId &getEmptyPeer();
 
   /// Needed for sets and maps
-  inline bool less(const PeerId &a, const PeerId &b) {
+  inline bool less(const peer::PeerId &a, const peer::PeerId &b) {
     // N.B. toVector returns const std::vector&, i.e. it is fast
     return a.toVector() < b.toVector();
   }
 
   /// Tries to cast from message field to peer id
-  outcome::result<PeerId> peerFrom(const TopicMessage &msg);
+  outcome::result<peer::PeerId> peerFrom(const TopicMessage &msg);
 
   /// Creates seq number byte representation as per pub-sub spec
-  Bytes createSeqNo(uint64_t seq);
+  ByteArray createSeqNo(uint64_t seq);
 
   /// Helper for text messages creation and protobuf
-  Bytes fromString(const std::string &s);
+  ByteArray fromString(const std::string &s);
 
   /// Creates message id as per pub-sub spec
   MessageId createMessageId(const TopicMessage &msg);
 
-  /// Uniform random generator interface
-  class UniformRandomGen {
-   public:
-    /// Creates default impl: MT19937
-    static std::shared_ptr<UniformRandomGen> createDefault();
-
-    virtual ~UniformRandomGen() = default;
-
-    /// Returns random size_t in range [0, n]. N.B. n is included!
-    virtual size_t operator()(size_t n) = 0;
-  };
-
 }  // namespace libp2p::protocol::gossip
-
-namespace std {
-  template <>
-  struct hash<libp2p::protocol::gossip::Bytes> {
-    size_t operator()(const libp2p::protocol::gossip::Bytes &x) const;
-  };
-}  // namespace std
 
 #endif  // LIBP2P_PROTOCOL_GOSSIP_COMMON_HPP

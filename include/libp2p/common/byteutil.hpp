@@ -49,4 +49,11 @@ namespace libp2p::common {
   }
 }  // namespace libp2p::common
 
+namespace std {
+  template <>
+  struct hash<libp2p::common::ByteArray> {
+    size_t operator()(const libp2p::common::ByteArray &x) const;
+  };
+}  // namespace std
+
 #endif  // LIBP2P_BYTEUTIL_HPP

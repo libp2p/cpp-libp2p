@@ -29,16 +29,9 @@ TEST(Gossip, CommonStuff) {
   ASSERT_TRUE(peer_res);
   ASSERT_EQ(peer, peer_res.value());
   ASSERT_EQ(msg->seq_no,
-            g::Bytes({0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99}));
+            g::ByteArray({0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99}));
   g::MessageId id = g::createMessageId(*msg);
   ASSERT_EQ(id.size(), 42);
-
-  auto gen = g::UniformRandomGen::createDefault();
-  for (int i = 0; i < 200; ++i) {
-    size_t rnd = (*gen)(13);
-    TR(rnd);
-    ASSERT_TRUE(rnd <= 13);
-  }
 }
 
 TEST(Gossip, PeerSet) {
@@ -76,21 +69,19 @@ TEST(Gossip, PeerSet) {
 
   ASSERT_FALSE(known_peers.find(g::getEmptyPeer()));
 
-  auto gen = g::UniformRandomGen::createDefault();
-
   std::vector<g::PeerContext::Ptr> vec;
   for (size_t i = 0; i < 3; ++i) {
-    vec = known_peers.selectRandomPeers(i, *gen);
+    vec = known_peers.selectRandomPeers(i);
     ASSERT_EQ(vec.size(), i);
   }
 
-  vec = known_peers.selectRandomPeers(NP / 2, *gen);
+  vec = known_peers.selectRandomPeers(NP / 2);
   ASSERT_EQ(vec.size(), NP / 2);
   for (const auto &selected_peer : vec) {
     auto pc = known_peers.find(selected_peer->peer_id);
     ASSERT_TRUE(pc);
-    ASSERT_EQ(pc->subscribed_to, selected_peer->subscribed_to);
-    ASSERT_EQ(pc->peer_id, selected_peer->peer_id);
+    ASSERT_EQ(pc.value()->subscribed_to, selected_peer->subscribed_to);
+    ASSERT_EQ(pc.value()->peer_id, selected_peer->peer_id);
   }
 
   vec.clear();

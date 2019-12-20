@@ -6,13 +6,11 @@
 #ifndef LIBP2P_PROTOCOL_GOSSIP_PEERS_HPP
 #define LIBP2P_PROTOCOL_GOSSIP_PEERS_HPP
 
-#include <algorithm>
+#include <functional>
 #include <set>
 
 #include <libp2p/multi/multiaddress.hpp>
-
 #include <libp2p/protocol/gossip/common.hpp>
-#include <libp2p/protocol/gossip/impl/ptr_key_wrapper.hpp>
 
 namespace libp2p::protocol::gossip {
 
@@ -25,8 +23,7 @@ namespace libp2p::protocol::gossip {
     using Ptr = std::shared_ptr<PeerContext>;
 
     /// The key
-    using key_type = PeerId;
-    const PeerId peer_id;
+    const peer::PeerId peer_id;
 
     /// Set of topics this peer is subscribed to
     std::set<TopicId> subscribed_to;
@@ -43,20 +40,14 @@ namespace libp2p::protocol::gossip {
     PeerContext &operator=(const PeerContext &) = delete;
     PeerContext &operator=(PeerContext &&) = delete;
 
-    explicit PeerContext(PeerId id) : peer_id(std::move(id)) {}
-
-    bool operator<(const PeerContext &other) const {
-      return less(peer_id, other.peer_id);
-    }
-
-    friend bool operator<(const PeerContext &ctx, const PeerId &peer) {
-      return less(ctx.peer_id, peer);
-    }
-
-    friend bool operator<(const PeerId &peer, const PeerContext &ctx) {
-      return less(peer, ctx.peer_id);
-    }
+    explicit PeerContext(peer::PeerId id) : peer_id(std::move(id)) {}
   };
+
+  /// Operators needed to place PeerContext::Ptr into PeerSet but use
+  /// const peer::PeerId& as a key
+  bool operator<(const PeerContext::Ptr &ctx, const peer::PeerId &peer);
+  bool operator<(const peer::PeerId &peer, const PeerContext::Ptr &ctx);
+  bool operator<(const PeerContext::Ptr &a, const PeerContext::Ptr &b);
 
   /// Peer set for pub-sub protocols
   class PeerSet {
@@ -68,14 +59,14 @@ namespace libp2p::protocol::gossip {
     PeerSet &operator=(const PeerSet &) = default;
     PeerSet &operator=(PeerSet &&) = default;
 
-    /// Finds peer context by id. Returns empty ptr if not found
-    PeerContext::Ptr find(const PeerId &id) const;
+    /// Finds peer context by id
+    boost::optional<PeerContext::Ptr> find(const peer::PeerId &id) const;
 
     /// Inserts peer context into set, returns false if already inserted
     bool insert(PeerContext::Ptr ctx);
 
     /// Erases peer context from set, returns false not found
-    bool erase(const PeerId &id);
+    bool erase(const peer::PeerId &id);
 
     /// Clears all data
     void clear();
@@ -87,45 +78,26 @@ namespace libp2p::protocol::gossip {
     size_t size() const;
 
     /// Selects up to n random peers
-    std::vector<PeerContext::Ptr> selectRandomPeers(
-        size_t n, UniformRandomGen &gen) const;
+    std::vector<PeerContext::Ptr> selectRandomPeers(size_t n) const;
+
+    /// Callback for peer selection
+    using SelectCallback = std::function<void(const PeerContext::Ptr &)>;
+
+    /// Callback for peer filtering
+    using FilterCallback = std::function<bool(const PeerContext::Ptr &)>;
 
     /// Selects all peers
-    template <typename Callback>
-    void selectAll(const Callback &callback) const {
-      for (const auto &p : peers_) {
-        callback(p.ptr);
-      }
-    }
+    void selectAll(const SelectCallback &callback) const;
 
     /// Selects peers filtered by external criteria
-    template <typename Callback, typename Predicate>
-    void selectIf(const Callback &callback, const Predicate &filter) const {
-      selectAll([&](const PeerContext::Ptr &p) {
-        if (filter(p))
-          callback(p);
-      });
-    }
+    void selectIf(const SelectCallback &callback,
+                  const FilterCallback &filter) const;
 
     /// Conditionally erases peers from the set
-    template <typename Predicate>
-    void eraseIf(const Predicate &filter) {
-      std::vector<PeerContext::Ptr> to_erase;
-      selectIf(
-          [&to_erase](const PeerContext::Ptr &p) { to_erase.emplace_back(p); },
-          filter);
-      if (to_erase.size() == size()) {
-        clear();
-      } else {
-        for (const auto &p : to_erase) {
-          erase(p->peer_id);
-        }
-      }
-    }
+    void eraseIf(const FilterCallback &filter);
 
    private:
-    std::set<SharedPtrKeyWrapper<PeerContext>, std::less<>> peers_;
-    mutable std::vector<PeerId> peer_ids_;
+    std::set<PeerContext::Ptr, std::less<>> peers_;
   };
 
 }  // namespace libp2p::protocol::gossip

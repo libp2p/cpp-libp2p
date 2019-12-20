@@ -5,6 +5,8 @@
 
 #include <libp2p/common/byteutil.hpp>
 
+#include <boost/container_hash/hash.hpp>
+
 namespace libp2p::common {
   ByteArray &putUint8(ByteArray &bytes, uint8_t n) {
     bytes.push_back(n);
@@ -30,3 +32,8 @@ namespace libp2p::common {
     return putUint32BE(bytes, n);
   }
 }  // namespace libp2p::common
+
+size_t std::hash<libp2p::common::ByteArray>::operator()(
+    const libp2p::common::ByteArray &x) const {
+  return boost::hash_range(x.begin(), x.end());
+}
