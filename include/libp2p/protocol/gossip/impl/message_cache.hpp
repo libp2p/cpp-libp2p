@@ -65,8 +65,8 @@ namespace libp2p::protocol::gossip {
     void getSeenMessageIds(const TopicId &topic,
                            const IHaveCallback &callback) const;
 
-    /// Returns message by id if found, or empty ptr otherwise
-    TopicMessage::Ptr getMessage(const MessageId &id) const;
+    /// Returns message by id if found
+    boost::optional<TopicMessage::Ptr> getMessage(const MessageId &id) const;
 
     /// Inserts a new message into cache. If already there, returns empty id
     boost::optional<MessageId> insert(TopicMessage::Ptr message);

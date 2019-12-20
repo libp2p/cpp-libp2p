@@ -38,11 +38,12 @@ namespace libp2p::protocol::gossip {
     }
   }
 
-  TopicMessage::Ptr MessageCache::getMessage(const MessageId &id) const {
+  boost::optional<TopicMessage::Ptr> MessageCache::getMessage(
+      const MessageId &id) const {
     auto &idx = table_->get<ById>();
     auto it = idx.find(id);
     if (it == idx.end()) {
-      return TopicMessage::Ptr{};
+      return boost::none;
     }
     return it->message;
   }
