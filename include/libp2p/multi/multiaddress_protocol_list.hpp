@@ -131,7 +131,7 @@ namespace libp2p::multi {
         {Protocol::Code::UTP, 0, "utp"},
         {Protocol::Code::UNIX, Protocol::kVarLen, "unix"},
         {Protocol::Code::P2P, Protocol::kVarLen, "p2p"},
-//        {Protocol::Code::P2P, Protocol::kVarLen, "ipfs"},
+        // Also P2P protocol may have a legacy name "ipfs"
         {Protocol::Code::ONION, 96, "onion"},
         {Protocol::Code::ONION3, 296, "onion3"},
         {Protocol::Code::GARLIC64, Protocol::kVarLen, "garlic64"},
