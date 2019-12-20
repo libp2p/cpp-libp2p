@@ -84,3 +84,35 @@ TEST(Multihash, FromToBuffer) {
   ASSERT_FALSE(Multihash::createFromBytes(v))
       << "Length in the header does not equal actual length";
 }
+
+/**
+ * @given blake hash and sha256 hash with same hash
+ * @when compare multihashes
+ * @then sha256 hash is less then blake hash
+ */
+TEST(Multihash, CompareDifferentTypes) {
+  std::vector<uint8_t> hash{2, 3, 4};
+  auto sha256_hash = Multihash::create(HashType::sha256, hash).value();
+  auto blake_hash = Multihash::create(HashType::blake2s128, hash).value();
+  // type sha256 < blake2s128
+  ASSERT_TRUE(sha256_hash < blake_hash);
+  ASSERT_FALSE(blake_hash < sha256_hash);
+  ASSERT_FALSE(sha256_hash < sha256_hash);
+  ASSERT_FALSE(blake_hash < blake_hash);
+}
+
+/**
+ * @given similar hash type and different hashes
+ * @when compare multihashes
+ * @then lesser hash is less
+ */
+TEST(Multihash, CompareDifferentHashes) {
+  std::vector<uint8_t> hash_lesser{2, 3, 4};
+  std::vector<uint8_t> hash{3, 4, 5};
+  auto hash1 = Multihash::create(HashType::sha256, hash_lesser).value();
+  auto hash2 = Multihash::create(HashType::sha256, hash).value();
+  ASSERT_TRUE(hash1 < hash2);
+  ASSERT_FALSE(hash2 < hash1);
+  ASSERT_FALSE(hash1 < hash1);
+  ASSERT_FALSE(hash2 < hash2);
+}

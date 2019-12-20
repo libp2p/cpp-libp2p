@@ -88,6 +88,7 @@ namespace libp2p::multi {
 
     bool operator==(const Multihash &other) const;
     bool operator!=(const Multihash &other) const;
+    bool operator<(const Multihash &other) const;
 
    private:
     /**
