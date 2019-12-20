@@ -16,12 +16,8 @@
 namespace libp2p::multi {
 
   /**
-   * A C++ wrapper for varint encoding implementation, which can be found in
-   * c-utils library. Encodes unsigned integers into variable-length byte
-   * arrays, efficient, having both an ability to store large numbers and not
-   * wasting space on small ones. Mind that the maximum length of a varint is 8
-   * bytes and it can store only unsigned integers
-   * @see https://github.com/multiformats/unsigned-varint
+   * @class Encodes and decodes unsigned integers into and from
+   * variable-length byte arrays using LEB128 algorithm.
    */
   class UVarint {
    public:
@@ -86,7 +82,7 @@ namespace libp2p::multi {
 
    private:
     /// private ctor for unsafe creation
-    UVarint(gsl::span<const uint8_t> varint_bytes, int64_t varint_size);
+    UVarint(gsl::span<const uint8_t> varint_bytes, size_t varint_size);
 
     std::vector<uint8_t> bytes_{};
   };

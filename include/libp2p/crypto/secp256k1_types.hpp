@@ -10,11 +10,14 @@
 #include <array>
 
 namespace libp2p::crypto::secp256k1 {
+
+  static const size_t kPrivateKeyLength = 32;
+  static const size_t kPublicKeyLength = 33;
   /**
    * @brief Common types
    */
-  using PrivateKey = std::array<uint8_t, 32>;
-  using PublicKey = std::array<uint8_t, 33>;
+  using PrivateKey = std::array<uint8_t, kPrivateKeyLength>;
+  using PublicKey = std::array<uint8_t, kPublicKeyLength>;
   using Signature = std::vector<uint8_t>;
 
   /**

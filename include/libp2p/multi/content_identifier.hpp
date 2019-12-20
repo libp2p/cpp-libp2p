@@ -39,6 +39,7 @@ namespace libp2p::multi {
     std::string toPrettyString(const std::string &base);
 
     bool operator==(const ContentIdentifier &c) const;
+    bool operator<(const ContentIdentifier &c) const;
 
     Version version;
     MulticodecType::Code content_type;

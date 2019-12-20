@@ -20,10 +20,10 @@ namespace libp2p::crypto::secp256k1 {
         const PrivateKey &key) const override;
 
     outcome::result<Signature> sign(
-        gsl::span<uint8_t> message,
+        gsl::span<const uint8_t> message,
         const PrivateKey &key) const override;
 
-    outcome::result<bool> verify(gsl::span<uint8_t> message,
+    outcome::result<bool> verify(gsl::span<const uint8_t> message,
                                  const Signature &signature,
                                  const PublicKey &key) const override;
 
