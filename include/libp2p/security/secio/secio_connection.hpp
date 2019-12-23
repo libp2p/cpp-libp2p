@@ -175,7 +175,7 @@ namespace libp2p::connection {
     std::atomic_bool read_completed_;
     std::condition_variable read_completed_cv_;
 
-    std::queue<const uint8_t> user_data_buffer_;
+    std::queue<uint8_t> user_data_buffer_;
   };
 }  // namespace libp2p::connection
 
