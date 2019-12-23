@@ -48,9 +48,9 @@ namespace libp2p::protocol::kademlia {
         scheduler_(std::move(scheduler)),
         table_(std::move(table)),
         local_store_(std::make_unique<LocalValueStore>(*this)),
-        providers_store_(*scheduler_, scheduler::toTicks(config_.max_record_age)),
-        log_("kad", "KadImpl", this)
-        {}
+        providers_store_(*scheduler_,
+                         scheduler::toTicks(config_.max_record_age)),
+        log_("kad", "KadImpl", this) {}
 
   KadImpl::~KadImpl() = default;
 
@@ -62,39 +62,38 @@ namespace libp2p::protocol::kademlia {
     new_channel_subscription_ =
         host_->getBus()
             .getChannel<network::event::OnNewConnectionChannel>()
-            .subscribe(
-                [this](
-                    // NOLINTNEXTLINE
-                    std::weak_ptr<connection::CapableConnection> conn) {
-                  if (auto c = conn.lock()) {
-                    // adding outbound connections only
-                    if (c->isInitiator()) {
-                      log_.debug("new outbound connection");
-                      auto remote_peer_res = c->remotePeer();
-                      if (!remote_peer_res) {
-                        return;
-                      }
-                      auto remote_peer_addr_res = c->remoteMultiaddr();
-                      if (!remote_peer_addr_res) {
-                        return;
-                      }
-                      addPeer(
-                          peer::PeerInfo{
-                              std::move(remote_peer_res.value()),
-                              {std::move(remote_peer_addr_res.value())}},
-                          false);
-                    }
+            .subscribe([this](
+                           // NOLINTNEXTLINE
+                           std::weak_ptr<connection::CapableConnection> conn) {
+              if (auto c = conn.lock()) {
+                // adding outbound connections only
+                if (c->isInitiator()) {
+                  log_.debug("new outbound connection");
+                  auto remote_peer_res = c->remotePeer();
+                  if (!remote_peer_res) {
+                    return;
                   }
-                });
+                  auto remote_peer_addr_res = c->remoteMultiaddr();
+                  if (!remote_peer_addr_res) {
+                    return;
+                  }
+                  addPeer(
+                      peer::PeerInfo{std::move(remote_peer_res.value()),
+                                     {std::move(remote_peer_addr_res.value())}},
+                      false);
+                }
+              }
+            });
 
     started_ = true;
   }
 
   void KadImpl::addPeer(peer::PeerInfo peer_info, bool permanent) {
-    auto res = host_->getPeerRepository().getAddressRepository().upsertAddresses(
-        peer_info.id,
-        gsl::span(peer_info.addresses.data(), peer_info.addresses.size()),
-        permanent ? peer::ttl::kPermanent : peer::ttl::kDay);
+    auto res =
+        host_->getPeerRepository().getAddressRepository().upsertAddresses(
+            peer_info.id,
+            gsl::span(peer_info.addresses.data(), peer_info.addresses.size()),
+            permanent ? peer::ttl::kPermanent : peer::ttl::kDay);
     if (res) {
       res = table_->update(peer_info.id);
     }
@@ -102,12 +101,12 @@ namespace libp2p::protocol::kademlia {
     if (res) {
       log_.debug("successfully added peer to table: {}", id_str);
     } else {
-      log_.debug("failed to add peer to table: {} : {}",
-                  id_str, res.error().message());
+      log_.debug("failed to add peer to table: {} : {}", id_str,
+                 res.error().message());
     }
   }
 
-  PeerIdVec KadImpl::getNearestPeers(const NodeId& id) {
+  PeerIdVec KadImpl::getNearestPeers(const NodeId &id) {
     return table_->getNearestPeers(id, config_.closer_peers_count * 2);
   }
 
@@ -165,7 +164,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     log_.debug("client session completed, total sessions: {}",
-                sessions_.size() - 1);
+               sessions_.size() - 1);
 
     closeSession(from);
   }
@@ -203,12 +202,12 @@ namespace libp2p::protocol::kademlia {
 
     void onResult(const peer::PeerId &from,
                   outcome::result<Message> result) override {
-      log_.debug("{} waiting for {} responses",
-                  from.toBase58(), waiting_for_.size());
+      log_.debug("{} waiting for {} responses", from.toBase58(),
+                 waiting_for_.size());
       waiting_for_.erase(from);
       if (!result) {
-        log_.warn("request to {} failed: {}",
-                   from.toBase58(), result.error().message());
+        log_.warn("request to {} failed: {}", from.toBase58(),
+                  result.error().message());
       } else {
         Message &msg = result.value();
         size_t n = 0;
@@ -232,9 +231,8 @@ namespace libp2p::protocol::kademlia {
             }
           }
         }
-        log_.debug(
-            "{} returned {} records, waiting for {} responses",
-           from.toBase58(), n, waiting_for_.size());
+        log_.debug("{} returned {} records, waiting for {} responses",
+                   from.toBase58(), n, waiting_for_.size());
       }
       if (callback_ && (result_.success || waiting_for_.empty())) {
         callback_(key_, std::move(result_));
@@ -265,9 +263,10 @@ namespace libp2p::protocol::kademlia {
       result.peer = std::move(pi);
       // TODO(artem): result.closer_peers needed here? probably not
 
-      scheduler_->schedule(
-          [f=std::move(f), p=peer, r=std::move(result)] { f(p, r); }
-      ).detach();
+      scheduler_
+          ->schedule(
+              [f = std::move(f), p = peer, r = std::move(result)] { f(p, r); })
+          .detach();
 
       log_.info("{} found locally from host!", peer.toBase58());
       return true;
@@ -275,7 +274,7 @@ namespace libp2p::protocol::kademlia {
 
     auto ids = table_->getNearestPeers(NodeId(peer), 20);
     if (ids.empty()) {
-      log_.info("{} : no peers",  peer.toBase58());
+      log_.info("{} : no peers", peer.toBase58());
       return false;
     }
 
@@ -289,9 +288,10 @@ namespace libp2p::protocol::kademlia {
       result.peer = host_->getPeerRepository().getPeerInfo(peer);
       // TODO(artem): result.closer_peers needed here? probably not
 
-      scheduler_->schedule(
-          [f=std::move(f), p=peer, r=std::move(result)] { f(p, r); }
-      ).detach();
+      scheduler_
+          ->schedule(
+              [f = std::move(f), p = peer, r = std::move(result)] { f(p, r); })
+          .detach();
 
       log_.info("{} found locally", peer.toBase58());
       return true;
@@ -316,7 +316,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     if (v.empty()) {
-      log_.info("{} : no peers to connect to",peer.toBase58());
+      log_.info("{} : no peers to connect to", peer.toBase58());
       return false;
     }
 
@@ -326,7 +326,7 @@ namespace libp2p::protocol::kademlia {
   bool KadImpl::findPeer(const peer::PeerId &peer,
                          const std::unordered_set<peer::PeerInfo> &closer_peers,
                          Kad::FindPeerQueryResultFunc f) {
-    std::optional<peer::PeerInfo> self_announce;
+    boost::optional<peer::PeerInfo> self_announce;
     peer::PeerInfo self = host_->getPeerInfo();
     if (server_) {
       self_announce = self;
@@ -352,22 +352,21 @@ namespace libp2p::protocol::kademlia {
     return true;
   }
 
-  void KadImpl::putValue(const ContentAddress& key, Value value, PutValueResultFunc f) {
+  void KadImpl::putValue(const ContentAddress &key, Value value,
+                         PutValueResultFunc f) {
     // puts value into local store and then it initiates broadcast process
 
     auto res = local_store_->putValue(key, std::move(value));
 
     // TODO(artem): subscriptions instead of coarse callback API
 
-    scheduler_->schedule(
-        [f=std::move(f), r=res] { f(r); }
-    ).detach();
+    scheduler_->schedule([f = std::move(f), r = res] { f(r); }).detach();
   }
 
   class GetValueBatchHandler : public KadResponseHandler {
    public:
-    GetValueBatchHandler(ContentAddress key,
-                         Kad::GetValueResultFunc f, KadImpl &kad)
+    GetValueBatchHandler(ContentAddress key, Kad::GetValueResultFunc f,
+                         KadImpl &kad)
         : key_(std::move(key)),
           callback_(std::move(f)),
           kad_(kad),
@@ -389,17 +388,16 @@ namespace libp2p::protocol::kademlia {
     void onResult(const peer::PeerId &from,
                   outcome::result<Message> result) override {
       log_.debug("{} waiting for {} responses", from.toBase58(),
-          waiting_for_.size());
+                 waiting_for_.size());
       waiting_for_.erase(from);
       if (!result) {
-        log_.warn("request to {} failed: {}",
-                   from.toBase58(), result.error().message());
+        log_.warn("request to {} failed: {}", from.toBase58(),
+                  result.error().message());
       } else {
         Message &msg = result.value();
 
-        log_.debug(
-            "response from {}, waiting for {} responses",
-            from.toBase58(), waiting_for_.size());
+        log_.debug("response from {}, waiting for {} responses",
+                   from.toBase58(), waiting_for_.size());
 
         if (msg.provider_peers) {
           for (auto &p : msg.provider_peers.value()) {
@@ -442,14 +440,12 @@ namespace libp2p::protocol::kademlia {
     SubLogger log_;
   };
 
-  void KadImpl::getValue(const ContentAddress& key, GetValueResultFunc f) {
+  void KadImpl::getValue(const ContentAddress &key, GetValueResultFunc f) {
     LocalValueStore::AbsTime ts;
     auto res = local_store_->getValue(key, ts);
     if (res) {
       // TODO(artem): subscriptions instead of coarse callback API
-      scheduler_->schedule(
-          [f=std::move(f), r=res] { f(r); }
-      ).detach();
+      scheduler_->schedule([f = std::move(f), r = res] { f(r); }).detach();
 
       return;
     }
@@ -459,7 +455,7 @@ namespace libp2p::protocol::kademlia {
     if (peers.size() < config_.get_many_records_count) {
       PeerIdVec closer_peers = getNearestPeers(NodeId(key));
 
-      for (auto& p : closer_peers) {
+      for (auto &p : closer_peers) {
         if (std::find(peers.begin(), peers.end(), p) == peers.end()) {
           peers.push_back(p);
           if (peers.size() == config_.get_many_records_count) {
@@ -470,9 +466,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     if (peers.empty()) {
-      scheduler_->schedule(
-          [f=std::move(f)] { f(Error::NO_PEERS); }
-      ).detach();
+      scheduler_->schedule([f = std::move(f)] { f(Error::NO_PEERS); }).detach();
 
       return;
     }
@@ -484,15 +478,15 @@ namespace libp2p::protocol::kademlia {
     if (!request.serialize(*buffer)) {
       log_.error("serialize error");
 
-      scheduler_->schedule(
-          [f=std::move(f)] { f(Error::MESSAGE_SERIALIZE_ERROR); }
-      ).detach();
+      scheduler_
+          ->schedule([f = std::move(f)] { f(Error::MESSAGE_SERIALIZE_ERROR); })
+          .detach();
 
       return;
     }
 
-    auto handler = std::make_shared<GetValueBatchHandler>(
-        key, std::move(f), *this);
+    auto handler =
+        std::make_shared<GetValueBatchHandler>(key, std::move(f), *this);
 
     for (const auto &p : peers) {
       auto peer_info = host_->getPeerRepository().getPeerInfo(p);
@@ -506,8 +500,8 @@ namespace libp2p::protocol::kademlia {
 
   class BroadcastHandler : public KadResponseHandler {
    public:
-    explicit BroadcastHandler(Kad &kad) :
-        log_("kad", "BroadcastHandler", &kad) {}
+    explicit BroadcastHandler(Kad &kad)
+        : log_("kad", "BroadcastHandler", &kad) {}
 
    private:
     Message::Type expectedResponseType() override {
@@ -520,13 +514,13 @@ namespace libp2p::protocol::kademlia {
 
     void onResult(const peer::PeerId &from, outcome::result<Message>) override {
       log_.warn("unexpected response to broadcast request from {}",
-          from.toBase58());
+                from.toBase58());
     }
 
     SubLogger log_;
   };
 
-  void KadImpl::broadcastThisProvider(const ContentAddress& key) {
+  void KadImpl::broadcastThisProvider(const ContentAddress &key) {
     PeerIdVec closer_peers = getNearestPeers(NodeId(key));
 
     if (closer_peers.empty()) {
@@ -571,15 +565,15 @@ namespace libp2p::protocol::kademlia {
     log_.debug("connecting to {}, {}", pi.id.toBase58(), handler.use_count());
 
     host_->newStream(pi, protocol_,
-                    [wptr = weak_from_this(), this, id, r = request,
-                     peerId = pi.id](auto &&stream_res) {
-                      auto self = wptr.lock();
-                      if (self) {
-                        onConnected(
-                            id, peerId,
-                            std::forward<decltype(stream_res)>(stream_res), r);
-                      }
-                    });
+                     [wptr = weak_from_this(), this, id, r = request,
+                      peerId = pi.id](auto &&stream_res) {
+                       auto self = wptr.lock();
+                       if (self) {
+                         onConnected(
+                             id, peerId,
+                             std::forward<decltype(stream_res)>(stream_res), r);
+                       }
+                     });
     connecting_sessions_[id] = handler;
   }
 
@@ -589,16 +583,14 @@ namespace libp2p::protocol::kademlia {
       KadProtocolSession::Buffer request) {
     auto it = connecting_sessions_.find(id);
     if (it == connecting_sessions_.end()) {
-      log_.warn("cannot find connecting session {}",
-                 id);
+      log_.warn("cannot find connecting session {}", id);
       return;
     }
     auto handler = it->second;
     connecting_sessions_.erase(it);
 
     if (!stream_res) {
-      log_.warn("cannot connect to server: {}",
-                 stream_res.error().message());
+      log_.warn("cannot connect to server: {}", stream_res.error().message());
       handler->onResult(peerId, outcome::failure(stream_res.error()));
       return;
     }
@@ -609,12 +601,12 @@ namespace libp2p::protocol::kademlia {
 
     std::string addr(stream->remoteMultiaddr().value().getStringAddress());
     log_.debug("connected to {}, ({} - {})", addr,
-                stream_res.value().use_count(), connecting_sessions_.size());
+               stream_res.value().use_count(), connecting_sessions_.size());
 
     auto protocol_session = std::make_shared<KadProtocolSession>(
         weak_from_this(), std::move(stream_res.value()));
     if (!protocol_session->write(std::move(request))) {
-      log_.warn("write to {} failed",addr);
+      log_.warn("write to {} failed", addr);
       assert(stream->remotePeerId());
       handler->onResult(peerId, Error::STREAM_RESET);
       return;
@@ -623,8 +615,7 @@ namespace libp2p::protocol::kademlia {
 
     sessions_[stream] =
         Session{std::move(protocol_session), std::move(handler)};
-    log_.debug("total sessions: {}",
-                sessions_.size());
+    log_.debug("total sessions: {}", sessions_.size());
   }
 
 }  // namespace libp2p::protocol::kademlia
