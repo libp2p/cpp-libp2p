@@ -277,16 +277,16 @@ namespace libp2p::crypto {
                                    .data = {priv.begin(), priv.end()}}}};
   }
 
-  outcome::result<KeyPair> CryptoProviderImpl::generateSecp256k1() const {
+  outcome::result<KeyPair> CryptoProviderImpl::generateSecp256k1() {
     return generateEcdsa256WithCurve(Key::Type::Secp256k1, NID_secp256k1);
   }
 
-  outcome::result<KeyPair> CryptoProviderImpl::generateEcdsa() const {
+  outcome::result<KeyPair> CryptoProviderImpl::generateEcdsa() {
     return generateEcdsa256WithCurve(Key::Type::ECDSA, NID_X9_62_prime256v1);
   }
 
   outcome::result<KeyPair> CryptoProviderImpl::generateEcdsa256WithCurve(
-      Key::Type key_type, int curve_nid) const {
+      Key::Type key_type, int curve_nid) {
     EC_KEY *key = EC_KEY_new();
     if (nullptr == key) {
       return KeyGeneratorError::KEY_GENERATION_FAILED;
@@ -378,14 +378,13 @@ namespace libp2p::crypto {
         return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
       case Key::Type::Ed25519:
         return signEd25519(message, private_key);
-      case Key::Type::Secp256k1:
-        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
-      case Key::Type::ECDSA:
-        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
       case Key::Type::UNSPECIFIED:
         return KeyGeneratorError::WRONG_KEY_TYPE;
       default:
         return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+        // non-implemented yet cases
+        // case Key::Type::Secp256k1:
+        // case Key::Type::ECDSA:
     }
   }
 
@@ -405,14 +404,13 @@ namespace libp2p::crypto {
         return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
       case Key::Type::Ed25519:
         return verifyEd25519(message, signature, public_key);
-      case Key::Type::Secp256k1:
-        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
-      case Key::Type::ECDSA:
-        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
       case Key::Type::UNSPECIFIED:
         return KeyGeneratorError::WRONG_KEY_TYPE;
       default:
         return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+        // non-implemented cases
+        // case Key::Type::Secp256k1:
+        // case Key::Type::ECDSA:
     }
   }
 
@@ -541,14 +539,13 @@ namespace libp2p::crypto {
   }
 
   std::function<outcome::result<Buffer>(Buffer)>
-  CryptoProviderImpl::prepareSharedSecretGenerator(
-      int curve_nid, Buffer own_private_key) const {
-    return [nid{std::move(curve_nid)},
-            private_bytes{std::move(own_private_key)}](
+  CryptoProviderImpl::prepareSharedSecretGenerator(int curve_nid,
+                                                   Buffer own_private_key) {
+    return [curve_nid, private_bytes{std::move(own_private_key)}](
                Buffer their_epubkey) -> outcome::result<Buffer> {
       const auto FAILED{KeyGeneratorError::KEY_DERIVATION_FAILED};
       // init curve
-      EC_GROUP *curve_group = EC_GROUP_new_by_curve_name(nid);
+      EC_GROUP *curve_group = EC_GROUP_new_by_curve_name(curve_nid);
       if (nullptr == curve_group) {
         return FAILED;
       }
@@ -603,7 +600,7 @@ namespace libp2p::crypto {
         return FAILED;
       }
 
-      EC_KEY *our_private_key = EC_KEY_new_by_curve_name(nid);
+      EC_KEY *our_private_key = EC_KEY_new_by_curve_name(curve_nid);
       if (nullptr == our_private_key) {
         return FAILED;
       }
@@ -617,7 +614,7 @@ namespace libp2p::crypto {
       // calculate the size of the buffer for the shared secret
       int field_size{EC_GROUP_get_degree(curve_group)};
       int secret_len{(field_size + 7) / 8};
-      uint8_t *secret_buffer{(uint8_t *)OPENSSL_malloc(secret_len)};
+      uint8_t *secret_buffer{(uint8_t *)OPENSSL_malloc(secret_len)};  // NOLINT
       if (nullptr == secret_buffer) {
         return FAILED;
       }
@@ -693,13 +690,12 @@ namespace libp2p::crypto {
     Buffer k2_cipher_key{iter, iter += cipher_key_size};
     Buffer k2_mac_key{iter, iter += hmac_key_size};
 
-    return std::make_pair<StretchedKey, StretchedKey>(
-        {.iv = std::move(k1_iv),
-         .cipher_key = std::move(k1_cipher_key),
-         .mac_key = std::move(k1_mac_key)},
-        {.iv = std::move(k2_iv),
-         .cipher_key = std::move(k2_cipher_key),
-         .mac_key = std::move(k2_mac_key)});
+    return std::make_pair(StretchedKey{.iv = std::move(k1_iv),
+                                       .cipher_key = std::move(k1_cipher_key),
+                                       .mac_key = std::move(k1_mac_key)},
+                          StretchedKey{.iv = std::move(k2_iv),
+                                       .cipher_key = std::move(k2_cipher_key),
+                                       .mac_key = std::move(k2_mac_key)});
   }
 
 }  // namespace libp2p::crypto

@@ -46,11 +46,11 @@ namespace libp2p::security::secio {
 
     /// Stores byte-exact copy of SECIO proposal sent to remote peer
     void storeLocalPeerProposalBytes(
-        std::shared_ptr<std::vector<uint8_t>> bytes);
+        const std::shared_ptr<std::vector<uint8_t>> &bytes);
 
     /// Stores byte-exact copy of SECIO proposal received from remote peer
     void storeRemotePeerProposalBytes(
-        std::shared_ptr<std::vector<uint8_t>> bytes);
+        const std::shared_ptr<std::vector<uint8_t>> &bytes);
 
     /// Stores ephemeral keypair for further computations
     void storeEphemeralKeypair(crypto::EphemeralKeyPair keypair);
@@ -101,8 +101,10 @@ namespace libp2p::security::secio {
      * @return remote peer public key or an error if happened
      */
     outcome::result<crypto::PublicKey> remotePublicKey(
-        std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
-        std::shared_ptr<ProposeMessageMarshaller> propose_marshaller) const;
+        const std::shared_ptr<crypto::marshaller::KeyMarshaller>
+            &key_marshaller,
+        const std::shared_ptr<ProposeMessageMarshaller> &propose_marshaller)
+        const;
 
     /// Computes shared secret via ec-cryptography
     outcome::result<crypto::Buffer> generateSharedSecret(
@@ -119,16 +121,16 @@ namespace libp2p::security::secio {
      * Computes which peer settings are preferred.
      * @return true if local's peer settings are preferred, false - otherwise
      */
-    outcome::result<bool> determineRoles(const ProposeMessage &local,
-                                         const ProposeMessage &remote) const;
+    static outcome::result<bool> determineRoles(const ProposeMessage &local,
+                                                const ProposeMessage &remote);
 
     /**
      * Determine common set of settings considering given peers' preference.
      * @return chosen algorithms structure if successful
      */
-    outcome::result<Algorithm> findCommonAlgo(
+    static outcome::result<Algorithm> findCommonAlgo(
         const ProposeMessage &local, const ProposeMessage &remote,
-        bool local_peer_is_preferred) const;
+        bool local_peer_is_preferred);
 
     boost::optional<std::vector<uint8_t>> local_peer_proposal_bytes_;
     boost::optional<std::vector<uint8_t>> remote_peer_proposal_bytes_;

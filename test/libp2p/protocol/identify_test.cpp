@@ -7,11 +7,12 @@
 
 #include <vector>
 
+#include <generated/protocol/identify/protobuf/identify.pb.h>
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/multi/uvarint.hpp>
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/network/network.hpp>
-#include <generated/protocol/identify/protobuf/identify.pb.h>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
@@ -25,7 +26,6 @@
 #include "mock/libp2p/peer/key_repository_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
-#include <libp2p/common/literals.hpp>
 
 using namespace libp2p;
 using namespace peer;

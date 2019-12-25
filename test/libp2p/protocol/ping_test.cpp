@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 #include <boost/asio/io_service.hpp>
 #include <boost/optional.hpp>
+#include <libp2p/common/literals.hpp>
 #include "libp2p/event/bus.hpp"
 #include "libp2p/peer/peer_id.hpp"
 #include "libp2p/protocol/ping/common.hpp"
@@ -16,7 +17,6 @@
 #include "mock/libp2p/crypto/random_generator_mock.hpp"
 #include "mock/libp2p/host/host_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
-#include <libp2p/common/literals.hpp>
 
 using namespace libp2p;
 using namespace protocol;

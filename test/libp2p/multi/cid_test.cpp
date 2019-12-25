@@ -49,16 +49,16 @@ TEST(CidTest, PrettyString) {
  * @then lesser version is always less
  */
 TEST(CidTest, CompareDifferentVersion) {
-  ContentIdentifier c0_v0(ContentIdentifier::Version::V0, MulticodecType::IDENTITY,
-                          ZERO_MULTIHASH);
-  ContentIdentifier c0_v1(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
-                       ZERO_MULTIHASH);
+  ContentIdentifier c0_v0(ContentIdentifier::Version::V0,
+                          MulticodecType::IDENTITY, ZERO_MULTIHASH);
+  ContentIdentifier c0_v1(ContentIdentifier::Version::V1,
+                          MulticodecType::IDENTITY, ZERO_MULTIHASH);
   ASSERT_TRUE(c0_v0 < c0_v1);
   ASSERT_FALSE(c0_v0 < c0_v0);
   ASSERT_FALSE(c0_v1 < c0_v1);
 
-  ContentIdentifier c1_v1(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
-                          ZERO_MULTIHASH);
+  ContentIdentifier c1_v1(ContentIdentifier::Version::V1,
+                          MulticodecType::IDENTITY, ZERO_MULTIHASH);
   ASSERT_TRUE(c0_v0 < c1_v1);
 
   ContentIdentifier c2_v0(ContentIdentifier::Version::V0, MulticodecType::SHA1,
@@ -74,9 +74,9 @@ TEST(CidTest, CompareDifferentVersion) {
  */
 TEST(CidTest, CompareDifferentTypes) {
   ContentIdentifier c1(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
-                          ZERO_MULTIHASH);
+                       ZERO_MULTIHASH);
   ContentIdentifier c2(ContentIdentifier::Version::V1, MulticodecType::SHA1,
-                          ZERO_MULTIHASH);
+                       ZERO_MULTIHASH);
   ASSERT_TRUE(c1 < c2);
   ASSERT_FALSE(c2 < c1);
   ASSERT_FALSE(c1 < c1);

@@ -30,7 +30,7 @@ namespace libp2p::security {
                 public std::enable_shared_from_this<Secio> {
    public:
     enum class Error {
-      REMOTE_PEER_SIGNATURE_IS_INVALID = 1, // TODO check error set completeness
+      REMOTE_PEER_SIGNATURE_IS_INVALID = 1,
     };
 
     static constexpr auto kProtocolId = "/secio/1.0.0";
@@ -58,25 +58,29 @@ namespace libp2p::security {
                         const peer::PeerId &p, SecConnCallbackFunc cb) override;
 
    private:
-    void sendProposeMessage(std::shared_ptr<connection::RawConnection> conn,
-                            std::shared_ptr<secio::Dialer> dialer,
-                            SecConnCallbackFunc cb) const;
+    void sendProposeMessage(
+        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<secio::Dialer> &dialer,
+        SecConnCallbackFunc cb) const;
 
-    void receiveProposeMessage(std::shared_ptr<connection::RawConnection> conn,
-                               std::shared_ptr<secio::Dialer> dialer,
-                               SecConnCallbackFunc cb) const;
+    void receiveProposeMessage(
+        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<secio::Dialer> &dialer,
+        SecConnCallbackFunc cb) const;
 
-    void sendExchangeMessage(std::shared_ptr<connection::RawConnection> conn,
-                             std::shared_ptr<secio::Dialer> dialer,
-                             SecConnCallbackFunc cb) const;
+    void sendExchangeMessage(
+        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<secio::Dialer> &dialer,
+        SecConnCallbackFunc cb) const;
 
-    void receiveExchangeMessage(std::shared_ptr<connection::RawConnection> conn,
-                                std::shared_ptr<secio::Dialer> dialer,
-                                SecConnCallbackFunc cb) const;
+    void receiveExchangeMessage(
+        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<secio::Dialer> &dialer,
+        SecConnCallbackFunc cb) const;
 
-    void closeConnection(
+    static void closeConnection(
         const std::shared_ptr<libp2p::connection::RawConnection> &conn,
-        const std::error_code &err) const;
+        const std::error_code &err);
 
     std::shared_ptr<crypto::random::CSPRNG> csprng_;
     std::shared_ptr<crypto::CryptoProvider> crypto_provider_;

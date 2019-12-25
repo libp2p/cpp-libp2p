@@ -37,7 +37,7 @@ namespace libp2p::security::secio {
   ProposeMessage ProposeMessageMarshallerImpl::protoToHandy(
       const protobuf::Propose &proto_msg) const {
     return ProposeMessage{
-        .rand = {proto_msg.rand().begin(), proto_msg.rand().end()},
+        .rand = {proto_msg.rand().begin(), proto_msg.rand().end()}, // NOLINT
         .pubkey = {proto_msg.pubkey().begin(), proto_msg.pubkey().end()},
         .exchanges = proto_msg.exchanges(),
         .ciphers = proto_msg.ciphers(),

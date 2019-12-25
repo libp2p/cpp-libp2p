@@ -5,8 +5,8 @@
 #include <algorithm>
 
 #include <gtest/gtest.h>
-#include "testutil/outcome.hpp"
 #include "libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp"
+#include "testutil/outcome.hpp"
 
 using libp2p::crypto::secp256k1::PrivateKey;
 using libp2p::crypto::secp256k1::PublicKey;

@@ -51,7 +51,7 @@ namespace libp2p::crypto::rsa {
     Hash256 digest = sha256(message);
     int result = RSA_verify(NID_sha256, digest.data(), digest.size(),
                             signature.data(), signature.size(), rsa.get());
-    return result == 1 ? true : false;
+    return result == 1;
   }
 
   outcome::result<std::shared_ptr<X509_PUBKEY>>

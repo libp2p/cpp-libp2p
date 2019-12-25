@@ -31,6 +31,12 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, SecioConnection::Error, e) {
       return "Received message has an invalid signature";
     case E::TOO_SHORT_BUFFER:
       return "Provided buffer is too short";
+    case E::NOTHING_TO_READ:
+      return "Zero bytes available to read";
+    case E::STREAM_IS_BROKEN:
+      return "Stream cannot be read. Frames are corrupted";
+    case E::OVERSIZED_FRAME:
+      return "Frame exceeds the maximum allowed size";
     default:
       return "Unknown error";
   }
@@ -44,16 +50,16 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, SecioConnection::Error, e) {
   auto(name) = (res).value();
 
 namespace {
-  using namespace libp2p;
   template <typename AesSecretType>
-  outcome::result<AesSecretType> initAesSecret(const common::ByteArray &key,
-                                               const common::ByteArray &iv) {
+  libp2p::outcome::result<AesSecretType> initAesSecret(
+      const libp2p::common::ByteArray &key,
+      const libp2p::common::ByteArray &iv) {
     AesSecretType secret{};
     if (key.size() != secret.key.size()) {
-      return crypto::OpenSslError::WRONG_KEY_SIZE;
+      return libp2p::crypto::OpenSslError::WRONG_KEY_SIZE;
     }
     if (iv.size() != secret.iv.size()) {
-      return crypto::OpenSslError::WRONG_IV_SIZE;
+      return libp2p::crypto::OpenSslError::WRONG_IV_SIZE;
     }
     std::copy(key.begin(), key.end(), secret.key.begin());
     std::copy(iv.begin(), iv.end(), secret.iv.begin());
@@ -162,7 +168,8 @@ namespace libp2p::connection {
 
   void SecioConnection::read(gsl::span<uint8_t> out, size_t bytes,
                              basic::Reader::ReadCallbackFunc cb) {
-    size_t out_size{out.size() < 0 ? 0 : (size_t)out.size()};
+    // the line below is due to gsl::span.size() has signed return type
+    size_t out_size{out.empty() ? 0u : static_cast<size_t>(out.size())};
     if (out_size < bytes) {
       cb(Error::TOO_SHORT_BUFFER);
     }
@@ -182,13 +189,13 @@ namespace libp2p::connection {
       // here lock becomes acquired
       reader_is_ready_ = false;
     }
-    size_t out_size{out.size() < 0 ? 0 : (size_t)out.size()};
+    size_t out_size{out.empty() ? 0 : static_cast<size_t>(out.size())};
     size_t to_read{out_size < bytes ? out_size : bytes};
 
     while (user_data_buffer_.size() < to_read) {
       IO_OUTCOME_TRY(bytes_read, readMessageSynced(), cb)
       if (0 == bytes_read) {
-        cb(Error::CONN_NOT_INITIALIZED);  // TODO error NOTHING_TO_READ
+        cb(Error::NOTHING_TO_READ);
         reader_is_ready_ = true;
         reader_is_ready_cv_.notify_all();
         return;
@@ -207,8 +214,7 @@ namespace libp2p::connection {
   }
 
   outcome::result<size_t> SecioConnection::readMessageSynced() {
-    // todo put more suitable error
-    outcome::result<size_t> result{Error::INITALIZATION_FAILED};
+    outcome::result<size_t> result{Error::STREAM_IS_BROKEN};
     read_completed_ = false;
 
     auto cb_wrapper = [&result, self{shared_from_this()}](
@@ -225,12 +231,13 @@ namespace libp2p::connection {
             outcome::result<size_t> read_bytes_res) mutable {
           IO_OUTCOME_TRY(len_marker_size, read_bytes_res, cb)
           if (len_marker_size != kLenMarkerSize) {
-            cb(Error::UNSUPPORTED_HASH);  // todo bad message
+            cb(Error::STREAM_IS_BROKEN);
             return;
           }
-          uint32_t frame_len{ntohl(common::convert<uint32_t>(buffer->data()))};
+          uint32_t frame_len{
+              ntohl(common::convert<uint32_t>(buffer->data()))};  // NOLINT
           if (frame_len > kMaxFrameSize) {
-            cb(Error::TOO_SHORT_BUFFER);  // todo frame is too long
+            cb(Error::OVERSIZED_FRAME);
             return;
           }
           self->raw_connection_->read(
@@ -239,14 +246,16 @@ namespace libp2p::connection {
                cb{cb}](outcome::result<size_t> read_bytes) mutable {
                 IO_OUTCOME_TRY(read_frame_bytes, read_bytes, cb)
                 if (frame_len != read_frame_bytes) {
-                  cb(std::errc::bad_message);
+                  cb(Error::STREAM_IS_BROKEN);
                   return;
                 }
                 IO_OUTCOME_TRY(mac_size, self->macSize(), cb)
                 const auto data_size{frame_len - mac_size};
                 auto data_span{gsl::make_span(buffer->data(), data_size)};
-                auto mac_span{
-                    gsl::make_span(buffer->data() + data_size, mac_size)};
+                auto mac_span{gsl::make_span(
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+                    buffer->data() + data_size, mac_size)};
+
                 IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb)
                 if (gsl::make_span(remote_mac) != mac_span) {
                   cb(Error::INVALID_MAC);

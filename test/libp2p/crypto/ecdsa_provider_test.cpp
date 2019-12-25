@@ -5,8 +5,8 @@
 
 #include "libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp"
 
-#include <gsl/gsl_util>
 #include <gtest/gtest.h>
+#include <gsl/gsl_util>
 #include "testutil/outcome.hpp"
 
 using libp2p::crypto::ecdsa::EcdsaProviderImpl;

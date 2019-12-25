@@ -86,12 +86,12 @@ namespace libp2p::security::secio {
             std::move(connection))} {}
 
   void Dialer::storeLocalPeerProposalBytes(
-      std::shared_ptr<std::vector<uint8_t>> bytes) {
+      const std::shared_ptr<std::vector<uint8_t>> &bytes) {
     local_peer_proposal_bytes_ = *bytes;
   }
 
   void Dialer::storeRemotePeerProposalBytes(
-      std::shared_ptr<std::vector<uint8_t>> bytes) {
+      const std::shared_ptr<std::vector<uint8_t>> &bytes) {
     remote_peer_proposal_bytes_ = *bytes;
   }
 
@@ -136,8 +136,9 @@ namespace libp2p::security::secio {
   }
 
   outcome::result<crypto::PublicKey> Dialer::remotePublicKey(
-      std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
-      std::shared_ptr<ProposeMessageMarshaller> propose_marshaller) const {
+      const std::shared_ptr<crypto::marshaller::KeyMarshaller> &key_marshaller,
+      const std::shared_ptr<ProposeMessageMarshaller> &propose_marshaller)
+      const {
     if (!remote_peer_proposal_bytes_) {
       return Error::INTERNAL_FAILURE;
     }
@@ -165,28 +166,22 @@ namespace libp2p::security::secio {
 
   outcome::result<crypto::StretchedKey> Dialer::localStretchedKey() const {
     if (local_peer_is_preferred_ and stretched_keys_) {
-      if (*local_peer_is_preferred_) {
-        return stretched_keys_->first;
-      } else {
-        return stretched_keys_->second;
-      }
+      return (*local_peer_is_preferred_ ? stretched_keys_->first
+                                        : stretched_keys_->second);
     }
     return Error::INTERNAL_FAILURE;
   }
 
   outcome::result<crypto::StretchedKey> Dialer::remoteStretchedKey() const {
     if (local_peer_is_preferred_ and stretched_keys_) {
-      if (*local_peer_is_preferred_) {
-        return stretched_keys_->second;
-      } else {
-        return stretched_keys_->first;
-      }
+      return (*local_peer_is_preferred_ ? stretched_keys_->second
+                                        : stretched_keys_->first);
     }
     return Error::INTERNAL_FAILURE;
   }
 
-  outcome::result<bool> Dialer::determineRoles(
-      const ProposeMessage &local, const ProposeMessage &remote) const {
+  outcome::result<bool> Dialer::determineRoles(const ProposeMessage &local,
+                                               const ProposeMessage &remote) {
     // determine preferred peer
     std::vector<uint8_t> corpus1{remote.pubkey.begin(), remote.pubkey.end()};
     std::copy(local.rand.begin(), local.rand.end(),
@@ -209,7 +204,7 @@ namespace libp2p::security::secio {
 
   outcome::result<Dialer::Algorithm> Dialer::findCommonAlgo(
       const ProposeMessage &local, const ProposeMessage &remote,
-      bool local_is_preferred) const {
+      bool local_is_preferred) {
     Algorithm match{};
 
     using curveT = crypto::common::CurveType;
@@ -217,7 +212,8 @@ namespace libp2p::security::secio {
         BestMatch(local.exchanges, remote.exchanges, local_is_preferred)};
     if (!curve) {
       return Error::NO_COMMON_EC_ALGO;
-    } else if (*curve == "P-256") {
+    }
+    if (*curve == "P-256") {
       match.curve = curveT::P256;
     } else if (*curve == "P-384") {
       match.curve = curveT::P384;
@@ -232,7 +228,8 @@ namespace libp2p::security::secio {
         BestMatch(local.ciphers, remote.ciphers, local_is_preferred)};
     if (!cipher) {
       return Error::NO_COMMON_CIPHER_ALGO;
-    } else if (*cipher == "AES-256") {
+    }
+    if (*cipher == "AES-256") {
       match.cipher = cipherT::AES256;
     } else if (*cipher == "AES-128") {
       match.cipher = cipherT::AES128;
@@ -244,7 +241,8 @@ namespace libp2p::security::secio {
     const auto hash{BestMatch(local.hashes, remote.hashes, local_is_preferred)};
     if (!hash) {
       return Error::NO_COMMON_HASH_ALGO;
-    } else if (*hash == "SHA256") {
+    }
+    if (*hash == "SHA256") {
       match.hash = hashT::SHA256;
     } else if (*hash == "SHA512") {
       match.hash = hashT::SHA512;

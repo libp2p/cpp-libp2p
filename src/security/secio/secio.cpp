@@ -93,8 +93,8 @@ namespace libp2p::security {
   }
 
   void Secio::sendProposeMessage(
-      std::shared_ptr<connection::RawConnection> conn,
-      std::shared_ptr<secio::Dialer> dialer,
+      const std::shared_ptr<connection::RawConnection> &conn,
+      const std::shared_ptr<secio::Dialer> &dialer,
       SecurityAdaptor::SecConnCallbackFunc cb) const {
     auto proto_propose{propose_marshaller_->handyToProto(propose_message_)};
     auto own_proposal_bytes = std::make_shared<std::vector<uint8_t>>();
@@ -108,8 +108,8 @@ namespace libp2p::security {
   }
 
   void Secio::receiveProposeMessage(
-      std::shared_ptr<connection::RawConnection> conn,
-      std::shared_ptr<secio::Dialer> dialer,
+      const std::shared_ptr<connection::RawConnection> &conn,
+      const std::shared_ptr<secio::Dialer> &dialer,
       SecurityAdaptor::SecConnCallbackFunc cb) const {
     auto remote_peer_proposal_bytes = std::make_shared<std::vector<uint8_t>>();
     dialer->rw->read<secio::protobuf::Propose>(
@@ -129,8 +129,8 @@ namespace libp2p::security {
   }
 
   void Secio::sendExchangeMessage(
-      std::shared_ptr<connection::RawConnection> conn,
-      std::shared_ptr<secio::Dialer> dialer,
+      const std::shared_ptr<connection::RawConnection> &conn,
+      const std::shared_ptr<secio::Dialer> &dialer,
       SecurityAdaptor::SecConnCallbackFunc cb) const {
     const auto &&self{this};
     SECIO_OUTCOME_TRY(curve, dialer->chosenCurve(), conn, cb)
@@ -159,8 +159,8 @@ namespace libp2p::security {
   }
 
   void Secio::receiveExchangeMessage(
-      std::shared_ptr<connection::RawConnection> conn,
-      std::shared_ptr<secio::Dialer> dialer,
+      const std::shared_ptr<connection::RawConnection> &conn,
+      const std::shared_ptr<secio::Dialer> &dialer,
       SecurityAdaptor::SecConnCallbackFunc cb) const {
     dialer->rw->read<secio::protobuf::Exchange>(
         [self{shared_from_this()}, conn, dialer,
@@ -224,7 +224,7 @@ namespace libp2p::security {
 
   void Secio::closeConnection(
       const std::shared_ptr<libp2p::connection::RawConnection> &conn,
-      const std::error_code &err) const {
+      const std::error_code &err) {
     (void)(conn->close());
     // The commented code below is left here if logging going to be enabled in
     // the future

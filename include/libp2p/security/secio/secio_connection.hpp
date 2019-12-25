@@ -38,6 +38,9 @@ namespace libp2p::connection {
       UNSUPPORTED_HASH,
       INVALID_MAC,
       TOO_SHORT_BUFFER,
+      NOTHING_TO_READ,
+      STREAM_IS_BROKEN,
+      OVERSIZED_FRAME,
     };
 
     /**

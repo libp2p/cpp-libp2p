@@ -58,8 +58,8 @@ namespace libp2p::crypto {
     //    outcome::result<KeyPair> generateRsa(common::RSAKeyType key_type)
     //    const;
     auto generateEd25519() const -> outcome::result<KeyPair>;
-    auto generateSecp256k1() const -> outcome::result<KeyPair>;
-    auto generateEcdsa() const -> outcome::result<KeyPair>;
+    static auto generateSecp256k1() -> outcome::result<KeyPair>;
+    static auto generateEcdsa() -> outcome::result<KeyPair>;
 
     auto deriveEd25519(const PrivateKey &key) const
         -> outcome::result<PublicKey>;
@@ -70,10 +70,10 @@ namespace libp2p::crypto {
                        const PublicKey &public_key) const
         -> outcome::result<bool>;
 
-    auto generateEcdsa256WithCurve(Key::Type key_type, int curve_nid) const
+    static auto generateEcdsa256WithCurve(Key::Type key_type, int curve_nid)
         -> outcome::result<KeyPair>;
-    auto prepareSharedSecretGenerator(int curve_nid,
-                                      Buffer own_private_key) const
+    static auto prepareSharedSecretGenerator(int curve_nid,
+                                             Buffer own_private_key)
         -> std::function<outcome::result<Buffer>(Buffer)>;
 
     std::shared_ptr<random::CSPRNG> random_provider_;
