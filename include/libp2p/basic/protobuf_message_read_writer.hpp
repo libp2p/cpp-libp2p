@@ -39,20 +39,21 @@ namespace libp2p::basic {
                   std::is_default_constructible<ProtoMsgType>::value>>
     void read(ReadCallbackFunc<ProtoMsgType> cb,
               const std::shared_ptr<std::vector<uint8_t>> &bytes = nullptr) {
-      read_writer_->read([self{shared_from_this()}, cb = std::move(cb),
-                          &bytes](auto &&res) mutable {
-        if (!res) {
-          return cb(res.error());
-        }
+      read_writer_->read(
+          [self{shared_from_this()}, cb = std::move(cb), bytes](auto &&res) {
+            if (!res) {
+              return cb(res.error());
+            }
 
-        auto &&buf = res.value();
-        ProtoMsgType msg;
-        msg.ParseFromArray(buf->data(), buf->size());
-        if (bytes) {
-          *bytes = std::move(*buf);
-        }
-        cb(std::move(msg));
-      });
+            auto &&buf = res.value();
+            ProtoMsgType msg;
+            msg.ParseFromArray(buf->data(), buf->size());
+            if (bytes) {
+              bytes->clear();
+              bytes->swap(*buf);
+            }
+            cb(std::move(msg));
+          });
     }
 
     /**
