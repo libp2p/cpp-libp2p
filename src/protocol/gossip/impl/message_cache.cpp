@@ -13,18 +13,20 @@
 
 namespace libp2p::protocol::gossip {
 
-  MessageCache::MessageCache(Time message_lifetime, Time broadcast_lifetime,
+  MessageCache::MessageCache(Time message_lifetime,
                              TimeFunction clock)
       : message_lifetime_(message_lifetime),
-        broadcast_lifetime_(broadcast_lifetime),
-        clock_(std::move(clock)),
-        oldest_in_seen_(0) {
-    assert(broadcast_lifetime_ <= message_lifetime_);
+        clock_(std::move(clock))
+//        ,
+//        oldest_in_seen_(0)
+        {
+    assert(message_lifetime_ > 0);
     table_ = std::make_unique<msg_cache_table::Table>();
   }
 
   MessageCache::~MessageCache() = default;
 
+  /*
   void MessageCache::getSeenMessageIds(const TopicId &topic,
                                        const IHaveCallback &callback) const {
     bool by_topic = not topic.empty();
@@ -37,6 +39,7 @@ namespace libp2p::protocol::gossip {
       callback(it->first, it->second);
     }
   }
+   */
 
   boost::optional<TopicMessage::Ptr> MessageCache::getMessage(
       const MessageId &id) const {
@@ -48,24 +51,23 @@ namespace libp2p::protocol::gossip {
     return it->message;
   }
 
-  boost::optional<MessageId> MessageCache::insert(TopicMessage::Ptr message) {
-    if (!message) {
-      return {};
+  bool MessageCache::insert(TopicMessage::Ptr message, const MessageId& msg_id) {
+    if (!message || msg_id.empty()) {
+      return false;
     }
-    MessageId id = createMessageId(*message);
     auto &idx = table_->get<ById>();
-    auto it = idx.find(id);
+    auto it = idx.find(msg_id);
     if (it != idx.end()) {
-      return {};
+      return false;
     }
-    for (const auto &topic : message->topic_ids) {
-      seen_by_topic_.insert({topic, id});
-    }
+    //for (const auto &topic : message->topic_ids) {
+    //  seen_by_topic_.insert({topic, id});
+    //}
     auto now = clock_();
-    if (oldest_in_seen_ == 0)
-      oldest_in_seen_ = now;
-    idx.insert({id, now, std::move(message)});
-    return boost::optional<MessageId>(std::move(id));
+    //if (oldest_in_seen_ == 0)
+    //  oldest_in_seen_ = now;
+    idx.insert({msg_id, now, std::move(message)});
+    return true;
   }
 
   void MessageCache::shift() {
@@ -75,43 +77,45 @@ namespace libp2p::protocol::gossip {
     }
     auto now = clock_();
     auto cache_expires = now - message_lifetime_;
-    auto seen_expires = now - broadcast_lifetime_;
-
-    assert(oldest_in_seen_ > 0);
-
-    if (oldest_in_seen_ < seen_expires) {
-      auto start = idx.lower_bound(oldest_in_seen_);
-
-      assert(start != idx.end());
-
-      auto stop = idx.upper_bound(seen_expires);
-      for (auto it = start; it != stop; ++it) {
-        // shift seen table
-        for (const auto &topic : it->message->topic_ids) {
-          seen_by_topic_.erase({topic, it->message_id});
-        }
-      }
-      if (seen_by_topic_.empty()) {
-        // everything has expired
-        table_->clear();
-        oldest_in_seen_ = 0;
-
-        return;
-      }
-
-      assert(stop != idx.end());
-
-      oldest_in_seen_ = stop->inserted_at;
-    } else {
-      // nothing expired
-      return;
-    }
+//    auto seen_expires = now - broadcast_lifetime_;
+//
+//    assert(oldest_in_seen_ > 0);
+//
+//    if (oldest_in_seen_ < seen_expires) {
+//      auto start = idx.lower_bound(oldest_in_seen_);
+//
+//      assert(start != idx.end());
+//
+//      auto stop = idx.upper_bound(seen_expires);
+//      for (auto it = start; it != stop; ++it) {
+//        // shift seen table
+//        for (const auto &topic : it->message->topic_ids) {
+//          seen_by_topic_.erase({topic, it->message_id});
+//        }
+//      }
+//      if (seen_by_topic_.empty()) {
+//        // everything has expired
+//        table_->clear();
+//        oldest_in_seen_ = 0;
+//
+//        return;
+//      }
+//
+//      assert(stop != idx.end());
+//
+//      oldest_in_seen_ = stop->inserted_at;
+//    } else {
+//      // nothing expired
+//      return;
+//    }
 
     auto expired_until = idx.lower_bound(cache_expires);
 
-    assert(expired_until != idx.end());
-
-    idx.erase(idx.begin(), expired_until);
+    if (expired_until != idx.end()) {
+      idx.erase(idx.begin(), expired_until);
+    } else {
+      table_->clear();
+    }
   }
 
 }  // namespace libp2p::protocol::gossip

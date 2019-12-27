@@ -8,14 +8,14 @@
 
 #include <libp2p/host/host.hpp>
 #include <libp2p/protocol/kademlia/impl/content_providers_store.hpp>
-#include <libp2p/protocol/kademlia/impl/helpers.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_protocol_session.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_response_handler.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_session_host.hpp>
 #include <libp2p/protocol/kademlia/impl/local_value_store.hpp>
 #include <libp2p/protocol/kademlia/kad.hpp>
 #include <libp2p/protocol/kademlia/routing_table.hpp>
-#include <libp2p/protocol/kademlia/scheduler.hpp>
+#include <libp2p/protocol/common/scheduler.hpp>
+#include <libp2p/protocol/common/helpers.hpp>
 
 namespace libp2p::protocol::kademlia {
 

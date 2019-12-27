@@ -8,7 +8,7 @@
 
 #include <libp2p/common/literals.hpp>
 #include <libp2p/network/connection_manager.hpp>
-#include <libp2p/protocol/kademlia/impl/asio_scheduler_impl.hpp>
+#include <libp2p/protocol/common/asio_scheduler_impl.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_impl.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
 
@@ -258,8 +258,8 @@ namespace libp2p::protocol::kademlia::example {
 }  //  namespace libp2p::protocol::kademlia::example
 
 int main(int argc, char *argv[]) {
-  namespace k = libp2p::protocol::kademlia;
-  namespace x = k::example;
+  namespace p = libp2p::protocol;
+  namespace x = libp2p::protocol::kademlia::example;
   try {
     size_t hosts_count = 6;
     bool kad_log_debug = false;
@@ -271,7 +271,7 @@ int main(int argc, char *argv[]) {
     x::setupLoggers(kad_log_debug);
 
     auto io = x::createIOContext();
-    auto scheduler = k::AsioSchedulerImpl::create(*io, 1000);
+    auto scheduler = p::AsioSchedulerImpl::create(*io, 1000);
 
     x::Hosts hosts(hosts_count, scheduler);
 

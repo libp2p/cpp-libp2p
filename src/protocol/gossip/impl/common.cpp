@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/common.hpp>
+#include <libp2p/protocol/gossip/impl/common.hpp>
 
 #include <random>
 

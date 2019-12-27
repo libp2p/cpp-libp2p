@@ -14,25 +14,25 @@
 
 namespace libp2p::protocol::gossip {
 
-  bool operator<(const PeerContext::Ptr &ctx, const peer::PeerId &peer) {
+  bool operator<(const PeerContextPtr &ctx, const peer::PeerId &peer) {
     if (!ctx)
       return false;
     return less(ctx->peer_id, peer);
   }
 
-  bool operator<(const peer::PeerId &peer, const PeerContext::Ptr &ctx) {
+  bool operator<(const peer::PeerId &peer, const PeerContextPtr &ctx) {
     if (!ctx)
       return false;
     return less(peer, ctx->peer_id);
   }
 
-  bool operator<(const PeerContext::Ptr &a, const PeerContext::Ptr &b) {
+  bool operator<(const PeerContextPtr &a, const PeerContextPtr &b) {
     if (!a || !b)
       return false;
     return less(a->peer_id, b->peer_id);
   }
 
-  boost::optional<PeerContext::Ptr> PeerSet::find(
+  boost::optional<PeerContextPtr> PeerSet::find(
       const peer::PeerId &id) const {
     auto it = peers_.find(id);
     if (it == peers_.end()) {
@@ -41,7 +41,11 @@ namespace libp2p::protocol::gossip {
     return *it;
   }
 
-  bool PeerSet::insert(PeerContext::Ptr ctx) {
+  bool PeerSet::contains(const peer::PeerId &id) const {
+    return peers_.count(id) != 0;
+  }
+
+  bool PeerSet::insert(PeerContextPtr ctx) {
     if (!ctx || peers_.find(ctx) != peers_.end()) {
       return false;
     }
@@ -49,13 +53,14 @@ namespace libp2p::protocol::gossip {
     return true;
   }
 
-  bool PeerSet::erase(const peer::PeerId &id) {
+  boost::optional<PeerContextPtr> PeerSet::erase(const peer::PeerId &id) {
     auto it = peers_.find(id);
     if (it == peers_.end()) {
-      return false;
+      return boost::none;
     }
+    boost::optional<PeerContextPtr> ret(*it);
     peers_.erase(it);
-    return true;
+    return ret;
   }
 
   void PeerSet::clear() {
@@ -70,8 +75,8 @@ namespace libp2p::protocol::gossip {
     return peers_.size();
   }
 
-  std::vector<PeerContext::Ptr> PeerSet::selectRandomPeers(size_t n) const {
-    std::vector<PeerContext::Ptr> ret;
+  std::vector<PeerContextPtr> PeerSet::selectRandomPeers(size_t n) const {
+    std::vector<PeerContextPtr> ret;
     if (n > 0) {
       ret.reserve(n > size() ? size() : n);
       std::sample(peers_.begin(), peers_.end(), std::back_inserter(ret), n,

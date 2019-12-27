@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <cassert>
-#include <libp2p/protocol/kademlia/scheduler.hpp>
+#include <libp2p/protocol/common/scheduler.hpp>
 
-namespace libp2p::protocol::kademlia {
+#include <cassert>
+
+namespace libp2p::protocol {
 
   Scheduler::Scheduler() : counter_(0) {}
 
@@ -71,4 +72,4 @@ namespace libp2p::protocol::kademlia {
     return true;
   }
 
-}  // namespace libp2p::protocol::kademlia
+}  // namespace libp2p::protocol

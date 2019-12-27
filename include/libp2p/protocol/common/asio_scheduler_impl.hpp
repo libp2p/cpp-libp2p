@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ASIO_SCHEDULER_IMPL_HPP
-#define LIBP2P_ASIO_SCHEDULER_IMPL_HPP
+#ifndef LIBP2P_PROTOCOL_ASIO_SCHEDULER_IMPL_HPP
+#define LIBP2P_PROTOCOL_ASIO_SCHEDULER_IMPL_HPP
 
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_context.hpp>
-#include <libp2p/protocol/kademlia/scheduler.hpp>
+#include <libp2p/protocol/common/scheduler.hpp>
 
-namespace libp2p::protocol::kademlia {
+namespace libp2p::protocol {
 
   class AsioSchedulerImpl : public Scheduler {
    public:
@@ -70,6 +70,6 @@ namespace libp2p::protocol::kademlia {
     bool immediate_cb_scheduled_ = false;
   };
 
-}  // namespace libp2p::protocol::kademlia
+}  // namespace libp2p::protocol
 
-#endif  // LIBP2P_ASIO_SCHEDULER_IMPL_HPP
+#endif  // LIBP2P_PROTOCOL_ASIO_SCHEDULER_IMPL_HPP

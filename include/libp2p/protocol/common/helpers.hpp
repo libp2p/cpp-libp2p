@@ -5,11 +5,12 @@
 
 #include <libp2p/common/logger.hpp>
 
-#ifndef LIBP2P_KADEMLIA_HELPERS_HPP
-#define LIBP2P_KADEMLIA_HELPERS_HPP
+#ifndef LIBP2P_PROTOCOL_COMMON_HELPERS_HPP
+#define LIBP2P_PROTOCOL_COMMON_HELPERS_HPP
 
-namespace libp2p::protocol::kademlia {
+namespace libp2p::protocol {
 
+  /// Local logger with common prefix
   class SubLogger {
    public:
     template <typename T>
@@ -20,6 +21,7 @@ namespace libp2p::protocol::kademlia {
       prefix_(std::move(prefix))
     {
       if (instance != nullptr) {
+        // helper used to distinguish instances
         prefix_ += fmt::format(" {}: ", (void*)instance); //NOLINT;
       } else {
         prefix_ += ": ";
@@ -33,9 +35,11 @@ namespace libp2p::protocol::kademlia {
         spdlog::string_view_t fmt,
         const Args &... args)
     {
-      prefix_.append(fmt.data(), fmt.size());
-      log_->log(lvl, prefix_, args...);
-      prefix_.resize(prefix_size_);
+      if (log_->should_log(lvl)) {
+        prefix_.append(fmt.data(), fmt.size());
+        log_->log(lvl, prefix_, args...);
+        prefix_.resize(prefix_size_);
+      }
     }
 
     template<typename... Args>
@@ -80,6 +84,6 @@ namespace libp2p::protocol::kademlia {
     size_t prefix_size_;
   };
 
-} //namespace libp2p::protocol::kademlia
+} //namespace libp2p::protocol
 
-#endif  // LIBP2P_KADEMLIA_HELPERS_HPP
+#endif  // LIBP2P_PROTOCOL_COMMON_HELPERS_HPP

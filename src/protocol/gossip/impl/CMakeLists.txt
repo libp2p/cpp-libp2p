@@ -3,15 +3,22 @@
 
 libp2p_add_library(p2p_gossip
     common.cpp
-    gossip_wire_protocol.cpp
+    message_builder.cpp
+    message_parser.cpp
+    gossip_core.cpp
+    local_subscriptions.cpp
+    remote_subscriptions.cpp
     peers.cpp
     message_cache.cpp
+    connectivity.cpp
+    stream_reader.cpp
+    stream_writer.cpp
     )
 target_link_libraries(p2p_gossip
     Boost::boost
     p2p_byteutil
+    p2p_protocol_common
     p2p_peer_id
     p2p_cid
     p2p_gossip_proto
-    p2p_logger
     )

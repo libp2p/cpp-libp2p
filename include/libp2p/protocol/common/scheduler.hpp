@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SCHEDULER_HPP
-#define LIBP2P_SCHEDULER_HPP
+#ifndef LIBP2P_PROTOCOL_SCHEDULER_HPP
+#define LIBP2P_PROTOCOL_SCHEDULER_HPP
 
 #include <functional>
 #include <map>
@@ -13,7 +13,7 @@
 
 #include <boost/noncopyable.hpp>
 
-namespace libp2p::protocol::kademlia {
+namespace libp2p::protocol {
   class Scheduler;
 
   namespace scheduler {
@@ -43,7 +43,7 @@ namespace libp2p::protocol::kademlia {
       virtual Ticket reschedule(const Ticket &ticket, Ticks delay) = 0;
     };
 
-    // Lifetime-aware scheduler handle
+    /// Lifetime-aware scheduler handle
     class Handle {
      public:
       Handle() = default;
@@ -77,7 +77,7 @@ namespace libp2p::protocol::kademlia {
       }
 
      private:
-      friend class libp2p::protocol::kademlia::Scheduler;
+      friend class libp2p::protocol::Scheduler;
 
       Handle(Ticket ticket, std::weak_ptr<Cancellation> cancellation)
           : ticket_(std::move(ticket)),
@@ -136,4 +136,4 @@ namespace libp2p::protocol::kademlia {
 
 }  // namespace libp2p::protocol::kademlia
 
-#endif  // LIBP2P_SCHEDULER_HPP
+#endif  // LIBP2P_PROTOCOL_SCHEDULER_HPP

@@ -10,18 +10,16 @@
 #include <set>
 
 #include <libp2p/multi/multiaddress.hpp>
-#include <libp2p/protocol/gossip/common.hpp>
+#include <libp2p/protocol/gossip/impl/common.hpp>
 
 namespace libp2p::protocol::gossip {
 
-  /// Builds outbound message for wire protocol
   class MessageBuilder;
+  class StreamWriter;
+  class StreamReader;
 
   /// Data related to peer needed by pub-sub protocols
   struct PeerContext {
-    /// Used by shared ptr only
-    using Ptr = std::shared_ptr<PeerContext>;
-
     /// The key
     const peer::PeerId peer_id;
 
@@ -31,8 +29,17 @@ namespace libp2p::protocol::gossip {
     /// Builds message to be sent to this peer
     std::shared_ptr<MessageBuilder> message_to_send;
 
+    /// Network stream writer
+    std::shared_ptr<StreamWriter> writer;
+
+    /// Network stream reader
+    std::shared_ptr<StreamReader> reader;
+
     /// Not null iff this peer can be dialed to
     boost::optional<multi::Multiaddress> dial_to;
+
+    /// Dialing to this peer is banned until this timestamp
+    Time banned_until = 0;
 
     ~PeerContext() = default;
     PeerContext(PeerContext &&) = delete;
@@ -43,11 +50,11 @@ namespace libp2p::protocol::gossip {
     explicit PeerContext(peer::PeerId id) : peer_id(std::move(id)) {}
   };
 
-  /// Operators needed to place PeerContext::Ptr into PeerSet but use
+  /// Operators needed to place PeerContextPtr into PeerSet but use
   /// const peer::PeerId& as a key
-  bool operator<(const PeerContext::Ptr &ctx, const peer::PeerId &peer);
-  bool operator<(const peer::PeerId &peer, const PeerContext::Ptr &ctx);
-  bool operator<(const PeerContext::Ptr &a, const PeerContext::Ptr &b);
+  bool operator<(const PeerContextPtr &ctx, const peer::PeerId &peer);
+  bool operator<(const peer::PeerId &peer, const PeerContextPtr &ctx);
+  bool operator<(const PeerContextPtr &a, const PeerContextPtr &b);
 
   /// Peer set for pub-sub protocols
   class PeerSet {
@@ -60,13 +67,16 @@ namespace libp2p::protocol::gossip {
     PeerSet &operator=(PeerSet &&) = default;
 
     /// Finds peer context by id
-    boost::optional<PeerContext::Ptr> find(const peer::PeerId &id) const;
+    boost::optional<PeerContextPtr> find(const peer::PeerId &id) const;
+
+    /// Returns if the set contains such a peer
+    bool contains(const peer::PeerId &id) const;
 
     /// Inserts peer context into set, returns false if already inserted
-    bool insert(PeerContext::Ptr ctx);
+    bool insert(PeerContextPtr ctx);
 
-    /// Erases peer context from set, returns false not found
-    bool erase(const peer::PeerId &id);
+    /// Removes peer context from set, returns erased item if found and erased
+    boost::optional<PeerContextPtr> erase(const peer::PeerId &id);
 
     /// Clears all data
     void clear();
@@ -78,13 +88,13 @@ namespace libp2p::protocol::gossip {
     size_t size() const;
 
     /// Selects up to n random peers
-    std::vector<PeerContext::Ptr> selectRandomPeers(size_t n) const;
+    std::vector<PeerContextPtr> selectRandomPeers(size_t n) const;
 
     /// Callback for peer selection
-    using SelectCallback = std::function<void(const PeerContext::Ptr &)>;
+    using SelectCallback = std::function<void(const PeerContextPtr &)>;
 
     /// Callback for peer filtering
-    using FilterCallback = std::function<bool(const PeerContext::Ptr &)>;
+    using FilterCallback = std::function<bool(const PeerContextPtr &)>;
 
     /// Selects all peers
     void selectAll(const SelectCallback &callback) const;
@@ -97,7 +107,7 @@ namespace libp2p::protocol::gossip {
     void eraseIf(const FilterCallback &filter);
 
    private:
-    std::set<PeerContext::Ptr, std::less<>> peers_;
+    std::set<PeerContextPtr, std::less<>> peers_;
   };
 
 }  // namespace libp2p::protocol::gossip
