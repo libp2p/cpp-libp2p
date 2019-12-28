@@ -76,9 +76,6 @@ namespace libp2p::protocol::gossip {
       const ByteArray &from;
       const TopicList &topics;
       const ByteArray &data;
-
-      Message(const ByteArray &f, const TopicList &t, const ByteArray &d)
-          : from(f), topics(t), data(d) {}
     };
 
     /// Empty message means EOS (end of subscription data stream)
