@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
     x::setupLoggers(kad_log_debug);
 
     auto io = x::createIOContext();
-    auto scheduler = k::AsioSchedulerImpl::create(*io, 1000);
+    auto scheduler = k::AsioScheduler::create(*io, 1000);
 
     x::Hosts hosts(hosts_count, scheduler);
 

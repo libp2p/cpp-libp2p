@@ -12,14 +12,13 @@
 
 namespace libp2p::protocol::kademlia {
 
-  class AsioSchedulerImpl : public Scheduler {
+  class AsioScheduler : public Scheduler {
    public:
-    static std::shared_ptr<AsioSchedulerImpl> create(
-        boost::asio::io_context &io, Ticks interval) {
-      return std::make_shared<AsioSchedulerImpl>(io, interval);
+    static std::shared_ptr<AsioScheduler> create(boost::asio::io_context &io, Ticks interval) {
+      return std::make_shared<AsioScheduler>(io, interval);
     }
 
-    AsioSchedulerImpl(boost::asio::io_context &io, Ticks interval)
+    AsioScheduler(boost::asio::io_context &io, Ticks interval)
         : Scheduler{},
           io_(io),
           timer_(io, boost::posix_time::milliseconds(interval)),
