@@ -8,6 +8,7 @@ libp2p_add_library(p2p_gossip
     gossip_core.cpp
     local_subscriptions.cpp
     remote_subscriptions.cpp
+    topic_subscriptions.cpp
     peer_set.cpp
     peer_context.cpp
     message_cache.cpp

@@ -21,6 +21,10 @@ namespace libp2p::protocol::gossip {
 
   MessageCache::~MessageCache() = default;
 
+  bool MessageCache::contains(const MessageId& id) const {
+    return table_->get<ById>().count(id) != 0;
+  }
+
   boost::optional<TopicMessage::Ptr> MessageCache::getMessage(
       const MessageId &id) const {
     auto &idx = table_->get<ById>();

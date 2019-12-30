@@ -33,7 +33,7 @@ namespace libp2p::protocol::gossip {
     GossipCore(Config config, std::shared_ptr<Scheduler> scheduler,
                std::shared_ptr<Host> host);
 
-    ~GossipCore() override;
+    ~GossipCore() override = default;
 
    private:
     // Gossip overrides
@@ -55,10 +55,13 @@ namespace libp2p::protocol::gossip {
                         TopicMessage::Ptr msg) override;
     void onMessageEnd(const PeerContextPtr &from) override;
 
+    /// Periodic heartbeat
     void onHeartbeat();
 
+    /// Lucal host subscribed or unsubscribed from topic
     void onLocalSubscriptionChanged(bool subscribe, const TopicId &topic);
 
+    /// Remote peer connected or disconnected
     void onPeerConnection(bool connected, const PeerContextPtr &ctx);
 
     const Config config_;

@@ -86,6 +86,8 @@ namespace libp2p::protocol::gossip {
 
     remote_subscriptions_.reset();
     connectivity_.reset();
+
+    local_subscriptions_->forwardEndOfSubscription();
   }
 
   Subscription GossipCore::subscribe(TopicSet topics,
@@ -112,7 +114,7 @@ namespace libp2p::protocol::gossip {
     bool inserted = msg_cache_.insert(msg, msg_id);
     assert(inserted);
 
-    remote_subscriptions_->forwardMessage(msg, msg_id, true);
+    remote_subscriptions_->onNewMessage(msg, msg_id, true);
 
     if (config_.echo_forward_mode) {
       local_subscriptions_->forwardMessage(msg);
@@ -179,10 +181,7 @@ namespace libp2p::protocol::gossip {
     }
 
     local_subscriptions_->forwardMessage(msg);
-
-    if (subscribed) {
-      remote_subscriptions_->forwardMessage(msg, msg_id, false);
-    }
+    remote_subscriptions_->onNewMessage(msg, msg_id, false);
   }
 
   void GossipCore::onMessageEnd(const PeerContextPtr &from) {

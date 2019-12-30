@@ -49,6 +49,7 @@ namespace libp2p::protocol::gossip {
   /// Message cache with expiration
   class MessageCache {
    public:
+    /// External time function
     using TimeFunction = std::function<Time()>;
 
     MessageCache(Time message_lifetime,
