@@ -4,6 +4,7 @@
 #
 
 add_subdirectory(kademlia)
+add_subdirectory(gossip)
 
 addtest(identify_test
     identify_test.cpp

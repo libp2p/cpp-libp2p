@@ -4,7 +4,7 @@
  */
 
 #include <boost/di.hpp>
-#include "boost/di/extension/scopes/shared.hpp"
+#include <boost/di/extension/scopes/shared.hpp>
 
 // implementations
 #include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
@@ -40,32 +40,29 @@
 
 namespace libp2p::protocol::kademlia::example {
 
-  std::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str) {
-    using R = std::optional<libp2p::peer::PeerInfo>;
-
+  boost::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str) {
     auto server_ma_res = libp2p::multi::Multiaddress::create(str);
     if (!server_ma_res) {
       std::cerr << "unable to create server multiaddress: "
                 << server_ma_res.error().message() << std::endl;
-      return R();
+      return boost::none;
     }
     auto server_ma = std::move(server_ma_res.value());
 
     auto server_peer_id_str = server_ma.getPeerId();
     if (!server_peer_id_str) {
       std::cerr << "unable to get peer id" << std::endl;
-      return R();
+      return boost::none;
     }
 
-    auto server_peer_id_res =
-        libp2p::peer::PeerId::fromBase58(*server_peer_id_str);
+    auto server_peer_id_res = peer::PeerId::fromBase58(*server_peer_id_str);
     if (!server_peer_id_res) {
       std::cerr << "Unable to decode peer id from base 58: "
                 << server_peer_id_res.error().message() << std::endl;
-      return R();
+      return boost::none;
     }
 
-    return libp2p::peer::PeerInfo{server_peer_id_res.value(), {server_ma}};
+    return peer::PeerInfo{server_peer_id_res.value(), {server_ma}};
   }
 
   namespace {
@@ -128,7 +125,8 @@ namespace libp2p::protocol::kademlia::example {
     }
   }  // namespace
 
-  void createPerHostObjects(PerHostObjects &objects, const KademliaConfig& conf) {
+  void createPerHostObjects(PerHostObjects &objects,
+                            const KademliaConfig &conf) {
     auto injector = makeInjector(boost::di::bind<boost::asio::io_context>.to(
         createIOContext())[boost::di::override]);
 
@@ -137,12 +135,9 @@ namespace libp2p::protocol::kademlia::example {
         injector.create<std::shared_ptr<libp2p::crypto::CryptoProvider>>();
     objects.key_marshaller = injector.create<
         std::shared_ptr<libp2p::crypto::marshaller::KeyMarshaller>>();
-    objects.routing_table =
-        std::make_shared<RoutingTableImpl>(
-            injector.create<std::shared_ptr<peer::IdentityManager>>(),
-            injector.create<std::shared_ptr<event::Bus>>(),
-            conf
-    );
+    objects.routing_table = std::make_shared<RoutingTableImpl>(
+        injector.create<std::shared_ptr<peer::IdentityManager>>(),
+        injector.create<std::shared_ptr<event::Bus>>(), conf);
   }
 
   std::shared_ptr<boost::asio::io_context> createIOContext() {
@@ -151,4 +146,4 @@ namespace libp2p::protocol::kademlia::example {
     return c;
   }
 
-}  // namespace libp2p::kad_example
+}  // namespace libp2p::protocol::kademlia::example

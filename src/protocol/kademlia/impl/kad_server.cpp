@@ -17,9 +17,10 @@ namespace libp2p::protocol::kademlia {
           &KadServer::onFindNode,    &KadServer::onPing};
 
   KadServer::KadServer(Host &host, KadImpl &kad)
-      : host_(host), kad_(kad), protocol_(kad_.config().protocolId),
-        log_("kad", "KadServer", &kad)
-  {
+      : host_(host),
+        kad_(kad),
+        protocol_(kad_.config().protocolId),
+        log_("kad", "KadServer", &kad) {
     host_.setProtocolHandler(protocol_,
                              [wptr = weak_from_this()](
                                  protocol::BaseProtocol::StreamResult rstream) {
@@ -36,14 +37,14 @@ namespace libp2p::protocol::kademlia {
   void KadServer::handle(StreamResult rstream) {
     if (!rstream) {
       log_.info("incoming connection failed due to '{}'",
-                 rstream.error().message());
+                rstream.error().message());
       return;
     }
 
     auto stream = rstream.value();
 
     log_.debug("incoming connection from '{}'",
-                stream->remoteMultiaddr().value().getStringAddress());
+               stream->remoteMultiaddr().value().getStringAddress());
 
     connection::Stream *s = stream.get();
     assert(sessions_.find(s) == sessions_.end());
@@ -72,7 +73,7 @@ namespace libp2p::protocol::kademlia {
       return;
 
     log_.debug("request from '{}', type = {}",
-                from->remoteMultiaddr().value().getStringAddress(), msg.type);
+               from->remoteMultiaddr().value().getStringAddress(), msg.type);
 
     bool close_session = (msg.type >= Message::kTableSize)
         || (not(this->*(request_handlers_table[msg.type]))(msg))  // NOLINT
@@ -91,7 +92,7 @@ namespace libp2p::protocol::kademlia {
     if (!session)
       return;
     log_.debug("server session completed, total sessions: {}",
-                sessions_.size() - 1);
+               sessions_.size() - 1);
     closeSession(from);
   }
 
@@ -104,12 +105,12 @@ namespace libp2p::protocol::kademlia {
   }
 
   bool KadServer::onPutValue(Message &msg) {
-    log_.info("{}",__FUNCTION__);
+    log_.info("{}", __FUNCTION__);
 
     if (!msg.record) {
       return false;
     }
-    auto& r = msg.record.value();
+    auto &r = msg.record.value();
 
     // TODO(artem): validate with external validator
 
@@ -118,11 +119,11 @@ namespace libp2p::protocol::kademlia {
       log_.info("onPutValue failed due to '{}'", res.error().message());
     }
 
-    return false; // no response
+    return false;  // no response
   }
 
   bool KadServer::onGetValue(Message &msg) {
-    log_.info("{}",__FUNCTION__);
+    log_.info("{}", __FUNCTION__);
 
     if (msg.key.empty()) {
       return false;
@@ -163,14 +164,15 @@ namespace libp2p::protocol::kademlia {
     LocalValueStore::AbsTime ts = 0;
     auto res = kad_.getLocalValueStore().getValue(cid, ts);
     if (res) {
-      msg.record = { std::move(cid), std::move(res.value()), std::to_string(ts) };
+      msg.record = Message::Record{std::move(cid), std::move(res.value()),
+                                   std::to_string(ts)};
     }
 
     return true;
   }
 
   bool KadServer::onAddProvider(Message &msg) {
-    log_.info("{}",__FUNCTION__);
+    log_.info("{}", __FUNCTION__);
 
     // TODO(artem): validate against sender id
 
@@ -179,16 +181,16 @@ namespace libp2p::protocol::kademlia {
     }
     ContentAddress cid(msg.key);
     auto providers = msg.provider_peers.value();
-    for (auto& p : providers) {
+    for (auto &p : providers) {
       kad_.getContentProvidersStore().addProvider(cid, p.info.id);
       kad_.addPeer(std::move(p.info), false);
     }
 
-    return false; // doesnt respond
+    return false;  // doesnt respond
   }
 
   bool KadServer::onGetProviders(Message &msg) {
-    log_.info("{}",__FUNCTION__);
+    log_.info("{}", __FUNCTION__);
 
     if (msg.key.empty()) {
       return false;
@@ -235,7 +237,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   bool KadServer::onFindNode(Message &msg) {
-    log_.info("{}",__FUNCTION__);
+    log_.info("{}", __FUNCTION__);
 
     if (msg.closer_peers) {
       for (auto &p : msg.closer_peers.value()) {
@@ -275,7 +277,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   bool KadServer::onPing(Message &msg) {
-    log_.info("{}",__FUNCTION__);
+    log_.info("{}", __FUNCTION__);
 
     if (msg.closer_peers) {
       for (auto &p : msg.closer_peers.value()) {
