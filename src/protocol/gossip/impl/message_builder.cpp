@@ -17,7 +17,7 @@ namespace libp2p::protocol::gossip {
       // NOLINTNEXTLINE
       return reinterpret_cast<const char *>(bytes.data());
     }
-  } //namespace
+  }  // namespace
 
   MessageBuilder::MessageBuilder()
       : pb_msg_(std::make_unique<pubsub::pb::RPC>()),
@@ -41,7 +41,7 @@ namespace libp2p::protocol::gossip {
     return empty_;
   }
 
-  bool MessageBuilder::serialize(std::vector<uint8_t> &buffer) {
+  outcome::result<ByteArray> MessageBuilder::serialize() {
     for (auto &[topic, message_ids] : ihaves_) {
       auto *ih = control_pb_msg_->add_ihave();
       ih->set_topicid(topic);
@@ -67,19 +67,22 @@ namespace libp2p::protocol::gossip {
     auto varint_vec = varint_len.toVector();
     size_t prefix_sz = varint_vec.size();
 
-    size_t old_sz = buffer.size();
-    buffer.resize(old_sz + prefix_sz + msg_sz);
-    memcpy(&buffer[old_sz], varint_vec.data(), prefix_sz);
+    ByteArray buffer;
+    buffer.resize(prefix_sz + msg_sz);
+    memcpy(&buffer[0], varint_vec.data(), prefix_sz);
 
-    bool success =
-        pb_msg_->SerializeToArray(&buffer[old_sz + prefix_sz], msg_sz);
+    bool success = pb_msg_->SerializeToArray(&buffer[prefix_sz], msg_sz);
 
     if (control_not_empty_) {
       pb_msg_->release_control();
     }
 
     clear();
-    return success;
+
+    if (success) {
+      return buffer;
+    }
+    return outcome::failure(Error::MESSAGE_SERIALIZE_ERROR);
   }
 
   void MessageBuilder::addSubscription(bool subscribe, const TopicId &topic) {
@@ -113,7 +116,8 @@ namespace libp2p::protocol::gossip {
     empty_ = false;
   }
 
-  void MessageBuilder::addMessage(const TopicMessage &msg, const MessageId &msg_id) {
+  void MessageBuilder::addMessage(const TopicMessage &msg,
+                                  const MessageId &msg_id) {
     if (messages_added_.count(msg_id) != 0) {
       // prevent duplicates
       return;
@@ -137,4 +141,4 @@ namespace libp2p::protocol::gossip {
     empty_ = false;
   }
 
-} //namespace libp2p::protocol::gossip
+}  // namespace libp2p::protocol::gossip
