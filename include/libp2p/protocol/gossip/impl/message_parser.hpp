@@ -24,6 +24,7 @@ namespace libp2p::protocol::gossip {
 
     ~MessageParser();
 
+
     /// Parses RPC protobuf message received from wire
     bool parse(gsl::span<const uint8_t> bytes);
 

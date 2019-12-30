@@ -19,4 +19,3 @@ target_link_libraries(asio_scheduler
 libp2p_add_library(subscription
     subscription.cpp
     )
-
