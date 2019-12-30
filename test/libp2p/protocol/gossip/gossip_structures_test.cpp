@@ -4,7 +4,7 @@
  */
 
 #include <libp2p/protocol/gossip/impl/message_cache.hpp>
-#include <libp2p/protocol/gossip/impl/peers.hpp>
+#include <libp2p/protocol/gossip/impl/peer_set.hpp>
 
 #include <gtest/gtest.h>
 #include "testutil/libp2p/peer.hpp"
@@ -12,8 +12,8 @@
 // debug stuff, unpack if it's needed to debug and trace
 #define VERBOSE 0
 #if VERBOSE
-  #include <spdlog/fmt/fmt.h>
-  #define TR(var) fmt::print("{}: {}={}\n", __LINE__, #var, var)
+#include <spdlog/fmt/fmt.h>
+#define TR(var) fmt::print("{}: {}={}\n", __LINE__, #var, var)
 #endif
 
 namespace g = libp2p::protocol::gossip;
@@ -27,8 +27,8 @@ namespace g = libp2p::protocol::gossip;
 TEST(Gossip, TopicMessageHasValidFields) {
   auto peer = testutil::randomPeerId();
 
-  auto msg = g::TopicMessage::fromScratch(peer, 0x2233445566778899ull,
-                                          g::fromString("hahaha"));
+  auto msg = std::make_shared<g::TopicMessage>(peer, 0x2233445566778899ull,
+                                               g::fromString("hahaha"));
   // peer is encoded properly
   auto peer_res = peerFrom(*msg);
   ASSERT_TRUE(peer_res);
@@ -157,7 +157,7 @@ TEST(Gossip, PeerSet) {
  */
 TEST(Gossip, MessageCache) {
   constexpr g::Time msg_lifetime = 20;
-  constexpr g::Time timer_interval = msg_lifetime/2;
+  constexpr g::Time timer_interval = msg_lifetime / 2;
 
   g::Time current_time = 1234567890000ull;  // typically timestamp
   g::Time stop_time = current_time + 400;
@@ -174,13 +174,13 @@ TEST(Gossip, MessageCache) {
   std::vector<std::pair<g::Time, g::MessageId>> inserted_messages;
 
   // insert helper function
-  auto insertMessage = [&](const g::TopicId& topic) {
-    auto msg = g::TopicMessage::fromScratch(
-        testutil::randomPeerId(), seq++, fake_body);
+  auto insertMessage = [&](const g::TopicId &topic) {
+    auto msg = std::make_shared<g::TopicMessage>(testutil::randomPeerId(),
+                                                 seq++, fake_body);
     auto msg_id = g::createMessageId(*msg);
     msg->topic_ids.push_back(topic);
     ASSERT_TRUE(cache.insert(msg, msg_id));
-    inserted_messages.emplace_back( current_time, std::move(msg_id) );
+    inserted_messages.emplace_back(current_time, std::move(msg_id));
   };
 
   const g::TopicId topic_1("t1");
@@ -191,11 +191,13 @@ TEST(Gossip, MessageCache) {
 
   for (; current_time <= stop_time; ++current_time) {
     insertMessage(topic_1);
-    if (current_time % 2 == 1) insertMessage(topic_2);
-    if (current_time % timer_interval == 0) cache.shift();
+    if (current_time % 2 == 1)
+      insertMessage(topic_2);
+    if (current_time % timer_interval == 0)
+      cache.shift();
     if (current_time % (timer_interval * 10) == 0) {
-      for (auto it = inserted_messages.rbegin();
-                it != inserted_messages.rend(); ++it) {
+      for (auto it = inserted_messages.rbegin(); it != inserted_messages.rend();
+           ++it) {
         auto msg = cache.getMessage(it->second);
         if (it->first < current_time - msg_lifetime) {
           ASSERT_FALSE(msg);
