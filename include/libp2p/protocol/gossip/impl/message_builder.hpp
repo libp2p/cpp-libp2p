@@ -38,8 +38,8 @@ namespace libp2p::protocol::gossip {
     /// Returns true if nothing added
     bool empty();
 
-    /// Serializes into byte buffer (appends to existing buffer) and clears
-    bool serialize(ByteArray &buffer);
+    /// Serializes into byte buffer and clears internal state
+    outcome::result<ByteArray> serialize();
 
     /// Adds subscription notification
     void addSubscription(bool subscribe, const TopicId &topic);
