@@ -11,9 +11,6 @@
 
 namespace libp2p::protocol::gossip {
 
-  MessageParser::MessageParser() = default;
-  MessageParser::~MessageParser() = default;
-
   bool MessageParser::parse(gsl::span<const uint8_t> bytes) {
     if (!pb_msg_) {
       pb_msg_ = std::make_unique<pubsub::pb::RPC>();

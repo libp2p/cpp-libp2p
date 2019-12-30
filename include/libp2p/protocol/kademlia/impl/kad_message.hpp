@@ -40,9 +40,9 @@ namespace libp2p::protocol::kademlia {
 
     Type type = kPing;
     std::vector<uint8_t> key;
-    std::optional<Record> record;
-    std::optional<Peers> closer_peers;
-    std::optional<Peers> provider_peers;
+    boost::optional<Record> record;
+    boost::optional<Peers> closer_peers;
+    boost::optional<Peers> provider_peers;
 
     void clear();
 
@@ -58,7 +58,7 @@ namespace libp2p::protocol::kademlia {
 
   // self is a protocol extension if this is server (i.e. announce)
   Message createFindNodeRequest(const peer::PeerId &node,
-                                std::optional<peer::PeerInfo> self_announce);
+                                boost::optional<peer::PeerInfo> self_announce);
 
   Message createPutValueRequest(const ContentAddress &key,
                                 Value value);
