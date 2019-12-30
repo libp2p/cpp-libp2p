@@ -13,7 +13,7 @@
 #include <libp2p/protocol/gossip/gossip.hpp>
 #include <libp2p/protocol/gossip/impl/message_cache.hpp>
 #include <libp2p/protocol/gossip/impl/message_receiver.hpp>
-#include <libp2p/protocol/gossip/impl/peers.hpp>
+#include <libp2p/protocol/gossip/impl/peer_set.hpp>
 
 namespace libp2p::protocol::gossip {
 

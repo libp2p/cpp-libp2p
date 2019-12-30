@@ -9,7 +9,7 @@
 #include <deque>
 
 #include <libp2p/protocol/common/scheduler.hpp>
-#include <libp2p/protocol/gossip/impl/peers.hpp>
+#include <libp2p/protocol/gossip/impl/peer_set.hpp>
 
 namespace libp2p::protocol::gossip {
 

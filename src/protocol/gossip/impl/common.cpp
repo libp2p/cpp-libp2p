@@ -24,12 +24,6 @@ namespace libp2p::protocol::gossip {
       return p.value();
     }
 
-    template <class T>
-    struct SPtrHack : public T {
-      template <typename... Args>
-      explicit SPtrHack(Args... args) : T(std::forward<Args>(args)...) {}
-    };
-
   }  // namespace
 
   const peer::PeerId &getEmptyPeer() {
@@ -80,15 +74,10 @@ namespace libp2p::protocol::gossip {
         seq_no(std::move(_seq)),
         data(std::move(_data)) {}
 
-  TopicMessage::Ptr TopicMessage::fromWire(ByteArray _from, ByteArray _seq,
-                                           ByteArray _data) {
-    return std::make_shared<SPtrHack<TopicMessage>>(
-        std::move(_from), std::move(_seq), std::move(_data));
-  }
-
-  TopicMessage::Ptr TopicMessage::fromScratch(const peer::PeerId& _from, uint64_t _seq,
-                                              ByteArray _data) {
-    return fromWire(_from.toVector(), createSeqNo(_seq), std::move(_data));
-  }
+  TopicMessage::TopicMessage(const peer::PeerId &_from, uint64_t _seq,
+                             ByteArray _data)
+      : from(_from.toVector()),
+        seq_no(createSeqNo(_seq)),
+        data(std::move(_data)) {}
 
 }  // namespace libp2p::protocol::gossip

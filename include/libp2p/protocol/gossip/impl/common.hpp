@@ -56,14 +56,6 @@ namespace libp2p::protocol::gossip {
   struct TopicMessage {
     using Ptr = std::shared_ptr<TopicMessage>;
 
-    /// Creates a new message from wire or storage
-    static TopicMessage::Ptr fromWire(ByteArray _from, ByteArray _seq,
-                                      ByteArray _data);
-
-    /// Creates a new message before publishing
-    static TopicMessage::Ptr fromScratch(const peer::PeerId &_from,
-                                         uint64_t _seq, ByteArray _data);
-
     /// Peer id of creator
     const ByteArray from;
 
@@ -81,8 +73,11 @@ namespace libp2p::protocol::gossip {
     boost::optional<ByteArray> signature;
     boost::optional<ByteArray> key;
 
-   protected:
+    /// Creates a new message from wire or storage
     TopicMessage(ByteArray _from, ByteArray _seq, ByteArray _data);
+
+    /// Creates topic message from scratch before publishing
+    TopicMessage(const peer::PeerId &_from, uint64_t _seq, ByteArray _data);
   };
 
   /// Returns "zero" peer id, needed for consistency purposes

@@ -102,8 +102,8 @@ namespace libp2p::protocol::gossip {
       return false;
     }
 
-    TopicMessage::Ptr msg =
-        TopicMessage::fromScratch(local_peer_id_, ++msg_seq_, std::move(data));
+    auto msg = std::make_shared<TopicMessage>(local_peer_id_, ++msg_seq_,
+                                              std::move(data));
 
     // TODO(artem): validate msg
 

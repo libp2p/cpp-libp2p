@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/peers.hpp>
+#include <libp2p/protocol/gossip/impl/peer_set.hpp>
 
 #include <algorithm>
 #include <random>
@@ -11,26 +11,7 @@
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 
-
 namespace libp2p::protocol::gossip {
-
-  bool operator<(const PeerContextPtr &ctx, const peer::PeerId &peer) {
-    if (!ctx)
-      return false;
-    return less(ctx->peer_id, peer);
-  }
-
-  bool operator<(const peer::PeerId &peer, const PeerContextPtr &ctx) {
-    if (!ctx)
-      return false;
-    return less(peer, ctx->peer_id);
-  }
-
-  bool operator<(const PeerContextPtr &a, const PeerContextPtr &b) {
-    if (!a || !b)
-      return false;
-    return less(a->peer_id, b->peer_id);
-  }
 
   boost::optional<PeerContextPtr> PeerSet::find(
       const peer::PeerId &id) const {

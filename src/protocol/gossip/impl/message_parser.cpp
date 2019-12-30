@@ -86,7 +86,7 @@ namespace libp2p::protocol::gossip {
           || m.topicids_size() == 0) {
         continue;
       }
-      auto message = TopicMessage::fromWire(
+      auto message = std::make_shared<TopicMessage>(
           fromString(m.from()), fromString(m.seqno()), fromString(m.data()));
       for (auto &tid : m.topicids()) {
         message->topic_ids.push_back(tid);

@@ -11,7 +11,7 @@
 #include <libp2p/host/host.hpp>
 #include <libp2p/protocol/common/helpers.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
-#include <libp2p/protocol/gossip/impl/peers.hpp>
+#include <libp2p/protocol/gossip/impl/peer_set.hpp>
 #include <libp2p/protocol/gossip/impl/stream_reader.hpp>
 #include <libp2p/protocol/gossip/impl/stream_writer.hpp>
 
