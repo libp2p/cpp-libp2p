@@ -56,15 +56,6 @@ namespace libp2p::protocol::gossip {
 
     ~MessageCache();
 
-    /// Callback for retrieving data for IHave protocol notifications
-    //using IHaveCallback =
-    //std::function<void(const TopicId &, const MessageId &)>;
-
-    /// Forwards actual seen message ids to callback by topic given
-    /// or all pairs if topic==""
-    //void getSeenMessageIds(const TopicId &topic,
-    //                       const IHaveCallback &callback) const;
-
     bool contains(const MessageId& id) const;
 
     /// Returns message by id if found
@@ -80,11 +71,8 @@ namespace libp2p::protocol::gossip {
     //using SeenTable = std::set<std::pair<TopicId, MessageId>>;
 
     const Time message_lifetime_;
-    //const Time broadcast_lifetime_;
     TimeFunction clock_;
     std::unique_ptr<msg_cache_table::Table> table_;
-    //SeenTable seen_by_topic_;
-    //Time oldest_in_seen_;
   };
 
 }  // namespace libp2p::protocol::gossip
