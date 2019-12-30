@@ -11,6 +11,8 @@
 
 namespace libp2p::protocol::gossip {
 
+  // need to define default ctor/dtor here in translation unit due to unique_ptr
+  // to type which is incomplete in header
   MessageParser::MessageParser() = default;
   MessageParser::~MessageParser() = default;
 

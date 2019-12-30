@@ -326,7 +326,7 @@ namespace libp2p::protocol::kademlia {
   bool KadImpl::findPeer(const peer::PeerId &peer,
                          const std::unordered_set<peer::PeerInfo> &closer_peers,
                          Kad::FindPeerQueryResultFunc f) {
-    std::optional<peer::PeerInfo> self_announce;
+    boost::optional<peer::PeerInfo> self_announce;
     peer::PeerInfo self = host_->getPeerInfo();
     if (server_) {
       self_announce = self;

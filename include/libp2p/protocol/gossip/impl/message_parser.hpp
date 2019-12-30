@@ -21,6 +21,7 @@ namespace libp2p::protocol::gossip {
   class MessageParser {
    public:
     MessageParser();
+
     ~MessageParser();
 
     /// Parses RPC protobuf message received from wire

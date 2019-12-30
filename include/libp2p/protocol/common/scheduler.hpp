@@ -6,10 +6,10 @@
 #ifndef LIBP2P_PROTOCOL_SCHEDULER_HPP
 #define LIBP2P_PROTOCOL_SCHEDULER_HPP
 
+#include <chrono>
 #include <functional>
 #include <map>
 #include <memory>
-#include <chrono>
 
 #include <boost/noncopyable.hpp>
 
@@ -47,41 +47,24 @@ namespace libp2p::protocol {
     class Handle {
      public:
       Handle() = default;
-      Handle(Handle&&) = default;
-      Handle(const Handle&) = delete;
-      Handle& operator=(Handle&&) = default;
-      Handle& operator=(const Handle&) = delete;
+      Handle(Handle &&) = default;
+      Handle(const Handle &) = delete;
+      Handle &operator=(Handle &&) = default;
+      Handle &operator=(const Handle &) = delete;
 
-      ~Handle() {
-        cancel();
-      }
+      ~Handle();
 
       /// Detaches handle from feedback interface, won't cancel on out-of-scope
-      void detach() {
-        cancellation_.reset();
-      }
+      void detach();
 
-      void cancel() {
-        auto sch = cancellation_.lock();
-        if (sch) {
-          sch->cancel(ticket_);
-        }
-        detach();
-      }
+      void cancel();
 
-      void reschedule(Ticks delay) {
-        auto sch = cancellation_.lock();
-        if (sch) {
-          ticket_ = sch->reschedule(ticket_, delay);
-        }
-      }
+      void reschedule(Ticks delay);
 
      private:
       friend class libp2p::protocol::Scheduler;
 
-      Handle(Ticket ticket, std::weak_ptr<Cancellation> cancellation)
-          : ticket_(std::move(ticket)),
-            cancellation_(std::move(cancellation)) {}
+      Handle(Ticket ticket, std::weak_ptr<Cancellation> cancellation);
 
       Ticket ticket_;
       std::weak_ptr<Cancellation> cancellation_;
@@ -108,7 +91,7 @@ namespace libp2p::protocol {
     Handle schedule(Callback cb);
 
     /// to be implemented as per async backend
-    virtual Ticks now() = 0;
+    virtual Ticks now() const = 0;
 
    protected:
     Scheduler();
@@ -134,6 +117,6 @@ namespace libp2p::protocol {
     Callback cb_in_progress_;
   };
 
-}  // namespace libp2p::protocol::kademlia
+}  // namespace libp2p::protocol
 
 #endif  // LIBP2P_PROTOCOL_SCHEDULER_HPP
