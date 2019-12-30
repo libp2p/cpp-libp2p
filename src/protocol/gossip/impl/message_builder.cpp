@@ -41,7 +41,7 @@ namespace libp2p::protocol::gossip {
     return empty_;
   }
 
-  outcome::result<ByteArray> MessageBuilder::serialize() {
+  outcome::result<SharedBuffer> MessageBuilder::serialize() {
     for (auto &[topic, message_ids] : ihaves_) {
       auto *ih = control_pb_msg_->add_ihave();
       ih->set_topicid(topic);
@@ -67,11 +67,13 @@ namespace libp2p::protocol::gossip {
     auto varint_vec = varint_len.toVector();
     size_t prefix_sz = varint_vec.size();
 
-    ByteArray buffer;
-    buffer.resize(prefix_sz + msg_sz);
-    memcpy(&buffer[0], varint_vec.data(), prefix_sz);
+    auto buffer = std::make_shared<ByteArray>();
+    buffer->resize(prefix_sz + msg_sz);
+    memcpy(buffer->data(), varint_vec.data(), prefix_sz);
 
-    bool success = pb_msg_->SerializeToArray(&buffer[prefix_sz], msg_sz);
+    bool success =
+        // NOLINTNEXTLINE
+        pb_msg_->SerializeToArray(buffer->data() + prefix_sz, msg_sz);
 
     if (control_not_empty_) {
       pb_msg_->release_control();

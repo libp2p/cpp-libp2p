@@ -39,7 +39,7 @@ namespace libp2p::protocol::gossip {
     bool empty();
 
     /// Serializes into byte buffer and clears internal state
-    outcome::result<ByteArray> serialize();
+    outcome::result<SharedBuffer> serialize();
 
     /// Adds subscription notification
     void addSubscription(bool subscribe, const TopicId &topic);

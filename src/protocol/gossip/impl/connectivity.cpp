@@ -120,14 +120,8 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    auto buf = std::make_shared<ByteArray>();
-    // TODO(artem): refactor to optional<SharedBuffer> serialize()
-    if (!ctx->message_to_send->serialize(*buf)) {
-      buf->clear();
-    }
-
-    // N.B. write errors, if any, will be passed later in async manner
-    ctx->writer->write(std::move(buf));
+    // N.B. errors, if any, will be passed later in async manner
+    ctx->writer->write(ctx->message_to_send->serialize());
   }
 
   peer::Protocol Connectivity::getProtocolId() const {

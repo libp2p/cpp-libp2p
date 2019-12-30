@@ -27,9 +27,7 @@ namespace libp2p::protocol::gossip {
     assert(stream_);
   }
 
-  void StreamWriter::write(SharedBuffer buffer) {
-    assert(buffer);
-
+  void StreamWriter::write(outcome::result<SharedBuffer> serialization_res) {
     if (closed_) {
       return;
     }
@@ -39,8 +37,13 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    if (buffer->empty()) {
+    if (!serialization_res) {
       asyncPostError(Error::MESSAGE_SERIALIZE_ERROR);
+      return;
+    }
+
+    auto& buffer = serialization_res.value();
+    if (buffer->empty()) {
       return;
     }
 

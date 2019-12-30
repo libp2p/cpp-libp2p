@@ -32,8 +32,9 @@ namespace libp2p::protocol::gossip {
                  std::shared_ptr<connection::Stream> stream,
                  PeerContextPtr peer);
 
-    /// Writes an outgoing message to stream
-    void write(SharedBuffer buffer);
+    /// Writes an outgoing message to stream, if there is serialization error
+    /// it will be posted in asynchronous manner
+    void write(outcome::result<SharedBuffer> serialization_res);
 
     /// Closes writer and discards all outgoing messages
     void close();
