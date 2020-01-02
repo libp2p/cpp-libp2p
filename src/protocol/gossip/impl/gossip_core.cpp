@@ -73,7 +73,7 @@ namespace libp2p::protocol::gossip {
   }
 
   void GossipCore::stop() {
-    if (started_) {
+    if (!started_) {
       return;
     }
 
