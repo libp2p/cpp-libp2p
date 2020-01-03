@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <random>
+#include <type_traits>
 
 #include <spdlog/fmt/fmt.h>
 #include <libp2p/protocol/common/asio/asio_scheduler.hpp>
@@ -22,6 +23,15 @@ auto bind_memfn(T *object, R (T::*fn)(Args...)) {
 }
 #define MEMFN_CALLBACK(M) \
   bind_memfn(this, &std::remove_pointer<decltype(this)>::type::M)
+
+template <typename R, typename... Args, typename T, typename S>
+auto bind_memfn_s(T *object, R (T::*fn)(S state, Args...), S state) {
+  return [object, fn, state](Args... args) {
+    return (object->*fn)(state, std::forward<Args>(args)...);
+  };
+}
+#define MEMFN_CALLBACK_S(M, S) \
+  bind_memfn_s(this, &std::remove_pointer<decltype(this)>::type::M, S)
 
 namespace {
 
@@ -83,6 +93,7 @@ namespace libp2p::protocol::gossip::example {
     boost::optional<peer::PeerId> peer_id_;
     Subscription announce_sub_;
     std::unordered_map<TopicId, Subscription> subs_;
+    int subs_counter_ = 0;
 
    public:
     peer::PeerId getPeerId() const {
@@ -116,7 +127,8 @@ namespace libp2p::protocol::gossip::example {
     void subscribeTo(const TopicId &id) {
       assert(gossip_);
       logger->info("({}) subscribes to {}", instance_no_, id);
-      subs_[id] = gossip_->subscribe({id}, MEMFN_CALLBACK(onSubscription));
+      subs_[id] = gossip_->subscribe(
+          {id}, MEMFN_CALLBACK_S(onSubscription, ++subs_counter_));
     }
 
     void unsubscribeFrom(const TopicId &id) {
@@ -141,15 +153,16 @@ namespace libp2p::protocol::gossip::example {
       gossip_->start();
     }
 
-    void onSubscription(Gossip::SubscriptionData d) {
+    void onSubscription(int subs_no, Gossip::SubscriptionData d) {
       if (!d) {
         logger->info("subscriptions stopped");
         subs_.clear();
       } else {
         auto res = peer::PeerId::fromBytes(d->from);
         std::string from = res ? res.value().toBase58() : "???";
-        logger->info("({}) message from {}: {}, topics: [{}]", instance_no_,
-                     from, toString(d->data), fmt::join(d->topics, ","));
+        logger->info("({}), subscr #{} message from {}: {}, topics: [{}]",
+                     instance_no_, subs_no, from, toString(d->data),
+                     fmt::join(d->topics, ","));
       }
     }
 
