@@ -8,12 +8,7 @@
 
 #include <cstdint>
 #include <memory>
-#include <string>
-#include <vector>
 
-#include <boost/optional.hpp>
-
-#include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/gossip/gossip.hpp>
 
 namespace libp2p::protocol::gossip {

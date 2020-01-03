@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <cassert>
+
 #include <boost/di.hpp>
 #include <boost/di/extension/scopes/shared.hpp>
 
@@ -26,39 +28,31 @@
 #include <libp2p/peer/impl/peer_repository_impl.hpp>
 #include <libp2p/peer/key_repository/inmem_key_repository.hpp>
 #include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
+#include <libp2p/protocol/gossip/impl/gossip_core.hpp>
 #include <libp2p/protocol_muxer/multiselect.hpp>
 #include <libp2p/security/plaintext.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp.hpp>
 
-#include <libp2p/protocol/kademlia/impl/routing_table_impl.hpp>
-
-#include <iostream>
-
 #include "factory.hpp"
 
-namespace libp2p::protocol::kademlia::example {
+namespace libp2p::protocol::gossip::example {
 
   boost::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str) {
     auto server_ma_res = libp2p::multi::Multiaddress::create(str);
     if (!server_ma_res) {
-      std::cerr << "unable to create server multiaddress: "
-                << server_ma_res.error().message() << std::endl;
       return boost::none;
     }
     auto server_ma = std::move(server_ma_res.value());
 
     auto server_peer_id_str = server_ma.getPeerId();
     if (!server_peer_id_str) {
-      std::cerr << "unable to get peer id" << std::endl;
       return boost::none;
     }
 
     auto server_peer_id_res = peer::PeerId::fromBase58(*server_peer_id_str);
     if (!server_peer_id_res) {
-      std::cerr << "Unable to decode peer id from base 58: "
-                << server_peer_id_res.error().message() << std::endl;
       return boost::none;
     }
 
@@ -125,25 +119,21 @@ namespace libp2p::protocol::kademlia::example {
     }
   }  // namespace
 
-  void createPerHostObjects(PerHostObjects &objects,
-                            const KademliaConfig &conf) {
-    auto injector = makeInjector(boost::di::bind<boost::asio::io_context>.to(
-        createIOContext())[boost::di::override]);
+  std::pair<std::shared_ptr<Host>, std::shared_ptr<Gossip>> createHostAndGossip(
+      Config config, std::shared_ptr<Scheduler> scheduler,
+      std::shared_ptr<boost::asio::io_context> io) {
+    std::pair<std::shared_ptr<Host>, std::shared_ptr<Gossip>> p;
 
-    objects.host = injector.create<std::shared_ptr<libp2p::Host>>();
-    objects.key_gen =
-        injector.create<std::shared_ptr<libp2p::crypto::CryptoProvider>>();
-    objects.key_marshaller = injector.create<
-        std::shared_ptr<libp2p::crypto::marshaller::KeyMarshaller>>();
-    objects.routing_table = std::make_shared<RoutingTableImpl>(
-        injector.create<std::shared_ptr<peer::IdentityManager>>(),
-        injector.create<std::shared_ptr<event::Bus>>(), conf);
+    auto injector = makeInjector(
+        boost::di::bind<boost::asio::io_context>.to(io)[boost::di::override]);
+
+    p.first = injector.create<std::shared_ptr<Host>>();
+    assert(p.first);
+
+    p.second = std::make_shared<GossipCore>(std::move(config),
+                                            std::move(scheduler), p.first);
+
+    return p;
   }
 
-  std::shared_ptr<boost::asio::io_context> createIOContext() {
-    static std::shared_ptr<boost::asio::io_context> c =
-        std::make_shared<boost::asio::io_context>();
-    return c;
-  }
-
-}  // namespace libp2p::protocol::kademlia::example
+}  // namespace libp2p::protocol::gossip::example

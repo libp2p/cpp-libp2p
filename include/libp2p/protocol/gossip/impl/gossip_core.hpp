@@ -9,6 +9,7 @@
 #include <map>
 
 #include <libp2p/host/host.hpp>
+#include <libp2p/protocol/common/helpers.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/gossip/gossip.hpp>
 #include <libp2p/protocol/gossip/impl/message_cache.hpp>
@@ -22,8 +23,9 @@ namespace libp2p::protocol::gossip {
   class Connectivity;
 
   /// Central component in gossip protocol impl, manages pub-sub logic itself
-  class GossipCore : public Gossip, public MessageReceiver,
-                     public std::enable_shared_from_this<GossipCore>{
+  class GossipCore : public Gossip,
+                     public MessageReceiver,
+                     public std::enable_shared_from_this<GossipCore> {
    public:
     GossipCore(const GossipCore &) = delete;
     GossipCore &operator=(const GossipCore &) = delete;
@@ -37,6 +39,8 @@ namespace libp2p::protocol::gossip {
 
    private:
     // Gossip overrides
+    void addBootstrapPeer(
+        peer::PeerId id, boost::optional<multi::Multiaddress> address) override;
     void start() override;
     void stop() override;
     Subscription subscribe(TopicSet topics,
@@ -65,6 +69,8 @@ namespace libp2p::protocol::gossip {
     void onPeerConnection(bool connected, const PeerContextPtr &ctx);
 
     const Config config_;
+    std::unordered_map<peer::PeerId, boost::optional<multi::Multiaddress>>
+        bootstrap_peers_;
     std::shared_ptr<Scheduler> scheduler_;
     std::shared_ptr<Host> host_;
     peer::PeerId local_peer_id_;
@@ -78,6 +84,8 @@ namespace libp2p::protocol::gossip {
 
     /// Heartbeat timer handle
     Scheduler::Handle heartbeat_timer_;
+
+    SubLogger log_;
   };
 
 }  // namespace libp2p::protocol::gossip

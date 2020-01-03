@@ -36,18 +36,24 @@ namespace libp2p::protocol::gossip {
         host_(std::move(host)),
         msg_receiver_(std::move(msg_receiver)),
         connected_cb_(std::move(on_connected)),
-        log_("gossip", "Connectivity", this) {
+        log_("gossip", "Connectivity", this) {}
+
+  Connectivity::~Connectivity() {
+    stop();
+  }
+
+  void Connectivity::start() {
     // clang-format off
     on_reader_event_ =
         [this, self_wptr=weak_from_this()]
-        (const PeerContextPtr &from, outcome::result<Success> event) {
+            (const PeerContextPtr &from, outcome::result<Success> event) {
           if (self_wptr.expired()) return;
           onReaderEvent(from, event);
         };
 
     on_writer_event_ =
         [this, self_wptr=weak_from_this()]
-        (const PeerContextPtr &from, outcome::result<Success> event) {
+            (const PeerContextPtr &from, outcome::result<Success> event) {
           if (self_wptr.expired()) return;
           onWriterEvent(from, event);
         };
@@ -56,7 +62,7 @@ namespace libp2p::protocol::gossip {
     host_->setProtocolHandler(
         config_.protocol_version,
         [self_wptr=weak_from_this()]
-        (protocol::BaseProtocol::StreamResult rstream) {
+            (protocol::BaseProtocol::StreamResult rstream) {
           auto h = self_wptr.lock();
           if (h) {
             h->handle(std::move(rstream));
@@ -66,10 +72,6 @@ namespace libp2p::protocol::gossip {
     // clang-format on
 
     log_.info("started");
-  }
-
-  Connectivity::~Connectivity() {
-    stop();
   }
 
   void Connectivity::stop() {
@@ -96,6 +98,9 @@ namespace libp2p::protocol::gossip {
       ctx = ctx_found.value();
     } else {
       ctx = std::make_shared<PeerContext>(std::move(id));
+
+      ctx->message_to_send = std::make_shared<MessageBuilder>();
+      all_peers_.insert(ctx);
       connectable_peers_.insert(ctx);
     }
 
@@ -112,6 +117,7 @@ namespace libp2p::protocol::gossip {
 
     if (!ctx->writer) {
       // not yet connected, will be flushed next time
+      assert(connecting_peers_.contains(ctx->peer_id));
       return;
     }
 
@@ -172,7 +178,7 @@ namespace libp2p::protocol::gossip {
       dial(ctx, true);
     } else {
       ctx = std::move(ctx_found.value());
-      if (!ctx->writer) {
+      if (!ctx->writer && !connecting_peers_.contains(ctx->peer_id)) {
         // not connected or connecting
         dial(ctx, true);
       }
@@ -227,6 +233,8 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
+    connecting_peers_.insert(ctx);
+
     // clang-format off
     host_->newStream(
         pi,
@@ -241,15 +249,15 @@ namespace libp2p::protocol::gossip {
         }
     );
     // clang-format on
-
-    connecting_peers_.insert(ctx);
   }
 
   void Connectivity::ban(PeerContextPtr ctx) {
     //  TODO(artem): lift this parameter up to some internal config
-    constexpr Time kBanInterval = 60000;
+    constexpr Time kBanInterval = 6000;
 
     assert(ctx);
+
+    log_.info("banning peer {}", ctx->peer_id.toBase58());
 
     auto ts = scheduler_->now() + kBanInterval;
     ctx->banned_until = ts;
@@ -263,6 +271,8 @@ namespace libp2p::protocol::gossip {
 
     assert(ts > 0);
 
+    log_.info("unbanning peer {}", ctx->peer_id.toBase58());
+
     banned_peers_expiration_.erase({ts, ctx});
     ctx->banned_until = 0;
   }
@@ -271,6 +281,8 @@ namespace libp2p::protocol::gossip {
     if (stopped_) {
       return;
     }
+
+    log_.debug("outbound stream connected for {}", ctx->peer_id.toBase58());
 
     auto ctx_found = connecting_peers_.erase(ctx->peer_id);
     if (!ctx_found) {
@@ -289,7 +301,14 @@ namespace libp2p::protocol::gossip {
         std::make_shared<StreamWriter>(config_, *scheduler_, on_writer_event_,
                                        std::move(rstream.value()), ctx);
 
+    if (!ctx->message_to_send) {
+      ctx->message_to_send = std::make_shared<MessageBuilder>();
+    } else {
+      flush(ctx);
+    }
+
     connected_cb_(true, ctx);
+    connected_peers_.insert(ctx);
   }
 
   void Connectivity::onReaderEvent(const PeerContextPtr &from,
@@ -340,7 +359,9 @@ namespace libp2p::protocol::gossip {
 
   void Connectivity::peerIsWritable(const PeerContextPtr &ctx,
                                     bool low_latency) {
-    assert (!ctx->message_to_send->empty());
+    if (ctx->message_to_send->empty()) {
+      return;
+    }
 
     if (low_latency) {
       writable_peers_low_latency_.insert(ctx);

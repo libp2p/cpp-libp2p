@@ -30,9 +30,18 @@ namespace libp2p::protocol::gossip {
               onLocalSubscriptionChanged(subscribe, topic);
             }
         )),
-        msg_seq_(scheduler_->now())
+        msg_seq_(scheduler_->now()),
+        log_("gossip", "Gossip", this)
   {}
   // clang-format on
+
+  void GossipCore::addBootstrapPeer(
+      peer::PeerId id, boost::optional<multi::Multiaddress> address) {
+    bootstrap_peers_[id] = address;
+    if (started_) {
+      connectivity_->addBootstrapPeer(std::move(id), std::move(address));
+    }
+  }
 
   void GossipCore::start() {
     if (started_) {
@@ -50,6 +59,10 @@ namespace libp2p::protocol::gossip {
         }
     );
     // clang-format on
+
+    for (const auto &p : bootstrap_peers_) {
+      connectivity_->addBootstrapPeer(p.first, p.second);
+    }
 
     remote_subscriptions_ = std::make_shared<RemoteSubscriptions>(
         config_, *connectivity_, *scheduler_);
@@ -70,6 +83,8 @@ namespace libp2p::protocol::gossip {
         }
     );
     // clang-format on
+
+    connectivity_->start();
   }
 
   void GossipCore::stop() {
@@ -107,6 +122,8 @@ namespace libp2p::protocol::gossip {
     auto msg = std::make_shared<TopicMessage>(local_peer_id_, ++msg_seq_,
                                               std::move(data));
 
+    msg->topic_ids.assign(topics.begin(), topics.end());
+
     // TODO(artem): validate msg
 
     MessageId msg_id = createMessageId(*msg);
@@ -127,12 +144,16 @@ namespace libp2p::protocol::gossip {
                                   const TopicId &topic) {
     assert(started_);
 
+    log_.debug("peer {} {}subscribed, topic {}", peer->peer_id.toBase58(),
+               (subscribe ? "" : "un"), topic);
     remote_subscriptions_->onPeerSubscribed(peer, subscribe, topic);
   }
 
   void GossipCore::onIHave(const PeerContextPtr &from, const TopicId &topic,
                            const MessageId &msg_id) {
     assert(started_);
+
+    log_.debug("peer {} has msg for topic {}", from->peer_id.toBase58(), topic);
 
     if (remote_subscriptions_->hasTopic(topic)) {
       if (!msg_cache_.contains(msg_id)) {
@@ -143,6 +164,8 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::onIWant(const PeerContextPtr &from,
                            const MessageId &msg_id) {
+    log_.debug("peer {} wants message", from->peer_id.toBase58());
+
     auto msg_found = msg_cache_.getMessage(msg_id);
     if (msg_found) {
       from->message_to_send->addMessage(*msg_found.value(), msg_id);
@@ -152,11 +175,17 @@ namespace libp2p::protocol::gossip {
   void GossipCore::onGraft(const PeerContextPtr &from, const TopicId &topic) {
     assert(started_);
 
+    log_.debug("peer {} sends graft for topic {}", from->peer_id.toBase58(),
+               topic);
+
     remote_subscriptions_->onGraft(from, topic);
   }
 
   void GossipCore::onPrune(const PeerContextPtr &from, const TopicId &topic) {
     assert(started_);
+
+    log_.debug("peer {} sends prune for topic {}", from->peer_id.toBase58(),
+               topic);
 
     remote_subscriptions_->onPrune(from, topic);
   }
@@ -177,8 +206,11 @@ namespace libp2p::protocol::gossip {
     MessageId msg_id = createMessageId(*msg);
     if (!msg_cache_.insert(msg, msg_id)) {
       // already there, ignore
+      log_.debug("ignoring message from peer {}", from->peer_id.toBase58());
       return;
     }
+
+    log_.debug("forwarding message from peer {}", from->peer_id.toBase58());
 
     local_subscriptions_->forwardMessage(msg);
     remote_subscriptions_->onNewMessage(msg, msg_id, false);
@@ -214,6 +246,8 @@ namespace libp2p::protocol::gossip {
       // notify the new peer about all topics we subscribed to
       for (auto &local_sub : local_subscriptions_->subscribedTo()) {
         ctx->message_to_send->addSubscription(true, local_sub.first);
+        connectivity_->peerIsWritable(ctx, true);
+        connectivity_->flush();
       }
     } else {
       remote_subscriptions_->onPeerDisconnected(ctx);

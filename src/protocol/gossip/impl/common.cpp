@@ -5,9 +5,36 @@
 
 #include <libp2p/protocol/gossip/impl/common.hpp>
 
-#include <random>
-
 #include <boost/endian/conversion.hpp>
+
+OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::gossip, Error, e) {
+  using E = libp2p::protocol::gossip::Error;
+  switch (e) {
+    case E::MESSAGE_PARSE_ERROR:
+      return "message parse error";
+    case E::MESSAGE_SIZE_ERROR:
+      return "message size out of bounds";
+    case E::MESSAGE_SERIALIZE_ERROR:
+      return "message serialize error";
+    case E::MESSAGE_WRITE_ERROR:
+      return "message write error";
+    case E::READER_DISCONNECTED:
+      return "stream reader disconnected";
+    case E::WRITER_DISCONNECTED:
+      return "stream writer disconnected";
+    case E::READER_TIMEOUT:
+      return "stream reader timeout";
+    case E::WRITER_TIMEOUT:
+      return "stream writer disconnected";
+    case E::CANNOT_CONNECT:
+      return "cannot connect to peer";
+    case E::VALIDATION_FAILED:
+      return "validation failed";
+    default:
+      break;
+  }
+  return "unknown error";
+}
 
 namespace libp2p::protocol::gossip {
 

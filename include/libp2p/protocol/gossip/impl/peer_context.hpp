@@ -6,7 +6,6 @@
 #ifndef LIBP2P_PROTOCOL_GOSSIP_PEER_CONTEXT_HPP
 #define LIBP2P_PROTOCOL_GOSSIP_PEER_CONTEXT_HPP
 
-#include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/protocol/gossip/impl/common.hpp>
 
 namespace libp2p::protocol::gossip {

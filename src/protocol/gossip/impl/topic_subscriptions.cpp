@@ -131,18 +131,19 @@ namespace libp2p::protocol::gossip {
       // already there
       return;
     }
-    res = subscribed_peers_.find(p->peer_id);
-    if (!res) {
-      res.value()->subscribed_to.insert(topic_);
+
+    if (!subscribed_peers_.contains(p->peer_id)) {
+      // subscribe first
+      onPeerSubscribed(p);
     }
-    if (res) {
-      if (self_subscribed_) {
-        mesh_peers_.insert(std::move(res.value()));
-      } else {
-        // we don't have mesh for the topic
-        p->message_to_send->addPrune(topic_);
-        connectivity_.peerIsWritable(p, true);
-      }
+
+    if (self_subscribed_) {
+      mesh_peers_.insert(p);
+      subscribed_peers_.erase(p->peer_id);
+    } else {
+      // we don't have mesh for the topic
+      p->message_to_send->addPrune(topic_);
+      connectivity_.peerIsWritable(p, true);
     }
   }
 

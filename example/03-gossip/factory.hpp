@@ -3,29 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_KAD_EXAMPLE_FACTORY_HPP
-#define LIBP2P_KAD_EXAMPLE_FACTORY_HPP
+#ifndef LIBP2P_GOSSIP_EXAMPLE_FACTORY_HPP
+#define LIBP2P_GOSSIP_EXAMPLE_FACTORY_HPP
 
-#include <libp2p/crypto/crypto_provider.hpp>
-#include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/host/host.hpp>
-#include <memory>
+#include <libp2p/protocol/common/scheduler.hpp>
+#include <libp2p/protocol/gossip/gossip.hpp>
 
-namespace libp2p::protocol::kademlia::example {
-  std::shared_ptr<boost::asio::io_context> createIOContext();
+namespace libp2p::protocol::gossip::example {
 
-  struct PerHostObjects {
-    std::shared_ptr<libp2p::Host> host;
-    std::shared_ptr<libp2p::protocol::kademlia::RoutingTable> routing_table;
-    std::shared_ptr<libp2p::crypto::CryptoProvider> key_gen;
-    std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller;
-  };
+  /// Creates unique host and gossip instances. Allows to make multiple
+  /// instances in a process (needed for this example), scheduler and io are
+  /// reused between all gossip and host instances
+  std::pair<std::shared_ptr<Host>, std::shared_ptr<Gossip>> createHostAndGossip(
+      Config config, std::shared_ptr<Scheduler> scheduler,
+      std::shared_ptr<boost::asio::io_context> io);
 
-  void createPerHostObjects(PerHostObjects &objects,
-                            const KademliaConfig &conf);
-
+  /// Parses listen address and peer id given as uri
   boost::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str);
+}  // namespace libp2p::protocol::gossip::example
 
-}  // namespace libp2p::protocol::kademlia::example
-
-#endif  // LIBP2P_KAD_EXAMPLE_FACTORY_HPP
+#endif  // LIBP2P_GOSSIP_EXAMPLE_FACTORY_HPP

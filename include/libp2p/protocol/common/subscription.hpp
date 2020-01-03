@@ -20,8 +20,12 @@ namespace libp2p::protocol {
       virtual void unsubscribe(uint64_t ticket) = 0;
     };
 
+    Subscription(const Subscription&) = delete;
+    Subscription& operator=(const Subscription&) = delete;
+    Subscription(Subscription&&) = default;
+    Subscription& operator=(Subscription&&) = default;
+    Subscription();
     Subscription(uint64_t ticket, std::weak_ptr<Source> source);
-
     ~Subscription();
 
     void cancel();

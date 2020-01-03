@@ -51,7 +51,7 @@ namespace libp2p::protocol {
       for (auto &p : subscriptions_) {
         if (being_canceled_.count(p.first) == 0) {
           // args are not moved of course
-          if (!filter(p.first, args...)) {
+          if (filter(p.first, args...)) {
             p.second(args...);
           }
         }

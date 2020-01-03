@@ -58,7 +58,7 @@ namespace libp2p::protocol::gossip {
 
   std::vector<PeerContextPtr> PeerSet::selectRandomPeers(size_t n) const {
     std::vector<PeerContextPtr> ret;
-    if (n > 0) {
+    if (n > 0 && !empty()) {
       ret.reserve(n > size() ? size() : n);
       std::sample(peers_.begin(), peers_.end(), std::back_inserter(ret), n,
                   std::mt19937{std::random_device{}()});

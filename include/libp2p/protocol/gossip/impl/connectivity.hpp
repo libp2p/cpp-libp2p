@@ -38,6 +38,8 @@ namespace libp2p::protocol::gossip {
 
     ~Connectivity() override;
 
+    void start();
+
     /// Stops all client-server operations
     void stop();
 

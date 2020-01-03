@@ -18,7 +18,7 @@ namespace libp2p::protocol::gossip {
                              MessageReceiver &msg_receiver,
                              std::shared_ptr<connection::Stream> stream,
                              PeerContextPtr peer)
-      : timeout_(config.rw_timeout_msec),
+      : timeout_(0/*config.rw_timeout_msec*/),
         scheduler_(scheduler),
         max_message_size_(config.max_message_size),
         feedback_(feedback),

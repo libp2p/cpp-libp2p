@@ -7,6 +7,8 @@
 
 namespace libp2p::protocol {
 
+  Subscription::Subscription() : ticket_(0) {}
+
   Subscription::Subscription(uint64_t ticket,
                              std::weak_ptr<Subscription::Source> source)
       : ticket_(ticket), source_wptr_(std::move(source)) {}

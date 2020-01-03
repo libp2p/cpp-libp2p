@@ -13,7 +13,9 @@
 
 #include <boost/optional.hpp>
 
+#include <libp2p/peer/peer_id.hpp>
 #include <libp2p/common/byteutil.hpp>
+#include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/protocol/common/subscription.hpp>
 
 namespace libp2p::protocol::gossip {
@@ -63,6 +65,10 @@ namespace libp2p::protocol::gossip {
   class Gossip {
    public:
     virtual ~Gossip() = default;
+
+    /// Adds bootstrap peer to the set of connectable peers
+    virtual void addBootstrapPeer(
+        peer::PeerId id, boost::optional<multi::Multiaddress> address) = 0;
 
     /// Starts client and server
     virtual void start() = 0;
