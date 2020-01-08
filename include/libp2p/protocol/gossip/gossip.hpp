@@ -50,7 +50,7 @@ namespace libp2p::protocol::gossip {
     size_t max_message_size = 1 << 24;
 
     /// Protocol version
-    std::string protocol_version = "/ipfs/gossip/1.0.0";
+    std::string protocol_version = "/meshsub/1.0.0";
   };
 
   using common::ByteArray;
@@ -76,9 +76,6 @@ namespace libp2p::protocol::gossip {
       const ByteArray &from;
       const TopicList &topics;
       const ByteArray &data;
-
-      Message(const ByteArray &f, const TopicList &t, const ByteArray &d)
-          : from(f), topics(t), data(d) {}
     };
 
     /// Empty message means EOS (end of subscription data stream)

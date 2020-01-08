@@ -49,7 +49,7 @@ namespace libp2p::protocol::gossip {
   void LocalSubscriptions::forwardMessage(const TopicMessage::Ptr &msg) {
     assert(msg);
     if (intersect(msg->topic_ids, topics_)) {
-      Gossip::Message tmp_msg(msg->from, msg->topic_ids, msg->data);
+      Gossip::Message tmp_msg{msg->from, msg->topic_ids, msg->data};
       publish(tmp_msg);
     }
   }
