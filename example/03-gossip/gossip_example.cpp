@@ -25,8 +25,9 @@ auto bind_memfn(T *object, R (T::*fn)(Args...)) {
   bind_memfn(this, &std::remove_pointer<decltype(this)>::type::M)
 
 template <typename R, typename... Args, typename T, typename S>
-auto bind_memfn_s(T *object, R (T::*fn)(S state, Args...), S state) {
-  return [object, fn, state](Args... args) {
+auto bind_memfn_s(T *object, R (T::*fn)(const S &state, Args...),
+                  const S &state) {
+  return [object, fn, state = state](Args... args) {
     return (object->*fn)(state, std::forward<Args>(args)...);
   };
 }
@@ -126,9 +127,12 @@ namespace libp2p::protocol::gossip::example {
 
     void subscribeTo(const TopicId &id) {
       assert(gossip_);
-      logger->info("({}) subscribes to {}", instance_no_, id);
-      subs_[id] = gossip_->subscribe(
-          {id}, MEMFN_CALLBACK_S(onSubscription, ++subs_counter_));
+      if (subs_.count(id) == 0) {
+        logger->info("({}) subscribes to {}", instance_no_, id);
+        subs_[id] =
+            gossip_->subscribe({id}, MEMFN_CALLBACK_S(onSubscription, id));
+        ++subs_counter_;
+      }
     }
 
     void unsubscribeFrom(const TopicId &id) {
@@ -153,15 +157,15 @@ namespace libp2p::protocol::gossip::example {
       gossip_->start();
     }
 
-    void onSubscription(int subs_no, Gossip::SubscriptionData d) {
+    void onSubscription(const TopicId &id, Gossip::SubscriptionData d) {
       if (!d) {
         logger->info("subscriptions stopped");
         subs_.clear();
       } else {
         auto res = peer::PeerId::fromBytes(d->from);
         std::string from = res ? res.value().toBase58() : "???";
-        logger->info("({}), subscr #{} message from {}: {}, topics: [{}]",
-                     instance_no_, subs_no, from, toString(d->data),
+        logger->info("({}), subscr to {}, message from {}: {}, topics: [{}]",
+                     instance_no_, id, from, toString(d->data),
                      fmt::join(d->topics, ","));
       }
     }
