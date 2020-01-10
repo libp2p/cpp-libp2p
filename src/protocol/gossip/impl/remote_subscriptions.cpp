@@ -91,17 +91,18 @@ namespace libp2p::protocol::gossip {
     res.value().onPrune(peer);
   }
 
-  void RemoteSubscriptions::onNewMessage(const TopicMessage::Ptr &msg,
-                                         const MessageId &msg_id,
-                                         bool is_published_locally) {
+  void RemoteSubscriptions::onNewMessage(const boost::optional<PeerContextPtr>& from,
+                                         const TopicMessage::Ptr &msg,
+                                         const MessageId &msg_id) {
     auto now = scheduler_.now();
+    bool is_published_locally = !from.has_value();
     for (const auto &topic : msg->topic_ids) {
       auto res = getItem(topic, is_published_locally);
       if (!res) {
         // TODO(artem): log it. if (is_published_locally) then this is error
         continue;
       }
-      res.value().onNewMessage(msg, msg_id, is_published_locally, now);
+      res.value().onNewMessage(from, msg, msg_id, now);
     }
   }
 

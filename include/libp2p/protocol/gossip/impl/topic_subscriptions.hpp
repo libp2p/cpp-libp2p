@@ -27,8 +27,9 @@ namespace libp2p::protocol::gossip {
     bool empty() const;
 
     /// Forwards message to mesh members and announce to other subscribers
-    void onNewMessage(const TopicMessage::Ptr &msg, const MessageId &msg_id,
-                      bool is_published_locally, Time now);
+    void onNewMessage(const boost::optional<PeerContextPtr> &from,
+                      const TopicMessage::Ptr &msg, const MessageId &msg_id,
+                      Time now);
 
     /// Periodic job needed to update meshes and shift "I have" caches
     void onHeartbeat(Time now);

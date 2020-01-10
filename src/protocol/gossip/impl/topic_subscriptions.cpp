@@ -12,6 +12,21 @@
 
 namespace libp2p::protocol::gossip {
 
+  namespace {
+
+    // dont forward message to peer it was received from as well as to its
+    // original issuer
+    bool needToForward(const PeerContextPtr &ctx,
+                       const boost::optional<PeerContextPtr> &from,
+                       const outcome::result<peer::PeerId> &origin) {
+      if (from && ctx->peer_id == from.value()->peer_id) {
+        return false;
+      }
+      return !(origin && ctx->peer_id == origin.value());
+    }
+
+  }  // namespace
+
   TopicSubscriptions::TopicSubscriptions(TopicId topic, const Config &config,
                                          Connectivity &connectivity)
       : topic_(std::move(topic)),
@@ -25,31 +40,40 @@ namespace libp2p::protocol::gossip {
         && subscribed_peers_.empty() && mesh_peers_.empty();
   }
 
-  void TopicSubscriptions::onNewMessage(const TopicMessage::Ptr &msg,
-                                        const MessageId &msg_id,
-                                        bool is_published_locally, Time now) {
+  void TopicSubscriptions::onNewMessage(
+      const boost::optional<PeerContextPtr> &from, const TopicMessage::Ptr &msg,
+      const MessageId &msg_id, Time now) {
+    bool is_published_locally = !from.has_value();
+
     if (is_published_locally) {
       fanout_period_ends_ = now + config_.seen_cache_lifetime_msec;
     }
 
-    mesh_peers_.selectAll([this, &msg, &msg_id](const PeerContextPtr &ctx) {
-      assert(ctx->message_to_send);
+    auto origin = peerFrom(*msg);
 
-      ctx->message_to_send->addMessage(*msg, msg_id);
-
-      // forward immediately to those in mesh
-      connectivity_.peerIsWritable(ctx, true);
-    });
-
-    subscribed_peers_.selectAll(
-        [this, &msg_id, is_published_locally](const PeerContextPtr &ctx) {
+    mesh_peers_.selectAll(
+        [this, &msg, &msg_id, &from, &origin](const PeerContextPtr &ctx) {
           assert(ctx->message_to_send);
 
-          ctx->message_to_send->addIHave(topic_, msg_id);
+          if (needToForward(ctx, from, origin)) {
+            ctx->message_to_send->addMessage(*msg, msg_id);
 
-          // local messages announce themselves immediately
-          connectivity_.peerIsWritable(ctx, is_published_locally);
+            // forward immediately to those in mesh
+            connectivity_.peerIsWritable(ctx, true);
+          }
         });
+
+    subscribed_peers_.selectAll([this, &msg_id, &from, is_published_locally,
+                                 &origin](const PeerContextPtr &ctx) {
+      assert(ctx->message_to_send);
+
+      if (needToForward(ctx, from, origin)) {
+        ctx->message_to_send->addIHave(topic_, msg_id);
+
+        // local messages announce themselves immediately
+        connectivity_.peerIsWritable(ctx, is_published_locally);
+      }
+    });
 
     seen_cache_.emplace_back(now, msg_id);
   }

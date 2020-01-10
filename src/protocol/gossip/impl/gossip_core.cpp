@@ -131,7 +131,7 @@ namespace libp2p::protocol::gossip {
     bool inserted = msg_cache_.insert(msg, msg_id);
     assert(inserted);
 
-    remote_subscriptions_->onNewMessage(msg, msg_id, true);
+    remote_subscriptions_->onNewMessage(boost::none, msg, msg_id);
 
     if (config_.echo_forward_mode) {
       local_subscriptions_->forwardMessage(msg);
@@ -213,7 +213,7 @@ namespace libp2p::protocol::gossip {
     log_.debug("forwarding message from peer {}", from->peer_id.toBase58());
 
     local_subscriptions_->forwardMessage(msg);
-    remote_subscriptions_->onNewMessage(msg, msg_id, false);
+    remote_subscriptions_->onNewMessage(from, msg, msg_id);
   }
 
   void GossipCore::onMessageEnd(const PeerContextPtr &from) {

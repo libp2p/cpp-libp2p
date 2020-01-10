@@ -41,9 +41,10 @@ namespace libp2p::protocol::gossip {
     /// Remote peer removes topic from its mesh
     void onPrune(const PeerContextPtr &peer, const TopicId &topic);
 
-    /// Forwards message to its topics
-    void onNewMessage(const TopicMessage::Ptr &msg, const MessageId &msg_id,
-                      bool is_published_locally);
+    /// Forwards message to its topics. If 'from' is not set then the message is
+    /// published locally
+    void onNewMessage(const boost::optional<PeerContextPtr>& from,
+                      const TopicMessage::Ptr &msg, const MessageId &msg_id);
 
     /// Periodic job needed to update meshes and shift "I have" caches
     void onHeartbeat();
