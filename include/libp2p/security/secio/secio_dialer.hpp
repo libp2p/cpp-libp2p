@@ -26,7 +26,7 @@ namespace libp2p::security::secio {
   class Dialer {
    public:
     /// protobuf messages read-writer in/to the wire
-    const std::unique_ptr<libp2p::basic::ProtobufMessageReadWriter> rw;
+    const std::shared_ptr<libp2p::basic::ProtobufMessageReadWriter> rw;
 
     enum class Error {
       INTERNAL_FAILURE = 1,

@@ -90,19 +90,15 @@ namespace libp2p::connection {
         local_stretched_key_{std::move(local_stretched_key)},
         remote_stretched_key_{std::move(remote_stretched_key)},
         aes128_secrets_{boost::none},
-        aes256_secrets_{boost::none},
-        reader_is_ready_{true},
-        read_completed_{true} {
+        aes256_secrets_{boost::none} {
     BOOST_ASSERT(raw_connection_);
     BOOST_ASSERT(hmac_provider_);
     BOOST_ASSERT(aes_provider_);
     BOOST_ASSERT(key_marshaller_);
-    BOOST_ASSERT(reader_is_ready_);
-    BOOST_ASSERT(read_completed_);
   }
 
   outcome::result<void> SecioConnection::init() {
-    if (isInitialised()) {
+    if (isInitialized()) {
       return Error::CONN_ALREADY_INITIALIZED;
     }
 
@@ -132,11 +128,11 @@ namespace libp2p::connection {
     } else {
       return Error::UNSUPPORTED_CIPHER;
     }
-
+    log_->info("initialized");
     return outcome::success();
   }
 
-  bool SecioConnection::isInitialised() const {
+  bool SecioConnection::isInitialized() const {
     return aes128_secrets_.has_value() != aes256_secrets_.has_value();
   }
 
@@ -166,89 +162,132 @@ namespace libp2p::connection {
     return raw_connection_->remoteMultiaddr();
   }
 
-  void SecioConnection::read(gsl::span<uint8_t> out, size_t bytes,
-                             basic::Reader::ReadCallbackFunc cb) {
-    // the line below is due to gsl::span.size() has signed return type
-    size_t out_size{out.empty() ? 0u : static_cast<size_t>(out.size())};
-    if (out_size < bytes) {
-      cb(Error::TOO_SHORT_BUFFER);
-    }
-    readSome(out, bytes, std::move(cb));
-  }
-
-  void SecioConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
-                                 basic::Reader::ReadCallbackFunc cb) {
-    if (!isInitialised()) {
-      cb(Error::CONN_NOT_INITIALIZED);
-    }
-
-    {
-      std::unique_lock<std::mutex> lock(read_mutex_);
-      reader_is_ready_cv_.wait(lock,
-                               [this] { return reader_is_ready_.load(); });
-      // here lock becomes acquired
-      reader_is_ready_ = false;
-    }
-    size_t out_size{out.empty() ? 0 : static_cast<size_t>(out.size())};
-    size_t to_read{out_size < bytes ? out_size : bytes};
-
-    while (user_data_buffer_.size() < to_read) {
-      IO_OUTCOME_TRY(bytes_read, readMessageSynced(), cb)
-      if (0 == bytes_read) {
-        cb(Error::NOTHING_TO_READ);
-        reader_is_ready_ = true;
-        reader_is_ready_cv_.notify_all();
-        return;
-      }
-    }
-
+  inline void SecioConnection::popUserData(gsl::span<uint8_t> out,
+                                           size_t bytes) {
     auto to{out.begin()};
-    for (size_t read = 0; read < to_read; ++read) {
+    for (size_t read = 0; read < bytes; ++read) {
       *to = user_data_buffer_.front();
       user_data_buffer_.pop();
       ++to;
     }
-    reader_is_ready_ = true;
-    reader_is_ready_cv_.notify_all();
-    cb(to_read);
   }
 
-  outcome::result<size_t> SecioConnection::readMessageSynced() {
-    outcome::result<size_t> result{Error::STREAM_IS_BROKEN};
-    read_completed_ = false;
+  void SecioConnection::read(gsl::span<uint8_t> out, size_t bytes,
+                             basic::Reader::ReadCallbackFunc cb) {
+    if (!isInitialized()) {
+      log_->error("Reading on unintialized connection");
+      cb(Error::CONN_NOT_INITIALIZED);
+      return;
+    }
 
-    auto cb_wrapper = [&result, self{shared_from_this()}](
-                          outcome::result<size_t> res) mutable {
-      result.swap(res);
-      self->read_completed_ = true;
-      self->read_completed_cv_.notify_all();  // all for safety
+    // the line below is due to gsl::span.size() has signed return type
+    size_t out_size{out.empty() ? 0u : static_cast<size_t>(out.size())};
+    if (out_size < bytes) {
+      log_->error(
+          "Provided buffer is too short. Buffer size is {} when {} required",
+          out_size, bytes);
+      cb(Error::TOO_SHORT_BUFFER);
+      return;
+    }
+
+    if (user_data_buffer_.size() >= bytes) {
+      popUserData(out, bytes);
+      log_->debug("Successfully read {} bytes", bytes);
+      cb(bytes);
+      return;
+    }
+
+    ReadCallbackFunc cb_wrapper =
+        [self{shared_from_this()}, user_cb{cb}, out,
+         bytes](outcome::result<size_t> size_read_res) -> void {
+      if (not size_read_res) {
+        // in case of error, propagate it to the caller
+        user_cb(size_read_res);
+        return;
+      }
+      /* No error occurred.
+       * Initiate one more read to check if there is enough decrypted bytes to
+       * return to the caller.
+       * If no, let's read one more SECIO frame */
+      self->read(out, bytes, user_cb);
     };
 
-    auto buffer = std::make_shared<common::ByteArray>(kMaxFrameSize);
+    // this populates user_data_buffer_ when read successful
+    readNextMessage(cb_wrapper);
+  }
+
+  void SecioConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
+                                 basic::Reader::ReadCallbackFunc cb) {
+    if (!isInitialized()) {
+      cb(Error::CONN_NOT_INITIALIZED);
+      return;
+    }
+
+    // define bytes quantity to read of user-level data
+    size_t out_size{out.empty() ? 0 : static_cast<size_t>(out.size())};
+    size_t read_limit{out_size < bytes ? out_size : bytes};
+
+    if (not user_data_buffer_.empty()) {
+      auto bytes_available{user_data_buffer_.size()};
+      size_t to_read{bytes_available < read_limit ? bytes_available
+                                                  : read_limit};
+      popUserData(out, to_read);
+      log_->debug("Successfully read {} bytes", to_read);
+      cb(to_read);
+      return;
+    }
+
+    ReadCallbackFunc cb_wrapper =
+        [self{shared_from_this()}, user_cb{cb}, out,
+         bytes](outcome::result<size_t> size_read_res) -> void {
+      if (not size_read_res) {
+        user_cb(size_read_res);
+        return;
+      }
+      self->readSome(out, bytes, user_cb);
+    };
+
+    readNextMessage(cb_wrapper);
+  }
+
+  void SecioConnection::readNextMessage(ReadCallbackFunc cb) {
+    auto buffer{std::make_shared<common::ByteArray>(kMaxFrameSize)};
     raw_connection_->read(
         *buffer, kLenMarkerSize,
-        [self{shared_from_this()}, buffer, cb{std::move(cb_wrapper)}](
-            outcome::result<size_t> read_bytes_res) mutable {
+        [self{shared_from_this()}, buffer,
+         cb{std::move(cb)}](outcome::result<size_t> read_bytes_res) mutable {
           IO_OUTCOME_TRY(len_marker_size, read_bytes_res, cb)
           if (len_marker_size != kLenMarkerSize) {
+            self->log_->error(
+                "Cannot read frame header. Read {} bytes when {} expected",
+                len_marker_size, kLenMarkerSize);
             cb(Error::STREAM_IS_BROKEN);
             return;
           }
           uint32_t frame_len{
               ntohl(common::convert<uint32_t>(buffer->data()))};  // NOLINT
           if (frame_len > kMaxFrameSize) {
+            self->log_->error("Frame size {} exceeds maximum allowed size {}",
+                              frame_len, kMaxFrameSize);
             cb(Error::OVERSIZED_FRAME);
             return;
           }
+          self->log_->debug("Expecting frame of size {}.", frame_len);
           self->raw_connection_->read(
               *buffer, frame_len,
               [self, buffer, frame_len,
                cb{cb}](outcome::result<size_t> read_bytes) mutable {
                 IO_OUTCOME_TRY(read_frame_bytes, read_bytes, cb)
                 if (frame_len != read_frame_bytes) {
+                  self->log_->error(
+                      "Unable to read expected amount of bytes. Read {} when "
+                      "{} expected",
+                      read_frame_bytes, frame_len);
                   cb(Error::STREAM_IS_BROKEN);
                   return;
                 }
+                self->log_->debug("Received frame with len {}",
+                                  read_frame_bytes);
                 IO_OUTCOME_TRY(mac_size, self->macSize(), cb)
                 const auto data_size{frame_len - mac_size};
                 auto data_span{gsl::make_span(buffer->data(), data_size)};
@@ -258,6 +297,8 @@ namespace libp2p::connection {
 
                 IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb)
                 if (gsl::make_span(remote_mac) != mac_span) {
+                  self->log_->error(
+                      "Signature does not validate for the received frame");
                   cb(Error::INVALID_MAC);
                   return;
                 }
@@ -267,21 +308,18 @@ namespace libp2p::connection {
                 for (auto &&e : decrypted_bytes) {
                   self->user_data_buffer_.emplace(std::forward<decltype(e)>(e));
                 }
+                self->log_->debug("Frame decrypted successfully {} -> {}",
+                                  frame_len, decrypted_bytes_len);
                 cb(decrypted_bytes_len);
               });
         });
-
-    std::unique_lock<std::mutex> lock(read_sync_mutex_);
-    read_completed_cv_.wait(lock, [this] { return read_completed_.load(); });
-    return result;
   }
 
   void SecioConnection::write(gsl::span<const uint8_t> in, size_t bytes,
                               basic::Writer::WriteCallbackFunc cb) {
-    if (!isInitialised()) {
+    if (!isInitialized()) {
       cb(Error::CONN_NOT_INITIALIZED);
     }
-    std::scoped_lock<std::mutex> lock(write_mutex_);
     IO_OUTCOME_TRY(mac_size, macSize(), cb);
     size_t frame_len{bytes + mac_size};
     common::ByteArray frame_buffer;
@@ -339,7 +377,7 @@ namespace libp2p::connection {
 
   outcome::result<common::ByteArray> SecioConnection::encryptLocal(
       gsl::span<const uint8_t> message) const {
-    if (!isInitialised()) {
+    if (!isInitialized()) {
       return Error::CONN_NOT_INITIALIZED;
     }
     using CT = crypto::common::CipherType;
@@ -355,7 +393,7 @@ namespace libp2p::connection {
 
   outcome::result<common::ByteArray> SecioConnection::decryptRemote(
       gsl::span<const uint8_t> message) const {
-    if (!isInitialised()) {
+    if (!isInitialized()) {
       return Error::CONN_NOT_INITIALIZED;
     }
     using CT = crypto::common::CipherType;

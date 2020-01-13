@@ -11,6 +11,7 @@
 #include <mutex>
 #include <queue>
 
+#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/secure_connection.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
@@ -80,7 +81,7 @@ namespace libp2p::connection {
      * Checks whether connection state is initialized.
      * @return true when initialized, otherwise - false
      */
-    bool isInitialised() const;
+    bool isInitialized() const;
 
     outcome::result<peer::PeerId> localPeer() const override;
 
@@ -112,10 +113,17 @@ namespace libp2p::connection {
 
    private:
     /**
-     * Does blocking read of the next available SECIO message from the network.
-     * @return quantity of bytes read or an error if happened
+     * Retrieves the next available SECIO message from the network.
      */
-    outcome::result<size_t> readMessageSynced();
+    void readNextMessage(ReadCallbackFunc cb);
+
+    /**
+     * Moves decrypted bytes from internal buffer to the output buffer.
+     * Does no boundary checks.
+     * @param out - buffer to be filled with decrypted bytes
+     * @param bytes - amount of bytes to pop from internal buffer
+     */
+    void popUserData(gsl::span<uint8_t> out, size_t bytes);
 
     /**
      * Computes MAC digest to sign a message using local peer key
@@ -168,17 +176,8 @@ namespace libp2p::connection {
     boost::optional<AesSecrets<crypto::common::Aes128Secret>> aes128_secrets_;
     boost::optional<AesSecrets<crypto::common::Aes256Secret>> aes256_secrets_;
 
-    std::mutex read_mutex_;
-    std::mutex read_sync_mutex_;
-    std::mutex write_mutex_;
-
-    std::atomic_bool reader_is_ready_;
-    std::condition_variable reader_is_ready_cv_;
-
-    std::atomic_bool read_completed_;
-    std::condition_variable read_completed_cv_;
-
     std::queue<uint8_t> user_data_buffer_;
+    common::Logger log_ = common::createLogger("SECCONN");
   };
 }  // namespace libp2p::connection
 

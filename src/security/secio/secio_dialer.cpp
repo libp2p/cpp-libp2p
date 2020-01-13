@@ -82,7 +82,7 @@ namespace {
 
 namespace libp2p::security::secio {
   Dialer::Dialer(std::shared_ptr<connection::RawConnection> connection)
-      : rw{std::make_unique<libp2p::basic::ProtobufMessageReadWriter>(
+      : rw{std::make_shared<libp2p::basic::ProtobufMessageReadWriter>(
             std::move(connection))} {}
 
   void Dialer::storeLocalPeerProposalBytes(
@@ -278,6 +278,6 @@ namespace libp2p::security::secio {
     corpus.insert(corpus.end(), ephemeral_public_key.begin(),
                   ephemeral_public_key.end());
 
-    return Error::INTERNAL_FAILURE;
+    return corpus;
   }
 }  // namespace libp2p::security::secio

@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 
     auto peer_info = libp2p::peer::PeerInfo{server_peer_id, {server_ma}};
 
-    // create Host object an open a stream through it
+    // create Host object and open a stream through it
     host->newStream(
         peer_info, echo.getProtocolId(), [&echo](auto &&stream_res) {
           if (!stream_res) {

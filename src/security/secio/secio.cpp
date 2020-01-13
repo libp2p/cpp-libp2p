@@ -79,6 +79,7 @@ namespace libp2p::security {
 
   void Secio::secureInbound(std::shared_ptr<connection::RawConnection> inbound,
                             SecurityAdaptor::SecConnCallbackFunc cb) {
+    log_->info("securing inbound connection");
     auto dialer = std::make_shared<secio::Dialer>(inbound);
     sendProposeMessage(inbound, dialer, cb);
     receiveProposeMessage(inbound, dialer, cb);
@@ -87,6 +88,7 @@ namespace libp2p::security {
   void Secio::secureOutbound(
       std::shared_ptr<connection::RawConnection> outbound,
       const peer::PeerId &p, SecurityAdaptor::SecConnCallbackFunc cb) {
+    log_->info("securing outbound connection");
     auto dialer = std::make_shared<secio::Dialer>(outbound);
     sendProposeMessage(outbound, dialer, cb);
     receiveProposeMessage(outbound, dialer, cb);
@@ -100,11 +102,11 @@ namespace libp2p::security {
     auto own_proposal_bytes = std::make_shared<std::vector<uint8_t>>();
     dialer->rw->write<secio::protobuf::Propose>(
         proto_propose,
-        [self{shared_from_this()}, conn, cb{std::move(cb)}](auto &&res) {
-          SECIO_OUTCOME_VOID_TRY(res, conn, cb)
-        },
+        [self{shared_from_this()}, conn, cb{std::move(cb)}](
+            auto &&res) mutable { SECIO_OUTCOME_VOID_TRY(res, conn, cb) },
         own_proposal_bytes);
     dialer->storeLocalPeerProposalBytes(own_proposal_bytes);
+    log_->debug("proposal sent");
   }
 
   void Secio::receiveProposeMessage(
@@ -123,6 +125,7 @@ namespace libp2p::security {
                                                remote_peer_propose),
               conn, cb)
           dialer->storeRemotePeerProposalBytes(remote_peer_proposal_bytes);
+          self->log_->debug("remote peer proposal received");
           self->sendExchangeMessage(conn, dialer, cb);
         },
         remote_peer_proposal_bytes);
@@ -154,6 +157,7 @@ namespace libp2p::security {
         [self{shared_from_this()}, conn, dialer,
          cb{std::move(cb)}](auto &&res) {
           SECIO_OUTCOME_VOID_TRY(res, conn, cb)
+          self->log_->debug("exchange message sent");
           self->receiveExchangeMessage(conn, dialer, cb);
         });
   }
@@ -168,6 +172,7 @@ namespace libp2p::security {
           SECIO_OUTCOME_TRY(remote_proto_exchange, res, conn, cb)
           auto remote_exchange{
               self->exchange_marshaller_->protoToHandy(remote_proto_exchange)};
+          self->log_->debug("remote exchange message received");
           SECIO_OUTCOME_TRY(remote_corpus,
                             dialer->getCorpus(false, remote_exchange.epubkey),
                             conn, cb)
@@ -213,27 +218,19 @@ namespace libp2p::security {
               self->key_marshaller_, self->idmgr_->getKeyPair().publicKey,
               remote_pubkey, chosen_hash, chosen_cipher, local_stretched_key,
               remote_stretched_key);
-          if (auto init_res = secio_conn->init(); init_res.has_error()) {
-            self->closeConnection(conn, init_res.error());
-            cb(init_res.error());
-            return;
-          }
+          SECIO_OUTCOME_VOID_TRY(secio_conn->init(), conn, cb)
           cb(std::move(secio_conn));
         });
   }
 
   void Secio::closeConnection(
       const std::shared_ptr<libp2p::connection::RawConnection> &conn,
-      const std::error_code &err) {
-    (void)(conn->close());
-    // The commented code below is left here if logging going to be enabled in
-    // the future
-    /*
-     *  err.message();
-     *  if (auto close_res = conn->close(); !close_res) {
-     *      // close_res.error().message();
-     *  }
-     */
+      const std::error_code &err) const {
+    log_->error("error happened, closing connection: {}", err.message());
+    if (auto close_res = conn->close(); !close_res) {
+      log_->error("connection close attempt ended with error: {}",
+                  close_res.error().message());
+    }
   }
 
 }  // namespace libp2p::security

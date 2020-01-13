@@ -78,9 +78,9 @@ namespace libp2p::security {
         const std::shared_ptr<secio::Dialer> &dialer,
         SecConnCallbackFunc cb) const;
 
-    static void closeConnection(
+    void closeConnection(
         const std::shared_ptr<libp2p::connection::RawConnection> &conn,
-        const std::error_code &err);
+        const std::error_code &err) const;
 
     std::shared_ptr<crypto::random::CSPRNG> csprng_;
     std::shared_ptr<crypto::CryptoProvider> crypto_provider_;
@@ -93,6 +93,7 @@ namespace libp2p::security {
     std::shared_ptr<crypto::aes::AesProvider> aes_provider_;
     //
     secio::ProposeMessage propose_message_;
+    common::Logger log_ = common::createLogger("SECIO");
   };
 }  // namespace libp2p::security
 
