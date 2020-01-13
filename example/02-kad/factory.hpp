@@ -9,7 +9,7 @@
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/host/host.hpp>
-#include <memory>
+#include <libp2p/protocol/kademlia/routing_table.hpp>
 
 namespace libp2p::protocol::kademlia::example {
   std::shared_ptr<boost::asio::io_context> createIOContext();

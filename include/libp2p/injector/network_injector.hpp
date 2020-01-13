@@ -220,7 +220,7 @@ namespace libp2p::injector {
    * @param args injector bindings that override default bindings.
    * @return complete network injector
    */
-  template <typename... Ts>
+  template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
   auto makeNetworkInjector(Ts &&... args) {
     using namespace boost;  // NOLINT
 
@@ -237,7 +237,7 @@ namespace libp2p::injector {
         crypto_provider->generateKeys(crypto::Key::Type::Ed25519).value();
 
     // clang-format off
-    return di::make_injector(
+    return di::make_injector<InjectorConfig>(
         di::bind<crypto::KeyPair>().template to(std::move(keypair)),
         di::bind<crypto::random::CSPRNG>().template to(std::move(csprng)),
         di::bind<crypto::ed25519::Ed25519Provider>().template to(std::move(ed25519_provider)),
