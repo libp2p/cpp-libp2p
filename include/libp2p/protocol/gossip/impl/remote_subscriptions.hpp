@@ -6,6 +6,7 @@
 #ifndef LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP
 #define LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP
 
+#include <libp2p/protocol/common/helpers.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/gossip/impl/topic_subscriptions.hpp>
 
@@ -61,6 +62,8 @@ namespace libp2p::protocol::gossip {
     // TODO(artem): bound table size (which may grow!)
     // by removing items not subscribed to locally. LRU(???)
     std::unordered_map<TopicId, TopicSubscriptions> table_;
+
+    SubLogger log_;
   };
 
 }  // namespace libp2p::protocol::gossip

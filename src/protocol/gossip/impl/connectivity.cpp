@@ -224,11 +224,9 @@ namespace libp2p::protocol::gossip {
 
     if (can_connect != C::CONNECTED && can_connect != C::CAN_CONNECT) {
       if (connection_must_exist) {
-        log_.error("connection must exist but not found for {}",
-                   ctx->peer_id.toBase58());
+        log_.error("connection must exist but not found for {}", ctx->str);
       } else {
-        log_.debug("{} is not connectable at the moment",
-                   ctx->peer_id.toBase58());
+        log_.debug("{} is not connectable at the moment", ctx->str);
       }
       return;
     }
@@ -257,7 +255,7 @@ namespace libp2p::protocol::gossip {
 
     assert(ctx);
 
-    log_.info("banning peer {}", ctx->peer_id.toBase58());
+    log_.info("banning peer {}", ctx->str);
 
     auto ts = scheduler_->now() + kBanInterval;
     ctx->banned_until = ts;
@@ -271,7 +269,7 @@ namespace libp2p::protocol::gossip {
 
     assert(ts > 0);
 
-    log_.info("unbanning peer {}", ctx->peer_id.toBase58());
+    log_.info("unbanning peer {}", ctx->str);
 
     banned_peers_expiration_.erase({ts, ctx});
     ctx->banned_until = 0;
@@ -282,16 +280,16 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    log_.debug("outbound stream connected for {}", ctx->peer_id.toBase58());
+    log_.debug("outbound stream connected for {}", ctx->str);
 
     auto ctx_found = connecting_peers_.erase(ctx->peer_id);
     if (!ctx_found) {
-      log_.error("cannot find connecting peer {}", ctx->peer_id.toBase58());
+      log_.error("cannot find connecting peer {}", ctx->str);
       return;
     }
 
     if (!rstream) {
-      log_.info("cannot connect, peer={}, error={}", ctx->peer_id.toBase58(),
+      log_.info("cannot connect, peer={}, error={}", ctx->str,
                 rstream.error().message());
       ban(std::move(ctx));
       return;
@@ -322,7 +320,7 @@ namespace libp2p::protocol::gossip {
       return;
     }
     log_.info("inbound stream error='{}', peer={}", event.error().message(),
-              from->peer_id.toBase58());
+              from->str);
 
     // TODO(artem): ban incoming peers for protocol violations etc.
 
@@ -344,10 +342,10 @@ namespace libp2p::protocol::gossip {
       return;
     }
     log_.info("outbound stream error='{}', peer={}", event.error().message(),
-              from->peer_id.toBase58());
+              from->str);
 
     if (!connected_peers_.erase(from->peer_id)) {
-      log_.debug("peer not found for {}", from->peer_id.toBase58());
+      log_.debug("peer not found for {}", from->str);
       return;
     }
 
@@ -433,6 +431,10 @@ namespace libp2p::protocol::gossip {
 
     writable_peers_low_latency_.clear();
     writable_peers_on_heartbeat_.clear();
+  }
+
+  const PeerSet &Connectivity::getConnectedPeers() const {
+    return connected_peers_;
   }
 
 }  // namespace libp2p::protocol::gossip

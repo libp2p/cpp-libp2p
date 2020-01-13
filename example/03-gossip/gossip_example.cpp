@@ -67,7 +67,7 @@ namespace libp2p::protocol::gossip::example {
       Config c;
       c.D = 2;
       c.ideal_connections_num = 5;
-      c.echo_forward_mode = false;
+      c.echo_forward_mode = true;
       return c;
     })();
     return config;
@@ -97,6 +97,8 @@ namespace libp2p::protocol::gossip::example {
     int subs_counter_ = 0;
 
    public:
+    size_t instanceNo() const { return instance_no_; }
+
     peer::PeerId getPeerId() const {
       assert(peer_id_);
       return peer_id_.value();
@@ -163,7 +165,7 @@ namespace libp2p::protocol::gossip::example {
         subs_.clear();
       } else {
         auto res = peer::PeerId::fromBytes(d->from);
-        std::string from = res ? res.value().toBase58() : "???";
+        std::string from = res ? res.value().toBase58().substr(46) : "???";
         logger->info("({}), subscr to {}, message from {}: {}, topics: [{}]",
                      instance_no_, id, from, toString(d->data),
                      fmt::join(d->topics, ","));
@@ -257,11 +259,16 @@ namespace libp2p::protocol::gossip::example {
         chooseHost().publish({kAnnounceTopic}, st.topic);
       }
       TopicSet topics{st.topic};
-      auto additional_topics = rnd(0, 2);
-      for (size_t i = 0; i < additional_topics; ++i) {
-        topics.insert(chooseTopic());
+      if (msg_counter_ % 20 == 0) {
+        auto additional_topics = rnd(0, 4);
+        for (size_t i = 0; i < additional_topics; ++i) {
+          topics.insert(chooseTopic());
+        }
       }
-      chooseHost().publish(topics, fmt::format("msg#{}", ++msg_counter_));
+      std::string msg = fmt::format("msg#{}", ++msg_counter_);
+      auto& h = chooseHost();
+      logger->info("publishing {} on topics {} via host ({})", msg, fmt::join(topics, ","), h.instanceNo());
+      chooseHost().publish(topics, msg);
     }
 
     const TopicId &chooseTopic() {

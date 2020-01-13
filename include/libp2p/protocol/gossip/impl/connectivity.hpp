@@ -59,6 +59,9 @@ namespace libp2p::protocol::gossip {
     /// all connected peers. The changes are subscribe/unsubscribe events
     void onHeartbeat(const std::map<TopicId, bool> &local_changes);
 
+    /// Returns connected peers
+    const PeerSet& getConnectedPeers() const;
+
    private:
     /// BaseProtocol override
     peer::Protocol getProtocolId() const override;
@@ -108,7 +111,7 @@ namespace libp2p::protocol::gossip {
     /// will become connectable after certain interval
     std::set<std::pair<Time, PeerContextPtr>> banned_peers_expiration_;
 
-    /// Writeble peers
+    /// Writable peers
     PeerSet connected_peers_;
 
     /// Connecting peers

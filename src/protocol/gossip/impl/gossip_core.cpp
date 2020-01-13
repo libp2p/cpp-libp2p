@@ -144,7 +144,7 @@ namespace libp2p::protocol::gossip {
                                   const TopicId &topic) {
     assert(started_);
 
-    log_.debug("peer {} {}subscribed, topic {}", peer->peer_id.toBase58(),
+    log_.debug("peer {} {}subscribed, topic {}", peer->str,
                (subscribe ? "" : "un"), topic);
     remote_subscriptions_->onPeerSubscribed(peer, subscribe, topic);
   }
@@ -153,30 +153,32 @@ namespace libp2p::protocol::gossip {
                            const MessageId &msg_id) {
     assert(started_);
 
-    log_.debug("peer {} has msg for topic {}", from->peer_id.toBase58(), topic);
+    log_.debug("peer {} has msg for topic {}", from->str, topic);
 
-    if (remote_subscriptions_->hasTopic(topic)) {
-      if (!msg_cache_.contains(msg_id)) {
-        from->message_to_send->addIWant(msg_id);
-      }
+    if (remote_subscriptions_->hasTopic(topic)
+        && !msg_cache_.contains(msg_id)) {
+      from->message_to_send->addIWant(msg_id);
+      connectivity_->peerIsWritable(from, false);
     }
   }
 
   void GossipCore::onIWant(const PeerContextPtr &from,
                            const MessageId &msg_id) {
-    log_.debug("peer {} wants message", from->peer_id.toBase58());
+    log_.debug("peer {} wants message", from->str);
 
     auto msg_found = msg_cache_.getMessage(msg_id);
     if (msg_found) {
       from->message_to_send->addMessage(*msg_found.value(), msg_id);
+      connectivity_->peerIsWritable(from, true);
+    } else {
+      log_.warn("wanted message not in cache");
     }
   }
 
   void GossipCore::onGraft(const PeerContextPtr &from, const TopicId &topic) {
     assert(started_);
 
-    log_.debug("peer {} sends graft for topic {}", from->peer_id.toBase58(),
-               topic);
+    log_.debug("graft from peer {} for topic {}", from->str, topic);
 
     remote_subscriptions_->onGraft(from, topic);
   }
@@ -184,8 +186,7 @@ namespace libp2p::protocol::gossip {
   void GossipCore::onPrune(const PeerContextPtr &from, const TopicId &topic) {
     assert(started_);
 
-    log_.debug("peer {} sends prune for topic {}", from->peer_id.toBase58(),
-               topic);
+    log_.debug("prune from peer {} for topic {}", from->str, topic);
 
     remote_subscriptions_->onPrune(from, topic);
   }
@@ -206,11 +207,11 @@ namespace libp2p::protocol::gossip {
     MessageId msg_id = createMessageId(*msg);
     if (!msg_cache_.insert(msg, msg_id)) {
       // already there, ignore
-      log_.debug("ignoring message from peer {}", from->peer_id.toBase58());
+      log_.debug("ignoring message from peer {}", from->str);
       return;
     }
 
-    log_.debug("forwarding message from peer {}", from->peer_id.toBase58());
+    log_.debug("forwarding message from peer {}", from->str);
 
     local_subscriptions_->forwardMessage(msg);
     remote_subscriptions_->onNewMessage(from, msg, msg_id);
@@ -244,8 +245,10 @@ namespace libp2p::protocol::gossip {
 
     if (connected) {
       // notify the new peer about all topics we subscribed to
-      for (auto &local_sub : local_subscriptions_->subscribedTo()) {
-        ctx->message_to_send->addSubscription(true, local_sub.first);
+      if (!local_subscriptions_->subscribedTo().empty()) {
+        for (auto &local_sub : local_subscriptions_->subscribedTo()) {
+          ctx->message_to_send->addSubscription(true, local_sub.first);
+        }
         connectivity_->peerIsWritable(ctx, true);
         connectivity_->flush();
       }

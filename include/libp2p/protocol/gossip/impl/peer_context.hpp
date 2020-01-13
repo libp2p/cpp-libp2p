@@ -19,6 +19,9 @@ namespace libp2p::protocol::gossip {
     /// The key
     const peer::PeerId peer_id;
 
+    /// String repr for logging purposes
+    const std::string str;
+
     /// Set of topics this peer is subscribed to
     std::set<TopicId> subscribed_to;
 
@@ -43,7 +46,7 @@ namespace libp2p::protocol::gossip {
     PeerContext &operator=(const PeerContext &) = delete;
     PeerContext &operator=(PeerContext &&) = delete;
 
-    explicit PeerContext(peer::PeerId id) : peer_id(std::move(id)) {}
+    explicit PeerContext(peer::PeerId id);
   };
 
   /// Operators needed to place PeerContextPtr into PeerSet but use

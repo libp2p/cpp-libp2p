@@ -15,13 +15,16 @@ namespace libp2p::protocol::gossip {
   RemoteSubscriptions::RemoteSubscriptions(const Config &config,
                                            Connectivity &connectivity,
                                            Scheduler &scheduler)
-      : config_(config), connectivity_(connectivity), scheduler_(scheduler) {}
+      : config_(config),
+        connectivity_(connectivity),
+        scheduler_(scheduler),
+        log_("gossip", "Subs", &connectivity_) {}
 
   void RemoteSubscriptions::onSelfSubscribed(bool subscribed,
                                              const TopicId &topic) {
     auto res = getItem(topic, subscribed);
     if (!res) {
-      // TODO(artem): log error
+      log_.error("error in self subscribe to {}", topic);
       return;
     }
     TopicSubscriptions &subs = res.value();
@@ -29,14 +32,30 @@ namespace libp2p::protocol::gossip {
     if (subs.empty()) {
       table_.erase(topic);
     }
+    log_.debug("self {} {}",
+               (subscribed ? "subscribed to" : "unsubscribed from"), topic);
   }
 
   void RemoteSubscriptions::onPeerSubscribed(const PeerContextPtr &peer,
                                              bool subscribed,
                                              const TopicId &topic) {
+    if (subscribed) {
+      if (!peer->subscribed_to.insert(topic).second) {
+        // request from wire, already subscribed, ignoring double subscription
+        return;
+      }
+      log_.debug("peer {} subscribing to {}", peer->str, topic);
+    } else {
+      if (peer->subscribed_to.erase(topic) == 0) {
+        // was not subscribed actually, ignore
+        return;
+      }
+      log_.debug("peer {} unsubscribing from {}", peer->str, topic);
+    }
     auto res = getItem(topic, subscribed);
     if (!res) {
       // not error in this case, this is request from wire...
+      log_.debug("entry doesnt exist for {}", topic);
       return;
     }
     TopicSubscriptions &subs = res.value();
@@ -52,8 +71,8 @@ namespace libp2p::protocol::gossip {
   }
 
   void RemoteSubscriptions::onPeerDisconnected(const PeerContextPtr &peer) {
-    for (const auto &topic : peer->subscribed_to) {
-      onPeerSubscribed(peer, false, topic);
+    while (!peer->subscribed_to.empty()) {
+      onPeerSubscribed(peer, false, *peer->subscribed_to.begin());
     }
   }
 
@@ -91,15 +110,15 @@ namespace libp2p::protocol::gossip {
     res.value().onPrune(peer);
   }
 
-  void RemoteSubscriptions::onNewMessage(const boost::optional<PeerContextPtr>& from,
-                                         const TopicMessage::Ptr &msg,
-                                         const MessageId &msg_id) {
+  void RemoteSubscriptions::onNewMessage(
+      const boost::optional<PeerContextPtr> &from, const TopicMessage::Ptr &msg,
+      const MessageId &msg_id) {
     auto now = scheduler_.now();
     bool is_published_locally = !from.has_value();
     for (const auto &topic : msg->topic_ids) {
       auto res = getItem(topic, is_published_locally);
       if (!res) {
-        // TODO(artem): log it. if (is_published_locally) then this is error
+        log_.error("error getting item for {}", topic);
         continue;
       }
       res.value().onNewMessage(from, msg, msg_id, now);
@@ -112,6 +131,7 @@ namespace libp2p::protocol::gossip {
       it->second.onHeartbeat(now);
       if (it->second.empty()) {
         // fanout interval expired - clean up
+        log_.debug("deleted entry for topic {}", it->first);
         it = table_.erase(it);
       } else {
         ++it;
@@ -128,7 +148,14 @@ namespace libp2p::protocol::gossip {
     if (create_if_not_exist) {
       auto [it, _] = table_.emplace(
           topic, TopicSubscriptions(topic, config_, connectivity_));
-      return it->second;
+      TopicSubscriptions &item = it->second;
+      connectivity_.getConnectedPeers().selectIf(
+          [&item](const PeerContextPtr &ctx) { item.onPeerSubscribed(ctx); },
+          [&topic](const PeerContextPtr &ctx) {
+            return ctx->subscribed_to.count(topic) != 0;
+          });
+      log_.debug("created entry for topic {}", topic);
+      return item;
     }
     return boost::none;
   }

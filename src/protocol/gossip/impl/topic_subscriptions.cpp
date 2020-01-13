@@ -6,6 +6,7 @@
 #include <libp2p/protocol/gossip/impl/topic_subscriptions.hpp>
 
 #include <algorithm>
+#include <cassert>
 
 #include <libp2p/protocol/gossip/impl/connectivity.hpp>
 #include <libp2p/protocol/gossip/impl/message_builder.hpp>
@@ -123,12 +124,8 @@ namespace libp2p::protocol::gossip {
   }
 
   void TopicSubscriptions::onPeerSubscribed(const PeerContextPtr &p) {
-    if (p->subscribed_to.count(topic_) != 0) {
-      // ignore double subscription
-      return;
-    }
+    assert(p->subscribed_to.count(topic_) != 0);
 
-    p->subscribed_to.insert(topic_);
     subscribed_peers_.insert(p);
 
     // announce the peer about messages available for the topic
@@ -144,9 +141,6 @@ namespace libp2p::protocol::gossip {
     if (!res) {
       res = mesh_peers_.erase(p->peer_id);
     }
-    if (res) {
-      res.value()->subscribed_to.erase(topic_);
-    }
   }
 
   void TopicSubscriptions::onGraft(const PeerContextPtr &p) {
@@ -158,6 +152,7 @@ namespace libp2p::protocol::gossip {
 
     if (!subscribed_peers_.contains(p->peer_id)) {
       // subscribe first
+      p->subscribed_to.insert(topic_);
       onPeerSubscribed(p);
     }
 

@@ -7,6 +7,17 @@
 
 namespace libp2p::protocol::gossip {
 
+  namespace  {
+
+    std::string makeStringRepr(const peer::PeerId& id) {
+      return id.toBase58().substr(46);
+    }
+
+  } //namespace
+
+  PeerContext::PeerContext(peer::PeerId id)
+      : peer_id(std::move(id)), str(makeStringRepr(peer_id)) {}
+
   bool operator<(const PeerContextPtr &ctx, const peer::PeerId &peer) {
     if (!ctx)
       return false;
