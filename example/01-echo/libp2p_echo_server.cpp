@@ -19,11 +19,11 @@ int main() {
   using libp2p::crypto::PublicKey;
   using libp2p::common::operator""_unhex;
 
-  // this keypair generates a PeerId
-  // "12D3KooWLs7RC93EGXZzn9YdKyZYYx3f9UjTLYNX1reThpCkFb83"
+  // resulting PeerId should be
+  // 12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV
   KeyPair keypair{PublicKey{{Key::Type::Ed25519,
-                             "a4249ea6d62bdd8bccf62257ac4899ff284796"
-                             "3228b388fda288db5d64e517e0"_unhex}},
+                             "48453469c62f4885373099421a7365520b5ffb"
+                             "0d93726c124166be4b81d852e6"_unhex}},
                   PrivateKey{{Key::Type::Ed25519,
                               "4a9361c525840f7086b893d584ebbe475b4ec"
                               "7069951d2e897e8bceb0a3f35ce"_unhex}}};
@@ -56,7 +56,10 @@ int main() {
 
     host->start();
     std::cout << "Server started\nListening on: " << ma.getStringAddress()
-              << "\nPeer id: " << host->getPeerInfo().id.toBase58() << "\n";
+              << "\nPeer id: " << host->getPeerInfo().id.toBase58()
+              << std::endl;
+    std::cout << "Connection string: " << ma.getStringAddress() << "/ipfs/"
+              << host->getPeerInfo().id.toBase58() << std::endl;
   });
 
   // run the IO context
