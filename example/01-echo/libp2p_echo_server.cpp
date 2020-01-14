@@ -6,13 +6,50 @@
 #include <chrono>
 #include <iostream>
 #include <memory>
+#include <string>
 
 #include <libp2p/common/literals.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/protocol/echo.hpp>
+#include <libp2p/security/plaintext.hpp>
+#include <libp2p/security/secio.hpp>
 
-int main() {
+bool isInsecure(int argc, char **argv) {
+  if (2 == argc) {
+    const std::string insecure{"-insecure"};
+    std::string argument{argv[1]};
+    if (insecure == argument) {
+      return true;
+    }
+  }
+  return false;
+}
+
+struct ServerContext {
+  std::shared_ptr<libp2p::Host> host;
+  std::shared_ptr<boost::asio::io_context> io_context;
+};
+
+ServerContext initSecureServer(const libp2p::crypto::KeyPair &keypair) {
+  auto injector = libp2p::injector::makeHostInjector(
+      libp2p::injector::useKeyPair(keypair),
+      libp2p::injector::useSecurityAdaptors<libp2p::security::Secio>());
+  auto host = injector.create<std::shared_ptr<libp2p::Host>>();
+  auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
+  return {.host = host, .io_context = context};
+}
+
+ServerContext initInsecureServer(const libp2p::crypto::KeyPair &keypair) {
+  auto injector = libp2p::injector::makeHostInjector(
+      libp2p::injector::useKeyPair(keypair),
+      libp2p::injector::useSecurityAdaptors<libp2p::security::Plaintext>());
+  auto host = injector.create<std::shared_ptr<libp2p::Host>>();
+  auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
+  return {.host = host, .io_context = context};
+}
+
+int main(int argc, char **argv) {
   using libp2p::crypto::Key;
   using libp2p::crypto::KeyPair;
   using libp2p::crypto::PrivateKey;
@@ -28,23 +65,27 @@ int main() {
                               "4a9361c525840f7086b893d584ebbe475b4ec"
                               "7069951d2e897e8bceb0a3f35ce"_unhex}}};
 
+  bool insecure_mode{isInsecure(argc, argv)};
+  if (insecure_mode) {
+    std::cout << "Starting in insecure mode" << std::endl;
+  } else {
+    std::cout << "Starting in secure mode" << std::endl;
+  }
   // create a default Host via an injector, overriding a random-generated
   // keypair with ours
-  auto injector =
-      libp2p::injector::makeHostInjector(libp2p::injector::useKeyPair(keypair));
-  auto host = injector.create<std::shared_ptr<libp2p::Host>>();
+  ServerContext server =
+      insecure_mode ? initInsecureServer(keypair) : initSecureServer(keypair);
 
   // set a handler for Echo protocol
   libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{1}};
-  host->setProtocolHandler(
+  server.host->setProtocolHandler(
       echo.getProtocolId(),
       [&echo](std::shared_ptr<libp2p::connection::Stream> received_stream) {
         echo.handle(std::move(received_stream));
       });
 
   // launch a Listener part of the Host
-  auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
-  context->post([host{std::move(host)}] {
+  server.io_context->post([host{std::move(server.host)}] {
     auto ma =
         libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40010").value();
     auto listen_res = host->listen(ma);
@@ -63,5 +104,5 @@ int main() {
   });
 
   // run the IO context
-  context->run();
+  server.io_context->run();
 }
