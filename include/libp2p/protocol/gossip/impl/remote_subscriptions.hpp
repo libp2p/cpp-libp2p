@@ -6,7 +6,7 @@
 #ifndef LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP
 #define LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP
 
-#include <libp2p/protocol/common/helpers.hpp>
+#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/gossip/impl/topic_subscriptions.hpp>
 

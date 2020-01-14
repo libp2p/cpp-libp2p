@@ -15,7 +15,7 @@
 #include <libp2p/protocol/kademlia/kad.hpp>
 #include <libp2p/protocol/kademlia/routing_table.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
-#include <libp2p/protocol/common/helpers.hpp>
+#include <libp2p/protocol/common/sublogger.hpp>
 
 namespace libp2p::protocol::kademlia {
 

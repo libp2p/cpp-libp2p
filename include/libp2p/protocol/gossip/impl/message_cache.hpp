@@ -69,7 +69,6 @@ namespace libp2p::protocol::gossip {
     void shift();
 
    private:
-    //using SeenTable = std::set<std::pair<TopicId, MessageId>>;
 
     const Time message_lifetime_;
     TimeFunction clock_;

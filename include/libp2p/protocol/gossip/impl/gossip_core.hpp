@@ -9,7 +9,7 @@
 #include <map>
 
 #include <libp2p/host/host.hpp>
-#include <libp2p/protocol/common/helpers.hpp>
+#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/gossip/gossip.hpp>
 #include <libp2p/protocol/gossip/impl/message_cache.hpp>

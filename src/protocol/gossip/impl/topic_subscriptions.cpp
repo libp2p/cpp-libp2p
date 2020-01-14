@@ -76,7 +76,7 @@ namespace libp2p::protocol::gossip {
       }
     });
 
-    seen_cache_.emplace_back(now, msg_id);
+    seen_cache_.emplace_back(now + config_.seen_cache_lifetime_msec, msg_id);
   }
 
   void TopicSubscriptions::onHeartbeat(Time now) {

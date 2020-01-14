@@ -52,7 +52,7 @@ namespace {
 
     auto debug_logger = libp2p::common::createLogger("debug");
     debug_logger->set_pattern(kPattern);
-    debug_logger->set_level(spdlog::level::debug);
+    debug_logger->set_level(spdlog::level::trace);
   }
 
 }  // namespace
@@ -96,7 +96,19 @@ namespace libp2p::protocol::gossip::example {
     std::unordered_map<TopicId, Subscription> subs_;
     int subs_counter_ = 0;
 
+    // total receives by message emitted
+    static std::map<std::string, size_t> receive_stats;
+
    public:
+    static void printReceiveStats() {
+      std::vector<std::string> strings{};
+      strings.reserve(receive_stats.size());
+      for (auto &[msg,count] : receive_stats) {
+        strings.push_back(fmt::format("{} : {}", msg, count));
+      }
+      logger->info("Message receives:\n{}", fmt::join(strings, "\n"));
+    }
+
     size_t instanceNo() const { return instance_no_; }
 
     peer::PeerId getPeerId() const {
@@ -166,9 +178,11 @@ namespace libp2p::protocol::gossip::example {
       } else {
         auto res = peer::PeerId::fromBytes(d->from);
         std::string from = res ? res.value().toBase58().substr(46) : "???";
+        std::string body = toString(d->data);
         logger->info("({}), subscr to {}, message from {}: {}, topics: [{}]",
-                     instance_no_, id, from, toString(d->data),
+                     instance_no_, id, from, body,
                      fmt::join(d->topics, ","));
+        ++receive_stats[body];
       }
     }
 
@@ -191,6 +205,8 @@ namespace libp2p::protocol::gossip::example {
       gossip_->publish(topics, fromString(msg));
     }
   };
+
+  std::map<std::string, size_t> HostContext::receive_stats{};
 
   /// Emits topic activity in random manner
   class Emitter {
@@ -265,7 +281,7 @@ namespace libp2p::protocol::gossip::example {
           topics.insert(chooseTopic());
         }
       }
-      std::string msg = fmt::format("msg#{}", ++msg_counter_);
+      std::string msg = fmt::format("{:#06d}", ++msg_counter_);
       auto& h = chooseHost();
       logger->info("publishing {} on topics {} via host ({})", msg, fmt::join(topics, ","), h.instanceNo());
       chooseHost().publish(topics, msg);
@@ -364,6 +380,8 @@ int main(int argc, char *argv[]) {
     hosts.clear();
 
     logger->info("Stopped");
+
+    example::HostContext::printReceiveStats();
 
   } catch (const std::exception &e) {
     if (logger) {

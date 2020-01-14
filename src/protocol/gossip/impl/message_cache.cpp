@@ -11,6 +11,10 @@
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
 
+#include <libp2p/common/hexutil.hpp>
+#define TRACE_ENABLED 0
+#include <libp2p/protocol/common/trace.hpp>
+
 namespace libp2p::protocol::gossip {
 
   MessageCache::MessageCache(Time message_lifetime, TimeFunction clock)
@@ -21,7 +25,7 @@ namespace libp2p::protocol::gossip {
 
   MessageCache::~MessageCache() = default;
 
-  bool MessageCache::contains(const MessageId& id) const {
+  bool MessageCache::contains(const MessageId &id) const {
     return table_->get<ById>().count(id) != 0;
   }
 
@@ -30,6 +34,8 @@ namespace libp2p::protocol::gossip {
     auto &idx = table_->get<ById>();
     auto it = idx.find(id);
     if (it == idx.end()) {
+      TRACE("MessageCache: {} not found, current size {}",
+            common::hex_upper(id), table_->size());
       return boost::none;
     }
     return it->message;
@@ -56,15 +62,25 @@ namespace libp2p::protocol::gossip {
       return;
     }
     auto now = clock_();
+
+    if (now < message_lifetime_) {
+      return;
+    }
+
     auto cache_expires = now - message_lifetime_;
 
-    auto expired_until = idx.lower_bound(cache_expires);
+    TRACE("MessageCache: size before shift: {}", table_->size());
 
-    if (expired_until != idx.end()) {
-      idx.erase(idx.begin(), expired_until);
-    } else {
+    if (idx.rbegin()->inserted_at <= cache_expires) {
       table_->clear();
+    } else {
+      auto expired_until = idx.lower_bound(cache_expires);
+      if (expired_until != idx.end()) {
+        idx.erase(idx.begin(), expired_until);
+      }
     }
+
+    TRACE("MessageCache: size after shift: {}", table_->size());
   }
 
 }  // namespace libp2p::protocol::gossip
