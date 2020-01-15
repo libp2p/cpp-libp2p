@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <type_traits>
+
 #include <libp2p/common/logger.hpp>
 
 #ifndef LIBP2P_PROTOCOL_COMMON_SUBLOGGER_HPP
@@ -10,17 +12,24 @@
 
 namespace libp2p::protocol {
 
-  /// Local logger with common prefix
+  /// Local logger with common prefix used to distinguish message source
+  /// instances
   class SubLogger {
    public:
     template <typename T>
-    SubLogger(const std::string &tag, std::string prefix, T *instance = nullptr)
-        : log_(common::createLogger(tag)), prefix_(std::move(prefix)) {
-      if (instance != nullptr) {
-        // helper used to distinguish instances
-        prefix_ += fmt::format(" {}: ", (void *)instance);  // NOLINT;
+    explicit SubLogger(const std::string &tag,
+                       spdlog::string_view_t prefix = "", T instance = T{})
+        : log_(common::createLogger(tag)) {
+      setInstanceName(prefix, instance);
+    }
+
+    template <typename T>
+    void setInstanceName(spdlog::string_view_t prefix, T instance = T{}) {
+      if constexpr (std::is_pointer<T>::value
+                    and not std::is_same<T, const char *>::value) {
+        prefix_ = fmt::format("{} {} :", prefix, (void *)instance);  // NOLINT;
       } else {
-        prefix_ += ": ";
+        prefix_ = fmt::format("{} {} :", prefix, instance);
       }
       prefix_size_ = prefix_.size();
     }
@@ -68,7 +77,7 @@ namespace libp2p::protocol {
    private:
     common::Logger log_;
     std::string prefix_;
-    size_t prefix_size_;
+    size_t prefix_size_ = 0;
   };
 }  // namespace libp2p::protocol
 
