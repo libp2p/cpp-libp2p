@@ -26,7 +26,7 @@ namespace libp2p::protocol::gossip {
 
     struct Record {
       MessageId message_id;
-      Time inserted_at;
+      Time expires_at;
       TopicMessage::Ptr message;
     };
 
@@ -42,7 +42,7 @@ namespace libp2p::protocol::gossip {
             // ordered_non_unique by time means accending order
             mi::ordered_non_unique<
                 mi::tag<ByTimestamp>,
-                mi::member<Record, Time, &Record::inserted_at>>>>;
+                mi::member<Record, Time, &Record::expires_at>>>>;
 
   }  // namespace msg_cache_table
 

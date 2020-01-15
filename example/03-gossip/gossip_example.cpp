@@ -68,6 +68,8 @@ namespace libp2p::protocol::gossip::example {
       c.D = 2;
       c.ideal_connections_num = 5;
       c.echo_forward_mode = true;
+      c.message_cache_lifetime_msec = 20000;
+      c.seen_cache_lifetime_msec = 17000;
       return c;
     })();
     return config;
@@ -325,7 +327,7 @@ namespace libp2p::protocol::gossip::example {
     Distr distr_;
     size_t topic_counter_ = 0;
     size_t msg_counter_ = 0;
-    size_t max_topics_ = 66;
+    size_t max_topics_ = 6;
     std::vector<FloodStats> floods_;
     Scheduler::Handle create_next_;
   };

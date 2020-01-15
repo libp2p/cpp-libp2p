@@ -12,7 +12,7 @@
 #include <boost/multi_index_container.hpp>
 
 #include <libp2p/common/hexutil.hpp>
-#define TRACE_ENABLED 0
+#define TRACE_ENABLED 1
 #include <libp2p/protocol/common/trace.hpp>
 
 namespace libp2p::protocol::gossip {
@@ -52,7 +52,7 @@ namespace libp2p::protocol::gossip {
       return false;
     }
     auto now = clock_();
-    idx.insert({msg_id, now, std::move(message)});
+    idx.insert({msg_id, now + message_lifetime_, std::move(message)});
     return true;
   }
 
@@ -63,18 +63,12 @@ namespace libp2p::protocol::gossip {
     }
     auto now = clock_();
 
-    if (now < message_lifetime_) {
-      return;
-    }
-
-    auto cache_expires = now - message_lifetime_;
-
     TRACE("MessageCache: size before shift: {}", table_->size());
 
-    if (idx.rbegin()->inserted_at <= cache_expires) {
+    if (idx.rbegin()->expires_at < now) {
       table_->clear();
     } else {
-      auto expired_until = idx.lower_bound(cache_expires);
+      auto expired_until = idx.lower_bound(now);
       if (expired_until != idx.end()) {
         idx.erase(idx.begin(), expired_until);
       }
