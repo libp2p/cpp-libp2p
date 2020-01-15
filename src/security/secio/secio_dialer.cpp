@@ -6,6 +6,7 @@
 #include <libp2p/security/secio/secio_dialer.hpp>
 
 #include <generated/security/secio/protobuf/secio.pb.h>
+#include <libp2p/basic/message_read_writer_bigendian.hpp>
 #include <libp2p/basic/protobuf_message_read_writer.hpp>
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/security/secio/exchange_message_marshaller.hpp>
@@ -83,7 +84,8 @@ namespace {
 namespace libp2p::security::secio {
   Dialer::Dialer(std::shared_ptr<connection::RawConnection> connection)
       : rw{std::make_shared<libp2p::basic::ProtobufMessageReadWriter>(
-            std::move(connection))} {}
+            std::make_shared<libp2p::basic::MessageReadWriterBigEndian>(
+                std::move(connection)))} {}
 
   void Dialer::storeLocalPeerProposalBytes(
       const std::shared_ptr<std::vector<uint8_t>> &bytes) {

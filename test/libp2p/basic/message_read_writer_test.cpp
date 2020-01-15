@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/basic/message_read_writer.hpp>
+#include <libp2p/basic/message_read_writer_uvarint.hpp>
 
 #include <gtest/gtest.h>
 #include <libp2p/basic/protobuf_message_read_writer.hpp>
@@ -26,7 +26,7 @@ class MessageReadWriterTest : public testing::Test {
       std::make_shared<RawConnectionMock>();
 
   std::shared_ptr<MessageReadWriter> msg_rw_ =
-      std::make_shared<MessageReadWriter>(conn_mock_);
+      std::make_shared<MessageReadWriterUvarint>(conn_mock_);
 
   static constexpr uint64_t kMsgLength = 4;
   UVarint len_varint_ = UVarint{kMsgLength};
