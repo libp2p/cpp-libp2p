@@ -103,13 +103,15 @@ namespace libp2p::protocol::gossip::example {
     static void printReceiveStats() {
       std::vector<std::string> strings{};
       strings.reserve(receive_stats.size());
-      for (auto &[msg,count] : receive_stats) {
+      for (auto &[msg, count] : receive_stats) {
         strings.push_back(fmt::format("{} : {}", msg, count));
       }
       logger->info("Message receives:\n{}", fmt::join(strings, "\n"));
     }
 
-    size_t instanceNo() const { return instance_no_; }
+    size_t instanceNo() const {
+      return instance_no_;
+    }
 
     peer::PeerId getPeerId() const {
       assert(peer_id_);
@@ -180,8 +182,7 @@ namespace libp2p::protocol::gossip::example {
         std::string from = res ? res.value().toBase58().substr(46) : "???";
         std::string body = toString(d->data);
         logger->info("({}), subscr to {}, message from {}: {}, topics: [{}]",
-                     instance_no_, id, from, body,
-                     fmt::join(d->topics, ","));
+                     instance_no_, id, from, body, fmt::join(d->topics, ","));
         ++receive_stats[body];
       }
     }
@@ -262,7 +263,6 @@ namespace libp2p::protocol::gossip::example {
         createFlood(pos);
       } else {
         sendMessage(pos);
-        st.sent++;
         st.timer.reschedule(chooseTimeInterval());
       }
     }
@@ -271,8 +271,11 @@ namespace libp2p::protocol::gossip::example {
       assert(floods_.size() > pos);
 
       FloodStats &st = floods_[pos];
+      auto &h = chooseHost();
       if (st.sent == 0) {
-        chooseHost().publish({kAnnounceTopic}, st.topic);
+        logger->info("announcing new flood topic {} via host ({})", st.topic,
+                     h.instanceNo());
+        h.publish({kAnnounceTopic}, st.topic);
       }
       TopicSet topics{st.topic};
       if (msg_counter_ % 20 == 0) {
@@ -282,9 +285,10 @@ namespace libp2p::protocol::gossip::example {
         }
       }
       std::string msg = fmt::format("{:#06d}", ++msg_counter_);
-      auto& h = chooseHost();
-      logger->info("publishing {} on topics {} via host ({})", msg, fmt::join(topics, ","), h.instanceNo());
-      chooseHost().publish(topics, msg);
+      logger->info("publishing {} on topics {} via host ({})", msg,
+                   fmt::join(topics, ","), h.instanceNo());
+      h.publish(topics, msg);
+      st.sent++;
     }
 
     const TopicId &chooseTopic() {
