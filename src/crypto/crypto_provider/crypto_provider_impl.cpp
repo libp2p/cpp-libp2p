@@ -351,7 +351,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<Buffer> CryptoProviderImpl::sign(
-      gsl::span<uint8_t> message, const PrivateKey &private_key) const {
+      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
     switch (private_key.type) {
       case Key::Type::RSA:
         return signRsa(message, private_key);
@@ -379,7 +379,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<Buffer> CryptoProviderImpl::signEd25519(
-      gsl::span<uint8_t> message, const PrivateKey &private_key) const {
+      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
     ed25519::PrivateKey priv_key;
     std::copy_n(private_key.data.begin(), priv_key.size(), priv_key.begin());
     OUTCOME_TRY(signature, ed25519_provider_->sign(message, priv_key));
@@ -387,7 +387,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verify(
-      gsl::span<uint8_t> message, gsl::span<uint8_t> signature,
+      gsl::span<const uint8_t> message, gsl::span<const uint8_t> signature,
       const PublicKey &public_key) const {
     switch (public_key.type) {
       case Key::Type::RSA:
@@ -420,7 +420,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifyEd25519(
-      gsl::span<uint8_t> message, gsl::span<uint8_t> signature,
+      gsl::span<const uint8_t> message, gsl::span<const uint8_t> signature,
       const PublicKey &public_key) const {
     ed25519::PublicKey ed_pub;
     std::copy_n(public_key.data.begin(), ed_pub.size(), ed_pub.begin());

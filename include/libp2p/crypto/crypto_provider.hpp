@@ -50,7 +50,8 @@ namespace libp2p::crypto {
      * @return signature bytes
      */
     virtual outcome::result<Buffer> sign(
-        gsl::span<uint8_t> message, const PrivateKey &private_key) const = 0;
+        gsl::span<const uint8_t> message,
+        const PrivateKey &private_key) const = 0;
 
     /**
      * @brief verifies validness of the signature for a given message and public
@@ -60,8 +61,8 @@ namespace libp2p::crypto {
      * @param public_key to validate against
      * @return true - if the signature matches the message and the public key
      */
-    virtual outcome::result<bool> verify(gsl::span<uint8_t> message,
-                                         gsl::span<uint8_t> signature,
+    virtual outcome::result<bool> verify(gsl::span<const uint8_t> message,
+                                         gsl::span<const uint8_t> signature,
                                          const PublicKey &public_key) const = 0;
     /**
      * Generate an ephemeral public key and return a function that will

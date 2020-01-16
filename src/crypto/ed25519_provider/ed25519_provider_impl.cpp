@@ -65,7 +65,7 @@ namespace libp2p::crypto::ed25519 {
   }
 
   outcome::result<Signature> Ed25519ProviderImpl::sign(
-      gsl::span<uint8_t> message, const PrivateKey &private_key) const {
+      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
     OUTCOME_TRY(evp_pkey,
                 NewEvpPkeyFromBytes(EVP_PKEY_ED25519, private_key,
                                     EVP_PKEY_new_raw_private_key));
@@ -93,7 +93,7 @@ namespace libp2p::crypto::ed25519 {
   }
 
   outcome::result<bool> Ed25519ProviderImpl::verify(
-      gsl::span<uint8_t> message, const Signature &signature,
+      gsl::span<const uint8_t> message, const Signature &signature,
       const PublicKey &public_key) const {
     OUTCOME_TRY(evp_pkey,
                 NewEvpPkeyFromBytes(EVP_PKEY_ED25519, public_key,

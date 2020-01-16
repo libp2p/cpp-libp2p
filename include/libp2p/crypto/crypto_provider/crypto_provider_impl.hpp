@@ -34,11 +34,11 @@ namespace libp2p::crypto {
     outcome::result<PublicKey> derivePublicKey(
         const PrivateKey &private_key) const override;
 
-    outcome::result<Buffer> sign(gsl::span<uint8_t> message,
+    outcome::result<Buffer> sign(gsl::span<const uint8_t> message,
                                  const PrivateKey &private_key) const override;
 
-    outcome::result<bool> verify(gsl::span<uint8_t> message,
-                                 gsl::span<uint8_t> signature,
+    outcome::result<bool> verify(gsl::span<const uint8_t> message,
+                                 gsl::span<const uint8_t> signature,
                                  const PublicKey &public_key) const override;
 
     outcome::result<EphemeralKeyPair> generateEphemeralKeyPair(
@@ -63,10 +63,10 @@ namespace libp2p::crypto {
     // Ed25519
     outcome::result<KeyPair> generateEd25519() const;
     outcome::result<PublicKey> deriveEd25519(const PrivateKey &key) const;
-    outcome::result<Buffer> signEd25519(gsl::span<uint8_t> message,
+    outcome::result<Buffer> signEd25519(gsl::span<const uint8_t> message,
                                         const PrivateKey &private_key) const;
-    outcome::result<bool> verifyEd25519(gsl::span<uint8_t> message,
-                                        gsl::span<uint8_t> signature,
+    outcome::result<bool> verifyEd25519(gsl::span<const uint8_t> message,
+                                        gsl::span<const uint8_t> signature,
                                         const PublicKey &public_key) const;
 
     // Secp256k1
