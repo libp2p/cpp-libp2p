@@ -15,6 +15,9 @@ namespace libp2p::crypto {
   namespace ed25519 {
     class Ed25519Provider;
   }
+  namespace rsa {
+    class RsaProvider;
+  }
 
   class CryptoProviderImpl : public CryptoProvider {
    public:
@@ -22,9 +25,11 @@ namespace libp2p::crypto {
 
     explicit CryptoProviderImpl(
         std::shared_ptr<random::CSPRNG> random_provider,
-        std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider);
+        std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider,
+        std::shared_ptr<rsa::RsaProvider> rsa_provider);
 
-    outcome::result<KeyPair> generateKeys(Key::Type key_type) const override;
+    outcome::result<KeyPair> generateKeys(
+        Key::Type key_type, common::RSAKeyType rsa_bitness) const override;
 
     outcome::result<PublicKey> derivePublicKey(
         const PrivateKey &private_key) const override;
@@ -46,12 +51,17 @@ namespace libp2p::crypto {
    private:
     void initialize();
 
-    //    outcome::result<KeyPair> generateRsa(common::RSAKeyType key_type)
-    //    const;
-    outcome::result<KeyPair> generateEd25519() const;
-    outcome::result<KeyPair> generateSecp256k1() const;
-    outcome::result<KeyPair> generateEcdsa() const;
+    // RSA
+    outcome::result<KeyPair> generateRsa(common::RSAKeyType rsa_bitness) const;
+    outcome::result<PublicKey> deriveRsa(const PrivateKey &key) const;
+    outcome::result<Buffer> signRsa(gsl::span<const uint8_t> message,
+                                    const PrivateKey &private_key) const;
+    outcome::result<bool> verifyRsa(gsl::span<const uint8_t> message,
+                                    gsl::span<const uint8_t> signature,
+                                    const PublicKey &public_key) const;
 
+    // Ed25519
+    outcome::result<KeyPair> generateEd25519() const;
     outcome::result<PublicKey> deriveEd25519(const PrivateKey &key) const;
     outcome::result<Buffer> signEd25519(gsl::span<uint8_t> message,
                                         const PrivateKey &private_key) const;
@@ -59,11 +69,18 @@ namespace libp2p::crypto {
                                         gsl::span<uint8_t> signature,
                                         const PublicKey &public_key) const;
 
+    // Secp256k1
+    outcome::result<KeyPair> generateSecp256k1() const;
+
+    // EcDSA
+    outcome::result<KeyPair> generateEcdsa() const;
+
     outcome::result<KeyPair> generateEcdsa256WithCurve(Key::Type key_type,
                                                        int curve_nid) const;
 
     std::shared_ptr<random::CSPRNG> random_provider_;
     std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider_;
+    std::shared_ptr<rsa::RsaProvider> rsa_provider_;
   };
 }  // namespace libp2p::crypto
 

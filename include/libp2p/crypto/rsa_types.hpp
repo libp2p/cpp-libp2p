@@ -8,6 +8,8 @@
 
 #include <vector>
 
+#include <libp2p/crypto/common.hpp>
+
 namespace libp2p::crypto::rsa {
   /**
    * @brief Common types
@@ -15,10 +17,11 @@ namespace libp2p::crypto::rsa {
   using PrivateKey = std::vector<uint8_t>; /**< RSA private key */
   using PublicKey = std::vector<uint8_t>;  /**< RSA public key */
   using Signature = std::vector<uint8_t>;  /**< RSA signature of a message */
+  using libp2p::crypto::common::RSAKeyType;
 
   struct KeyPair {
     PrivateKey private_key; /**< RSA private key */
-    PublicKey public_key;  /**< RSA public key */
+    PublicKey public_key;   /**< RSA public key */
 
     /**
      * @brief Comparing keypairs

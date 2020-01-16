@@ -14,6 +14,7 @@
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
+#include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
 #include <libp2p/muxer/mplex.hpp>
 #include <libp2p/muxer/yamux.hpp>
 #include <libp2p/network/impl/connection_manager_impl.hpp>
@@ -227,8 +228,10 @@ namespace libp2p::injector {
     auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();
     auto ed25519_provider =
         std::make_shared<crypto::ed25519::Ed25519ProviderImpl>();
-    auto crypto_provider =
-        std::make_shared<crypto::CryptoProviderImpl>(csprng, ed25519_provider);
+    auto rsa_provider = std::make_shared<crypto::rsa::RsaProviderImpl>();
+    std::shared_ptr<crypto::CryptoProvider> crypto_provider =
+        std::make_shared<crypto::CryptoProviderImpl>(csprng, ed25519_provider,
+                                                     rsa_provider);
     auto validator =
         std::make_shared<crypto::validator::KeyValidatorImpl>(crypto_provider);
 
@@ -241,6 +244,7 @@ namespace libp2p::injector {
         di::bind<crypto::KeyPair>().template to(std::move(keypair)),
         di::bind<crypto::random::CSPRNG>().template to(std::move(csprng)),
         di::bind<crypto::ed25519::Ed25519Provider>().template to(std::move(ed25519_provider)),
+        di::bind<crypto::rsa::RsaProvider>().template to(std::move(rsa_provider)),
         di::bind<crypto::CryptoProvider>().template to<crypto::CryptoProviderImpl>(),
         di::bind<crypto::marshaller::KeyMarshaller>().template to<crypto::marshaller::KeyMarshallerImpl>(),
         di::bind<peer::IdentityManager>().template to<peer::IdentityManagerImpl>(),

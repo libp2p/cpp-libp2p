@@ -19,13 +19,16 @@
 #include <libp2p/crypto/ed25519_provider.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/random_generator.hpp>
+#include <libp2p/crypto/rsa_provider.hpp>
 
 namespace libp2p::crypto {
   CryptoProviderImpl::CryptoProviderImpl(
       std::shared_ptr<random::CSPRNG> random_provider,
-      std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider)
+      std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider,
+      std::shared_ptr<rsa::RsaProvider> rsa_provider)
       : random_provider_{std::move(random_provider)},
-        ed25519_provider_{std::move(ed25519_provider)} {
+        ed25519_provider_{std::move(ed25519_provider)},
+        rsa_provider_{std::move(rsa_provider)} {
     initialize();
   }
 
@@ -207,11 +210,10 @@ namespace libp2p::crypto {
   }  // namespace detail
 
   outcome::result<KeyPair> CryptoProviderImpl::generateKeys(
-      Key::Type key_type) const {
+      Key::Type key_type, common::RSAKeyType rsa_bitness) const {
     switch (key_type) {
       case Key::Type::RSA:
-        // TODO(akvinikym) 01.10.19 PRE-314: implement
-        return KeyGeneratorError::KEY_GENERATION_FAILED;
+        return generateRsa(rsa_bitness);
       case Key::Type::Ed25519:
         return generateEd25519();
       case Key::Type::Secp256k1:
@@ -223,34 +225,17 @@ namespace libp2p::crypto {
     }
   }
 
-  /// previous implementation is commented - it can be used as a hint when
-  /// implementing a new version of the method
-  //  outcome::result<KeyPair> CryptoProviderImpl::generateRsa(
-  //      common::RSAKeyType bits_option) const {
-  //    BOOST_ASSERT_MSG(false, "not implemented");
-  //
-  //    int bits = 0;
-  //    Key::Type key_type;
-  //    switch (bits_option) {
-  //      case common::RSAKeyType::RSA1024:
-  //        bits = 1024;
-  //        key_type = Key::Type::RSA1024;
-  //        break;
-  //      case common::RSAKeyType::RSA2048:
-  //        bits = 2048;
-  //        key_type = Key::Type::RSA2048;
-  //        break;
-  //      case common::RSAKeyType::RSA4096:
-  //        bits = 4096;
-  //        key_type = Key::Type::RSA4096;
-  //        break;
-  //    }
-  //
-  //    OUTCOME_TRY(keys, detail::generateRsaKeys(bits));
-  //
-  //    return KeyPair{{{key_type, std::move(keys.first)}},
-  //                   {{key_type, std::move(keys.second)}}};
-  //  }
+  outcome::result<KeyPair> CryptoProviderImpl::generateRsa(
+      common::RSAKeyType rsa_bitness) const {
+    OUTCOME_TRY(rsa, rsa_provider_->generate(rsa_bitness));
+
+    auto &&pub = rsa.public_key;
+    auto &&priv = rsa.private_key;
+    return KeyPair{.publicKey = {{.type = Key::Type::RSA,
+                                  .data = {pub.begin(), pub.end()}}},
+                   .privateKey = {{.type = Key::Type::RSA,
+                                   .data = {priv.begin(), priv.end()}}}};
+  }
 
   outcome::result<KeyPair> CryptoProviderImpl::generateEd25519() const {
     OUTCOME_TRY(ed, ed25519_provider_->generate());
@@ -348,6 +333,14 @@ namespace libp2p::crypto {
     return KeyGeneratorError::UNSUPPORTED_KEY_TYPE;
   }
 
+  outcome::result<PublicKey> CryptoProviderImpl::deriveRsa(
+      const PrivateKey &key) const {
+    rsa::PrivateKey private_key;
+    std::copy_n(key.data.begin(), key.data.size(), private_key.begin());
+    OUTCOME_TRY(rsa_pub, rsa_provider_->derive(private_key));
+    return PublicKey{{key.type, {rsa_pub.begin(), rsa_pub.end()}}};
+  }
+
   outcome::result<PublicKey> CryptoProviderImpl::deriveEd25519(
       const PrivateKey &key) const {
     ed25519::PrivateKey private_key;
@@ -361,7 +354,7 @@ namespace libp2p::crypto {
       gsl::span<uint8_t> message, const PrivateKey &private_key) const {
     switch (private_key.type) {
       case Key::Type::RSA:
-        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+        return signRsa(message, private_key);
       case Key::Type::Ed25519:
         return signEd25519(message, private_key);
       case Key::Type::Secp256k1:
@@ -373,6 +366,16 @@ namespace libp2p::crypto {
       default:
         return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
     }
+  }
+
+  outcome::result<Buffer> CryptoProviderImpl::signRsa(
+      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
+    rsa::PrivateKey priv_key;
+    priv_key.insert(priv_key.end(), private_key.data.begin(),
+                    private_key.data.end());
+
+    OUTCOME_TRY(signature, rsa_provider_->sign(message, priv_key));
+    return {signature.begin(), signature.end()};
   }
 
   outcome::result<Buffer> CryptoProviderImpl::signEd25519(
@@ -388,7 +391,7 @@ namespace libp2p::crypto {
       const PublicKey &public_key) const {
     switch (public_key.type) {
       case Key::Type::RSA:
-        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+        return verifyRsa(message, signature, public_key);
       case Key::Type::Ed25519:
         return verifyEd25519(message, signature, public_key);
       case Key::Type::Secp256k1:
@@ -402,10 +405,24 @@ namespace libp2p::crypto {
     }
   }
 
+  outcome::result<bool> CryptoProviderImpl::verifyRsa(
+      gsl::span<const uint8_t> message, gsl::span<const uint8_t> signature,
+      const PublicKey &public_key) const {
+    rsa::PublicKey rsa_pub;
+    rsa_pub.insert(rsa_pub.end(), public_key.data.begin(),
+                   public_key.data.end());
+
+    rsa::Signature rsa_sig;
+    rsa_sig.insert(rsa_sig.end(), signature.begin(), signature.end());
+
+    OUTCOME_TRY(result, rsa_provider_->verify(message, rsa_sig, rsa_pub));
+    return result;
+  }
+
   outcome::result<bool> CryptoProviderImpl::verifyEd25519(
       gsl::span<uint8_t> message, gsl::span<uint8_t> signature,
       const PublicKey &public_key) const {
-    ed25519::PrivateKey ed_pub;
+    ed25519::PublicKey ed_pub;
     std::copy_n(public_key.data.begin(), ed_pub.size(), ed_pub.begin());
 
     ed25519::Signature ed_sig;
