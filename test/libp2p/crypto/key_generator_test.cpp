@@ -132,27 +132,8 @@ TEST_P(KeyLengthTest, KeyLengthCorrect) {
   ASSERT_EQ(val.privateKey.data.size(), private_key_length);
 }
 
-// TODO(turuslan): convert to TestWithParam and test more key types
-class KeyGoCompatibility : public ::testing::Test {
- public:
-  KeyGoCompatibility()
-      : random_{std::make_shared<BoostRandomGenerator>()},
-        ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
-        rsa_provider_{std::make_shared<RsaProviderImpl>()},
-        ecdsa_provider_{std::make_shared<EcdsaProviderImpl>()},
-        secp256k1_provider_{std::make_shared<Secp256k1ProviderImpl>()},
-        crypto_provider_{std::make_shared<CryptoProviderImpl>(
-            random_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
-            secp256k1_provider_)} {}
-
- protected:
-  std::shared_ptr<CSPRNG> random_;
-  std::shared_ptr<Ed25519Provider> ed25519_provider_;
-  std::shared_ptr<RsaProvider> rsa_provider_;
-  std::shared_ptr<EcdsaProvider> ecdsa_provider_;
-  std::shared_ptr<Secp256k1Provider> secp256k1_provider_;
-  std::shared_ptr<CryptoProvider> crypto_provider_;
-};
+// TODO(turuslan): FIL-132 convert to TestWithParam and test more key types
+class KeyGoCompatibility : public KeyGenTest, public ::testing::Test {};
 
 TEST_F(KeyGoCompatibility, RSA_old) {
   PrivateKey privateKey{
