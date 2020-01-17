@@ -95,9 +95,6 @@ namespace libp2p::crypto {
                                       gsl::span<const uint8_t> signature,
                                       const PublicKey &public_key) const;
 
-    outcome::result<KeyPair> generateEcdsa256WithCurve(Key::Type key_type,
-                                                       int curve_nid) const;
-
     std::shared_ptr<random::CSPRNG> random_provider_;
     std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider_;
     std::shared_ptr<rsa::RsaProvider> rsa_provider_;
