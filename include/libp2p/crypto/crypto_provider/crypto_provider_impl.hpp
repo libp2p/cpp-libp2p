@@ -18,6 +18,9 @@ namespace libp2p::crypto {
   namespace rsa {
     class RsaProvider;
   }
+  namespace ecdsa {
+    class EcdsaProvider;
+  }
 
   class CryptoProviderImpl : public CryptoProvider {
    public:
@@ -26,7 +29,8 @@ namespace libp2p::crypto {
     explicit CryptoProviderImpl(
         std::shared_ptr<random::CSPRNG> random_provider,
         std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider,
-        std::shared_ptr<rsa::RsaProvider> rsa_provider);
+        std::shared_ptr<rsa::RsaProvider> rsa_provider,
+        std::shared_ptr<ecdsa::EcdsaProvider> ecdsa_provider);
 
     outcome::result<KeyPair> generateKeys(
         Key::Type key_type, common::RSAKeyType rsa_bitness) const override;
@@ -72,8 +76,14 @@ namespace libp2p::crypto {
     // Secp256k1
     outcome::result<KeyPair> generateSecp256k1() const;
 
-    // EcDSA
+    // ECDSA
     outcome::result<KeyPair> generateEcdsa() const;
+    outcome::result<PublicKey> deriveEcdsa(const PrivateKey &key) const;
+    outcome::result<Buffer> signEcdsa(gsl::span<const uint8_t> message,
+                                      const PrivateKey &private_key) const;
+    outcome::result<bool> verifyEcdsa(gsl::span<const uint8_t> message,
+                                      gsl::span<const uint8_t> signature,
+                                      const PublicKey &public_key) const;
 
     outcome::result<KeyPair> generateEcdsa256WithCurve(Key::Type key_type,
                                                        int curve_nid) const;
@@ -81,6 +91,7 @@ namespace libp2p::crypto {
     std::shared_ptr<random::CSPRNG> random_provider_;
     std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider_;
     std::shared_ptr<rsa::RsaProvider> rsa_provider_;
+    std::shared_ptr<ecdsa::EcdsaProvider> ecdsa_provider_;
   };
 }  // namespace libp2p::crypto
 

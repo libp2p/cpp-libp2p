@@ -38,6 +38,19 @@ namespace {
 
 namespace libp2p::crypto::rsa {
 
+  /**
+   * according to libp2p specification:
+   *  https://github.com/libp2p/specs/blob/master/peer-ids/peer-ids.md#how-keys-are-encoded-and-messages-signed
+   *  We encode the public key using the DER-encoded PKIX format
+   *  We encode the private key as a PKCS1 key using ASN.1 DER.
+   *
+   *  according to openssl manual:
+   *  https://www.openssl.org/docs/man1.1.1/man3/i2d_RSA_PUBKEY.html
+   *  d2i_RSA_PUBKEY() and i2d_RSA_PUBKEY() decode and encode a PKIX
+   *
+   *  https://www.openssl.org/docs/man1.1.1/man3/i2d_RSAPrivateKey.html
+   *  d2i_RSAPrivateKey(), i2d_RSAPrivateKey() decode and encode a PKCS#1
+   */
   outcome::result<KeyPair> RsaProviderImpl::generate(
       RSAKeyType rsa_bitness) const {
     int bits{0};

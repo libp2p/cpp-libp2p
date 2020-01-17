@@ -8,6 +8,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
+#include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
@@ -26,6 +27,8 @@ using libp2p::crypto::Key;
 using libp2p::crypto::KeyPair;
 using libp2p::crypto::PrivateKey;
 using libp2p::crypto::PublicKey;
+using libp2p::crypto::ecdsa::EcdsaProvider;
+using libp2p::crypto::ecdsa::EcdsaProviderImpl;
 using libp2p::crypto::ed25519::Ed25519Provider;
 using libp2p::crypto::ed25519::Ed25519ProviderImpl;
 using libp2p::crypto::random::BoostRandomGenerator;
@@ -40,8 +43,9 @@ struct BaseKeyTest {
   std::shared_ptr<Ed25519Provider> ed25519 =
       std::make_shared<Ed25519ProviderImpl>();
   std::shared_ptr<RsaProvider> rsa = std::make_shared<RsaProviderImpl>();
+  std::shared_ptr<EcdsaProvider> ecdsa = std::make_shared<EcdsaProviderImpl>();
   std::shared_ptr<CryptoProvider> crypto_provider =
-      std::make_shared<CryptoProviderImpl>(random, ed25519, rsa);
+      std::make_shared<CryptoProviderImpl>(random, ed25519, rsa, ecdsa);
   std::shared_ptr<KeyValidator> validator =
       std::make_shared<KeyValidatorImpl>(crypto_provider);
 };

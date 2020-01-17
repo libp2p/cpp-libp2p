@@ -10,6 +10,7 @@
 #include <boost/filesystem.hpp>
 #include <gsl/gsl_util>
 #include <libp2p/common/literals.hpp>
+#include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
@@ -22,6 +23,8 @@ using libp2p::crypto::CryptoProviderImpl;
 using libp2p::crypto::Key;
 using libp2p::crypto::KeyGeneratorError;
 using libp2p::crypto::PrivateKey;
+using libp2p::crypto::ecdsa::EcdsaProvider;
+using libp2p::crypto::ecdsa::EcdsaProviderImpl;
 using libp2p::crypto::ed25519::Ed25519Provider;
 using libp2p::crypto::ed25519::Ed25519ProviderImpl;
 using libp2p::crypto::random::BoostRandomGenerator;
@@ -37,13 +40,15 @@ class KeyGeneratorTest : public ::testing::TestWithParam<Key::Type> {
       : random_{std::make_shared<BoostRandomGenerator>()},
         ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
         rsa_provider_{std::make_shared<RsaProviderImpl>()},
+        ecdsa_provider_{std::make_shared<EcdsaProviderImpl>()},
         crypto_provider_{std::make_shared<CryptoProviderImpl>(
-            random_, ed25519_provider_, rsa_provider_)} {}
+            random_, ed25519_provider_, rsa_provider_, ecdsa_provider_)} {}
 
  protected:
   std::shared_ptr<CSPRNG> random_;
   std::shared_ptr<Ed25519Provider> ed25519_provider_;
   std::shared_ptr<RsaProvider> rsa_provider_;
+  std::shared_ptr<EcdsaProvider> ecdsa_provider_;
   std::shared_ptr<CryptoProvider> crypto_provider_;
 };
 
@@ -102,13 +107,15 @@ class KeyLengthTest
       : random_{std::make_shared<BoostRandomGenerator>()},
         ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
         rsa_provider_{std::make_shared<RsaProviderImpl>()},
+        ecdsa_provider_{std::make_shared<EcdsaProviderImpl>()},
         crypto_provider_{std::make_shared<CryptoProviderImpl>(
-            random_, ed25519_provider_, rsa_provider_)} {}
+            random_, ed25519_provider_, rsa_provider_, ecdsa_provider_)} {}
 
  protected:
   std::shared_ptr<CSPRNG> random_;
   std::shared_ptr<Ed25519Provider> ed25519_provider_;
   std::shared_ptr<RsaProvider> rsa_provider_;
+  std::shared_ptr<EcdsaProvider> ecdsa_provider_;
   std::shared_ptr<CryptoProvider> crypto_provider_;
 };
 
@@ -116,7 +123,7 @@ INSTANTIATE_TEST_CASE_P(
     TestSomeKeyLengths, KeyLengthTest,
     ::testing::Values(std::tuple(Key::Type::Ed25519, 32, 32),
                       std::tuple(Key::Type::Secp256k1, 32, 33),
-                      std::tuple(Key::Type::ECDSA, 32, 33)));
+                      std::tuple(Key::Type::ECDSA, 121, 91)));
 
 /**
  * @given key generator and tuple of <key type, private key length, public key
@@ -138,13 +145,15 @@ class KeyGoCompatibility : public ::testing::Test {
       : random_{std::make_shared<BoostRandomGenerator>()},
         ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
         rsa_provider_{std::make_shared<RsaProviderImpl>()},
+        ecdsa_provider_{std::make_shared<EcdsaProviderImpl>()},
         crypto_provider_{std::make_shared<CryptoProviderImpl>(
-            random_, ed25519_provider_, rsa_provider_)} {}
+            random_, ed25519_provider_, rsa_provider_, ecdsa_provider_)} {}
 
  protected:
   std::shared_ptr<CSPRNG> random_;
   std::shared_ptr<Ed25519Provider> ed25519_provider_;
   std::shared_ptr<RsaProvider> rsa_provider_;
+  std::shared_ptr<EcdsaProvider> ecdsa_provider_;
   std::shared_ptr<CryptoProvider> crypto_provider_;
 };
 
@@ -179,18 +188,6 @@ TEST_F(KeyGoCompatibility, RSA_old) {
       "337d9b8ed29b4505c8e57a06a9a008ecb89ece3a6e809af64342be4367e06ba1be"
       "c131c8944465ba1f5cead836e84932097aea1f6aefc97e84f76219b9dec8afd7a1"
       "d0fa90802bd84b1d021112daf026c60ad958db4247e56dc39d0203010001"_unhex);
-}
-
-TEST_F(KeyGoCompatibility, ECDSA) {
-  PrivateKey privateKey{
-      {Key::Type::ECDSA,
-       "325153c93c647c8b7645f69f5a91aba5bb0a0c6c9256264a3cd7f860e9916c28"_unhex}};
-
-  auto derivedPublicKey = crypto_provider_->derivePublicKey(privateKey).value();
-
-  EXPECT_EQ(
-      derivedPublicKey.data,
-      "033571844d75a74a49a3b5e2953261078ff60cacd270cab134c8b70ded6d26e5cd"_unhex);
 }
 
 /**
@@ -300,4 +297,44 @@ TEST_F(KeyGoCompatibility, RSA) {
   auto verify_result =
       crypto_provider_->verify(msg_span, signature, derived).value();
   ASSERT_TRUE(verify_result);
+}
+
+/**
+ * @given a private ECDSA key generated in golang
+ * @when public key derived, test blob signed and signature gets verified
+ * @then all the outcomes are the same as in golang
+ */
+TEST_F(KeyGoCompatibility, ECDSA) {
+  PrivateKey private_key{
+      {Key::Type::ECDSA,
+       "307702010104209466e35f6cbe89c1b96ef0a58b4bb66913f767581f5b8f669ce50e561"
+       "bdd7754a00a06082a8648ce3d030107a144034200047b0c9099a22405b7d425aa607dad"
+       "2782b82fa172b31348b7c59aca51fb2c101986d70d59b177a33bbb9b79c1e780db23d1b"
+       "7d345a7473d77b9b75b4deaa21997"_unhex}};
+
+  auto derived = crypto_provider_->derivePublicKey(private_key).value();
+  EXPECT_EQ(derived.data,
+            "3059301306072a8648ce3d020106082a8648ce3d030107034200047b0c9099a224"
+            "05b7d425aa607dad2782b82fa172b31348b7c59aca51fb2c101986d70d59b177a3"
+            "3bbb9b79c1e780db23d1b7d345a7473d77b9b75b4deaa21997"_unhex);
+
+  auto message{"think of the rapture!"_v};
+  const size_t message_len{21};  // here we do not count terminating null char
+  ASSERT_EQ(message.size(), message_len);
+
+  auto msg_span = gsl::make_span(message.data(), message_len);
+  auto signature = crypto_provider_->sign(msg_span, private_key).value();
+
+  auto verify_own_result =
+      crypto_provider_->verify(msg_span, signature, derived);
+  ASSERT_TRUE(verify_own_result.has_value());
+  ASSERT_TRUE(verify_own_result.value());
+
+  auto go_signature =
+      "304502201e045bf3d5e36c7870307ddf7f61577a641054bf21b67c1a233c4e03998d0501"
+      "022100f3a41d42dc365a698fa2257181ec6554bbb833ff4dd5a52119558c0aa4a4a0da"_unhex;
+  auto verify_go_result =
+      crypto_provider_->verify(msg_span, go_signature, derived);
+  ASSERT_TRUE(verify_go_result.has_value());
+  ASSERT_TRUE(verify_go_result.value());
 }

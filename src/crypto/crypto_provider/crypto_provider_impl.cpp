@@ -16,6 +16,7 @@
 #include <gsl/gsl_util>
 #include <gsl/pointers>
 #include <gsl/span>
+#include <libp2p/crypto/ecdsa_provider.hpp>
 #include <libp2p/crypto/ed25519_provider.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/random_generator.hpp>
@@ -25,10 +26,12 @@ namespace libp2p::crypto {
   CryptoProviderImpl::CryptoProviderImpl(
       std::shared_ptr<random::CSPRNG> random_provider,
       std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider,
-      std::shared_ptr<rsa::RsaProvider> rsa_provider)
+      std::shared_ptr<rsa::RsaProvider> rsa_provider,
+      std::shared_ptr<ecdsa::EcdsaProvider> ecdsa_provider)
       : random_provider_{std::move(random_provider)},
         ed25519_provider_{std::move(ed25519_provider)},
-        rsa_provider_{std::move(rsa_provider)} {
+        rsa_provider_{std::move(rsa_provider)},
+        ecdsa_provider_{std::move(ecdsa_provider)} {
     initialize();
   }
 
@@ -171,42 +174,43 @@ namespace libp2p::crypto {
      *  https://www.openssl.org/docs/man1.1.1/man3/i2d_RSAPrivateKey.html
      *  d2i_RSAPrivateKey(), i2d_RSAPrivateKey() decode and encode a PKCS#1
      */
-    outcome::result<std::pair<CryptoProvider::Buffer, CryptoProvider::Buffer>>
-    generateRsaKeys(int bits) {
-      int ret = 0;
-      RSA *rsa = nullptr;
-      BIGNUM *bne = nullptr;
-      // clean up automatically
-      auto cleanup = gsl::finally([&]() {
-        if (nullptr != rsa) {
-          RSA_free(rsa);
-        }
-        if (nullptr != bne) {
-          BN_free(bne);
-        }
-      });
-
-      constexpr uint64_t exp = RSA_F4;
-
-      // 1. generate rsa state
-      bne = BN_new();
-      ret = BN_set_word(bne, exp);
-      if (ret != 1) {
-        return KeyGeneratorError::KEY_GENERATION_FAILED;
-      }
-
-      // 2. generate keys
-      rsa = RSA_new();
-      ret = RSA_generate_key_ex(rsa, bits, bne, nullptr);
-      if (ret != 1) {
-        return KeyGeneratorError::KEY_GENERATION_FAILED;
-      }
-
-      OUTCOME_TRY(public_bytes, detail::encodeKeyDer(rsa, i2d_RSA_PUBKEY));
-      OUTCOME_TRY(private_bytes, detail::encodeKeyDer(rsa, i2d_RSAPrivateKey));
-
-      return {std::move(public_bytes), std::move(private_bytes)};
-    }
+    //    outcome::result<std::pair<CryptoProvider::Buffer,
+    //    CryptoProvider::Buffer>> generateRsaKeys(int bits) {
+    //      int ret = 0;
+    //      RSA *rsa = nullptr;
+    //      BIGNUM *bne = nullptr;
+    //      // clean up automatically
+    //      auto cleanup = gsl::finally([&]() {
+    //        if (nullptr != rsa) {
+    //          RSA_free(rsa);
+    //        }
+    //        if (nullptr != bne) {
+    //          BN_free(bne);
+    //        }
+    //      });
+    //
+    //      constexpr uint64_t exp = RSA_F4;
+    //
+    //      // 1. generate rsa state
+    //      bne = BN_new();
+    //      ret = BN_set_word(bne, exp);
+    //      if (ret != 1) {
+    //        return KeyGeneratorError::KEY_GENERATION_FAILED;
+    //      }
+    //
+    //      // 2. generate keys
+    //      rsa = RSA_new();
+    //      ret = RSA_generate_key_ex(rsa, bits, bne, nullptr);
+    //      if (ret != 1) {
+    //        return KeyGeneratorError::KEY_GENERATION_FAILED;
+    //      }
+    //
+    //      OUTCOME_TRY(public_bytes, detail::encodeKeyDer(rsa,
+    //      i2d_RSA_PUBKEY)); OUTCOME_TRY(private_bytes,
+    //      detail::encodeKeyDer(rsa, i2d_RSAPrivateKey));
+    //
+    //      return {std::move(public_bytes), std::move(private_bytes)};
+    //    }
   }  // namespace detail
 
   outcome::result<KeyPair> CryptoProviderImpl::generateKeys(
@@ -253,7 +257,43 @@ namespace libp2p::crypto {
   }
 
   outcome::result<KeyPair> CryptoProviderImpl::generateEcdsa() const {
-    return generateEcdsa256WithCurve(Key::Type::ECDSA, NID_X9_62_prime256v1);
+    OUTCOME_TRY(ecdsa, ecdsa_provider_->generate());
+
+    auto &&pub = ecdsa.public_key;
+    auto &&priv = ecdsa.private_key;
+    return KeyPair{.publicKey = {{.type = Key::Type::ECDSA,
+                                  .data = {pub.begin(), pub.end()}}},
+                   .privateKey = {{.type = Key::Type::ECDSA,
+                                   .data = {priv.begin(), priv.end()}}}};
+  }
+
+  outcome::result<PublicKey> CryptoProviderImpl::deriveEcdsa(
+      const PrivateKey &key) const {
+    ecdsa::PrivateKey private_key;
+    std::copy_n(key.data.begin(), private_key.size(), private_key.begin());
+    OUTCOME_TRY(ecdsa_pub, ecdsa_provider_->derive(private_key));
+
+    return PublicKey{{key.type, {ecdsa_pub.begin(), ecdsa_pub.end()}}};
+  }
+
+  outcome::result<Buffer> CryptoProviderImpl::signEcdsa(
+      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
+    ecdsa::PrivateKey priv_key;
+    std::copy_n(private_key.data.begin(), priv_key.size(), priv_key.begin());
+    OUTCOME_TRY(signature, ecdsa_provider_->sign(message, priv_key));
+    return {signature.begin(), signature.end()};
+  }
+
+  outcome::result<bool> CryptoProviderImpl::verifyEcdsa(
+      gsl::span<const uint8_t> message, gsl::span<const uint8_t> signature,
+      const PublicKey &public_key) const {
+    ecdsa::PublicKey ecdsa_pub;
+    std::copy_n(public_key.data.begin(), ecdsa_pub.size(), ecdsa_pub.begin());
+
+    ecdsa::Signature ecdsa_sig;
+    ecdsa_sig.insert(ecdsa_sig.end(), signature.begin(), signature.end());
+
+    return ecdsa_provider_->verify(message, ecdsa_sig, ecdsa_pub);
   }
 
   outcome::result<KeyPair> CryptoProviderImpl::generateEcdsa256WithCurve(
@@ -320,13 +360,13 @@ namespace libp2p::crypto {
       const PrivateKey &private_key) const {
     switch (private_key.type) {
       case Key::Type::RSA:
-        return detail::deriveRsa(private_key);
+        return deriveRsa(private_key);
       case Key::Type::Ed25519:
         return deriveEd25519(private_key);
       case Key::Type::Secp256k1:
         return detail::deriveSecp256k1(private_key);
       case Key::Type::ECDSA:
-        return detail::deriveEcdsa(private_key);
+        return deriveEcdsa(private_key);
       case Key::Type::UNSPECIFIED:
         return KeyGeneratorError::WRONG_KEY_TYPE;
     }
@@ -336,7 +376,7 @@ namespace libp2p::crypto {
   outcome::result<PublicKey> CryptoProviderImpl::deriveRsa(
       const PrivateKey &key) const {
     rsa::PrivateKey private_key;
-    std::copy_n(key.data.begin(), key.data.size(), private_key.begin());
+    private_key.insert(private_key.end(), key.data.begin(), key.data.end());
     OUTCOME_TRY(rsa_pub, rsa_provider_->derive(private_key));
     return PublicKey{{key.type, {rsa_pub.begin(), rsa_pub.end()}}};
   }
@@ -360,7 +400,7 @@ namespace libp2p::crypto {
       case Key::Type::Secp256k1:
         return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
       case Key::Type::ECDSA:
-        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+        return signEcdsa(message, private_key);
       case Key::Type::UNSPECIFIED:
         return KeyGeneratorError::WRONG_KEY_TYPE;
       default:
@@ -397,7 +437,7 @@ namespace libp2p::crypto {
       case Key::Type::Secp256k1:
         return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
       case Key::Type::ECDSA:
-        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+        return verifyEcdsa(message, signature, public_key);
       case Key::Type::UNSPECIFIED:
         return KeyGeneratorError::WRONG_KEY_TYPE;
       default:
