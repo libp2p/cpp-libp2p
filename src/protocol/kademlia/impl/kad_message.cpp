@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 #include <libp2p/multi/uvarint.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_message.hpp>
 
@@ -24,8 +23,9 @@ namespace libp2p::protocol::kademlia {
       }
     }
 
-    std::optional<Message::Peer> assign_peer(const kad::pb::Message_Peer &src) {
-      using R = std::optional<Message::Peer>;
+    boost::optional<Message::Peer> assign_peer(
+        const kad::pb::Message_Peer &src) {
+      using R = boost::optional<Message::Peer>;
 
       if (int(src.connection()) > int(ConnStatus::CAN_NOT_CONNECT)) {
         // TODO(artem): log
@@ -54,7 +54,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     template <class PbContainer>
-    bool assign_peers(std::optional<Message::Peers> &dst,
+    bool assign_peers(boost::optional<Message::Peers> &dst,
                       const PbContainer &src) {
       if (!src.empty()) {
         dst = Message::Peers{};
@@ -73,13 +73,13 @@ namespace libp2p::protocol::kademlia {
     }
 
     template <class PbContainer>
-    std::optional<Message::Record> assign_record(const PbContainer &src) {
+    boost::optional<Message::Record> assign_record(const PbContainer &src) {
       auto ca_res = ContentAddress::fromWire(src.key());
       if (!ca_res) {
         return {};
       }
-      std::optional<Message::Record> record = Message::Record
-          { std::move(ca_res.value()), Value(), src.timereceived() };
+      boost::optional<Message::Record> record = Message::Record{
+          std::move(ca_res.value()), Value(), src.timereceived()};
       assign_blob(record.value().value, src.value());
       return record;
     }
@@ -155,9 +155,8 @@ namespace libp2p::protocol::kademlia {
     size_t prefix_sz = varint_vec.size();
     buffer.resize(prefix_sz + msg_sz);
     memcpy(buffer.data(), varint_vec.data(), prefix_sz);
-    return pb_msg.SerializeToArray(
-        buffer.data() + prefix_sz, //NOLINT
-    msg_sz);
+    return pb_msg.SerializeToArray(buffer.data() + prefix_sz,  // NOLINT
+                                   msg_sz);
   }
 
   void Message::selfAnnounce(peer::PeerInfo self) {
@@ -166,7 +165,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   Message createFindNodeRequest(const peer::PeerId &node,
-                                std::optional<peer::PeerInfo> self_announce) {
+                                boost::optional<peer::PeerInfo> self_announce) {
     Message msg;
     msg.type = Message::kFindNode;
     msg.key = node.toVector();
@@ -177,7 +176,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   Message createAddProviderRequest(peer::PeerInfo self,
-      const ContentAddress &key) {
+                                   const ContentAddress &key) {
     Message msg;
     msg.type = Message::kAddProvider;
     msg.key = key.data;

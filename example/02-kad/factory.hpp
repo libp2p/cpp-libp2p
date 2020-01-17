@@ -21,9 +21,10 @@ namespace libp2p::protocol::kademlia::example {
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller;
   };
 
-  void createPerHostObjects(PerHostObjects &objects, const KademliaConfig& conf);
+  void createPerHostObjects(PerHostObjects &objects,
+                            const KademliaConfig &conf);
 
-  std::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str);
+  boost::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str);
 
 }  // namespace libp2p::protocol::kademlia::example
 

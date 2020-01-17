@@ -138,7 +138,8 @@ namespace libp2p::protocol::kademlia::example {
     }
   }  // namespace
 
-  void createPerHostObjects(PerHostObjects &objects, const KademliaConfig& conf) {
+  void createPerHostObjects(PerHostObjects &objects,
+                            const KademliaConfig &conf) {
     auto injector = makeInjector(boost::di::bind<boost::asio::io_context>.to(
         createIOContext())[boost::di::override]);
 
@@ -147,12 +148,9 @@ namespace libp2p::protocol::kademlia::example {
         injector.create<std::shared_ptr<libp2p::crypto::CryptoProvider>>();
     objects.key_marshaller = injector.create<
         std::shared_ptr<libp2p::crypto::marshaller::KeyMarshaller>>();
-    objects.routing_table =
-        std::make_shared<RoutingTableImpl>(
-            injector.create<std::shared_ptr<peer::IdentityManager>>(),
-            injector.create<std::shared_ptr<event::Bus>>(),
-            conf
-    );
+    objects.routing_table = std::make_shared<RoutingTableImpl>(
+        injector.create<std::shared_ptr<peer::IdentityManager>>(),
+        injector.create<std::shared_ptr<event::Bus>>(), conf);
   }
 
   std::shared_ptr<boost::asio::io_context> createIOContext() {
@@ -161,4 +159,4 @@ namespace libp2p::protocol::kademlia::example {
     return c;
   }
 
-}  // namespace libp2p::kad_example
+}  // namespace libp2p::protocol::kademlia::example
