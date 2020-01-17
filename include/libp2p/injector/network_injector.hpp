@@ -16,6 +16,7 @@
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
+#include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
 #include <libp2p/muxer/mplex.hpp>
 #include <libp2p/muxer/yamux.hpp>
 #include <libp2p/network/impl/connection_manager_impl.hpp>
@@ -231,9 +232,12 @@ namespace libp2p::injector {
         std::make_shared<crypto::ed25519::Ed25519ProviderImpl>();
     auto rsa_provider = std::make_shared<crypto::rsa::RsaProviderImpl>();
     auto ecdsa_provider = std::make_shared<crypto::ecdsa::EcdsaProviderImpl>();
+    auto secp256k1_provider =
+        std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>();
     std::shared_ptr<crypto::CryptoProvider> crypto_provider =
         std::make_shared<crypto::CryptoProviderImpl>(
-            csprng, ed25519_provider, rsa_provider, ecdsa_provider);
+            csprng, ed25519_provider, rsa_provider, ecdsa_provider,
+            secp256k1_provider);
     auto validator =
         std::make_shared<crypto::validator::KeyValidatorImpl>(crypto_provider);
 
@@ -248,6 +252,7 @@ namespace libp2p::injector {
         di::bind<crypto::ed25519::Ed25519Provider>().template to(std::move(ed25519_provider)),
         di::bind<crypto::rsa::RsaProvider>().template to(std::move(rsa_provider)),
         di::bind<crypto::ecdsa::EcdsaProvider>().template to(std::move(ecdsa_provider)),
+        di::bind<crypto::secp256k1::Secp256k1Provider>().template to(std::move(secp256k1_provider)),
         di::bind<crypto::CryptoProvider>().template to<crypto::CryptoProviderImpl>(),
         di::bind<crypto::marshaller::KeyMarshaller>().template to<crypto::marshaller::KeyMarshallerImpl>(),
         di::bind<peer::IdentityManager>().template to<peer::IdentityManagerImpl>(),

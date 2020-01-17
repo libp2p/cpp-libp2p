@@ -15,6 +15,7 @@
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
+#include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
 #include <testutil/outcome.hpp>
 
 using libp2p::common::ByteArray;
@@ -31,26 +32,34 @@ using libp2p::crypto::random::BoostRandomGenerator;
 using libp2p::crypto::random::CSPRNG;
 using libp2p::crypto::rsa::RsaProvider;
 using libp2p::crypto::rsa::RsaProviderImpl;
+using libp2p::crypto::secp256k1::Secp256k1Provider;
+using libp2p::crypto::secp256k1::Secp256k1ProviderImpl;
 using libp2p::common::operator""_unhex;
 using libp2p::common::operator""_v;
 
-class KeyGeneratorTest : public ::testing::TestWithParam<Key::Type> {
+class KeyGenTest {
  public:
-  KeyGeneratorTest()
+  KeyGenTest()
       : random_{std::make_shared<BoostRandomGenerator>()},
         ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
         rsa_provider_{std::make_shared<RsaProviderImpl>()},
         ecdsa_provider_{std::make_shared<EcdsaProviderImpl>()},
+        secp256k1_provider_{std::make_shared<Secp256k1ProviderImpl>()},
         crypto_provider_{std::make_shared<CryptoProviderImpl>(
-            random_, ed25519_provider_, rsa_provider_, ecdsa_provider_)} {}
+            random_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
+            secp256k1_provider_)} {}
 
  protected:
   std::shared_ptr<CSPRNG> random_;
   std::shared_ptr<Ed25519Provider> ed25519_provider_;
   std::shared_ptr<RsaProvider> rsa_provider_;
   std::shared_ptr<EcdsaProvider> ecdsa_provider_;
+  std::shared_ptr<Secp256k1Provider> secp256k1_provider_;
   std::shared_ptr<CryptoProvider> crypto_provider_;
 };
+
+class KeyGeneratorTest : public KeyGenTest,
+                         public ::testing::TestWithParam<Key::Type> {};
 
 /**
  * @given key generator and key type as parameter
@@ -100,24 +109,9 @@ INSTANTIATE_TEST_CASE_P(TestAllKeyTypes, KeyGeneratorTest,
                                           Key::Type::ECDSA));
 
 class KeyLengthTest
-    : public ::testing::TestWithParam<
-          std::tuple<Key::Type, const uint32_t, const uint32_t>> {
- public:
-  KeyLengthTest()
-      : random_{std::make_shared<BoostRandomGenerator>()},
-        ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
-        rsa_provider_{std::make_shared<RsaProviderImpl>()},
-        ecdsa_provider_{std::make_shared<EcdsaProviderImpl>()},
-        crypto_provider_{std::make_shared<CryptoProviderImpl>(
-            random_, ed25519_provider_, rsa_provider_, ecdsa_provider_)} {}
-
- protected:
-  std::shared_ptr<CSPRNG> random_;
-  std::shared_ptr<Ed25519Provider> ed25519_provider_;
-  std::shared_ptr<RsaProvider> rsa_provider_;
-  std::shared_ptr<EcdsaProvider> ecdsa_provider_;
-  std::shared_ptr<CryptoProvider> crypto_provider_;
-};
+    : public KeyGenTest,
+      public ::testing::TestWithParam<
+          std::tuple<Key::Type, const uint32_t, const uint32_t>> {};
 
 INSTANTIATE_TEST_CASE_P(
     TestSomeKeyLengths, KeyLengthTest,
@@ -146,14 +140,17 @@ class KeyGoCompatibility : public ::testing::Test {
         ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
         rsa_provider_{std::make_shared<RsaProviderImpl>()},
         ecdsa_provider_{std::make_shared<EcdsaProviderImpl>()},
+        secp256k1_provider_{std::make_shared<Secp256k1ProviderImpl>()},
         crypto_provider_{std::make_shared<CryptoProviderImpl>(
-            random_, ed25519_provider_, rsa_provider_, ecdsa_provider_)} {}
+            random_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
+            secp256k1_provider_)} {}
 
  protected:
   std::shared_ptr<CSPRNG> random_;
   std::shared_ptr<Ed25519Provider> ed25519_provider_;
   std::shared_ptr<RsaProvider> rsa_provider_;
   std::shared_ptr<EcdsaProvider> ecdsa_provider_;
+  std::shared_ptr<Secp256k1Provider> secp256k1_provider_;
   std::shared_ptr<CryptoProvider> crypto_provider_;
 };
 
@@ -333,6 +330,42 @@ TEST_F(KeyGoCompatibility, ECDSA) {
   auto go_signature =
       "304502201e045bf3d5e36c7870307ddf7f61577a641054bf21b67c1a233c4e03998d0501"
       "022100f3a41d42dc365a698fa2257181ec6554bbb833ff4dd5a52119558c0aa4a4a0da"_unhex;
+  auto verify_go_result =
+      crypto_provider_->verify(msg_span, go_signature, derived);
+  ASSERT_TRUE(verify_go_result.has_value());
+  ASSERT_TRUE(verify_go_result.value());
+}
+
+/**
+ * @given a private Secp256k1 key generated in golang
+ * @when public key derived, test blob signed and signature gets verified
+ * @then all the outcomes are the same as in golang
+ */
+TEST_F(KeyGoCompatibility, Secp256k1) {
+  PrivateKey private_key{
+      {Key::Type::Secp256k1,
+       "7a719128d60097eb45859be6e76a59fc81afe805bf187d354187d2ab45310b6a"_unhex}};
+
+  auto derived = crypto_provider_->derivePublicKey(private_key).value();
+  EXPECT_EQ(
+      derived.data,
+      "02bf00d2b556f8d5fc87b82465c653241ae21420635b374c7c76add17571813dd7"_unhex);
+
+  auto message{"think of the rapture!"_v};
+  const size_t message_len{21};  // here we do not count terminating null char
+  ASSERT_EQ(message.size(), message_len);
+
+  auto msg_span = gsl::make_span(message.data(), message_len);
+  auto signature = crypto_provider_->sign(msg_span, private_key).value();
+
+  auto verify_own_result =
+      crypto_provider_->verify(msg_span, signature, derived);
+  ASSERT_TRUE(verify_own_result.has_value());
+  ASSERT_TRUE(verify_own_result.value());
+
+  auto go_signature =
+      "3045022100a6ffadf76999d30c964a40677788f13c89478550d2013e780fe17c265578cd"
+      "a90220265a6f8162900c1841913f260dc932f3d61db7b08f11cd356289c7aea71f4d12"_unhex;
   auto verify_go_result =
       crypto_provider_->verify(msg_span, go_signature, derived);
   ASSERT_TRUE(verify_go_result.has_value());

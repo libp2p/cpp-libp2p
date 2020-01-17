@@ -21,17 +21,20 @@
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/random_generator.hpp>
 #include <libp2p/crypto/rsa_provider.hpp>
+#include <libp2p/crypto/secp256k1_provider.hpp>
 
 namespace libp2p::crypto {
   CryptoProviderImpl::CryptoProviderImpl(
       std::shared_ptr<random::CSPRNG> random_provider,
       std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider,
       std::shared_ptr<rsa::RsaProvider> rsa_provider,
-      std::shared_ptr<ecdsa::EcdsaProvider> ecdsa_provider)
+      std::shared_ptr<ecdsa::EcdsaProvider> ecdsa_provider,
+      std::shared_ptr<secp256k1::Secp256k1Provider> secp256k1_provider)
       : random_provider_{std::move(random_provider)},
         ed25519_provider_{std::move(ed25519_provider)},
         rsa_provider_{std::move(rsa_provider)},
-        ecdsa_provider_{std::move(ecdsa_provider)} {
+        ecdsa_provider_{std::move(ecdsa_provider)},
+        secp256k1_provider_{std::move(secp256k1_provider)} {
     initialize();
   }
 
@@ -253,7 +256,43 @@ namespace libp2p::crypto {
   }
 
   outcome::result<KeyPair> CryptoProviderImpl::generateSecp256k1() const {
-    return generateEcdsa256WithCurve(Key::Type::Secp256k1, NID_secp256k1);
+    OUTCOME_TRY(secp, secp256k1_provider_->generate());
+
+    auto &&pub = secp.public_key;
+    auto &&priv = secp.private_key;
+    return KeyPair{.publicKey = {{.type = Key::Type::Secp256k1,
+                                  .data = {pub.begin(), pub.end()}}},
+                   .privateKey = {{.type = Key::Type::Secp256k1,
+                                   .data = {priv.begin(), priv.end()}}}};
+  }
+
+  outcome::result<PublicKey> CryptoProviderImpl::deriveSecp256k1(
+      const PrivateKey &key) const {
+    secp256k1::PrivateKey private_key;
+    std::copy_n(key.data.begin(), private_key.size(), private_key.begin());
+    OUTCOME_TRY(secp_pub, secp256k1_provider_->derive(private_key));
+
+    return PublicKey{{key.type, {secp_pub.begin(), secp_pub.end()}}};
+  }
+
+  outcome::result<Buffer> CryptoProviderImpl::signSecp256k1(
+      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
+    secp256k1::PrivateKey priv_key;
+    std::copy_n(private_key.data.begin(), priv_key.size(), priv_key.begin());
+    OUTCOME_TRY(signature, secp256k1_provider_->sign(message, priv_key));
+    return {signature.begin(), signature.end()};
+  }
+
+  outcome::result<bool> CryptoProviderImpl::verifySecp256k1(
+      gsl::span<const uint8_t> message, gsl::span<const uint8_t> signature,
+      const PublicKey &public_key) const {
+    secp256k1::PublicKey secp_pub;
+    std::copy_n(public_key.data.begin(), secp_pub.size(), secp_pub.begin());
+
+    ecdsa::Signature secp_sig;
+    secp_sig.insert(secp_sig.end(), signature.begin(), signature.end());
+
+    return secp256k1_provider_->verify(message, secp_sig, secp_pub);
   }
 
   outcome::result<KeyPair> CryptoProviderImpl::generateEcdsa() const {
@@ -364,7 +403,7 @@ namespace libp2p::crypto {
       case Key::Type::Ed25519:
         return deriveEd25519(private_key);
       case Key::Type::Secp256k1:
-        return detail::deriveSecp256k1(private_key);
+        return deriveSecp256k1(private_key);
       case Key::Type::ECDSA:
         return deriveEcdsa(private_key);
       case Key::Type::UNSPECIFIED:
@@ -398,7 +437,7 @@ namespace libp2p::crypto {
       case Key::Type::Ed25519:
         return signEd25519(message, private_key);
       case Key::Type::Secp256k1:
-        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+        return signSecp256k1(message, private_key);
       case Key::Type::ECDSA:
         return signEcdsa(message, private_key);
       case Key::Type::UNSPECIFIED:
@@ -435,7 +474,7 @@ namespace libp2p::crypto {
       case Key::Type::Ed25519:
         return verifyEd25519(message, signature, public_key);
       case Key::Type::Secp256k1:
-        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+        return verifySecp256k1(message, signature, public_key);
       case Key::Type::ECDSA:
         return verifyEcdsa(message, signature, public_key);
       case Key::Type::UNSPECIFIED:
