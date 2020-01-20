@@ -7,6 +7,7 @@
 #define LIBP2P_CONTENT_IDENTIFIER_CODEC_HPP
 
 #include <libp2p/multi/content_identifier.hpp>
+#include <libp2p/multi/multibase_codec/codecs/base58.hpp>
 
 namespace libp2p::multi {
 
@@ -20,7 +21,8 @@ namespace libp2p::multi {
     enum class EncodeError {
       INVALID_CONTENT_TYPE = 1,
       INVALID_HASH_TYPE,
-      INVALID_HASH_LENGTH
+      INVALID_HASH_LENGTH,
+      VERSION_UNSUPPORTED
     };
 
     enum class DecodeError {
@@ -39,6 +41,18 @@ namespace libp2p::multi {
 
     static outcome::result<ContentIdentifier> decode(
         gsl::span<const uint8_t> bytes);
+
+    /**
+     * @brief Encode CID v0 to string representation
+     * @param cid - input CID for encode
+     * @param encoding - type of the encoding, ignored for CID v0 (always
+     * Base58)
+     * @todo Sergey Kaprovich: FIL-133 add support for CID v1
+     * @return CID string
+     */
+    static outcome::result<std::string> toString(
+        const ContentIdentifier &cid,
+        MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE58);
   };
 
 }  // namespace libp2p::multi
