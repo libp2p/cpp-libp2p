@@ -19,10 +19,16 @@ namespace libp2p::crypto::rsa {
    */
   class RsaProviderImpl : public RsaProvider {
    public:
-    outcome::result<Signature> sign(gsl::span<uint8_t> message,
-                                    const PrivateKey &private_key) const override;
+    outcome::result<KeyPair> generate(RSAKeyType rsa_bitness) const override;
 
-    outcome::result<bool> verify(gsl::span<uint8_t> message,
+    outcome::result<PublicKey> derive(
+        const PrivateKey &private_key) const override;
+
+    outcome::result<Signature> sign(
+        gsl::span<const uint8_t> message,
+        const PrivateKey &private_key) const override;
+
+    outcome::result<bool> verify(gsl::span<const uint8_t> message,
                                  const Signature &signature,
                                  const PublicKey &key) const override;
 

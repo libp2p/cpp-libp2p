@@ -6,9 +6,12 @@
 #include "acceptance/p2p/host/peer/test_peer.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
+#include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
+#include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include "acceptance/p2p/host/peer/tick_counter.hpp"
 #include "acceptance/p2p/host/protocol/client_test_session.hpp"
@@ -23,8 +26,13 @@ Peer::Peer(Peer::Duration timeout)
       random_provider_{std::make_shared<BoostRandomGenerator>()},
       ed25519_provider_{
           std::make_shared<crypto::ed25519::Ed25519ProviderImpl>()},
+      rsa_provider_{std::make_shared<crypto::rsa::RsaProviderImpl>()},
+      ecdsa_provider_{std::make_shared<crypto::ecdsa::EcdsaProviderImpl>()},
+      secp256k1_provider_{
+          std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>()},
       crypto_provider_{std::make_shared<crypto::CryptoProviderImpl>(
-          random_provider_, ed25519_provider_)} {
+          random_provider_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
+          secp256k1_provider_)} {
   EXPECT_OUTCOME_TRUE_MSG(
       keys, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
       "failed to generate keys");
@@ -88,7 +96,8 @@ void Peer::wait() {
 
 Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto crypto_provider = std::make_shared<crypto::CryptoProviderImpl>(
-      random_provider_, ed25519_provider_);
+      random_provider_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
+      secp256k1_provider_);
 
   auto key_validator = std::make_shared<crypto::validator::KeyValidatorImpl>(
       std::move(crypto_provider));
@@ -144,6 +153,6 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto peer_repo = std::make_unique<peer::PeerRepositoryImpl>(
       std::move(addr_repo), std::move(key_repo), std::move(protocol_repo));
 
-  return std::make_shared<host::BasicHost>(idmgr, std::move(network),
-                                           std::move(peer_repo), std::move(bus));
+  return std::make_shared<host::BasicHost>(
+      idmgr, std::move(network), std::move(peer_repo), std::move(bus));
 }

@@ -65,7 +65,7 @@ addtest(rsa_provider_test
     rsa_provider_test.cpp
     )
 target_link_libraries(rsa_provider_test
-    p2p_rsa
+    p2p_rsa_provider
     )
 
 addtest(secp256k1_test

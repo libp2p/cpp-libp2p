@@ -6,12 +6,13 @@
 #ifndef LIBP2P_CRYPTO_PROVIDER_HPP
 #define LIBP2P_CRYPTO_PROVIDER_HPP
 
+#include <vector>
+
 #include <boost/filesystem.hpp>
 #include <gsl/span>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/outcome/outcome.hpp>
-#include <vector>
 
 namespace libp2p::crypto {
   /**
@@ -27,9 +28,12 @@ namespace libp2p::crypto {
     /**
      * @brief generates new key pair of specified type
      * @param key_type key type
+     * @param rsa_bitness specifies the length of RSA key
      * @return new generated key pair of public and private key or error
      */
-    virtual outcome::result<KeyPair> generateKeys(Key::Type key_type) const = 0;
+    virtual outcome::result<KeyPair> generateKeys(
+        Key::Type key_type,
+        common::RSAKeyType rsa_bitness = common::RSAKeyType::RSA2048) const = 0;
 
     /**
      * @brief derives public key from private key
@@ -46,7 +50,8 @@ namespace libp2p::crypto {
      * @return signature bytes
      */
     virtual outcome::result<Buffer> sign(
-        gsl::span<uint8_t> message, const PrivateKey &private_key) const = 0;
+        gsl::span<const uint8_t> message,
+        const PrivateKey &private_key) const = 0;
 
     /**
      * @brief verifies validness of the signature for a given message and public
@@ -56,8 +61,8 @@ namespace libp2p::crypto {
      * @param public_key to validate against
      * @return true - if the signature matches the message and the public key
      */
-    virtual outcome::result<bool> verify(gsl::span<uint8_t> message,
-                                         gsl::span<uint8_t> signature,
+    virtual outcome::result<bool> verify(gsl::span<const uint8_t> message,
+                                         gsl::span<const uint8_t> signature,
                                          const PublicKey &public_key) const = 0;
     /**
      * Generate an ephemeral public key and return a function that will

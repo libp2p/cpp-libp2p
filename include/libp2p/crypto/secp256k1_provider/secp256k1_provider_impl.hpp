@@ -14,14 +14,12 @@
 namespace libp2p::crypto::secp256k1 {
   class Secp256k1ProviderImpl : public Secp256k1Provider {
    public:
-    outcome::result<KeyPair> generateKeyPair() const override;
+    outcome::result<KeyPair> generate() const override;
 
-    outcome::result<PublicKey> derivePublicKey(
-        const PrivateKey &key) const override;
+    outcome::result<PublicKey> derive(const PrivateKey &key) const override;
 
-    outcome::result<Signature> sign(
-        gsl::span<const uint8_t> message,
-        const PrivateKey &key) const override;
+    outcome::result<Signature> sign(gsl::span<const uint8_t> message,
+                                    const PrivateKey &key) const override;
 
     outcome::result<bool> verify(gsl::span<const uint8_t> message,
                                  const Signature &signature,

@@ -5,8 +5,8 @@
 #include <algorithm>
 
 #include <gtest/gtest.h>
-#include "testutil/outcome.hpp"
 #include "libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp"
+#include "testutil/outcome.hpp"
 
 using libp2p::crypto::secp256k1::PrivateKey;
 using libp2p::crypto::secp256k1::PublicKey;
@@ -60,8 +60,7 @@ class Secp256k1ProviderTest : public ::testing::Test {
  */
 TEST_F(Secp256k1ProviderTest, PublicKeyDerivationSuccess) {
   Secp256k1ProviderImpl provider;
-  EXPECT_OUTCOME_TRUE(derivedPublicKey,
-                      provider.derivePublicKey(sample_private_key_));
+  EXPECT_OUTCOME_TRUE(derivedPublicKey, provider.derive(sample_private_key_));
   ASSERT_EQ(derivedPublicKey, sample_public_key_);
 };
 
@@ -83,7 +82,7 @@ TEST_F(Secp256k1ProviderTest, PreGeneratedSignatureVerificationSuccess) {
  * @then Generating key pair, signature and it's verification must be successful
  */
 TEST_F(Secp256k1ProviderTest, GenerateSignatureSuccess) {
-  EXPECT_OUTCOME_TRUE(keyPair, provider_.generateKeyPair());
+  EXPECT_OUTCOME_TRUE(keyPair, provider_.generate());
   EXPECT_OUTCOME_TRUE(signature, provider_.sign(message_, keyPair.private_key));
   EXPECT_OUTCOME_TRUE(
       verificationResult,
@@ -97,8 +96,8 @@ TEST_F(Secp256k1ProviderTest, GenerateSignatureSuccess) {
  * @then Signature for different public key must be invalid
  */
 TEST_F(Secp256k1ProviderTest, VerifySignatureInvalidKeyFailure) {
-  EXPECT_OUTCOME_TRUE(firstKeyPair, provider_.generateKeyPair());
-  EXPECT_OUTCOME_TRUE(secondKeyPair, provider_.generateKeyPair());
+  EXPECT_OUTCOME_TRUE(firstKeyPair, provider_.generate());
+  EXPECT_OUTCOME_TRUE(secondKeyPair, provider_.generate());
   EXPECT_OUTCOME_TRUE(signature,
                       provider_.sign(message_, firstKeyPair.private_key));
   EXPECT_OUTCOME_TRUE(

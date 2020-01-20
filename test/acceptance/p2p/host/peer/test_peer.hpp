@@ -34,6 +34,9 @@ class Peer {
   using Echo = libp2p::protocol::Echo;
   using BoostRandomGenerator = libp2p::crypto::random::BoostRandomGenerator;
   using Ed25519Provider = libp2p::crypto::ed25519::Ed25519Provider;
+  using RsaProvider = libp2p::crypto::rsa::RsaProvider;
+  using EcdsaProvider = libp2p::crypto::ecdsa::EcdsaProvider;
+  using Secp256k1Provider = libp2p::crypto::secp256k1::Secp256k1Provider;
   using CryptoProvider = libp2p::crypto::CryptoProvider;
 
   using Context = boost::asio::io_context;
@@ -80,6 +83,9 @@ class Peer {
   sptr<Echo> echo_;                             ///< echo protocol
   sptr<BoostRandomGenerator> random_provider_;  ///< random provider
   sptr<Ed25519Provider> ed25519_provider_;      ///< ed25519 provider
+  sptr<RsaProvider> rsa_provider_;              ///< rsa provider
+  sptr<EcdsaProvider> ecdsa_provider_;          ///< ecdsa provider
+  sptr<Secp256k1Provider> secp256k1_provider_;  ///< secp256k1 provider
   sptr<CryptoProvider> crypto_provider_;        ///< crypto provider
 };
 

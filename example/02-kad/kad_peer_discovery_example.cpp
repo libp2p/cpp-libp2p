@@ -29,7 +29,7 @@ namespace libp2p::protocol::kademlia::example {
         .value();
   }
 
-  const KademliaConfig& getConfig() {
+  const KademliaConfig &getConfig() {
     static KademliaConfig config = ([] {
       KademliaConfig c;
       c.randomWalk.delay = 5s;
@@ -45,7 +45,7 @@ namespace libp2p::protocol::kademlia::example {
       std::shared_ptr<KadImpl> kad;
       std::string listen_to;
       std::string connect_to;
-      std::optional<libp2p::peer::PeerId> find_id;
+      boost::optional<libp2p::peer::PeerId> find_id;
       Scheduler::Handle htimer;
       Scheduler::Handle hbootstrap;
       bool found = false;
@@ -53,13 +53,13 @@ namespace libp2p::protocol::kademlia::example {
       bool request_sent = false;
 
       Host(size_t i, std::shared_ptr<Scheduler> sch, PerHostObjects obj)
-        : index(i), o(std::move(obj))
+          : index(i),
+            o(std::move(obj))
 
       {
-        kad = std::make_shared<KadImpl>(
-            o.host, std::move(sch), o.routing_table,
-            createDefaultValueStoreBackend(), getConfig()
-        );
+        kad = std::make_shared<KadImpl>(o.host, std::move(sch), o.routing_table,
+                                        createDefaultValueStoreBackend(),
+                                        getConfig());
       }
 
       void checkPeers() {
@@ -90,7 +90,6 @@ namespace libp2p::protocol::kademlia::example {
         kad->start(true);
       }
 
-
       void connect() {
         if (connect_to.empty())
           return;
@@ -100,8 +99,10 @@ namespace libp2p::protocol::kademlia::example {
 
       void findPeer(const libp2p::peer::PeerId &id) {
         find_id = id;
-        htimer = kad->scheduler().schedule(20000, [this] { onFindPeerTimer(); });
-        hbootstrap = kad->scheduler().schedule(100, [this] { onBootstrapTimer(); });
+        htimer =
+            kad->scheduler().schedule(20000, [this] { onFindPeerTimer(); });
+        hbootstrap =
+            kad->scheduler().schedule(100, [this] { onBootstrapTimer(); });
       }
 
       void onBootstrapTimer() {
@@ -110,7 +111,7 @@ namespace libp2p::protocol::kademlia::example {
           request_sent =
               kad->findPeer(genRandomPeerId(*o.key_gen, *o.key_marshaller),
                             [this](const libp2p::peer::PeerId &peer,
-                                   Kad::FindPeerQueryResult res) { //NOLINT
+                                   Kad::FindPeerQueryResult res) {  // NOLINT
                               logger->info(
                                   "bootstrap return from findPeer, i={}, "
                                   "peer={} peers={} ({})",
@@ -151,8 +152,8 @@ namespace libp2p::protocol::kademlia::example {
           logger->info("onFindPeer: i={}, res: success={}, peers={}", index,
                        res.success, res.closer_peers.size());
 
-        htimer =
-            kad->scheduler().schedule(1000, [this, peers = std::move(res.closer_peers)] {
+        htimer = kad->scheduler().schedule(
+            1000, [this, peers = std::move(res.closer_peers)] {
               kad->findPeer(find_id.value(),
                             [this](const libp2p::peer::PeerId &peer,
                                    Kad::FindPeerQueryResult res) {
@@ -172,7 +173,7 @@ namespace libp2p::protocol::kademlia::example {
 
     std::vector<Host> hosts;
 
-    Hosts(size_t n, const std::shared_ptr<Scheduler>& sch) {
+    Hosts(size_t n, const std::shared_ptr<Scheduler> &sch) {
       hosts.reserve(n);
 
       for (size_t i = 0; i < n; ++i) {
@@ -182,7 +183,7 @@ namespace libp2p::protocol::kademlia::example {
       makeConnectTopologyCircle();
     }
 
-    void newHost(const std::shared_ptr<Scheduler>& sch) {
+    void newHost(const std::shared_ptr<Scheduler> &sch) {
       size_t index = hosts.size();
       PerHostObjects o;
       createPerHostObjects(o, getConfig());
@@ -264,9 +265,9 @@ int main(int argc, char *argv[]) {
     size_t hosts_count = 6;
     bool kad_log_debug = false;
     if (argc > 1)
-      hosts_count = atoi(argv[1]); //NOLINT
+      hosts_count = atoi(argv[1]);  // NOLINT
     if (argc > 2)
-      kad_log_debug = (atoi(argv[2]) != 0); //NOLINT
+      kad_log_debug = (atoi(argv[2]) != 0);  // NOLINT
 
     x::setupLoggers(kad_log_debug);
 
