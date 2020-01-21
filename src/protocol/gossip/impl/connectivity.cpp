@@ -36,7 +36,10 @@ namespace libp2p::protocol::gossip {
         host_(std::move(host)),
         msg_receiver_(std::move(msg_receiver)),
         connected_cb_(std::move(on_connected)),
-        log_("gossip", "Connectivity", this) {}
+        log_("gossip") {
+    log_.setInstanceName("Connectivity",
+                         host_->getPeerInfo().id.toBase58().substr(46));
+  }
 
   Connectivity::~Connectivity() {
     stop();
@@ -90,6 +93,10 @@ namespace libp2p::protocol::gossip {
 
   void Connectivity::addBootstrapPeer(
       peer::PeerId id, boost::optional<multi::Multiaddress> address) {
+    if (id == host_->getId()) {
+      return;
+    }
+
     auto ctx_found = all_peers_.find(id);
 
     PeerContextPtr ctx;
@@ -117,7 +124,7 @@ namespace libp2p::protocol::gossip {
 
     if (!ctx->writer) {
       // not yet connected, will be flushed next time
-      assert(connecting_peers_.contains(ctx->peer_id));
+      // TODO(artem): state: assert(connecting_peers_.contains(ctx->peer_id));
       return;
     }
 
@@ -175,13 +182,14 @@ namespace libp2p::protocol::gossip {
       all_peers_.insert(ctx);
 
       // make outbound stream over existing connection
-      dial(ctx, true);
+      // TODO(artem) dial(ctx, true);
+
     } else {
       ctx = std::move(ctx_found.value());
-      if (!ctx->writer && !connecting_peers_.contains(ctx->peer_id)) {
-        // not connected or connecting
-        dial(ctx, true);
-      }
+      //      if (!ctx->writer && !connecting_peers_.contains(ctx->peer_id)) {
+      //        // not connected or connecting
+      //        dial(ctx, true);
+      //      }
     }
 
     // currently we prefer newer streams, but avoid duplicate ones,
@@ -192,10 +200,31 @@ namespace libp2p::protocol::gossip {
       readers_.insert(ctx);
     }
 
-    ctx->reader =
-        std::make_shared<StreamReader>(config_, *scheduler_, on_reader_event_,
-                                       *msg_receiver_, std::move(stream), ctx);
+    ctx->reader = std::make_shared<StreamReader>(
+        config_, *scheduler_, on_reader_event_, *msg_receiver_, stream, ctx);
     ctx->reader->read();
+
+    if (!connecting_peers_.contains(ctx->peer_id)
+        && !connected_peers_.contains(ctx->peer_id)) {
+      // not connected or connecting
+      if (!ctx->writer) {
+        ctx->writer = std::make_shared<StreamWriter>(
+            config_, *scheduler_, on_writer_event_, std::move(stream), ctx);
+      }
+      if (ctx->banned_until != 0) {
+        // unban outbound connection only if inbound one exists
+        unban(ctx);
+      }
+
+      if (!ctx->message_to_send) {
+        ctx->message_to_send = std::make_shared<MessageBuilder>();
+      } else {
+        flush(ctx);
+      }
+
+      connected_peers_.insert(ctx);
+      connected_cb_(true, ctx);
+    }
   }
 
   void Connectivity::dial(const PeerContextPtr &ctx,
@@ -214,9 +243,7 @@ namespace libp2p::protocol::gossip {
 
     peer::PeerInfo pi = host_->getPeerRepository().getPeerInfo(ctx->peer_id);
     if (ctx->dial_to) {
-      if (!contains(pi.addresses, ctx->dial_to.value())) {
-        pi.addresses.push_back(ctx->dial_to.value());
-      }
+      pi.addresses = {ctx->dial_to.value()};
     }
 
     auto can_connect =
@@ -280,8 +307,6 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    log_.debug("outbound stream connected for {}", ctx->str);
-
     auto ctx_found = connecting_peers_.erase(ctx->peer_id);
     if (!ctx_found) {
       log_.error("cannot find connecting peer {}", ctx->str);
@@ -295,6 +320,8 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
+    log_.debug("outbound stream connected for {}", ctx->str);
+
     ctx->writer =
         std::make_shared<StreamWriter>(config_, *scheduler_, on_writer_event_,
                                        std::move(rstream.value()), ctx);
@@ -305,8 +332,8 @@ namespace libp2p::protocol::gossip {
       flush(ctx);
     }
 
-    connected_cb_(true, ctx);
     connected_peers_.insert(ctx);
+    connected_cb_(true, ctx);
   }
 
   void Connectivity::onReaderEvent(const PeerContextPtr &from,

@@ -14,11 +14,12 @@ namespace libp2p::protocol::gossip {
 
   RemoteSubscriptions::RemoteSubscriptions(const Config &config,
                                            Connectivity &connectivity,
-                                           Scheduler &scheduler)
+                                           Scheduler &scheduler,
+                                           SubLogger &log)
       : config_(config),
         connectivity_(connectivity),
         scheduler_(scheduler),
-        log_("gossip", "Subs", &connectivity_) {}
+        log_(log) {}
 
   void RemoteSubscriptions::onSelfSubscribed(bool subscribed,
                                              const TopicId &topic) {
@@ -147,7 +148,7 @@ namespace libp2p::protocol::gossip {
     }
     if (create_if_not_exist) {
       auto [it, _] = table_.emplace(
-          topic, TopicSubscriptions(topic, config_, connectivity_));
+          topic, TopicSubscriptions(topic, config_, connectivity_, log_));
       TopicSubscriptions &item = it->second;
       connectivity_.getConnectedPeers().selectIf(
           [&item](const PeerContextPtr &ctx) { item.onPeerSubscribed(ctx); },

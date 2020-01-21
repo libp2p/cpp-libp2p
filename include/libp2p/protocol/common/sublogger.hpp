@@ -16,7 +16,7 @@ namespace libp2p::protocol {
   /// instances
   class SubLogger {
    public:
-    template <typename T>
+    template <typename T=int>
     explicit SubLogger(const std::string &tag,
                        spdlog::string_view_t prefix = "", T instance = T{})
         : log_(common::createLogger(tag)) {
@@ -27,9 +27,9 @@ namespace libp2p::protocol {
     void setInstanceName(spdlog::string_view_t prefix, T instance = T{}) {
       if constexpr (std::is_pointer<T>::value
                     and not std::is_same<T, const char *>::value) {
-        prefix_ = fmt::format("{} {} :", prefix, (void *)instance);  // NOLINT;
+        prefix_ = fmt::format("{} {}: ", prefix, (void *)instance);  // NOLINT;
       } else {
-        prefix_ = fmt::format("{} {} :", prefix, instance);
+        prefix_ = fmt::format("{} {}: ", prefix, instance);
       }
       prefix_size_ = prefix_.size();
     }

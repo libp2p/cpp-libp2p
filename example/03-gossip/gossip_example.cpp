@@ -8,52 +8,18 @@
 #include <type_traits>
 
 #include <spdlog/fmt/fmt.h>
+
 #include <libp2p/protocol/common/asio/asio_scheduler.hpp>
 #include <libp2p/protocol/gossip/gossip.hpp>
 #include <libp2p/protocol/gossip/impl/common.hpp>
 
 #include "factory.hpp"
-
-// wraps member fn via lambda
-template <typename R, typename... Args, typename T>
-auto bind_memfn(T *object, R (T::*fn)(Args...)) {
-  return [object, fn](Args... args) {
-    return (object->*fn)(std::forward<Args>(args)...);
-  };
-}
-#define MEMFN_CALLBACK(M) \
-  bind_memfn(this, &std::remove_pointer<decltype(this)>::type::M)
-
-template <typename R, typename... Args, typename T, typename S>
-auto bind_memfn_s(T *object, R (T::*fn)(const S &state, Args...),
-                  const S &state) {
-  return [object, fn, state = state](Args... args) {
-    return (object->*fn)(state, std::forward<Args>(args)...);
-  };
-}
-#define MEMFN_CALLBACK_S(M, S) \
-  bind_memfn_s(this, &std::remove_pointer<decltype(this)>::type::M, S)
+#include "utility.hpp"
 
 namespace {
 
+  // local logger
   libp2p::common::Logger logger;
-
-  void setupLoggers(bool log_debug) {
-    static const char *kPattern = "%L %T.%e %v";
-
-    logger = libp2p::common::createLogger("gossip-example");
-    logger->set_pattern(kPattern);
-
-    auto gossip_logger = libp2p::common::createLogger("gossip");
-    gossip_logger->set_pattern(kPattern);
-    if (log_debug) {
-      gossip_logger->set_level(spdlog::level::debug);
-    }
-
-    auto debug_logger = libp2p::common::createLogger("debug");
-    debug_logger->set_pattern(kPattern);
-    debug_logger->set_level(spdlog::level::trace);
-  }
 
 }  // namespace
 
@@ -73,11 +39,6 @@ namespace libp2p::protocol::gossip::example {
       return c;
     })();
     return config;
-  }
-
-  std::string toString(const ByteArray &buf) {
-    // NOLINTNEXTLINE
-    return std::string(reinterpret_cast<const char *>(buf.data()), buf.size());
   }
 
   multi::Multiaddress createAddress(size_t instance_no) {
@@ -344,7 +305,7 @@ int main(int argc, char *argv[]) {
     if (argc > 2)
       log_debug = (atoi(argv[2]) != 0);  // NOLINT
 
-    setupLoggers(log_debug);
+    logger = example::setupLoggers(log_debug);
 
     // create objects common to all hosts
     auto io = std::make_shared<boost::asio::io_context>();

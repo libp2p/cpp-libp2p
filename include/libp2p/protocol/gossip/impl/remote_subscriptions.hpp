@@ -6,8 +6,8 @@
 #ifndef LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP
 #define LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP
 
-#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
+#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/gossip/impl/topic_subscriptions.hpp>
 
 namespace libp2p::protocol::gossip {
@@ -18,7 +18,7 @@ namespace libp2p::protocol::gossip {
     /// Ctor. Dependencies are passed by ref becaus this object is a part of
     /// GossipCore and lives only within its scope
     RemoteSubscriptions(const Config &config, Connectivity &connectivity,
-                        Scheduler &scheduler);
+                        Scheduler &scheduler, SubLogger &log);
 
     /// This host subscribes or unsubscribes
     void onSelfSubscribed(bool subscribed, const TopicId &topic);
@@ -44,7 +44,7 @@ namespace libp2p::protocol::gossip {
 
     /// Forwards message to its topics. If 'from' is not set then the message is
     /// published locally
-    void onNewMessage(const boost::optional<PeerContextPtr>& from,
+    void onNewMessage(const boost::optional<PeerContextPtr> &from,
                       const TopicMessage::Ptr &msg, const MessageId &msg_id);
 
     /// Periodic job needed to update meshes and shift "I have" caches
@@ -63,7 +63,7 @@ namespace libp2p::protocol::gossip {
     // by removing items not subscribed to locally. LRU(???)
     std::unordered_map<TopicId, TopicSubscriptions> table_;
 
-    SubLogger log_;
+    SubLogger &log_;
   };
 
 }  // namespace libp2p::protocol::gossip

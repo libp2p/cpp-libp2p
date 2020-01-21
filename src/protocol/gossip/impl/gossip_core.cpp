@@ -31,8 +31,10 @@ namespace libp2p::protocol::gossip {
             }
         )),
         msg_seq_(scheduler_->now()),
-        log_("gossip", "Gossip", this)
-  {}
+        log_("gossip")
+  {
+    log_.setInstanceName("Gossip", local_peer_id_.toBase58().substr(46));
+  }
   // clang-format on
 
   void GossipCore::addBootstrapPeer(
@@ -65,7 +67,7 @@ namespace libp2p::protocol::gossip {
     }
 
     remote_subscriptions_ = std::make_shared<RemoteSubscriptions>(
-        config_, *connectivity_, *scheduler_);
+        config_, *connectivity_, *scheduler_, log_);
 
     started_ = true;
 
@@ -242,6 +244,7 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::onPeerConnection(bool connected, const PeerContextPtr &ctx) {
     assert(started_);
+
 
     if (connected) {
       // notify the new peer about all topics we subscribed to

@@ -17,10 +17,9 @@ namespace libp2p::protocol::gossip::example {
   /// reused between all gossip and host instances
   std::pair<std::shared_ptr<Host>, std::shared_ptr<Gossip>> createHostAndGossip(
       Config config, std::shared_ptr<Scheduler> scheduler,
-      std::shared_ptr<boost::asio::io_context> io);
+      std::shared_ptr<boost::asio::io_context> io,
+      boost::optional<crypto::KeyPair> keypair = boost::none);
 
-  /// Parses listen address and peer id given as uri
-  boost::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str);
 }  // namespace libp2p::protocol::gossip::example
 
 #endif  // LIBP2P_GOSSIP_EXAMPLE_FACTORY_HPP

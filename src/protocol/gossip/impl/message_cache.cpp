@@ -12,7 +12,7 @@
 #include <boost/multi_index_container.hpp>
 
 #include <libp2p/common/hexutil.hpp>
-#define TRACE_ENABLED 1
+#define TRACE_ENABLED 0
 #include <libp2p/protocol/common/trace.hpp>
 
 namespace libp2p::protocol::gossip {
