@@ -20,6 +20,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, ContentIdentifierCodec::EncodeError,
       return "Hash length is invalid; Must be 32 bytes for sha256 in version 0";
     case E::INVALID_HASH_TYPE:
       return "Hash type is invalid; Must be sha256 in version 0";
+    case E::VERSION_UNSUPPORTED:
+      return "Content identifier version unsupported";
   }
   return "Unknown error";
 }
@@ -114,5 +116,20 @@ namespace libp2p::multi {
       return DecodeError::MALFORMED_VERSION;
     }
     return DecodeError::RESERVED_VERSION;
+  }
+
+  outcome::result<std::string> ContentIdentifierCodec::toString(
+      const ContentIdentifier &cid, MultibaseCodec::Encoding encoding) {
+    std::ignore = encoding;
+    std::string result;
+    OUTCOME_TRY(cid_bytes, encode(cid));
+    switch (cid.version) {
+      case ContentIdentifier::Version::V0:
+        result = detail::encodeBase58(cid_bytes);
+        break;
+      default:
+        return EncodeError::VERSION_UNSUPPORTED;
+    }
+    return result;
   }
 }  // namespace libp2p::multi

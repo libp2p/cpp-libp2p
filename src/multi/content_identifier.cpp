@@ -17,7 +17,7 @@ namespace libp2p::multi {
         content_type{content_type},
         content_address{std::move(content_address)} {}
 
-  std::string ContentIdentifier::toPrettyString(const std::string &base) {
+  std::string ContentIdentifier::toPrettyString(const std::string &base) const {
     /// TODO(Harrm) FIL-14: hash type is a subset of multicodec type, better move them
     /// to one place
     std::string hash_type = MulticodecType::getName(

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <boost/operators.hpp>
+#include <libp2p/multi/multibase_codec.hpp>
 #include <libp2p/multi/multicodec_type.hpp>
 #include <libp2p/multi/multihash.hpp>
 
@@ -36,7 +37,7 @@ namespace libp2p::multi {
      * @param base is a human-readable multibase prefix
      * @returns human readable representation of the CID
      */
-    std::string toPrettyString(const std::string &base);
+    std::string toPrettyString(const std::string &base) const;
 
     bool operator==(const ContentIdentifier &c) const;
     bool operator<(const ContentIdentifier &c) const;
