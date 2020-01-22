@@ -8,6 +8,10 @@
 #include <cassert>
 
 #include <libp2p/protocol/gossip/impl/message_builder.hpp>
+#include <libp2p/protocol/gossip/impl/peer_context.hpp>
+
+#define TRACE_ENABLED 1
+#include <libp2p/protocol/common/trace.hpp>
 
 namespace libp2p::protocol::gossip {
 
@@ -73,6 +77,9 @@ namespace libp2p::protocol::gossip {
       feedback_(peer_, res.error());
       return;
     }
+
+    TRACE("written {} bytes to peer {}", res.value(), peer_->str);
+
     if (writing_bytes_ != res.value()) {
       feedback_(peer_, Error::MESSAGE_WRITE_ERROR);
       return;

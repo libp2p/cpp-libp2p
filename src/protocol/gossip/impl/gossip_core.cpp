@@ -209,7 +209,7 @@ namespace libp2p::protocol::gossip {
     MessageId msg_id = createMessageId(*msg);
     if (!msg_cache_.insert(msg, msg_id)) {
       // already there, ignore
-      log_.debug("ignoring message from peer {}", from->str);
+      log_.debug("ignoring message from peer {}, already in cache", from->str);
       return;
     }
 
@@ -221,6 +221,8 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::onMessageEnd(const PeerContextPtr &from) {
     assert(started_);
+
+    log_.debug("finished dispatching message from peer {}", from->str);
 
     // Apply immediate send operation to affected peers
     connectivity_->flush();
@@ -247,6 +249,7 @@ namespace libp2p::protocol::gossip {
 
 
     if (connected) {
+      log_.debug("peer {} connected", ctx->str);
       // notify the new peer about all topics we subscribed to
       if (!local_subscriptions_->subscribedTo().empty()) {
         for (auto &local_sub : local_subscriptions_->subscribedTo()) {
@@ -256,6 +259,7 @@ namespace libp2p::protocol::gossip {
         connectivity_->flush();
       }
     } else {
+      log_.debug("peer {} disconnected", ctx->str);
       remote_subscriptions_->onPeerDisconnected(ctx);
     }
   }

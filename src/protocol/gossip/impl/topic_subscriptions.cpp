@@ -178,6 +178,9 @@ namespace libp2p::protocol::gossip {
 
   void TopicSubscriptions::onPrune(const PeerContextPtr &p) {
     mesh_peers_.erase(p->peer_id);
+    if (p->subscribed_to.count(topic_) != 0) {
+      subscribed_peers_.insert(p);
+    }
   }
 
   void TopicSubscriptions::addToMesh(const PeerContextPtr &p) {
@@ -186,6 +189,8 @@ namespace libp2p::protocol::gossip {
     p->message_to_send->addGraft(topic_);
     connectivity_.peerIsWritable(p, false);
     mesh_peers_.insert(p);
+    log_.debug("peer {} added to mesh (size={}) for topic {}", p->str,
+               mesh_peers_.size(), topic_);
   }
 
   void TopicSubscriptions::removeFromMesh(const PeerContextPtr &p) {
@@ -194,6 +199,8 @@ namespace libp2p::protocol::gossip {
     p->message_to_send->addPrune(topic_);
     connectivity_.peerIsWritable(p, false);
     subscribed_peers_.insert(p);
+    log_.debug("peer {} removed from mesh (size={}) for topic {}", p->str,
+               mesh_peers_.size(), topic_);
   }
 
 }  // namespace libp2p::protocol::gossip

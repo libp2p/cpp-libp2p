@@ -43,12 +43,14 @@ namespace libp2p::protocol::gossip {
     if (subscribed) {
       if (!peer->subscribed_to.insert(topic).second) {
         // request from wire, already subscribed, ignoring double subscription
+        log_.debug("peer {} already subscribed to {}", peer->str, topic);
         return;
       }
       log_.debug("peer {} subscribing to {}", peer->str, topic);
     } else {
       if (peer->subscribed_to.erase(topic) == 0) {
         // was not subscribed actually, ignore
+        log_.debug("peer {} was not subscribed to {}", peer->str, topic);
         return;
       }
       log_.debug("peer {} unsubscribing from {}", peer->str, topic);

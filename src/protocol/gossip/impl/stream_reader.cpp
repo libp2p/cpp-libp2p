@@ -9,6 +9,10 @@
 
 #include <libp2p/basic/varint_reader.hpp>
 #include <libp2p/protocol/gossip/impl/message_parser.hpp>
+#include <libp2p/protocol/gossip/impl/peer_context.hpp>
+
+#define TRACE_ENABLED 1
+#include <libp2p/protocol/common/trace.hpp>
 
 namespace libp2p::protocol::gossip {
 
@@ -96,6 +100,9 @@ namespace libp2p::protocol::gossip {
       feedback_(peer_, res.error());
       return;
     }
+
+    TRACE("read {} bytes from peer {}", res.value(), peer_->str);
+
     if (buffer_->size() != res.value()) {
       feedback_(peer_, Error::MESSAGE_PARSE_ERROR);
       return;
