@@ -18,6 +18,15 @@ namespace libp2p::crypto {
   namespace hmac {
     class HmacProvider;
   }
+  namespace rsa {
+    class RsaProvider;
+  }
+  namespace ecdsa {
+    class EcdsaProvider;
+  }
+  namespace secp256k1 {
+    class Secp256k1Provider;
+  }
 
   class CryptoProviderImpl : public CryptoProvider {
    public:
@@ -31,18 +40,22 @@ namespace libp2p::crypto {
     explicit CryptoProviderImpl(
         std::shared_ptr<random::CSPRNG> random_provider,
         std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider,
+        std::shared_ptr<rsa::RsaProvider> rsa_provider,
+        std::shared_ptr<ecdsa::EcdsaProvider> ecdsa_provider,
+        std::shared_ptr<secp256k1::Secp256k1Provider> secp256k1_provider,
         std::shared_ptr<hmac::HmacProvider> hmac_provider);
 
-    outcome::result<KeyPair> generateKeys(Key::Type key_type) const override;
+    outcome::result<KeyPair> generateKeys(
+        Key::Type key_type, common::RSAKeyType rsa_bitness) const override;
 
     outcome::result<PublicKey> derivePublicKey(
         const PrivateKey &private_key) const override;
 
-    outcome::result<Buffer> sign(gsl::span<uint8_t> message,
+    outcome::result<Buffer> sign(gsl::span<const uint8_t> message,
                                  const PrivateKey &private_key) const override;
 
-    outcome::result<bool> verify(gsl::span<uint8_t> message,
-                                 gsl::span<uint8_t> signature,
+    outcome::result<bool> verify(gsl::span<const uint8_t> message,
+                                 gsl::span<const uint8_t> signature,
                                  const PublicKey &public_key) const override;
 
     outcome::result<EphemeralKeyPair> generateEphemeralKeyPair(
@@ -54,30 +67,50 @@ namespace libp2p::crypto {
 
    private:
     void initialize();
+    static std::function<outcome::result<Buffer>(Buffer)>
+    prepareSharedSecretGenerator(int curve_nid, Buffer own_private_key);
 
-    //    outcome::result<KeyPair> generateRsa(common::RSAKeyType key_type)
-    //    const;
-    auto generateEd25519() const -> outcome::result<KeyPair>;
-    static auto generateSecp256k1() -> outcome::result<KeyPair>;
-    static auto generateEcdsa() -> outcome::result<KeyPair>;
+    // RSA
+    outcome::result<KeyPair> generateRsa(common::RSAKeyType rsa_bitness) const;
+    outcome::result<PublicKey> deriveRsa(const PrivateKey &key) const;
+    outcome::result<Buffer> signRsa(gsl::span<const uint8_t> message,
+                                    const PrivateKey &private_key) const;
+    outcome::result<bool> verifyRsa(gsl::span<const uint8_t> message,
+                                    gsl::span<const uint8_t> signature,
+                                    const PublicKey &public_key) const;
 
-    auto deriveEd25519(const PrivateKey &key) const
-        -> outcome::result<PublicKey>;
-    auto signEd25519(gsl::span<uint8_t> message,
-                     const PrivateKey &private_key) const
-        -> outcome::result<Buffer>;
-    auto verifyEd25519(gsl::span<uint8_t> message, gsl::span<uint8_t> signature,
-                       const PublicKey &public_key) const
-        -> outcome::result<bool>;
+    // Ed25519
+    outcome::result<KeyPair> generateEd25519() const;
+    outcome::result<PublicKey> deriveEd25519(const PrivateKey &key) const;
+    outcome::result<Buffer> signEd25519(gsl::span<const uint8_t> message,
+                                        const PrivateKey &private_key) const;
+    outcome::result<bool> verifyEd25519(gsl::span<const uint8_t> message,
+                                        gsl::span<const uint8_t> signature,
+                                        const PublicKey &public_key) const;
 
-    static auto generateEcdsa256WithCurve(Key::Type key_type, int curve_nid)
-        -> outcome::result<KeyPair>;
-    static auto prepareSharedSecretGenerator(int curve_nid,
-                                             Buffer own_private_key)
-        -> std::function<outcome::result<Buffer>(Buffer)>;
+    // Secp256k1
+    outcome::result<KeyPair> generateSecp256k1() const;
+    outcome::result<PublicKey> deriveSecp256k1(const PrivateKey &key) const;
+    outcome::result<Buffer> signSecp256k1(gsl::span<const uint8_t> message,
+                                          const PrivateKey &private_key) const;
+    outcome::result<bool> verifySecp256k1(gsl::span<const uint8_t> message,
+                                          gsl::span<const uint8_t> signature,
+                                          const PublicKey &public_key) const;
+
+    // ECDSA
+    outcome::result<KeyPair> generateEcdsa() const;
+    outcome::result<PublicKey> deriveEcdsa(const PrivateKey &key) const;
+    outcome::result<Buffer> signEcdsa(gsl::span<const uint8_t> message,
+                                      const PrivateKey &private_key) const;
+    outcome::result<bool> verifyEcdsa(gsl::span<const uint8_t> message,
+                                      gsl::span<const uint8_t> signature,
+                                      const PublicKey &public_key) const;
 
     std::shared_ptr<random::CSPRNG> random_provider_;
     std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider_;
+    std::shared_ptr<rsa::RsaProvider> rsa_provider_;
+    std::shared_ptr<ecdsa::EcdsaProvider> ecdsa_provider_;
+    std::shared_ptr<secp256k1::Secp256k1Provider> secp256k1_provider_;
     std::shared_ptr<hmac::HmacProvider> hmac_provider_;
   };
 }  // namespace libp2p::crypto

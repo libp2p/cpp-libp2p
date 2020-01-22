@@ -10,12 +10,12 @@
 
 #include <memory>
 
+#include "libp2p/crypto/common_functions.hpp"
 #include "libp2p/crypto/error.hpp"
 #include "libp2p/crypto/sha/sha256.hpp"
-#include "libp2p/crypto/common_functions.hpp"
 
 namespace libp2p::crypto::secp256k1 {
-  outcome::result<KeyPair> Secp256k1ProviderImpl::generateKeyPair() const {
+  outcome::result<KeyPair> Secp256k1ProviderImpl::generate() const {
     PublicKey public_key{};
     PrivateKey private_key{};
     std::shared_ptr<EC_KEY> key{EC_KEY_new_by_curve_name(NID_secp256k1),
@@ -39,7 +39,7 @@ namespace libp2p::crypto::secp256k1 {
     return KeyPair{private_key, public_key};
   }
 
-  outcome::result<PublicKey> Secp256k1ProviderImpl::derivePublicKey(
+  outcome::result<PublicKey> Secp256k1ProviderImpl::derive(
       const PrivateKey &key) const {
     OUTCOME_TRY(private_key, bytesToPrivateKey(key));
     PublicKey public_key{};

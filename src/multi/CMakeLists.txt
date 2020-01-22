@@ -42,4 +42,5 @@ target_link_libraries(p2p_cid
     p2p_multihash
     p2p_sha
     p2p_uvarint
+    p2p_multibase_codec
     )

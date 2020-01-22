@@ -8,11 +8,14 @@
 
 // implementations
 #include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
+#include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
+#include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
+#include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/muxer/mplex.hpp>
 #include <libp2p/muxer/yamux.hpp>
@@ -77,9 +80,17 @@ namespace libp2p::protocol::kademlia::example {
       auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();
       auto ed25519_provider =
           std::make_shared<crypto::ed25519::Ed25519ProviderImpl>();
+      auto rsa_provider = std::make_shared<crypto::rsa::RsaProviderImpl>();
+      auto ecdsa_provider =
+          std::make_shared<crypto::ecdsa::EcdsaProviderImpl>();
+      auto secp256k1_provider =
+          std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>();
       auto hmac_provider = std::make_shared<crypto::hmac::HmacProviderImpl>();
-      auto crypto_provider = std::make_shared<crypto::CryptoProviderImpl>(
-          csprng, ed25519_provider, hmac_provider);
+
+      std::shared_ptr<crypto::CryptoProvider> crypto_provider =
+          std::make_shared<crypto::CryptoProviderImpl>(
+              csprng, ed25519_provider, rsa_provider, ecdsa_provider,
+              secp256k1_provider, hmac_provider);
       auto validator = std::make_shared<crypto::validator::KeyValidatorImpl>(
           crypto_provider);
 
