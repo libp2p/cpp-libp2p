@@ -577,13 +577,18 @@ namespace libp2p::crypto {
     }
 
     auto iter = result.begin();
-    Buffer k1_iv{iter, iter += iv_size};
-    Buffer k1_cipher_key{iter, iter += cipher_key_size};
-    Buffer k1_mac_key{iter, iter += hmac_key_size};
+    Buffer k1_iv{iter, iter + iv_size};
+    iter += iv_size;
+    Buffer k1_cipher_key{iter, iter + cipher_key_size};
+    iter += cipher_key_size;
+    Buffer k1_mac_key{iter, iter + hmac_key_size};
+    iter += hmac_key_size;
 
-    Buffer k2_iv{iter, iter += iv_size};
-    Buffer k2_cipher_key{iter, iter += cipher_key_size};
-    Buffer k2_mac_key{iter, iter += hmac_key_size};
+    Buffer k2_iv{iter, iter + iv_size};
+    iter += iv_size;
+    Buffer k2_cipher_key{iter, iter + cipher_key_size};
+    iter += cipher_key_size;
+    Buffer k2_mac_key{iter, iter + hmac_key_size};
 
     return std::make_pair(StretchedKey{.iv = std::move(k1_iv),
                                        .cipher_key = std::move(k1_cipher_key),
