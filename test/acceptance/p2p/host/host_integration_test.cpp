@@ -30,6 +30,7 @@ struct HostIntegrationTestConfig {
   Duration future_timeout;     ///< how long to wait to obtain peer info
   Duration system_timeout;  ///< how long to wait before starting clients after
                             ///< all peer info obtained
+  bool secured;             ///< use SECIO if true, otherwise Plaintext
 };
 
 /*
@@ -61,7 +62,7 @@ struct HostIntegrationTest
  */
 TEST_P(HostIntegrationTest, InteractAllToAllSuccess) {
   const auto [peer_count, ping_times, start_port, timeout, future_timeout,
-              system_timeout] = GetParam();
+              system_timeout, secured] = GetParam();
   const auto addr_prefix = "/ip4/127.0.0.1/tcp/";
   testutil::MultiaddressGenerator ma_generator(addr_prefix, start_port);
 
@@ -74,7 +75,7 @@ TEST_P(HostIntegrationTest, InteractAllToAllSuccess) {
     auto promise = std::make_shared<PeerPromise>();
     peerinfo_futures.push_back(promise->get_future());
 
-    auto peer = std::make_shared<Peer>(timeout);
+    auto peer = std::make_shared<Peer>(timeout, secured);
     auto ma = ma_generator.nextMultiaddress();
     peer->startServer(ma, std::move(promise));
     peers.push_back(std::move(peer));
@@ -120,5 +121,7 @@ namespace {
 INSTANTIATE_TEST_CASE_P(AllTestCases, HostIntegrationTest,
                         ::testing::Values(
                             // ports are not freed, so new ports each time
-                            Config{1u, 1u, 40510u, 2s, 2s, 200ms},
-                            Config{2u, 1u, 40510u, 2s, 2s, 200ms}));
+                            Config{1u, 1u, 40510u, 2s, 2s, 200ms, false},
+                            Config{2u, 1u, 40510u, 2s, 2s, 200ms, false},
+                            Config{1u, 1u, 40510u, 2s, 2s, 200ms, true},
+                            Config{2u, 1u, 40510u, 2s, 2s, 200ms, true}));

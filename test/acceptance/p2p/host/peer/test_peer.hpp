@@ -48,8 +48,9 @@ class Peer {
   /**
    * @brief constructs peer
    * @param timeout represents how long server and clients should work
+   * @param secure - use SECIO when true, otherwise - Plaintext
    */
-  explicit Peer(Duration timeout);
+  explicit Peer(Duration timeout, bool secure);
 
   /**
    * @brief schedules server start
@@ -80,7 +81,8 @@ class Peer {
   const Duration timeout_;                      ///< operations timeout
   sptr<Context> context_;                       ///< io context
   std::thread thread_;                          ///< peer working thread
-  sptr<Host> host_;                             ///< host
+  sptr<Host> host_;                             ///< first host
+  sptr<Host> host2_;                             ///< second host
   sptr<Echo> echo_;                             ///< echo protocol
   sptr<BoostRandomGenerator> random_provider_;  ///< random provider
   sptr<Ed25519Provider> ed25519_provider_;      ///< ed25519 provider
@@ -89,6 +91,7 @@ class Peer {
   sptr<Secp256k1Provider> secp256k1_provider_;  ///< secp256k1 provider
   sptr<HmacProvider> hmac_provider_;            ///< hmac provider
   sptr<CryptoProvider> crypto_provider_;        ///< crypto provider
+  const bool secure_;                           ///< use SECIO or not
 };
 
 #endif  // LIBP2P_HOST_TEST_PEER_HPP
