@@ -291,10 +291,8 @@ namespace libp2p::connection {
                 IO_OUTCOME_TRY(mac_size, self->macSize(), cb)
                 const auto data_size{frame_len - mac_size};
                 auto data_span{gsl::make_span(buffer->data(), data_size)};
-                auto mac_span{gsl::make_span(
-                    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                    buffer->data() + data_size, mac_size)};
-
+                auto mac_span{
+                    gsl::make_span(*buffer).subspan(data_size, mac_size)};
                 IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb)
                 if (gsl::make_span(remote_mac) != mac_span) {
                   self->log_->error(
@@ -323,7 +321,7 @@ namespace libp2p::connection {
     IO_OUTCOME_TRY(mac_size, macSize(), cb);
     size_t frame_len{bytes + mac_size};
     common::ByteArray frame_buffer;
-    constexpr size_t len_field_size{sizeof(uint32_t)};
+    constexpr size_t len_field_size{kLenMarkerSize};
     frame_buffer.reserve(len_field_size + frame_len);
 
     common::putUint32BE(frame_buffer, frame_len);
