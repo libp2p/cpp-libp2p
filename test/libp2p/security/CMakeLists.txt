@@ -25,4 +25,18 @@ target_link_libraries(plaintext_exchange_message_marshaller_test
     p2p_multihash
     p2p_multiaddress
     p2p_plaintext_exchange_message_marshaller
-)
+    )
+
+addtest(secio_exchange_message_marshaller_test
+    secio_exchange_message_marshaller_test.cpp
+    )
+target_link_libraries(secio_exchange_message_marshaller_test
+    p2p_secio_exchange_message_marshaller
+    )
+
+addtest(secio_propose_message_marshaller_test
+    secio_propose_message_marshaller_test.cpp
+    )
+target_link_libraries(secio_propose_message_marshaller_test
+    p2p_secio_propose_message_marshaller
+    )
