@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+#include <gsl/multi_span>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
@@ -18,8 +19,8 @@
 bool isInsecure(int argc, char **argv) {
   if (2 == argc) {
     const std::string insecure{"-insecure"};
-    std::string argument{argv[1]};
-    if (insecure == argument) {
+    auto args = gsl::multi_span<char *>(argv, argc);
+    if (insecure == args[1]) {
       return true;
     }
   }
@@ -71,6 +72,7 @@ int main(int argc, char **argv) {
   } else {
     std::cout << "Starting in secure mode" << std::endl;
   }
+
   // create a default Host via an injector, overriding a random-generated
   // keypair with ours
   ServerContext server =
@@ -104,5 +106,11 @@ int main(int argc, char **argv) {
   });
 
   // run the IO context
-  server.io_context->run();
+  try {
+    server.io_context->run();
+  } catch (const boost::system::error_code &ec) {
+    std::cout << "Server cannot run: " << ec.message() << std::endl;
+  } catch (...) {
+    std::cout << "Unknown error happened" << std::endl;
+  }
 }
