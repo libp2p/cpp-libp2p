@@ -14,9 +14,10 @@ Target C++ compilers are:
 
 ## Supported protocols
 * Transports: TCP
-* Security protocols: [Plaintext 2.0](https://github.com/libp2p/specs/blob/master/plaintext/README.md), [SECIO](https://github.com/libp2p/specs/blob/master/secio/README.md) (WIP)
+* Security protocols: [Plaintext 2.0](https://github.com/libp2p/specs/blob/master/plaintext/README.md), [SECIO](https://github.com/libp2p/specs/blob/master/secio/README.md)
 * Multiplexing protocols: [MPlex](https://github.com/libp2p/specs/tree/master/mplex), [Yamux](https://github.com/hashicorp/yamux/blob/master/spec.md)
-* [Kademlia DHT](https://github.com/libp2p/specs/pull/108) (WIP)
+* [Kademlia DHT](https://github.com/libp2p/specs/pull/108)
+* [Gossipsub](https://github.com/libp2p/specs/tree/master/pubsub/gossipsub) (WIP)
 * [Identify](https://github.com/libp2p/specs/tree/master/identify)
 
 ## Development
