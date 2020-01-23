@@ -66,7 +66,9 @@ namespace libp2p::protocol {
       being_canceled_.clear();
 
       // and maybe someone subscribed inside callbacks
-      subscriptions_.merge(being_subscribed_);
+      for (auto& [ticket, cb] : being_subscribed_) {
+        subscriptions_[ticket] = std::move(cb);
+      }
       being_subscribed_.clear();
     }
 
