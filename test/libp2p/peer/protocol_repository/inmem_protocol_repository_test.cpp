@@ -5,10 +5,10 @@
 
 #include <gtest/gtest.h>
 
+#include <libp2p/common/literals.hpp>
 #include <libp2p/peer/errors.hpp>
 #include <libp2p/peer/protocol_repository.hpp>
 #include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
-#include <libp2p/common/literals.hpp>
 #include "testutil/outcome.hpp"
 
 using namespace libp2p::peer;

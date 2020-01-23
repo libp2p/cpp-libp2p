@@ -41,7 +41,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, MplexStream::Error, e) {
   if (connection_.expired()) {            \
     return Error::CONNECTION_IS_DEAD;     \
   }                                       \
-  auto conn_var_name = connection_.lock();
+  auto(conn_var_name) = connection_.lock();
 
 namespace libp2p::connection {
   std::string MplexStream::StreamId::toString() const {

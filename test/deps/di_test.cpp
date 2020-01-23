@@ -35,8 +35,8 @@ struct Derived : public example {
 };
 
 template <typename... T>
-auto useBind(){
-  return boost::di::bind<example*[]>.template to<T...>();
+auto useBind() {
+  return boost::di::bind<example *[]>.template to<T...>();
 }
 
 /**

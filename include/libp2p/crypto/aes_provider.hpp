@@ -6,6 +6,7 @@
 #ifndef LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP
 #define LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP
 
+#include <gsl/span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -22,6 +23,7 @@ namespace libp2p::crypto::aes {
 
    public:
     virtual ~AesProvider() = default;
+
     /**
      * @brief encrypts data using AES128 cipher
      * @param secret cipher secret
@@ -29,7 +31,7 @@ namespace libp2p::crypto::aes {
      * @return encrypted data or error
      */
     virtual outcome::result<ByteArray> encryptAesCtr128(
-        const Aes128Secret &secret, const ByteArray &data) const = 0;
+        const Aes128Secret &secret, gsl::span<const uint8_t> data) const = 0;
 
     /**
      * @brief decrypts data using AES128 cipher
@@ -38,7 +40,7 @@ namespace libp2p::crypto::aes {
      * @return decrypted data or error
      */
     virtual outcome::result<ByteArray> decryptAesCtr128(
-        const Aes128Secret &secret, const ByteArray &data) const = 0;
+        const Aes128Secret &secret, gsl::span<const uint8_t> data) const = 0;
 
     /**
      * @brief encrypts data using AES256 cipher
@@ -47,16 +49,16 @@ namespace libp2p::crypto::aes {
      * @return encrypted data or error
      */
     virtual outcome::result<ByteArray> encryptAesCtr256(
-        const Aes256Secret &secret, const ByteArray &data) const = 0;
+        const Aes256Secret &secret, gsl::span<const uint8_t> data) const = 0;
 
-    /**
+    /**œ
      * @brief decrypts data using AES256 cipher
      * @param secret cipher secret
      * @param data encrypted data
      * @return decrypted data or error
      */
     virtual outcome::result<ByteArray> decryptAesCtr256(
-        const Aes256Secret &secret, const ByteArray &data) const = 0;
+        const Aes256Secret &secret, gsl::span<const uint8_t> data) const = 0;
   };
 }  // namespace libp2p::crypto::aes
 

@@ -5,10 +5,11 @@
 
 #include <libp2p/protocol/identify/identify_delta.hpp>
 
+#include <generated/protocol/identify/protobuf/identify.pb.h>
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/multi/uvarint.hpp>
 #include <libp2p/protocol/identify/identify_push.hpp>
-#include <generated/protocol/identify/protobuf/identify.pb.h>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/host/host_mock.hpp"
@@ -16,7 +17,6 @@
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
 #include "testutil/gmock_actions.hpp"
-#include <libp2p/common/literals.hpp>
 
 using namespace libp2p;
 using namespace peer;

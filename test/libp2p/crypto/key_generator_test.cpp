@@ -13,6 +13,7 @@
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/error.hpp>
+#include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
@@ -28,6 +29,8 @@ using libp2p::crypto::ecdsa::EcdsaProvider;
 using libp2p::crypto::ecdsa::EcdsaProviderImpl;
 using libp2p::crypto::ed25519::Ed25519Provider;
 using libp2p::crypto::ed25519::Ed25519ProviderImpl;
+using libp2p::crypto::hmac::HmacProvider;
+using libp2p::crypto::hmac::HmacProviderImpl;
 using libp2p::crypto::random::BoostRandomGenerator;
 using libp2p::crypto::random::CSPRNG;
 using libp2p::crypto::rsa::RsaProvider;
@@ -45,9 +48,10 @@ class KeyGenTest {
         rsa_provider_{std::make_shared<RsaProviderImpl>()},
         ecdsa_provider_{std::make_shared<EcdsaProviderImpl>()},
         secp256k1_provider_{std::make_shared<Secp256k1ProviderImpl>()},
+        hmac_provider_{std::make_shared<HmacProviderImpl>()},
         crypto_provider_{std::make_shared<CryptoProviderImpl>(
             random_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
-            secp256k1_provider_)} {}
+            secp256k1_provider_, hmac_provider_)} {}
 
  protected:
   std::shared_ptr<CSPRNG> random_;
@@ -55,6 +59,7 @@ class KeyGenTest {
   std::shared_ptr<RsaProvider> rsa_provider_;
   std::shared_ptr<EcdsaProvider> ecdsa_provider_;
   std::shared_ptr<Secp256k1Provider> secp256k1_provider_;
+  std::shared_ptr<HmacProvider> hmac_provider_;
   std::shared_ptr<CryptoProvider> crypto_provider_;
 };
 

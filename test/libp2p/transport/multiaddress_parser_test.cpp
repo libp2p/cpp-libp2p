@@ -6,9 +6,9 @@
 #include "libp2p/transport/impl/multiaddress_parser.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include "testutil/outcome.hpp"
-#include <libp2p/common/literals.hpp>
 
 using libp2p::multi::Multiaddress;
 using libp2p::multi::Protocol;
@@ -46,8 +46,7 @@ INSTANTIATE_TEST_CASE_P(TestSupported, TransportParserTest,
  * content of the multiaddress
  */
 TEST_F(TransportParserTest, CorrectAlternative) {
-  auto r4 = MultiaddressParser::parse(
-      "/ip4/127.0.0.1/tcp/5050"_multiaddr);
+  auto r4 = MultiaddressParser::parse("/ip4/127.0.0.1/tcp/5050"_multiaddr);
   auto r6 = MultiaddressParser::parse(
       "/ip6/2001:db8:85a3:8d3:1319:8a2e:370:7348/tcp/443"_multiaddr);
 
@@ -61,7 +60,8 @@ TEST_F(TransportParserTest, CorrectAlternative) {
       return ip_tcp.first.to_string() == "127.0.0.1" && ip_tcp.second == 5050;
     }
     bool operator()(const Ip6Tcp &ip_tcp) {
-      return ip_tcp.first.to_string() == "2001:db8:85a3:8d3:1319:8a2e:370:7348" && ip_tcp.second == 443;
+      return ip_tcp.first.to_string() == "2001:db8:85a3:8d3:1319:8a2e:370:7348"
+          && ip_tcp.second == 443;
     }
   } visitor;
 

@@ -238,7 +238,13 @@ namespace libp2p::connection {
 
   void YamuxedConnection::doReadData(size_t data_size,
                                      basic::Reader::ReadCallbackFunc cb) {
-    data_buffer_.clear();
+    // allocate enough memory
+    data_buffer_.resize(data_size);
+    // clear all previously stored data to prevent any unauthorized access
+    std::fill(data_buffer_.begin(), data_buffer_.end(), 0u);
+    /* memset could be faster than std::fill when compiler optimization is
+     * disabled, but it had to operate with raw pointers that are discouraged.
+     * Moreover, std::fill looks more idiomatic for that case */
     return connection_->read(
         data_buffer_, data_size,
         [self{shared_from_this()}, cb = std::move(cb)](auto &&res) {
@@ -470,12 +476,13 @@ namespace libp2p::connection {
       stream->resetStream();
 
       // TODO(artem): temporarily cleanup itself!
-//      if (streams_.empty() && !new_stream_pending_) {
-//        auto res = close();
-//        if (!res) {
-//          log_->error("cannot close connection: {} ", res.error().message());
-//        }
-//      }
+      //      if (streams_.empty() && !new_stream_pending_) {
+      //        auto res = close();
+      //        if (!res) {
+      //          log_->error("cannot close connection: {} ",
+      //          res.error().message());
+      //        }
+      //      }
     }
   }
 

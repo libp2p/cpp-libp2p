@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_HPP
-#define LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_HPP
+#ifndef LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_MARSHALLER_HPP
+#define LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_MARSHALLER_HPP
 
 #include <utility>
 #include <vector>
@@ -44,4 +44,4 @@ namespace libp2p::security::plaintext {
 
 }  // namespace libp2p::security::plaintext
 
-#endif  // LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_HPP
+#endif  // LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_MARSHALLER_HPP

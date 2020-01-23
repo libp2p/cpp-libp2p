@@ -40,7 +40,7 @@ namespace libp2p::connection {
                  void(gsl::span<const uint8_t>, size_t,
                       Writer::WriteCallbackFunc));
     bool isInitiator() const noexcept override {
-      return true; //TODO(artem): fix reuse connections in opposite direction
+      return true;  // TODO(artem): fix reuse connections in opposite direction
       // return isInitiator_hack();
     }
     MOCK_CONST_METHOD0(isInitiator_hack, bool());

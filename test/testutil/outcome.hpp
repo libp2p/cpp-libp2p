@@ -10,7 +10,7 @@
 #include <libp2p/outcome/outcome.hpp>
 
 #if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
-#	pragma GCC diagnostic ignored "-Wparentheses"
+#pragma GCC diagnostic ignored "-Wparentheses"
 #endif
 
 #define PP_CAT(a, b) PP_CAT_I(a, b)

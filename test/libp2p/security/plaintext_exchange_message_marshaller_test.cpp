@@ -5,11 +5,11 @@
 
 #include <gtest/gtest.h>
 
+#include <generated/security/plaintext/protobuf/plaintext.pb.h>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
-#include <generated/security/plaintext/protobuf/plaintext.pb.h>
 #include "testutil/outcome.hpp"
 
 using libp2p::crypto::Key;

@@ -246,7 +246,7 @@ namespace libp2p::connection {
   if (!stream_opt) {                                     \
     return resetStream(stream_id);                       \
   }                                                      \
-  auto stream_var_name = std::move(*stream_opt);
+  auto(stream_var_name) = std::move(*stream_opt);
 
   void MplexedConnection::processMessageFrame(const MplexFrame &frame,
                                               StreamId stream_id) {

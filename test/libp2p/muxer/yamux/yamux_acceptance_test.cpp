@@ -6,6 +6,7 @@
 #include "libp2p/muxer/yamux/yamuxed_connection.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/muxer/yamux.hpp>
@@ -15,7 +16,6 @@
 #include "mock/libp2p/transport/upgrader_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include <libp2p/common/literals.hpp>
 #include "testutil/outcome.hpp"
 
 using namespace libp2p::connection;

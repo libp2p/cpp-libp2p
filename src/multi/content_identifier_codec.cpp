@@ -5,10 +5,10 @@
 
 #include <cstring>
 
+#include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
 #include <libp2p/multi/multicodec_type.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <libp2p/crypto/sha/sha256.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, ContentIdentifierCodec::EncodeError,
                             e) {
@@ -72,14 +72,14 @@ namespace libp2p::multi {
   }
 
   std::vector<uint8_t> ContentIdentifierCodec::encodeCIDV0(
-      const void* byte_buffer, size_t sz) {
+      const void *byte_buffer, size_t sz) {
     std::vector<uint8_t> bytes;
     bytes.resize(34);
-    bytes[0] = 0x12; // sha256 hash type
-    bytes[1] = 0x20; // hash length
-    auto hash = crypto::sha256(gsl::span<uint8_t>(
-        (uint8_t*)byte_buffer, //NOLINT
-        sz));
+    bytes[0] = 0x12;  // sha256 hash type
+    bytes[1] = 0x20;  // hash length
+    auto hash =
+        crypto::sha256(gsl::span<uint8_t>((uint8_t *)byte_buffer,  // NOLINT
+                                          sz));
     memcpy(&bytes[2], hash.data(), 0x20);
     return bytes;
   }

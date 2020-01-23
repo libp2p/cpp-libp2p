@@ -18,7 +18,8 @@ target_link_libraries(p2p_message_read_writer_error
     )
 
 libp2p_add_library(p2p_message_read_writer
-    message_read_writer.cpp
+    message_read_writer_bigendian.cpp
+    message_read_writer_uvarint.cpp
     )
 target_link_libraries(p2p_message_read_writer
     p2p_message_read_writer_error

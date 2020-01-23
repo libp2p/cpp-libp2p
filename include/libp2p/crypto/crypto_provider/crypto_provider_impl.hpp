@@ -15,6 +15,9 @@ namespace libp2p::crypto {
   namespace ed25519 {
     class Ed25519Provider;
   }
+  namespace hmac {
+    class HmacProvider;
+  }
   namespace rsa {
     class RsaProvider;
   }
@@ -27,6 +30,11 @@ namespace libp2p::crypto {
 
   class CryptoProviderImpl : public CryptoProvider {
    public:
+    enum class Error {
+      UNKNOWN_CIPHER_TYPE = 1,
+      UNKNOWN_HASH_TYPE,
+    };
+
     ~CryptoProviderImpl() override = default;
 
     explicit CryptoProviderImpl(
@@ -34,7 +42,8 @@ namespace libp2p::crypto {
         std::shared_ptr<ed25519::Ed25519Provider> ed25519_provider,
         std::shared_ptr<rsa::RsaProvider> rsa_provider,
         std::shared_ptr<ecdsa::EcdsaProvider> ecdsa_provider,
-        std::shared_ptr<secp256k1::Secp256k1Provider> secp256k1_provider);
+        std::shared_ptr<secp256k1::Secp256k1Provider> secp256k1_provider,
+        std::shared_ptr<hmac::HmacProvider> hmac_provider);
 
     outcome::result<KeyPair> generateKeys(
         Key::Type key_type, common::RSAKeyType rsa_bitness) const override;
@@ -52,12 +61,14 @@ namespace libp2p::crypto {
     outcome::result<EphemeralKeyPair> generateEphemeralKeyPair(
         common::CurveType curve) const override;
 
-    std::vector<StretchedKey> stretchKey(common::CipherType cipher_type,
-                                         common::HashType hash_type,
-                                         const Buffer &secret) const override;
+    outcome::result<std::pair<StretchedKey, StretchedKey>> stretchKey(
+        common::CipherType cipher_type, common::HashType hash_type,
+        const Buffer &secret) const override;
 
    private:
     void initialize();
+    static std::function<outcome::result<Buffer>(Buffer)>
+    prepareSharedSecretGenerator(int curve_nid, Buffer own_private_key);
 
     // RSA
     outcome::result<KeyPair> generateRsa(common::RSAKeyType rsa_bitness) const;
@@ -100,7 +111,10 @@ namespace libp2p::crypto {
     std::shared_ptr<rsa::RsaProvider> rsa_provider_;
     std::shared_ptr<ecdsa::EcdsaProvider> ecdsa_provider_;
     std::shared_ptr<secp256k1::Secp256k1Provider> secp256k1_provider_;
+    std::shared_ptr<hmac::HmacProvider> hmac_provider_;
   };
 }  // namespace libp2p::crypto
+
+OUTCOME_HPP_DECLARE_ERROR(libp2p::crypto, CryptoProviderImpl::Error)
 
 #endif  // LIBP2P_CRYPTO_PROVIDER_CRYPTO_PROVIDER_IMPL_HPP

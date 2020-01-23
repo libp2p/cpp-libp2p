@@ -6,19 +6,23 @@
 #include "acceptance/p2p/host/peer/test_peer.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/crypto/aes_provider/aes_provider_impl.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
+#include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
+#include <libp2p/security/secio/exchange_message_marshaller_impl.hpp>
+#include <libp2p/security/secio/propose_message_marshaller_impl.hpp>
 #include "acceptance/p2p/host/peer/tick_counter.hpp"
 #include "acceptance/p2p/host/protocol/client_test_session.hpp"
 
 using namespace libp2p;  // NOLINT
 
-Peer::Peer(Peer::Duration timeout)
+Peer::Peer(Peer::Duration timeout, bool secure)
     : muxed_config_{1024576, 1000},
       timeout_{timeout},
       context_{std::make_shared<Context>()},
@@ -30,18 +34,26 @@ Peer::Peer(Peer::Duration timeout)
       ecdsa_provider_{std::make_shared<crypto::ecdsa::EcdsaProviderImpl>()},
       secp256k1_provider_{
           std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>()},
+      hmac_provider_{std::make_shared<crypto::hmac::HmacProviderImpl>()},
       crypto_provider_{std::make_shared<crypto::CryptoProviderImpl>(
           random_provider_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
-          secp256k1_provider_)} {
+          secp256k1_provider_, hmac_provider_)},
+      secure_{secure} {
   EXPECT_OUTCOME_TRUE_MSG(
       keys, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
       "failed to generate keys");
-
   host_ = makeHost(keys);
 
-  host_->setProtocolHandler(
-      echo_->getProtocolId(),
-      [this](std::shared_ptr<Stream> result) { echo_->handle(result); });
+  EXPECT_OUTCOME_TRUE_MSG(
+      keys2, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
+      "failed to generate keys");
+  host2_ = makeHost(keys2);
+
+  auto handler = [this](std::shared_ptr<Stream> result) {
+    echo_->handle(result);
+  };
+  host_->setProtocolHandler(echo_->getProtocolId(), handler);
+  host2_->setProtocolHandler(echo_->getProtocolId(), handler);
 }
 
 void Peer::startServer(const multi::Multiaddress &address,
@@ -59,7 +71,7 @@ void Peer::startClient(const peer::PeerInfo &pinfo, size_t message_count,
                        Peer::sptr<TickCounter> counter) {
   context_->post([this, server_id = pinfo.id.toBase58(), pinfo, message_count,
                   counter = std::move(counter)]() mutable {
-    this->host_->newStream(
+    this->host2_->newStream(
         pinfo, echo_->getProtocolId(),
         [server_id = std::move(server_id), ping_times = message_count,
          counter = std::move(counter)](
@@ -97,10 +109,10 @@ void Peer::wait() {
 Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto crypto_provider = std::make_shared<crypto::CryptoProviderImpl>(
       random_provider_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
-      secp256k1_provider_);
+      secp256k1_provider_, hmac_provider_);
 
-  auto key_validator = std::make_shared<crypto::validator::KeyValidatorImpl>(
-      std::move(crypto_provider));
+  auto key_validator =
+      std::make_shared<crypto::validator::KeyValidatorImpl>(crypto_provider);
 
   auto key_marshaller = std::make_shared<crypto::marshaller::KeyMarshallerImpl>(
       std::move(key_validator));
@@ -116,9 +128,20 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
       std::make_shared<security::plaintext::ExchangeMessageMarshallerImpl>(
           key_marshaller);
 
-  std::vector<std::shared_ptr<security::SecurityAdaptor>> security_adaptors = {
-      std::make_shared<security::Plaintext>(std::move(exchange_msg_marshaller),
-                                            idmgr, std::move(key_marshaller))};
+  std::vector<std::shared_ptr<security::SecurityAdaptor>> security_adaptors;
+
+  if (secure_) {
+    security_adaptors.emplace_back(std::make_shared<security::Secio>(
+        std::make_shared<crypto::random::BoostRandomGenerator>(),
+        crypto_provider,
+        std::make_shared<security::secio::ProposeMessageMarshallerImpl>(),
+        std::make_shared<security::secio::ExchangeMessageMarshallerImpl>(),
+        idmgr, key_marshaller, hmac_provider_,
+        std::make_shared<crypto::aes::AesProviderImpl>()));
+  } else {
+    security_adaptors.emplace_back(std::make_shared<security::Plaintext>(
+        std::move(exchange_msg_marshaller), idmgr, std::move(key_marshaller)));
+  }
 
   std::vector<std::shared_ptr<muxer::MuxerAdaptor>> muxer_adaptors = {
       std::make_shared<muxer::Yamux>(muxed_config_)};
