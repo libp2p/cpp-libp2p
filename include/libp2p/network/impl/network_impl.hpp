@@ -15,7 +15,7 @@ namespace libp2p::network {
    public:
     ~NetworkImpl() override = default;
 
-    NetworkImpl(std::unique_ptr<ListenerManager> listener,
+    NetworkImpl(std::shared_ptr<ListenerManager> listener,
                 std::unique_ptr<Dialer> dialer,
                 std::shared_ptr<ConnectionManager> cmgr);
 
@@ -28,7 +28,7 @@ namespace libp2p::network {
     ConnectionManager &getConnectionManager() override;
 
    private:
-    std::unique_ptr<ListenerManager> listener_;
+    std::shared_ptr<ListenerManager> listener_;
     std::unique_ptr<Dialer> dialer_;
     std::shared_ptr<ConnectionManager> cmgr_;
   };

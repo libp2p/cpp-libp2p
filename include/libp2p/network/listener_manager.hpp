@@ -11,8 +11,8 @@
 #include <libp2p/event/bus.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/network/router.hpp>
-#include <libp2p/protocol/base_protocol.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <libp2p/protocol/base_protocol.hpp>
 
 namespace libp2p::network {
 
@@ -117,6 +117,13 @@ namespace libp2p::network {
      * @brief Getter for Router.
      */
     virtual Router &getRouter() = 0;
+
+    /**
+     * @brief Allows new connections for accepting incoming streams
+     */
+    virtual void onConnection(
+        outcome::result<std::shared_ptr<connection::CapableConnection>>
+            rconn) = 0;
   };
 
 }  // namespace libp2p::network

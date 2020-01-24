@@ -16,7 +16,7 @@ namespace libp2p::network {
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
 
-      //if (c->isInitiator()) {
+      this->listener_->onConnection(c);
         // TODO(artem): dont reuse connections in opposite direction temporarily
         TRACE("reusing connection to peer {}", p.id.toBase58().substr(46));
         cb(std::move(c));
@@ -49,7 +49,11 @@ namespace libp2p::network {
               }
 
               auto &&conn = rconn.value();
-              this->cmgr_->addConnectionToPeer(pid, conn);
+              //if (!c->isInitiator()) {
+                this->listener_->onConnection(rconn);
+              //}
+
+              //this->cmgr_->addConnectionToPeer(pid, conn);
 
               // return connection to the user
               cb(conn);
@@ -79,6 +83,7 @@ namespace libp2p::network {
           if (!conn->isInitiator()) {
             TRACE(
                 "dialer: opening outbound stream inside inbound connection");
+
           }
 
           // 2. open new stream on that connection
@@ -115,13 +120,16 @@ namespace libp2p::network {
   DialerImpl::DialerImpl(
       std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect,
       std::shared_ptr<TransportManager> tmgr,
-      std::shared_ptr<ConnectionManager> cmgr)
+      std::shared_ptr<ConnectionManager> cmgr,
+      std::shared_ptr<ListenerManager> listener)
       : multiselect_(std::move(multiselect)),
         tmgr_(std::move(tmgr)),
-        cmgr_(std::move(cmgr)) {
+        cmgr_(std::move(cmgr)),
+        listener_(std::move(listener)){
     BOOST_ASSERT(multiselect_ != nullptr);
     BOOST_ASSERT(tmgr_ != nullptr);
     BOOST_ASSERT(cmgr_ != nullptr);
+    BOOST_ASSERT(listener_ != nullptr);
   }
 
 }  // namespace libp2p::network

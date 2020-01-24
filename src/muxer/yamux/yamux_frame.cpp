@@ -86,6 +86,7 @@ namespace libp2p::connection {
   }
 
   YamuxFrame::ByteArray goAwayMsg(YamuxFrame::GoAwayError error) {
+    TRACE("yamux goAwayMsg");
     return YamuxFrame::frameBytes(
         YamuxFrame::kDefaultVersion, YamuxFrame::FrameType::GO_AWAY,
         YamuxFrame::Flag::NONE, 0, static_cast<uint32_t>(error));

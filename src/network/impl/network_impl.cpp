@@ -23,7 +23,7 @@ namespace libp2p::network {
     return *cmgr_;
   }
 
-  NetworkImpl::NetworkImpl(std::unique_ptr<ListenerManager> listener,
+  NetworkImpl::NetworkImpl(std::shared_ptr<ListenerManager> listener,
                            std::unique_ptr<Dialer> dialer,
                            std::shared_ptr<ConnectionManager> cmgr)
       : listener_(std::move(listener)),
