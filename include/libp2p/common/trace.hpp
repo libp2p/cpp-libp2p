@@ -5,10 +5,10 @@
 
 #include <libp2p/common/logger.hpp>
 
-#ifndef LIBP2P_PROTOCOL_COMMON_TRACE_HPP
-#define LIBP2P_PROTOCOL_COMMON_TRACE_HPP
+#ifndef LIBP2P_COMMON_TRACE_HPP
+#define LIBP2P_COMMON_TRACE_HPP
 
-namespace libp2p::protocol {
+namespace libp2p::common {
 
   /// Special debug utility function, allows for not having logger as member
   /// field
@@ -20,12 +20,12 @@ namespace libp2p::protocol {
     log->trace(fmt, args...);
   }
 
-}  // namespace libp2p::protocol
+}  // namespace libp2p::common
 
 #if TRACE_ENABLED
-#define TRACE(...) traceToDebugLogger(__VA_ARGS__)
+#define TRACE(...) libp2p::common::traceToDebugLogger(__VA_ARGS__)
 #else
 #define TRACE(...)
 #endif
 
-#endif  // LIBP2P_PROTOCOL_COMMON_TRACE_HPP
+#endif  // LIBP2P_COMMON_TRACE_HPP

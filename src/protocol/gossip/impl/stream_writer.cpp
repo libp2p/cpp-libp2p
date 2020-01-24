@@ -11,7 +11,7 @@
 #include <libp2p/protocol/gossip/impl/peer_context.hpp>
 
 #define TRACE_ENABLED 1
-#include <libp2p/protocol/common/trace.hpp>
+#include <libp2p/common/trace.hpp>
 
 namespace libp2p::protocol::gossip {
 
@@ -100,6 +100,8 @@ namespace libp2p::protocol::gossip {
 
     auto data = buffer->data();
     writing_bytes_ = buffer->size();
+
+    TRACE("writing {} bytes to peer {}", writing_bytes_, peer_->str);
 
     // clang-format off
     stream_->write(

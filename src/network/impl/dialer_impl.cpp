@@ -7,15 +7,18 @@
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
 
+#define TRACE_ENABLED 1
+#include <libp2p/common/trace.hpp>
+
 namespace libp2p::network {
 
   void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb) {
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
-      log_->debug("dialer: found reusable connection");
 
       if (c->isInitiator()) {
         // TODO(artem): dont reuse connections in opposite direction temporarily
+        TRACE("reusing connection to peer {}", p.id.toBase58().substr(46));
         return cb(std::move(c));
       }
     }
@@ -70,7 +73,7 @@ namespace libp2p::network {
           auto &&conn = rconn.value();
 
           if (!conn->isInitiator()) {
-            log_->debug(
+            TRACE(
                 "dialer: opening outbound stream inside inbound connection");
           }
 
@@ -84,7 +87,7 @@ namespace libp2p::network {
                 }
                 auto &&stream = rstream.value();
 
-                log_->debug("dialer: inside newStream callback");
+                TRACE("dialer: inside newStream callback");
 
                 // 3. negotiate a protocol over that stream
                 std::vector<peer::Protocol> protocols{protocol};

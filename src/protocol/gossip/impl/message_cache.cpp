@@ -13,7 +13,7 @@
 
 #include <libp2p/common/hexutil.hpp>
 #define TRACE_ENABLED 0
-#include <libp2p/protocol/common/trace.hpp>
+#include <libp2p/common/trace.hpp>
 
 namespace libp2p::protocol::gossip {
 

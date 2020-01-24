@@ -12,7 +12,7 @@
 #include <libp2p/protocol/gossip/impl/peer_context.hpp>
 
 #define TRACE_ENABLED 1
-#include <libp2p/protocol/common/trace.hpp>
+#include <libp2p/common/trace.hpp>
 
 namespace libp2p::protocol::gossip {
 
@@ -41,6 +41,8 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
+    TRACE("{}", __PRETTY_FUNCTION__);
+
     // clang-format off
     libp2p::basic::VarintReader::readVarint(
         stream_,
@@ -67,6 +69,8 @@ namespace libp2p::protocol::gossip {
       return;
     }
     auto msg_len = varint_opt->toUInt64();
+
+    TRACE("reading {} bytes from peer {}", msg_len, peer_->str);
 
     if (msg_len > max_message_size_) {
       feedback_(peer_, Error::MESSAGE_SIZE_ERROR);
