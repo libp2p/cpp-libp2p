@@ -38,7 +38,10 @@ namespace libp2p::protocol::gossip::example {
       auto injector = makeInjector(
           boost::di::bind<boost::asio::io_context>.to(io)[boost::di::override],
           boost::di::bind<crypto::KeyPair>().template to(
-              std::move(keypair.value()))[boost::di::override]);
+              std::move(keypair.value()))[boost::di::override]
+          //, boost::di::bind<muxer::MuxerAdaptor *[]>().template to<muxer::Mplex>()
+          //[boost::di::override]
+                  );
       p.first = injector.create<std::shared_ptr<Host>>();
     }
 

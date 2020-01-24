@@ -16,18 +16,20 @@ namespace libp2p::network {
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
 
-      if (c->isInitiator()) {
+      //if (c->isInitiator()) {
         // TODO(artem): dont reuse connections in opposite direction temporarily
         TRACE("reusing connection to peer {}", p.id.toBase58().substr(46));
-        return cb(std::move(c));
-      }
+        cb(std::move(c));
+        return;
+      //}
     }
 
     // we don't have a connection to this peer.
     // did user supply its addresses in {@param p}?
     if (p.addresses.empty()) {
       // we don't have addresses of peer p
-      return cb(std::errc::destination_address_required);
+      cb(std::errc::destination_address_required);
+      return;
     }
 
     // for all multiaddresses supplied in peerinfo
@@ -36,13 +38,14 @@ namespace libp2p::network {
       if (auto tr = this->tmgr_->findBest(ma); tr != nullptr) {
         // we can dial to this peer!
         // dial using best transport
-        return tr->dial(
+        tr->dial(
             p.id, ma,
             [this, cb{std::move(cb)}, pid{p.id}](
                 outcome::result<std::shared_ptr<connection::CapableConnection>>
                     rconn) {
               if (!rconn) {
-                return cb(rconn.error());
+                cb(rconn.error());
+                return;
               }
 
               auto &&conn = rconn.value();
@@ -51,18 +54,19 @@ namespace libp2p::network {
               // return connection to the user
               cb(conn);
             });
+        return;
       }
     }
 
     // we did not find supported transport
-    return cb(std::errc::address_family_not_supported);
+    cb(std::errc::address_family_not_supported);
   }
 
   void DialerImpl::newStream(const peer::PeerInfo &p,
                              const peer::Protocol &protocol,
                              StreamResultFunc cb) {
     // 1. make new connection or reuse existing
-    return this->dial(
+    this->dial(
         p,
         [this, cb{std::move(cb)}, protocol](
             outcome::result<std::shared_ptr<connection::CapableConnection>>
@@ -87,7 +91,7 @@ namespace libp2p::network {
                 }
                 auto &&stream = rstream.value();
 
-                TRACE("dialer: inside newStream callback");
+                TRACE("dialer: before multiselect");
 
                 // 3. negotiate a protocol over that stream
                 std::vector<peer::Protocol> protocols{protocol};
@@ -98,6 +102,8 @@ namespace libp2p::network {
                       if (!rproto) {
                         return cb(rproto.error());
                       }
+
+                      TRACE("dialer: inside multiselect callback");
 
                       // 4. return stream back to the user
                       cb(std::move(stream));

@@ -182,14 +182,15 @@ namespace libp2p::protocol::gossip {
       all_peers_.insert(ctx);
 
       // make outbound stream over existing connection
-      // TODO(artem) dial(ctx, true);
+      // TODO(artem)
+      dial(ctx, true);
 
     } else {
       ctx = std::move(ctx_found.value());
-      //      if (!ctx->writer && !connecting_peers_.contains(ctx->peer_id)) {
-      //        // not connected or connecting
-      //        dial(ctx, true);
-      //      }
+            if (!ctx->writer && !connecting_peers_.contains(ctx->peer_id)) {
+              // not connected or connecting
+              dial(ctx, true);
+            }
     }
 
     // currently we prefer newer streams, but avoid duplicate ones,
@@ -204,6 +205,7 @@ namespace libp2p::protocol::gossip {
         config_, *scheduler_, on_reader_event_, *msg_receiver_, stream, ctx);
     ctx->reader->read();
 
+    /*
     if (!connecting_peers_.contains(ctx->peer_id)
         && !connected_peers_.contains(ctx->peer_id)) {
       // not connected or connecting
@@ -225,6 +227,7 @@ namespace libp2p::protocol::gossip {
       connected_peers_.insert(ctx);
       connected_cb_(true, ctx);
     }
+     */
   }
 
   void Connectivity::dial(const PeerContextPtr &ctx,

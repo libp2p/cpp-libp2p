@@ -87,6 +87,8 @@ namespace libp2p::protocol::gossip {
     // clang-format on
 
     connectivity_->start();
+
+    onHeartbeat();
   }
 
   void GossipCore::stop() {

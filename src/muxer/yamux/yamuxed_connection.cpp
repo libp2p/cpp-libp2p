@@ -9,6 +9,9 @@
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 #include <libp2p/muxer/yamux/yamux_stream.hpp>
 
+#define TRACE_ENABLED 1
+#include <libp2p/common/trace.hpp>
+
 using Buffer = libp2p::common::ByteArray;
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxedConnection::Error, e) {
@@ -66,6 +69,8 @@ namespace libp2p::connection {
 
     auto stream_id = getNewStreamId();
 
+    TRACE("creating stream {}", stream_id);
+
     new_stream_pending_ = true;
 
     write(
@@ -78,6 +83,8 @@ namespace libp2p::connection {
                std::make_shared<YamuxStream>(self->weak_from_this(), stream_id,
                                              self->config_.maximum_window_size);
            self->streams_.insert({stream_id, created_stream});
+
+           TRACE("created stream {}", stream_id);
 
            self->new_stream_pending_ = false;
 
@@ -266,6 +273,7 @@ namespace libp2p::connection {
         return closeSession();
       }
 
+      // TODO(artem): new_stream_handler_ and inbound streams issue
       if (streams_.size() < config_.maximum_streams && new_stream_handler_) {
         stream = registerNewStream(stream_id);
       } else {
