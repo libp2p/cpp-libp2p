@@ -31,11 +31,11 @@ namespace libp2p::protocol::gossip::example {
   const Config &getConfig() {
     static Config config = ([] {
       Config c;
-      c.D = 2;
-      c.ideal_connections_num = 5;
+      c.D = 3;
+      c.ideal_connections_num = 15;
       c.echo_forward_mode = true;
-      c.message_cache_lifetime_msec = 20000;
-      c.seen_cache_lifetime_msec = 17000;
+      c.message_cache_lifetime_msec = 90000;
+      c.seen_cache_lifetime_msec = 67000;
       return c;
     })();
     return config;

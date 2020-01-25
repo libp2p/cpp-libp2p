@@ -105,7 +105,7 @@ namespace libp2p::connection {
     bool started_ = false;
 
     // XXX
-    bool new_stream_pending_ = false;
+    // TODO(artem) bool new_stream_pending_ = false;
 
     /**
      * Write message to the connection; ensures no more than one wright

@@ -71,7 +71,7 @@ namespace libp2p::connection {
 
     TRACE("creating stream {}", stream_id);
 
-    new_stream_pending_ = true;
+    // TODO(artem) new_stream_pending_ = true;
 
     write(
         {newStreamMsg(stream_id),
@@ -86,7 +86,7 @@ namespace libp2p::connection {
 
            TRACE("created stream {}", stream_id);
 
-           self->new_stream_pending_ = false;
+           // TODO(artem) self->new_stream_pending_ = false;
 
            return cb(std::move(created_stream));
          }});
@@ -213,11 +213,13 @@ namespace libp2p::connection {
     if (!res) {
       if (res.error().value() == boost::asio::error::eof) {
         log_->info("the client has closed a session");
+        resetAllStreams();
         return;
       }
       log_->error(
           "cannot read header from the connection: {}; closing the session",
           res.error().message());
+      resetAllStreams();
       return closeSession();
     }
 
@@ -226,6 +228,7 @@ namespace libp2p::connection {
       log_->error(
           "client has sent something, which is not a valid header; closing the "
           "session");
+      resetAllStreams();
       return closeSession();
     }
 
@@ -239,6 +242,7 @@ namespace libp2p::connection {
         return processGoAwayFrame(*header_opt);
       default:
         log_->critical("garbage in parsed frame's type; closing the session");
+        resetAllStreams();
         return closeSession();
     }
   }
@@ -339,7 +343,7 @@ namespace libp2p::connection {
 
   void YamuxedConnection::resetAllStreams() {
     for (const auto &stream : streams_) {
-      stream.second->resetStream();
+      stream.second->onConnectionReset();
     }
   }
 

@@ -100,7 +100,6 @@ namespace libp2p::protocol::gossip::example {
                       local_ep_.peer_id.toBase58());
       Config config;
       config.echo_forward_mode = true;
-      config.heartbeat_interval_msec = 7000;
 
       // create host and gossip nodes using our keypair
       std::tie(host_, gossip_) = createHostAndGossip(

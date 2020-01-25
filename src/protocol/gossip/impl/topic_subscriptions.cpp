@@ -117,8 +117,10 @@ namespace libp2p::protocol::gossip {
     if (!seen_cache_.empty()) {
       auto it = std::find_if(seen_cache_.begin(), seen_cache_.end(),
                              [now](const auto &p) { return p.first >= now; });
-      seen_cache_.erase(seen_cache_.begin(), it);
-      log_.debug("seen cache size={} for {}", seen_cache_.size(), topic_);
+      if (it != seen_cache_.begin()) {
+        seen_cache_.erase(seen_cache_.begin(), it);
+        log_.debug("seen cache size={} for {}", seen_cache_.size(), topic_);
+      }
     }
   }
 

@@ -75,6 +75,8 @@ namespace libp2p::connection {
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() const override;
 
+    void onConnectionReset();
+
    private:
     /**
      * Internal proxy method for reads; (\param some) denotes if the read should
@@ -117,9 +119,15 @@ namespace libp2p::connection {
 
     /// is the stream reading right now?
     bool is_reading_ = false;
+    ReadCallbackFunc read_cb_;
+    void beginRead(ReadCallbackFunc cb);
+    void endRead(outcome::result<size_t> result);
 
     /// is the stream writing right now?
     bool is_writing_ = false;
+    WriteCallbackFunc write_cb_;
+    void beginWrite(WriteCallbackFunc cb);
+    void endWrite(outcome::result<size_t> result);
 
     /// YamuxedConnection API starts here
     friend class YamuxedConnection;
