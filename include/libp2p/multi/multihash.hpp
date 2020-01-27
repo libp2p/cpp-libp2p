@@ -111,8 +111,7 @@ namespace libp2p::multi {
      * hash itself
      */
     std::vector<uint8_t> data_;
-    // does not store hash itself, points on data_
-    gsl::span<const uint8_t> hash_;
+    uint8_t hash_offset_{};  ///< size of non-hash data from the beginning
     HashType type_;
   };
 
