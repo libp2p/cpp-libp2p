@@ -46,9 +46,6 @@ namespace libp2p::multi {
     data_.push_back(static_cast<uint8_t>(hash.size()));
     hash_offset_ = data_.size();
     data_.insert(data_.end(), hash.begin(), hash.end());
-
-    // hash_ points to a data_.begin() + size ... data_.end()
-//    hash_ = gsl::span<const uint8_t>(data_).subspan(size);
   }
 
   outcome::result<Multihash> Multihash::create(HashType type,
