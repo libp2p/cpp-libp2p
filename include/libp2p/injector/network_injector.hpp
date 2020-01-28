@@ -164,7 +164,8 @@ namespace libp2p::injector {
    */
   template <typename C>
   auto useConfig(C &&c) {
-    return boost::di::bind<std::decay<C>>().template to(std::forward<C>(c));
+    return boost::di::bind<std::decay<C>>().template to(
+        std::forward<C>(c))[boost::di::override];
   }
 
   /**

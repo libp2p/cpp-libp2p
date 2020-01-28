@@ -6,7 +6,6 @@
 #ifndef LIBP2P_HOST_INJECTOR_HPP
 #define LIBP2P_HOST_INJECTOR_HPP
 
-#include <boost/di.hpp>
 #include <libp2p/injector/network_injector.hpp>
 
 // implementations

@@ -3,38 +3,35 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_HOST_INJECTOR_HPP
-#define LIBP2P_HOST_INJECTOR_HPP
+#ifndef LIBP2P_GOSSIP_INJECTOR_HPP
+#define LIBP2P_GOSSIP_INJECTOR_HPP
 
-#include <boost/di.hpp>
-#include <libp2p/injector/network_injector.hpp>
+#include <libp2p/injector/host_injector.hpp>
 
 // implementations
-#include <libp2p/host/basic_host.hpp>
-#include <libp2p/peer/address_repository/inmem_address_repository.hpp>
-#include <libp2p/peer/impl/peer_repository_impl.hpp>
-#include <libp2p/peer/key_repository/inmem_key_repository.hpp>
-#include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
+#include <libp2p/protocol/gossip/impl/gossip_core.hpp>
+#include <libp2p/protocol/common/asio/asio_scheduler.hpp>
 
 namespace libp2p::injector {
 
+  auto useGossipConfig(const protocol::gossip::Config& c) {
+    return boost::di::bind<protocol::gossip::Config>().template to(
+        c)[boost::di::override];
+  }
+
+  // clang-format off
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
-  auto makeHostInjector(Ts &&... args) {
+  auto makeGossipInjector(Ts &&... args) {
     using namespace boost;  // NOLINT
 
     // clang-format off
     return di::make_injector<InjectorConfig>(
-        makeNetworkInjector<InjectorConfig>(),
+        makeHostInjector<InjectorConfig>(),
 
-        di::bind<Host>.template to<host::BasicHost>(),
-
-        di::bind<muxer::MuxedConnectionConfig>.to(muxer::MuxedConnectionConfig()),
-
-        // repositories
-        di::bind<peer::PeerRepository>.template to<peer::PeerRepositoryImpl>(),
-        di::bind<peer::AddressRepository>.template to<peer::InmemAddressRepository>(),
-        di::bind<peer::KeyRepository>.template to<peer::InmemKeyRepository>(),
-        di::bind<peer::ProtocolRepository>.template to<peer::InmemProtocolRepository>(),
+        di::bind<protocol::gossip::Config>.template to(protocol::gossip::Config {}),
+        di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
+        di::bind<protocol::gossip::Gossip>.template to<protocol::gossip::GossipCore>(),
+        di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
 
         // user-defined overrides...
         std::forward<decltype(args)>(args)...
@@ -44,4 +41,4 @@ namespace libp2p::injector {
 
 }  // namespace libp2p::injector
 
-#endif  // LIBP2P_HOST_INJECTOR_HPP
+#endif  // LIBP2P_GOSSIP_INJECTOR_HPP
