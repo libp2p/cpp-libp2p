@@ -3,13 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_executable(gossip_example
-    gossip_example.cpp
-    )
-
 libp2p_add_library(gossip_example_common
-    factory.cpp
     utility.cpp
+    console_async_reader.cpp
     )
 
 target_link_libraries(gossip_example_common
@@ -21,10 +17,7 @@ target_link_libraries(gossip_example_common
     p2p_inmem_protocol_repository
     p2p_gossip
     asio_scheduler
-    )
-
-target_link_libraries(gossip_example
-    gossip_example_common
+    Boost::program_options
     )
 
 add_executable(gossip_chat_example

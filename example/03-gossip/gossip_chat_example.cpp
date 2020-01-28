@@ -3,247 +3,181 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <cassert>
+#include <iostream>
 
 #include <spdlog/fmt/fmt.h>
+#include <boost/program_options.hpp>
 
-#include <libp2p/protocol/common/asio/asio_scheduler.hpp>
-#include "factory.hpp"
+#include <libp2p/injector/gossip_injector.hpp>
+
+#include "console_async_reader.hpp"
 #include "utility.hpp"
 
 namespace {
+  // cmd line options
+  struct Options {
+    // local node port
+    int port = 0;
 
-  /// local logger
-  libp2p::common::Logger logger;
+    // topic name
+    std::string topic = "chat";
 
+    // optional remote peer to connect to
+    boost::optional<libp2p::peer::PeerInfo> remote;
+
+    // log level: 'd' for debug, 'i' for info, 'w' for warning, 'e' for error
+    char log_level = 'w';
+  };
+
+  // parses command line, returns non-empty Options on success
+  boost::optional<Options> parseCommandLine(int argc, char **argv);
 }  // namespace
 
-namespace libp2p::protocol::gossip::example {
-
-  // Logic of this host
-  class HostContext {
-    // publishes this peer beacon into topic "peers" once a minute
-    static const size_t kAnnounceInterval = 60000;
-
-    // this libp2p host
-    std::shared_ptr<Host> host_;
-
-    // local pubsub node
-    std::shared_ptr<Gossip> gossip_;
-
-    // local endpoint info to setup this peer id and listen address
-    EndpointInfo local_ep_;
-
-    // self listening address URI, sent into "peers" topic
-    std::string self_address_str_;
-
-    // subscription handle to "peers" topic
-    Subscription peers_sub_;
-
-    // subscription handler to "chat" topic
-    Subscription chat_sub_;
-
-    // timer handle to perform periodic self-announces
-    Scheduler::Handle self_announce_timer_;
-
-    // callback from "peers" topic
-    void onPeerAnnounce(Gossip::SubscriptionData d) {
-      if (d) {
-        std::string s = toString(d->data);
-        logger->info("Peer announced: {}", s);
-        auto pi = str2peerInfo(s);
-        if (pi) {
-          // add bootstrap peer into gossip node
-          gossip_->addBootstrapPeer(pi.value().id, pi.value().addresses[0]);
-        }
-      }
-    }
-
-    // callback from "chat" topic, contains message
-    static void onChatMessage(Gossip::SubscriptionData d) {
-      if (d) {
-        fmt::print(stderr, "{}: {}\n", formatPeerId(d->from),
-                   toString(d->data));
-      }
-    }
-
-    // timer callback, publishes self address tino "peers"
-    void onSelfAnnounce() {
-      publish("peers", self_address_str_);
-      self_announce_timer_.reschedule(kAnnounceInterval);
-    }
-
-    // called when asio starts
-    void onStart() {
-      auto listen_res = host_->listen(local_ep_.address.value());
-      if (!listen_res) {
-        fmt::print(stderr, "Cannot listen to multiaddress {}, {}",
-                   local_ep_.address.value().getStringAddress(),
-                   listen_res.error().message());
-        return;
-      }
-
-      host_->start();
-      gossip_->start();
-      publish("peers", self_address_str_);
-      fmt::print(stderr, "Started\n");
-    }
-
-   public:
-    HostContext(const std::shared_ptr<Scheduler> &scheduler,
-                const std::shared_ptr<boost::asio::io_context> &io,
-                EndpointInfo local_endpoint,
-                const boost::optional<EndpointInfo> &remote_endpoint)
-        : local_ep_(std::move(local_endpoint)) {
-      self_address_str_ =
-          fmt::format("{}/ipfs/{}", local_ep_.address->getStringAddress(),
-                      local_ep_.peer_id.toBase58());
-      Config config;
-      config.echo_forward_mode = true;
-
-      // create host and gossip nodes using our keypair
-      std::tie(host_, gossip_) = createHostAndGossip(
-          config, scheduler, io, std::move(local_ep_.keypair));
-
-      // subscribe to "peers"
-      peers_sub_ = gossip_->subscribe(
-          {"peers"}, [this](Gossip::SubscriptionData d) { onPeerAnnounce(d); });
-
-      // subscribe to "chat"
-      chat_sub_ = gossip_->subscribe(
-          {"chat"}, [](Gossip::SubscriptionData d) { onChatMessage(d); });
-
-      // subscribe to announce timer
-      self_announce_timer_ = scheduler->schedule(
-          kAnnounceInterval, [this]() { onSelfAnnounce(); });
-
-      // add remote peer to dial to
-      if (remote_endpoint) {
-        gossip_->addBootstrapPeer(remote_endpoint->peer_id,
-                                  remote_endpoint->address);
-      }
-
-      // defer onStart() call to asio startup
-      scheduler->schedule([this] { onStart(); }).detach();
-    }
-
-    // publishes string message to topic
-    void publish(const TopicId &topic, const std::string &msg) {
-      gossip_->publish({topic}, fromString(msg));
-    }
-  };
-
-  // helper with console print
-  auto makeEndpoint(const std::string_view &label, const std::string &host,
-                    const std::string &port, const std::string &key) {
-    auto ep = makeEndpoint(host, port, key);
-    if (!ep) {
-      fmt::print(stderr,
-                 "Cannot make {} endpoint out of HOST={}, PORT={} and KEY={}\n",
-                 label, host, port, key);
-    } else {
-      fmt::print(stderr, "{} peer id: {}, listen address: {}\n", label,
-                 ep.value().peer_id.toBase58(),
-                 ep.value().address.value().getStringAddress());
-    }
-    return ep;
-  }
-
-  // asynchronously reads lines from stdin
-  class ConsoleAsyncReader {
-   public:
-    // lines read from the console come into this callback
-    using Handler = std::function<void(const std::string &)>;
-
-    // starts the reader
-    ConsoleAsyncReader(boost::asio::io_context &io, Handler handler)
-        : in_(io, STDIN_FILENO), handler_(std::move(handler)) {
-      read();
-    }
-
-    void stop() {
-      stopped_ = true;
-    }
-
-   private:
-    void read() {
-      input_.consume(input_.data().size());
-      boost::asio::async_read_until(
-          in_, input_, "\n",
-          [this](const boost::system::error_code &e, std::size_t size) {
-            onRead(e, size);
-          });
-    }
-
-    void onRead(const boost::system::error_code &e, std::size_t size) {
-      if (stopped_) {
-        return;
-      }
-      if (!e && size != 0) {
-        line_.assign(buffers_begin(input_.data()), buffers_end(input_.data()));
-        line_.erase(line_.find_first_of("\r\n"));
-        handler_(line_);
-      } else {
-        logger->error(e.message());
-      }
-      read();
-    };
-
-    boost::asio::posix::stream_descriptor in_;
-    boost::asio::streambuf input_;
-    std::string line_;
-    Handler handler_;
-    bool stopped_ = false;
-  };
-
-}  // namespace libp2p::protocol::gossip::example
-
 int main(int argc, char *argv[]) {
-  namespace example = libp2p::protocol::gossip::example;
+  namespace utility = libp2p::protocol::example::utility;
 
-  if (argc != 6 && argc != 3) {
-    fmt::print(
-        stderr,
-        "Usage:\n LOCAL_PORT LOCAL_KEY [REMOTE_HOST REMOTE_PORT REMOTE_KEY]\n");
+  auto options = parseCommandLine(argc, argv);
+  if (!options) {
     return 1;
   }
 
-  auto io = std::make_shared<boost::asio::io_context>();
+  utility::setupLoggers(options->log_level);
 
-  auto local_endpoint = example::makeEndpoint("local", example::getLocalIP(*io),
-                                              argv[1], argv[2]);  // NOLINT
-  if (!local_endpoint) {
+  // overriding default config to see local messages as well (echo mode)
+  libp2p::protocol::gossip::Config config;
+  config.echo_forward_mode = true;
+
+  // injector creates and ties dependent objects
+  auto injector = libp2p::injector::makeGossipInjector(
+      libp2p::injector::useGossipConfig(config));
+
+  // create asio context
+  auto io = injector.create<std::shared_ptr<boost::asio::io_context>>();
+
+  // host is our local libp2p node
+  auto host = injector.create<std::shared_ptr<libp2p::Host>>();
+
+  // make peer uri of local node
+  auto local_address_str =
+      fmt::format("/ip4/{}/tcp/{}/p2p/{}", utility::getLocalIP(*io),
+                  options->port, host->getId().toBase58());
+
+  // local address -> peer info
+  auto peer_info = utility::str2peerInfo(local_address_str);
+  if (!peer_info) {
+    std::cerr << "Cannot resolve local peer from " << local_address_str << "\n";
     return 2;
   }
 
-  boost::optional<example::EndpointInfo> remote_endpoint;
-  if (argc == 6) {
-    remote_endpoint =
-        example::makeEndpoint("remote", argv[3], argv[4], argv[5]);  // NOLINT
-    if (!remote_endpoint) {
-      return 3;
-    }
+  // say local address
+  std::cerr << "I am " << local_address_str << "\n";
+
+  // create gossip node
+  auto gossip =
+      injector.create<std::shared_ptr<libp2p::protocol::gossip::Gossip>>();
+
+  using Message = libp2p::protocol::gossip::Gossip::Message;
+
+  // subscribe to chat topic, print messages to the console
+  auto subscription = gossip->subscribe(
+      {options->topic}, [](boost::optional<const Message &> m) {
+        if (!m) {
+          // message with no value means EOS, this occurs when the node has
+          // stopped
+          return;
+        }
+        std::cerr << utility::formatPeerId(m->from) << ": "
+                  << utility::toString(m->data) << "\n";
+      });
+
+  // tell gossip to connect to remote peer, only if specified
+  if (options->remote) {
+    gossip->addBootstrapPeer(options->remote->id,
+                             options->remote->addresses[0]);
   }
 
-  logger = example::setupLoggers(true);
+  // start the node as soon as async engine starts
+  io->post([&] {
+    auto listen_res = host->listen(peer_info->addresses[0]);
+    if (!listen_res) {
+      std::cerr << "Cannot listen to multiaddress "
+                << peer_info->addresses[0].getStringAddress() << ", "
+                << listen_res.error().message() << "\n";
+      io->stop();
+      return;
+    }
+    host->start();
+    gossip->start();
+    std::cerr << "Node started\n";
+  });
 
-  auto scheduler = std::make_shared<libp2p::protocol::AsioScheduler>(*io, 100);
+  // read lines from stdin in async manner and publish them into the chat
+  utility::ConsoleAsyncReader stdin_reader(
+      *io, [&gossip, &options](const std::string &msg) {
+        gossip->publish({options->topic}, utility::fromString(msg));
+      });
 
-  example::HostContext host(scheduler, io, std::move(local_endpoint.value()),
-                            remote_endpoint);
-
-  logger->info("Starting");
-
-  // reads messages from console and publishes them
-  example::ConsoleAsyncReader stdin_reader(
-      *io, [&host](const std::string &msg) { host.publish("chat", msg); });
-
-  // run until signal is caught
+  // gracefully shutdown on signal
   boost::asio::signal_set signals(*io, SIGINT, SIGTERM);
   signals.async_wait(
       [&io](const boost::system::error_code &, int) { io->stop(); });
-  io->run();
 
-  fmt::print(stderr, "Stopped\n");
+  // run event loop
+  io->run();
+  std::cerr << "Node stopped\n";
+
   return 0;
 }
+
+namespace {
+
+  boost::optional<Options> parseCommandLine(int argc, char **argv) {
+    namespace po = boost::program_options;
+    try {
+      Options o;
+      std::string remote;
+
+      po::options_description desc("gossip_chat_example options");
+      desc.add_options()("help,h", "print usage message")(
+          "port,p", po::value(&o.port), "port to listen to")(
+          "topic,t", po::value(&o.topic), "chat topic name (default is 'chat'")(
+          "remote,r", po::value(&remote), "remote peer uri to connect to")(
+          "log,l", po::value(&o.log_level), "log level, [e,w,i,d]");
+
+      po::variables_map vm;
+      po::store(parse_command_line(argc, argv, desc), vm);
+      po::notify(vm);
+
+      if (vm.count("help") != 0 || argc == 1) {
+        std::cerr << desc << "\n";
+        return boost::none;
+      }
+
+      if (o.port == 0) {
+        std::cerr << "Port cannot be zero\n";
+        return boost::none;
+      }
+
+      if (o.topic.empty()) {
+        std::cerr << "Topic name cannot be empty\n";
+        return boost::none;
+      }
+
+      if (!remote.empty()) {
+        o.remote = libp2p::protocol::example::utility::str2peerInfo(remote);
+        if (!o.remote) {
+          std::cerr << "Cannot resolve remote peer address from " << remote
+                    << "\n";
+          return boost::none;
+        }
+      }
+
+      return o;
+
+    } catch (const std::exception &e) {
+      std::cerr << e.what() << "\n";
+    }
+    return boost::none;
+  }
+
+}  // namespace
