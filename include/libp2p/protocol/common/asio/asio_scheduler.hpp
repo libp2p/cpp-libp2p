@@ -16,7 +16,7 @@ namespace libp2p::protocol {
    public:
     ~AsioScheduler() override = default;
 
-    AsioScheduler(boost::asio::io_context &io, Ticks interval);
+    AsioScheduler(boost::asio::io_context &io, SchedulerConfig config);
 
    private:
     Ticks now() const override;
@@ -28,8 +28,8 @@ namespace libp2p::protocol {
     void onImmediate();
 
     boost::asio::io_context &io_;
-    boost::asio::deadline_timer timer_;
     Ticks interval_;
+    boost::asio::deadline_timer timer_;
     boost::posix_time::ptime started_;
     std::function<void(const boost::system::error_code &)> timer_cb_;
     std::function<void()> immediate_cb_;

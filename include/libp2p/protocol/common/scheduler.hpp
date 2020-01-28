@@ -72,6 +72,10 @@ namespace libp2p::protocol {
 
   }  // namespace scheduler
 
+  struct SchedulerConfig {
+    scheduler::Ticks period_msec = 100;
+  };
+
   /// Async execution interface
   class Scheduler : public scheduler::Cancellation, private boost::noncopyable {
    public:

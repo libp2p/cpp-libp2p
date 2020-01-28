@@ -3,18 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <cassert>
+
 #include <libp2p/protocol/common/asio/asio_scheduler.hpp>
 
 namespace libp2p::protocol {
 
   AsioScheduler::AsioScheduler(boost::asio::io_context &io,
-                               Scheduler::Ticks interval)
+                               SchedulerConfig config)
       : io_(io),
-        timer_(io, boost::posix_time::milliseconds(interval)),
-        interval_(interval),
+        interval_(config.period_msec),
+        timer_(io, boost::posix_time::milliseconds(interval_)),
         started_(boost::posix_time::microsec_clock::local_time()),
         timer_cb_([this](const boost::system::error_code &) { onTimer(); }),
         immediate_cb_([this] { onImmediate(); }) {
+    assert(interval_ > 0 && interval_ <= 1000);
     timer_.async_wait(timer_cb_);
   }
 
