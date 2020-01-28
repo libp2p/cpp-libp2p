@@ -270,8 +270,8 @@ int main(int argc, char *argv[]) {
 
     auto io = x::createIOContext();
 
-    auto scheduler =
-        std::make_shared<libp2p::protocol::AsioScheduler>(*io, 1000);
+    auto scheduler = std::make_shared<libp2p::protocol::AsioScheduler>(
+        *io, libp2p::protocol::SchedulerConfig{});
 
     x::Hosts hosts(hosts_count, scheduler);
 

@@ -127,10 +127,11 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
 
   auto cmgr = std::make_shared<network::ConnectionManagerImpl>(bus, tmgr);
 
-  auto listener = std::make_unique<network::ListenerManagerImpl>(
+  auto listener = std::make_shared<network::ListenerManagerImpl>(
       multiselect, std::move(router), tmgr, cmgr);
 
-  auto dialer = std::make_unique<network::DialerImpl>(multiselect, tmgr, cmgr);
+  auto dialer =
+      std::make_unique<network::DialerImpl>(multiselect, tmgr, cmgr, listener);
 
   auto network = std::make_unique<network::NetworkImpl>(
       std::move(listener), std::move(dialer), cmgr);
@@ -144,6 +145,6 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto peer_repo = std::make_unique<peer::PeerRepositoryImpl>(
       std::move(addr_repo), std::move(key_repo), std::move(protocol_repo));
 
-  return std::make_shared<host::BasicHost>(idmgr, std::move(network),
-                                           std::move(peer_repo), std::move(bus));
+  return std::make_shared<host::BasicHost>(
+      idmgr, std::move(network), std::move(peer_repo), std::move(bus));
 }
