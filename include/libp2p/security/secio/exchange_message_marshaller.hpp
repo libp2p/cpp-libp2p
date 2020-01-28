@@ -34,7 +34,7 @@ namespace libp2p::security::secio {
         const ExchangeMessage &msg) const = 0;
 
     /**
-     * Converts protubuf Exchange message to its handy counterpart
+     * Converts protobuf Exchange message to its handy counterpart
      * @param proto_msg protobuf Exchange message
      * @return handy Exchange message
      */

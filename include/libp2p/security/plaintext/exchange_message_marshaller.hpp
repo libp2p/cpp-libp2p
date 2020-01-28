@@ -16,6 +16,10 @@
 
 namespace libp2p::security::plaintext {
 
+  namespace protobuf {
+    class Exchange;
+  }
+
   /**
    * Performs serializing of a Plaintext exchange message to Protobuf format and
    * deserializes it back
@@ -23,6 +27,22 @@ namespace libp2p::security::plaintext {
   class ExchangeMessageMarshaller {
    public:
     virtual ~ExchangeMessageMarshaller() = default;
+
+    /**
+     * Converts handy Exchange message to its protobuf counterpart
+     * @param msg handy Exchange message
+     * @return protobuf Exchange message
+     */
+    virtual outcome::result<protobuf::Exchange> handyToProto(
+        const ExchangeMessage &msg) const = 0;
+
+    /**
+     * Converts protobuf Exchange message to its handy counterpart
+     * @param proto_msg protobuf Exchange message
+     * @return handy Exchange message
+     */
+    virtual outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>>
+    protoToHandy(const protobuf::Exchange &proto_msg) const = 0;
 
     /**
      * @param msg exchange message to be marshalled to Protobuf
