@@ -82,7 +82,7 @@ namespace libp2p::security {
 
   void Plaintext::sendExchangeMsg(
       const std::shared_ptr<connection::RawConnection> &conn,
-      std::shared_ptr<basic::ProtobufMessageReadWriter> rw,
+      const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
       SecConnCallbackFunc cb) const {
     plaintext::ExchangeMessage exchange_msg{
         .pubkey = idmgr_->getKeyPair().publicKey, .peer_id = idmgr_->getId()};
@@ -91,7 +91,7 @@ namespace libp2p::security {
 
     rw->write<plaintext::protobuf::Exchange>(
         proto_exchange_msg,
-        [self{shared_from_this()}, cb{cb}, conn](auto &&res) {
+        [self{shared_from_this()}, cb{std::move(cb)}, conn](auto &&res) {
           if (res.has_error()) {
             self->closeConnection(conn, Error::EXCHANGE_SEND_ERROR);
             return cb(Error::EXCHANGE_SEND_ERROR);
@@ -101,7 +101,7 @@ namespace libp2p::security {
 
   void Plaintext::receiveExchangeMsg(
       const std::shared_ptr<connection::RawConnection> &conn,
-      std::shared_ptr<basic::ProtobufMessageReadWriter> rw,
+      const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
       const MaybePeerId &p, SecConnCallbackFunc cb) const {
     auto remote_peer_exchange_bytes = std::make_shared<std::vector<uint8_t>>();
     rw->read<plaintext::protobuf::Exchange>(

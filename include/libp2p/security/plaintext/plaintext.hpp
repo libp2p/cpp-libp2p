@@ -55,13 +55,14 @@ namespace libp2p::security {
    private:
     using MaybePeerId = boost::optional<peer::PeerId>;
 
-    void sendExchangeMsg(const std::shared_ptr<connection::RawConnection> &conn,
-                         std::shared_ptr<basic::ProtobufMessageReadWriter> rw,
-                         SecConnCallbackFunc cb) const;
+    void sendExchangeMsg(
+        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
+        SecConnCallbackFunc cb) const;
 
     void receiveExchangeMsg(
         const std::shared_ptr<connection::RawConnection> &conn,
-        std::shared_ptr<basic::ProtobufMessageReadWriter> rw,
+        const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
         const MaybePeerId &p, SecConnCallbackFunc cb) const;
 
     // the callback passed to an async read call in receiveExchangeMsg
