@@ -333,7 +333,18 @@ namespace libp2p::connection {
     frame_buffer.insert(frame_buffer.end(),
                         std::make_move_iterator(mac_data.begin()),
                         std::make_move_iterator(mac_data.end()));
-    raw_connection_->write(frame_buffer, frame_buffer.size(), std::move(cb));
+    basic::Writer::WriteCallbackFunc cb_wrapper =
+        [user_cb{std::move(cb)}, bytes,
+         raw_bytes{frame_buffer.size()}](auto &&res) {
+          if (not res) {
+            return user_cb(res);  // pulling out the error occurred
+          }
+          if (res.value() != raw_bytes) {
+            return user_cb(Error::STREAM_IS_BROKEN);
+          }
+          user_cb(bytes);
+        };
+    raw_connection_->write(frame_buffer, frame_buffer.size(), cb_wrapper);
   }
 
   void SecioConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,

@@ -28,6 +28,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, Secio::Error, e) {
   switch (e) {  // NOLINT
     case E::REMOTE_PEER_SIGNATURE_IS_INVALID:
       return "Remote peer exchange message contains invalid signature";
+    case E::INITIAL_PACKET_VERIFICATION_FAILED:
+      return "Error happened while inital packet verification";
     default:
       return "Unknown error";
   }
@@ -126,6 +128,7 @@ namespace libp2p::security {
               conn, cb)
           dialer->storeRemotePeerProposalBytes(remote_peer_proposal_bytes);
           self->log_->debug("remote peer proposal received");
+          self->remote_peer_rand_.swap(remote_peer_propose.rand);
           self->sendExchangeMessage(conn, dialer, cb);
         },
         remote_peer_proposal_bytes);
@@ -219,7 +222,26 @@ namespace libp2p::security {
               remote_pubkey, chosen_hash, chosen_cipher, local_stretched_key,
               remote_stretched_key);
           SECIO_OUTCOME_VOID_TRY(secio_conn->init(), conn, cb)
-          cb(std::move(secio_conn));
+          secio_conn->write(
+              self->remote_peer_rand_, self->remote_peer_rand_.size(),
+              [self, conn, cb, secio_conn](auto &&write_res) {
+                SECIO_OUTCOME_TRY(written_bytes, write_res, conn, cb)
+                if (written_bytes != self->remote_peer_rand_.size()) {
+                  return cb(Error::INITIAL_PACKET_VERIFICATION_FAILED);
+                }
+                const auto kToRead{self->propose_message_.rand.size()};
+                auto buffer = std::make_shared<common::ByteArray>(kToRead);
+                secio_conn->read(
+                    *buffer, kToRead,
+                    [self, cb, conn, secio_conn, buffer](auto &&read_res) {
+                      SECIO_OUTCOME_TRY(read_bytes, read_res, conn, cb)
+                      if (read_bytes != buffer->size()
+                          or *buffer != self->propose_message_.rand) {
+                        return cb(Error::INITIAL_PACKET_VERIFICATION_FAILED);
+                      }
+                      cb(secio_conn);
+                    });
+              });
         });
   }
 

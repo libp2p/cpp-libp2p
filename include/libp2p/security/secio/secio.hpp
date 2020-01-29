@@ -31,6 +31,7 @@ namespace libp2p::security {
    public:
     enum class Error {
       REMOTE_PEER_SIGNATURE_IS_INVALID = 1,
+      INITIAL_PACKET_VERIFICATION_FAILED,
     };
 
     static constexpr auto kProtocolId = "/secio/1.0.0";
@@ -93,6 +94,7 @@ namespace libp2p::security {
     std::shared_ptr<crypto::aes::AesProvider> aes_provider_;
     //
     secio::ProposeMessage propose_message_;
+    mutable common::ByteArray remote_peer_rand_;
     common::Logger log_ = common::createLogger("SECIO");
   };
 }  // namespace libp2p::security
