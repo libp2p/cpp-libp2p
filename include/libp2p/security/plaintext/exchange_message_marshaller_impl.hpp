@@ -26,11 +26,18 @@ namespace libp2p::security::plaintext {
     enum class Error {
       PUBLIC_KEY_SERIALIZING_ERROR = 1,
       MESSAGE_SERIALIZING_ERROR,
-      PUBLIC_KEY_DESERIALIZING_ERROR
+      PUBLIC_KEY_DESERIALIZING_ERROR,
+      MESSAGE_DESERIALIZING_ERROR,
     };
 
     explicit ExchangeMessageMarshallerImpl(
         std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller);
+
+    outcome::result<protobuf::Exchange> handyToProto(
+        const ExchangeMessage &msg) const override;
+
+    outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>>
+    protoToHandy(const protobuf::Exchange &proto_msg) const override;
 
     outcome::result<std::vector<uint8_t>> marshal(
         const ExchangeMessage &msg) const override;
@@ -39,9 +46,6 @@ namespace libp2p::security::plaintext {
         gsl::span<const uint8_t> msg_bytes) const override;
 
    private:
-    outcome::result<std::unique_ptr<crypto::protobuf::PublicKey>>
-    allocatePubKey(const crypto::PublicKey &pubkey) const;
-
     std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller_;
   };
 
