@@ -7,7 +7,7 @@
 
 #include <cassert>
 
-#define TRACE_ENABLED 1
+#define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxStream::Error, e) {

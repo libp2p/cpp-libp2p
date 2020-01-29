@@ -104,9 +104,6 @@ namespace libp2p::connection {
     // indicates whether start() has been executed or not
     bool started_ = false;
 
-    // XXX
-    // TODO(artem) bool new_stream_pending_ = false;
-
     /**
      * Write message to the connection; ensures no more than one wright
      * would be executed at one time

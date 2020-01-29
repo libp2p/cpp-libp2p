@@ -9,7 +9,7 @@
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 #include <libp2p/muxer/yamux/yamux_stream.hpp>
 
-#define TRACE_ENABLED 1
+#define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
 
 using Buffer = libp2p::common::ByteArray;
@@ -71,8 +71,6 @@ namespace libp2p::connection {
 
     TRACE("creating stream {}", stream_id);
 
-    // TODO(artem) new_stream_pending_ = true;
-
     write(
         {newStreamMsg(stream_id),
          [self{shared_from_this()}, cb = std::move(cb), stream_id](auto &&res) {
@@ -85,8 +83,6 @@ namespace libp2p::connection {
            self->streams_.insert({stream_id, created_stream});
 
            TRACE("created stream {}", stream_id);
-
-           // TODO(artem) self->new_stream_pending_ = false;
 
            return cb(std::move(created_stream));
          }});
@@ -219,7 +215,6 @@ namespace libp2p::connection {
       log_->error(
           "cannot read header from the connection: {}; closing the session",
           res.error().message());
-      resetAllStreams();
       return closeSession();
     }
 
@@ -228,7 +223,6 @@ namespace libp2p::connection {
       log_->error(
           "client has sent something, which is not a valid header; closing the "
           "session");
-      resetAllStreams();
       return closeSession();
     }
 
@@ -242,7 +236,6 @@ namespace libp2p::connection {
         return processGoAwayFrame(*header_opt);
       default:
         log_->critical("garbage in parsed frame's type; closing the session");
-        resetAllStreams();
         return closeSession();
     }
   }
@@ -277,7 +270,6 @@ namespace libp2p::connection {
         return closeSession();
       }
 
-      // TODO(artem): new_stream_handler_ and inbound streams issue
       if (streams_.size() < config_.maximum_streams && new_stream_handler_) {
         stream = registerNewStream(stream_id);
       } else {
@@ -480,14 +472,6 @@ namespace libp2p::connection {
     if (auto stream = findStream(stream_id)) {
       streams_.erase(stream_id);
       stream->resetStream();
-
-      // TODO(artem): temporarily cleanup itself!
-//      if (streams_.empty() && !new_stream_pending_) {
-//        auto res = close();
-//        if (!res) {
-//          log_->error("cannot close connection: {} ", res.error().message());
-//        }
-//      }
     }
   }
 
@@ -498,16 +482,18 @@ namespace libp2p::connection {
   }
 
   void YamuxedConnection::closeSession() {
-    return write({goAwayMsg(YamuxFrame::GoAwayError::PROTOCOL_ERROR),
-                  [self{shared_from_this()}](auto &&res) {
-                    self->started_ = false;
-                    if (!res) {
-                      self->log_->error("cannot close a Yamux session: {} ",
-                                        res.error().message());
-                      return;
-                    }
-                    self->log_->info("Yamux session was closed");
-                  }});
+    resetAllStreams();
+
+    write({goAwayMsg(YamuxFrame::GoAwayError::PROTOCOL_ERROR),
+           [self{shared_from_this()}](auto &&res) {
+             self->started_ = false;
+             if (!res) {
+               self->log_->error("cannot close a Yamux session: {} ",
+                                 res.error().message());
+               return;
+             }
+             self->log_->info("Yamux session was closed");
+           }});
   }
 
   void YamuxedConnection::streamOnWindowUpdate(StreamId stream_id,
