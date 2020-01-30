@@ -7,24 +7,26 @@
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
 
+#define TRACE_ENABLED 0
+#include <libp2p/common/trace.hpp>
+
 namespace libp2p::network {
 
   void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb) {
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
-      log_->debug("dialer: found reusable connection");
 
-      if (c->isInitiator()) {
-        // TODO(artem): dont reuse connections in opposite direction temporarily
-        return cb(std::move(c));
-      }
+      TRACE("reusing connection to peer {}", p.id.toBase58().substr(46));
+      cb(std::move(c));
+      return;
     }
 
     // we don't have a connection to this peer.
     // did user supply its addresses in {@param p}?
     if (p.addresses.empty()) {
       // we don't have addresses of peer p
-      return cb(std::errc::destination_address_required);
+      cb(std::errc::destination_address_required);
+      return;
     }
 
     // for all multiaddresses supplied in peerinfo
@@ -33,33 +35,35 @@ namespace libp2p::network {
       if (auto tr = this->tmgr_->findBest(ma); tr != nullptr) {
         // we can dial to this peer!
         // dial using best transport
-        return tr->dial(
+        tr->dial(
             p.id, ma,
             [this, cb{std::move(cb)}, pid{p.id}](
                 outcome::result<std::shared_ptr<connection::CapableConnection>>
                     rconn) {
               if (!rconn) {
-                return cb(rconn.error());
+                cb(rconn.error());
+                return;
               }
 
-              auto &&conn = rconn.value();
-              this->cmgr_->addConnectionToPeer(pid, conn);
+              // allow the connection to accept inbound streams
+              this->listener_->onConnection(rconn);
 
               // return connection to the user
-              cb(conn);
+              cb(rconn.value());
             });
+        return;
       }
     }
 
     // we did not find supported transport
-    return cb(std::errc::address_family_not_supported);
+    cb(std::errc::address_family_not_supported);
   }
 
   void DialerImpl::newStream(const peer::PeerInfo &p,
                              const peer::Protocol &protocol,
                              StreamResultFunc cb) {
     // 1. make new connection or reuse existing
-    return this->dial(
+    this->dial(
         p,
         [this, cb{std::move(cb)}, protocol](
             outcome::result<std::shared_ptr<connection::CapableConnection>>
@@ -70,8 +74,7 @@ namespace libp2p::network {
           auto &&conn = rconn.value();
 
           if (!conn->isInitiator()) {
-            log_->debug(
-                "dialer: opening outbound stream inside inbound connection");
+            TRACE("dialer: opening outbound stream inside inbound connection");
           }
 
           // 2. open new stream on that connection
@@ -84,7 +87,7 @@ namespace libp2p::network {
                 }
                 auto &&stream = rstream.value();
 
-                log_->debug("dialer: inside newStream callback");
+                TRACE("dialer: before multiselect");
 
                 // 3. negotiate a protocol over that stream
                 std::vector<peer::Protocol> protocols{protocol};
@@ -96,6 +99,8 @@ namespace libp2p::network {
                         return cb(rproto.error());
                       }
 
+                      TRACE("dialer: inside multiselect callback");
+
                       // 4. return stream back to the user
                       cb(std::move(stream));
                     });
@@ -106,13 +111,16 @@ namespace libp2p::network {
   DialerImpl::DialerImpl(
       std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect,
       std::shared_ptr<TransportManager> tmgr,
-      std::shared_ptr<ConnectionManager> cmgr)
+      std::shared_ptr<ConnectionManager> cmgr,
+      std::shared_ptr<ListenerManager> listener)
       : multiselect_(std::move(multiselect)),
         tmgr_(std::move(tmgr)),
-        cmgr_(std::move(cmgr)) {
+        cmgr_(std::move(cmgr)),
+        listener_(std::move(listener)) {
     BOOST_ASSERT(multiselect_ != nullptr);
     BOOST_ASSERT(tmgr_ != nullptr);
     BOOST_ASSERT(cmgr_ != nullptr);
+    BOOST_ASSERT(listener_ != nullptr);
   }
 
 }  // namespace libp2p::network

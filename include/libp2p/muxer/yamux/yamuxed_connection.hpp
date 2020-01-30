@@ -39,7 +39,8 @@ namespace libp2p::connection {
       TOO_MANY_STREAMS,
       FORBIDDEN_CALL,
       OTHER_SIDE_ERROR,
-      INTERNAL_ERROR
+      INTERNAL_ERROR,
+      CLOSED_BY_PEER
     };
 
     /**
@@ -104,9 +105,6 @@ namespace libp2p::connection {
     // indicates whether start() has been executed or not
     bool started_ = false;
 
-    // XXX
-    bool new_stream_pending_ = false;
-
     /**
      * Write message to the connection; ensures no more than one wright
      * would be executed at one time
@@ -169,7 +167,7 @@ namespace libp2p::connection {
     /**
      * Reset all streams, which were created over this connection
      */
-    void resetAllStreams();
+    void resetAllStreams(outcome::result<void> reason);
 
     /**
      * Find stream with such id in local streams
@@ -236,7 +234,7 @@ namespace libp2p::connection {
     /**
      * Close this Yamux session
      */
-    void closeSession();
+    void closeSession(outcome::result<void> reason);
 
     std::shared_ptr<SecureConnection> connection_;
     NewStreamHandlerFunc new_stream_handler_;
