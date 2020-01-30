@@ -44,16 +44,10 @@ Peer::Peer(Peer::Duration timeout, bool secure)
       "failed to generate keys");
   host_ = makeHost(keys);
 
-  EXPECT_OUTCOME_TRUE_MSG(
-      keys2, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
-      "failed to generate keys");
-  host2_ = makeHost(keys2);
-
   auto handler = [this](std::shared_ptr<Stream> result) {
     echo_->handle(result);
   };
   host_->setProtocolHandler(echo_->getProtocolId(), handler);
-  host2_->setProtocolHandler(echo_->getProtocolId(), handler);
 }
 
 void Peer::startServer(const multi::Multiaddress &address,
@@ -71,7 +65,7 @@ void Peer::startClient(const peer::PeerInfo &pinfo, size_t message_count,
                        Peer::sptr<TickCounter> counter) {
   context_->post([this, server_id = pinfo.id.toBase58(), pinfo, message_count,
                   counter = std::move(counter)]() mutable {
-    this->host2_->newStream(
+    this->host_->newStream(
         pinfo, echo_->getProtocolId(),
         [server_id = std::move(server_id), ping_times = message_count,
          counter = std::move(counter)](

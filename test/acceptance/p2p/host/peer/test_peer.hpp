@@ -82,7 +82,6 @@ class Peer {
   sptr<Context> context_;                       ///< io context
   std::thread thread_;                          ///< peer working thread
   sptr<Host> host_;                             ///< first host
-  sptr<Host> host2_;                             ///< second host
   sptr<Echo> echo_;                             ///< echo protocol
   sptr<BoostRandomGenerator> random_provider_;  ///< random provider
   sptr<Ed25519Provider> ed25519_provider_;      ///< ed25519 provider

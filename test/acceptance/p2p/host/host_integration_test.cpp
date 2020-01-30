@@ -97,6 +97,10 @@ TEST_P(HostIntegrationTest, InteractAllToAllSuccess) {
   // start client sessions from all peers to all other peers
   for (size_t i = 0; i < peer_count; ++i) {
     for (size_t j = 0; j < peer_count; ++j) {
+      if (secured and i == j) {
+        // SECIO does not allow communicating itself
+        continue;
+      }
       const auto &pinfo = peerinfo_futures[j].get();
       auto counter = std::make_shared<TickCounter>(i, j, ping_times);
       peers[i]->startClient(pinfo, ping_times, counter);
@@ -123,5 +127,6 @@ INSTANTIATE_TEST_CASE_P(AllTestCases, HostIntegrationTest,
                             // ports are not freed, so new ports each time
                             Config{1u, 1u, 40510u, 2s, 2s, 200ms, false},
                             Config{2u, 1u, 40510u, 2s, 2s, 200ms, false},
-                            Config{1u, 1u, 40510u, 2s, 2s, 200ms, true},
-                            Config{2u, 1u, 40510u, 2s, 2s, 200ms, true}));
+                            Config{2u, 1u, 40510u, 5s, 2s, 200ms, true}
+                            /*, TODO(igor-egorov) FIL-143 enable test for more than two SECIO peers
+                            Config{3u, 1u, 40510u, 5s, 2s, 200ms, true}*/));
