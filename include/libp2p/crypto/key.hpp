@@ -9,6 +9,7 @@
 #include <functional>
 
 #include <libp2p/common/types.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto {
 
@@ -56,7 +57,7 @@ namespace libp2p::crypto {
    */
   struct EphemeralKeyPair {
     Buffer ephemeral_public_key;
-    std::function<PrivateKey()> private_key_generator;
+    std::function<outcome::result<Buffer>(Buffer)> shared_secret_generator;
   };
 
   /**

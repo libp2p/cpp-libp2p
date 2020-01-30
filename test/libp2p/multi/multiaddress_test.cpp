@@ -250,8 +250,8 @@ TEST_F(MultiaddressTest, GetProtocolsWithValues) {
  * @then it is accepted
  */
 TEST_F(MultiaddressTest, DnsAndIpfs) {
-  auto addr = "/dns4/kusama-bootnode-1.paritytech.net/tcp/30333/p2p/QmV32G18YzenpNFmhqg2n7TtdjYRK7oU6FhLbDL4oRgsbe"s;
+  auto addr =
+      "/dns4/kusama-bootnode-1.paritytech.net/tcp/30333/p2p/QmV32G18YzenpNFmhqg2n7TtdjYRK7oU6FhLbDL4oRgsbe"s;
   EXPECT_OUTCOME_TRUE(address, Multiaddress::create(addr));
   ASSERT_EQ(address.getStringAddress(), addr);
-
 }

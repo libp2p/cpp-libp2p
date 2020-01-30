@@ -12,8 +12,7 @@ namespace libp2p::connection {
 
   PlaintextConnection::PlaintextConnection(
       std::shared_ptr<RawConnection> raw_connection,
-      crypto::PublicKey localPubkey,
-      crypto::PublicKey remotePubkey,
+      crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller)
       : raw_connection_{std::move(raw_connection)},
         local_(std::move(localPubkey)),
@@ -56,8 +55,7 @@ namespace libp2p::connection {
     return raw_connection_->remoteMultiaddr();
   }
 
-  void PlaintextConnection::read(gsl::span<uint8_t> in,
-                                 size_t bytes,
+  void PlaintextConnection::read(gsl::span<uint8_t> in, size_t bytes,
                                  Reader::ReadCallbackFunc f) {
     return raw_connection_->read(in, bytes, std::move(f));
   };
@@ -68,14 +66,12 @@ namespace libp2p::connection {
     return raw_connection_->readSome(in, bytes, std::move(f));
   };
 
-  void PlaintextConnection::write(gsl::span<const uint8_t> in,
-                                  size_t bytes,
+  void PlaintextConnection::write(gsl::span<const uint8_t> in, size_t bytes,
                                   Writer::WriteCallbackFunc f) {
     return raw_connection_->write(in, bytes, std::move(f));
   }
 
-  void PlaintextConnection::writeSome(gsl::span<const uint8_t> in,
-                                      size_t bytes,
+  void PlaintextConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
                                       Writer::WriteCallbackFunc f) {
     return raw_connection_->writeSome(in, bytes, std::move(f));
   }

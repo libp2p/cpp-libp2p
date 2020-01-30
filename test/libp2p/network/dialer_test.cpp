@@ -49,7 +49,7 @@ struct DialerTest : public ::testing::Test {
   std::shared_ptr<ConnectionManagerMock> cmgr =
       std::make_shared<ConnectionManagerMock>();
 
-  std::shared_ptr<ListenerManager> listener = std::make_shared<ListenerMock>();
+  std::shared_ptr<ListenerMock> listener = std::make_shared<ListenerMock>();
 
   std::shared_ptr<Dialer> dialer =
       std::make_shared<DialerImpl>(proto_muxer, tmgr, cmgr, listener);
@@ -71,6 +71,9 @@ TEST_F(DialerTest, DialNewConnection) {
   EXPECT_CALL(*cmgr, getBestConnectionForPeer(pinfo.id))
       .WillOnce(Return(nullptr));
 
+  // connection is stored
+  EXPECT_CALL(*listener, onConnection(_)).Times(1);
+
   // we have transport to dial
   EXPECT_CALL(*tmgr, findBest(ma1)).WillOnce(Return(transport));
 
@@ -78,8 +81,7 @@ TEST_F(DialerTest, DialNewConnection) {
   EXPECT_CALL(*transport, dial(pinfo.id, ma1, _))
       .WillOnce(Arg2CallbackWithArg(outcome::success(connection)));
 
-  // connection is stored by connection manager
-  EXPECT_CALL(*cmgr, addConnectionToPeer(pinfo.id, _)).Times(1);
+
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {

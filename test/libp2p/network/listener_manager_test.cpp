@@ -164,7 +164,6 @@ TEST_F(ListenerManagerTest, SetProtocolHandlerWithMatcher) {
   EXPECT_CALL(*router, setProtocolHandler(Eq(p), _, _))
       .WillOnce(Arg1CallbackWithArg(stream));
 
-  listener->setProtocolHandler(
-      p, [&](auto &&s) { cb.Call(s); },
-      [p](auto &&proto) { return proto == p; });
+  listener->setProtocolHandler(p, [&](auto &&s) { cb.Call(s); },
+                               [p](auto &&proto) { return proto == p; });
 }

@@ -75,8 +75,6 @@ namespace libp2p::connection {
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() const override;
 
-    void onConnectionReset();
-
    private:
     /**
      * Internal proxy method for reads; (\param some) denotes if the read should
@@ -123,6 +121,14 @@ namespace libp2p::connection {
     void beginRead(ReadCallbackFunc cb);
     void endRead(outcome::result<size_t> result);
 
+    /// Tries to consume requested bytes from already received data
+    outcome::result<size_t> tryConsumeReadBuffer(gsl::span<uint8_t> out,
+                                                 size_t bytes, bool some);
+
+    /// Forwards read buffer and receive window and acknowledges
+    /// bytes received in async manner
+    void sendAck(size_t bytes);
+
     /// is the stream writing right now?
     bool is_writing_ = false;
     WriteCallbackFunc write_cb_;
@@ -145,6 +151,9 @@ namespace libp2p::connection {
      */
     outcome::result<void> commitData(gsl::span<const uint8_t> data,
                                      size_t data_size);
+
+    /// Called by connection on reset
+    void onConnectionReset(outcome::result<size_t> reason);
   };
 }  // namespace libp2p::connection
 

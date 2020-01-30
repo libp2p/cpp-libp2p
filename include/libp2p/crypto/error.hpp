@@ -25,6 +25,7 @@ namespace libp2p::crypto {
     FAILED_ENCRYPT_FINALIZE,        ///< failed to finalize encryption
     FAILED_DECRYPT_FINALIZE,        ///< failed to finalize decryption
     WRONG_IV_SIZE,                  ///< wrong iv size
+    WRONG_KEY_SIZE,                 ///< wrong key size
   };
 
   enum class HmacProviderError {
@@ -56,7 +57,8 @@ namespace libp2p::crypto {
     WRONG_KEY_TYPE,                   ///< incorrect key type
     CANNOT_LOAD_UNSPECIFIED,          ///< cannot load unspecified key
     GET_KEY_BYTES_FAILED,             ///< failed to get key bytes from PKEY
-    INTERNAL_ERROR                    ///< internal error happened
+    INTERNAL_ERROR,                   ///< internal error happened
+    UNSUPPORTED_CURVE_TYPE,           ///< generator for curve type is not implemented
   };
 
   enum class KeyValidatorError {

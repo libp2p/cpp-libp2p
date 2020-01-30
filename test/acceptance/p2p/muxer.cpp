@@ -43,6 +43,9 @@ using std::chrono_literals::operator""ms;
 
 static const size_t kServerBufSize = 10000;  // 10 Kb
 
+// verbose==true will allow to print debug output to stdout
+static const bool verbose = false;
+
 struct UpgraderSemiMock : public Upgrader {
   ~UpgraderSemiMock() override = default;
 
@@ -96,6 +99,15 @@ struct Server : public std::enable_shared_from_this<Server> {
 
     stream->readSome(
         *buf, buf->size(), [buf, stream, this](outcome::result<size_t> rread) {
+          if (!rread) {
+            if (rread.error() == YamuxedConnection::Error::CLOSED_BY_PEER) {
+              // TODO(artem): EOF wasn't signalled by former logic,
+              // check if this complies to this test's intentions
+              return;
+            }
+            this->println("readSome error: ", rread.error().message());
+          }
+
           EXPECT_OUTCOME_TRUE(read, rread)
 
           this->println("readSome ", read, " bytes");
@@ -134,6 +146,7 @@ struct Server : public std::enable_shared_from_this<Server> {
  private:
   template <typename... Args>
   void println(Args &&... args) {
+    if (!verbose) return;
     std::cout << "[server " << std::this_thread::get_id() << "]\t";
     (std::cout << ... << args);
     std::cout << std::endl;
@@ -218,6 +231,7 @@ struct Client : public std::enable_shared_from_this<Client> {
  private:
   template <typename... Args>
   void println(Args &&... args) {
+    if (!verbose) return;
     std::cout << "[client " << std::this_thread::get_id() << "]\t";
     (std::cout << ... << args);
     std::cout << std::endl;

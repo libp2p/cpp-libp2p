@@ -12,17 +12,17 @@
 #include <libp2p/crypto/ecdsa_provider.hpp>
 
 namespace libp2p::crypto::ecdsa {
+
   class EcdsaProviderImpl : public EcdsaProvider {
    public:
-    outcome::result<KeyPair> GenerateKeyPair() const override;
+    outcome::result<KeyPair> generate() const override;
 
-    outcome::result<PublicKey> DerivePublicKey(
-        const PrivateKey &key) const override;
+    outcome::result<PublicKey> derive(const PrivateKey &key) const override;
 
-    outcome::result<Signature> Sign(gsl::span<uint8_t> message,
+    outcome::result<Signature> sign(gsl::span<const uint8_t> message,
                                     const PrivateKey &key) const override;
 
-    outcome::result<bool> Verify(gsl::span<uint8_t> message,
+    outcome::result<bool> verify(gsl::span<const uint8_t> message,
                                  const Signature &signature,
                                  const PublicKey &key) const override;
 
@@ -35,7 +35,7 @@ namespace libp2p::crypto::ecdsa {
      * @return Converted key or error code
      */
     template <typename KeyType>
-    outcome::result<KeyType> ConvertEcKeyToBytes(
+    outcome::result<KeyType> convertEcKeyToBytes(
         const std::shared_ptr<EC_KEY> &ec_key,
         int (*converter)(EC_KEY *, uint8_t **)) const;
 
@@ -47,7 +47,7 @@ namespace libp2p::crypto::ecdsa {
      * @return Converted key or error code
      */
     template <typename KeyType>
-    outcome::result<std::shared_ptr<EC_KEY>> ConvertBytesToEcKey(
+    outcome::result<std::shared_ptr<EC_KEY>> convertBytesToEcKey(
         const KeyType &key,
         EC_KEY *(*converter)(EC_KEY **, const uint8_t **, long)) const;
   };

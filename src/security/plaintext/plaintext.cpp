@@ -7,21 +7,26 @@
 
 #include <functional>
 
+#include <generated/security/plaintext/protobuf/plaintext.pb.h>
+#include <libp2p/basic/protobuf_message_read_writer.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/security/error.hpp>
 #include <libp2p/security/plaintext/plaintext_connection.hpp>
 
 #if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
-#	pragma GCC diagnostic ignored "-Wparentheses"
+#pragma GCC diagnostic ignored "-Wparentheses"
 #endif
 
-#define PLAINTEXT_OUTCOME_TRY(name, res, conn, cb) \
-  auto(name) = (res);                              \
-  if ((name).has_error()) {                        \
-    closeConnection(conn, (name).error());         \
-    cb((name).error());                            \
-    return;                                        \
+#define PLAINTEXT_OUTCOME_VOID_TRY(res, conn, cb) \
+  if ((res).has_error()) {                        \
+    closeConnection(conn, (res).error());         \
+    cb((res).error());                            \
+    return;                                       \
   }
+
+#define PLAINTEXT_OUTCOME_TRY(name, res, conn, cb) \
+  PLAINTEXT_OUTCOME_VOID_TRY((res), (conn), (cb))  \
+  auto(name) = (res).value();
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, Plaintext::Error, e) {
   using E = libp2p::security::Plaintext::Error;
@@ -29,7 +34,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, Plaintext::Error, e) {
     case E::EXCHANGE_SEND_ERROR:
       return "Error occured while sending Exchange message to the peer";
     case E::EXCHANGE_RECEIVE_ERROR:
-      return "Error occured while receiving Exchange message to the peer";
+      return "Error occurred while receiving Exchange message to the peer";
     case E::INVALID_PEER_ID:
       return "Received peer id doesn't match actual peer id";
     case E::EMPTY_PEER_ID:
@@ -61,76 +66,54 @@ namespace libp2p::security {
       std::shared_ptr<connection::RawConnection> inbound,
       SecConnCallbackFunc cb) {
     log_->debug("securing inbound connection");
-    sendExchangeMsg(inbound, cb);
-    receiveExchangeMsg(inbound, boost::none, cb);
+    auto rw = std::make_shared<basic::ProtobufMessageReadWriter>(inbound);
+    sendExchangeMsg(inbound, rw, cb);
+    receiveExchangeMsg(inbound, rw, boost::none, cb);
   }
 
   void Plaintext::secureOutbound(
       std::shared_ptr<connection::RawConnection> outbound,
       const peer::PeerId &p, SecConnCallbackFunc cb) {
     log_->debug("securing outbound connection");
-    sendExchangeMsg(outbound, cb);
-    receiveExchangeMsg(outbound, p, cb);
+    auto rw = std::make_shared<basic::ProtobufMessageReadWriter>(outbound);
+    sendExchangeMsg(outbound, rw, cb);
+    receiveExchangeMsg(outbound, rw, p, cb);
   }
 
   void Plaintext::sendExchangeMsg(
       const std::shared_ptr<connection::RawConnection> &conn,
+      const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
       SecConnCallbackFunc cb) const {
-    PLAINTEXT_OUTCOME_TRY(out_msg_res,
-                          marshaller_->marshal(plaintext::ExchangeMessage{
-                              .pubkey = idmgr_->getKeyPair().publicKey,
-                              .peer_id = idmgr_->getId()}),
-                          conn, cb)
+    plaintext::ExchangeMessage exchange_msg{
+        .pubkey = idmgr_->getKeyPair().publicKey, .peer_id = idmgr_->getId()};
+    PLAINTEXT_OUTCOME_TRY(proto_exchange_msg,
+                          marshaller_->handyToProto(exchange_msg), conn, cb)
 
-    auto out_msg = out_msg_res.value();
-    auto len = out_msg.size();
-
-    std::vector<uint8_t> len_bytes = {
-        static_cast<uint8_t>(len >> 24u), static_cast<uint8_t>(len >> 16u),
-        static_cast<uint8_t>(len >> 8u), static_cast<uint8_t>(len)};
-
-    conn->write(len_bytes, 4,
-                [self{shared_from_this()}, out_msg, conn,
-                 cb{std::move(cb)}](auto &&res) mutable {
-                  if (res.has_error()) {
-                    self->closeConnection(conn, Error::EXCHANGE_SEND_ERROR);
-                    return cb(Error::EXCHANGE_SEND_ERROR);
-                  }
-
-                  conn->write(
-                      out_msg, out_msg.size(),
-                      [self{std::move(self)}, cb{cb}, conn](auto &&res) {
-                        if (res.has_error()) {
-                          self->closeConnection(conn,
-                                                Error::EXCHANGE_SEND_ERROR);
-                          return cb(Error::EXCHANGE_SEND_ERROR);
-                        }
-                      });
-                });
+    rw->write<plaintext::protobuf::Exchange>(
+        proto_exchange_msg,
+        [self{shared_from_this()}, cb{std::move(cb)}, conn](auto &&res) {
+          if (res.has_error()) {
+            self->closeConnection(conn, Error::EXCHANGE_SEND_ERROR);
+            return cb(Error::EXCHANGE_SEND_ERROR);
+          }
+        });
   }
 
   void Plaintext::receiveExchangeMsg(
       const std::shared_ptr<connection::RawConnection> &conn,
+      const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
       const MaybePeerId &p, SecConnCallbackFunc cb) const {
-    constexpr size_t kMaxMsgSize = 4;  // we read uint32_t first
-    auto read_bytes = std::make_shared<std::vector<uint8_t>>(kMaxMsgSize);
-
-    conn->read(
-        *read_bytes, kMaxMsgSize,
+    auto remote_peer_exchange_bytes = std::make_shared<std::vector<uint8_t>>();
+    rw->read<plaintext::protobuf::Exchange>(
         [self{shared_from_this()}, conn, p, cb{std::move(cb)},
-         read_bytes](auto &&r) {
-          auto bytes_size = (static_cast<uint32_t>(read_bytes->at(0)) << 24u)
-              + (static_cast<uint32_t>(read_bytes->at(1)) << 16u)
-              + (static_cast<uint32_t>(read_bytes->at(2)) << 8u)
-              + read_bytes->at(3);
-
-          auto received_bytes =
-              std::make_shared<std::vector<uint8_t>>(bytes_size);
-          conn->read(*received_bytes, received_bytes->size(),
-                     [self, conn, p, cb, received_bytes](auto &&r) {
-                       self->readCallback(conn, p, cb, received_bytes, r);
-                     });
-        });
+         remote_peer_exchange_bytes](auto &&res) {
+          if (!res) {
+            return cb(res.error());
+          }
+          self->readCallback(conn, p, cb, remote_peer_exchange_bytes,
+                             remote_peer_exchange_bytes->size());
+        },
+        remote_peer_exchange_bytes);
   }
 
   void Plaintext::readCallback(
@@ -138,16 +121,19 @@ namespace libp2p::security {
       const MaybePeerId &p, const SecConnCallbackFunc &cb,
       const std::shared_ptr<std::vector<uint8_t>> &read_bytes,
       outcome::result<size_t> read_call_res) const {
-    PLAINTEXT_OUTCOME_TRY(r, read_call_res, conn, cb);
+    /*
+     * The method does redundant unmarshalling of message bytes to proto
+     * exchange message. This could be a subject of further improvement.
+     */
+    PLAINTEXT_OUTCOME_VOID_TRY(read_call_res, conn, cb);
     PLAINTEXT_OUTCOME_TRY(in_exchange_msg, marshaller_->unmarshal(*read_bytes),
                           conn, cb);
-    auto &msg = in_exchange_msg.value().first;
+    auto &msg = in_exchange_msg.first;
     auto received_pid = msg.peer_id;
     auto pkey = msg.pubkey;
 
     // PeerId is derived from the Protobuf-serialized public key, not a raw one
-    auto derived_pid_res =
-        peer::PeerId::fromPublicKey(in_exchange_msg.value().second);
+    auto derived_pid_res = peer::PeerId::fromPublicKey(in_exchange_msg.second);
     if (!derived_pid_res) {
       log_->error("cannot create a PeerId from the received public key: {}",
                   derived_pid_res.error().message());

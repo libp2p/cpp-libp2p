@@ -44,11 +44,8 @@ namespace libp2p::multi {
     data_.insert(data_.end(), bytes.begin(), bytes.end());
     BOOST_ASSERT(hash.size() <= std::numeric_limits<uint8_t>::max());
     data_.push_back(static_cast<uint8_t>(hash.size()));
-    size_t size = data_.size();
+    hash_offset_ = data_.size();
     data_.insert(data_.end(), hash.begin(), hash.end());
-
-    // hash_ points to a data_.begin() + size ... data_.end()
-    hash_ = gsl::span<const uint8_t>(data_).subspan(size);
   }
 
   outcome::result<Multihash> Multihash::create(HashType type,
@@ -93,7 +90,7 @@ namespace libp2p::multi {
   }
 
   gsl::span<const uint8_t> Multihash::getHash() const {
-    return hash_;
+    return gsl::span<const uint8_t>(data_).subspan(hash_offset_);
   }
 
   std::string Multihash::toHex() const {
@@ -113,8 +110,8 @@ namespace libp2p::multi {
   }
 
   bool Multihash::operator<(const class libp2p::multi::Multihash &other) const {
-    return this->type_ < other.type_ ||
-        (this->type_ == other.type_ && this->data_ < other.data_);
+    return this->type_ < other.type_
+        || (this->type_ == other.type_ && this->data_ < other.data_);
   }
 
 }  // namespace libp2p::multi

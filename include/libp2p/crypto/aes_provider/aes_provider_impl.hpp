@@ -8,6 +8,7 @@
 
 #include <libp2p/crypto/aes_provider.hpp>
 
+#include <gsl/span>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -19,16 +20,20 @@ namespace libp2p::crypto::aes {
 
    public:
     outcome::result<ByteArray> encryptAesCtr128(
-        const Aes128Secret &secret, const ByteArray &data) const override;
+        const Aes128Secret &secret,
+        gsl::span<const uint8_t> data) const override;
 
     outcome::result<ByteArray> decryptAesCtr128(
-        const Aes128Secret &secret, const ByteArray &data) const override;
+        const Aes128Secret &secret,
+        gsl::span<const uint8_t> data) const override;
 
     outcome::result<ByteArray> encryptAesCtr256(
-        const Aes256Secret &secret, const ByteArray &data) const override;
+        const Aes256Secret &secret,
+        gsl::span<const uint8_t> data) const override;
 
     outcome::result<ByteArray> decryptAesCtr256(
-        const Aes256Secret &secret, const ByteArray &data) const override;
+        const Aes256Secret &secret,
+        gsl::span<const uint8_t> data) const override;
   };
 }  // namespace libp2p::crypto::aes
 

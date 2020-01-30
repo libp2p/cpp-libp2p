@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP
-#define LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP
+#ifndef LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP
+#define LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP
 
 #include <vector>
 
@@ -26,11 +26,18 @@ namespace libp2p::security::plaintext {
     enum class Error {
       PUBLIC_KEY_SERIALIZING_ERROR = 1,
       MESSAGE_SERIALIZING_ERROR,
-      PUBLIC_KEY_DESERIALIZING_ERROR
+      PUBLIC_KEY_DESERIALIZING_ERROR,
+      MESSAGE_DESERIALIZING_ERROR,
     };
 
     explicit ExchangeMessageMarshallerImpl(
         std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller);
+
+    outcome::result<protobuf::Exchange> handyToProto(
+        const ExchangeMessage &msg) const override;
+
+    outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>>
+    protoToHandy(const protobuf::Exchange &proto_msg) const override;
 
     outcome::result<std::vector<uint8_t>> marshal(
         const ExchangeMessage &msg) const override;
@@ -39,9 +46,6 @@ namespace libp2p::security::plaintext {
         gsl::span<const uint8_t> msg_bytes) const override;
 
    private:
-    outcome::result<std::unique_ptr<crypto::protobuf::PublicKey>>
-    allocatePubKey(const crypto::PublicKey &pubkey) const;
-
     std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller_;
   };
 
@@ -50,4 +54,4 @@ namespace libp2p::security::plaintext {
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security::plaintext,
                           ExchangeMessageMarshallerImpl::Error);
 
-#endif  // LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP
+#endif  // LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_MARSHALLER_IMPL_HPP

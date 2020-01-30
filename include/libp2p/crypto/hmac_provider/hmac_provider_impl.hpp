@@ -7,6 +7,7 @@
 #define LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_IMPL_HPP
 
 #include <libp2p/crypto/hmac_provider.hpp>
+#include <gsl/span>
 
 namespace libp2p::crypto::hmac {
   class HmacProviderImpl : public HmacProvider {
@@ -15,7 +16,7 @@ namespace libp2p::crypto::hmac {
    public:
     outcome::result<ByteArray> calculateDigest(
         HashType hash_type, const ByteArray &key,
-        const ByteArray &message) const override;
+        gsl::span<const uint8_t> message) const override;
   };
 }  // namespace libp2p::crypto::hmac
 

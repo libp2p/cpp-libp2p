@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 #include "factory.hpp"
 
 #include <boost/di/extension/scopes/shared.hpp>
@@ -43,8 +44,17 @@ namespace libp2p::protocol::kademlia::example {
       auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();
       auto ed25519_provider =
           std::make_shared<crypto::ed25519::Ed25519ProviderImpl>();
-      auto crypto_provider = std::make_shared<crypto::CryptoProviderImpl>(
-          csprng, ed25519_provider);
+      auto rsa_provider = std::make_shared<crypto::rsa::RsaProviderImpl>();
+      auto ecdsa_provider =
+          std::make_shared<crypto::ecdsa::EcdsaProviderImpl>();
+      auto secp256k1_provider =
+          std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>();
+      auto hmac_provider = std::make_shared<crypto::hmac::HmacProviderImpl>();
+
+      std::shared_ptr<crypto::CryptoProvider> crypto_provider =
+          std::make_shared<crypto::CryptoProviderImpl>(
+              csprng, ed25519_provider, rsa_provider, ecdsa_provider,
+              secp256k1_provider, hmac_provider);
       auto validator = std::make_shared<crypto::validator::KeyValidatorImpl>(
           crypto_provider);
 

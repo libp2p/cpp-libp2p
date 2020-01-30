@@ -95,14 +95,13 @@ TEST_F(RouterTest, SetHandlerPerfectInvokeFail) {
  */
 TEST_F(RouterTest, SetHandlerWithPredicate) {
   // this match is shorter, than the next two; must not be invoked
-  this->setProtocolHandler(
-      kProtocolPrefix, [](auto &&) { FAIL(); }, [](auto &&) { return true; });
+  this->setProtocolHandler(kProtocolPrefix, [](auto &&) { FAIL(); },
+                           [](auto &&) { return true; });
 
   // this match is equal to the next one, but its handler will evaluate to
   // false; must not be invoked
-  this->setProtocolHandler(
-      kVersionProtocolPrefix, [](auto &&) { FAIL(); },
-      [](auto &&) { return false; });
+  this->setProtocolHandler(kVersionProtocolPrefix, [](auto &&) { FAIL(); },
+                           [](auto &&) { return false; });
 
   // this match must be invoked
   this->setProtocolHandler(

@@ -16,7 +16,7 @@ namespace libp2p::crypto::aes {
   using libp2p::crypto::common::Aes128Secret;
   using libp2p::crypto::common::Aes256Secret;
 
-  outcome::result<ByteArray> encrypt(const ByteArray &data,
+  outcome::result<ByteArray> encrypt(gsl::span<const uint8_t> data,
                                      gsl::span<const uint8_t> key,
                                      gsl::span<const uint8_t> iv,
                                      const EVP_CIPHER *cipher) {
@@ -71,7 +71,7 @@ namespace libp2p::crypto::aes {
     return ByteArray(std::move(cipher_text));
   }
 
-  outcome::result<ByteArray> decrypt(const ByteArray &data,
+  outcome::result<ByteArray> decrypt(gsl::span<const uint8_t> data,
                                      gsl::span<const uint8_t> key,
                                      gsl::span<const uint8_t> iv,
                                      const EVP_CIPHER *cipher) {
@@ -123,7 +123,7 @@ namespace libp2p::crypto::aes {
   }
 
   outcome::result<ByteArray> AesProviderImpl::encryptAesCtr128(
-      const Aes128Secret &secret, const ByteArray &data) const {
+      const Aes128Secret &secret, gsl::span<const uint8_t> data) const {
     auto key_span = gsl::make_span(secret.key);
     auto iv_span = gsl::make_span(secret.iv);
 
@@ -131,7 +131,7 @@ namespace libp2p::crypto::aes {
   }
 
   outcome::result<ByteArray> AesProviderImpl::encryptAesCtr256(
-      const Aes256Secret &secret, const ByteArray &data) const {
+      const Aes256Secret &secret, gsl::span<const uint8_t> data) const {
     auto key_span = gsl::make_span(secret.key);
     auto iv_span = gsl::make_span(secret.iv);
 
@@ -139,7 +139,7 @@ namespace libp2p::crypto::aes {
   }
 
   outcome::result<ByteArray> AesProviderImpl::decryptAesCtr128(
-      const Aes128Secret &secret, const ByteArray &data) const {
+      const Aes128Secret &secret, gsl::span<const uint8_t> data) const {
     auto key_span = gsl::make_span(secret.key);
     auto iv_span = gsl::make_span(secret.iv);
 
@@ -147,7 +147,7 @@ namespace libp2p::crypto::aes {
   }
 
   outcome::result<ByteArray> AesProviderImpl::decryptAesCtr256(
-      const Aes256Secret &secret, const ByteArray &data) const {
+      const Aes256Secret &secret, gsl::span<const uint8_t> data) const {
     auto key_span = gsl::make_span(secret.key);
     auto iv_span = gsl::make_span(secret.iv);
 

@@ -14,7 +14,8 @@ namespace libp2p::connection {
     common::ByteArray result;
 
     uint64_t id_and_flag = (stream_number << 3) | static_cast<uint8_t>(flag);
-    multi::UVarint id_and_flag_varint{id_and_flag}, length_varint{length};
+    multi::UVarint id_and_flag_varint{id_and_flag};
+    multi::UVarint length_varint{length};
 
     result.insert(result.end(), id_and_flag_varint.toVector().begin(),
                   id_and_flag_varint.toVector().end());

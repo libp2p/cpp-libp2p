@@ -60,12 +60,12 @@ namespace libp2p::protocol::kademlia {
   Message createFindNodeRequest(const peer::PeerId &node,
                                 boost::optional<peer::PeerInfo> self_announce);
 
-  Message createPutValueRequest(const ContentAddress &key,
-                                Value value);
+  Message createPutValueRequest(const ContentAddress &key, Value value);
 
   Message createGetValueRequest(const ContentAddress &key);
 
-  Message createAddProviderRequest(peer::PeerInfo self, const ContentAddress &key);
+  Message createAddProviderRequest(peer::PeerInfo self,
+                                   const ContentAddress &key);
 
 }  // namespace libp2p::protocol::kademlia
 #endif  // LIBP2P_KAD_MESSAGE_HPP

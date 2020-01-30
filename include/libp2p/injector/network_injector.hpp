@@ -9,11 +9,16 @@
 #include <boost/di.hpp>
 
 // implementations
+#include <libp2p/crypto/aes_provider/aes_provider_impl.hpp>
 #include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
+#include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
+#include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
+#include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
+#include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
 #include <libp2p/muxer/mplex.hpp>
 #include <libp2p/muxer/yamux.hpp>
 #include <libp2p/network/impl/connection_manager_impl.hpp>
@@ -26,6 +31,9 @@
 #include <libp2p/protocol_muxer/multiselect.hpp>
 #include <libp2p/security/plaintext.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
+#include <libp2p/security/secio.hpp>
+#include <libp2p/security/secio/exchange_message_marshaller_impl.hpp>
+#include <libp2p/security/secio/propose_message_marshaller_impl.hpp>
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp.hpp>
 
@@ -228,8 +236,15 @@ namespace libp2p::injector {
     auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();
     auto ed25519_provider =
         std::make_shared<crypto::ed25519::Ed25519ProviderImpl>();
-    auto crypto_provider =
-        std::make_shared<crypto::CryptoProviderImpl>(csprng, ed25519_provider);
+    auto rsa_provider = std::make_shared<crypto::rsa::RsaProviderImpl>();
+    auto ecdsa_provider = std::make_shared<crypto::ecdsa::EcdsaProviderImpl>();
+    auto secp256k1_provider =
+        std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>();
+    auto hmac_provider = std::make_shared<crypto::hmac::HmacProviderImpl>();
+    std::shared_ptr<crypto::CryptoProvider> crypto_provider =
+        std::make_shared<crypto::CryptoProviderImpl>(
+            csprng, ed25519_provider, rsa_provider, ecdsa_provider,
+            secp256k1_provider, hmac_provider);
     auto validator =
         std::make_shared<crypto::validator::KeyValidatorImpl>(crypto_provider);
 
@@ -242,11 +257,18 @@ namespace libp2p::injector {
         di::bind<crypto::KeyPair>().template to(std::move(keypair)),
         di::bind<crypto::random::CSPRNG>().template to(std::move(csprng)),
         di::bind<crypto::ed25519::Ed25519Provider>().template to(std::move(ed25519_provider)),
+        di::bind<crypto::rsa::RsaProvider>().template to(std::move(rsa_provider)),
+        di::bind<crypto::ecdsa::EcdsaProvider>().template to(std::move(ecdsa_provider)),
+        di::bind<crypto::secp256k1::Secp256k1Provider>().template to(std::move(secp256k1_provider)),
+        di::bind<crypto::aes::AesProvider>().template to<crypto::aes::AesProviderImpl>(),
+        di::bind<crypto::hmac::HmacProvider>().template to<crypto::hmac::HmacProviderImpl>(),
         di::bind<crypto::CryptoProvider>().template to<crypto::CryptoProviderImpl>(),
         di::bind<crypto::marshaller::KeyMarshaller>().template to<crypto::marshaller::KeyMarshallerImpl>(),
         di::bind<peer::IdentityManager>().template to<peer::IdentityManagerImpl>(),
         di::bind<crypto::validator::KeyValidator>().template to<crypto::validator::KeyValidatorImpl>(),
         di::bind<security::plaintext::ExchangeMessageMarshaller>().template to<security::plaintext::ExchangeMessageMarshallerImpl>(),
+        di::bind<security::secio::ProposeMessageMarshaller>().template to<security::secio::ProposeMessageMarshallerImpl>(),
+        di::bind<security::secio::ExchangeMessageMarshaller>().template to<security::secio::ExchangeMessageMarshallerImpl>(),
 
         // internal
         di::bind<network::Router>().template to<network::RouterImpl>(),
@@ -259,7 +281,7 @@ namespace libp2p::injector {
         di::bind<protocol_muxer::ProtocolMuxer>().template to<protocol_muxer::Multiselect>(),
 
         // default adaptors
-        di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext>(),  // NOLINT
+        di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext, security::Secio>(),  // NOLINT
         di::bind<muxer::MuxerAdaptor *[]>().template to<muxer::Yamux, muxer::Mplex>(),  // NOLINT
         di::bind<transport::TransportAdaptor *[]>().template to<transport::TcpTransport>(),  // NOLINT
 

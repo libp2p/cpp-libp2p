@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <boost/operators.hpp>
+#include <libp2p/multi/multibase_codec.hpp>
 #include <libp2p/multi/multicodec_type.hpp>
 #include <libp2p/multi/multihash.hpp>
 
@@ -26,7 +27,8 @@ namespace libp2p::multi {
    * needed only for CIDs serialized to a string, so it is not present in this
    * structure
    */
- struct ContentIdentifier: public boost::equality_comparable<ContentIdentifier> {
+  struct ContentIdentifier
+      : public boost::equality_comparable<ContentIdentifier> {
     enum class Version { V0 = 0, V1 = 1 };
 
     ContentIdentifier(Version version, MulticodecType::Code content_type,
@@ -36,7 +38,7 @@ namespace libp2p::multi {
      * @param base is a human-readable multibase prefix
      * @returns human readable representation of the CID
      */
-    std::string toPrettyString(const std::string &base);
+    std::string toPrettyString(const std::string &base) const;
 
     bool operator==(const ContentIdentifier &c) const;
     bool operator<(const ContentIdentifier &c) const;

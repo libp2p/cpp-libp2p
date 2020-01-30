@@ -12,6 +12,10 @@
 #include <libp2p/security/plaintext/exchange_message_marshaller.hpp>
 #include <libp2p/security/security_adaptor.hpp>
 
+namespace libp2p::basic {
+  class ProtobufMessageReadWriter;
+}
+
 namespace libp2p::security {
   /**
    * Implementation of security adaptor, which creates plaintext connection.
@@ -51,11 +55,14 @@ namespace libp2p::security {
    private:
     using MaybePeerId = boost::optional<peer::PeerId>;
 
-    void sendExchangeMsg(const std::shared_ptr<connection::RawConnection> &conn,
-                         SecConnCallbackFunc cb) const;
+    void sendExchangeMsg(
+        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
+        SecConnCallbackFunc cb) const;
 
     void receiveExchangeMsg(
         const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
         const MaybePeerId &p, SecConnCallbackFunc cb) const;
 
     // the callback passed to an async read call in receiveExchangeMsg
