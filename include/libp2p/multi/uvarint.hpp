@@ -67,6 +67,7 @@ namespace libp2p::multi {
 
     bool operator==(const UVarint& r) const;
     bool operator!=(const UVarint& r) const;
+    bool operator<(const UVarint& r) const;
 
     /**
      * @return the number of bytes currently stored in a varint

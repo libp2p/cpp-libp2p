@@ -76,6 +76,10 @@ namespace libp2p::multi {
     return !(*this == r);
   }
 
+  bool UVarint::operator<(const UVarint &r) const {
+    return toUInt64() < r.toUInt64();
+  }
+
   size_t UVarint::calculateSize(gsl::span<const uint8_t> varint_bytes) {
     size_t size = 0;
     size_t shift = 0;
