@@ -236,11 +236,19 @@ namespace libp2p::connection {
      */
     void closeSession(outcome::result<void> reason);
 
+    /// Underlying connection
     std::shared_ptr<SecureConnection> connection_;
+
+    /// Handler for new inbound streams
     NewStreamHandlerFunc new_stream_handler_;
+
+    /// Config constants
     muxer::MuxedConnectionConfig config_;
 
+    /// Last stream id to be incremented
     uint32_t last_created_stream_id_;
+
+    /// Streams
     std::unordered_map<StreamId, std::shared_ptr<YamuxStream>> streams_;
 
     libp2p::common::Logger log_ = libp2p::common::createLogger("yx-conn");
@@ -262,18 +270,6 @@ namespace libp2p::connection {
      */
     void streamOnWindowUpdate(StreamId stream_id, NotifyeeCallback cb);
     std::map<StreamId, NotifyeeCallback> window_updates_subs_;
-
-    /**
-     * Add a handler function, which is called, when data for a particular
-     * stream is received
-     * @param stream_id of the stream which is to be notified
-     * @param handler to be called; if it returns true, it's removed from
-     * the list of handlers for that stream
-     * @note this is done through a function and not event emitters, as each
-     * stream is to receive that event independently based on id
-     */
-    void streamOnAddData(StreamId stream_id, NotifyeeCallback cb);
-    std::map<StreamId, NotifyeeCallback> data_subs_;
 
     /**
      * Write bytes to the connection; before calling this method, the stream

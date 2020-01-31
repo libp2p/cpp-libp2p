@@ -41,7 +41,7 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    TRACE("{}", __PRETTY_FUNCTION__);
+    TRACE("reading length from peer {}", peer_->str);
 
     // clang-format off
     libp2p::basic::VarintReader::readVarint(

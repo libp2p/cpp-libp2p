@@ -117,8 +117,24 @@ namespace libp2p::connection {
 
     /// is the stream reading right now?
     bool is_reading_ = false;
+
+    /// read callback, non-zero during async data receive
     ReadCallbackFunc read_cb_;
-    void beginRead(ReadCallbackFunc cb);
+
+    /// client's read buffer
+    gsl::span<uint8_t> external_read_buffer_;
+
+    /// bytes count client is waiting for, non-zero during async data receive
+    size_t bytes_waiting_ = 0;
+
+    /// client makes readSome operation
+    bool reading_some_ = false;
+
+    /// starts async read operation
+    void beginRead(ReadCallbackFunc cb, gsl::span<uint8_t> out, size_t bytes,
+                   bool some);
+
+    /// ends async read operation
     void endRead(outcome::result<size_t> result);
 
     /// Tries to consume requested bytes from already received data
@@ -131,8 +147,14 @@ namespace libp2p::connection {
 
     /// is the stream writing right now?
     bool is_writing_ = false;
+
+    /// write callback, non-zero during async sends
     WriteCallbackFunc write_cb_;
+
+    /// starts async write operation
     void beginWrite(WriteCallbackFunc cb);
+
+    /// ends async write operation
     void endWrite(outcome::result<size_t> result);
 
     /// YamuxedConnection API starts here

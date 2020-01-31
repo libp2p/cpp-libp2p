@@ -7,7 +7,7 @@
 
 #include <cassert>
 
-#define TRACE_ENABLED 0
+#define TRACE_ENABLED 1
 #include <libp2p/common/trace.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxStream::Error, e) {
@@ -55,11 +55,15 @@ namespace libp2p::connection {
     return read(out, bytes, std::move(cb), true);
   }
 
-  void YamuxStream::beginRead(ReadCallbackFunc cb) {
+  void YamuxStream::beginRead(ReadCallbackFunc cb, gsl::span<uint8_t> out,
+                              size_t bytes, bool some) {
     assert(!is_reading_);
     assert(!read_cb_);
     TRACE("yamux stream {} beginRead", stream_id_);
     read_cb_ = std::move(cb);
+    external_read_buffer_ = out;
+    bytes_waiting_ = bytes;
+    reading_some_ = some;
     is_reading_ = true;
   }
 
@@ -68,6 +72,8 @@ namespace libp2p::connection {
 
     // N.B. reentrancy of read_cb_{read} is allowed
     is_reading_ = false;
+    bytes_waiting_ = 0;
+    reading_some_ = false;
     if (read_cb_) {
       auto cb = std::move(read_cb_);
       read_cb_ = ReadCallbackFunc{};
@@ -79,6 +85,8 @@ namespace libp2p::connection {
       gsl::span<uint8_t> out, size_t bytes, bool some) {
     // will try to consume n bytes if applicable
     auto n = std::min(read_buffer_.size(), bytes);
+
+    TRACE("stream {}: need {} bytes, available {} bytes", stream_id_, bytes, n);
 
     if ((some && n > 0) || (!some && n == bytes)) {
       auto copied = boost::asio::buffer_copy(boost::asio::buffer(out.data(), n),
@@ -140,21 +148,7 @@ namespace libp2p::connection {
     }
 
     // cannot return immediately, wait for incoming data
-    beginRead(std::move(cb));
-
-    yamuxed_connection_.lock()->streamOnAddData(
-        stream_id_, [self{shared_from_this()}, out, bytes, some]() {
-          // if there is enough data in our buffer (depending if we want to read
-          // some or all bytes), read it
-
-          auto res = self->tryConsumeReadBuffer(out, bytes, some);
-          if (res && res.value() == 0) {
-            // not enough data received
-            return false;
-          }
-          self->endRead(res);
-          return true;
-        });
+    beginRead(std::move(cb), out, bytes, some);
   }
 
   void YamuxStream::write(gsl::span<const uint8_t> in, size_t bytes,
@@ -344,15 +338,49 @@ namespace libp2p::connection {
       return Error::RECEIVE_OVERFLOW;
     }
 
-    if (boost::asio::buffer_copy(
-            read_buffer_.prepare(data_size),
-            boost::asio::const_buffer(data.data(), data_size))
-        != data_size) {
-      return Error::INTERNAL_ERROR;
+    size_t bytes_remain = data_size;
+    bool inplace_readop = false;
+
+    if (read_buffer_.size() == 0 && bytes_waiting_ > 0) {
+      // will try to consume n bytes w/o copying to intermediate buffer
+      auto n = std::min(data_size, bytes_waiting_);
+
+      TRACE("stream {}: need {} bytes, available {} bytes", stream_id_,
+            bytes_waiting_, n);
+
+      if ((reading_some_ && n > 0) || (!reading_some_ && n == bytes_waiting_)) {
+        memcpy(external_read_buffer_.data(), data.data(), n);
+        sendAck(n);
+        bytes_remain -= n;
+        inplace_readop = true;
+      }
     }
-    read_buffer_.commit(data_size);
+
+    if (bytes_remain > 0) {
+      if (boost::asio::buffer_copy(
+              read_buffer_.prepare(bytes_remain),
+              boost::asio::const_buffer(data.data() + data_size - bytes_remain,
+                                        bytes_remain))
+          != bytes_remain) {
+        return Error::INTERNAL_ERROR;
+      }
+      read_buffer_.commit(bytes_remain);
+    }
 
     receive_window_size_ -= data_size;
+
+    if (inplace_readop) {
+      assert(read_cb_);
+      assert(data_size - bytes_remain > 0);
+      endRead(data_size - bytes_remain);
+    } else if (bytes_waiting_ > 0) {
+      assert(read_cb_);
+      auto res = tryConsumeReadBuffer(external_read_buffer_, bytes_waiting_,
+                                      reading_some_);
+      if (!res || res.value() > 0) {
+        endRead(res);
+      }
+    }
 
     return outcome::success();
   }

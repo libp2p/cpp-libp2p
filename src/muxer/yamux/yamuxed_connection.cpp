@@ -9,7 +9,7 @@
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 #include <libp2p/muxer/yamux/yamux_stream.hpp>
 
-#define TRACE_ENABLED 0
+#define TRACE_ENABLED 1
 #include <libp2p/common/trace.hpp>
 
 using Buffer = libp2p::common::ByteArray;
@@ -124,7 +124,7 @@ namespace libp2p::connection {
     resetAllStreams(Error::YAMUX_IS_CLOSED);
     streams_.clear();
     window_updates_subs_.clear();
-    data_subs_.clear();
+//    data_subs_.clear();
     return connection_->close();
   }
 
@@ -418,14 +418,6 @@ namespace libp2p::connection {
             return self->doReadHeader();
           }
 
-          if (auto stream_data_sub = self->data_subs_.find(frame.stream_id);
-              stream_data_sub != self->data_subs_.end()) {
-            // if someone is waiting for the data from that stream, notify it
-            if (stream_data_sub->second()) {
-              self->data_subs_.erase(stream_data_sub);
-            }
-          }
-
           self->doReadHeader();
         });
   }
@@ -507,11 +499,6 @@ namespace libp2p::connection {
   void YamuxedConnection::streamOnWindowUpdate(StreamId stream_id,
                                                NotifyeeCallback cb) {
     window_updates_subs_[stream_id] = std::move(cb);
-  }
-
-  void YamuxedConnection::streamOnAddData(StreamId stream_id,
-                                          NotifyeeCallback cb) {
-    data_subs_[stream_id] = std::move(cb);
   }
 
   void YamuxedConnection::streamWrite(StreamId stream_id,
