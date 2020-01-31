@@ -12,22 +12,35 @@
 #include <libp2p/security/secio/secio_connection.hpp>
 #include <libp2p/security/secio/secio_dialer.hpp>
 
-#define SECIO_OUTCOME_VOID_TRY(res, conn, cb)   \
-  if ((res).has_error()) {                      \
-    self->closeConnection(conn, (res).error()); \
-    cb((res).error());                          \
-    return;                                     \
+#ifndef UNIQUE_NAME
+#define UNIQUE_NAME(base) base##__LINE__
+#endif  // UNIQUE_NAME
+
+#define SECIO_OUTCOME_TRY_VOID_I(var, res, conn, cb) \
+  auto && (var) = (res);                             \
+  if ((var).has_error()) {                           \
+    self->closeConnection((conn), (var).error());    \
+    cb((var).error());                               \
+    return;                                          \
   }
 
+#define SECIO_OUTCOME_TRY_NAME_I(var, val, res, conn, cb) \
+  SECIO_OUTCOME_TRY_VOID_I(var, res, conn, cb)            \
+  auto && (val) = (var).value();
+
 #define SECIO_OUTCOME_TRY(name, res, conn, cb) \
-  SECIO_OUTCOME_VOID_TRY((res), (conn), (cb))  \
-  auto(name) = (res).value();
+  SECIO_OUTCOME_TRY_NAME_I(UNIQUE_NAME(name), name, res, conn, cb)
+
+#define SECIO_OUTCOME_VOID_TRY(res, conn, cb) \
+  SECIO_OUTCOME_TRY_VOID_I(UNIQUE_NAME(void_var), res, conn, cb)
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, Secio::Error, e) {
   using E = libp2p::security::Secio::Error;
   switch (e) {  // NOLINT
     case E::REMOTE_PEER_SIGNATURE_IS_INVALID:
       return "Remote peer exchange message contains invalid signature";
+    case E::INITIAL_PACKET_VERIFICATION_FAILED:
+      return "Error happened while initial packet verification";
     default:
       return "Unknown error";
   }
@@ -42,8 +55,7 @@ namespace libp2p::security {
       std::shared_ptr<secio::ExchangeMessageMarshaller> exchange_marshaller,
       std::shared_ptr<peer::IdentityManager> idmgr,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
-      std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider,
-      std::shared_ptr<crypto::aes::AesProvider> aes_provider)
+      std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider)
       : csprng_(std::move(csprng)),
         crypto_provider_(std::move(crypto_provider)),
         propose_marshaller_(std::move(propose_marshaller)),
@@ -51,7 +63,6 @@ namespace libp2p::security {
         idmgr_(std::move(idmgr)),
         key_marshaller_(std::move(key_marshaller)),
         hmac_provider_(std::move(hmac_provider)),
-        aes_provider_(std::move(aes_provider)),
         propose_message_{.rand = csprng_->randomBytes(16),
                          .pubkey = {},  // marshalled public key will be stored
                                         // here, initialized in constructor body
@@ -117,7 +128,7 @@ namespace libp2p::security {
     dialer->rw->read<secio::protobuf::Propose>(
         [self{shared_from_this()}, conn, dialer, cb{std::move(cb)},
          remote_peer_proposal_bytes](auto &&res) {
-          SECIO_OUTCOME_TRY(other_peer_proto_propose, res, conn, cb)
+          SECIO_OUTCOME_TRY(other_peer_proto_propose, res, conn, cb);
           auto remote_peer_propose{self->propose_marshaller_->protoToHandy(
               other_peer_proto_propose)};
           SECIO_OUTCOME_VOID_TRY(
@@ -126,6 +137,7 @@ namespace libp2p::security {
               conn, cb)
           dialer->storeRemotePeerProposalBytes(remote_peer_proposal_bytes);
           self->log_->debug("remote peer proposal received");
+          self->remote_peer_rand_.swap(remote_peer_propose.rand);
           self->sendExchangeMessage(conn, dialer, cb);
         },
         remote_peer_proposal_bytes);
@@ -214,12 +226,31 @@ namespace libp2p::security {
                             conn, cb)
 
           auto secio_conn = std::make_shared<connection::SecioConnection>(
-              conn, self->hmac_provider_, self->aes_provider_,
-              self->key_marshaller_, self->idmgr_->getKeyPair().publicKey,
-              remote_pubkey, chosen_hash, chosen_cipher, local_stretched_key,
-              remote_stretched_key);
+              conn, self->hmac_provider_, self->key_marshaller_,
+              self->idmgr_->getKeyPair().publicKey, remote_pubkey, chosen_hash,
+              chosen_cipher, local_stretched_key, remote_stretched_key);
           SECIO_OUTCOME_VOID_TRY(secio_conn->init(), conn, cb)
-          cb(std::move(secio_conn));
+          secio_conn->write(
+              self->remote_peer_rand_, self->remote_peer_rand_.size(),
+              [self, conn, cb, secio_conn](auto &&write_res) {
+                SECIO_OUTCOME_TRY(written_bytes, write_res, conn, cb)
+                if (written_bytes != self->remote_peer_rand_.size()) {
+                  return cb(Error::INITIAL_PACKET_VERIFICATION_FAILED);
+                }
+                const auto kToRead{self->propose_message_.rand.size()};
+                auto buffer = std::make_shared<common::ByteArray>(kToRead);
+                secio_conn->read(
+                    *buffer, kToRead,
+                    [self, cb, conn, secio_conn, buffer](auto &&read_res) {
+                      SECIO_OUTCOME_TRY(read_bytes, read_res, conn, cb)
+                      if (read_bytes != buffer->size()
+                          or *buffer != self->propose_message_.rand) {
+                        return cb(Error::INITIAL_PACKET_VERIFICATION_FAILED);
+                      }
+                      self->log_->info("connection initialized");
+                      cb(secio_conn);
+                    });
+              });
         });
   }
 

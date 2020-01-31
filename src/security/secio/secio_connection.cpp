@@ -9,7 +9,7 @@
 
 #include <arpa/inet.h>
 #include <libp2p/common/byteutil.hpp>
-#include <libp2p/crypto/aes_provider.hpp>
+#include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/hmac_provider.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -42,12 +42,20 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, SecioConnection::Error, e) {
   }
 }
 
+#ifndef UNIQUE_NAME
+#define UNIQUE_NAME(base) base##__LINE__
+#endif  // UNIQUE_NAME
+
+#define IO_OUTCOME_TRY_NAME(var, val, res, cb) \
+  auto && (var) = (res);                       \
+  if ((var).has_error()) {                     \
+    cb((var).error());                         \
+    return;                                    \
+  }                                            \
+  auto && (val) = (var).value();
+
 #define IO_OUTCOME_TRY(name, res, cb) \
-  if ((res).has_error()) {            \
-    cb((res).error());                \
-    return;                           \
-  }                                   \
-  auto(name) = (res).value();
+  IO_OUTCOME_TRY_NAME(UNIQUE_NAME(name), name, res, cb)
 
 namespace {
   template <typename AesSecretType>
@@ -72,7 +80,6 @@ namespace libp2p::connection {
   SecioConnection::SecioConnection(
       std::shared_ptr<RawConnection> raw_connection,
       std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider,
-      std::shared_ptr<crypto::aes::AesProvider> aes_provider,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
       crypto::PublicKey local_pubkey, crypto::PublicKey remote_pubkey,
       crypto::common::HashType hash_type,
@@ -81,7 +88,6 @@ namespace libp2p::connection {
       crypto::StretchedKey remote_stretched_key)
       : raw_connection_{std::move(raw_connection)},
         hmac_provider_{std::move(hmac_provider)},
-        aes_provider_{std::move(aes_provider)},
         key_marshaller_{std::move(key_marshaller)},
         local_{std::move(local_pubkey)},
         remote_{std::move(remote_pubkey)},
@@ -93,7 +99,6 @@ namespace libp2p::connection {
         aes256_secrets_{boost::none} {
     BOOST_ASSERT(raw_connection_);
     BOOST_ASSERT(hmac_provider_);
-    BOOST_ASSERT(aes_provider_);
     BOOST_ASSERT(key_marshaller_);
   }
 
@@ -103,6 +108,7 @@ namespace libp2p::connection {
     }
 
     using CT = crypto::common::CipherType;
+    using AesCtrMode = crypto::aes::AesCtrImpl::Mode;
     if (cipher_type_ == CT::AES128) {
       OUTCOME_TRY(
           local_128,
@@ -112,8 +118,10 @@ namespace libp2p::connection {
           remote_128,
           initAesSecret<crypto::common::Aes128Secret>(
               remote_stretched_key_.cipher_key, remote_stretched_key_.iv));
-      aes128_secrets_ = AesSecrets<crypto::common::Aes128Secret>{
-          .local = local_128, .remote = remote_128};
+      local_encryptor_ = std::make_unique<crypto::aes::AesCtrImpl>(
+          local_128, AesCtrMode::ENCRYPT);
+      remote_decryptor_ = std::make_unique<crypto::aes::AesCtrImpl>(
+          remote_128, AesCtrMode::DECRYPT);
     } else if (cipher_type_ == CT::AES256) {
       OUTCOME_TRY(
           local_256,
@@ -123,17 +131,18 @@ namespace libp2p::connection {
           remote_256,
           initAesSecret<crypto::common::Aes256Secret>(
               remote_stretched_key_.cipher_key, remote_stretched_key_.iv));
-      aes256_secrets_ = AesSecrets<crypto::common::Aes256Secret>{
-          .local = local_256, .remote = remote_256};
+      local_encryptor_ = std::make_unique<crypto::aes::AesCtrImpl>(
+          local_256, AesCtrMode::ENCRYPT);
+      remote_decryptor_ = std::make_unique<crypto::aes::AesCtrImpl>(
+          remote_256, AesCtrMode::DECRYPT);
     } else {
       return Error::UNSUPPORTED_CIPHER;
     }
-    log_->info("initialized");
     return outcome::success();
   }
 
   bool SecioConnection::isInitialized() const {
-    return aes128_secrets_.has_value() != aes256_secrets_.has_value();
+    return local_encryptor_ and remote_decryptor_;
   }
 
   outcome::result<peer::PeerId> SecioConnection::localPeer() const {
@@ -300,8 +309,9 @@ namespace libp2p::connection {
                   cb(Error::INVALID_MAC);
                   return;
                 }
-                IO_OUTCOME_TRY(decrypted_bytes, self->decryptRemote(data_span),
-                               cb)
+                IO_OUTCOME_TRY(decrypted_bytes,
+                               (*self->remote_decryptor_)->crypt(data_span),
+                               cb);
                 size_t decrypted_bytes_len{decrypted_bytes.size()};
                 for (auto &&e : decrypted_bytes) {
                   self->user_data_buffer_.emplace(std::forward<decltype(e)>(e));
@@ -325,7 +335,7 @@ namespace libp2p::connection {
     frame_buffer.reserve(len_field_size + frame_len);
 
     common::putUint32BE(frame_buffer, frame_len);
-    IO_OUTCOME_TRY(encrypted_data, encryptLocal(in), cb);
+    IO_OUTCOME_TRY(encrypted_data, (*local_encryptor_)->crypt(in), cb);
     IO_OUTCOME_TRY(mac_data, macLocal(encrypted_data), cb);
     frame_buffer.insert(frame_buffer.end(),
                         std::make_move_iterator(encrypted_data.begin()),
@@ -333,7 +343,18 @@ namespace libp2p::connection {
     frame_buffer.insert(frame_buffer.end(),
                         std::make_move_iterator(mac_data.begin()),
                         std::make_move_iterator(mac_data.end()));
-    raw_connection_->write(frame_buffer, frame_buffer.size(), std::move(cb));
+    basic::Writer::WriteCallbackFunc cb_wrapper =
+        [user_cb{std::move(cb)}, bytes,
+         raw_bytes{frame_buffer.size()}](auto &&res) {
+          if (not res) {
+            return user_cb(res);  // pulling out the error occurred
+          }
+          if (res.value() != raw_bytes) {
+            return user_cb(Error::STREAM_IS_BROKEN);
+          }
+          user_cb(bytes);
+        };
+    raw_connection_->write(frame_buffer, frame_buffer.size(), cb_wrapper);
   }
 
   void SecioConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
@@ -373,37 +394,4 @@ namespace libp2p::connection {
         hash_type_, remote_stretched_key_.mac_key, message);
   }
 
-  outcome::result<common::ByteArray> SecioConnection::encryptLocal(
-      gsl::span<const uint8_t> message) const {
-    if (!isInitialized()) {
-      return Error::CONN_NOT_INITIALIZED;
-    }
-    using CT = crypto::common::CipherType;
-    switch (cipher_type_) {
-      case CT::AES128:
-        return aes_provider_->encryptAesCtr128(aes128_secrets_->local, message);
-      case CT::AES256:
-        return aes_provider_->encryptAesCtr256(aes256_secrets_->local, message);
-      default:
-        return Error::UNSUPPORTED_CIPHER;
-    }
-  }
-
-  outcome::result<common::ByteArray> SecioConnection::decryptRemote(
-      gsl::span<const uint8_t> message) const {
-    if (!isInitialized()) {
-      return Error::CONN_NOT_INITIALIZED;
-    }
-    using CT = crypto::common::CipherType;
-    switch (cipher_type_) {
-      case CT::AES128:
-        return aes_provider_->decryptAesCtr128(aes128_secrets_->remote,
-                                               message);
-      case CT::AES256:
-        return aes_provider_->decryptAesCtr256(aes256_secrets_->remote,
-                                               message);
-      default:
-        return Error::UNSUPPORTED_CIPHER;
-    }
-  }
 }  // namespace libp2p::connection

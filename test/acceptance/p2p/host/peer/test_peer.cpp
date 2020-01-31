@@ -6,7 +6,6 @@
 #include "acceptance/p2p/host/peer/test_peer.hpp"
 
 #include <gtest/gtest.h>
-#include <libp2p/crypto/aes_provider/aes_provider_impl.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
@@ -44,16 +43,10 @@ Peer::Peer(Peer::Duration timeout, bool secure)
       "failed to generate keys");
   host_ = makeHost(keys);
 
-  EXPECT_OUTCOME_TRUE_MSG(
-      keys2, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
-      "failed to generate keys");
-  host2_ = makeHost(keys2);
-
   auto handler = [this](std::shared_ptr<Stream> result) {
     echo_->handle(result);
   };
   host_->setProtocolHandler(echo_->getProtocolId(), handler);
-  host2_->setProtocolHandler(echo_->getProtocolId(), handler);
 }
 
 void Peer::startServer(const multi::Multiaddress &address,
@@ -71,7 +64,7 @@ void Peer::startClient(const peer::PeerInfo &pinfo, size_t message_count,
                        Peer::sptr<TickCounter> counter) {
   context_->post([this, server_id = pinfo.id.toBase58(), pinfo, message_count,
                   counter = std::move(counter)]() mutable {
-    this->host2_->newStream(
+    this->host_->newStream(
         pinfo, echo_->getProtocolId(),
         [server_id = std::move(server_id), ping_times = message_count,
          counter = std::move(counter)](
@@ -136,8 +129,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
         crypto_provider,
         std::make_shared<security::secio::ProposeMessageMarshallerImpl>(),
         std::make_shared<security::secio::ExchangeMessageMarshallerImpl>(),
-        idmgr, key_marshaller, hmac_provider_,
-        std::make_shared<crypto::aes::AesProviderImpl>()));
+        idmgr, key_marshaller, hmac_provider_));
   } else {
     security_adaptors.emplace_back(std::make_shared<security::Plaintext>(
         std::move(exchange_msg_marshaller), idmgr, std::move(key_marshaller)));
