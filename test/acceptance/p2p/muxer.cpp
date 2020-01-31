@@ -4,6 +4,7 @@
  */
 
 #include <algorithm>
+#include <cstdlib>
 #include <random>
 
 #include <gtest/gtest.h>
@@ -43,8 +44,12 @@ using std::chrono_literals::operator""ms;
 
 static const size_t kServerBufSize = 10000;  // 10 Kb
 
-// verbose==true will allow to print debug output to stdout
-static const bool verbose = false;
+// allows to print debug output to stdout, not wanted in CI output, but
+// useful while debugging
+bool verbose() {
+  static const bool v = (std::getenv("TRACE_DEBUG") != nullptr);
+  return v;
+}
 
 struct UpgraderSemiMock : public Upgrader {
   ~UpgraderSemiMock() override = default;
@@ -101,8 +106,7 @@ struct Server : public std::enable_shared_from_this<Server> {
         *buf, buf->size(), [buf, stream, this](outcome::result<size_t> rread) {
           if (!rread) {
             if (rread.error() == YamuxedConnection::Error::CLOSED_BY_PEER) {
-              // TODO(artem): EOF wasn't signalled by former logic,
-              // check if this complies to this test's intentions
+              // client closed connection, ok
               return;
             }
             this->println("readSome error: ", rread.error().message());
@@ -146,7 +150,8 @@ struct Server : public std::enable_shared_from_this<Server> {
  private:
   template <typename... Args>
   void println(Args &&... args) {
-    if (!verbose) return;
+    if (!verbose())
+      return;
     std::cout << "[server " << std::this_thread::get_id() << "]\t";
     (std::cout << ... << args);
     std::cout << std::endl;
@@ -231,7 +236,8 @@ struct Client : public std::enable_shared_from_this<Client> {
  private:
   template <typename... Args>
   void println(Args &&... args) {
-    if (!verbose) return;
+    if (!verbose())
+      return;
     std::cout << "[client " << std::this_thread::get_id() << "]\t";
     (std::cout << ... << args);
     std::cout << std::endl;

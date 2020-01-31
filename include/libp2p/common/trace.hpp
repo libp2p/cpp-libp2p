@@ -10,8 +10,10 @@
 
 namespace libp2p::common {
 
-  /// Special debug utility function, allows for not having logger as member
-  /// field
+  /**
+   * Special debug utility function, allows for not having logger as member
+   * field
+   */
   template <typename... Args>
   inline void traceToDebugLogger(spdlog::string_view_t fmt,
                                  const Args &... args) {
