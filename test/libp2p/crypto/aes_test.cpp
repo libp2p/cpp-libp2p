@@ -108,3 +108,35 @@ TEST_F(AesTest, DecodeAesCtr256Success) {
   ASSERT_TRUE(result);
   ASSERT_EQ(result.value(), plain_text_256);
 }
+
+TEST_F(AesTest, Stream) {
+  Aes256Secret secret{};
+
+  std::copy(key_256.begin(), key_256.end(), secret.key.begin());
+  std::copy(iv.begin(), iv.end(), secret.iv.begin());
+
+  auto cipher_text = gsl::make_span(cipher_text_256);
+  const auto kDelimiter = 20;
+  auto cipher_text_part_1 = cipher_text.subspan(0, kDelimiter);
+  auto cipher_text_part_2 =
+      cipher_text.subspan(kDelimiter, cipher_text.size() - kDelimiter);
+
+  auto &&result_ref = aes::AesCtrImpl(secret, aes::AesCtrImpl::Mode::DECRYPT)
+                          .crypt(cipher_text_256);
+  ASSERT_TRUE(result_ref);
+  ASSERT_EQ(result_ref.value(), plain_text_256);
+
+  aes::AesCtrImpl ctr(secret, aes::AesCtrImpl::Mode::DECRYPT);
+  auto &&result_part_1 = ctr.crypt(cipher_text_part_1);
+  auto &&result_part_2 = ctr.crypt(cipher_text_part_2);
+  ASSERT_TRUE(result_part_1);
+  ASSERT_TRUE(result_part_2);
+  ASSERT_EQ(plain_text_256.size(),
+            result_part_1.value().size() + result_part_2.value().size());
+  ByteArray out;
+  out.insert(out.end(), result_part_1.value().begin(),
+             result_part_1.value().end());
+  out.insert(out.end(), result_part_2.value().begin(),
+             result_part_2.value().end());
+  ASSERT_EQ(plain_text_256, out);
+}
