@@ -17,21 +17,21 @@ namespace libp2p::crypto::aes {
   using libp2p::crypto::common::Aes256Secret;
 
   AesCtrImpl::AesCtrImpl(const Aes128Secret &secret, AesCtrImpl::Mode mode)
-      : mode_{mode}, initialization_error_{outcome::success()} {
+      : mode_{mode} {
     auto key = gsl::make_span(secret.key);
     auto iv = gsl::make_span(secret.iv);
     initialization_error_ = init(key, iv, EVP_aes_128_ctr());
   }
 
   AesCtrImpl::AesCtrImpl(const Aes256Secret &secret, AesCtrImpl::Mode mode)
-      : mode_{mode}, initialization_error_{outcome::success()} {
+      : mode_{mode} {
     auto key = gsl::make_span(secret.key);
     auto iv = gsl::make_span(secret.iv);
     initialization_error_ = init(key, iv, EVP_aes_256_ctr());
   }
 
   AesCtrImpl::~AesCtrImpl() {
-    if (ctx_) {
+    if (nullptr != ctx_) {
       EVP_CIPHER_CTX_free(ctx_);
       ctx_ = nullptr;
     }

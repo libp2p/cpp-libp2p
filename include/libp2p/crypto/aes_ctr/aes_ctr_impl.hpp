@@ -44,8 +44,8 @@ namespace libp2p::crypto::aes {
                                const EVP_CIPHER *cipher);
 
     const Mode mode_;
-    outcome::result<void> initialization_error_;
-    EVP_CIPHER_CTX *ctx_;
+    outcome::result<void> initialization_error_{outcome::success()};
+    EVP_CIPHER_CTX *ctx_{nullptr};
   };
 
 }  // namespace libp2p::crypto::aes
