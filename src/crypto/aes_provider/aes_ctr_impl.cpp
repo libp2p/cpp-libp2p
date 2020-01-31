@@ -45,7 +45,7 @@ namespace libp2p::crypto::aes {
       return OpenSslError::FAILED_INITIALIZE_CONTEXT;
     }
 
-    int mode{Mode::ENCRYPT == mode_ ? 0 : 1};
+    int mode{Mode::ENCRYPT == mode_ ? 1 : 0};
     if (1
         != EVP_CipherInit_ex(ctx_, cipher, nullptr, key.data(), iv.data(),
                              mode)) {
