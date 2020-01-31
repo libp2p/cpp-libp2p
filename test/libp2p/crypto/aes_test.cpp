@@ -109,6 +109,11 @@ TEST_F(AesTest, DecodeAesCtr256Success) {
   ASSERT_EQ(result.value(), plain_text_256);
 }
 
+/**
+ * @given two identical encrypted streams
+ * @when one stream is decrypted at once and the second in two approaches
+ * @then the resulting decrypted data is equal and valid
+ */
 TEST_F(AesTest, Stream) {
   Aes256Secret secret{};
 
