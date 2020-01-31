@@ -9,7 +9,7 @@
 #include <boost/di.hpp>
 
 // implementations
-#include <libp2p/crypto/aes_provider/aes_provider_impl.hpp>
+#include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
 #include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
@@ -259,7 +259,7 @@ namespace libp2p::injector {
         di::bind<crypto::rsa::RsaProvider>().template to(std::move(rsa_provider)),
         di::bind<crypto::ecdsa::EcdsaProvider>().template to(std::move(ecdsa_provider)),
         di::bind<crypto::secp256k1::Secp256k1Provider>().template to(std::move(secp256k1_provider)),
-        di::bind<crypto::aes::AesProvider>().template to<crypto::aes::AesProviderImpl>(),
+        di::bind<crypto::aes::AesCtr>().template to<crypto::aes::AesCtrImpl>(),
         di::bind<crypto::hmac::HmacProvider>().template to<crypto::hmac::HmacProviderImpl>(),
         di::bind<crypto::CryptoProvider>().template to<crypto::CryptoProviderImpl>(),
         di::bind<crypto::marshaller::KeyMarshaller>().template to<crypto::marshaller::KeyMarshallerImpl>(),

@@ -6,7 +6,6 @@
 #include "acceptance/p2p/host/peer/test_peer.hpp"
 
 #include <gtest/gtest.h>
-#include <libp2p/crypto/aes_provider/aes_provider_impl.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
@@ -130,8 +129,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
         crypto_provider,
         std::make_shared<security::secio::ProposeMessageMarshallerImpl>(),
         std::make_shared<security::secio::ExchangeMessageMarshallerImpl>(),
-        idmgr, key_marshaller, hmac_provider_,
-        std::make_shared<crypto::aes::AesProviderImpl>()));
+        idmgr, key_marshaller, hmac_provider_));
   } else {
     security_adaptors.emplace_back(std::make_shared<security::Plaintext>(
         std::move(exchange_msg_marshaller), idmgr, std::move(key_marshaller)));

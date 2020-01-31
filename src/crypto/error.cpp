@@ -41,6 +41,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::crypto, OpenSslError, e) {
       return "wrong iv size";
     case OpenSslError::WRONG_KEY_SIZE:
       return "wrong key size";
+    case OpenSslError::STREAM_FINALIZED:
+      return "stream encryption(decryption) has been already finalized";
   }
   return "unknown CryptoProviderError code";
 }
