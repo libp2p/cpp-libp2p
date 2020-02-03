@@ -9,7 +9,8 @@
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 #include <libp2p/muxer/yamux/yamux_stream.hpp>
 
-using Buffer = libp2p::common::ByteArray;
+#define TRACE_ENABLED 0
+#include <libp2p/common/trace.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxedConnection::Error, e) {
   using ErrorType = libp2p::connection::YamuxedConnection::Error;
@@ -27,6 +28,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxedConnection::Error, e) {
       return "error happened on other side's behalf";
     case ErrorType::INTERNAL_ERROR:
       return "internal error happened";
+    case ErrorType::CLOSED_BY_PEER:
+      return "connection closed by peer";
   }
   return "unknown";
 }
@@ -66,7 +69,7 @@ namespace libp2p::connection {
 
     auto stream_id = getNewStreamId();
 
-    new_stream_pending_ = true;
+    TRACE("creating stream {}", stream_id);
 
     write(
         {newStreamMsg(stream_id),
@@ -79,7 +82,7 @@ namespace libp2p::connection {
                                              self->config_.maximum_window_size);
            self->streams_.insert({stream_id, created_stream});
 
-           self->new_stream_pending_ = false;
+           TRACE("created stream {}", stream_id);
 
            return cb(std::move(created_stream));
          }});
@@ -116,10 +119,9 @@ namespace libp2p::connection {
 
   outcome::result<void> YamuxedConnection::close() {
     started_ = false;
-    resetAllStreams();
+    resetAllStreams(Error::YAMUX_IS_CLOSED);
     streams_.clear();
     window_updates_subs_.clear();
-    data_subs_.clear();
     return connection_->close();
   }
 
@@ -206,12 +208,13 @@ namespace libp2p::connection {
     if (!res) {
       if (res.error().value() == boost::asio::error::eof) {
         log_->info("the client has closed a session");
+        resetAllStreams(Error::CLOSED_BY_PEER);
         return;
       }
       log_->error(
           "cannot read header from the connection: {}; closing the session",
           res.error().message());
-      return closeSession();
+      return closeSession(res.error());
     }
 
     auto header_opt = parseFrame(header_buffer_);
@@ -219,7 +222,7 @@ namespace libp2p::connection {
       log_->error(
           "client has sent something, which is not a valid header; closing the "
           "session");
-      return closeSession();
+      return closeSession(Error::OTHER_SIDE_ERROR);
     }
 
     switch (header_opt->type) {
@@ -232,7 +235,7 @@ namespace libp2p::connection {
         return processGoAwayFrame(*header_opt);
       default:
         log_->critical("garbage in parsed frame's type; closing the session");
-        return closeSession();
+        return closeSession(Error::OTHER_SIDE_ERROR);
     }
   }
 
@@ -269,7 +272,7 @@ namespace libp2p::connection {
         // duplicate stream request - critical protocol violation
         log_->error(
             "duplicate stream request was sent; closing the Yamux session");
-        return closeSession();
+        return closeSession(Error::OTHER_SIDE_ERROR);
       }
 
       if (streams_.size() < config_.maximum_streams && new_stream_handler_) {
@@ -335,15 +338,15 @@ namespace libp2p::connection {
     doReadHeader();
   }
 
-  void YamuxedConnection::resetAllStreams() {
+  void YamuxedConnection::resetAllStreams(outcome::result<void> reason) {
     for (const auto &stream : streams_) {
-      stream.second->resetStream();
+      stream.second->onConnectionReset(reason.error());
     }
   }
 
   void YamuxedConnection::processGoAwayFrame(const YamuxFrame &frame) {
     started_ = false;
-    resetAllStreams();
+    resetAllStreams(Error::YAMUX_IS_CLOSED);
   }
 
   std::shared_ptr<YamuxStream> YamuxedConnection::findStream(
@@ -386,7 +389,7 @@ namespace libp2p::connection {
     if (data_len > config_.maximum_window_size) {
       log_->error(
           "too much data was received by this connection; closing the session");
-      return closeSession();
+      return closeSession(Error::OTHER_SIDE_ERROR);
     }
 
     // read the data, commit it to the stream and call handler, if exists
@@ -397,7 +400,7 @@ namespace libp2p::connection {
           if (!res) {
             self->log_->error("cannot read data from the connection: {}",
                               res.error().message());
-            return self->closeSession();
+            return self->closeSession(Error::OTHER_SIDE_ERROR);
           }
 
           if (stream && !discard_data) {
@@ -405,19 +408,11 @@ namespace libp2p::connection {
             if (!commit_res) {
               self->log_->error("cannot commit data to the stream's buffer: {}",
                                 commit_res.error().message());
-              return self->closeSession();
+              return self->closeSession(Error::INTERNAL_ERROR);
             }
           } else {
             // the data is to be discarded
             return self->doReadHeader();
-          }
-
-          if (auto stream_data_sub = self->data_subs_.find(frame.stream_id);
-              stream_data_sub != self->data_subs_.end()) {
-            // if someone is waiting for the data from that stream, notify it
-            if (stream_data_sub->second()) {
-              self->data_subs_.erase(stream_data_sub);
-            }
           }
 
           self->doReadHeader();
@@ -474,15 +469,6 @@ namespace libp2p::connection {
     if (auto stream = findStream(stream_id)) {
       streams_.erase(stream_id);
       stream->resetStream();
-
-      // TODO(artem): temporarily cleanup itself!
-      //      if (streams_.empty() && !new_stream_pending_) {
-      //        auto res = close();
-      //        if (!res) {
-      //          log_->error("cannot close connection: {} ",
-      //          res.error().message());
-      //        }
-      //      }
     }
   }
 
@@ -492,27 +478,24 @@ namespace libp2p::connection {
     return id;
   }
 
-  void YamuxedConnection::closeSession() {
-    return write({goAwayMsg(YamuxFrame::GoAwayError::PROTOCOL_ERROR),
-                  [self{shared_from_this()}](auto &&res) {
-                    self->started_ = false;
-                    if (!res) {
-                      self->log_->error("cannot close a Yamux session: {} ",
-                                        res.error().message());
-                      return;
-                    }
-                    self->log_->info("Yamux session was closed");
-                  }});
+  void YamuxedConnection::closeSession(outcome::result<void> reason) {
+    resetAllStreams(reason);
+
+    write({goAwayMsg(YamuxFrame::GoAwayError::PROTOCOL_ERROR),
+           [self{shared_from_this()}](auto &&res) {
+             self->started_ = false;
+             if (!res) {
+               self->log_->error("cannot close a Yamux session: {} ",
+                                 res.error().message());
+               return;
+             }
+             self->log_->info("Yamux session was closed");
+           }});
   }
 
   void YamuxedConnection::streamOnWindowUpdate(StreamId stream_id,
                                                NotifyeeCallback cb) {
     window_updates_subs_[stream_id] = std::move(cb);
-  }
-
-  void YamuxedConnection::streamOnAddData(StreamId stream_id,
-                                          NotifyeeCallback cb) {
-    data_subs_[stream_id] = std::move(cb);
   }
 
   void YamuxedConnection::streamWrite(StreamId stream_id,

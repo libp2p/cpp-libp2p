@@ -8,6 +8,9 @@
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 
+#define TRACE_ENABLED 0
+#include <libp2p/common/trace.hpp>
+
 namespace libp2p::connection {
   YamuxFrame::ByteArray YamuxFrame::frameBytes(uint8_t version, FrameType type,
                                                Flag flag, uint32_t stream_id,
@@ -34,24 +37,28 @@ namespace libp2p::connection {
   }
 
   YamuxFrame::ByteArray newStreamMsg(YamuxFrame::StreamId stream_id) {
+    TRACE("yamux newStreamMsg, stream_id={}", stream_id);
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
                                   YamuxFrame::Flag::SYN, stream_id, 0);
   }
 
   YamuxFrame::ByteArray ackStreamMsg(YamuxFrame::StreamId stream_id) {
+    TRACE("yamux ackStreamMsg, stream_id={}", stream_id);
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
                                   YamuxFrame::Flag::ACK, stream_id, 0);
   }
 
   YamuxFrame::ByteArray closeStreamMsg(YamuxFrame::StreamId stream_id) {
+    TRACE("yamux closeStreamMsg, stream_id={}", stream_id);
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
                                   YamuxFrame::Flag::FIN, stream_id, 0);
   }
 
   YamuxFrame::ByteArray resetStreamMsg(YamuxFrame::StreamId stream_id) {
+    TRACE("yamux resetStreamMsg, stream_id={}", stream_id);
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
                                   YamuxFrame::Flag::RST, stream_id, 0);
@@ -71,6 +78,7 @@ namespace libp2p::connection {
 
   YamuxFrame::ByteArray dataMsg(YamuxFrame::StreamId stream_id,
                                 gsl::span<const uint8_t> data) {
+    TRACE("yamux dataMsg, stream_id={}, size={}", stream_id, data.size());
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
                                   YamuxFrame::Flag::NONE, stream_id,
@@ -78,6 +86,7 @@ namespace libp2p::connection {
   }
 
   YamuxFrame::ByteArray goAwayMsg(YamuxFrame::GoAwayError error) {
+    TRACE("yamux goAwayMsg");
     return YamuxFrame::frameBytes(
         YamuxFrame::kDefaultVersion, YamuxFrame::FrameType::GO_AWAY,
         YamuxFrame::Flag::NONE, 0, static_cast<uint32_t>(error));

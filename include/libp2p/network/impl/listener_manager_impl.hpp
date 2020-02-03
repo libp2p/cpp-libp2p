@@ -50,6 +50,10 @@ namespace libp2p::network {
 
     Router &getRouter() override;
 
+    void onConnection(
+        outcome::result<std::shared_ptr<connection::CapableConnection>> rconn)
+        override;
+
    private:
     bool started = false;
 
@@ -61,9 +65,6 @@ namespace libp2p::network {
     std::shared_ptr<network::Router> router_;
     std::shared_ptr<TransportManager> tmgr_;
     std::shared_ptr<ConnectionManager> cmgr_;
-
-    void onConnection(
-        outcome::result<std::shared_ptr<connection::CapableConnection>> rconn);
   };
 
 }  // namespace libp2p::network

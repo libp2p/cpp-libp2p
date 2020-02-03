@@ -8,6 +8,7 @@
 
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/network/dialer.hpp>
+#include <libp2p/network/listener_manager.hpp>
 #include <libp2p/network/transport_manager.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
 
@@ -19,7 +20,8 @@ namespace libp2p::network {
 
     DialerImpl(std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect,
                std::shared_ptr<TransportManager> tmgr,
-               std::shared_ptr<ConnectionManager> cmgr);
+               std::shared_ptr<ConnectionManager> cmgr,
+               std::shared_ptr<ListenerManager> listener);
 
     // Establishes a connection to a given peer
     void dial(const peer::PeerInfo &p, DialResultFunc cb) override;
@@ -33,8 +35,7 @@ namespace libp2p::network {
     std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect_;
     std::shared_ptr<TransportManager> tmgr_;
     std::shared_ptr<ConnectionManager> cmgr_;
-
-    common::Logger log_ = common::createLogger("debug"); // XXX
+    std::shared_ptr<ListenerManager> listener_;
   };
 
 }  // namespace libp2p::network

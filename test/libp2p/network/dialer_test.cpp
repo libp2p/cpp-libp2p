@@ -11,6 +11,7 @@
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/network/connection_manager_mock.hpp"
 #include "mock/libp2p/network/router_mock.hpp"
+#include "mock/libp2p/network/listener_mock.hpp"
 #include "mock/libp2p/network/transport_manager_mock.hpp"
 #include "mock/libp2p/peer/address_repository_mock.hpp"
 #include "mock/libp2p/protocol_muxer/protocol_muxer_mock.hpp"
@@ -48,8 +49,10 @@ struct DialerTest : public ::testing::Test {
   std::shared_ptr<ConnectionManagerMock> cmgr =
       std::make_shared<ConnectionManagerMock>();
 
+  std::shared_ptr<ListenerMock> listener = std::make_shared<ListenerMock>();
+
   std::shared_ptr<Dialer> dialer =
-      std::make_shared<DialerImpl>(proto_muxer, tmgr, cmgr);
+      std::make_shared<DialerImpl>(proto_muxer, tmgr, cmgr, listener);
 
   multi::Multiaddress ma1 = "/ip4/127.0.0.1/tcp/1"_multiaddr;
   peer::PeerId pid = "1"_peerid;
@@ -68,6 +71,9 @@ TEST_F(DialerTest, DialNewConnection) {
   EXPECT_CALL(*cmgr, getBestConnectionForPeer(pinfo.id))
       .WillOnce(Return(nullptr));
 
+  // connection is stored
+  EXPECT_CALL(*listener, onConnection(_)).Times(1);
+
   // we have transport to dial
   EXPECT_CALL(*tmgr, findBest(ma1)).WillOnce(Return(transport));
 
@@ -75,8 +81,7 @@ TEST_F(DialerTest, DialNewConnection) {
   EXPECT_CALL(*transport, dial(pinfo.id, ma1, _))
       .WillOnce(Arg2CallbackWithArg(outcome::success(connection)));
 
-  // connection is stored by connection manager
-  EXPECT_CALL(*cmgr, addConnectionToPeer(pinfo.id, _)).Times(1);
+
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {

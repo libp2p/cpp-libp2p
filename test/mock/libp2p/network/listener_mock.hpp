@@ -43,6 +43,9 @@ namespace libp2p::network {
                  outcome::result<void>(const multi::Multiaddress &));
 
     MOCK_METHOD0(getRouter, Router &());
+
+    MOCK_METHOD1(onConnection, void(
+        outcome::result<std::shared_ptr<connection::CapableConnection>>));
   };
 }  // namespace libp2p::network
 
