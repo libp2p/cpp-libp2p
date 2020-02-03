@@ -124,7 +124,6 @@ namespace libp2p::connection {
     resetAllStreams(Error::YAMUX_IS_CLOSED);
     streams_.clear();
     window_updates_subs_.clear();
-//    data_subs_.clear();
     return connection_->close();
   }
 
