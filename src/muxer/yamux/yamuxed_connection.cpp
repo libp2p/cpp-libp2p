@@ -12,8 +12,6 @@
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
 
-using Buffer = libp2p::common::ByteArray;
-
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxedConnection::Error, e) {
   using ErrorType = libp2p::connection::YamuxedConnection::Error;
   switch (e) {
