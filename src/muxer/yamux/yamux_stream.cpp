@@ -200,13 +200,14 @@ namespace libp2p::connection {
         if (conn_wptr.expired()) {
           self->endWrite(Error::CONNECTION_IS_DEAD);
         } else {
-          conn_wptr.lock()->streamWrite(
-              self->stream_id_, in, bytes, some, [self](auto &&res) {
-                if (res) {
-                  self->send_window_size_ -= res.value();
-                }
-                self->endWrite(std::forward<decltype(res)>(res));
-              });
+          conn_wptr.lock()->streamWrite(self->stream_id_, in, bytes, some,
+                                        [self](outcome::result<size_t> res) {
+                                          if (res) {
+                                            self->send_window_size_ -=
+                                                res.value();
+                                          }
+                                          self->endWrite(res);
+                                        });
         }
         return true;
       }
