@@ -9,7 +9,7 @@
 #include <boost/di.hpp>
 
 // implementations
-#include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
+#include <libp2p/crypto/aes_provider/aes_provider_impl.hpp>
 #include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
@@ -172,7 +172,8 @@ namespace libp2p::injector {
    */
   template <typename C>
   auto useConfig(C &&c) {
-    return boost::di::bind<std::decay<C>>().template to(std::forward<C>(c));
+    return boost::di::bind<std::decay<C>>().template to(
+        std::forward<C>(c))[boost::di::override];
   }
 
   /**
@@ -228,7 +229,7 @@ namespace libp2p::injector {
    * @param args injector bindings that override default bindings.
    * @return complete network injector
    */
-  template <typename... Ts>
+  template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
   auto makeNetworkInjector(Ts &&... args) {
     using namespace boost;  // NOLINT
 
@@ -252,14 +253,14 @@ namespace libp2p::injector {
         crypto_provider->generateKeys(crypto::Key::Type::Ed25519).value();
 
     // clang-format off
-    return di::make_injector(
+    return di::make_injector<InjectorConfig>(
         di::bind<crypto::KeyPair>().template to(std::move(keypair)),
         di::bind<crypto::random::CSPRNG>().template to(std::move(csprng)),
         di::bind<crypto::ed25519::Ed25519Provider>().template to(std::move(ed25519_provider)),
         di::bind<crypto::rsa::RsaProvider>().template to(std::move(rsa_provider)),
         di::bind<crypto::ecdsa::EcdsaProvider>().template to(std::move(ecdsa_provider)),
         di::bind<crypto::secp256k1::Secp256k1Provider>().template to(std::move(secp256k1_provider)),
-        di::bind<crypto::aes::AesCtr>().template to<crypto::aes::AesCtrImpl>(),
+        di::bind<crypto::aes::AesProvider>().template to<crypto::aes::AesProviderImpl>(),
         di::bind<crypto::hmac::HmacProvider>().template to<crypto::hmac::HmacProviderImpl>(),
         di::bind<crypto::CryptoProvider>().template to<crypto::CryptoProviderImpl>(),
         di::bind<crypto::marshaller::KeyMarshaller>().template to<crypto::marshaller::KeyMarshallerImpl>(),

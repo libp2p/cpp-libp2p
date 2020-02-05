@@ -19,3 +19,9 @@ target_link_libraries(all_muxers_acceptance_test
     p2p_identity_manager
     p2p_literals
     )
+
+# TODO(artem): make addtest
+add_executable(protocol_streams_regression protocol_streams_regression.cpp)
+
+target_link_libraries(protocol_streams_regression
+    p2p_basic_host)

@@ -6,7 +6,6 @@
 #ifndef LIBP2P_HOST_INJECTOR_HPP
 #define LIBP2P_HOST_INJECTOR_HPP
 
-#include <boost/di.hpp>
 #include <libp2p/injector/network_injector.hpp>
 
 // implementations
@@ -18,13 +17,13 @@
 
 namespace libp2p::injector {
 
-  template <typename... Ts>
+  template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
   auto makeHostInjector(Ts &&... args) {
     using namespace boost;  // NOLINT
 
     // clang-format off
-    return di::make_injector(
-        makeNetworkInjector(),
+    return di::make_injector<InjectorConfig>(
+        makeNetworkInjector<InjectorConfig>(),
 
         di::bind<Host>.template to<host::BasicHost>(),
 
