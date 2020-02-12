@@ -90,7 +90,10 @@ namespace libp2p::connection {
     void write(gsl::span<const uint8_t> in, size_t bytes, WriteCallbackFunc cb,
                bool some);
 
+    /// this stream's connection
     std::weak_ptr<YamuxedConnection> yamuxed_connection_;
+
+    /// id of this stream
     YamuxedConnection::StreamId stream_id_;
 
     /// is the stream opened for reads?
@@ -99,8 +102,10 @@ namespace libp2p::connection {
     /// is the stream opened for writes?
     bool is_writable_ = true;
 
-    /// default sliding window size of the stream - how much unread bytes can be
-    /// on both sides
+    /**
+     * default sliding window size of the stream - how much unread bytes can be
+     * on both sides
+     */
     static constexpr uint32_t kDefaultWindowSize = 256 * 1024;  // in bytes
 
     /// how much unacked bytes can we have on our side
@@ -141,8 +146,11 @@ namespace libp2p::connection {
     outcome::result<size_t> tryConsumeReadBuffer(gsl::span<uint8_t> out,
                                                  size_t bytes, bool some);
 
-    /// Forwards read buffer and receive window and acknowledges
-    /// bytes received in async manner
+    /**
+     * Forwards read buffer and receive window and acknowledges bytes received
+     * in async manner
+     * @param bytes number of bytes to ack
+     */
     void sendAck(size_t bytes);
 
     /// is the stream writing right now?

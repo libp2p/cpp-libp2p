@@ -40,7 +40,7 @@ namespace libp2p::connection {
       FORBIDDEN_CALL,
       OTHER_SIDE_ERROR,
       INTERNAL_ERROR,
-      CLOSED_BY_PEER
+      CLOSED_BY_PEER,
     };
 
     /**

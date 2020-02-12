@@ -18,7 +18,7 @@
 
 namespace libp2p::crypto {
   namespace aes {
-    class AesProvider;
+    class AesCtr;
   }
   namespace hmac {
     class HmacProvider;
@@ -61,7 +61,6 @@ namespace libp2p::connection {
     SecioConnection(
         std::shared_ptr<RawConnection> raw_connection,
         std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider,
-        std::shared_ptr<crypto::aes::AesProvider> aes_provider,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
         crypto::PublicKey local_pubkey, crypto::PublicKey remote_pubkey,
         crypto::common::HashType hash_type,
@@ -141,28 +140,11 @@ namespace libp2p::connection {
     outcome::result<common::ByteArray> macRemote(
         gsl::span<const uint8_t> message) const;
 
-    /**
-     * Does AES encryption of a message using local peer key
-     * @param message to be encrypted
-     * @return an encrypted representation of the message
-     */
-    outcome::result<common::ByteArray> encryptLocal(
-        gsl::span<const uint8_t> message) const;
-
-    /**
-     * Does AES decryption of a message using remote peer key
-     * @param message to be decrypted
-     * @return a decrypted representation of the message
-     */
-    outcome::result<common::ByteArray> decryptRemote(
-        gsl::span<const uint8_t> message) const;
-
     /// Returns MAC digest size in bytes for the chosen algorithm
     outcome::result<size_t> macSize() const;
 
     std::shared_ptr<RawConnection> raw_connection_;
     std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider_;
-    std::shared_ptr<crypto::aes::AesProvider> aes_provider_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
 
     crypto::PublicKey local_;
@@ -175,6 +157,9 @@ namespace libp2p::connection {
 
     boost::optional<AesSecrets<crypto::common::Aes128Secret>> aes128_secrets_;
     boost::optional<AesSecrets<crypto::common::Aes256Secret>> aes256_secrets_;
+
+    boost::optional<std::unique_ptr<crypto::aes::AesCtr>> local_encryptor_;
+    boost::optional<std::unique_ptr<crypto::aes::AesCtr>> remote_decryptor_;
 
     std::queue<uint8_t> user_data_buffer_;
     common::Logger log_ = common::createLogger("SECCONN");

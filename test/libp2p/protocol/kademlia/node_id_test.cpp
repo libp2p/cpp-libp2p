@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
+#include <cstdlib>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/literals.hpp>
 #include "testutil/libp2p/peer.hpp"
@@ -17,6 +18,13 @@ using libp2p::peer::PeerId;
 using libp2p::protocol::kademlia::NodeId;
 using libp2p::protocol::kademlia::xor_distance;
 using libp2p::protocol::kademlia::XorDistanceComparator;
+
+// allows to print debug output to stdout, not wanted in CI output, but
+// useful while debugging
+bool verbose() {
+  static const bool v = (std::getenv("TRACE_DEBUG") != nullptr);
+  return v;
+}
 
 bool is_distance_less(Hash256 a, Hash256 b) {
   constexpr auto size = Hash256().size();
@@ -48,6 +56,7 @@ bool is_xor_distance_sorted(const PeerId &local, std::vector<PeerId> &peers) {
 }
 
 void print(NodeId from, std::vector<PeerId> &pids) {
+  if (!verbose()) return;
   std::cout << "peers: \n";
   for (auto &p : pids) {
     std::cout << "pid: " << p.toHex()

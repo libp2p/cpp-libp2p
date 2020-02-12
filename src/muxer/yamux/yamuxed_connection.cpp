@@ -9,10 +9,8 @@
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 #include <libp2p/muxer/yamux/yamux_stream.hpp>
 
-#define TRACE_ENABLED 1
+#define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
-
-using Buffer = libp2p::common::ByteArray;
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxedConnection::Error, e) {
   using ErrorType = libp2p::connection::YamuxedConnection::Error;
@@ -124,7 +122,6 @@ namespace libp2p::connection {
     resetAllStreams(Error::YAMUX_IS_CLOSED);
     streams_.clear();
     window_updates_subs_.clear();
-//    data_subs_.clear();
     return connection_->close();
   }
 

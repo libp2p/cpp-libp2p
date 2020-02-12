@@ -7,7 +7,7 @@
 #define LIBP2P_SECIO_ADAPTOR_HPP
 
 #include <libp2p/common/logger.hpp>
-#include <libp2p/crypto/aes_provider.hpp>
+#include <libp2p/crypto/aes_ctr.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/hmac_provider.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
@@ -31,6 +31,7 @@ namespace libp2p::security {
    public:
     enum class Error {
       REMOTE_PEER_SIGNATURE_IS_INVALID = 1,
+      INITIAL_PACKET_VERIFICATION_FAILED,
     };
 
     static constexpr auto kProtocolId = "/secio/1.0.0";
@@ -46,8 +47,7 @@ namespace libp2p::security {
           std::shared_ptr<secio::ExchangeMessageMarshaller> exchange_marshaller,
           std::shared_ptr<peer::IdentityManager> idmgr,
           std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
-          std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider,
-          std::shared_ptr<crypto::aes::AesProvider> aes_provider);
+          std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider);
 
     peer::Protocol getProtocolId() const override;
 
@@ -90,9 +90,9 @@ namespace libp2p::security {
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
     // secio conn deps go below
     std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider_;
-    std::shared_ptr<crypto::aes::AesProvider> aes_provider_;
     //
     secio::ProposeMessage propose_message_;
+    mutable common::ByteArray remote_peer_rand_;
     common::Logger log_ = common::createLogger("SECIO");
   };
 }  // namespace libp2p::security

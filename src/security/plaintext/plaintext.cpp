@@ -17,16 +17,27 @@
 #pragma GCC diagnostic ignored "-Wparentheses"
 #endif
 
-#define PLAINTEXT_OUTCOME_VOID_TRY(res, conn, cb) \
-  if ((res).has_error()) {                        \
-    closeConnection(conn, (res).error());         \
-    cb((res).error());                            \
-    return;                                       \
+#ifndef UNIQUE_NAME
+#define UNIQUE_NAME(base) base##__LINE__
+#endif  // UNIQUE_NAME
+
+#define PLAINTEXT_OUTCOME_TRY_VOID_I(var, res, conn, cb) \
+  auto && (var) = (res);                                 \
+  if ((var).has_error()) {                               \
+    closeConnection((conn), (var).error());              \
+    cb((var).error());                                   \
+    return;                                              \
   }
 
+#define PLAINTEXT_OUTCOME_TRY_NAME_I(var, val, res, conn, cb) \
+  PLAINTEXT_OUTCOME_TRY_VOID_I(var, res, conn, cb)            \
+  auto && (val) = (var).value();
+
 #define PLAINTEXT_OUTCOME_TRY(name, res, conn, cb) \
-  PLAINTEXT_OUTCOME_VOID_TRY((res), (conn), (cb))  \
-  auto(name) = (res).value();
+  PLAINTEXT_OUTCOME_TRY_NAME_I(UNIQUE_NAME(name), name, res, conn, cb)
+
+#define PLAINTEXT_OUTCOME_VOID_TRY(res, conn, cb) \
+  PLAINTEXT_OUTCOME_TRY_VOID_I(UNIQUE_NAME(void_var), res, conn, cb)
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, Plaintext::Error, e) {
   using E = libp2p::security::Plaintext::Error;

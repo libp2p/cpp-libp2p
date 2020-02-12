@@ -4,7 +4,7 @@
 #
 
 libp2p_add_library(p2p_aes_provider
-    aes_provider_impl.cpp
+    aes_ctr_impl.cpp
     )
 
 target_link_libraries(p2p_aes_provider
