@@ -108,7 +108,7 @@ namespace libp2p::connection {
     boost::asio::streambuf read_buffer_;
 
     /// when a new data arrives, this function is to be called
-    std::function<void()> data_notifyee_;
+    std::function<void(outcome::result<size_t>)> data_notifyee_;
     bool data_notified_ = false;
 
     /// is the stream opened for reads?

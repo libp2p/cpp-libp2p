@@ -25,17 +25,15 @@ namespace libp2p::protocol::kademlia {
 
     boost::optional<Message::Peer> assign_peer(
         const kad::pb::Message_Peer &src) {
-      using R = boost::optional<Message::Peer>;
-
       if (int(src.connection()) > int(ConnStatus::CAN_NOT_CONNECT)) {
         // TODO(artem): log
-        return R();
+        return boost::none;
       }
 
       auto peer_id_res = peer::PeerId::fromBase58(src.id());
       if (!peer_id_res) {
         // TODO(artem): log
-        return R();
+        return boost::none;
       }
 
       std::vector<multi::Multiaddress> addresses;
@@ -43,7 +41,7 @@ namespace libp2p::protocol::kademlia {
         auto res = multi::Multiaddress::create(addr);
         if (!res) {
           // TODO(artem): log
-          return R();
+          return boost::none;
         }
         addresses.push_back(res.value());
       }

@@ -17,4 +17,5 @@ target_link_libraries(kad_peer_discovery_example
     p2p_inmem_protocol_repository
     p2p_literals
     p2p_kad
+    asio_scheduler
     )

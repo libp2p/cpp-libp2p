@@ -8,7 +8,7 @@
 
 #include <libp2p/common/literals.hpp>
 #include <libp2p/network/connection_manager.hpp>
-#include <libp2p/protocol/kademlia/impl/asio_scheduler_impl.hpp>
+#include <libp2p/protocol/common/asio/asio_scheduler.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_impl.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
 
@@ -52,12 +52,9 @@ namespace libp2p::protocol::kademlia::example {
       bool verbose = true;
       bool request_sent = false;
 
-      Host(size_t i, std::shared_ptr<Scheduler> sch, PerHostObjects obj)
-          : index(i),
-            o(std::move(obj))
-
-      {
-        kad = std::make_shared<KadImpl>(o.host, std::move(sch), o.routing_table,
+      Host(size_t i, const std::shared_ptr<Scheduler> &sch, PerHostObjects obj)
+          : index(i), o(std::move(obj)) {
+        kad = std::make_shared<KadImpl>(o.host, sch, o.routing_table,
                                         createDefaultValueStoreBackend(),
                                         getConfig());
       }
@@ -259,8 +256,8 @@ namespace libp2p::protocol::kademlia::example {
 }  //  namespace libp2p::protocol::kademlia::example
 
 int main(int argc, char *argv[]) {
-  namespace k = libp2p::protocol::kademlia;
-  namespace x = k::example;
+  namespace p = libp2p::protocol;
+  namespace x = libp2p::protocol::kademlia::example;
   try {
     size_t hosts_count = 6;
     bool kad_log_debug = false;
@@ -272,7 +269,9 @@ int main(int argc, char *argv[]) {
     x::setupLoggers(kad_log_debug);
 
     auto io = x::createIOContext();
-    auto scheduler = k::AsioSchedulerImpl::create(*io, 1000);
+
+    auto scheduler = std::make_shared<libp2p::protocol::AsioScheduler>(
+        *io, libp2p::protocol::SchedulerConfig{});
 
     x::Hosts hosts(hosts_count, scheduler);
 

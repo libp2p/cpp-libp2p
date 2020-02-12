@@ -3,10 +3,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <cassert>
-#include <libp2p/protocol/kademlia/scheduler.hpp>
+#include <libp2p/protocol/common/scheduler.hpp>
 
-namespace libp2p::protocol::kademlia {
+#include <cassert>
+
+namespace libp2p::protocol {
+
+  scheduler::Handle::~Handle() {
+    cancel();
+  }
+
+  void scheduler::Handle::detach() {
+    cancellation_.reset();
+  }
+
+  void scheduler::Handle::cancel() {
+    auto sch = cancellation_.lock();
+    if (sch) {
+      sch->cancel(ticket_);
+    }
+    detach();
+  }
+
+  void scheduler::Handle::reschedule(scheduler::Ticks delay) {
+    auto sch = cancellation_.lock();
+    if (sch) {
+      ticket_ = sch->reschedule(ticket_, delay);
+    }
+  }
+
+  scheduler::Handle::Handle(Ticket ticket,
+                            std::weak_ptr<Cancellation> cancellation)
+      : ticket_(std::move(ticket)), cancellation_(std::move(cancellation)) {}
 
   Scheduler::Scheduler() : counter_(0) {}
 
@@ -42,7 +70,9 @@ namespace libp2p::protocol::kademlia {
       return newTicket(delay, cb_in_progress_);
     }
     auto it = table_.find(ticket);
-    assert (it != table_.end());
+
+    assert(it != table_.end());
+
     auto cb = std::move(it->second);
     table_.erase(it);
     return newTicket(delay, std::move(cb));
@@ -71,4 +101,4 @@ namespace libp2p::protocol::kademlia {
     return true;
   }
 
-}  // namespace libp2p::protocol::kademlia
+}  // namespace libp2p::protocol

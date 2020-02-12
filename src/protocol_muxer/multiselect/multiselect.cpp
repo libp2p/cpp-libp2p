@@ -5,6 +5,9 @@
 
 #include <libp2p/protocol_muxer/multiselect/multiselect.hpp>
 
+#define TRACE_ENABLED 1
+#include <libp2p/common/trace.hpp>
+
 namespace libp2p::protocol_muxer {
   using peer::Protocol;
 
@@ -27,6 +30,7 @@ namespace libp2p::protocol_muxer {
     auto [write_buffer, read_buffer, index] = getBuffers();
 
     if (is_initiator) {
+      TRACE("in Multiselect::negotiate opening msg");
       MessageWriter::sendOpeningMsg(std::make_shared<ConnectionState>(
           connection, supported_protocols, handler, write_buffer, read_buffer,
           index, shared_from_this()));
@@ -47,6 +51,7 @@ namespace libp2p::protocol_muxer {
 
   void Multiselect::onWriteCompleted(
       std::shared_ptr<ConnectionState> connection_state) const {
+    TRACE("Multiselect onWriteCompleted, status={}", connection_state->status);
     MessageReader::readNextMessage(std::move(connection_state));
   }
 

@@ -317,6 +317,11 @@ namespace libp2p::connection {
   }
 
   void MplexedConnection::closeSession() {
+    for (auto &[_, stream] : streams_) {
+      // all that stuff to be refactored
+      (void)stream->commitData(gsl::span<const uint8_t>{}, 0);
+    }
+
     auto close_res = close();
     if (!close_res) {
       log_->error("cannot close the connection: {}",

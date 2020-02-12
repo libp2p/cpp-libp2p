@@ -8,7 +8,7 @@
 
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <libp2p/protocol/kademlia/scheduler.hpp>
+#include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_session_host.hpp>
 
 namespace libp2p::protocol::kademlia {

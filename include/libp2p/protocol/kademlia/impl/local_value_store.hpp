@@ -11,7 +11,7 @@
 #include <boost/multi_index/ordered_index_fwd.hpp>
 #include <boost/multi_index_container_fwd.hpp>
 
-#include <libp2p/protocol/kademlia/scheduler.hpp>
+#include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/kademlia/value_store_backend.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_backend.hpp>
 

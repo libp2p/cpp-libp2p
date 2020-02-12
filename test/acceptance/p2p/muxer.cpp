@@ -105,8 +105,8 @@ struct Server : public std::enable_shared_from_this<Server> {
     stream->readSome(
         *buf, buf->size(), [buf, stream, this](outcome::result<size_t> rread) {
           if (!rread) {
-            if (rread.error() == YamuxedConnection::Error::CLOSED_BY_PEER) {
-              // client closed connection, ok
+            if (rread.error() == YamuxedConnection::Error::CLOSED_BY_PEER
+            || rread.error() == MplexStream::Error::CONNECTION_IS_DEAD) {
               return;
             }
             this->println("readSome error: ", rread.error().message());

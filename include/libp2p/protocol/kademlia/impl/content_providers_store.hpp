@@ -12,7 +12,7 @@
 #include <boost/multi_index_container_fwd.hpp>
 
 #include <libp2p/protocol/kademlia/common.hpp>
-#include <libp2p/protocol/kademlia/scheduler.hpp>
+#include <libp2p/protocol/common/scheduler.hpp>
 
 namespace libp2p::protocol::kademlia {
 

@@ -85,7 +85,11 @@ namespace libp2p::connection {
     // this lambda checks, if there's enough data in our read buffer, and gives
     // it to the caller, if so
     auto read_lambda = [self{shared_from_this()}, cb{std::move(cb)}, out, bytes,
-                        some]() mutable {
+                        some](outcome::result<size_t> res) mutable {
+      if (!res) {
+        self->data_notified_ = true;
+        return cb(res);
+      }
       if ((some && self->read_buffer_.size() != 0)
           || (!some && self->read_buffer_.size() >= bytes)) {
         auto to_read =
@@ -106,7 +110,7 @@ namespace libp2p::connection {
 
     // return immediately, if there's enough data in the buffer
     data_notified_ = false;
-    read_lambda();
+    read_lambda(0);
     if (data_notified_) {
       return;
     }
@@ -229,6 +233,14 @@ namespace libp2p::connection {
 
   outcome::result<void> MplexStream::commitData(gsl::span<const uint8_t> data,
                                                 size_t data_size) {
+    if (data_size == 0) {
+      is_reset_ = true;
+      if (data_notifyee_ && !data_notified_) {
+        data_notifyee_(Error::CONNECTION_IS_DEAD);
+      }
+      return Error::CONNECTION_IS_DEAD;
+    }
+
     if (data_size > receive_window_size_) {
       // we have received more data, than we can handle
       reset();
@@ -245,7 +257,7 @@ namespace libp2p::connection {
     receive_window_size_ -= data_size;
 
     if (data_notifyee_ && !data_notified_) {
-      data_notifyee_();
+      data_notifyee_(data_size);
     }
 
     return outcome::success();
