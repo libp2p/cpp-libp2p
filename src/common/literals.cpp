@@ -11,6 +11,8 @@
 #include <libp2p/multi/multihash.hpp>
 #include <libp2p/peer/peer_id.hpp>
 
+#include <algorithm>
+
 namespace libp2p::common {
   libp2p::common::Hash256 operator""_hash256(const char *c, size_t s) {
     libp2p::common::Hash256 hash{};
