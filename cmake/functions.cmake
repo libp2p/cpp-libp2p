@@ -45,8 +45,13 @@ function(add_flag flag)
 endfunction()
 
 function(compile_proto_to_cpp PROTO_LIBRARY_NAME PB_H PB_CC PROTO)
-  get_target_property(Protobuf_INCLUDE_DIR protobuf::libprotobuf INTERFACE_INCLUDE_DIRECTORIES)
-  get_target_property(Protobuf_PROTOC_EXECUTABLE protobuf::protoc IMPORTED_LOCATION_RELEASE)
+  if (NOT Protobuf_INCLUDE_DIR)
+    get_target_property(Protobuf_INCLUDE_DIR protobuf::libprotobuf INTERFACE_INCLUDE_DIRECTORIES)
+  endif()
+  if (NOT Protobuf_PROTOC_EXECUTABLE)
+    get_target_property(Protobuf_PROTOC_EXECUTABLE protobuf::protoc IMPORTED_LOCATION_RELEASE)
+    set(PROTOBUF_DEPENDS protobuf::protoc)
+  endif()
 
   if (NOT Protobuf_PROTOC_EXECUTABLE)
     message(FATAL_ERROR "Protobuf_PROTOC_EXECUTABLE is empty")
@@ -78,7 +83,7 @@ function(compile_proto_to_cpp PROTO_LIBRARY_NAME PB_H PB_CC PROTO)
       COMMAND ${GEN_COMMAND}
       ARGS -I${PROJECT_SOURCE_DIR}/src -I${GEN_ARGS} --cpp_out=${SCHEMA_OUT_DIR} ${PROTO_ABS}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-      DEPENDS protobuf::protoc
+      DEPENDS ${PROTOBUF_DEPENDS}
       VERBATIM
   )
 
