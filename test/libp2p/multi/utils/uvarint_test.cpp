@@ -51,22 +51,22 @@ TEST(UVarint, CorrectEncoding) {
 }
 
 TEST(UVarint, ByteString) {
-  auto encoded0 = UVarint(0).toVector();
+  auto encoded0 = UVarint(0).toBytes();
   std::string str0(encoded0.begin(), encoded0.end());
   EXPECT_EQ(str0, "\x00"s);
   EXPECT_EQ(hex_upper(encoded0), "00");
 
-  auto encoded1 = UVarint(1).toVector();
+  auto encoded1 = UVarint(1).toBytes();
   std::string str1(encoded1.begin(), encoded1.end());
   EXPECT_EQ(str1, "\x01"s);
   EXPECT_EQ(hex_upper(encoded1), "01");
 
-  auto encoded128 = UVarint(128).toVector();
+  auto encoded128 = UVarint(128).toBytes();
   std::string str128(encoded128.begin(), encoded128.end());
   EXPECT_EQ(str128, "\x80\x1"s);
   EXPECT_EQ(hex_upper(encoded128), "8001");
 
-  auto encoded130 = UVarint(130).toVector();
+  auto encoded130 = UVarint(130).toBytes();
   std::string str130(encoded130.begin(), encoded130.end());
   EXPECT_EQ(str130, "\x82\x1"s);
   EXPECT_EQ(hex_upper(encoded130), "8201");
