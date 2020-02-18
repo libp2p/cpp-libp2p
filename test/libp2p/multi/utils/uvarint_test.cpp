@@ -12,6 +12,7 @@
 
 using libp2p::common::hex_upper;
 using libp2p::multi::UVarint;
+using namespace std::string_literals;
 
 /**
  * @given an unsigned integer
@@ -47,6 +48,28 @@ TEST(UVarint, CorrectEncoding) {
   ASSERT_EQ(hex_upper(var.toBytes()), "AC02");
   var = 16384;
   ASSERT_EQ(hex_upper(var.toBytes()), "808001");
+}
+
+TEST(UVarint, ByteString) {
+  auto encoded0 = UVarint(0).toVector();
+  std::string str0(encoded0.begin(), encoded0.end());
+  EXPECT_EQ(str0, "\x00"s);
+  EXPECT_EQ(hex_upper(encoded0), "00");
+
+  auto encoded1 = UVarint(1).toVector();
+  std::string str1(encoded1.begin(), encoded1.end());
+  EXPECT_EQ(str1, "\x01"s);
+  EXPECT_EQ(hex_upper(encoded1), "01");
+
+  auto encoded128 = UVarint(128).toVector();
+  std::string str128(encoded128.begin(), encoded128.end());
+  EXPECT_EQ(str128, "\x80\x1"s);
+  EXPECT_EQ(hex_upper(encoded128), "8001");
+
+  auto encoded130 = UVarint(130).toVector();
+  std::string str130(encoded130.begin(), encoded130.end());
+  EXPECT_EQ(str130, "\x82\x1"s);
+  EXPECT_EQ(hex_upper(encoded130), "8201");
 }
 
 /**
