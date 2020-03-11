@@ -9,6 +9,7 @@
 
 #include <boost/optional.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base16.hpp>
+#include <libp2p/multi/multibase_codec/codecs/base32.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base58.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base64.hpp>
 
@@ -28,6 +29,10 @@ namespace {
         return MultibaseCodec::Encoding::BASE16_LOWER;
       case 'F':
         return MultibaseCodec::Encoding::BASE16_UPPER;
+      case 'b':
+        return MultibaseCodec::Encoding::BASE32_LOWER;
+      case 'B':
+        return MultibaseCodec::Encoding::BASE32_UPPER;
       case 'Z':
         return MultibaseCodec::Encoding::BASE58;
       case 'm':
@@ -51,6 +56,10 @@ namespace {
        {&encodeBase16Upper, &decodeBase16Upper}},
       {MultibaseCodec::Encoding::BASE16_LOWER,
        {&encodeBase16Lower, &decodeBase16Lower}},
+      {MultibaseCodec::Encoding::BASE32_UPPER,
+       {&encodeBase32Upper, &decodeBase32Upper}},
+      {MultibaseCodec::Encoding::BASE32_LOWER,
+       {&encodeBase32Lower, &decodeBase32Lower}},
       {MultibaseCodec::Encoding::BASE58, {&encodeBase58, &decodeBase58}},
       {MultibaseCodec::Encoding::BASE64, {&encodeBase64, &decodeBase64}}};
 }  // namespace

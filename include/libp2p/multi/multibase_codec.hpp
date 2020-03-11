@@ -30,6 +30,8 @@ namespace libp2p::multi {
     enum class Encoding : char {
       BASE16_LOWER = 'f',
       BASE16_UPPER = 'F',
+      BASE32_LOWER = 'b',
+      BASE32_UPPER = 'B',
       BASE58 = 'Z',
       BASE64 = 'm'
     };

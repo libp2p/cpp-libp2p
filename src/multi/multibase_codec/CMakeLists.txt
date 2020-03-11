@@ -6,6 +6,7 @@
 libp2p_add_library(p2p_multibase_codec
     multibase_codec_impl.cpp
     codecs/base16.cpp
+    codecs/base32.cpp
     codecs/base58.cpp
     codecs/base64.cpp
     codecs/base_error.cpp

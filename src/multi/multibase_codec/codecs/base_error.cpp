@@ -12,6 +12,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi::detail, BaseError, e) {
       return "Input is not a valid base64 string";
     case E::INVALID_BASE58_INPUT:
       return "Input is not a valid base58 string";
+    case E::INVALID_BASE32_INPUT:
+      return "Input is not a valid base32 string";
     case E::NON_UPPERCASE_INPUT:
       return "Input is not in the uppercase hex";
     case E::NON_LOWERCASE_INPUT:
