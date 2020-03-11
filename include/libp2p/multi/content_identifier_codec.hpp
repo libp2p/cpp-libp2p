@@ -42,11 +42,10 @@ namespace libp2p::multi {
         gsl::span<const uint8_t> bytes);
 
     /**
-     * @brief Encode CID v0 to string representation
+     * @brief Encode CID to string representation
      * @param cid - input CID for encode
      * @param encoding - type of the encoding, ignored for CID v0 (always
      * Base58)
-     * @todo Sergey Kaprovich: FIL-133 add support for CID v1
      * @return CID string
      */
     static outcome::result<std::string> toString(

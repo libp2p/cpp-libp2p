@@ -59,6 +59,24 @@ TEST(CidTest, MultibaseStringSuccess) {
 }
 
 /**
+ * @given CID V1 with sample multihash and it's string representation from
+ * reference implementation tests
+ * @when Convert given CID to string
+ * @then Generated and reference string representations must be equal
+ */
+TEST(CidTest, MultibaseStringSuccessCIDV1) {
+  const Multihash reference_multihash =
+      "12202D5BB7C3AFBE68C05BCD109D890DCA28CEB0105BF529EA1111F9EF8B44B217B9"_multihash;
+  ContentIdentifier cid(ContentIdentifier::Version::V1, MulticodecType::RAW,
+                        reference_multihash);
+  EXPECT_OUTCOME_TRUE(cid_string,
+                      ContentIdentifierCodec::toString(
+                          cid, MultibaseCodec::Encoding::BASE32_LOWER))
+  ASSERT_EQ(cid_string,
+            "bafkreibnlo34hl56ndafxtiqtweq3sriz2ybaw7vfhvbcepz56fujmqxxe");
+}
+
+/**
  * @given CID of different versions
  * @when compare CIDs
  * @then lesser version is always less

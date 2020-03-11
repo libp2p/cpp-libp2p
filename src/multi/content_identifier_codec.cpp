@@ -7,6 +7,7 @@
 
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
+#include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
 #include <libp2p/multi/multicodec_type.hpp>
 #include <libp2p/multi/uvarint.hpp>
 
@@ -120,12 +121,14 @@ namespace libp2p::multi {
 
   outcome::result<std::string> ContentIdentifierCodec::toString(
       const ContentIdentifier &cid, MultibaseCodec::Encoding encoding) {
-    std::ignore = encoding;
     std::string result;
     OUTCOME_TRY(cid_bytes, encode(cid));
     switch (cid.version) {
       case ContentIdentifier::Version::V0:
         result = detail::encodeBase58(cid_bytes);
+        break;
+      case ContentIdentifier::Version::V1:
+        result = MultibaseCodecImpl().encode(cid_bytes, encoding);
         break;
       default:
         return EncodeError::VERSION_UNSUPPORTED;
