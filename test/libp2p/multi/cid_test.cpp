@@ -59,6 +59,122 @@ TEST(CidTest, MultibaseStringSuccess) {
 }
 
 /**
+ * @given CID V1 with sample multihash and it's string representation from
+ * reference implementation tests
+ * @when Convert given CID to string
+ * @then Generated and reference string representations must be equal
+ */
+TEST(CidTest, MultibaseStringSuccessCIDV1) {
+  const Multihash reference_multihash =
+      "12202D5BB7C3AFBE68C05BCD109D890DCA28CEB0105BF529EA1111F9EF8B44B217B9"_multihash;
+  ContentIdentifier cid(ContentIdentifier::Version::V1, MulticodecType::RAW,
+                        reference_multihash);
+  EXPECT_OUTCOME_TRUE(cid_string, ContentIdentifierCodec::toString(cid))
+  ASSERT_EQ(cid_string,
+            "bafkreibnlo34hl56ndafxtiqtweq3sriz2ybaw7vfhvbcepz56fujmqxxe");
+}
+
+/**
+ * @given CID V1 with sample multihash and it's string representation from
+ * reference implementation tests
+ * @when Convert given CID to string via Base58 encoding
+ * @then Generated and reference string representations must be equal
+ */
+TEST(CidTest, MultibaseStringOfBaseSuccessCIDV1) {
+  const Multihash reference_multihash =
+      "12202D5BB7C3AFBE68C05BCD109D890DCA28CEB0105BF529EA1111F9EF8B44B217B9"_multihash;
+  ContentIdentifier cid(ContentIdentifier::Version::V1, MulticodecType::RAW,
+                        reference_multihash);
+  EXPECT_OUTCOME_TRUE(cid_string,
+                      ContentIdentifierCodec::toStringOfBase(
+                          cid, MultibaseCodec::Encoding::BASE58))
+  ASSERT_EQ(cid_string, "Zb2rhZhLextyrUiNJUcVUR143SaKDPvHxgpGyeB1N1nqdPzfi");
+}
+
+/**
+ * @given CID V0 with sample multihash and it's string representation from
+ * reference implementation tests
+ * @when Convert given CID to string via Base58 encoding
+ * @then Generated and reference string representations must be equal
+ */
+TEST(CidTest, MultibaseStringOfBaseSuccessCIDV0) {
+  const Multihash reference_multihash =
+      "12209658BF8A26B986DEE4ACEB8227B6A74D638CE4CDB2D72CD19516A6F83F1BFDD3"_multihash;
+  ContentIdentifier cid(ContentIdentifier::Version::V0, MulticodecType::DAG_PB,
+                        reference_multihash);
+  EXPECT_OUTCOME_TRUE(cid_string,
+                      ContentIdentifierCodec::toStringOfBase(
+                          cid, MultibaseCodec::Encoding::BASE58))
+  ASSERT_EQ(cid_string, "QmYTYMTdkVyB8we45bdXfZuDu5vCjRVX8QNTFLhC7K8C7t");
+}
+
+/**
+ * @given CID V0 with sample multihash and it's string representation from
+ * reference implementation tests
+ * @when Try to convert given CID to string via Base32 encoding
+ * @then INVALID_BASE_ENCODING error be returned
+ */
+TEST(CidTest, MultibaseStringOfBaseCIDV0InvalidBase) {
+  const Multihash reference_multihash =
+      "12209658BF8A26B986DEE4ACEB8227B6A74D638CE4CDB2D72CD19516A6F83F1BFDD3"_multihash;
+  ContentIdentifier cid(ContentIdentifier::Version::V0, MulticodecType::DAG_PB,
+                        reference_multihash);
+  EXPECT_OUTCOME_FALSE(error,
+                       ContentIdentifierCodec::toStringOfBase(
+                           cid, MultibaseCodec::Encoding::BASE32_LOWER))
+  ASSERT_EQ(error, ContentIdentifierCodec::EncodeError::INVALID_BASE_ENCODING);
+}
+
+/**
+ * @given CID V1 with reference multihash and it's string representation from
+ * reference implementation tests
+ * @when Convert given string to CID
+ * @then Generated and given cid must be equal
+ */
+TEST(CidTest, MultibaseFromStringSuccessCIDV1) {
+  const Multihash reference_multihash =
+      "12202D5BB7C3AFBE68C05BCD109D890DCA28CEB0105BF529EA1111F9EF8B44B217B9"_multihash;
+  ContentIdentifier reference_cid(ContentIdentifier::Version::V1,
+                                  MulticodecType::RAW, reference_multihash);
+  const std::string reference_string_cid =
+      "bafkreibnlo34hl56ndafxtiqtweq3sriz2ybaw7vfhvbcepz56fujmqxxe";
+  EXPECT_OUTCOME_TRUE(cid,
+                      ContentIdentifierCodec::fromString(reference_string_cid));
+  ASSERT_EQ(cid, reference_cid);
+}
+
+/**
+ * @given CID V0 with reference multihash and it's string representation from
+ * reference implementation tests
+ * @when Convert given string to CID
+ * @then Generated and given cid must be equal
+ */
+TEST(CidTest, MultibaseFromStringSuccessCIDV0) {
+  const Multihash reference_multihash =
+      "12209658BF8A26B986DEE4ACEB8227B6A74D638CE4CDB2D72CD19516A6F83F1BFDD3"_multihash;
+  ContentIdentifier reference_cid(ContentIdentifier::Version::V0,
+                                  MulticodecType::DAG_PB, reference_multihash);
+  const std::string reference_string_cid =
+      "QmYTYMTdkVyB8we45bdXfZuDu5vCjRVX8QNTFLhC7K8C7t";
+
+  EXPECT_OUTCOME_TRUE(cid,
+                      ContentIdentifierCodec::fromString(reference_string_cid));
+  ASSERT_EQ(cid, reference_cid);
+}
+
+/**
+ * @given short string
+ * @when try to convert given string to CID
+ * @then CID_TOO_SHORT error be returned
+ */
+TEST(CidTest, MultibaseFromStringShortCid) {
+  const std::string short_string = "*";
+
+  EXPECT_OUTCOME_FALSE(error, ContentIdentifierCodec::fromString(short_string))
+  ASSERT_EQ(error, ContentIdentifierCodec::DecodeError::CID_TOO_SHORT);
+}
+
+/**
  * @given CID of different versions
  * @when compare CIDs
  * @then lesser version is always less

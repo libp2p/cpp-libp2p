@@ -22,14 +22,16 @@ namespace libp2p::multi {
       INVALID_CONTENT_TYPE = 1,
       INVALID_HASH_TYPE,
       INVALID_HASH_LENGTH,
-      VERSION_UNSUPPORTED
+      VERSION_UNSUPPORTED,
+      INVALID_BASE_ENCODING,
     };
 
     enum class DecodeError {
       EMPTY_VERSION = 1,
       EMPTY_MULTICODEC,
       MALFORMED_VERSION,
-      RESERVED_VERSION
+      RESERVED_VERSION,
+      CID_TOO_SHORT,
     };
 
     static outcome::result<std::vector<uint8_t>> encode(
@@ -42,16 +44,31 @@ namespace libp2p::multi {
         gsl::span<const uint8_t> bytes);
 
     /**
-     * @brief Encode CID v0 to string representation
+     * @brief Encode CID to string representation
      * @param cid - input CID for encode
-     * @param encoding - type of the encoding, ignored for CID v0 (always
-     * Base58)
-     * @todo Sergey Kaprovich: FIL-133 add support for CID v1
+     * Encoding:
+     * Base58 for CID v0
+     * Base32 for CID v1
      * @return CID string
      */
-    static outcome::result<std::string> toString(
-        const ContentIdentifier &cid,
-        MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE58);
+    static outcome::result<std::string> toString(const ContentIdentifier &cid);
+
+    /**
+     * @brief Encode CID to string representation
+     * @param cid - input CID for encode
+     * @param base - type of the encoding
+     * @return CID string
+     */
+    static outcome::result<std::string> toStringOfBase(
+        const ContentIdentifier &cid, MultibaseCodec::Encoding base);
+
+    /**
+     * @brief Decode string representation of CID to CID
+     * @param str - CID string representation
+     * @return CID
+     */
+    static outcome::result<ContentIdentifier> fromString(
+        const std::string &str);
   };
 
 }  // namespace libp2p::multi

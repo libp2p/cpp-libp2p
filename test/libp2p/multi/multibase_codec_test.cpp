@@ -160,6 +160,136 @@ TEST_F(Base16EncodingLower, IncorrectBody) {
   ASSERT_FALSE(error.has_value());
 }
 
+class Base32EncodingLower : public MultibaseCodecTest {
+ public:
+  MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE32_LOWER;
+
+  const std::vector<std::pair<ByteArray, std::string_view>> decode_encode_table{
+      {"61"_unhex, "bme"},
+      {"626262"_unhex, "bmjrge"},
+      {"636363"_unhex, "bmnrwg"},
+      {"73696d706c792061206c6f6e6720737472696e67"_unhex,
+       "bonuw24dmpeqgcidmn5xgoidtorzgs3th"},
+      {"00eb15231dfceb60925886b67d065299925915aeb172c06647"_unhex,
+       "badvrkiy57tvwbesyq23h2bsstgjfsfnowfzmazsh"},
+      {"516b6fcd0f"_unhex, "bkfvw7tip"},
+      {"bf4f89001e670274dd"_unhex, "bx5hysaa6m4bhjxi"},
+      {"572e4794"_unhex, "bk4xepfa"},
+      {"ecac89cad93923c02321"_unhex, "b5switswzher4aizb"},
+      {"10c8511e"_unhex, "bcdefchq"},
+      {"00000000000000000000"_unhex, "baaaaaaaaaaaaaaaa"},
+      {"000111d38e5fc9071ffcd20b4a763cc9ae4f252bb4e"
+       "48fd66a835e252ada93ff480d6dd43dc62a641155a5"_unhex,
+       "baaardu4ol7eqoh742ifuu5r4zgxe6jjlwtsi7vtkqnpckkw2sp7uqdln2q64mktecfk2"
+       "k"},
+      {"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"
+       "2122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f4041"
+       "42434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162"
+       "636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f80818283"
+       "8485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4"
+       "a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5"
+       "c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6"
+       "e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"_unhex,
+       "baaaqeayeaudaocajbifqydiob4ibceqtcqkrmfyydenbwha5dypsaijcemsckjrhfausuk"
+       "zmfuxc6mbrgiztinjwg44dsor3hq6t4p2aifbegrcfizduqskkjnge2tspkbiveu2ukvlfo"
+       "wczljnvyxk6l5qgcytdmrswmz3infvgw3dnnzxxa4lson2hk5txpb4xu634pv7h7aebqkby"
+       "jbmgq6eitculrsgy5d4qsgjjhfevs2lzrgm2tooj3hu7ucq2fi5euwtkpkfjvkv2zlnov6y"
+       "ldmvtws23nn5yxg5lxpf5x274bqocypcmlrwhzde4vs6mzxhm7ugr2lj5jvow27mntww33t"
+       "o55x7a4hrohzhf43t6r2pk5pwo33xp6dy7f47u6x3pp6hz7l57z7p674"}};
+
+  static constexpr std::string_view incorrect_encoded{"BMe"};
+};
+
+/**
+ * @given bytes
+ * @when trying to encode those bytes
+ * @then encoding succeeds
+ */
+TEST_F(Base32EncodingLower, SuccessEncoding) {
+  for (const auto &[decoded, encoded] : decode_encode_table) {
+    auto encoded_str = multibase->encode(decoded, encoding);
+    ASSERT_EQ(encoded_str, encoded);
+
+    auto decoded_bytes = decodeCorrect(encoded);
+    ASSERT_EQ(decoded_bytes, decoded);
+  }
+}
+
+/**
+ * @given string containing symbols, forbidden in base32 lower case
+ * @when trying to decode that string
+ * @then decoding fails
+ */
+TEST_F(Base32EncodingLower, IncorrectBody) {
+  auto error = multibase->decode(incorrect_encoded);
+  ASSERT_FALSE(error.has_value());
+}
+
+class Base32EncodingUpper : public MultibaseCodecTest {
+ public:
+  MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE32_UPPER;
+
+  const std::vector<std::pair<ByteArray, std::string_view>> decode_encode_table{
+      {"61"_unhex, "BME"},
+      {"626262"_unhex, "BMJRGE"},
+      {"636363"_unhex, "BMNRWG"},
+      {"73696d706c792061206c6f6e6720737472696e67"_unhex,
+       "BONUW24DMPEQGCIDMN5XGOIDTORZGS3TH"},
+      {"00eb15231dfceb60925886b67d065299925915aeb172c06647"_unhex,
+       "BADVRKIY57TVWBESYQ23H2BSSTGJFSFNOWFZMAZSH"},
+      {"516b6fcd0f"_unhex, "BKFVW7TIP"},
+      {"bf4f89001e670274dd"_unhex, "BX5HYSAA6M4BHJXI"},
+      {"572e4794"_unhex, "BK4XEPFA"},
+      {"ecac89cad93923c02321"_unhex, "B5SWITSWZHER4AIZB"},
+      {"10c8511e"_unhex, "BCDEFCHQ"},
+      {"00000000000000000000"_unhex, "BAAAAAAAAAAAAAAAA"},
+      {"000111d38e5fc9071ffcd20b4a763cc9ae4f252bb4e"
+       "48fd66a835e252ada93ff480d6dd43dc62a641155a5"_unhex,
+       "BAAARDU4OL7EQOH742IFUU5R4ZGXE6JJLWTSI7VTKQNPCKKW2SP7UQDLN2Q64MKTECFK2"
+       "K"},
+      {"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"
+       "2122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f4041"
+       "42434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162"
+       "636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f80818283"
+       "8485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4"
+       "a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5"
+       "c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6"
+       "e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"_unhex,
+       "BAAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQTCQKRMFYYDENBWHA5DYPSAIJCEMSCKJRHFAUSUK"
+       "ZMFUXC6MBRGIZTINJWG44DSOR3HQ6T4P2AIFBEGRCFIZDUQSKKJNGE2TSPKBIVEU2UKVLFO"
+       "WCZLJNVYXK6L5QGCYTDMRSWMZ3INFVGW3DNNZXXA4LSON2HK5TXPB4XU634PV7H7AEBQKBY"
+       "JBMGQ6EITCULRSGY5D4QSGJJHFEVS2LZRGM2TOOJ3HU7UCQ2FI5EUWTKPKFJVKV2ZLNOV6Y"
+       "LDMVTWS23NN5YXG5LXPF5X274BQOCYPCMLRWHZDE4VS6MZXHM7UGR2LJ5JVOW27MNTWW33T"
+       "O55X7A4HROHZHF43T6R2PK5PWO33XP6DY7F47U6X3PP6HZ7L57Z7P674"}};
+
+  static constexpr std::string_view incorrect_encoded{"BMe"};
+};
+
+/**
+ * @given bytes
+ * @when trying to encode those bytes
+ * @then encoding succeeds
+ */
+TEST_F(Base32EncodingUpper, SuccessEncoding) {
+  for (const auto &[decoded, encoded] : decode_encode_table) {
+    auto encoded_str = multibase->encode(decoded, encoding);
+    ASSERT_EQ(encoded_str, encoded);
+
+    auto decoded_bytes = decodeCorrect(encoded);
+    ASSERT_EQ(decoded_bytes, decoded);
+  }
+}
+
+/**
+ * @given string containing symbols, forbidden in base32 upper case
+ * @when trying to decode that string
+ * @then decoding fails
+ */
+TEST_F(Base32EncodingUpper, IncorrectBody) {
+  auto error = multibase->decode(incorrect_encoded);
+  ASSERT_FALSE(error.has_value());
+}
+
 class Base58Encoding : public MultibaseCodecTest {
  public:
   MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE58;

@@ -7,6 +7,7 @@
 
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
+#include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
 #include <libp2p/multi/multicodec_type.hpp>
 #include <libp2p/multi/uvarint.hpp>
 
@@ -20,6 +21,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, ContentIdentifierCodec::EncodeError,
       return "Hash length is invalid; Must be 32 bytes for sha256 in version 0";
     case E::INVALID_HASH_TYPE:
       return "Hash type is invalid; Must be sha256 in version 0";
+    case E::INVALID_BASE_ENCODING:
+      return "Invalid base encoding";
     case E::VERSION_UNSUPPORTED:
       return "Content identifier version unsupported";
   }
@@ -38,6 +41,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, ContentIdentifierCodec::DecodeError,
       return "Version is malformed; Must be a non-negative integer";
     case E::RESERVED_VERSION:
       return "Version is greater than the latest version";
+    case E::CID_TOO_SHORT:
+      return "CID too short";
   }
   return "Unknown error";
 }
@@ -119,17 +124,55 @@ namespace libp2p::multi {
   }
 
   outcome::result<std::string> ContentIdentifierCodec::toString(
-      const ContentIdentifier &cid, MultibaseCodec::Encoding encoding) {
-    std::ignore = encoding;
+      const ContentIdentifier &cid) {
     std::string result;
     OUTCOME_TRY(cid_bytes, encode(cid));
     switch (cid.version) {
       case ContentIdentifier::Version::V0:
         result = detail::encodeBase58(cid_bytes);
         break;
+      case ContentIdentifier::Version::V1:
+        result = MultibaseCodecImpl().encode(
+            cid_bytes, MultibaseCodec::Encoding::BASE32_LOWER);
+        break;
       default:
         return EncodeError::VERSION_UNSUPPORTED;
     }
     return result;
+  }
+
+  outcome::result<std::string> ContentIdentifierCodec::toStringOfBase(
+      const ContentIdentifier &cid, MultibaseCodec::Encoding base) {
+    std::string result;
+    OUTCOME_TRY(cid_bytes, encode(cid));
+    switch (cid.version) {
+      case ContentIdentifier::Version::V0:
+        if (base != MultibaseCodec::Encoding::BASE58)
+          return EncodeError::INVALID_BASE_ENCODING;
+        result = detail::encodeBase58(cid_bytes);
+        break;
+      case ContentIdentifier::Version::V1:
+        result = MultibaseCodecImpl().encode(cid_bytes, base);
+        break;
+      default:
+        return EncodeError::VERSION_UNSUPPORTED;
+    }
+    return result;
+  }
+
+  outcome::result<ContentIdentifier> ContentIdentifierCodec::fromString(
+      const std::string &str) {
+    if (str.size() < 2) {
+      return DecodeError::CID_TOO_SHORT;
+    }
+
+    if (str.size() == 46 && str.substr(0, 2) == "Qm") {
+      OUTCOME_TRY(hash, detail::decodeBase58(str));
+      return decode(hash);
+    }
+
+    OUTCOME_TRY(bytes, MultibaseCodecImpl().decode(str));
+
+    return decode(bytes);
   }
 }  // namespace libp2p::multi
