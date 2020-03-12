@@ -22,7 +22,8 @@ namespace libp2p::multi {
       INVALID_CONTENT_TYPE = 1,
       INVALID_HASH_TYPE,
       INVALID_HASH_LENGTH,
-      VERSION_UNSUPPORTED
+      VERSION_UNSUPPORTED,
+      INVALID_BASE_ENCODING,
     };
 
     enum class DecodeError {
@@ -45,13 +46,21 @@ namespace libp2p::multi {
     /**
      * @brief Encode CID to string representation
      * @param cid - input CID for encode
-     * @param encoding - type of the encoding, ignored for CID v0 (always
-     * Base58)
+     * Encoding:
+     * Base58 for CID v0
+     * Base32 for CID v1
      * @return CID string
      */
-    static outcome::result<std::string> toString(
-        const ContentIdentifier &cid,
-        MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE58);
+    static outcome::result<std::string> toString(const ContentIdentifier &cid);
+
+    /**
+     * @brief Encode CID to string representation
+     * @param cid - input CID for encode
+     * @param base - type of the encoding
+     * @return CID string
+     */
+    static outcome::result<std::string> toStringOfBase(
+        const ContentIdentifier &cid, MultibaseCodec::Encoding base);
 
     /**
      * @brief Decode string representation of CID to CID
