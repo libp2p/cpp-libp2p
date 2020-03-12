@@ -7,10 +7,8 @@
 #include <libp2p/multi/multibase_codec/codecs/base_error.hpp>
 
 namespace libp2p::multi::detail {
-  const unsigned char kUpperBase32Alphabet[] =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-  const unsigned char kLowerBase32Alphabet[] =
-      "abcdefghijklmnopqrstuvwxyz234567";
+  const std::string kUpperBase32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const std::string kLowerBase32Alphabet = "abcdefghijklmnopqrstuvwxyz234567";
 
   enum Base32Mode {
     LOWER,
@@ -25,7 +23,7 @@ namespace libp2p::multi::detail {
     return 8 - 5 - block * 5 % 8;
   }
 
-  unsigned char encode_char(unsigned char c, Base32Mode mode) {
+  char encode_char(unsigned char c, Base32Mode mode) {
     if (mode == Base32Mode::UPPER) {
       return kUpperBase32Alphabet[c & 0x1F];  // 0001 1111
     }
@@ -35,8 +33,8 @@ namespace libp2p::multi::detail {
   unsigned char shift_right(uint8_t byte, int8_t offset) {
     if (offset > 0)
       return byte >> offset;
-    else
-      return byte << -offset;
+
+    return byte << -offset;
   }
 
   unsigned char shift_left(uint8_t byte, int8_t offset) {
@@ -53,12 +51,12 @@ namespace libp2p::multi::detail {
         return block;
       }
 
-      unsigned char c = shift_right(plain[byte], bit);
+      unsigned char c = shift_right(plain[byte], bit);  // NOLINT
 
       if (bit < 0 && byte < len - 1) {
-        c |= shift_right(plain[byte + 1], 8 + bit);
+        c |= shift_right(plain[byte + 1], 8 + bit);  // NOLINT
       }
-      coded[block] = encode_char(c, mode);
+      coded[block] = encode_char(c, mode);  // NOLINT
     }
     return 8;
   }
@@ -95,20 +93,20 @@ namespace libp2p::multi::detail {
 
     if (mode == Base32Mode::UPPER) {
       if (c >= 'A' && c <= 'Z')
-        decoded_ch = c - 'A';
+        decoded_ch = c - 'A';  // NOLINT
     } else {
       if (c >= 'a' && c <= 'z')
-        decoded_ch = c - 'a';
+        decoded_ch = c - 'a';  // NOLINT
     }
     if (c >= '2' && c <= '7')
-      decoded_ch = c - '2' + 26;
+      decoded_ch = c - '2' + 26;  // NOLINT
 
     return decoded_ch;
   }
 
   outcome::result<int> decode_sequence(const char *coded, int len,
                                        uint8_t *plain, Base32Mode mode) {
-    plain[0] = 0;
+    plain[0] = 0;  // NOLINT
     for (int block = 0; block < 8; block++) {
       int bit = get_bit(block);
       int byte = get_byte(block);
@@ -116,14 +114,14 @@ namespace libp2p::multi::detail {
       if (block >= len) {
         return byte;
       }
-      int c = decode_char(coded[block], mode);
+      int c = decode_char(coded[block], mode);  // NOLINT
       if (c < 0) {
         return BaseError::INVALID_BASE32_INPUT;
       }
 
-      plain[byte] |= shift_left(c, bit);
+      plain[byte] |= shift_left(c, bit);  // NOLINT
       if (bit < 0) {
-        plain[byte + 1] = shift_left(c, 8 + bit);
+        plain[byte + 1] = shift_left(c, 8 + bit);  // NOLINT
       }
     }
     return 5;
