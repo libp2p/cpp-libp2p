@@ -29,7 +29,8 @@ namespace libp2p::multi {
       EMPTY_VERSION = 1,
       EMPTY_MULTICODEC,
       MALFORMED_VERSION,
-      RESERVED_VERSION
+      RESERVED_VERSION,
+      CID_TOO_SHORT,
     };
 
     static outcome::result<std::vector<uint8_t>> encode(
@@ -51,6 +52,14 @@ namespace libp2p::multi {
     static outcome::result<std::string> toString(
         const ContentIdentifier &cid,
         MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE58);
+
+    /**
+     * @brief Decode string representation of CID to CID
+     * @param str - CID string representation
+     * @return CID
+     */
+    static outcome::result<ContentIdentifier> fromString(
+        const std::string &str);
   };
 
 }  // namespace libp2p::multi

@@ -39,6 +39,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, ContentIdentifierCodec::DecodeError,
       return "Version is malformed; Must be a non-negative integer";
     case E::RESERVED_VERSION:
       return "Version is greater than the latest version";
+    case E::CID_TOO_SHORT:
+      return "CID too short";
   }
   return "Unknown error";
 }
@@ -134,5 +136,21 @@ namespace libp2p::multi {
         return EncodeError::VERSION_UNSUPPORTED;
     }
     return result;
+  }
+
+  outcome::result<ContentIdentifier> ContentIdentifierCodec::fromString(
+      const std::string &str) {
+    if (str.size() < 2) {
+      return DecodeError::CID_TOO_SHORT;
+    }
+
+    if (str.size() == 46 && str.substr(0, 2) == "Qm") {
+      OUTCOME_TRY(hash, detail::decodeBase58(str));
+      return decode(hash);
+    }
+
+    OUTCOME_TRY(bytes, MultibaseCodecImpl().decode(str));
+
+    return decode(bytes);
   }
 }  // namespace libp2p::multi
