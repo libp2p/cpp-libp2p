@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <gsl/span>
 #include <libp2p/multi/multibase_codec/codecs/base32.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base_error.hpp>
 
@@ -41,22 +42,22 @@ namespace libp2p::multi::detail {
     return shift_right(byte, -offset);
   }
 
-  int encode_sequence(const uint8_t *plain, int len, char *coded,
+  int encode_sequence(gsl::span<const uint8_t> plain, gsl::span<char> coded,
                       Base32Mode mode) {
     for (int block = 0; block < 8; block++) {
       int byte = get_byte(block);
       int bit = get_bit(block);
 
-      if (byte >= len) {
+      if (byte >= plain.size()) {
         return block;
       }
 
-      unsigned char c = shift_right(plain[byte], bit);  // NOLINT
+      unsigned char c = shift_right(plain[byte], bit);
 
-      if (bit < 0 && byte < len - 1) {
-        c |= shift_right(plain[byte + 1], 8 + bit);  // NOLINT
+      if (bit < 0 && byte < plain.size() - 1) {
+        c |= shift_right(plain[byte + 1], 8 + bit);
       }
-      coded[block] = encode_char(c, mode);  // NOLINT
+      coded[block] = encode_char(c, mode);
     }
     return 8;
   }
@@ -70,8 +71,9 @@ namespace libp2p::multi::detail {
     }
 
     for (size_t i = 0, j = 0; i < bytes.size(); i += 5, j += 8) {
-      int n = encode_sequence(&bytes[i], std::min<size_t>(bytes.size() - i, 5),
-                              &result[j], mode);
+      int n = encode_sequence(
+          gsl::make_span(&bytes[i], std::min<size_t>(bytes.size() - i, 5)),
+          gsl::make_span(&result[j], 8), mode);
       if (n < 8) {
         result.erase(result.end() - (8 - n), result.end());
       }
@@ -104,24 +106,25 @@ namespace libp2p::multi::detail {
     return decoded_ch;
   }
 
-  outcome::result<int> decode_sequence(const char *coded, int len,
-                                       uint8_t *plain, Base32Mode mode) {
-    plain[0] = 0;  // NOLINT
+  outcome::result<int> decode_sequence(gsl::span<const char> coded,
+                                       gsl::span<uint8_t> plain,
+                                       Base32Mode mode) {
+    plain[0] = 0;
     for (int block = 0; block < 8; block++) {
       int bit = get_bit(block);
       int byte = get_byte(block);
 
-      if (block >= len) {
+      if (block >= coded.size()) {
         return byte;
       }
-      int c = decode_char(coded[block], mode);  // NOLINT
+      int c = decode_char(coded[block], mode);
       if (c < 0) {
         return BaseError::INVALID_BASE32_INPUT;
       }
 
-      plain[byte] |= shift_left(c, bit);  // NOLINT
+      plain[byte] |= shift_left(c, bit);
       if (bit < 0) {
-        plain[byte + 1] = shift_left(c, 8 + bit);  // NOLINT
+        plain[byte + 1] = shift_left(c, 8 + bit);
       }
     }
     return 5;
@@ -137,10 +140,11 @@ namespace libp2p::multi::detail {
     }
 
     for (size_t i = 0, j = 0; i < string.size(); i += 8, j += 5) {
-      OUTCOME_TRY(
-          n,
-          decode_sequence(&string[i], std::min<size_t>(string.size() - i, 8),
-                          &result[j], mode));
+      OUTCOME_TRY(n,
+                  decode_sequence(
+                      gsl::make_span(&string[i],
+                                     std::min<size_t>(string.size() - i, 8)),
+                      gsl::make_span(&result[j], 5), mode));
       if (n < 5) {
         result.erase(result.end() - (5 - n), result.end());
       }
