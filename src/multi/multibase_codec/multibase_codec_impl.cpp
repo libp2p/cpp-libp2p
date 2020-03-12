@@ -33,7 +33,7 @@ namespace {
         return MultibaseCodec::Encoding::BASE32_LOWER;
       case 'B':
         return MultibaseCodec::Encoding::BASE32_UPPER;
-      case 'Z':
+      case 'z':
         return MultibaseCodec::Encoding::BASE58;
       case 'm':
         return MultibaseCodec::Encoding::BASE64;

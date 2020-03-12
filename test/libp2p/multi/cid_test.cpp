@@ -88,7 +88,7 @@ TEST(CidTest, MultibaseStringOfBaseSuccessCIDV1) {
   EXPECT_OUTCOME_TRUE(cid_string,
                       ContentIdentifierCodec::toStringOfBase(
                           cid, MultibaseCodec::Encoding::BASE58))
-  ASSERT_EQ(cid_string, "Zb2rhZhLextyrUiNJUcVUR143SaKDPvHxgpGyeB1N1nqdPzfi");
+  ASSERT_EQ(cid_string, "zb2rhZhLextyrUiNJUcVUR143SaKDPvHxgpGyeB1N1nqdPzfi");
 }
 
 /**

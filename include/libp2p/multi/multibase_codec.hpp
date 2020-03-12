@@ -32,7 +32,7 @@ namespace libp2p::multi {
       BASE16_UPPER = 'F',
       BASE32_LOWER = 'b',
       BASE32_UPPER = 'B',
-      BASE58 = 'Z',
+      BASE58 = 'z',
       BASE64 = 'm'
     };
 

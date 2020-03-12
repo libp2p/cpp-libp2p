@@ -295,22 +295,22 @@ class Base58Encoding : public MultibaseCodecTest {
   MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE58;
 
   const std::vector<std::pair<ByteArray, std::string_view>> decode_encode_table{
-      {"61"_unhex, "Z2g"},
-      {"626262"_unhex, "Za3gV"},
-      {"636363"_unhex, "ZaPEr"},
+      {"61"_unhex, "z2g"},
+      {"626262"_unhex, "za3gV"},
+      {"636363"_unhex, "zaPEr"},
       {"73696d706c792061206c6f6e6720737472696e67"_unhex,
-       "Z2cFupjhnEsSn59qHXstmK2ffpLv2"},
+       "z2cFupjhnEsSn59qHXstmK2ffpLv2"},
       {"00eb15231dfceb60925886b67d065299925915aeb172c06647"_unhex,
-       "Z1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L"},
-      {"516b6fcd0f"_unhex, "ZABnLTmg"},
-      {"bf4f89001e670274dd"_unhex, "Z3SEo3LWLoPntC"},
-      {"572e4794"_unhex, "Z3EFU7m"},
-      {"ecac89cad93923c02321"_unhex, "ZEJDM8drfXA6uyA"},
-      {"10c8511e"_unhex, "ZRt5zm"},
-      {"00000000000000000000"_unhex, "Z1111111111"},
+       "z1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L"},
+      {"516b6fcd0f"_unhex, "zABnLTmg"},
+      {"bf4f89001e670274dd"_unhex, "z3SEo3LWLoPntC"},
+      {"572e4794"_unhex, "z3EFU7m"},
+      {"ecac89cad93923c02321"_unhex, "zEJDM8drfXA6uyA"},
+      {"10c8511e"_unhex, "zRt5zm"},
+      {"00000000000000000000"_unhex, "z1111111111"},
       {"000111d38e5fc9071ffcd20b4a763cc9ae4f252bb4e"
        "48fd66a835e252ada93ff480d6dd43dc62a641155a5"_unhex,
-       "Z123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"},
+       "z123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"},
       {"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"
        "2122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f4041"
        "42434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162"
@@ -319,7 +319,7 @@ class Base58Encoding : public MultibaseCodecTest {
        "a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5"
        "c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6"
        "e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"_unhex,
-       "Z1cWB5HCBdLjAuqGGReWE3R3CguuwSjw6RHn39s2yuDRTS5NsBgNiFpWgAnEx6VQi8"
+       "z1cWB5HCBdLjAuqGGReWE3R3CguuwSjw6RHn39s2yuDRTS5NsBgNiFpWgAnEx6VQi8"
        "c"
        "sexkgYw3mdYrMHr8x9i7aEwP8kZ7vccXWqKDvGv3u1GxFKPuAkn8JCPPGDMf3vMMnb"
        "z"
@@ -368,7 +368,7 @@ TEST_F(Base58Encoding, IncorrectBody) {
  * @then decoding succeeds
  */
 TEST_F(Base58Encoding, SkipsWhitespacesSuccess) {
-  constexpr auto base64_with_whitespaces = "Z \t\n\v\f\r 2g \r\f\v\n\t ";
+  constexpr auto base64_with_whitespaces = "z \t\n\v\f\r 2g \r\f\v\n\t ";
   auto decoded_bytes = decodeCorrect(base64_with_whitespaces);
 
   ASSERT_EQ(decoded_bytes, "61"_unhex);
@@ -382,7 +382,7 @@ TEST_F(Base58Encoding, SkipsWhitespacesSuccess) {
  * @then decoding fails
  */
 TEST_F(Base58Encoding, SkipsWhitespacesFailure) {
-  constexpr auto base64_with_whitespaces = "Z \t\n\v\f\r skip \r\f\v\n\t a";
+  constexpr auto base64_with_whitespaces = "z \t\n\v\f\r skip \r\f\v\n\t a";
   auto error = multibase->decode(base64_with_whitespaces);
 
   ASSERT_FALSE(error.has_value());
