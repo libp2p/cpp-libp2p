@@ -118,7 +118,7 @@ namespace libp2p::storage {
       return bindArgs(statement, args...);
     }
 
-    /// Returns the number of rows modified by INS
+    /// Returns the number of rows modified
     int countChanges();
 
     ::sqlite::database db_;
