@@ -14,6 +14,7 @@ add_subdirectory(peer)
 add_subdirectory(protocol)
 add_subdirectory(protocol_muxer)
 add_subdirectory(security)
+add_subdirectory(storage)
 add_subdirectory(transport)
 
 add_library(p2p
