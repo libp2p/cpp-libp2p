@@ -1,6 +1,6 @@
 include(GNUInstallDirs)
 
-function (libp2p_install targets)
+function(libp2p_install targets)
   install(TARGETS ${targets} EXPORT libp2pConfig
       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -20,3 +20,9 @@ install(
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
     NAMESPACE p2p::
 )
+if(EXPOSE_MOCKS)
+  install(
+      DIRECTORY ${CMAKE_SOURCE_DIR}/test/mock/libp2p
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mock
+  )
+endif()
