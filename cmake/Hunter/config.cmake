@@ -28,11 +28,11 @@ hunter_config(
 )
 
 hunter_config(
-    Boost.DI
-    URL https://github.com/masterjedy/di/archive/c5287ee710ad90f5286d0cc2b9e49b72d89267a6.zip
-    SHA1 802b64a6242be45771f3d4c86257eac0a3c7b289
-    # disable building examples and tests, disable testing
-    CMAKE_ARGS BOOST_DI_OPT_BUILD_TESTS=OFF BOOST_DI_OPT_BUILD_EXAMPLES=OFF
+        Boost.DI
+        URL https://github.com/masterjedy/di/archive/a20eebb6decfba55867a6920e00443a9485f50cd.zip
+        SHA1 459660ae0f34a95eccc738f6b98195a2650185e1
+        # disable building examples and tests, disable testing
+        CMAKE_ARGS BOOST_DI_OPT_BUILD_TESTS=OFF BOOST_DI_OPT_BUILD_EXAMPLES=OFF
 )
 
 hunter_config(
