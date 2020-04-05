@@ -14,7 +14,7 @@ set(CMAKE_TOOLCHAIN_FILE
     )
 
 include("cmake/Hunter/init.cmake")
-project(libp2p C CXX)
+project(libp2p VERSION 0.0.1 LANGUAGES C CXX)
 
 include(cmake/print.cmake)
 print("C flags: ${CMAKE_C_FLAGS}")
