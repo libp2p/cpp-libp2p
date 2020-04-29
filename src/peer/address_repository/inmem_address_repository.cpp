@@ -19,7 +19,7 @@ namespace libp2p::peer {
       it = db_.find(p);
     }
 
-    for (auto &m : ma) {
+    for (const auto &m : ma) {
       it->second->insert({m, Clock::now() + ttl});
       signal_added_(p, m);
     }
@@ -38,7 +38,13 @@ namespace libp2p::peer {
 
     auto expires_in = Clock::now() + ttl;
     for (const auto &m : ma) {
-      (*it->second)[m] = expires_in;
+      auto item_it = it->second->find(m);
+      if (item_it == it->second->end()) {
+        it->second->insert({m, expires_in});
+        signal_added_(p, m);
+      } else {
+        item_it->second = expires_in;
+      }
     }
 
     return outcome::success();

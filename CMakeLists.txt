@@ -32,6 +32,7 @@ include(cmake/san.cmake)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(TESTING "Build tests" ON)
+option(EXAMPLES "Build examples" ON)
 option(CLANG_FORMAT "Enable clang-format target" ON)
 option(CLANG_TIDY "Enable clang-tidy checks during compilation" OFF)
 option(COVERAGE "Enable generation of coverage info" OFF)
@@ -93,7 +94,10 @@ include_directories(
 )
 
 add_subdirectory(src)
-add_subdirectory(example)
+
+if(EXAMPLES)
+  add_subdirectory(example)
+endif()
 
 if(TESTING)
   enable_testing()
