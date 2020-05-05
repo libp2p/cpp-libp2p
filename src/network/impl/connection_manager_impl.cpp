@@ -22,13 +22,13 @@ namespace libp2p::network {
   ConnectionManager::ConnectionSPtr
   ConnectionManagerImpl::getBestConnectionForPeer(const peer::PeerId &p) const {
     // TODO(warchant): maybe make pluggable strategies
-    auto c = getConnectionsToPeer(p);
-    if (c.empty()) {
-      return nullptr;
+    for (auto &conn : getConnectionsToPeer(p)) {
+      if (!conn->isClosed()) {
+        // for now, return first connection
+        return conn;
+      }
     }
-
-    // for now, return first connection
-    return c[0];
+    return nullptr;
   }
 
   ConnectionManager::Connectedness ConnectionManagerImpl::connectedness(
