@@ -325,8 +325,8 @@ namespace libp2p::crypto {
   outcome::result<EphemeralKeyPair>
   CryptoProviderImpl::generateEphemeralKeyPair(common::CurveType curve) const {
     const auto FAILED{KeyGeneratorError::KEY_GENERATION_FAILED};
-    int nid;
-    size_t private_key_length_in_bytes;
+    int nid = 0;
+    size_t private_key_length_in_bytes = 0;
     switch (curve) {
       case common::CurveType::P256:
         nid = NID_X9_62_prime256v1;
@@ -536,8 +536,8 @@ namespace libp2p::crypto {
   CryptoProviderImpl::stretchKey(common::CipherType cipher_type,
                                  common::HashType hash_type,
                                  const Buffer &secret) const {
-    size_t cipher_key_size;
-    size_t iv_size;
+    size_t cipher_key_size = 0;
+    size_t iv_size = 0;
     switch (cipher_type) {
       case common::CipherType::AES128:
         cipher_key_size = 16;

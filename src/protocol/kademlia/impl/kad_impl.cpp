@@ -441,7 +441,7 @@ namespace libp2p::protocol::kademlia {
   };
 
   void KadImpl::getValue(const ContentAddress &key, GetValueResultFunc f) {
-    LocalValueStore::AbsTime ts;
+    LocalValueStore::AbsTime ts = 0;
     auto res = local_store_->getValue(key, ts);
     if (res) {
       // TODO(artem): subscriptions instead of coarse callback API
