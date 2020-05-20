@@ -132,7 +132,7 @@ namespace libp2p::crypto::rsa {
     OUTCOME_TRY(rsa, rsaFromPrivateKey(private_key));
     Hash256 digest = sha256(message);
     Signature signature(RSA_size(rsa.get()));
-    unsigned int signature_size;
+    unsigned int signature_size = 0;
     if (1
         != RSA_sign(NID_sha256, digest.data(), digest.size(), signature.data(),
                     &signature_size, rsa.get())) {
