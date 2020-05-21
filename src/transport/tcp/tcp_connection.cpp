@@ -75,6 +75,18 @@ namespace libp2p::transport {
         });
   }
 
+  void TcpConnection::resolve(const TcpConnection::Tcp &protocol,
+                              const std::string &host_name,
+                              const std::string &port,
+                              TcpConnection::ResolveCallbackFunc cb) {
+    auto resolver = std::make_shared<Tcp::resolver>(context_);
+    resolver->async_resolve(
+        protocol, host_name, port,
+        [resolver, cb{std::move(cb)}](const ErrorCode &ec, auto &&iterator) {
+          cb(ec, std::forward<decltype(iterator)>(iterator));
+        });
+  }
+
   void TcpConnection::connect(
       const TcpConnection::ResolverResultsType &iterator,
       TcpConnection::ConnectCallbackFunc cb) {

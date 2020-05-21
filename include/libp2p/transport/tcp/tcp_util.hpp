@@ -57,8 +57,30 @@ namespace libp2p::transport::detail {
   inline bool supportsIpTcp(const multi::Multiaddress &ma) {
     using P = multi::Protocol::Code;
     return (ma.hasProtocol(P::IP4) || ma.hasProtocol(P::IP6)
-            || ma.hasProtocol(P::DNS4) || ma.hasProtocol(P::DNS6))
+            || ma.hasProtocol(P::DNS4) || ma.hasProtocol(P::DNS6)
+            || ma.hasProtocol(P::DNS))
         && ma.hasProtocol(P::TCP);
+  }
+
+  inline auto getFirstProtocol(const multi::Multiaddress &ma) {
+    return ma.getProtocolsWithValues().front().first.code;
+  }
+
+  // Obtain host and port strings from provided address
+  inline std::pair<std::string, std::string> getHostAndPort(
+      const multi::Multiaddress &address) {
+    auto v = address.getProtocolsWithValues();
+
+    // get host
+    auto it = v.begin();
+    auto host = it->second;
+
+    // get port
+    it++;
+    BOOST_ASSERT(it->first.code == multi::Protocol::Code::TCP);
+    auto port = it->second;
+
+    return {host, port};
   }
 
   inline outcome::result<boost::asio::ip::tcp::endpoint> makeEndpoint(
@@ -69,8 +91,7 @@ namespace libp2p::transport::detail {
     try {
       auto v = ma.getProtocolsWithValues();
       auto it = v.begin();
-      if (!(it->first.code == P::IP4 || it->first.code == P::IP6
-            || it->first.code == P::DNS4 || it->first.code == P::DNS6)) {
+      if (!(it->first.code == P::IP4 || it->first.code == P::IP6)) {
         return std::errc::address_family_not_supported;
       }
 
