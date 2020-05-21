@@ -12,8 +12,8 @@
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 #include <gsl/span>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/multi/multiaddress.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::transport::detail {
   template <typename T>
@@ -56,7 +56,8 @@ namespace libp2p::transport::detail {
 
   inline bool supportsIpTcp(const multi::Multiaddress &ma) {
     using P = multi::Protocol::Code;
-    return (ma.hasProtocol(P::IP4) || ma.hasProtocol(P::IP6))
+    return (ma.hasProtocol(P::IP4) || ma.hasProtocol(P::IP6)
+            || ma.hasProtocol(P::DNS4) || ma.hasProtocol(P::DNS6))
         && ma.hasProtocol(P::TCP);
   }
 
@@ -68,7 +69,8 @@ namespace libp2p::transport::detail {
     try {
       auto v = ma.getProtocolsWithValues();
       auto it = v.begin();
-      if (!(it->first.code == P::IP4 || it->first.code == P::IP6)) {
+      if (!(it->first.code == P::IP4 || it->first.code == P::IP6
+            || it->first.code == P::DNS4 || it->first.code == P::DNS6)) {
         return std::errc::address_family_not_supported;
       }
 

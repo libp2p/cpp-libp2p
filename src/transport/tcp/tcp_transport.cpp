@@ -9,6 +9,23 @@
 
 namespace libp2p::transport {
 
+  // Obtain host and port strings from provided address
+  std::pair<std::string, std::string> getHostAndPort(
+      const multi::Multiaddress &address) {
+    auto v = address.getProtocolsWithValues();
+
+    // get host
+    auto it = v.begin();
+    auto host = it->second;
+
+    // get port
+    it++;
+    BOOST_ASSERT(it->first.code == multi::Protocol::Code::TCP);
+    auto port = it->second;
+
+    return {host, port};
+  }
+
   void TcpTransport::dial(const peer::PeerId &remoteId,
                           multi::Multiaddress address,
                           TransportAdaptor::HandlerFunc handler) {
@@ -17,12 +34,10 @@ namespace libp2p::transport {
     }
 
     auto conn = std::make_shared<TcpConnection>(*context_);
-    auto rendpoint = detail::makeEndpoint(address);
-    if (!rendpoint) {
-      return handler(rendpoint.error());
-    }
 
-    conn->resolve(rendpoint.value(),
+    auto [host, port] = getHostAndPort(address);
+
+    conn->resolve(host, port,
                   [self{shared_from_this()}, conn, handler{std::move(handler)},
                    remoteId](auto ec, auto r) mutable {
                     if (ec) {
