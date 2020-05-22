@@ -67,7 +67,7 @@ namespace libp2p::transport::detail {
   }
 
   // Obtain host and port strings from provided address
-  inline std::pair<std::string, std::string> getHostAndPort(
+  inline std::pair<std::string, std::string> getHostAndTcpPort(
       const multi::Multiaddress &address) {
     auto v = address.getProtocolsWithValues();
 
