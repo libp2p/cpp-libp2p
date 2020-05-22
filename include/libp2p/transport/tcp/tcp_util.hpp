@@ -12,8 +12,8 @@
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 #include <gsl/span>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/multi/multiaddress.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::transport::detail {
   template <typename T>
@@ -56,8 +56,31 @@ namespace libp2p::transport::detail {
 
   inline bool supportsIpTcp(const multi::Multiaddress &ma) {
     using P = multi::Protocol::Code;
-    return (ma.hasProtocol(P::IP4) || ma.hasProtocol(P::IP6))
+    return (ma.hasProtocol(P::IP4) || ma.hasProtocol(P::IP6)
+            || ma.hasProtocol(P::DNS4) || ma.hasProtocol(P::DNS6)
+            || ma.hasProtocol(P::DNS))
         && ma.hasProtocol(P::TCP);
+  }
+
+  inline auto getFirstProtocol(const multi::Multiaddress &ma) {
+    return ma.getProtocolsWithValues().front().first.code;
+  }
+
+  // Obtain host and port strings from provided address
+  inline std::pair<std::string, std::string> getHostAndTcpPort(
+      const multi::Multiaddress &address) {
+    auto v = address.getProtocolsWithValues();
+
+    // get host
+    auto it = v.begin();
+    auto host = it->second;
+
+    // get port
+    it++;
+    BOOST_ASSERT(it->first.code == multi::Protocol::Code::TCP);
+    auto port = it->second;
+
+    return {host, port};
   }
 
   inline outcome::result<boost::asio::ip::tcp::endpoint> makeEndpoint(

@@ -45,6 +45,23 @@ namespace libp2p::transport {
     void resolve(const Tcp::endpoint &endpoint, ResolveCallbackFunc cb);
 
     /**
+     * @brief Resolve service name (DNS).
+     * @param host_name host name to resolve
+     * @param cb callback executed on operation completion.
+     */
+    void resolve(const std::string &host_name, const std::string &port,
+                 ResolveCallbackFunc cb);
+
+    /**
+     * @brief Resolve service name (DNS).
+     * @param protocol is either Tcp::ip4 or Tcp::ip6 protocol
+     * @param host_name host name to resolve
+     * @param cb callback executed on operation completion.
+     */
+    void resolve(const Tcp &protocol, const std::string &host_name,
+                 const std::string &port, ResolveCallbackFunc cb);
+
+    /**
      * @brief Connect to a remote service.
      * @param iterator list of resolved IP addresses of remote service.
      * @param cb callback executed on operation completion.
