@@ -37,6 +37,9 @@ namespace libp2p::protocol {
 
     ~Identify() override = default;
 
+    boost::signals2::connection onIdentifyReceived(
+        const std::function<IdentifyMessageProcessor::IdentifyCallback> &cb);
+
     /**
      * Get addresses other peers reported we have dialed from
      * @return set of addresses

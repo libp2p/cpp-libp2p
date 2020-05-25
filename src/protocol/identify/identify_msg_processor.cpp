@@ -26,6 +26,11 @@ namespace libp2p::protocol {
     BOOST_ASSERT(key_marshaller_);
   }
 
+  boost::signals2::connection IdentifyMessageProcessor::onIdentifyReceived(
+      const std::function<IdentifyCallback> &cb) {
+    return signal_identify_received_.connect(cb);
+  }
+
   void IdentifyMessageProcessor::sendIdentify(StreamSPtr stream) {
     identify::pb::Identify msg;
 
@@ -170,6 +175,8 @@ namespace libp2p::protocol {
       addresses.push_back(addr);
     }
     consumeListenAddresses(addresses, peer_id);
+
+    signal_identify_received_(peer_id);
   }
 
   boost::optional<peer::PeerId> IdentifyMessageProcessor::consumePublicKey(
@@ -326,15 +333,14 @@ namespace libp2p::protocol {
     // invalidate previously known addresses of that peer
     auto add_res = addr_repo.updateAddresses(peer_id, peer::ttl::kTransient);
     if (!add_res) {
-      log_->error("cannot update listen addresses of the peer {}: {}",
+      log_->debug("cannot update listen addresses of the peer {}: {}",
                   peer_id.toBase58(), add_res.error().message());
     }
 
     // memorize the addresses
     auto addresses = addr_repo.getAddresses(peer_id);
     if (!addresses) {
-      log_->error("can not get addresses for peer {}", peer_id.toBase58());
-      return;
+      log_->debug("can not get addresses for peer {}", peer_id.toBase58());
     }
 
     switch (conn_manager_.connectedness({peer_id, addresses.value()})) {

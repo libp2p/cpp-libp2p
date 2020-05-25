@@ -21,6 +21,11 @@ namespace libp2p::protocol {
     BOOST_ASSERT(msg_processor_);
   }
 
+  boost::signals2::connection Identify::onIdentifyReceived(
+      const std::function<IdentifyMessageProcessor::IdentifyCallback> &cb) {
+    return msg_processor_->onIdentifyReceived(cb);
+  }
+
   std::vector<multi::Multiaddress> Identify::getAllObservedAddresses() const {
     return msg_processor_->getObservedAddresses().getAllAddresses();
   }

@@ -17,10 +17,10 @@
 #include <libp2p/host/host.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/network/connection_manager.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/identify/observed_addresses.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 namespace identify::pb {
   class Identify;
@@ -35,10 +35,15 @@ namespace libp2p::protocol {
     using StreamSPtr = std::shared_ptr<connection::Stream>;
 
    public:
+    using IdentifyCallback = void(const peer::PeerId &);
+
     IdentifyMessageProcessor(
         Host &host, network::ConnectionManager &conn_manager,
         peer::IdentityManager &identity_manager,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
+
+    boost::signals2::connection onIdentifyReceived(
+        const std::function<IdentifyCallback> &cb);
 
     /**
      * Send an Identify message over the provided stream
@@ -131,6 +136,7 @@ namespace libp2p::protocol {
     peer::IdentityManager &identity_manager_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
     ObservedAddresses observed_addresses_;
+    boost::signals2::signal<IdentifyCallback> signal_identify_received_;
 
     common::Logger log_ = common::createLogger("IdentifyMsgProcessor");
   };
