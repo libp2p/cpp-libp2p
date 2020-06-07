@@ -179,6 +179,11 @@ namespace libp2p::connection {
       write_cb_ = WriteCallbackFunc{};
       cb(result);
     }
+    if (not write_queue_.empty()) {
+      auto [in, bytes, cb, some] = write_queue_.front();
+      write_queue_.pop_front();
+      write(in, bytes, cb, some);
+    }
   }
 
   void YamuxStream::write(gsl::span<const uint8_t> in, size_t bytes,
@@ -187,7 +192,9 @@ namespace libp2p::connection {
       return cb(Error::NOT_WRITABLE);
     }
     if (is_writing_) {
-      return cb(Error::IS_WRITING);
+      write_queue_.emplace_back(in, bytes, cb, some);
+      return;
+      // return cb(Error::IS_WRITING);
     }
 
     beginWrite(std::move(cb));
