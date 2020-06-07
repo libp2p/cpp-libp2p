@@ -159,6 +159,11 @@ namespace libp2p::connection {
     /// write callback, non-zero during async sends
     WriteCallbackFunc write_cb_;
 
+    /// Queue of write requests that were received when stream was writing
+    std::deque<
+        std::tuple<gsl::span<const uint8_t>, size_t, WriteCallbackFunc, bool>>
+        write_queue_{};
+
     /// starts async write operation
     void beginWrite(WriteCallbackFunc cb);
 
