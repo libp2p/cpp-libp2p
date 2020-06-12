@@ -179,6 +179,9 @@ namespace libp2p::connection {
       write_cb_ = WriteCallbackFunc{};
       cb(result);
     }
+
+    // check if new write messages were received while stream was writing
+    // and propagate these messages
     if (not write_queue_.empty()) {
       auto [in, bytes, cb, some] = write_queue_.front();
       write_queue_.pop_front();

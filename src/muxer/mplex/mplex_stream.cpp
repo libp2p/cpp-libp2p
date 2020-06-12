@@ -154,6 +154,9 @@ namespace libp2p::connection {
                               write_res.error().message());
           }
           cb(std::forward<decltype(write_res)>(write_res));
+
+          // check if new write messages were received while stream was writing
+          // and propagate these messages
           if (not self->write_queue_.empty()) {
             auto [in, bytes, cb] = self->write_queue_.front();
             self->write_queue_.pop_front();
