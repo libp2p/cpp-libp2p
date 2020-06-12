@@ -87,9 +87,10 @@ namespace libp2p::host {
             auto &proto_map = it->second;
 
             // insert new stream if no stream for given peer id and protocol
-            // exists or it exists but expired
+            // exists or it exists but expired or it exists but closed
             if (proto_map.count(proto) == 0
-                or proto_map[proto].lock() == nullptr) {
+                or proto_map[proto].lock() == nullptr
+                or proto_map[proto].lock()->isClosed()) {
               open_streams_[remote_peer_id][proto] = stream;
             }
           }
@@ -113,11 +114,12 @@ namespace libp2p::host {
       auto &proto_map = id_it->second;
       if (const auto &stream_it = proto_map.find(protocol);
           stream_it != proto_map.end()) {
-        if (auto stream = stream_it->second.lock()) {
+        if (auto stream = stream_it->second.lock();
+            stream and not stream->isClosed()) {
           // stream with given protocol for given peer id already exists
           return handler(stream);
         }
-        // weak_ptr to stream expired, no need to keep it anymore
+        // stream either expired or closed, no need to keep it anymore
         proto_map.erase(stream_it);
       }
     }
