@@ -91,6 +91,10 @@ namespace libp2p::host {
             if (proto_map.count(proto) == 0
                 or proto_map[proto].lock() == nullptr
                 or proto_map[proto].lock()->isClosed()) {
+              spdlog::debug(
+                  "Inserted new stream during handling for peer id {}, "
+                  "protocol {}",
+                  remote_peer_id.toBase58(), proto);
               open_streams_[remote_peer_id][proto] = stream;
             }
           }
@@ -128,10 +132,22 @@ namespace libp2p::host {
         [this, p, protocol, handler](
             outcome::result<std::shared_ptr<connection::Stream>> stream_res) {
           if (stream_res) {
-            // if peer id is not known insert empty map by this peer id
-            open_streams_.insert({p.id, {}});
+            // if peer id is not known insert empty map by this peer id (if
+            // another map does not exist yet)
+            const auto &[it, inserted] = open_streams_.insert({p.id, {}});
 
-            open_streams_[p.id].insert({protocol, stream_res.value()});
+            auto &proto_map = it->second;
+            // insert new stream if no stream for given peer id and protocol
+            // exists or it exists but expired or it exists but closed
+            if (proto_map.count(protocol) == 0
+                or proto_map[protocol].lock() == nullptr
+                or proto_map[protocol].lock()->isClosed()) {
+              spdlog::debug(
+                  "Inserted new stream during new stream for peer id {}, "
+                  "protocol {}",
+                  p.id.toBase58(), protocol);
+              open_streams_[p.id].insert({protocol, stream_res.value()});
+            }
           }
           handler(stream_res);
         });
