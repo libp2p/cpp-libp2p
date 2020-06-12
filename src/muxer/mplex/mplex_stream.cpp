@@ -136,7 +136,8 @@ namespace libp2p::connection {
       return cb(Error::INVALID_ARGUMENT);
     }
     if (is_writing_) {
-      return cb(Error::IS_WRITING);
+      write_queue_.emplace_back(in, bytes, cb);
+      return;
     }
     if (connection_.expired()) {
       return cb(Error::CONNECTION_IS_DEAD);
@@ -153,6 +154,11 @@ namespace libp2p::connection {
                               write_res.error().message());
           }
           cb(std::forward<decltype(write_res)>(write_res));
+          if (not self->write_queue_.empty()) {
+            auto [in, bytes, cb] = self->write_queue_.front();
+            self->write_queue_.pop_front();
+            self->write(in, bytes, cb);
+          }
         });
   }
 

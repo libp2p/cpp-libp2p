@@ -194,7 +194,6 @@ namespace libp2p::connection {
     if (is_writing_) {
       write_queue_.emplace_back(in, bytes, cb, some);
       return;
-      // return cb(Error::IS_WRITING);
     }
 
     beginWrite(std::move(cb));
