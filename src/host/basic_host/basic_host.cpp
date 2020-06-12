@@ -74,7 +74,27 @@ namespace libp2p::host {
   void BasicHost::setProtocolHandler(
       const peer::Protocol &proto,
       const std::function<connection::Stream::Handler> &handler) {
-    network_->getListener().getRouter().setProtocolHandler(proto, handler);
+    network_->getListener().getRouter().setProtocolHandler(
+        proto,
+        [this, proto,
+         handler](const std::shared_ptr<connection::Stream> &stream) {
+          if (auto remote_peer_id_res = stream->remotePeerId();
+              remote_peer_id_res) {
+            // store stream in the map if it does not exist
+            const auto &remote_peer_id = remote_peer_id_res.value();
+            const auto &[it, inserted] =
+                open_streams_.insert({remote_peer_id, {}});
+            auto &proto_map = it->second;
+
+            // insert new stream if no stream for given peer id and protocol
+            // exists or it exists but expired
+            if (proto_map.count(proto) == 0
+                or proto_map[proto].lock() == nullptr) {
+              open_streams_[remote_peer_id][proto] = stream;
+            }
+          }
+          handler(stream);
+        });
   }
 
   void BasicHost::setProtocolHandler(
@@ -88,7 +108,31 @@ namespace libp2p::host {
   void BasicHost::newStream(const peer::PeerInfo &p,
                             const peer::Protocol &protocol,
                             const Host::StreamResultHandler &handler) {
-    network_->getDialer().newStream(p, protocol, handler);
+    if (const auto &id_it = open_streams_.find(p.id);
+        id_it != open_streams_.end()) {
+      auto &proto_map = id_it->second;
+      if (const auto &stream_it = proto_map.find(protocol);
+          stream_it != proto_map.end()) {
+        if (auto stream = stream_it->second.lock()) {
+          // stream with given protocol for given peer id already exists
+          return handler(stream);
+        }
+        // weak_ptr to stream expired, no need to keep it anymore
+        proto_map.erase(stream_it);
+      }
+    }
+    network_->getDialer().newStream(
+        p, protocol,
+        [this, p, protocol, handler](
+            outcome::result<std::shared_ptr<connection::Stream>> stream_res) {
+          if (stream_res) {
+            // if peer id is not known insert empty map by this peer id
+            open_streams_.insert({p.id, {}});
+
+            open_streams_[p.id].insert({protocol, stream_res.value()});
+          }
+          handler(stream_res);
+        });
   }
 
   outcome::result<void> BasicHost::listen(const multi::Multiaddress &ma) {

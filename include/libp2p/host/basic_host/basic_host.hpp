@@ -80,6 +80,10 @@ namespace libp2p::host {
     std::unique_ptr<network::Network> network_;
     std::unique_ptr<peer::PeerRepository> repo_;
     std::shared_ptr<event::Bus> bus_;
+    std::unordered_map<
+        peer::PeerId,
+        std::unordered_map<peer::Protocol, std::weak_ptr<connection::Stream>>>
+        open_streams_;
   };
 
 }  // namespace libp2p::host
