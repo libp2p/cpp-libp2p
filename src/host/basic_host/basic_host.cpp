@@ -78,10 +78,13 @@ namespace libp2p::host {
         proto,
         [this, proto,
          handler](const std::shared_ptr<connection::Stream> &stream) {
+          spdlog::debug("Obtained new stream from the listener. Protocol: {}",
+                        proto);
           if (auto remote_peer_id_res = stream->remotePeerId();
               remote_peer_id_res) {
             // store stream in the map if it does not exist
             const auto &remote_peer_id = remote_peer_id_res.value();
+            spdlog::debug("Remote peer id: {}", remote_peer_id.toBase58());
             const auto &[it, inserted] =
                 open_streams_.insert({remote_peer_id, {}});
             auto &proto_map = it->second;
@@ -113,6 +116,8 @@ namespace libp2p::host {
   void BasicHost::newStream(const peer::PeerInfo &p,
                             const peer::Protocol &protocol,
                             const Host::StreamResultHandler &handler) {
+    spdlog::debug("Opening new stream to {}, protocol {}", p.id.toHex(),
+                  protocol);
     if (const auto &id_it = open_streams_.find(p.id);
         id_it != open_streams_.end()) {
       auto &proto_map = id_it->second;
