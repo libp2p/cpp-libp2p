@@ -180,6 +180,7 @@ namespace libp2p::connection {
       cb(result);
     }
 
+    std::lock_guard<std::mutex> lock(write_queue_mutex_);
     // check if new write messages were received while stream was writing
     // and propagate these messages
     if (not write_queue_.empty()) {
@@ -195,6 +196,7 @@ namespace libp2p::connection {
       return cb(Error::NOT_WRITABLE);
     }
     if (is_writing_) {
+      std::lock_guard<std::mutex> lock(write_queue_mutex_);
       write_queue_.emplace_back(in, bytes, cb, some);
       return;
     }

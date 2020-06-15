@@ -7,6 +7,7 @@
 #define LIBP2P_MPLEX_STREAM_HPP
 
 #include <deque>
+#include <mutex>
 
 #include <boost/asio/streambuf.hpp>
 #include <boost/noncopyable.hpp>
@@ -116,6 +117,8 @@ namespace libp2p::connection {
     /// Queue of write requests that were received when stream was writing
     std::deque<std::tuple<gsl::span<const uint8_t>, size_t, WriteCallbackFunc>>
         write_queue_{};
+
+    mutable std::mutex write_queue_mutex_;
 
     /// is the stream opened for reads?
     bool is_readable_ = true;

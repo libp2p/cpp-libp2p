@@ -6,6 +6,9 @@
 #ifndef LIBP2P_YAMUX_STREAM_HPP
 #define LIBP2P_YAMUX_STREAM_HPP
 
+#include <deque>
+#include <mutex>
+
 #include <boost/asio/streambuf.hpp>
 #include <boost/noncopyable.hpp>
 #include <libp2p/connection/stream.hpp>
@@ -163,6 +166,8 @@ namespace libp2p::connection {
     std::deque<
         std::tuple<gsl::span<const uint8_t>, size_t, WriteCallbackFunc, bool>>
         write_queue_{};
+
+    mutable std::mutex write_queue_mutex_;
 
     /// starts async write operation
     void beginWrite(WriteCallbackFunc cb);
