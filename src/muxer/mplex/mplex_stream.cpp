@@ -136,7 +136,9 @@ namespace libp2p::connection {
       return cb(Error::INVALID_ARGUMENT);
     }
     if (is_writing_) {
-      return cb(Error::IS_WRITING);
+      std::lock_guard<std::mutex> lock(write_queue_mutex_);
+      write_queue_.emplace_back(in, bytes, cb);
+      return;
     }
     if (connection_.expired()) {
       return cb(Error::CONNECTION_IS_DEAD);
@@ -153,6 +155,15 @@ namespace libp2p::connection {
                               write_res.error().message());
           }
           cb(std::forward<decltype(write_res)>(write_res));
+
+          std::lock_guard<std::mutex> lock(self->write_queue_mutex_);
+          // check if new write messages were received while stream was writing
+          // and propagate these messages
+          if (not self->write_queue_.empty()) {
+            auto [in, bytes, cb] = self->write_queue_.front();
+            self->write_queue_.pop_front();
+            self->write(in, bytes, cb);
+          }
         });
   }
 

@@ -6,6 +6,9 @@
 #ifndef LIBP2P_MPLEX_STREAM_HPP
 #define LIBP2P_MPLEX_STREAM_HPP
 
+#include <deque>
+#include <mutex>
+
 #include <boost/asio/streambuf.hpp>
 #include <boost/noncopyable.hpp>
 #include <libp2p/common/logger.hpp>
@@ -110,6 +113,12 @@ namespace libp2p::connection {
     /// when a new data arrives, this function is to be called
     std::function<void(outcome::result<size_t>)> data_notifyee_;
     bool data_notified_ = false;
+
+    /// Queue of write requests that were received when stream was writing
+    std::deque<std::tuple<gsl::span<const uint8_t>, size_t, WriteCallbackFunc>>
+        write_queue_{};
+
+    mutable std::mutex write_queue_mutex_;
 
     /// is the stream opened for reads?
     bool is_readable_ = true;
