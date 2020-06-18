@@ -195,18 +195,17 @@ namespace libp2p::connection {
     if (!is_writable_) {
       return cb(Error::NOT_WRITABLE);
     }
+    std::vector<uint8_t> in_vector(in.size());
+    std::copy(in.begin(), in.end(), in_vector.begin());
     if (is_writing_) {
       std::lock_guard<std::mutex> lock(write_queue_mutex_);
-      std::vector<uint8_t> in_vector;
-      in_vector.reserve(in.size());
-      std::copy(in.begin(), in.end(), in_vector.begin());
       write_queue_.emplace_back(in_vector, bytes, cb, some);
       return;
     }
 
     beginWrite(std::move(cb));
 
-    auto write_lambda = [self{shared_from_this()}, in, bytes,
+    auto write_lambda = [self{shared_from_this()}, in_vector, bytes,
                          some]() mutable -> bool {
       if (self->send_window_size_ >= bytes) {
         // we can write - window size on the other side allows us
@@ -214,14 +213,14 @@ namespace libp2p::connection {
         if (conn_wptr.expired()) {
           self->endWrite(Error::CONNECTION_IS_DEAD);
         } else {
-          conn_wptr.lock()->streamWrite(self->stream_id_, in, bytes, some,
-                                        [self](outcome::result<size_t> res) {
-                                          if (res) {
-                                            self->send_window_size_ -=
-                                                res.value();
-                                          }
-                                          self->endWrite(res);
-                                        });
+          conn_wptr.lock()->streamWrite(
+              self->stream_id_, in_vector, bytes, some,
+              [self](outcome::result<size_t> res) {
+                if (res) {
+                  self->send_window_size_ -= res.value();
+                }
+                self->endWrite(res);
+              });
         }
         return true;
       }

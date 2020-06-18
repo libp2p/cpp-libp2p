@@ -135,11 +135,10 @@ namespace libp2p::connection {
     if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
       return cb(Error::INVALID_ARGUMENT);
     }
+    std::vector<uint8_t> in_vector(in.size());
+    std::copy(in.begin(), in.end(), in_vector.begin());
     if (is_writing_) {
       std::lock_guard<std::mutex> lock(write_queue_mutex_);
-      std::vector<uint8_t> in_vector;
-      in_vector.reserve(in.size());
-      std::copy(in.begin(), in.end(), in_vector.begin());
       write_queue_.emplace_back(in_vector, bytes, cb);
       return;
     }
@@ -149,7 +148,7 @@ namespace libp2p::connection {
 
     is_writing_ = true;
     connection_.lock()->streamWrite(
-        stream_id_, in, bytes,
+        stream_id_, in_vector, bytes,
         [self{shared_from_this()}, cb{std::move(cb)}](auto &&write_res) {
           self->is_writing_ = false;
           if (!write_res) {
