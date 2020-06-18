@@ -197,7 +197,10 @@ namespace libp2p::connection {
     }
     if (is_writing_) {
       std::lock_guard<std::mutex> lock(write_queue_mutex_);
-      write_queue_.emplace_back(in, bytes, cb, some);
+      std::vector<uint8_t> in_vector;
+      in_vector.reserve(in.size());
+      std::copy(in.begin(), in.end(), in_vector.begin());
+      write_queue_.emplace_back(in_vector, bytes, cb, some);
       return;
     }
 
