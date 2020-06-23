@@ -15,14 +15,21 @@ namespace libp2p::protocol {
         interval_(config.period_msec),
         timer_(io, boost::posix_time::milliseconds(interval_)),
         started_(boost::posix_time::microsec_clock::local_time()),
-        timer_cb_([this](const boost::system::error_code &error) {
-          if (!error)
+        cancelled_(std::make_shared<bool>(false)),
+        timer_cb_([this, cancelled{cancelled_}](
+                      const boost::system::error_code &error) {
+          if (!error && !*cancelled)
             onTimer();
         }),
         immediate_cb_([this] { onImmediate(); }) {
     assert(interval_ > 0 && interval_ <= 1000);
     timer_.async_wait(timer_cb_);
   }
+
+  AsioScheduler::~AsioScheduler() {
+    *cancelled_ = true;
+    timer_.cancel();
+  };
 
   Scheduler::Ticks AsioScheduler::now() const {
     boost::posix_time::ptime t(boost::posix_time::microsec_clock::local_time());
