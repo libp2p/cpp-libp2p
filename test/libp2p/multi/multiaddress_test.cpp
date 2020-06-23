@@ -251,7 +251,11 @@ TEST_F(MultiaddressTest, GetProtocolsWithValues) {
  */
 TEST_F(MultiaddressTest, DnsAndIpfs) {
   auto addr =
-      "/dns4/kusama-bootnode-1.paritytech.net/tcp/30333/p2p/QmV32G18YzenpNFmhqg2n7TtdjYRK7oU6FhLbDL4oRgsbe"s;
+      "/dns4/p2p.cc3-0.kusama.network/tcp/30100/p2p/12D3KooWDgtynm4S9M3m6ZZhXYu2RrWKdvkCSScc25xKDVSg1Sjd"s;
   EXPECT_OUTCOME_TRUE(address, Multiaddress::create(addr));
   ASSERT_EQ(address.getStringAddress(), addr);
+  auto peer_id_opt = address.getPeerId();
+  ASSERT_TRUE(peer_id_opt);
+  ASSERT_EQ(peer_id_opt.value(),
+            "12D3KooWDgtynm4S9M3m6ZZhXYu2RrWKdvkCSScc25xKDVSg1Sjd");
 }

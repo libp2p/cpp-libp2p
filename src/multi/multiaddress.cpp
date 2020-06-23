@@ -175,7 +175,7 @@ namespace libp2p::multi {
     if (protocol == nullptr) {
       return {};
     }
-    auto proto_str = "/"s + std::string(protocol->name);
+    auto proto_str = "/"s + std::string(protocol->name) + "/";
     auto proto_positions =
         findSubstringOccurrences(stringified_address_, proto_str);
     if (proto == Protocol::Code::P2P) {  // ipfs and p2p are equivalent
