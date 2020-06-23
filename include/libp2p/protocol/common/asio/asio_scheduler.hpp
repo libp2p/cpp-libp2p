@@ -41,7 +41,7 @@ namespace libp2p::protocol {
      * indicates the successful completion of the wait operation. Cancel is used
      * to indicate that handler should not be executed.
      */
-    std::shared_ptr<bool> cancelled_;
+    std::shared_ptr<bool> canceled_;
     std::function<void(const boost::system::error_code &)> timer_cb_;
     std::function<void()> immediate_cb_;
     bool immediate_cb_scheduled_ = false;

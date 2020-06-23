@@ -136,8 +136,9 @@ namespace libp2p::connection {
       return cb(Error::INVALID_ARGUMENT);
     }
     if (is_writing_) {
+      std::vector<uint8_t> in_vector(in.begin(), in.end());
       std::lock_guard<std::mutex> lock(write_queue_mutex_);
-      write_queue_.emplace_back(in, bytes, cb);
+      write_queue_.emplace_back(in_vector, bytes, cb);
       return;
     }
     if (connection_.expired()) {

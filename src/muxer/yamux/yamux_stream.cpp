@@ -197,14 +197,16 @@ namespace libp2p::connection {
     }
     if (is_writing_) {
       std::lock_guard<std::mutex> lock(write_queue_mutex_);
-      write_queue_.emplace_back(in, bytes, cb, some);
+
+      std::vector<uint8_t> in_vector(in.begin(), in.end());
+      write_queue_.emplace_back(in_vector, bytes, cb, some);
       return;
     }
 
     beginWrite(std::move(cb));
 
-    auto write_lambda = [self{shared_from_this()}, in, bytes,
-                         some]() mutable -> bool {
+    auto write_lambda = [self{shared_from_this()}, bytes,
+                         some](gsl::span<const uint8_t> in) mutable -> bool {
       if (self->send_window_size_ >= bytes) {
         // we can write - window size on the other side allows us
         auto conn_wptr = self->yamuxed_connection_;
@@ -226,7 +228,7 @@ namespace libp2p::connection {
     };
 
     // if we can write now - do it and return
-    if (write_lambda()) {
+    if (write_lambda(in)) {
       return;
     }
 
@@ -236,8 +238,10 @@ namespace libp2p::connection {
       return endWrite(Error::CONNECTION_IS_DEAD);
     }
     yamuxed_connection_.lock()->streamOnWindowUpdate(
-        stream_id_, [write_lambda = std::move(write_lambda)]() mutable {
-          return write_lambda();
+        stream_id_,
+        [write_lambda = std::move(write_lambda),
+         in_bytes = std::vector<uint8_t>{in.begin(), in.end()}]() mutable {
+          return write_lambda(in_bytes);
         });
   }
 

@@ -115,7 +115,7 @@ namespace libp2p::connection {
     bool data_notified_ = false;
 
     /// Queue of write requests that were received when stream was writing
-    std::deque<std::tuple<gsl::span<const uint8_t>, size_t, WriteCallbackFunc>>
+    std::deque<std::tuple<std::vector<uint8_t>, size_t, WriteCallbackFunc>>
         write_queue_{};
 
     mutable std::mutex write_queue_mutex_;
