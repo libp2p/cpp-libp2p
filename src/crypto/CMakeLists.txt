@@ -15,6 +15,7 @@ add_subdirectory(random_generator)
 add_subdirectory(rsa_provider)
 add_subdirectory(secp256k1_provider)
 add_subdirectory(sha)
+add_subdirectory(x25519_provider)
 
 libp2p_add_library(p2p_crypto_error
     error.cpp
