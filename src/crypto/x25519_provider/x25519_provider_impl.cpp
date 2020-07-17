@@ -70,7 +70,7 @@ namespace libp2p::crypto::x25519 {
                                     EVP_PKEY_new_raw_private_key));
     OUTCOME_TRY(evp_peerkey,
                 NewEvpPkeyFromBytes(EVP_PKEY_X25519, public_key,
-                                    EVP_PKEY_new_raw_private_key));
+                                    EVP_PKEY_new_raw_public_key));
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new(evp_pkey.get(), nullptr);
     if (nullptr == pctx) {
       return FAILED;
