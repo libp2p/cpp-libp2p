@@ -41,7 +41,7 @@ namespace libp2p::protocol::kademlia {
                    std::shared_ptr<Scheduler> scheduler,
                    std::shared_ptr<RoutingTable> table,
                    std::unique_ptr<ValueStoreBackend> storage,
-                   KademliaConfig config)
+                   const KademliaConfig &config)
       : config_(config),
         protocol_(config_.protocolId),
         host_(std::move(host)),
@@ -50,7 +50,8 @@ namespace libp2p::protocol::kademlia {
         local_store_(std::make_unique<LocalValueStore>(*this)),
         providers_store_(*scheduler_,
                          scheduler::toTicks(config_.max_record_age)),
-        log_("kad", "KadImpl", this) {}
+        log_("kad", "KadImpl", this) {
+  }
 
   KadImpl::~KadImpl() = default;
 
@@ -350,6 +351,10 @@ namespace libp2p::protocol::kademlia {
     }
 
     return true;
+  }
+
+  PeerIdVec KadImpl::findProviders(const ContentAddress &key) const {
+    return providers_store_.getProvidersFor(key);
   }
 
   void KadImpl::putValue(const ContentAddress &key, Value value,

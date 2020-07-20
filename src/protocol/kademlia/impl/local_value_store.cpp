@@ -11,38 +11,11 @@
 #include <unordered_map>
 
 #include <libp2p/protocol/kademlia/config.hpp>
+#include <libp2p/protocol/kademlia/impl/default_value_store.hpp>
 
 namespace libp2p::protocol::kademlia {
 
   namespace {
-    struct DefaultValueStore : public ValueStoreBackend {
-      DefaultValueStore() = default;
-      ~DefaultValueStore() override = default;
-
-      /// PutValue adds value corresponding to given Key.
-      bool putValue(ContentAddress key, Value value) override {
-        values_[std::move(key)] = std::move(value);
-        return true; // N.B. Real backend should validate key and value
-      }
-
-      /// GetValue searches for the value corresponding to given Key.
-      [[nodiscard]] outcome::result<Value> getValue(
-          const ContentAddress &key) const override {
-        auto it = values_.find(key);
-        if (it == values_.end()) {
-          return Error::VALUE_NOT_FOUND;
-        }
-        return it->second;
-      }
-
-      void erase(const ContentAddress &key) override {
-        values_.erase(key);
-      }
-
-     private:
-      std::unordered_map<ContentAddress, Value> values_;
-    };
-
     constexpr scheduler::Ticks kRefreshTimerInterval = 60 * 1000;
 
     constexpr int kRefreshN = 2;
@@ -62,6 +35,7 @@ namespace libp2p::protocol::kademlia {
   {
     assert(refresh_interval_ > kRefreshTimerInterval);
 
+    local_storage_ = createDefaultValueStoreBackend();
     table_ = std::make_unique<lvs_table::Table>();
 
     refresh_timer_ = kad_.scheduler().schedule(kRefreshTimerInterval,

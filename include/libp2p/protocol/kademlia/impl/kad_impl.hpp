@@ -7,6 +7,8 @@
 #define LIBP2P_KAD_IMPL_HPP
 
 #include <libp2p/host/host.hpp>
+#include <libp2p/protocol/common/scheduler.hpp>
+#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/kademlia/impl/content_providers_store.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_protocol_session.hpp>
 #include <libp2p/protocol/kademlia/impl/kad_response_handler.hpp>
@@ -14,8 +16,6 @@
 #include <libp2p/protocol/kademlia/impl/local_value_store.hpp>
 #include <libp2p/protocol/kademlia/kad.hpp>
 #include <libp2p/protocol/kademlia/routing_table.hpp>
-#include <libp2p/protocol/common/scheduler.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -27,7 +27,8 @@ namespace libp2p::protocol::kademlia {
    public:
     KadImpl(std::shared_ptr<Host> host, std::shared_ptr<Scheduler> scheduler,
             std::shared_ptr<RoutingTable> table,
-            std::unique_ptr<ValueStoreBackend> storage, KademliaConfig config);
+            std::unique_ptr<ValueStoreBackend> storage,
+            const KademliaConfig &config);
 
     ~KadImpl() override;
 
@@ -40,6 +41,8 @@ namespace libp2p::protocol::kademlia {
     bool findPeer(const peer::PeerId &peer,
                   const std::unordered_set<peer::PeerInfo> &closer_peers,
                   FindPeerQueryResultFunc f) override;
+
+    PeerIdVec findProviders(const ContentAddress& key) const override;
 
     void putValue(const ContentAddress &key, Value value,
                   PutValueResultFunc f) override;

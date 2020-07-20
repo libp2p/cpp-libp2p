@@ -10,6 +10,7 @@ libp2p_add_library(p2p_kad
     local_value_store.cpp
     content_providers_store.cpp
     content_address.cpp
+    default_value_store.cpp
     )
 target_link_libraries(p2p_kad
     scheduler

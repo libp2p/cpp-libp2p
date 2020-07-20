@@ -52,6 +52,8 @@ namespace libp2p::protocol::kademlia {
     using GetValueResult = outcome::result<Value>;
     using GetValueResultFunc = std::function<void(GetValueResult)>;
 
+    virtual PeerIdVec findProviders(const ContentAddress& key) const = 0;
+
     /// PutValue adds value corresponding to given Key.
     virtual void putValue(const ContentAddress& key, Value value,
         PutValueResultFunc f) = 0;
