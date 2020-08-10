@@ -33,8 +33,7 @@ namespace libp2p::connection {
   }
 
   outcome::result<void> NoiseConnection::close() {
-    // todo
-    return outcome::success();
+    return raw_connection_->close();
   }
 
   void NoiseConnection::read(gsl::span<uint8_t> out, size_t bytes,

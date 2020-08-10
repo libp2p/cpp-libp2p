@@ -16,6 +16,15 @@ target_link_libraries(aes_test
     p2p_literals
     )
 
+addtest(chachapoly_test
+    chachapoly_test.cpp
+    )
+target_link_libraries(chachapoly_test
+    p2p_chachapoly_provider
+    p2p_testutil
+    p2p_literals
+    )
+
 addtest(ecdsa_test
     ecdsa_provider_test.cpp
     )

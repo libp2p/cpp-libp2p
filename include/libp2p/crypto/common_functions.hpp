@@ -16,22 +16,6 @@
 #include <gsl/span>
 #include <libp2p/outcome/outcome.hpp>
 
-/*
- *  auto pkv =
-      "6d8e72d53e0f8582f52169bf7f6c60ddb7e0fbb83af97a11cff02f1bf21bbf7c"_unhex;
-
-  PrivateKey private_key;
-  std::copy_n(pkv.begin(), private_key.size(), private_key.begin());
-
-  EXPECT_OUTCOME_TRUE(public_key, provider.derive(private_key));
-  std::vector<uint8_t> pubv;
-  pubv.resize(public_key.size(), 0);
-  std::copy_n(public_key.begin(), public_key.size(), pubv.begin());
-  ASSERT_EQ(
-      pubv,
-      "502d10724db25437888bcd8e3e473ae226cb746740c2bb67fab6a31c650cb228"_unhex);
- */
-
 namespace libp2p::crypto {
 
   template <typename Array>

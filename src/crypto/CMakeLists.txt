@@ -4,6 +4,7 @@
 #
 
 add_subdirectory(aes_provider)
+add_subdirectory(chachapoly)
 add_subdirectory(crypto_provider)
 add_subdirectory(ecdsa_provider)
 add_subdirectory(ed25519_provider)
