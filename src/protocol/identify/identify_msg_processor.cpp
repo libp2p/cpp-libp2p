@@ -42,13 +42,15 @@ namespace libp2p::protocol {
     // set an address of the other side, so that it knows, which address we used
     // to connect to it
     if (auto remote_addr = stream->remoteMultiaddr()) {
-      msg.set_observedaddr(std::string{remote_addr.value().getStringAddress()});
+      auto const &addr = remote_addr.value().getBytesAddress();
+      msg.set_observedaddr(std::string((const char*)addr.data(), addr.size()));
     }
 
     // set addresses we are listening on
     for (const auto &addr :
          host_.getNetwork().getListener().getListenAddresses()) {
-      msg.add_listenaddrs(std::string{addr.getStringAddress()});
+      auto const &a = addr.getBytesAddress();
+      msg.add_listenaddrs(std::string((const char*)a.data(), a.size()));
     }
 
     // set our public key
@@ -267,7 +269,7 @@ namespace libp2p::protocol {
       return;
     }
 
-    auto address_res = multi::Multiaddress::create(address_str);
+    auto address_res = multi::Multiaddress::create(gsl::span<const uint8_t>((const uint8_t*)address_str.data(), address_str.size()));
     if (!address_res) {
       return log_->error("peer {} has send an invalid observed address",
                          peer_id.toBase58());
@@ -319,7 +321,7 @@ namespace libp2p::protocol {
 
     std::vector<multi::Multiaddress> listen_addresses;
     for (const auto &addr_str : addresses_strings) {
-      auto addr_res = multi::Multiaddress::create(addr_str);
+      auto addr_res = multi::Multiaddress::create(gsl::span<const uint8_t>((const uint8_t*)addr_str.data(), addr_str.size()));
       if (!addr_res) {
         log_->error("peer {} has sent an invalid listen address",
                     peer_id.toBase58());

@@ -112,7 +112,7 @@ namespace libp2p::multi::converters {
     }
   }
 
-  outcome::result<std::string> bytesToMultiaddrString(const ByteArray &bytes) {
+  outcome::result<std::string> bytesToMultiaddrString(gsl::span<const uint8_t> bytes) {
     std::string results;
 
     size_t lastpos = 0;
@@ -192,4 +192,7 @@ namespace libp2p::multi::converters {
     return results;
   }
 
+  outcome::result<std::string> bytesToMultiaddrString(const ByteArray &bytes) {
+    return bytesToMultiaddrString(gsl::span<const uint8_t>(bytes));
+  }
 }  // namespace libp2p::multi::converters
