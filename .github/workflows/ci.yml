@@ -45,7 +45,8 @@ jobs:
         fi
 
         sudo python3 -m pip install --upgrade pip
-        sudo pip3 install scikit-build cmake requests gitpython gcovr pyyaml
+        sudo pip3 install scikit-build 
+        sudo pip3 install cmake requests gitpython gcovr pyyaml
     - name: cmake
       env:
         CC: ${{ matrix.compiler.cc }}
