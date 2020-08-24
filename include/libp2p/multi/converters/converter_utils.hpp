@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include <gsl/span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -36,6 +37,14 @@ namespace libp2p::multi::converters {
    * format, if the provided byte sequence was a valid multiaddr
    */
   auto bytesToMultiaddrString(const common::ByteArray &bytes)
+      -> outcome::result<std::string>;
+
+  /**
+   * Converts the given byte sequence representing
+   * a multiaddr to a string containing the multiaddr in a human-readable
+   * format, if the provided byte sequence was a valid multiaddr
+   */
+  auto bytesToMultiaddrString(gsl::span<const uint8_t> bytes)
       -> outcome::result<std::string>;
 
 }  // namespace libp2p::multi::converters
