@@ -3,11 +3,69 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <openssl/sha.h>
+#include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/sha/sha512.hpp>
 
-#include <openssl/sha.h>
-
 namespace libp2p::crypto {
+
+  Sha512::Sha512() {
+    initialized_ = 1 == SHA512_Init(&ctx_);
+  }
+
+  Sha512::~Sha512() {
+    sinkCtx();
+  }
+
+  outcome::result<void> Sha512::write(gsl::span<const uint8_t> data) {
+    if (not initialized_) {
+      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+    }
+    if (1 != SHA512_Update(&ctx_, data.data(), data.size())) {
+      return HmacProviderError::FAILED_UPDATE_DIGEST;
+    }
+    return outcome::success();
+  }
+
+  outcome::result<std::vector<uint8_t>> Sha512::digest() {
+    if (not initialized_) {
+      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+    }
+    SHA512_CTX ctx = ctx_;
+    std::vector<uint8_t> result;
+    result.resize(digestSize());
+    if (1 != SHA512_Final(result.data(), &ctx)) {
+      return HmacProviderError::FAILED_FINALIZE_DIGEST;
+    }
+    return result;
+  }
+
+  outcome::result<void> Sha512::reset() {
+    sinkCtx();
+    if (1 != SHA512_Init(&ctx_)) {
+      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+    }
+    initialized_ = true;
+    return outcome::success();
+  }
+
+  size_t Sha512::digestSize() const {
+    return SHA512_DIGEST_LENGTH;
+  }
+
+  size_t Sha512::blockSize() const {
+    return SHA512_CBLOCK;
+  }
+
+  void Sha512::sinkCtx() {
+    if (initialized_) {
+      initialized_ = false;
+      libp2p::common::Hash512 digest;
+      SHA512_Final(digest.data(), &ctx_);
+      memset(digest.data(), 0, digest.size());
+    }
+  }
+
   common::Hash512 sha512(std::string_view input) {
     std::vector<uint8_t> bytes{input.begin(), input.end()};
     return sha512(bytes);

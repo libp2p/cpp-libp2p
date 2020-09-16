@@ -9,6 +9,7 @@
 #include <gsl/span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
+#include <libp2p/crypto/hash.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto::hmac {
@@ -18,13 +19,14 @@ namespace libp2p::crypto::hmac {
    * involving a cryptographic hash function
    * and a secret cryptographic key
    */
-  class HmacProvider {
+  class HmacProvider : public Hash {
     using HashType = common::HashType;
 
    public:
     using ByteArray = libp2p::common::ByteArray;
 
     virtual ~HmacProvider() = default;
+
     /**
      * @brief calculates digests
      * @param hash_type hash type
@@ -32,7 +34,7 @@ namespace libp2p::crypto::hmac {
      * @param message source message
      * @return message digest if calculation was successful, error otherwise
      */
-    virtual outcome::result<ByteArray> calculateDigest(
+    [[deprecated]] virtual outcome::result<ByteArray> calculateDigest(
         HashType hash_type, const ByteArray &key,
         gsl::span<const uint8_t> message) const = 0;
   };
