@@ -8,6 +8,7 @@
 
 #include <string_view>
 
+#include <openssl/sha.h>
 #include <gsl/span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/hash.hpp>

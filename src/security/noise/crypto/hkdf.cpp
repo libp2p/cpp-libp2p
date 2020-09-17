@@ -17,7 +17,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::noise, HKDFError, e) {
 
 namespace libp2p::security::noise {
 
-  using HMAC = crypto::hmac::HmacProviderImpl;
+  using HMAC = crypto::hmac::HmacProviderCtrImpl;
 
   outcome::result<HKDFResult> hkdf(HashType hash_type, size_t outputs,
                                    const ByteArray &chaining_key,

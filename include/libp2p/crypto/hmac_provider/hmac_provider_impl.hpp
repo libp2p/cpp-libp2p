@@ -11,15 +11,11 @@
 #include <libp2p/crypto/hmac_provider.hpp>
 
 namespace libp2p::crypto::hmac {
-  class HmacProviderImpl : public HmacProvider {
-    using HashType = common::HashType;
-
+  class HmacProviderCtrImpl : public HmacProviderCtr {
    public:
-    [[deprecated]] HmacProviderImpl();
+    HmacProviderCtrImpl(HashType hash_type, const ByteArray &key);
 
-    HmacProviderImpl(HashType hash_type, const ByteArray &key);
-
-    ~HmacProviderImpl() override;
+    ~HmacProviderCtrImpl() override;
 
     outcome::result<void> write(gsl::span<const uint8_t> data) override;
 
@@ -31,10 +27,6 @@ namespace libp2p::crypto::hmac {
 
     size_t blockSize() const override;
 
-    [[deprecated]] outcome::result<ByteArray> calculateDigest(
-        HashType hash_type, const ByteArray &key,
-        gsl::span<const uint8_t> message) const override;
-
    private:
     void sinkCtx();
 
@@ -43,6 +35,13 @@ namespace libp2p::crypto::hmac {
     const EVP_MD *hash_st_;
     HMAC_CTX *hmac_ctx_;
     bool initialized_;
+  };
+
+  class HmacProviderImpl : public HmacProvider {
+   public:
+    outcome::result<ByteArray> calculateDigest(
+        HashType hash_type, const ByteArray &key,
+        gsl::span<const uint8_t> message) const override;
   };
 }  // namespace libp2p::crypto::hmac
 

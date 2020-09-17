@@ -13,18 +13,21 @@
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto::hmac {
+
+  using ByteArray = libp2p::common::ByteArray;
+  using HashType = common::HashType;
+
+  /// HMAC that supports stream data feeding interface
+  class HmacProviderCtr : public Hash {};
+
   /**
    * @class HmacProvider provides HMAC functionality
    * allows calculating message authentication code
    * involving a cryptographic hash function
    * and a secret cryptographic key
    */
-  class HmacProvider : public Hash {
-    using HashType = common::HashType;
-
+  class HmacProvider {
    public:
-    using ByteArray = libp2p::common::ByteArray;
-
     virtual ~HmacProvider() = default;
 
     /**
@@ -34,7 +37,7 @@ namespace libp2p::crypto::hmac {
      * @param message source message
      * @return message digest if calculation was successful, error otherwise
      */
-    [[deprecated]] virtual outcome::result<ByteArray> calculateDigest(
+    virtual outcome::result<ByteArray> calculateDigest(
         HashType hash_type, const ByteArray &key,
         gsl::span<const uint8_t> message) const = 0;
   };

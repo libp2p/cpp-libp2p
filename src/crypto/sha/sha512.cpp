@@ -59,10 +59,10 @@ namespace libp2p::crypto {
 
   void Sha512::sinkCtx() {
     if (initialized_) {
-      initialized_ = false;
       libp2p::common::Hash512 digest;
       SHA512_Final(digest.data(), &ctx_);
       memset(digest.data(), 0, digest.size());
+      initialized_ = false;
     }
   }
 

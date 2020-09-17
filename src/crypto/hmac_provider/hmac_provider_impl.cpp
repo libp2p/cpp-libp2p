@@ -38,48 +38,54 @@ namespace libp2p::crypto::hmac {
     return nullptr;
   }
 
-  [[deprecated]] outcome::result<ByteArray> HmacProviderImpl::calculateDigest(
+  outcome::result<ByteArray> HmacProviderImpl::calculateDigest(
       HashType hash_type, const ByteArray &key,
       gsl::span<const uint8_t> message) const {
-    const evp_md_st *evp_md = makeHashTraits(hash_type);
-    auto digest_size = ::libp2p::crypto::hmac::digestSize(hash_type);
-    if (evp_md == nullptr || digest_size == 0) {
-      return HmacProviderError::UNSUPPORTED_HASH_METHOD;
-    }
-
-    std::vector<uint8_t> result(digest_size, 0);
-    unsigned int len = 0;
-
-    hmac_ctx_st *ctx = HMAC_CTX_new();
-    if (nullptr == ctx) {
-      return HmacProviderError::FAILED_CREATE_CONTEXT;
-    }
-
-    auto clean_ctx_at_exit = gsl::finally([ctx]() { HMAC_CTX_free(ctx); });
-
-    if (1 != HMAC_Init_ex(ctx, key.data(), key.size(), evp_md, nullptr)) {
-      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
-    }
-
-    if (1 != HMAC_Update(ctx, message.data(), message.size())) {
-      return HmacProviderError::FAILED_UPDATE_DIGEST;
-    }
-
-    if (1 != HMAC_Final(ctx, result.data(), &len)) {
-      return HmacProviderError::FAILED_FINALIZE_DIGEST;
-    }
-
-    if (digest_size != len) {
-      return HmacProviderError::WRONG_DIGEST_SIZE;
-    }
-
-    return result;
+    HmacProviderCtrImpl hmac{hash_type, key};
+    OUTCOME_TRY(hmac.write(message));
+    return hmac.digest();
   }
 
-  [[deprecated]] HmacProviderImpl::HmacProviderImpl() : initialized_{false} {}
+  //  outcome::result<ByteArray> HmacProviderImpl::calculateDigest(
+  //      HashType hash_type, const ByteArray &key,
+  //      gsl::span<const uint8_t> message) const {
+  //    const evp_md_st *evp_md = makeHashTraits(hash_type);
+  //    auto digest_size = ::libp2p::crypto::hmac::digestSize(hash_type);
+  //    if (evp_md == nullptr || digest_size == 0) {
+  //      return HmacProviderError::UNSUPPORTED_HASH_METHOD;
+  //    }
+  //
+  //    std::vector<uint8_t> result(digest_size, 0);
+  //    unsigned int len = 0;
+  //
+  //    hmac_ctx_st *ctx = HMAC_CTX_new();
+  //    if (nullptr == ctx) {
+  //      return HmacProviderError::FAILED_CREATE_CONTEXT;
+  //    }
+  //
+  //    auto clean_ctx_at_exit = gsl::finally([ctx]() { HMAC_CTX_free(ctx); });
+  //
+  //    if (1 != HMAC_Init_ex(ctx, key.data(), key.size(), evp_md, nullptr)) {
+  //      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+  //    }
+  //
+  //    if (1 != HMAC_Update(ctx, message.data(), message.size())) {
+  //      return HmacProviderError::FAILED_UPDATE_DIGEST;
+  //    }
+  //
+  //    if (1 != HMAC_Final(ctx, result.data(), &len)) {
+  //      return HmacProviderError::FAILED_FINALIZE_DIGEST;
+  //    }
+  //
+  //    if (digest_size != len) {
+  //      return HmacProviderError::WRONG_DIGEST_SIZE;
+  //    }
+  //
+  //    return result;
+  //  }
 
-  HmacProviderImpl::HmacProviderImpl(HmacProviderImpl::HashType hash_type,
-                                     const ByteArray &key)
+  HmacProviderCtrImpl::HmacProviderCtrImpl(HashType hash_type,
+                                           const ByteArray &key)
       : hash_type_{hash_type},
         key_{key},
         hash_st_{hash_type_ == HashType::SHA1
@@ -105,11 +111,12 @@ namespace libp2p::crypto::hmac {
         == HMAC_Init_ex(hmac_ctx_, key_.data(), key_.size(), hash_st_, nullptr);
   }
 
-  HmacProviderImpl::~HmacProviderImpl() {
+  HmacProviderCtrImpl::~HmacProviderCtrImpl() {
     sinkCtx();
   }
 
-  outcome::result<void> HmacProviderImpl::write(gsl::span<const uint8_t> data) {
+  outcome::result<void> HmacProviderCtrImpl::write(
+      gsl::span<const uint8_t> data) {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
@@ -119,11 +126,14 @@ namespace libp2p::crypto::hmac {
     return outcome::success();
   }
 
-  outcome::result<std::vector<uint8_t>> HmacProviderImpl::digest() {
+  outcome::result<std::vector<uint8_t>> HmacProviderCtrImpl::digest() {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
-    HMAC_CTX *ctx_copy{nullptr};
+    HMAC_CTX *ctx_copy = HMAC_CTX_new();
+    if (nullptr == ctx_copy) {
+      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+    }
     if (1 != HMAC_CTX_copy(ctx_copy, hmac_ctx_)) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
@@ -140,7 +150,7 @@ namespace libp2p::crypto::hmac {
     return result;
   }
 
-  outcome::result<void> HmacProviderImpl::reset() {
+  outcome::result<void> HmacProviderCtrImpl::reset() {
     sinkCtx();
     hmac_ctx_ = HMAC_CTX_new();
     if (nullptr == hmac_ctx_
@@ -153,23 +163,22 @@ namespace libp2p::crypto::hmac {
     return outcome::success();
   }
 
-  size_t HmacProviderImpl::digestSize() const {
+  size_t HmacProviderCtrImpl::digestSize() const {
     if (initialized_) {
       return EVP_MD_size(hash_st_);
     }
     return 0;
   }
 
-  size_t HmacProviderImpl::blockSize() const {
+  size_t HmacProviderCtrImpl::blockSize() const {
     if (initialized_) {
       return EVP_MD_block_size(hash_st_);
     }
     return 0;
   }
 
-  void HmacProviderImpl::sinkCtx() {
+  void HmacProviderCtrImpl::sinkCtx() {
     if (initialized_) {
-      initialized_ = false;
       std::vector<uint8_t> data;
       data.resize(digestSize());
       unsigned len{0};
@@ -177,6 +186,7 @@ namespace libp2p::crypto::hmac {
       HMAC_CTX_free(hmac_ctx_);
       hmac_ctx_ = nullptr;
       memset(data.data(), 0, data.size());
+      initialized_ = false;
     }
   }
 }  // namespace libp2p::crypto::hmac
