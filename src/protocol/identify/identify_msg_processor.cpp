@@ -7,12 +7,12 @@
 
 #include <tuple>
 
+#include <generated/protocol/identify/protobuf/identify.pb.h>
 #include <boost/assert.hpp>
 #include <libp2p/basic/protobuf_message_read_writer.hpp>
 #include <libp2p/network/network.hpp>
 #include <libp2p/peer/address_repository.hpp>
 #include <libp2p/protocol/identify/utils.hpp>
-#include <generated/protocol/identify/protobuf/identify.pb.h>
 
 namespace {
   inline std::string fromMultiaddrToString(const libp2p::multi::Multiaddress &ma) {
@@ -354,16 +354,15 @@ namespace libp2p::protocol {
       log_->debug("can not get addresses for peer {}", peer_id.toBase58());
     }
 
-    switch (conn_manager_.connectedness({peer_id, addresses.value()})) {
-      case network::ConnectionManager::Connectedness::CONNECTED:
-        add_res = addr_repo.upsertAddresses(peer_id, listen_addresses,
-                                            peer::ttl::kPermanent);
-        break;
-      default:
-        add_res = addr_repo.upsertAddresses(peer_id, listen_addresses,
-                                            peer::ttl::kRecentlyConnected);
-        break;
-    }
+    bool permanent_ttl =
+        (addresses
+         && (conn_manager_.connectedness({peer_id, addresses.value()})
+             == network::ConnectionManager::Connectedness::CONNECTED));
+
+    add_res = addr_repo.upsertAddresses(
+        peer_id, listen_addresses,
+        permanent_ttl ? peer::ttl::kPermanent : peer::ttl::kRecentlyConnected);
+
     if (!add_res) {
       log_->error("cannot add addresses to peer {}: {}", peer_id.toBase58(),
                   add_res.error().message());
