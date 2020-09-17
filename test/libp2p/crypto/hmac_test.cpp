@@ -90,14 +90,20 @@ TEST_F(HmacTest, HashSha512Success) {
 }
 
 /**
- * @given invalid HashType value
- * @when hmacDigest is applied with given value
- * @then error is returned
+ * @given initialized HMAC instance
+ * @when digest gets calculated and HMAC is reset
+ * @then the state was correctly reset and the same calculation gives the same
+ * result
  */
-TEST_F(HmacTest, HashInvalidFails) {
-  auto &&digest = provider.calculateDigest(static_cast<common::HashType>(15),
-                                           sha1_key, message);
-  ASSERT_FALSE(digest);
-  ASSERT_EQ(digest.error().value(),
-            static_cast<int>(HmacProviderError::UNSUPPORTED_HASH_METHOD));
+TEST_F(HmacTest, HmacCtrTest) {
+  hmac::HmacProviderCtrImpl hmac{common::HashType::SHA256, sha256_key};
+  ASSERT_TRUE(hmac.write(message));
+  auto &&digest = hmac.digest();
+  ASSERT_TRUE(digest);
+  ASSERT_EQ(digest.value(), sha256_dgst);
+  ASSERT_TRUE(hmac.reset());
+  ASSERT_TRUE(hmac.write(message));
+  auto &&digest2 = hmac.digest();
+  ASSERT_TRUE(digest2);
+  ASSERT_EQ(digest2.value(), sha256_dgst);
 }
