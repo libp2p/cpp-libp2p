@@ -72,6 +72,7 @@ namespace libp2p::regression {
           injector::makeHostInjector<boost::di::extension::shared_config>(
               boost::di::bind<boost::asio::io_context>.to(
                   io)[boost::di::override],
+
               std::forward<decltype(args)>(args)...);
       host_ = injector.template create<std::shared_ptr<Host>>();
 
@@ -274,7 +275,7 @@ namespace libp2p::regression {
     signals.async_wait(
         [&io](const boost::system::error_code &, int) { io->stop(); });
 
-    io->run_for(2000ms);
+    io->run_for(3000ms);
   }
 
 }  // namespace libp2p::regression
@@ -357,6 +358,9 @@ void testStreamsGetNotifiedAboutEOF(InjectorArgs &&... args) {
   EXPECT_TRUE(server_read);
   EXPECT_TRUE(client_read);
   EXPECT_TRUE(eof_passed);
+
+  if (server) server->stop();
+  if (client) client->stop();
 }
 
 template <typename... InjectorArgs>
@@ -427,7 +431,7 @@ void testOutboundConnectionAcceptsStreams(InjectorArgs &&... args) {
   };
 
   auto listen_to =
-      libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40000").value();
+      libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40001").value();
 
   io = std::make_shared<boost::asio::io_context>();
 
@@ -447,6 +451,9 @@ void testOutboundConnectionAcceptsStreams(InjectorArgs &&... args) {
   EXPECT_TRUE(client_accepted_stream);
   EXPECT_TRUE(client_read_from_accepted_stream);
   EXPECT_TRUE(server_read_from_connected_stream);
+
+  if (server) server->stop();
+  if (client) client->stop();
 }
 
 TEST(StreamsRegression, YamuxStreamsGetNotifiedAboutEOF) {
@@ -461,25 +468,38 @@ TEST(StreamsRegression, MplexStreamsGetNotifiedAboutEOF) {
           .template to<libp2p::muxer::Mplex>()[boost::di::override]);
 }
 
-TEST(StreamsRegression, OutboundYamuxConnectionAcceptsStreams) {
-  testOutboundConnectionAcceptsStreams(
-      boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
-          .template to<libp2p::muxer::Yamux>()[boost::di::override]);
-}
-
 TEST(StreamsRegression, OutboundMplexConnectionAcceptsStreams) {
   testOutboundConnectionAcceptsStreams(
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
           .template to<libp2p::muxer::Mplex>()[boost::di::override]);
 }
 
+TEST(StreamsRegression, OutboundYamuxConnectionAcceptsStreams) {
+  testOutboundConnectionAcceptsStreams(
+      boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
+          .template to<libp2p::muxer::Yamux>()[boost::di::override]);
+}
+
+TEST(StreamsRegression, OutboundYamuxTLSConnectionAcceptsStreams) {
+  testOutboundConnectionAcceptsStreams(
+      boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
+          .template to<libp2p::muxer::Yamux>()[boost::di::override],
+      libp2p::injector::useSecurityAdaptors<libp2p::security::TlsAdaptor>());
+}
+
+TEST(StreamsRegression, YamuxTLSStreamsGetNotifiedAboutEOF) {
+  testStreamsGetNotifiedAboutEOF(
+      boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
+          .template to<libp2p::muxer::Yamux>()[boost::di::override],
+      libp2p::injector::useSecurityAdaptors<libp2p::security::TlsAdaptor>());
+}
+
 int main(int argc, char *argv[]) {
   if (std::getenv("TRACE_DEBUG") != nullptr
       || (argc > 1 && std::string("trace") == argv[1])) {
-    auto log = libp2p::common::createLogger("debug");
-    log->set_level(spdlog::level::trace);
+    spdlog::set_level(spdlog::level::trace);
   } else {
-    spdlog::set_level(spdlog::level::err);
+    spdlog::set_level(spdlog::level::info);
   }
 
   ::testing::InitGoogleTest(&argc, argv);

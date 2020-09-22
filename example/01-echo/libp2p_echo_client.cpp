@@ -8,6 +8,7 @@
 #include <memory>
 
 #include <libp2p/common/literals.hpp>
+#include <libp2p/common/logger.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/protocol/echo.hpp>
@@ -18,6 +19,12 @@ int main(int argc, char *argv[]) {
   using libp2p::crypto::PrivateKey;
   using libp2p::crypto::PublicKey;
   using libp2p::common::operator""_unhex;
+
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
+    spdlog::set_level(spdlog::level::trace);
+  } else {
+    spdlog::set_level(spdlog::level::err);
+  }
 
   if (argc != 2) {
     std::cerr << "please, provide an address of the server\n";

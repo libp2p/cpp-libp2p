@@ -169,6 +169,9 @@ namespace libp2p::protocol_muxer {
     // if we receive na message, send next protocol we consider; if none is
     // left, negotiation failed
     auto protos = connection_state->left_protocols;
+
+    TRACE("Multiselect::handleNaMsg trying {}", fmt::join(*protos, ", "));
+
     protos->erase(protos->begin());
     if (protos->empty()) {
       return negotiationRoundFailed(connection_state,

@@ -63,6 +63,11 @@ namespace libp2p::protocol::example::utility {
     debug_logger->set_level(spdlog_level);
     logger->set_level(spdlog_level);
 
+    if (spdlog_level == spdlog::level::trace) {
+      // for all loggers
+      spdlog::set_level(spdlog_level);
+    }
+
     return logger;
   }
 
