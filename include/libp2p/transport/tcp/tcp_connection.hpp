@@ -13,6 +13,8 @@
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 
+namespace libp2p::security { class TlsAdaptor; }
+
 namespace libp2p::transport {
 
   /**
@@ -97,6 +99,8 @@ namespace libp2p::transport {
 
     boost::system::error_code handle_errcode(
         const boost::system::error_code &e) noexcept;
+
+    friend class security::TlsAdaptor;
   };
 }  // namespace libp2p::transport
 

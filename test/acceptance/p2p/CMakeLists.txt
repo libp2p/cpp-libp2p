@@ -29,5 +29,6 @@ target_link_libraries(protocol_streams_regression
     p2p_inmem_address_repository
     p2p_inmem_key_repository
     p2p_inmem_protocol_repository
+    p2p_tls
     )
 
