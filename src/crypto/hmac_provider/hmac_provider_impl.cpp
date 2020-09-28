@@ -189,4 +189,8 @@ namespace libp2p::crypto::hmac {
       initialized_ = false;
     }
   }
+
+  HashType HmacProviderCtrImpl::hashType() const {
+    return hash_type_;
+  }
 }  // namespace libp2p::crypto::hmac

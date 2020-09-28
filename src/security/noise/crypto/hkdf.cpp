@@ -17,17 +17,24 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::noise, HKDFError, e) {
 
 namespace libp2p::security::noise {
 
+  ByteArray span2vec(gsl::span<const uint8_t> span) {
+    ByteArray vec;
+    vec.resize(span.size());
+    std::copy_n(span.begin(), span.size(), vec.begin());
+    return vec;
+  }
+
   using HMAC = crypto::hmac::HmacProviderCtrImpl;
 
-  outcome::result<HKDFResult> hkdf(HashType hash_type, size_t outputs,
-                                   const ByteArray &chaining_key,
-                                   const ByteArray &input_key_material) {
+  outcome::result<HKDFResult> hkdf(
+      HashType hash_type, size_t outputs, gsl::span<const uint8_t> chaining_key,
+      gsl::span<const uint8_t> input_key_material) {
     if (0 == outputs or outputs > 3) {
       return HKDFError::ILLEGAL_OUTPUTS_NUMBER;
     }
     HKDFResult result;
 
-    HMAC temp_mac{hash_type, chaining_key};
+    HMAC temp_mac{hash_type, span2vec(chaining_key)};
     OUTCOME_TRY(temp_mac.write(input_key_material));
     OUTCOME_TRY(temp_key, temp_mac.digest());
 

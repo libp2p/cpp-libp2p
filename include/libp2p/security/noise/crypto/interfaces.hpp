@@ -11,10 +11,15 @@
 #include <boost/optional.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
+#include <libp2p/crypto/common_functions.hpp>
 #include <libp2p/crypto/hash.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::security::noise {
+
+  using Key32 = std::array<uint8_t, 32>;
+  using libp2p::crypto::asArray;
+  using libp2p::crypto::asVector;
 
   using crypto::common::HashType;
   using libp2p::common::ByteArray;
@@ -28,9 +33,11 @@ namespace libp2p::security::noise {
     ILLEGAL_OUTPUTS_NUMBER = 1,
   };
 
+  ByteArray span2vec(gsl::span<const uint8_t> span);
+
   outcome::result<HKDFResult> hkdf(HashType hash_type, size_t outputs,
-                                   const ByteArray &chaining_key,
-                                   const ByteArray &input_key_material);
+                                   gsl::span<const uint8_t> chaining_key,
+                                   gsl::span<const uint8_t> input_key_material);
 
   struct DHKey {
     ByteArray priv;
@@ -53,6 +60,45 @@ namespace libp2p::security::noise {
 
     /// algorithm identifier used in Noise handshake
     virtual std::string dhName() const = 0;
+  };
+
+  class NamedHash {
+   public:
+    virtual ~NamedHash() = default;
+
+    virtual std::shared_ptr<crypto::Hash> hash() = 0;
+
+    virtual std::string hashName() const = 0;
+  };
+
+  // has to be initialized with a key
+  class AEADCipher {
+   public:
+    virtual ~AEADCipher() = default;
+
+    virtual outcome::result<ByteArray> encrypt(
+        uint64_t nonce, gsl::span<const uint8_t> plaintext,
+        gsl::span<const uint8_t> aad) = 0;
+
+    virtual outcome::result<ByteArray> decrypt(
+        uint64_t nonce, gsl::span<const uint8_t> ciphertext,
+        gsl::span<const uint8_t> aad) = 0;
+  };
+
+  class NamedAEADCipher {
+   public:
+    virtual ~NamedAEADCipher() = default;
+
+    virtual std::shared_ptr<AEADCipher> cipher(Key32 key) = 0;
+
+    virtual std::string cipherName() const = 0;
+  };
+
+  class CipherSuite : public DiffieHellman,
+                      public NamedHash,
+                      public NamedAEADCipher {
+   public:
+    virtual ~CipherSuite() = default;
   };
 
 }  // namespace libp2p::security::noise

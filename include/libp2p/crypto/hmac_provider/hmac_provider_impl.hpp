@@ -27,7 +27,9 @@ namespace libp2p::crypto::hmac {
 
     size_t blockSize() const override;
 
-   private:
+    HashType hashType() const override;
+
+  private:
     void sinkCtx();
 
     HashType hash_type_;

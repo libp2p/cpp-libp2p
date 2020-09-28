@@ -7,9 +7,12 @@
 #define LIBP2P_SRC_CRYPTO_HASHER_HPP
 
 #include <gsl/span>
+#include <libp2p/crypto/common.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto {
+
+  using libp2p::crypto::common::HashType;
 
   class Hash {
    public:
@@ -33,6 +36,9 @@ namespace libp2p::crypto {
 
     /// block size in bytes for the most optimal hash update via write method
     virtual size_t blockSize() const = 0;
+
+    /// runtime identifiable hasher type
+    virtual HashType hashType() const = 0;
   };
 }  // namespace libp2p::crypto
 
