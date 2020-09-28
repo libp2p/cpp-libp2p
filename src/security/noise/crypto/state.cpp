@@ -104,14 +104,53 @@ namespace libp2p::security::noise {
     return outcome::success();
   }
 
-  outcome::result<ByteArray> SymmetricState::encryptAndHash(gsl::span<const uint8_t> plaintext) {
-    if (not has_key_) {
-      OUTCOME_TRY(mixHash(plaintext));
-      return span2vec(plaintext);
-    }
-    OUTCOME_TRY(ciphertext, encrypt(plaintext, h_));
-    OUTCOME_TRY(mixHash())
+//  outcome::result<ByteArray> SymmetricState::encryptAndHash(gsl::span<const uint8_t> plaintext) {
+//      if (not has_key_) {
+//          OUTCOME_TRY(mixHash(plaintext));
+//          return span2vec(plaintext);
+//      }
+//      OUTCOME_TRY(ciphertext, encrypt(plaintext, h_));
+//      OUTCOME_TRY(mixHash())
+//  }
 
+  outcome::result<SymmetricState::CSPair> SymmetricState::split() {
+    OUTCOME_TRY(hkdf_res,
+                hkdf(cipher_suite_->hash()->hashType(), 2, chaining_key_, {}));
+    BOOST_ASSERT(hkdf_res.one.size() == key_.size());
+    std::shared_ptr<CipherState> first_state = std::make_shared<CipherState>(
+        cipher_suite_, asArray<Key32>(hkdf_res.one));
+    BOOST_ASSERT(hkdf_res.two.size() == key_.size());
+    std::shared_ptr<CipherState> second_state = std::make_shared<CipherState>(
+        cipher_suite_, asArray<Key32>(hkdf_res.two));
+    first_state->cipher_ = cipher_suite_->cipher(first_state->key_);
+    second_state->cipher_ = cipher_suite_->cipher(second_state->key_);
+    return std::make_pair(std::move(first_state), std::move(second_state));
+  }
+
+  void SymmetricState::checkpoint() {
+    if (chaining_key_.size() > prev_ck_.capacity()
+        || prev_ck_.size() > chaining_key_.size()) {
+      prev_ck_.resize(chaining_key_.size());
+    }
+    std::copy(chaining_key_.begin(), chaining_key_.end(), prev_ck_.begin());
+
+    if (h_.size() > prev_h_.capacity() || prev_h_.size() > h_.size()) {
+      prev_h_.resize(h_.size());
+    }
+    std::copy(h_.begin(), h_.end(), prev_h_.begin());
+  }
+
+  void SymmetricState::rollback() {
+    if (prev_ck_.size() > chaining_key_.capacity()
+        || chaining_key_.size() > prev_ck_.size()) {
+      chaining_key_.resize(prev_ck_.size());
+    }
+    std::copy(prev_ck_.begin(), prev_ck_.end(), chaining_key_.begin());
+
+    if (prev_h_.size() > h_.capacity() || h_.size() > prev_h_.size()) {
+      h_.resize(prev_h_.size());
+    }
+    std::copy(prev_h_.begin(), prev_h_.end(), h_.begin());
   }
 
 }  // namespace libp2p::security::noise

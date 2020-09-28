@@ -34,6 +34,9 @@ namespace libp2p::security::noise {
 
   class SymmetricState : public CipherState {
    public:
+    using CSPair =
+        std::pair<std::shared_ptr<CipherState>, std::shared_ptr<CipherState>>;
+
     outcome::result<void> initializeSymmetric(
         gsl::span<const uint8_t> handshake_name);
 
@@ -45,6 +48,12 @@ namespace libp2p::security::noise {
 
     outcome::result<ByteArray> encryptAndHash(
         gsl::span<const uint8_t> plaintext);
+
+    outcome::result<CSPair> split();
+
+    void checkpoint();
+
+    void rollback();
 
    private:
     // names below has come from go-libp2p-noise :(
