@@ -7,6 +7,7 @@
 #define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_STATE_HPP
 
 #include <libp2p/security/noise/crypto/interfaces.hpp>
+#include <libp2p/security/noise/crypto/message_patterns.hpp>
 
 namespace libp2p::security::noise {
 
@@ -84,25 +85,6 @@ namespace libp2p::security::noise {
     ByteArray hash_;               // h
     ByteArray prev_chaining_key_;  // prev_ck
     ByteArray prev_hash_;          // prev_h
-  };
-
-  enum class MessagePattern : int {  // int required here
-    S,
-    E,
-    DHEE,
-    DHES,
-    DHSE,
-    DHSS,
-    PSK  // no elements anymore
-  };
-
-  using MessagePatterns = std::vector<std::vector<MessagePattern>>;
-
-  struct HandshakePattern {
-    std::string name;
-    std::vector<MessagePattern> initiatorPreMessages;
-    std::vector<MessagePattern> responderPreMessages;
-    MessagePatterns messages;
   };
 
   constexpr size_t kMaxMsgLen = 65535;
