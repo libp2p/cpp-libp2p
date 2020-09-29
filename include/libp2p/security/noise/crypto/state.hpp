@@ -16,6 +16,11 @@ namespace libp2p::security::noise {
     WRONG_KEY32_SIZE,
     EMPTY_HANDSHAKE_NAME,
     WRONG_PRESHARED_KEY_SIZE,
+    INITIALIZATION_ERROR,
+    UNEXPECTED_WRITE_CALL,
+    NO_HANDSHAKE_MESSAGE,
+    LONG_MESSAGE,
+    NO_PUBLIC_KEY,
   };
 
   outcome::result<Key32> bytesToKey32(gsl::span<const uint8_t> key);
@@ -78,6 +83,8 @@ namespace libp2p::security::noise {
 
     void rollback();
 
+    ByteArray hash() const;
+
    private:
     // names below has come from go-libp2p-noise :(
     bool has_key_ = false;         // has_k
@@ -118,17 +125,19 @@ namespace libp2p::security::noise {
         gsl::span<const uint8_t> precompiled_out,
         gsl::span<const uint8_t> message);
 
-    ByteArray channelBinding() const;
+    outcome::result<ByteArray> channelBinding() const;
 
-    ByteArray remotePeerStaticPubkey() const;
+    outcome::result<ByteArray> remotePeerStaticPubkey() const;
 
-    ByteArray remotePeerEphemeralPubkey() const;
+    outcome::result<ByteArray> remotePeerEphemeralPubkey() const;
 
-    DHKey localPeerEphemeralKey() const;
+    outcome::result<DHKey> localPeerEphemeralKey() const;
 
-    int messageIndex() const;
+    outcome::result<int> messageIndex() const;
 
    private:
+    outcome::result<void> isInitialized() const;
+
     bool is_initialized_ = false;
     std::unique_ptr<SymmetricState> symmetric_state_;  // ss
     DHKey local_static_kp_;                            // s
