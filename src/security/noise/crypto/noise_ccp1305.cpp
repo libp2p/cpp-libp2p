@@ -8,14 +8,14 @@
 namespace libp2p::security::noise {
 
   outcome::result<ByteArray> CCP1305Impl::encrypt(
-      uint64_t nonce, gsl::span<const uint8_t> plaintext,
-      gsl::span<const uint8_t> aad) {
+      gsl::span<const uint8_t> precompiled_out, uint64_t nonce,
+      gsl::span<const uint8_t> plaintext, gsl::span<const uint8_t> aad) {
     return std::errc::not_supported;
   }
 
   outcome::result<ByteArray> CCP1305Impl::decrypt(
-      uint64_t nonce, gsl::span<const uint8_t> ciphertext,
-      gsl::span<const uint8_t> aad) {
+      gsl::span<const uint8_t> precompiled_out, uint64_t nonce,
+      gsl::span<const uint8_t> ciphertext, gsl::span<const uint8_t> aad) {
     return std::errc::not_supported;
   }
 }  // namespace libp2p::security::noise

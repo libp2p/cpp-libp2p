@@ -14,14 +14,15 @@ namespace libp2p::security::noise {
    public:
     ~CCP1305Impl() override = default;
 
-    outcome::result<ByteArray> encrypt(uint64_t nonce,
+    outcome::result<ByteArray> encrypt(gsl::span<const uint8_t> precompiled_out,
+                                       uint64_t nonce,
                                        gsl::span<const uint8_t> plaintext,
                                        gsl::span<const uint8_t> aad) override;
 
-    outcome::result<ByteArray> decrypt(uint64_t nonce,
+    outcome::result<ByteArray> decrypt(gsl::span<const uint8_t> precompiled_out,
+                                       uint64_t nonce,
                                        gsl::span<const uint8_t> ciphertext,
                                        gsl::span<const uint8_t> aad) override;
-
   };
 }  // namespace libp2p::security::noise
 
