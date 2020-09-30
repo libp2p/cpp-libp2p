@@ -14,8 +14,7 @@ namespace libp2p::protocol::gossip {
 
   RemoteSubscriptions::RemoteSubscriptions(const Config &config,
                                            Connectivity &connectivity,
-                                           Scheduler &scheduler,
-                                           SubLogger &log)
+                                           Scheduler &scheduler, SubLogger &log)
       : config_(config),
         connectivity_(connectivity),
         scheduler_(scheduler),
@@ -105,12 +104,13 @@ namespace libp2p::protocol::gossip {
   }
 
   void RemoteSubscriptions::onPrune(const PeerContextPtr &peer,
-                                    const TopicId &topic) {
+                                    const TopicId &topic,
+                                    uint64_t backoff_time) {
     auto res = getItem(topic, false);
     if (!res) {
       return;
     }
-    res.value().onPrune(peer);
+    res.value().onPrune(peer, scheduler_.now() + backoff_time * 1000);
   }
 
   void RemoteSubscriptions::onNewMessage(

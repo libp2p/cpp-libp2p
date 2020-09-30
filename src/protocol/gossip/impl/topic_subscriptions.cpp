@@ -91,14 +91,24 @@ namespace libp2p::protocol::gossip {
       // add/remove mesh members according to desired network density D
       size_t sz = mesh_peers_.size();
 
-      if (sz < config_.D) {
-        auto peers = subscribed_peers_.selectRandomPeers(config_.D - sz);
+      if (sz < config_.D_min) {
+        auto peers = subscribed_peers_.selectRandomPeers(config_.D_min - sz);
         for (auto &p : peers) {
+
+          auto it = dont_bother_until_.find(p);
+          if (it != dont_bother_until_.end()) {
+            if (it->second < now) {
+              dont_bother_until_.erase(it);
+            } else {
+              continue;
+            }
+          }
+
           addToMesh(p);
           subscribed_peers_.erase(p->peer_id);
         }
-      } else if (sz > config_.D) {
-        auto peers = mesh_peers_.selectRandomPeers(sz - config_.D);
+      } else if (sz > config_.D_max) {
+        auto peers = mesh_peers_.selectRandomPeers(sz - config_.D_max);
         for (auto &p : peers) {
           removeFromMesh(p);
           mesh_peers_.erase(p->peer_id);
@@ -153,6 +163,7 @@ namespace libp2p::protocol::gossip {
     if (!res) {
       res = mesh_peers_.erase(p->peer_id);
     }
+    dont_bother_until_.erase(p);
   }
 
   void TopicSubscriptions::onGraft(const PeerContextPtr &p) {
@@ -178,10 +189,12 @@ namespace libp2p::protocol::gossip {
     }
   }
 
-  void TopicSubscriptions::onPrune(const PeerContextPtr &p) {
+  void TopicSubscriptions::onPrune(const PeerContextPtr &p,
+                                   Time dont_bother_until) {
     mesh_peers_.erase(p->peer_id);
     if (p->subscribed_to.count(topic_) != 0) {
       subscribed_peers_.insert(p);
+      dont_bother_until_.insert({ p, dont_bother_until });
     }
   }
 

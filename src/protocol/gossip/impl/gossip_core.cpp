@@ -109,6 +109,12 @@ namespace libp2p::protocol::gossip {
     local_subscriptions_->forwardEndOfSubscription();
   }
 
+  void GossipCore::setValidator(const TopicId &topic, Validator validator) {
+    assert(validator);
+
+    validators_[topic] = std::move(validator);
+  }
+
   Subscription GossipCore::subscribe(TopicSet topics,
                                      SubscriptionCallback callback) {
     assert(callback);
@@ -127,8 +133,6 @@ namespace libp2p::protocol::gossip {
                                               std::move(data));
 
     msg->topic_ids.assign(topics.begin(), topics.end());
-
-    // TODO(artem): validate msg
 
     MessageId msg_id = createMessageId(*msg);
 
@@ -187,12 +191,13 @@ namespace libp2p::protocol::gossip {
     remote_subscriptions_->onGraft(from, topic);
   }
 
-  void GossipCore::onPrune(const PeerContextPtr &from, const TopicId &topic) {
+  void GossipCore::onPrune(const PeerContextPtr &from, const TopicId &topic,
+                           uint64_t backoff_time) {
     assert(started_);
 
     log_.debug("prune from peer {} for topic {}", from->str, topic);
 
-    remote_subscriptions_->onPrune(from, topic);
+    remote_subscriptions_->onPrune(from, topic, backoff_time);
   }
 
   void GossipCore::onTopicMessage(const PeerContextPtr &from,
@@ -206,7 +211,24 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    // TODO(artem): validate
+    // validate message. If no validator is set then we
+    // suppose that the message is valid (we might not know topic details)
+    bool valid = true;
+
+    if (!validators_.empty()) {
+      for (const auto &topic : msg->topic_ids) {
+        auto it = validators_.find(topic);
+        if (it != validators_.end()) {
+          valid = it->second(msg->from, msg->data);
+          break;
+        }
+      }
+    }
+
+    if (!valid) {
+      log_.debug("message validation failed");
+      return;
+    }
 
     MessageId msg_id = createMessageId(*msg);
     if (!msg_cache_.insert(msg, msg_id)) {
@@ -249,12 +271,11 @@ namespace libp2p::protocol::gossip {
   void GossipCore::onPeerConnection(bool connected, const PeerContextPtr &ctx) {
     assert(started_);
 
-
     if (connected) {
       log_.debug("peer {} connected", ctx->str);
       // notify the new peer about all topics we subscribed to
       if (!local_subscriptions_->subscribedTo().empty()) {
-        for (auto &local_sub : local_subscriptions_->subscribedTo()) {
+        for (const auto &local_sub : local_subscriptions_->subscribedTo()) {
           ctx->message_to_send->addSubscription(true, local_sub.first);
         }
         connectivity_->peerIsWritable(ctx, true);

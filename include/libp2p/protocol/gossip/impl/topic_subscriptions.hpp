@@ -48,7 +48,7 @@ namespace libp2p::protocol::gossip {
     void onGraft(const PeerContextPtr &p);
 
     /// Remote peer kicks this host out of its mesh
-    void onPrune(const PeerContextPtr &p);
+    void onPrune(const PeerContextPtr &p, Time dont_bother_until);
 
    private:
     /// Adds a peer to mesh
@@ -75,6 +75,9 @@ namespace libp2p::protocol::gossip {
 
     /// "I have" notifications for new subscribers aka seen messages cache
     std::deque<std::pair<Time, MessageId>> seen_cache_;
+
+    /// Prune backoff times per peer
+    std::unordered_map<PeerContextPtr, Time> dont_bother_until_;
 
     SubLogger &log_;
   };

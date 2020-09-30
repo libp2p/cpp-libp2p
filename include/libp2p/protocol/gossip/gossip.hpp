@@ -13,17 +13,18 @@
 
 #include <boost/optional.hpp>
 
-#include <libp2p/peer/peer_id.hpp>
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/multi/multiaddress.hpp>
+#include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/common/subscription.hpp>
 
 namespace libp2p::protocol::gossip {
 
   /// Gossip pub-sub protocol config
   struct Config {
-    /// Network density factor for gossip meshes
-    size_t D = 6;
+    /// Network density factors for gossip meshes
+    size_t D_min = 5;
+    size_t D_max = 10;
 
     /// Ideal number of connected peers to support the network
     size_t ideal_connections_num = 100;
@@ -83,6 +84,13 @@ namespace libp2p::protocol::gossip {
       const TopicList &topics;
       const ByteArray &data;
     };
+
+    /// Validator of messages arriving from the wire
+    using Validator =
+        std::function<bool(const ByteArray &from, const ByteArray &data)>;
+
+    /// Sets message validator for topic
+    virtual void setValidator(const TopicId &topic, Validator validator) = 0;
 
     /// Empty message means EOS (end of subscription data stream)
     using SubscriptionData = boost::optional<const Message &>;

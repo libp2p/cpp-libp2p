@@ -60,6 +60,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang|Clang|GNU)$")
   add_flag(-Wsign-compare)
   add_flag(-Wtype-limits)            # size_t - size_t >= 0 -> always true
 
+  # suppress warnings if a certain compiler version doesn't know some of the warnings above
+  add_flag(-Wno-unknown-warning-option)
+
   # disable those flags
   add_flag(-Wno-unused-command-line-argument)    # clang: warning: argument unused during compilation: '--coverage' [-Wunused-command-line-argument]
   add_flag(-Wno-unused-parameter)    # prints too many useless warnings

@@ -40,7 +40,8 @@ namespace libp2p::protocol::gossip {
     void onGraft(const PeerContextPtr &peer, const TopicId &topic);
 
     /// Remote peer removes topic from its mesh
-    void onPrune(const PeerContextPtr &peer, const TopicId &topic);
+    void onPrune(const PeerContextPtr &peer, const TopicId &topic,
+                 uint64_t backoff_time);
 
     /// Forwards message to its topics. If 'from' is not set then the message is
     /// published locally

@@ -18,10 +18,9 @@ namespace libp2p::protocol::gossip {
 
     template <typename T>
     bool contains(const std::vector<T> &container, const T &element) {
-      return (container.empty())
-          ? false
-          : (std::find(container.begin(), container.end(), element)
-             != container.end());
+      return !(container.empty())
+          && (std::find(container.begin(), container.end(), element)
+              != container.end());
     }
 
   }  // namespace
@@ -228,6 +227,8 @@ namespace libp2p::protocol::gossip {
       connected_cb_(true, ctx);
     }
      */
+
+
   }
 
   void Connectivity::dial(const PeerContextPtr &ctx,
@@ -352,7 +353,7 @@ namespace libp2p::protocol::gossip {
     log_.info("inbound stream error='{}', peer={}", event.error().message(),
               from->str);
 
-    // TODO(artem): ban incoming peers for protocol violations etc.
+    // TODO(artem): ban incoming peers for protocol violations etc. - v.1.1
 
     from->reader->close();
     from->reader.reset();

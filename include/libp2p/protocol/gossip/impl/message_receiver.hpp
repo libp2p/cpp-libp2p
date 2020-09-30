@@ -30,8 +30,11 @@ namespace libp2p::protocol::gossip {
     /// Graft request received (gossip mesh control)
     virtual void onGraft(const PeerContextPtr &from, const TopicId &topic) = 0;
 
-    /// Prune request received (gossip mesh control)
-    virtual void onPrune(const PeerContextPtr &from, const TopicId &topic) = 0;
+    /// Prune request received (gossip mesh control).
+    /// the peer must not be bothered with GRAFT requests for at least
+    /// backoff_time seconds
+    virtual void onPrune(const PeerContextPtr &from, const TopicId &topic,
+                         uint64_t backoff_time) = 0;
 
     /// Message received
     virtual void onTopicMessage(const PeerContextPtr &from,

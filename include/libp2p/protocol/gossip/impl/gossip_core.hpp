@@ -9,8 +9,8 @@
 #include <map>
 
 #include <libp2p/host/host.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
+#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/gossip/gossip.hpp>
 #include <libp2p/protocol/gossip/impl/message_cache.hpp>
 #include <libp2p/protocol/gossip/impl/message_receiver.hpp>
@@ -43,6 +43,7 @@ namespace libp2p::protocol::gossip {
         peer::PeerId id, boost::optional<multi::Multiaddress> address) override;
     void start() override;
     void stop() override;
+    void setValidator(const TopicId& topic, Validator validator) override;
     Subscription subscribe(TopicSet topics,
                            SubscriptionCallback callback) override;
     bool publish(const TopicSet &topic, ByteArray data) override;
@@ -54,37 +55,65 @@ namespace libp2p::protocol::gossip {
                  const MessageId &msg_id) override;
     void onIWant(const PeerContextPtr &from, const MessageId &msg_id) override;
     void onGraft(const PeerContextPtr &from, const TopicId &topic) override;
-    void onPrune(const PeerContextPtr &from, const TopicId &topic) override;
+    void onPrune(const PeerContextPtr &from, const TopicId &topic,
+                 uint64_t backoff_time) override;
     void onTopicMessage(const PeerContextPtr &from,
                         TopicMessage::Ptr msg) override;
     void onMessageEnd(const PeerContextPtr &from) override;
 
-    /// Periodic heartbeat
+    /// Periodic heartbeat timer fn
     void onHeartbeat();
 
-    /// Lucal host subscribed or unsubscribed from topic
+    /// Local host subscribed or unsubscribed from topic
     void onLocalSubscriptionChanged(bool subscribe, const TopicId &topic);
 
     /// Remote peer connected or disconnected
     void onPeerConnection(bool connected, const PeerContextPtr &ctx);
 
+    /// Configuration parameters
     const Config config_;
+
+    /// Bootstrap peers to dial to
     std::unordered_map<peer::PeerId, boost::optional<multi::Multiaddress>>
         bootstrap_peers_;
+
+    /// Scheduler for timers and async calls
     std::shared_ptr<Scheduler> scheduler_;
+
+    /// Host (interface to libp2p network)
     std::shared_ptr<Host> host_;
+
+    /// This peer's id
     peer::PeerId local_peer_id_;
+
+    /// Message cache w/expiration
     MessageCache msg_cache_;
+
+    /// Local subscriptions manager (this host subscribed to topics)
     std::shared_ptr<LocalSubscriptions> local_subscriptions_;
+
+    /// Remote subscriptions manager (other peers subscribed to topics)
     std::shared_ptr<RemoteSubscriptions> remote_subscriptions_;
+
+    /// Remote messages validators by topic
+    std::unordered_map<TopicId, Validator> validators_;
+
+    /// Network part of gossip component
     std::shared_ptr<Connectivity> connectivity_;
+
+    /// Local {un}subscribe changes to be broadcasted to peers
     std::map<TopicId, bool> broadcast_on_heartbeat_;
+
+    /// Incremented msg sequence number
     uint64_t msg_seq_;
+
+    /// True if started and active
     bool started_ = false;
 
     /// Heartbeat timer handle
     Scheduler::Handle heartbeat_timer_;
 
+    /// Logger
     SubLogger log_;
   };
 

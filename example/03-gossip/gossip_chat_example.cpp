@@ -46,6 +46,7 @@ int main(int argc, char *argv[]) {
   // overriding default config to see local messages as well (echo mode)
   libp2p::protocol::gossip::Config config;
   config.echo_forward_mode = true;
+  //config.protocol_version = "/floodsub/1.0.0"; //"/meshsub/1.1.0";
 
   // injector creates and ties dependent objects
   auto injector = libp2p::injector::makeGossipInjector(
