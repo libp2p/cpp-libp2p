@@ -16,11 +16,14 @@ namespace libp2p::security::noise {
     WRONG_KEY32_SIZE,
     EMPTY_HANDSHAKE_NAME,
     WRONG_PRESHARED_KEY_SIZE,
-    INITIALIZATION_ERROR,
+    NOT_INITIALIZED,
     UNEXPECTED_WRITE_CALL,
+    UNEXPECTED_READ_CALL,
     NO_HANDSHAKE_MESSAGE,
-    LONG_MESSAGE,
+    MESSAGE_TOO_LONG,
+    MESSAGE_TOO_SHORT,
     NO_PUBLIC_KEY,
+    REMOTE_KEY_ALREADY_SET,
   };
 
   outcome::result<Key32> bytesToKey32(gsl::span<const uint8_t> key);
@@ -85,6 +88,8 @@ namespace libp2p::security::noise {
 
     ByteArray hash() const;
 
+    bool hasKey() const;
+
    private:
     // names below has come from go-libp2p-noise :(
     bool has_key_ = false;         // has_k
@@ -137,6 +142,34 @@ namespace libp2p::security::noise {
 
    private:
     outcome::result<void> isInitialized() const;
+
+    outcome::result<void> writeMessageE(ByteArray &out);
+
+    outcome::result<void> writeMessageS(ByteArray &out);
+
+    outcome::result<void> writeMessageDHEE();
+
+    outcome::result<void> writeMessageDHES();
+
+    outcome::result<void> writeMessageDHSE();
+
+    outcome::result<void> writeMessageDHSS();
+
+    outcome::result<void> writeMessagePSK();
+
+    outcome::result<void> readMessageE(ByteArray &message);
+
+    outcome::result<void> readMessageS(ByteArray &message);
+
+    outcome::result<void> readMessageDHEE();
+
+    outcome::result<void> readMessageDHES();
+
+    outcome::result<void> readMessageDHSE();
+
+    outcome::result<void> readMessageDHSS();
+
+    outcome::result<void> readMessagePSK();
 
     bool is_initialized_ = false;
     std::unique_ptr<SymmetricState> symmetric_state_;  // ss
