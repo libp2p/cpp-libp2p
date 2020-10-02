@@ -6,6 +6,8 @@
 #ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_STATE_HPP
 #define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_STATE_HPP
 
+#include <boost/optional.hpp>
+
 #include <libp2p/security/noise/crypto/interfaces.hpp>
 #include <libp2p/security/noise/crypto/message_patterns.hpp>
 
@@ -101,6 +103,42 @@ namespace libp2p::security::noise {
 
   constexpr size_t kMaxMsgLen = 65535;
 
+  class HandshakeStateConfig {
+   public:
+    HandshakeStateConfig(std::shared_ptr<CipherSuite> cipher_suite,
+                         HandshakePattern pattern, bool is_initiator,
+                         DHKey local_static_keypair);
+
+    HandshakeStateConfig &setPrologue(gsl::span<const uint8_t> prologue);
+
+    HandshakeStateConfig &setPresharedKey(gsl::span<const uint8_t> key,
+                                          int placement);
+
+    HandshakeStateConfig &setLocalEphemeralKeypair(DHKey keypair);
+
+    HandshakeStateConfig &setRemoteStaticPubkey(gsl::span<const uint8_t> key);
+
+    HandshakeStateConfig &setRemoteEphemeralPubkey(
+        gsl::span<const uint8_t> key);
+
+  private:
+    template <typename T>
+    using opt = boost::optional<T>;
+    friend class HandshakeState;
+
+    std::shared_ptr<CipherSuite> cipher_suite_;
+    HandshakePattern pattern_;
+    bool is_initiator_;
+    DHKey local_static_keypair_;
+    // optional fields go below
+    opt<ByteArray> prologue_;
+    opt<ByteArray> preshared_key_;
+    opt<int> preshared_key_placement_;
+    opt<DHKey> local_ephemeral_keypair_;
+    opt<ByteArray> remote_static_pubkey_;
+    opt<ByteArray> remote_ephemeral_pubkey_;
+  };
+
   class HandshakeState {
    public:
     struct MessagingResult {
@@ -111,16 +149,7 @@ namespace libp2p::security::noise {
 
     HandshakeState() = default;
 
-    outcome::result<void> init(std::shared_ptr<CipherSuite> cipher_suite,
-                               const HandshakePattern &pattern,
-                               DHKey static_keypair, DHKey ephemeral_keypair,
-                               gsl::span<const uint8_t> remote_static_pubkey,
-                               gsl::span<const uint8_t> remote_ephemeral_pubkey,
-                               gsl::span<const uint8_t> preshared_key,
-                               int preshared_key_placement,
-                               MessagePatterns message_patterns,
-                               bool is_initiator,
-                               gsl::span<const uint8_t> prologue);
+    outcome::result<void> init(HandshakeStateConfig config);
 
     outcome::result<MessagingResult> writeMessage(
         gsl::span<const uint8_t> precompiled_out,

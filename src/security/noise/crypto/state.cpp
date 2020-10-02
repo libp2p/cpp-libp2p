@@ -225,24 +225,77 @@ namespace libp2p::security::noise {
     return has_key_;
   }
 
-  outcome::result<void> HandshakeState::init(
-      std::shared_ptr<CipherSuite> cipher_suite,
-      const HandshakePattern &pattern, DHKey static_keypair,
-      DHKey ephemeral_keypair, gsl::span<const uint8_t> remote_static_pubkey,
-      gsl::span<const uint8_t> remote_ephemeral_pubkey,
-      gsl::span<const uint8_t> preshared_key, int preshared_key_placement,
-      MessagePatterns message_patterns, bool is_initiator,
+  // Handshake state config
+
+  HandshakeStateConfig::HandshakeStateConfig(
+      std::shared_ptr<CipherSuite> cipher_suite, HandshakePattern pattern,
+      bool is_initiator, DHKey local_static_keypair)
+      : cipher_suite_{std::move(cipher_suite)},
+        pattern_{std::move(pattern)},
+        is_initiator_{is_initiator},
+        local_static_keypair_{std::move(local_static_keypair)} {}
+
+  HandshakeStateConfig &HandshakeStateConfig::setPrologue(
       gsl::span<const uint8_t> prologue) {
-    local_static_kp_ = std::move(static_keypair);
-    local_ephemeral_kp_ = std::move(ephemeral_keypair);
-    remote_static_pubkey_ = spanToVec(remote_static_pubkey);
-    remote_ephemeral_pubkey_ = spanToVec(remote_ephemeral_pubkey);
-    preshared_key_ = spanToVec(preshared_key);
-    message_patterns_ = std::move(message_patterns);
-    should_write_ = is_initiator;
-    is_initiator_ = is_initiator;
+    ByteArray data(prologue.begin(), prologue.end());
+    prologue_ = std::move(data);
+    return *this;
+  }
+
+  HandshakeStateConfig &HandshakeStateConfig::setPresharedKey(
+      gsl::span<const uint8_t> key, int placement) {
+    ByteArray data(key.begin(), key.end());
+    preshared_key_ = std::move(data);
+    preshared_key_placement_ = placement;
+    return *this;
+  }
+
+  HandshakeStateConfig &HandshakeStateConfig::setLocalEphemeralKeypair(
+      DHKey keypair) {
+    local_ephemeral_keypair_ = std::move(keypair);
+    return *this;
+  }
+
+  HandshakeStateConfig &HandshakeStateConfig::setRemoteStaticPubkey(
+      gsl::span<const uint8_t> key) {
+    ByteArray data(key.begin(), key.end());
+    remote_static_pubkey_ = std::move(data);
+    return *this;
+  }
+
+  HandshakeStateConfig &HandshakeStateConfig::setRemoteEphemeralPubkey(
+      gsl::span<const uint8_t> key) {
+    ByteArray data(key.begin(), key.end());
+    remote_ephemeral_pubkey_ = std::move(data);
+    return *this;
+  }
+
+  // Handshake state
+
+  outcome::result<void> HandshakeState::init(HandshakeStateConfig config) {
+    local_static_kp_ = std::move(config.local_static_keypair_);
+    message_patterns_ = std::move(config.pattern_.messages);
+    is_initiator_ = config.is_initiator_;
+    should_write_ = is_initiator_;
+    if (config.local_ephemeral_keypair_) {
+      local_ephemeral_kp_ = std::move(config.local_ephemeral_keypair_.value());
+    }
+    if (config.remote_static_pubkey_) {
+      remote_static_pubkey_ = std::move(config.remote_static_pubkey_.value());
+    }
+    if (config.remote_ephemeral_pubkey_) {
+      remote_ephemeral_pubkey_ =
+          std::move(config.remote_ephemeral_pubkey_.value());
+    }
+    if (config.preshared_key_) {
+      preshared_key_ = std::move(config.preshared_key_.value());
+    }
     symmetric_state_ =
-        std::make_unique<SymmetricState>(std::move(cipher_suite));
+        std::make_unique<SymmetricState>(std::move(config.cipher_suite_));
+    int preshared_key_placement{0};
+    if (config.preshared_key_placement_) {
+      preshared_key_placement = config.preshared_key_placement_.value();
+    }
     std::string psk_modifier;
     if (not preshared_key_.empty()) {
       if (32 != preshared_key_.size()) {
@@ -258,14 +311,18 @@ namespace libp2p::security::noise {
       }
     }
     std::stringstream ss;
-    ss << "Noise_" << pattern.name << psk_modifier << "_"
+    ss << "Noise_" << config.pattern_.name << psk_modifier << "_"
        << symmetric_state_->cipherSuite()->name();
     auto handshake_name_str = ss.str();
     ByteArray handshake_name_bytes(handshake_name_str.begin(),
                                    handshake_name_str.end());
     OUTCOME_TRY(symmetric_state_->initializeSymmetric(handshake_name_bytes));
+    ByteArray prologue;
+    if (config.prologue_) {
+      prologue = std::move(config.prologue_.value());
+    }
     OUTCOME_TRY(symmetric_state_->mixHash(prologue));
-    for (const auto &m : pattern.initiatorPreMessages) {
+    for (const auto &m : config.pattern_.initiatorPreMessages) {
       if (is_initiator_ and MessagePattern::S == m) {
         OUTCOME_TRY(symmetric_state_->mixHash(local_static_kp_.pub));
       } else if (is_initiator_ and MessagePattern::E == m) {
@@ -276,7 +333,7 @@ namespace libp2p::security::noise {
         OUTCOME_TRY(symmetric_state_->mixHash(remote_ephemeral_pubkey_));
       }
     }
-    for (const auto &m : pattern.responderPreMessages) {
+    for (const auto &m : config.pattern_.responderPreMessages) {
       if (not is_initiator_ and MessagePattern::S == m) {
         OUTCOME_TRY(symmetric_state_->mixHash(local_static_kp_.pub));
       } else if (not is_initiator_ and MessagePattern::E == m) {
