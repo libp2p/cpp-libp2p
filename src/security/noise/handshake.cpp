@@ -5,7 +5,7 @@
 
 #include <libp2p/security/noise/handshake.hpp>
 
-#include <libp2p/crypto/x25519_provider/x25519_provider_impl.hpp>
+#include <libp2p/common/byteutil.hpp>
 #include <libp2p/security/noise/crypto/cipher_suite.hpp>
 #include <libp2p/security/noise/crypto/noise_ccp1305.hpp>
 #include <libp2p/security/noise/crypto/noise_dh.hpp>
@@ -48,6 +48,22 @@ namespace libp2p::security::noise {
         .identity_sig = std::move(signed_payload),
         .data = {}};
     return noise_marshaller_->marshal(payload);
+  }
+
+  outcome::result<void> Handshake::sendHandshakeMessage(
+      gsl::span<const uint8_t> precompiled_out,
+      gsl::span<const uint8_t> payload) {
+    OUTCOME_TRY(write_result,
+                handshake_state_->writeMessage(
+                    precompiled_out.subspan(0, kLengthPrefixSize), payload));
+    ByteArray buf;
+    buf.reserve(write_result.data.size());
+    common::putUint16BE(buf, write_result.data.size() - kLengthPrefixSize);
+    auto begin = write_result.data.begin();
+    std::advance(begin, kLengthPrefixSize);
+    buf.insert(buf.end(), begin, write_result.data.end());
+    conn_->write(buf, buf.size(),{}); // todo callback
+    return outcome::success();
   }
 
   outcome::result<void> Handshake::runHandshake() {

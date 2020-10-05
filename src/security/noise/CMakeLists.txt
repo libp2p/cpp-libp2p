@@ -16,6 +16,7 @@ libp2p_add_library(p2p_noise
     crypto/noise_ccp1305.cpp
     crypto/message_patterns.cpp
     crypto/cipher_suite.cpp
+    insecure_rw.cpp
     )
 target_link_libraries(p2p_noise
     Boost::boost

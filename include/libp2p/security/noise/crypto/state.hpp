@@ -102,6 +102,8 @@ namespace libp2p::security::noise {
   };
 
   constexpr size_t kMaxMsgLen = 65535;
+  constexpr size_t kLengthPrefixSize = 2;  // in bytes
+
 
   class HandshakeStateConfig {
    public:

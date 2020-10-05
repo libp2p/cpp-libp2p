@@ -13,8 +13,8 @@ namespace libp2p::security::noise {
   class CipherSuiteImpl : public CipherSuite {
    public:
     CipherSuiteImpl(std::shared_ptr<DiffieHellman> dh,
-                std::shared_ptr<NamedHash> hash,
-                std::shared_ptr<NamedAEADCipher> cipher);
+                    std::shared_ptr<NamedHash> hash,
+                    std::shared_ptr<NamedAEADCipher> cipher);
 
     outcome::result<DHKey> generate() override;
 

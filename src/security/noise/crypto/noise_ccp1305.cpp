@@ -18,17 +18,23 @@ namespace libp2p::security::noise {
   outcome::result<ByteArray> CCP1305Impl::encrypt(
       gsl::span<const uint8_t> precompiled_out, uint64_t nonce,
       gsl::span<const uint8_t> plaintext, gsl::span<const uint8_t> aad) {
-    unused(precompiled_out);
     auto n = ccp_->uint64toNonce(nonce);
-    return ccp_->encrypt(n, plaintext, aad);
+    OUTCOME_TRY(enc, ccp_->encrypt(n, plaintext, aad));
+    auto res = spanToVec(precompiled_out);
+    res.reserve(res.size() + enc.size());
+    res.insert(res.end(), enc.begin(), enc.end());
+    return res;
   }
 
   outcome::result<ByteArray> CCP1305Impl::decrypt(
       gsl::span<const uint8_t> precompiled_out, uint64_t nonce,
       gsl::span<const uint8_t> ciphertext, gsl::span<const uint8_t> aad) {
-    unused(precompiled_out);
     auto n = ccp_->uint64toNonce(nonce);
-    return ccp_->decrypt(n, ciphertext, aad);
+    OUTCOME_TRY(dec, ccp_->decrypt(n, ciphertext, aad));
+    auto res = spanToVec(precompiled_out);
+    res.reserve(res.size() + dec.size());
+    res.insert(res.end(), dec.begin(), dec.end());
+    return res;
   }
 
   std::shared_ptr<AEADCipher> NamedCCPImpl::cipher(Key32 key) {
