@@ -13,7 +13,9 @@
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/crypto/x25519_provider.hpp>
+#include <libp2p/security/noise/crypto/state.hpp>
 #include <libp2p/security/noise/handshake_message_marshaller_impl.hpp>
+#include <libp2p/security/noise/insecure_rw.hpp>
 
 namespace libp2p::connection {
   class NoiseConnection : public SecureConnection,
@@ -27,10 +29,10 @@ namespace libp2p::connection {
 
     NoiseConnection(
         // node keypair, need private key to sign payload
-        crypto::KeyPair keypair, std::shared_ptr<RawConnection> raw_connection,
+        std::shared_ptr<RawConnection> raw_connection,
         crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
-        std::shared_ptr<crypto::CryptoProvider> crypto_provider);
+        std::shared_ptr<security::noise::CipherState> cipher);
 
     bool isClosed() const override;
 
@@ -61,24 +63,16 @@ namespace libp2p::connection {
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
    private:
-    outcome::result<void> runHandshake();
-
-    outcome::result<std::vector<uint8_t>> generateHandshakePayload(
-        const crypto::x25519::Keypair &keypair);
-
-    outcome::result<void> sendHandshakeMessage(gsl::span<uint8_t> payload);
-
-    const std::string payload_signature_prefix_ = "noise-libp2p-static-key:";
-
-    crypto::KeyPair keypair_;
     std::shared_ptr<RawConnection> raw_connection_;
     crypto::PublicKey local_;
     crypto::PublicKey remote_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
-    std::shared_ptr<crypto::CryptoProvider> crypto_provider_;
     common::Logger log_ = common::createLogger("NoiseConn");
-    std::unique_ptr<security::noise::HandshakeMessageMarshaller>
-        noise_marshaller_;
+    std::shared_ptr<security::noise::CipherState> cipher_;
+    std::shared_ptr<common::ByteArray> frame_buffer_;
+    std::shared_ptr<security::noise::InsecureReadWriter> framer_;
+    size_t already_read_, already_wrote_;
+    common::ByteArray writing_;
   };
 }  // namespace libp2p::connection
 
