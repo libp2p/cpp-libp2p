@@ -44,6 +44,7 @@ namespace libp2p::security::noise {
    private:
     std::shared_ptr<connection::RawConnection> connection_;
     std::shared_ptr<common::ByteArray> buffer_;
+    common::ByteArray outbuf_;
   };
 
 }  // namespace libp2p::security::noise

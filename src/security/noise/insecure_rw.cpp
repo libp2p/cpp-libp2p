@@ -57,19 +57,18 @@ namespace libp2p::security::noise {
     if (buffer.size() > static_cast<int64_t>(kMaxMsgLen)) {
       return cb(std::errc::message_size);
     }
-    std::shared_ptr<ByteArray> outbuf;
-    auto to_write = kLengthPrefixSize + buffer.size();
-    outbuf->reserve(to_write);
-    common::putUint16BE(*outbuf, buffer.size());
-    outbuf->insert(outbuf->end(), buffer.begin(), buffer.end());
-    auto write_cb = [cb{std::move(cb)}, outbuf,
-                     to_write](outcome::result<size_t> result) {
+    outbuf_.clear();
+    outbuf_.reserve(kLengthPrefixSize + buffer.size());
+    common::putUint16BE(outbuf_, buffer.size());
+    outbuf_.insert(outbuf_.end(), buffer.begin(), buffer.end());
+    auto write_cb = [self{shared_from_this()},
+                     cb{std::move(cb)}](outcome::result<size_t> result) {
       IO_OUTCOME_TRY(written_bytes, result, cb);
-      if (to_write != written_bytes) {
+      if (self->outbuf_.size() != written_bytes) {
         return cb(std::errc::broken_pipe);
       }
       cb(written_bytes - kLengthPrefixSize);
     };
-    connection_->write(*outbuf, to_write, write_cb);
+    connection_->write(outbuf_, outbuf_.size(), write_cb);
   }
 }  // namespace libp2p::security::noise
