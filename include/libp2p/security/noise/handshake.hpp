@@ -11,11 +11,12 @@
 #include <libp2p/crypto/x25519_provider.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
+#include <libp2p/security/noise/crypto/state.hpp>
 #include <libp2p/security/noise/handshake_message_marshaller.hpp>
 
 namespace libp2p::security::noise {
 
-  std::shared_ptr<CipherSuite> createCipherSuite();
+  std::shared_ptr<CipherSuite> defaultCipherSuite();
 
   class Handshake {
    public:
@@ -27,16 +28,20 @@ namespace libp2p::security::noise {
     const std::string kPayloadPrefix = "noise-libp2p-static-key:";
 
     outcome::result<std::vector<uint8_t>> generateHandshakePayload(
-        const crypto::x25519::Keypair &keypair);
+        const DHKey &keypair);
+
+    outcome::result<void> sendHandshakeMessage(gsl::span<const uint8_t> payload,
+                                               gsl::span<const uint8_t> data);
 
     outcome::result<void> runHandshake();
 
-    const crypto::KeyPair local_key_;
+    const crypto::KeyPair local_key_;  // ???
     std::shared_ptr<connection::RawConnection> conn_;
     bool initiator_;  /// false for incoming connections
     std::shared_ptr<crypto::CryptoProvider> crypto_provider_;  // todo init
     std::unique_ptr<security::noise::HandshakeMessageMarshaller>
         noise_marshaller_;  // todo init
+    std::unique_ptr<HandshakeState> handshake_state_;
   };
 
 }  // namespace libp2p::security::noise

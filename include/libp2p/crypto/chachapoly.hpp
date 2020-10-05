@@ -59,35 +59,41 @@ namespace libp2p::crypto::chachapoly {
         const Nonce &nonce, gsl::span<const uint8_t> ciphertext,
         gsl::span<const uint8_t> aad) = 0;
 
-    /**
-     * Performs encryption or decryption. Operation depends on initialization of
-     * cipher implementing class.
-     *
-     * Nonce is automatically calculated from continuously incrementing uint64_t
-     * number after each call of the method.
-     *
-     * First encryption or decryption will be performed with the nonce equal to
-     * 0 (zero).
-     *
-     * @param data - bytes to process
-     * @param aad - data for message authentication
-     * @return
-     */
-    virtual outcome::result<ByteArray> crypt(gsl::span<const uint8_t> data,
-                                             gsl::span<const uint8_t> aad) = 0;
+    //    /**
+    //     * Performs encryption or decryption. Operation depends on
+    //     initialization of
+    //     * cipher implementing class.
+    //     *
+    //     * Nonce is automatically calculated from continuously incrementing
+    //     uint64_t
+    //     * number after each call of the method.
+    //     *
+    //     * First encryption or decryption will be performed with the nonce
+    //     equal to
+    //     * 0 (zero).
+    //     *
+    //     * @param data - bytes to process
+    //     * @param aad - data for message authentication
+    //     * @return
+    //     */
+    //    virtual outcome::result<ByteArray> crypt(gsl::span<const uint8_t>
+    //    data,
+    //                                             gsl::span<const uint8_t> aad)
+    //                                             = 0;
 
-   protected:
     /**
      * Convert 64-bit integer to 12-bit long byte sequence with four zero bytes
      * at the beginning
      * @param n - an integer to convert
      * @return - bytes vector
      */
-    inline ByteArray nonce64to12(uint64_t n) const {
+    inline Nonce uint64toNonce(uint64_t n) const {
       ByteArray result{4, 0};
       result.reserve(12);
       libp2p::common::putUint64LE(result, n);
-      return result;
+      Nonce nonce;
+      std::copy_n(result.begin(), nonce.size(), nonce.begin());
+      return nonce;
     }
   };
 

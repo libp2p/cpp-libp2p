@@ -12,7 +12,7 @@
 namespace libp2p::security::noise {
   class CCP1305Impl : public AEADCipher {
    public:
-    ~CCP1305Impl() override = default;
+    CCP1305Impl(Key32 key);
 
     outcome::result<ByteArray> encrypt(gsl::span<const uint8_t> precompiled_out,
                                        uint64_t nonce,
@@ -23,6 +23,18 @@ namespace libp2p::security::noise {
                                        uint64_t nonce,
                                        gsl::span<const uint8_t> ciphertext,
                                        gsl::span<const uint8_t> aad) override;
+
+  private:
+    std::unique_ptr<crypto::chachapoly::ChaCha20Poly1305> ccp_;
+  };
+
+  class NamedCCPImpl : public NamedAEADCipher {
+  public:
+    ~NamedCCPImpl() override = default;
+
+    std::shared_ptr<AEADCipher> cipher(Key32 key) override;
+
+    std::string cipherName() const override;
   };
 }  // namespace libp2p::security::noise
 

@@ -11,8 +11,10 @@
 
 namespace libp2p::security::noise {
 
-  class SHA256 : public crypto::Sha256, public NamedHash {
+  class SHA256 : public NamedHash {
    public:
+    std::shared_ptr<libp2p::crypto::Hash> hash() override;
+
     std::string hashName() const override;
   };
 

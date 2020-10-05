@@ -105,9 +105,9 @@ namespace libp2p::security::noise {
 
   class HandshakeStateConfig {
    public:
-    HandshakeStateConfig(std::shared_ptr<CipherSuite> cipher_suite,
-                         HandshakePattern pattern, bool is_initiator,
-                         DHKey local_static_keypair);
+    explicit HandshakeStateConfig(std::shared_ptr<CipherSuite> cipher_suite,
+                                  HandshakePattern pattern, bool is_initiator,
+                                  DHKey local_static_keypair);
 
     HandshakeStateConfig &setPrologue(gsl::span<const uint8_t> prologue);
 
@@ -121,7 +121,7 @@ namespace libp2p::security::noise {
     HandshakeStateConfig &setRemoteEphemeralPubkey(
         gsl::span<const uint8_t> key);
 
-  private:
+   private:
     template <typename T>
     using opt = boost::optional<T>;
     friend class HandshakeState;

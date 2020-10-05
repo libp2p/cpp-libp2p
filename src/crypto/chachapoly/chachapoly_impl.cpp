@@ -16,9 +16,9 @@ namespace libp2p::crypto::chachapoly {
     return (result);           \
   }
 
-  ChaCha20Poly1305Impl::ChaCha20Poly1305Impl(const Key &key, Mode default_mode)
+  ChaCha20Poly1305Impl::ChaCha20Poly1305Impl(Key key)  //, Mode default_mode)
       : key_{key},
-        mode_{default_mode},
+        // mode_{default_mode},
         nonce_{0},
         cipher_{EVP_chacha20_poly1305()},
         block_size_{EVP_CIPHER_block_size(cipher_)} {}
@@ -125,15 +125,15 @@ namespace libp2p::crypto::chachapoly {
     result.resize(ciphertext.size() - 16);
     return result;
   }
-
-  outcome::result<ByteArray> ChaCha20Poly1305Impl::crypt(
-      gsl::span<const uint8_t> data, gsl::span<const uint8_t> aad) {
-    auto nonce = asArray<Nonce>(nonce64to12(nonce_));
-    ++nonce_;
-    if (Mode::ENCRYPT == mode_) {
-      return encrypt(nonce, data, aad);
-    }
-    return decrypt(nonce, data, aad);
-  }
+  // todo remove
+  //  outcome::result<ByteArray> ChaCha20Poly1305Impl::crypt(
+  //      gsl::span<const uint8_t> data, gsl::span<const uint8_t> aad) {
+  //    auto nonce = asArray<Nonce>(nonce64to12(nonce_));
+  //    ++nonce_;
+  //    if (Mode::ENCRYPT == mode_) {
+  //      return encrypt(nonce, data, aad);
+  //    }
+  //    return decrypt(nonce, data, aad);
+  //  }
 
 }  // namespace libp2p::crypto::chachapoly

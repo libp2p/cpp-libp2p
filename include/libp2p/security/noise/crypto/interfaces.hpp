@@ -103,7 +103,7 @@ namespace libp2p::security::noise {
    public:
     virtual ~CipherSuite() = default;
 
-    virtual std::string name() const = 0;
+    virtual std::string name() = 0;
   };
 
 }  // namespace libp2p::security::noise

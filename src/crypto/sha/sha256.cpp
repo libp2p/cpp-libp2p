@@ -80,4 +80,8 @@ namespace libp2p::crypto {
       initialized_ = false;
     }
   }
+
+  HashType Sha256::hashType() const {
+    return HashType::SHA256;
+  }
 }  // namespace libp2p::crypto
