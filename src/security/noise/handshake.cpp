@@ -8,13 +8,18 @@
 #include <libp2p/crypto/x25519_provider/x25519_provider_impl.hpp>
 #include <libp2p/security/noise/handshake_message.hpp>
 #include <libp2p/security/noise/handshake_message_marshaller_impl.hpp>
+#include <libp2p/security/noise/crypto/state.hpp>
 
 namespace libp2p::security::noise {
 
-  Handshake::Handshake(const crypto::KeyPair &local_key,
+  std::shared_ptr<CipherSuite> createCipherSuite() {
+    return std::shared_ptr<CipherSuite>();
+  }
+
+  Handshake::Handshake(crypto::KeyPair local_key,
                        std::shared_ptr<connection::RawConnection> connection,
                        bool is_initiator)
-      : local_key_{local_key},
+      : local_key_{std::move(local_key)},
         conn_{std::move(connection)},
         initiator_{is_initiator} {}
 

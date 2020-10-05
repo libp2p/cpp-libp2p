@@ -10,13 +10,16 @@
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/x25519_provider.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <libp2p/security/noise/crypto/interfaces.hpp>
 #include <libp2p/security/noise/handshake_message_marshaller.hpp>
 
 namespace libp2p::security::noise {
 
+  std::shared_ptr<CipherSuite> createCipherSuite();
+
   class Handshake {
    public:
-    explicit Handshake(const crypto::KeyPair &local_key,
+    explicit Handshake(crypto::KeyPair local_key,
                        std::shared_ptr<connection::RawConnection> connection,
                        bool is_initiator);
 
