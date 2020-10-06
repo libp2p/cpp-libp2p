@@ -6,7 +6,10 @@
 #ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_MESSAGE_MARSHALLER_HPP
 #define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_MESSAGE_MARSHALLER_HPP
 
+#include <tuple>
+
 #include <gsl/span>
+#include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/noise/handshake_message.hpp>
 
@@ -37,8 +40,8 @@ namespace libp2p::security::noise {
      * @param proto_msg protobuf handshake message
      * @return handy handshake message
      */
-    virtual outcome::result<HandshakeMessage> protoToHandy(
-        const protobuf::NoiseHandshakePayload &proto_msg) const = 0;
+    virtual outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>>
+    protoToHandy(const protobuf::NoiseHandshakePayload &proto_msg) const = 0;
 
     /**
      * @param msg handy handshake message to be serialized
@@ -51,8 +54,8 @@ namespace libp2p::security::noise {
      * @param msg_bytes of protobuf representation of the message
      * @return deserialized handy handshake message
      */
-    virtual outcome::result<HandshakeMessage> unmarshal(
-        gsl::span<const uint8_t> msg_bytes) const = 0;
+    virtual outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>>
+    unmarshal(gsl::span<const uint8_t> msg_bytes) const = 0;
   };
 }  // namespace libp2p::security::noise
 
