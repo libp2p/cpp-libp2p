@@ -28,11 +28,11 @@ namespace libp2p::connection {
     ~NoiseConnection() override = default;
 
     NoiseConnection(
-        // node keypair, need private key to sign payload
         std::shared_ptr<RawConnection> raw_connection,
         crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
-        std::shared_ptr<security::noise::CipherState> cipher);
+        std::shared_ptr<security::noise::CipherState> encoder,
+        std::shared_ptr<security::noise::CipherState> decoder);
 
     bool isClosed() const override;
 
@@ -67,12 +67,14 @@ namespace libp2p::connection {
     crypto::PublicKey local_;
     crypto::PublicKey remote_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
-    common::Logger log_ = common::createLogger("NoiseConn");
-    std::shared_ptr<security::noise::CipherState> cipher_;
+    std::shared_ptr<security::noise::CipherState> encoder_cs_;
+    std::shared_ptr<security::noise::CipherState> decoder_cs_;
     std::shared_ptr<common::ByteArray> frame_buffer_;
     std::shared_ptr<security::noise::InsecureReadWriter> framer_;
-    size_t already_read_, already_wrote_;
+    size_t already_read_;
+    size_t already_wrote_;
     common::ByteArray writing_;
+    common::Logger log_ = common::createLogger("NoiseConn");
   };
 }  // namespace libp2p::connection
 

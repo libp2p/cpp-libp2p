@@ -7,11 +7,6 @@
 
 namespace libp2p::security::noise {
 
-  namespace {
-    template <typename T>
-    void unused(T &&) {}
-  }  // namespace
-
   CCP1305Impl::CCP1305Impl(Key32 key)
       : ccp_{std::make_unique<crypto::chachapoly::ChaCha20Poly1305Impl>(key)} {}
 

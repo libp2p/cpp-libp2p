@@ -13,7 +13,6 @@
 #include <libp2p/security/noise/crypto/noise_sha256.hpp>
 #include <libp2p/security/noise/crypto/state.hpp>
 #include <libp2p/security/noise/handshake_message.hpp>
-#include <libp2p/security/noise/handshake_message_marshaller_impl.hpp>
 
 #ifndef UNIQUE_NAME
 #define UNIQUE_NAME(base) base##__LINE__
@@ -31,6 +30,11 @@
   IO_OUTCOME_TRY_NAME(UNIQUE_NAME(name), name, res, cb)
 
 namespace libp2p::security::noise {
+
+  namespace {
+    template <typename T>
+    void unused(T &&) {}
+  }  // namespace
 
   std::shared_ptr<CipherSuite> defaultCipherSuite() {
     auto dh = std::make_shared<DiffieHellmanImpl>();
@@ -97,14 +101,17 @@ namespace libp2p::security::noise {
     rw_.write(write_result.data, write_cb);
   }
 
-  void Handshake::readHandshakeMessage(basic::Reader::ReadCallbackFunc cb) {
+  void Handshake::readHandshakeMessage(
+      basic::MessageReadWriter::ReadCallbackFunc cb) {
     auto read_cb = [self{shared_from_this()}, cb{std::move(cb)}](auto result) {
       IO_OUTCOME_TRY(buffer, result, cb);
       IO_OUTCOME_TRY(rr, self->handshake_state_->readMessage({}, *buffer), cb);
       if (rr.cs1 and rr.cs2) {
         self->setCipherStates(rr.cs1, rr.cs2);
       }
-      cb(rr.data.size());
+      auto shared_data = std::make_shared<ByteArray>();
+      shared_data->swap(rr.data);
+      cb(std::move(shared_data));
     };
     rw_.read(read_cb);
   }
@@ -115,7 +122,9 @@ namespace libp2p::security::noise {
     OUTCOME_TRY(remote_id, peer::PeerId::fromPublicKey(remote_payload.second));
     auto &&handy_payload = remote_payload.first;
     if (initiator_ and remote_peer_id_ != remote_id) {
-      // todo log expected and received
+      log_->debug(
+          "Remote peer id mismatches already known, expected {}, got {}",
+          remote_peer_id_->toHex(), remote_id.toHex());
       return std::errc::bad_address;
     }
     ByteArray to_verify;
@@ -130,7 +139,8 @@ namespace libp2p::security::noise {
                 crypto_provider_->verify(to_verify, handy_payload.identity_sig,
                                          handy_payload.identity_key));
     if (not signature_correct) {
-      return std::errc::owner_dead;  // todo
+      log_->trace("Remote peer's payload signature verification failed");
+      return std::errc::owner_dead;
     }
     remote_peer_id_ = remote_id;
     remote_peer_pubkey_ = handy_payload.identity_key;
@@ -150,14 +160,96 @@ namespace libp2p::security::noise {
     size_t max_msg_size =
         2 * dh25519_len + payload.size() + 2 * poly1305_tag_size;
     std::vector<uint8_t> buffer(max_msg_size + length_prefix_size);
-//    if (initiator_) {
-//      sendHandshakeMessage({}, [self{shared_from_this()}](auto result) {
-////        IO_OUTCOME_TRY(bytes_sent, result, cb)
-//      });
-//    } else {
-//    }
+    if (initiator_) {
+      //
+      // Outgoing connection. Stage 0
+      //
+      log_->trace("outgoing connection. stage 0");
+      sendHandshakeMessage(
+          {},
+          [self{shared_from_this()}, payload{std::move(payload)}](auto result) {
+            IO_OUTCOME_TRY(bytes_written, result, self->hscb);
+            if (0 != bytes_written) {
+              return self->hscb(std::errc::bad_message);
+            }
+            //
+            // Outgoing connection. Stage 1
+            //
+            self->log_->trace("outgoing connection. stage 1");
+            self->readHandshakeMessage([self, payload](auto result) {
+              IO_OUTCOME_TRY(bytes_read, result, self->hscb);
+              auto handle_result =
+                  self->handleRemoteHandshakePayload(*bytes_read);
+              if (handle_result.has_error()) {
+                return self->hscb(handle_result.error());
+              }
+              //
+              // Outgoing connection. Stage 2
+              //
+              self->log_->trace("outgoing connection. stage 2");
+              self->sendHandshakeMessage(
+                  payload, [self, to_write(payload.size())](auto result) {
+                    IO_OUTCOME_TRY(bytes_written, result, self->hscb);
+                    if (to_write != bytes_written) {
+                      return self->hscb(std::errc::broken_pipe);
+                    }
+                    self->hscb(true);  // todo init connection somehow
+                  });
+            });
+          });
+    } else {
+      //
+      // Incoming connection. Stage 0
+      //
+      log_->trace("incoming connection. stage 0");
+      readHandshakeMessage(
+          [self{shared_from_this()}, payload{std::move(payload)}](auto result) {
+            IO_OUTCOME_TRY(plaintext, result, self->hscb);
+            unused(plaintext);
+            /*
+             * Seems that plaintext has to be ignored here. Probably we have to
+             * check later that it has zero length.
+             */
+            //
+            // Incoming connection. Stage 1
+            //
+            self->log_->trace("incoming connection. stage 1");
+            self->sendHandshakeMessage(
+                payload, [self, to_write(payload.size())](auto result) {
+                  IO_OUTCOME_TRY(bytes_written, result, self->hscb);
+                  if (bytes_written != to_write) {
+                    return self->hscb(std::errc::broken_pipe);
+                  }
+                  //
+                  // Incoming connection. Stage 2
+                  //
+                  self->log_->trace("incoming connection. stage 2");
+                  self->readHandshakeMessage([self](auto result) {
+                    IO_OUTCOME_TRY(plaintext, result, self->hscb);
+                    // may be need to check that plaintext is non empty
+                    auto handle_result =
+                        self->handleRemoteHandshakePayload(*plaintext);
+                    if (handle_result.has_error()) {
+                      self->hscb(handle_result.error());
+                    }
+                    self->hscb(true);  // may be init connection here instead
+                  });
+                });
+          });
+    }
 
     return outcome::success();
+  }
+
+  void Handshake::hscb(outcome::result<bool> secured) {
+    if (secured.has_error()) {
+      log_->error("handshake failed, {}", secured.error().message());
+      return;
+    }
+    if (not secured.value()) {
+      log_->error("handshake failed for unknown reason");
+    }
+    log_->info("Handshake succeeded");
   }
 
 }  // namespace libp2p::security::noise

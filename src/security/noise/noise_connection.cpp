@@ -19,25 +19,27 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, NoiseConnection::Error, e) {
 }
 
 #define _OUTCOME_CB1(t, r) \
-  auto &&t{r};             \
-  if (!t)                  \
-    return cb(t.error());
+  auto && (t){r};          \
+  if (!(t))                \
+    return cb((t).error());
 #define _OUTCOME_CB(t, l, r) \
   _OUTCOME_CB1(t, r)         \
-  auto &&l{r.value()};
-#define OUTCOME_CB(l, r) _OUTCOME_CB(BOOST_OUTCOME_TRY_UNIQUE_NAME, l, r)
+  auto && (l){(r).value()};
+#define OUTCOME_CB(l, r) _OUTCOME_CB(BOOST_OUTCOME_TRY_UNIQUE_NAME, (l), (r))
 
 namespace libp2p::connection {
   NoiseConnection::NoiseConnection(
       std::shared_ptr<RawConnection> raw_connection,
       crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
-      std::shared_ptr<security::noise::CipherState> cipher)
+      std::shared_ptr<security::noise::CipherState> encoder,
+      std::shared_ptr<security::noise::CipherState> decoder)
       : raw_connection_{std::move(raw_connection)},
         local_{std::move(localPubkey)},
         remote_{std::move(remotePubkey)},
         key_marshaller_{std::move(key_marshaller)},
-        cipher_{std::move(cipher)},
+        encoder_cs_{std::move(encoder)},
+        decoder_cs_{std::move(decoder)},
         frame_buffer_{
             std::make_shared<common::ByteArray>(security::noise::kMaxMsgLen)},
         framer_{std::make_shared<security::noise::InsecureReadWriter>(
@@ -70,7 +72,7 @@ namespace libp2p::connection {
         [self{shared_from_this()}, out, bytes, cb{std::move(cb)}](auto _n) {
           OUTCOME_CB(n, _n);
           self->already_read_ += n;
-          self->read(out.subspan(n), bytes - n, std::move(cb));
+          self->read(out.subspan(n), bytes - n, cb);
         });
   }
 
@@ -78,7 +80,8 @@ namespace libp2p::connection {
                                  libp2p::basic::Reader::ReadCallbackFunc cb) {
     if (!frame_buffer_->empty()) {
       auto n{std::min(bytes, frame_buffer_->size())};
-      auto begin{frame_buffer_->begin()}, end{begin + n};
+      auto begin{frame_buffer_->begin()};
+      auto end{begin + n};
       std::copy(begin, end, out.begin());
       frame_buffer_->erase(begin, end);
       return cb(n);
@@ -86,10 +89,9 @@ namespace libp2p::connection {
     framer_->read(
         [self{shared_from_this()}, out, bytes, cb{std::move(cb)}](auto _data) {
           OUTCOME_CB(data, _data);
-          // TODO: remove precompiled_out
-          OUTCOME_CB(decrypted, self->cipher_->decrypt({}, *data, {}));
+          OUTCOME_CB(decrypted, self->decoder_cs_->decrypt({}, *data, {}));
           self->frame_buffer_->assign(decrypted.begin(), decrypted.end());
-          self->readSome(out, bytes, std::move(cb));
+          self->readSome(out, bytes, cb);
         });
   }
 
@@ -101,15 +103,14 @@ namespace libp2p::connection {
       return cb(n);
     }
     auto n{std::min(bytes, security::noise::kMaxPlainText)};
-    // TODO: remove precompiled_out
-    OUTCOME_CB(encrypted, cipher_->encrypt({}, in.subspan(0, n), {}));
+    OUTCOME_CB(encrypted, encoder_cs_->encrypt({}, in.subspan(0, n), {}));
     writing_ = std::move(encrypted);
     framer_->write(writing_,
                    [self{shared_from_this()}, in{in.subspan(n)},
                     bytes{bytes - n}, cb{std::move(cb)}](auto _n) {
                      OUTCOME_CB(n, _n);
                      self->already_wrote_ += n;
-                     self->write(in, bytes, std::move(cb));
+                     self->write(in, bytes, cb);
                    });
   }
 
