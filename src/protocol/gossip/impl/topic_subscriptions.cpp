@@ -58,10 +58,10 @@ namespace libp2p::protocol::gossip {
 
     mesh_peers_.selectAll(
         [this, &msg, &msg_id, &from, &origin](const PeerContextPtr &ctx) {
-          assert(ctx->message_to_send);
+          assert(ctx->message_builder);
 
           if (needToForward(ctx, from, origin)) {
-            ctx->message_to_send->addMessage(*msg, msg_id);
+            ctx->message_builder->addMessage(*msg, msg_id);
 
             // forward immediately to those in mesh
             connectivity_.peerIsWritable(ctx, true);
@@ -70,10 +70,10 @@ namespace libp2p::protocol::gossip {
 
     subscribed_peers_.selectAll([this, &msg_id, &from, is_published_locally,
                                  &origin](const PeerContextPtr &ctx) {
-      assert(ctx->message_to_send);
+      assert(ctx->message_builder);
 
       if (needToForward(ctx, from, origin)) {
-        ctx->message_to_send->addIHave(topic_, msg_id);
+        ctx->message_builder->addIHave(topic_, msg_id);
 
         // local messages announce themselves immediately
         connectivity_.peerIsWritable(ctx, is_published_locally);
@@ -152,7 +152,7 @@ namespace libp2p::protocol::gossip {
 
     // announce the peer about messages available for the topic
     for (const auto &[_, msg_id] : seen_cache_) {
-      p->message_to_send->addIHave(topic_, msg_id);
+      p->message_builder->addIHave(topic_, msg_id);
     }
     // will be sent on next heartbeat
     connectivity_.peerIsWritable(p, false);
@@ -184,7 +184,7 @@ namespace libp2p::protocol::gossip {
       subscribed_peers_.erase(p->peer_id);
     } else {
       // we don't have mesh for the topic
-      p->message_to_send->addPrune(topic_);
+      p->message_builder->addPrune(topic_);
       connectivity_.peerIsWritable(p, true);
     }
   }
@@ -199,9 +199,9 @@ namespace libp2p::protocol::gossip {
   }
 
   void TopicSubscriptions::addToMesh(const PeerContextPtr &p) {
-    assert(p->message_to_send);
+    assert(p->message_builder);
 
-    p->message_to_send->addGraft(topic_);
+    p->message_builder->addGraft(topic_);
     connectivity_.peerIsWritable(p, false);
     mesh_peers_.insert(p);
     log_.debug("peer {} added to mesh (size={}) for topic {}", p->str,
@@ -209,9 +209,9 @@ namespace libp2p::protocol::gossip {
   }
 
   void TopicSubscriptions::removeFromMesh(const PeerContextPtr &p) {
-    assert(p->message_to_send);
+    assert(p->message_builder);
 
-    p->message_to_send->addPrune(topic_);
+    p->message_builder->addPrune(topic_);
     connectivity_.peerIsWritable(p, false);
     subscribed_peers_.insert(p);
     log_.debug("peer {} removed from mesh (size={}) for topic {}", p->str,

@@ -165,7 +165,7 @@ namespace libp2p::protocol::gossip {
 
     if (remote_subscriptions_->hasTopic(topic)
         && !msg_cache_.contains(msg_id)) {
-      from->message_to_send->addIWant(msg_id);
+      from->message_builder->addIWant(msg_id);
       connectivity_->peerIsWritable(from, false);
     }
   }
@@ -176,7 +176,7 @@ namespace libp2p::protocol::gossip {
 
     auto msg_found = msg_cache_.getMessage(msg_id);
     if (msg_found) {
-      from->message_to_send->addMessage(*msg_found.value(), msg_id);
+      from->message_builder->addMessage(*msg_found.value(), msg_id);
       connectivity_->peerIsWritable(from, true);
     } else {
       log_.warn("wanted message not in cache");
@@ -211,6 +211,13 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
+    MessageId msg_id = createMessageId(*msg);
+    if (msg_cache_.contains(msg_id)) {
+      // already there, ignore
+      log_.debug("ignoring message from peer {}, already in cache", from->str);
+      return;
+    }
+
     // validate message. If no validator is set then we
     // suppose that the message is valid (we might not know topic details)
     bool valid = true;
@@ -230,10 +237,8 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    MessageId msg_id = createMessageId(*msg);
     if (!msg_cache_.insert(msg, msg_id)) {
-      // already there, ignore
-      log_.debug("ignoring message from peer {}, already in cache", from->str);
+      log_.error("message cache error");
       return;
     }
 
@@ -276,7 +281,7 @@ namespace libp2p::protocol::gossip {
       // notify the new peer about all topics we subscribed to
       if (!local_subscriptions_->subscribedTo().empty()) {
         for (const auto &local_sub : local_subscriptions_->subscribedTo()) {
-          ctx->message_to_send->addSubscription(true, local_sub.first);
+          ctx->message_builder->addSubscription(true, local_sub.first);
         }
         connectivity_->peerIsWritable(ctx, true);
         connectivity_->flush();

@@ -13,8 +13,7 @@ libp2p_add_library(p2p_gossip
     peer_context.cpp
     message_cache.cpp
     connectivity.cpp
-    stream_reader.cpp
-    stream_writer.cpp
+    stream.cpp
     )
 target_link_libraries(p2p_gossip
     Boost::boost

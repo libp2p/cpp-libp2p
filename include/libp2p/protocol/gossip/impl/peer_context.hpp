@@ -11,8 +11,7 @@
 namespace libp2p::protocol::gossip {
 
   class MessageBuilder;
-  class StreamWriter;
-  class StreamReader;
+  class Stream;
 
   /// Data related to peer needed by pub-sub protocols
   struct PeerContext {
@@ -22,23 +21,26 @@ namespace libp2p::protocol::gossip {
     /// String repr for logging purposes
     const std::string str;
 
-    /// Set of topics this peer is subscribed to
-    std::set<TopicId> subscribed_to;
-
-    /// Builds message to be sent to this peer
-    std::shared_ptr<MessageBuilder> message_to_send;
-
-    /// Network stream writer
-    std::shared_ptr<StreamWriter> writer;
-
-    /// Network stream reader
-    std::shared_ptr<StreamReader> reader;
-
     /// Not null iff this peer can be dialed to
     boost::optional<multi::Multiaddress> dial_to;
 
+    /// Builds message to be sent to this peer
+    std::shared_ptr<MessageBuilder> message_builder;
+
+    /// Set of topics this peer is subscribed to
+    std::set<TopicId> subscribed_to;
+
+    /// Streams connected to peer
+    std::vector<std::shared_ptr<Stream>> streams;
+
     /// Dialing to this peer is banned until this timestamp
     Time banned_until = 0;
+
+    /// Index of stream recently active (to write next message to)
+    size_t active_stream = 0;
+
+    /// If true, then outbound connection is in progress
+    bool is_connecting = false;
 
     ~PeerContext() = default;
     PeerContext(PeerContext &&) = delete;

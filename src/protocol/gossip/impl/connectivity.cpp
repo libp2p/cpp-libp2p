@@ -46,20 +46,12 @@ namespace libp2p::protocol::gossip {
 
   void Connectivity::start() {
     // clang-format off
-    on_reader_event_ =
+    on_stream_event_ =
         [this, self_wptr=weak_from_this()]
             (const PeerContextPtr &from, outcome::result<Success> event) {
           if (self_wptr.expired()) return;
-          onReaderEvent(from, event);
+          onStreamEvent(from, event);
         };
-
-    on_writer_event_ =
-        [this, self_wptr=weak_from_this()]
-            (const PeerContextPtr &from, outcome::result<Success> event) {
-          if (self_wptr.expired()) return;
-          onWriterEvent(from, event);
-        };
-
 
     host_->setProtocolHandler(
         config_.protocol_version,
@@ -79,14 +71,11 @@ namespace libp2p::protocol::gossip {
   void Connectivity::stop() {
     stopped_ = true;
     all_peers_.selectAll([](const PeerContextPtr &ctx) {
-      if (ctx->writer) {
-        ctx->writer->close();
-      }
-      if (ctx->reader) {
-        ctx->reader->close();
+      for (auto &stream : ctx->streams) {
+        stream->close();
       }
     });
-    readers_.clear();
+    // readers_.clear();
     connected_peers_.clear();
   }
 
@@ -104,8 +93,6 @@ namespace libp2p::protocol::gossip {
       ctx = ctx_found.value();
     } else {
       ctx = std::make_shared<PeerContext>(std::move(id));
-
-      ctx->message_to_send = std::make_shared<MessageBuilder>();
       all_peers_.insert(ctx);
       connectable_peers_.insert(ctx);
     }
@@ -113,27 +100,30 @@ namespace libp2p::protocol::gossip {
     ctx->dial_to = std::move(address);
   }
 
-  void Connectivity::flush(const PeerContextPtr &ctx) {
+  void Connectivity::flush(const PeerContextPtr &ctx) const {
     assert(ctx);
-    assert(ctx->message_to_send);
+    assert(ctx->message_builder);
 
     if (stopped_) {
       return;
     }
 
-    if (!ctx->writer) {
-      // not yet connected, will be flushed next time
-      // TODO(artem): state: assert(connecting_peers_.contains(ctx->peer_id));
-      return;
-    }
-
-    if (ctx->message_to_send->empty()) {
+    if (ctx->message_builder->empty()) {
       // nothing to flush, it's ok
       return;
     }
 
+    if (ctx->streams.empty()) {
+      // will be flushed after connecting
+      return;
+    }
+
+    size_t idx = ctx->active_stream;
+
+    assert(idx < ctx->streams.size());
+
     // N.B. errors, if any, will be passed later in async manner
-    ctx->writer->write(ctx->message_to_send->serialize());
+    ctx->streams[idx]->write(ctx->message_builder->serialize());
   }
 
   peer::Protocol Connectivity::getProtocolId() const {
@@ -146,21 +136,23 @@ namespace libp2p::protocol::gossip {
     }
 
     if (!rstream) {
-      log_.info("incoming connection failed due to '{}'",
+      log_.info("incoming connection failed, error={}",
                 rstream.error().message());
       return;
     }
-    auto &stream = rstream.value();
 
+    onNewStream(std::move(rstream.value()), false);
+  }
+
+  void Connectivity::onNewStream(std::shared_ptr<connection::Stream> stream,
+                                 bool is_outbound) {
     // no remote peer id means dead stream
-
     auto peer_res = stream->remotePeerId();
     if (!peer_res) {
-      log_.info(" connection from '{}' failed: {}",
-                stream->remoteMultiaddr().value().getStringAddress(),
-                peer_res.error().message());
+      log_.info("ignoring dead stream: {}", peer_res.error().message());
     } else {
-      log_.debug(" connection from '{}', peer_id={}",
+      log_.debug("new {}bound stream, address={}, peer_id={}",
+                 is_outbound ? "out" : "in",
                  stream->remoteMultiaddr().value().getStringAddress(),
                  peer_res.value().toBase58());
     }
@@ -170,73 +162,49 @@ namespace libp2p::protocol::gossip {
 
     auto ctx_found = all_peers_.find(peer_id);
     if (!ctx_found) {
-      if (readers_.size() >= config_.max_connections_num) {
-        log_.debug("too many connections, refusing");
+      if (all_peers_.size() >= config_.max_connections_num) {
+        log_.warn("too many connections, refusing new stream");
+        stream->close([](outcome::result<void>) {});
         return;
       }
+
       ctx = std::make_shared<PeerContext>(peer_id);
-      // core may append messages before outbound stream establishes
-      ctx->message_to_send = std::make_shared<MessageBuilder>();
-
       all_peers_.insert(ctx);
-
-      // make outbound stream over existing connection
-      // TODO(artem)
-      dial(ctx, true);
-
     } else {
       ctx = std::move(ctx_found.value());
-            if (!ctx->writer && !connecting_peers_.contains(ctx->peer_id)) {
-              // not connected or connecting
-              dial(ctx, true);
-            }
-    }
-
-    // currently we prefer newer streams, but avoid duplicate ones,
-    // because this is pub-sub and broadcast
-    if (ctx->reader) {
-      ctx->reader->close();
-    } else {
-      readers_.insert(ctx);
-    }
-
-    ctx->reader = std::make_shared<StreamReader>(
-        config_, *scheduler_, on_reader_event_, *msg_receiver_, stream, ctx);
-    ctx->reader->read();
-
-    /*
-    if (!connecting_peers_.contains(ctx->peer_id)
-        && !connected_peers_.contains(ctx->peer_id)) {
-      // not connected or connecting
-      if (!ctx->writer) {
-        ctx->writer = std::make_shared<StreamWriter>(
-            config_, *scheduler_, on_writer_event_, std::move(stream), ctx);
-      }
       if (ctx->banned_until != 0) {
         // unban outbound connection only if inbound one exists
         unban(ctx);
       }
-
-      if (!ctx->message_to_send) {
-        ctx->message_to_send = std::make_shared<MessageBuilder>();
-      } else {
-        flush(ctx);
-      }
-
-      connected_peers_.insert(ctx);
-      connected_cb_(true, ctx);
+      ctx->is_connecting = false;
     }
-     */
 
+    size_t stream_id = ctx->streams.size();
 
+    auto gossip_stream = std::make_shared<Stream>(
+        stream_id, config_, *scheduler_, on_stream_event_, *msg_receiver_,
+        std::move(stream), ctx);
+
+    gossip_stream->read();
+
+    ctx->streams.push_back(std::move(gossip_stream));
+
+    ctx->active_stream = stream_id;
+
+    if (stream_id == 0) {
+      // new connection
+      connected_peers_.insert(ctx);
+    }
+    connected_cb_(true, ctx);
   }
 
   void Connectivity::dial(const PeerContextPtr &ctx,
                           bool connection_must_exist) {
     using C = network::ConnectionManager::Connectedness;
 
-    assert(!ctx->writer);
-    assert(!connecting_peers_.contains(ctx->peer_id));
+    if (ctx->is_connecting) {
+      return;
+    }
 
     if (ctx->banned_until != 0 && connection_must_exist) {
       // unban outbound connection only if inbound one exists
@@ -262,25 +230,29 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    connecting_peers_.insert(ctx);
+    ctx->is_connecting = true;
 
     // clang-format off
     host_->newStream(
         pi,
         config_.protocol_version,
-        [wptr = weak_from_this(), this, p=ctx] (auto &&rstream) mutable {
+        [wptr = weak_from_this(), this, ctx=ctx] (auto &&rstream) mutable {
             auto self = wptr.lock();
             if (self) {
-                onConnected(
-                    std::move(p), std::forward<decltype(rstream)>(rstream)
-                );
+              if (!rstream) {
+                log_.info("outbound connection failed, error={}",
+                          rstream.error().message());
+                ban(ctx);
+                return;
+              }
+              onNewStream(std::move(rstream.value()), true);
             }
         }
     );
     // clang-format on
   }
 
-  void Connectivity::ban(PeerContextPtr ctx) {
+  void Connectivity::ban(const PeerContextPtr &ctx) {
     //  TODO(artem): lift this parameter up to some internal config
     constexpr Time kBanInterval = 6000;
 
@@ -290,9 +262,17 @@ namespace libp2p::protocol::gossip {
 
     auto ts = scheduler_->now() + kBanInterval;
     ctx->banned_until = ts;
-    ctx->message_to_send->clear();
-    ctx->writer.reset();
-    banned_peers_expiration_.insert({ts, std::move(ctx)});
+    ctx->is_connecting = false;
+    ctx->message_builder->clear();
+    for (auto &s : ctx->streams) {
+      s->close();
+    }
+    ctx->streams.clear();
+    ctx->active_stream = 0;
+    banned_peers_expiration_.insert({ts, ctx});
+    connected_peers_.erase(ctx->peer_id);
+    connectable_peers_.erase(ctx->peer_id);
+    connected_cb_(false, ctx);
   }
 
   void Connectivity::unban(const PeerContextPtr &ctx) {
@@ -306,41 +286,7 @@ namespace libp2p::protocol::gossip {
     ctx->banned_until = 0;
   }
 
-  void Connectivity::onConnected(PeerContextPtr ctx, StreamResult rstream) {
-    if (stopped_) {
-      return;
-    }
-
-    auto ctx_found = connecting_peers_.erase(ctx->peer_id);
-    if (!ctx_found) {
-      log_.error("cannot find connecting peer {}", ctx->str);
-      return;
-    }
-
-    if (!rstream) {
-      log_.info("cannot connect, peer={}, error={}", ctx->str,
-                rstream.error().message());
-      ban(std::move(ctx));
-      return;
-    }
-
-    log_.debug("outbound stream connected for {}", ctx->str);
-
-    ctx->writer =
-        std::make_shared<StreamWriter>(config_, *scheduler_, on_writer_event_,
-                                       std::move(rstream.value()), ctx);
-
-    if (!ctx->message_to_send) {
-      ctx->message_to_send = std::make_shared<MessageBuilder>();
-    } else {
-      flush(ctx);
-    }
-
-    connected_peers_.insert(ctx);
-    connected_cb_(true, ctx);
-  }
-
-  void Connectivity::onReaderEvent(const PeerContextPtr &from,
+  void Connectivity::onStreamEvent(const PeerContextPtr &from,
                                    outcome::result<Success> event) {
     if (stopped_) {
       return;
@@ -350,45 +296,16 @@ namespace libp2p::protocol::gossip {
       // do nothing at the moment, keep it connected
       return;
     }
-    log_.info("inbound stream error='{}', peer={}", event.error().message(),
-              from->str);
+    log_.info("stream error='{}', peer={}", event.error().message(), from->str);
 
     // TODO(artem): ban incoming peers for protocol violations etc. - v.1.1
 
-    from->reader->close();
-    from->reader.reset();
-
-    // let them connect once more if they want
-    readers_.erase(from->peer_id);
-  }
-
-  void Connectivity::onWriterEvent(const PeerContextPtr &from,
-                                   outcome::result<Success> event) {
-    if (stopped_) {
-      return;
-    }
-
-    if (event) {
-      // do nothing at the moment, keep it connected
-      return;
-    }
-    log_.info("outbound stream error='{}', peer={}", event.error().message(),
-              from->str);
-
-    if (!connected_peers_.erase(from->peer_id)) {
-      log_.debug("peer not found for {}", from->str);
-      return;
-    }
-
-    // TODO(artem): different ban intervals depending on error
     ban(from);
-
-    connected_cb_(false, from);
   }
 
   void Connectivity::peerIsWritable(const PeerContextPtr &ctx,
                                     bool low_latency) {
-    if (ctx->message_to_send->empty()) {
+    if (ctx->message_builder->empty()) {
       return;
     }
 
@@ -427,7 +344,10 @@ namespace libp2p::protocol::gossip {
       auto peers = connectable_peers_.selectRandomPeers(
           config_.ideal_connections_num - sz);
       for (auto &p : peers) {
-        dial(p, false);
+        if (p->streams.empty()) {
+          log_.debug("dialing {}", p->str);
+          dial(p, false);
+        }
       }
     }
 
@@ -444,7 +364,7 @@ namespace libp2p::protocol::gossip {
       connected_peers_.selectAll(
           [&flat_changes, this] (const PeerContextPtr& ctx) {
             boost::for_each(flat_changes, [&ctx] (auto&& p) {
-                ctx->message_to_send->addSubscription(p.first, p.second);
+                ctx->message_builder->addSubscription(p.first, p.second);
             });
             flush(ctx);
           }

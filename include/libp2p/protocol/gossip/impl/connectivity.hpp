@@ -9,11 +9,10 @@
 #include <unordered_map>
 
 #include <libp2p/host/host.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
+#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/gossip/impl/peer_set.hpp>
-#include <libp2p/protocol/gossip/impl/stream_reader.hpp>
-#include <libp2p/protocol/gossip/impl/stream_writer.hpp>
+#include <libp2p/protocol/gossip/impl/stream.hpp>
 
 namespace libp2p::protocol::gossip {
 
@@ -60,7 +59,7 @@ namespace libp2p::protocol::gossip {
     void onHeartbeat(const std::map<TopicId, bool> &local_changes);
 
     /// Returns connected peers
-    const PeerSet& getConnectedPeers() const;
+    const PeerSet &getConnectedPeers() const;
 
    private:
     /// BaseProtocol override
@@ -69,36 +68,32 @@ namespace libp2p::protocol::gossip {
     /// BaseProtocol override, on new inbound stream
     void handle(StreamResult rstream) override;
 
-    /// On new outbound stream
-    void onConnected(PeerContextPtr peer, StreamResult rstream);
-
-    /// Async feedback from readers
-    void onReaderEvent(const PeerContextPtr &from,
-                       outcome::result<Success> event);
-
-    /// Async feedback from writers
-    void onWriterEvent(const PeerContextPtr &from,
-                       outcome::result<Success> event);
-
     /// Tries to connect to peer
     void dial(const PeerContextPtr &peer, bool connection_must_exist);
 
+    /// Attaches new stream to peer context
+    void onNewStream(std::shared_ptr<connection::Stream> stream,
+                     bool is_outbound);
+
+    /// Async feedback from streams
+    void onStreamEvent(const PeerContextPtr &from,
+                       outcome::result<Success> event);
+
     /// Bans peer from outbound candidates list for configured time interval
-    void ban(PeerContextPtr ctx);
+    void ban(const PeerContextPtr &ctx);
 
     /// Unbans peer
     void unban(const PeerContextPtr &peer);
 
     /// Flushes outging messages into wire for a given peer, if connected
-    void flush(const PeerContextPtr &ctx);
+    void flush(const PeerContextPtr &ctx) const;
 
     const Config config_;
     std::shared_ptr<Scheduler> scheduler_;
     std::shared_ptr<Host> host_;
     std::shared_ptr<MessageReceiver> msg_receiver_;
     ConnectionStatusFeedback connected_cb_;
-    StreamReader::Feedback on_reader_event_;
-    StreamWriter::Feedback on_writer_event_;
+    Stream::Feedback on_stream_event_;
     bool stopped_ = false;
 
     /// All known peers
@@ -113,12 +108,6 @@ namespace libp2p::protocol::gossip {
 
     /// Writable peers
     PeerSet connected_peers_;
-
-    /// Connecting peers
-    PeerSet connecting_peers_;
-
-    /// Active readers
-    PeerSet readers_;
 
     /// Peers with pending write operation before the next heartbeat
     PeerSet writable_peers_low_latency_;

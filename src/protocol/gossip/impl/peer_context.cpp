@@ -3,20 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <libp2p/protocol/gossip/impl/message_builder.hpp>
 #include <libp2p/protocol/gossip/impl/peer_context.hpp>
 
 namespace libp2p::protocol::gossip {
 
-  namespace  {
+  namespace {
 
-    std::string makeStringRepr(const peer::PeerId& id) {
+    std::string makeStringRepr(const peer::PeerId &id) {
       return id.toBase58().substr(46);
     }
 
-  } //namespace
+  }  // namespace
 
   PeerContext::PeerContext(peer::PeerId id)
-      : peer_id(std::move(id)), str(makeStringRepr(peer_id)) {}
+      : peer_id(std::move(id)),
+        str(makeStringRepr(peer_id)),
+        message_builder(std::make_shared<MessageBuilder>()) {}
 
   bool operator<(const PeerContextPtr &ctx, const peer::PeerId &peer) {
     if (!ctx)
