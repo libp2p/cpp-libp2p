@@ -23,9 +23,11 @@ namespace libp2p::protocol::gossip {
     /// This host subscribes or unsubscribes
     void onSelfSubscribed(bool subscribed, const TopicId &topic);
 
-    /// Remote peer subscribes or unsubscribes
-    void onPeerSubscribed(const PeerContextPtr &peer, bool subscribed,
-                          const TopicId &topic);
+    /// Remote peer subscribes
+    void onPeerSubscribed(const PeerContextPtr &peer, const TopicId &topic);
+
+    /// Remote peer unsubscribes
+    void onPeerUnsubscribed(const PeerContextPtr &peer, TopicId topic);
 
     /// Peer disconnected - remove it from all topics it's subscribed to
     void onPeerDisconnected(const PeerContextPtr &peer);

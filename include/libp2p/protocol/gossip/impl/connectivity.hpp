@@ -94,7 +94,7 @@ namespace libp2p::protocol::gossip {
     std::shared_ptr<MessageReceiver> msg_receiver_;
     ConnectionStatusFeedback connected_cb_;
     Stream::Feedback on_stream_event_;
-    bool stopped_ = false;
+    bool started_ = false;
 
     /// All known peers
     PeerSet all_peers_;

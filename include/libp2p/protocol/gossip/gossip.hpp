@@ -71,6 +71,10 @@ namespace libp2p::protocol::gossip {
     virtual void addBootstrapPeer(
         peer::PeerId id, boost::optional<multi::Multiaddress> address) = 0;
 
+    /// Adds bootstrap peer address in string form
+    virtual outcome::result<void> addBootstrapPeer(
+        const std::string &address) = 0;
+
     /// Starts client and server
     virtual void start() = 0;
 
@@ -91,6 +95,13 @@ namespace libp2p::protocol::gossip {
 
     /// Sets message validator for topic
     virtual void setValidator(const TopicId &topic, Validator validator) = 0;
+
+    /// Creates unique message ID out of message fields
+    using MessageIdFn = std::function<ByteArray(
+        const ByteArray &from, const ByteArray &seq, const ByteArray &data)>;
+
+    /// Sets message ID funtion that differs from default (from+sec_no)
+    virtual void setMessageIdFn(MessageIdFn fn) = 0;
 
     /// Empty message means EOS (end of subscription data stream)
     using SubscriptionData = boost::optional<const Message &>;

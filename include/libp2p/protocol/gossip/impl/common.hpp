@@ -93,9 +93,9 @@ namespace libp2p::protocol::gossip {
   /// Helper for text messages creation and protobuf
   ByteArray fromString(const std::string &s);
 
-  /// Creates message id as per pub-sub spec
-  MessageId createMessageId(const TopicMessage &msg);
-
+  /// Creates message id, default function
+  MessageId createMessageId(const ByteArray &from, const ByteArray &seq,
+                            const ByteArray &data);
 }  // namespace libp2p::protocol::gossip
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::gossip, Error);

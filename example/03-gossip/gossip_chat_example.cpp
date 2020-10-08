@@ -9,7 +9,7 @@
 #include <boost/program_options.hpp>
 
 #include <libp2p/injector/gossip_injector.hpp>
-
+#include <libp2p/common/hexutil.hpp>
 #include "console_async_reader.hpp"
 #include "utility.hpp"
 
@@ -43,9 +43,12 @@ int main(int argc, char *argv[]) {
 
   utility::setupLoggers(options->log_level);
 
+  libp2p::common::createLogger("tls")->set_level(spdlog::level::debug);
+
   // overriding default config to see local messages as well (echo mode)
   libp2p::protocol::gossip::Config config;
   config.echo_forward_mode = true;
+  config.D_max = config.D_min = 1;
   //config.protocol_version = "/floodsub/1.0.0"; //"/meshsub/1.1.0";
 
   // injector creates and ties dependent objects
@@ -88,14 +91,37 @@ int main(int argc, char *argv[]) {
           return;
         }
         std::cerr << utility::formatPeerId(m->from) << ": "
-                  << utility::toString(m->data) << "\n";
+                  //<< utility::toString(m->data) << "\n";
+            <<libp2p::common::hex_lower(m->data) << "\n";
       });
 
   // tell gossip to connect to remote peer, only if specified
-  if (options->remote) {
-    gossip->addBootstrapPeer(options->remote->id,
-                             options->remote->addresses[0]);
+//  if (options->remote) {
+//    gossip->addBootstrapPeer(options->remote->id,
+//                             options->remote->addresses[0]);
+//  }
+
+  std::vector<std::string> prs {
+      "/dns4/bootstrap-1.testnet.fildev.network/tcp/1347/p2p/12D3KooW9yeKXha4hdrJKq74zEo99T8DhriQdWNoojWnnQbsgB3v",
+ "/dns4/bootstrap-2.testnet.fildev.network/tcp/1347/p2p/12D3KooWCrx8yVG9U9Kf7w8KLN3Edkj5ZKDhgCaeMqQbcQUoB6CT",
+  "/dns4/bootstrap-4.testnet.fildev.network/tcp/1347/p2p/12D3KooWPkL9LrKRQgHtq7kn9ecNhGU9QaziG8R5tX8v9v7t3h34",
+//  "/dns4/bootstrap-3.testnet.fildev.network/tcp/1347/p2p/12D3KooWKYSsbpgZ3HAjax5M1BXCwXLa6gVkUARciz7uN3FNtr7T",
+//        "/dns4/bootstrap-5.testnet.fildev.network/tcp/1347/p2p/12D3KooWQYzqnLASJAabyMpPb1GcWZvNSe7JDcRuhdRqonFoiK9W"
+
+ // "/ip4/192.168.0.103/tcp/43311/p2p/12D3KooWLtzFQrv4kembPJxALBS9CjZJgsDiVCaNPTVBZBKVUpRu",
+ // "/ip4/192.168.0.103/tcp/38219/p2p/12D3KooWPEKVru5cw6huNceSLsSYR2RNzJ1Q8towLrHXG6759AoJ"
+
+  //    "/ip4/51.158.78.208/tcp/39983/p2p/12D3KooWQTFn8dceqrujD7MJaybhZppL7DXkzWKM1KRFyPwupWEG",
+  //    "/ip4/51.158.78.208/tcp/44375/p2p/12D3KooWPc6Bi5w7SaYXMfaT3ZEmuX8Qb96nhusfLx4Ab42Lpgvp"
+  };
+
+  for (const auto& s : prs) {
+    auto res = gossip->addBootstrapPeer(s);
+    if (!res) {
+      std::cerr << "error parse address " << s << " : " << res.error().message() << "\n";
+    }
   }
+
 
   // start the node as soon as async engine starts
   io->post([&] {

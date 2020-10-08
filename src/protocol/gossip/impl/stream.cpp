@@ -112,7 +112,6 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    peer_->active_stream = stream_id_;
     parser.dispatch(peer_, msg_receiver_);
 
     // reads again

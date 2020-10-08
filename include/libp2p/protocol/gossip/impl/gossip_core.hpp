@@ -41,9 +41,11 @@ namespace libp2p::protocol::gossip {
     // Gossip overrides
     void addBootstrapPeer(
         peer::PeerId id, boost::optional<multi::Multiaddress> address) override;
+    outcome::result<void> addBootstrapPeer(const std::string& address) override;
     void start() override;
     void stop() override;
     void setValidator(const TopicId& topic, Validator validator) override;
+    void setMessageIdFn(MessageIdFn fn) override;
     Subscription subscribe(TopicSet topics,
                            SubscriptionCallback callback) override;
     bool publish(const TopicSet &topic, ByteArray data) override;
@@ -73,6 +75,9 @@ namespace libp2p::protocol::gossip {
     /// Configuration parameters
     const Config config_;
 
+    /// Message ID function
+    MessageIdFn create_message_id_;
+
     /// Bootstrap peers to dial to
     std::unordered_map<peer::PeerId, boost::optional<multi::Multiaddress>>
         bootstrap_peers_;
@@ -95,8 +100,13 @@ namespace libp2p::protocol::gossip {
     /// Remote subscriptions manager (other peers subscribed to topics)
     std::shared_ptr<RemoteSubscriptions> remote_subscriptions_;
 
+    struct ValidatorAndLocalSub {
+      Validator validator;
+      Subscription sub;
+    };
+
     /// Remote messages validators by topic
-    std::unordered_map<TopicId, Validator> validators_;
+    std::unordered_map<TopicId, ValidatorAndLocalSub> validators_;
 
     /// Network part of gossip component
     std::shared_ptr<Connectivity> connectivity_;

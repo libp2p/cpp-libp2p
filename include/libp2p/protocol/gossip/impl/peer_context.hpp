@@ -31,13 +31,11 @@ namespace libp2p::protocol::gossip {
     std::set<TopicId> subscribed_to;
 
     /// Streams connected to peer
-    std::vector<std::shared_ptr<Stream>> streams;
+    std::shared_ptr<Stream> outbound_stream;
+    std::vector<std::shared_ptr<Stream>> inbound_streams;
 
     /// Dialing to this peer is banned until this timestamp
     Time banned_until = 0;
-
-    /// Index of stream recently active (to write next message to)
-    size_t active_stream = 0;
 
     /// If true, then outbound connection is in progress
     bool is_connecting = false;

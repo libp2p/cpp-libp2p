@@ -50,7 +50,6 @@ namespace libp2p::protocol::gossip {
       assert(p);
       return p.value();
     }
-
   }  // namespace
 
   const peer::PeerId &getEmptyPeer() {
@@ -89,10 +88,11 @@ namespace libp2p::protocol::gossip {
     return ret;
   }
 
-  MessageId createMessageId(const TopicMessage &msg) {
-    MessageId msg_id(msg.seq_no);
-    msg_id.reserve(msg.seq_no.size() + msg.from.size());
-    msg_id.insert(msg_id.end(), msg.from.begin(), msg.from.end());
+  MessageId createMessageId(const ByteArray &from, const ByteArray &seq,
+                            const ByteArray &data) {
+    MessageId msg_id(from);
+    msg_id.reserve(seq.size() + from.size());
+    msg_id.insert(msg_id.end(), seq.begin(), seq.end());
     return msg_id;
   }
 

@@ -179,7 +179,9 @@ namespace libp2p::protocol::gossip {
       onPeerSubscribed(p);
     }
 
-    if (self_subscribed_) {
+    bool mesh_is_full = (mesh_peers_.size() >= config_.D_max);
+
+    if (self_subscribed_ && !mesh_is_full) {
       mesh_peers_.insert(p);
       subscribed_peers_.erase(p->peer_id);
     } else {
