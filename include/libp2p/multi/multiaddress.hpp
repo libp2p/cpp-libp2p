@@ -13,6 +13,7 @@
 #include <string_view>
 #include <unordered_map>
 
+#include <gsl/span>
 #include <boost/optional.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
@@ -52,6 +53,14 @@ namespace libp2p::multi {
      * otherwise
      */
     static FactoryResult create(const ByteBuffer &bytes);
+
+    /**
+     * Construct a multiaddress instance from the bytes
+     * @param bytes to be in that multiaddress
+     * @return pointer to Multiaddress, if creation is successful, error
+     * otherwise
+     */
+    static FactoryResult create(gsl::span<const uint8_t> bytes);
 
     /**
      * Encapsulate a multiaddress to this one, such that:

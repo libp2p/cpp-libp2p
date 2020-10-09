@@ -35,6 +35,7 @@
 #include <libp2p/security/secio.hpp>
 #include <libp2p/security/secio/exchange_message_marshaller_impl.hpp>
 #include <libp2p/security/secio/propose_message_marshaller_impl.hpp>
+#include <libp2p/security/tls.hpp>
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp.hpp>
 
@@ -282,7 +283,7 @@ namespace libp2p::injector {
         di::bind<protocol_muxer::ProtocolMuxer>().template to<protocol_muxer::Multiselect>(),
 
         // default adaptors
-        di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext, security::Secio, security::Noise>(),  // NOLINT
+        di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext, security::Secio, security::Noise, security::TlsAdaptor>(),  // NOLINT
         di::bind<muxer::MuxerAdaptor *[]>().template to<muxer::Yamux, muxer::Mplex>(),  // NOLINT
         di::bind<transport::TransportAdaptor *[]>().template to<transport::TcpTransport>(),  // NOLINT
 

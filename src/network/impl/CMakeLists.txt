@@ -20,6 +20,7 @@ target_link_libraries(p2p_listener_manager
     Boost::boost
     p2p_multiaddress
     p2p_peer_id
+    p2p_logger
     )
 
 

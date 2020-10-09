@@ -5,7 +5,16 @@
 
 #include <libp2p/network/impl/listener_manager_impl.hpp>
 
+#include <libp2p/common/logger.hpp>
+
 namespace libp2p::network {
+
+  namespace {
+    spdlog::logger &log() {
+      static common::Logger logger = common::createLogger("listener_mgr");
+      return *logger;
+    }
+  }  // namespace
 
   ListenerManagerImpl::ListenerManagerImpl(
       std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect,
@@ -167,16 +176,15 @@ namespace libp2p::network {
   void ListenerManagerImpl::onConnection(
       outcome::result<std::shared_ptr<connection::CapableConnection>> rconn) {
     if (!rconn) {
-      // can not accept valid connection
-      // TODO(Warchant): log error
+      log().warn("can not accept valid connection, {}",
+                 rconn.error().message());
       return;  // ignore
     }
     auto &&conn = rconn.value();
 
     auto rid = conn->remotePeer();
     if (!rid) {
-      // can not get remote peer id
-      // TODO(Warchant): log error
+      log().warn("can not get remote peer id, {}", rid.error().message());
       return;  // ignore
     }
     auto &&id = rid.value();
@@ -185,8 +193,7 @@ namespace libp2p::network {
     conn->onStream(
         [this](outcome::result<std::shared_ptr<connection::Stream>> rstream) {
           if (!rstream) {
-            // can not accept a stream
-            // TODO(Warchant): log error
+            log().warn("can not accept stream, {}", rstream.error().message());
             return;  // ignore
           }
           auto &&stream = rstream.value();
@@ -197,16 +204,16 @@ namespace libp2p::network {
               false /* not initiator */,
               [this, stream](outcome::result<peer::Protocol> rproto) {
                 if (!rproto) {
-                  // can not negotiate protocols
-                  // TODO(Warchant): log error
+                  log().warn("can not negotiate protocols, {}",
+                             rproto.error().message());
                   return;  // ignore
                 }
                 auto &&proto = rproto.value();
 
                 auto rhandle = this->router_->handle(proto, stream);
                 if (!rhandle) {
-                  // no handler found
-                  // TODO(Warchant): log
+                  log().warn("no protocol handler found, {}",
+                             rhandle.error().message());
                   return;  // this is not an error
                 }
               });

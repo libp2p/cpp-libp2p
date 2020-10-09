@@ -51,9 +51,9 @@ class IdentifyTest : public testing::Test {
       identify_pb_msg_.add_protocols(proto);
     }
     identify_pb_msg_.set_observedaddr(
-        std::string{remote_multiaddr_.getStringAddress()});
+        std::string{(const char*)remote_multiaddr_.getBytesAddress().data(), remote_multiaddr_.getBytesAddress().size()});
     for (const auto &addr : listen_addresses_) {
-      identify_pb_msg_.add_listenaddrs(std::string{addr.getStringAddress()});
+      identify_pb_msg_.add_listenaddrs(std::string{(const char*)addr.getBytesAddress().data(), addr.getBytesAddress().size()});
     }
     identify_pb_msg_.set_publickey(marshalled_pubkey_.data(),
                                    marshalled_pubkey_.size());
@@ -207,8 +207,7 @@ TEST_F(IdentifyTest, Receive) {
       .WillOnce(ReturnStreamRes(std::static_pointer_cast<Stream>(stream_)));
 
   EXPECT_CALL(*stream_, read(_, 1, _))
-      .WillOnce(ReadPut(gsl::make_span(identify_pb_msg_bytes_.data(), 1)))
-      .WillOnce(ReadPut(gsl::make_span(identify_pb_msg_bytes_.data() + 1, 1)));
+      .WillOnce(ReadPut(gsl::make_span(identify_pb_msg_bytes_.data(), 1)));
   EXPECT_CALL(*stream_, read(_, pb_msg_len_varint_->toUInt64(), _))
       .WillOnce(ReadPut(gsl::make_span(
           identify_pb_msg_bytes_.data() + pb_msg_len_varint_->size(),

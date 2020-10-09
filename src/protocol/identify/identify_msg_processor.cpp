@@ -7,12 +7,23 @@
 
 #include <tuple>
 
+#include <generated/protocol/identify/protobuf/identify.pb.h>
 #include <boost/assert.hpp>
 #include <libp2p/basic/protobuf_message_read_writer.hpp>
 #include <libp2p/network/network.hpp>
 #include <libp2p/peer/address_repository.hpp>
 #include <libp2p/protocol/identify/utils.hpp>
-#include <generated/protocol/identify/protobuf/identify.pb.h>
+
+namespace {
+  inline std::string fromMultiaddrToString(const libp2p::multi::Multiaddress &ma) {
+    auto const &addr = ma.getBytesAddress();
+    return std::string(reinterpret_cast<const char*>(addr.data()), addr.size()); // NOLINT
+  }
+
+  inline libp2p::outcome::result<libp2p::multi::Multiaddress> fromStringToMultiaddr(const std::string &addr) {
+    return libp2p::multi::Multiaddress::create(gsl::span<const uint8_t>(reinterpret_cast<const uint8_t*>(addr.data()), addr.size())); // NOLINT
+  }
+}
 
 namespace libp2p::protocol {
   IdentifyMessageProcessor::IdentifyMessageProcessor(
@@ -42,13 +53,13 @@ namespace libp2p::protocol {
     // set an address of the other side, so that it knows, which address we used
     // to connect to it
     if (auto remote_addr = stream->remoteMultiaddr()) {
-      msg.set_observedaddr(std::string{remote_addr.value().getStringAddress()});
+      msg.set_observedaddr(fromMultiaddrToString(remote_addr.value()));
     }
 
     // set addresses we are listening on
     for (const auto &addr :
          host_.getNetwork().getListener().getListenAddresses()) {
-      msg.add_listenaddrs(std::string{addr.getStringAddress()});
+      msg.add_listenaddrs(fromMultiaddrToString(addr));
     }
 
     // set our public key
@@ -267,7 +278,7 @@ namespace libp2p::protocol {
       return;
     }
 
-    auto address_res = multi::Multiaddress::create(address_str);
+    auto address_res = fromStringToMultiaddr(address_str);
     if (!address_res) {
       return log_->error("peer {} has send an invalid observed address",
                          peer_id.toBase58());
@@ -319,7 +330,7 @@ namespace libp2p::protocol {
 
     std::vector<multi::Multiaddress> listen_addresses;
     for (const auto &addr_str : addresses_strings) {
-      auto addr_res = multi::Multiaddress::create(addr_str);
+      auto addr_res = fromStringToMultiaddr(addr_str);
       if (!addr_res) {
         log_->error("peer {} has sent an invalid listen address",
                     peer_id.toBase58());
@@ -343,16 +354,15 @@ namespace libp2p::protocol {
       log_->debug("can not get addresses for peer {}", peer_id.toBase58());
     }
 
-    switch (conn_manager_.connectedness({peer_id, addresses.value()})) {
-      case network::ConnectionManager::Connectedness::CONNECTED:
-        add_res = addr_repo.upsertAddresses(peer_id, listen_addresses,
-                                            peer::ttl::kPermanent);
-        break;
-      default:
-        add_res = addr_repo.upsertAddresses(peer_id, listen_addresses,
-                                            peer::ttl::kRecentlyConnected);
-        break;
-    }
+    bool permanent_ttl =
+        (addresses
+         && (conn_manager_.connectedness({peer_id, addresses.value()})
+             == network::ConnectionManager::Connectedness::CONNECTED));
+
+    add_res = addr_repo.upsertAddresses(
+        peer_id, listen_addresses,
+        permanent_ttl ? peer::ttl::kPermanent : peer::ttl::kRecentlyConnected);
+
     if (!add_res) {
       log_->error("cannot add addresses to peer {}: {}", peer_id.toBase58(),
                   add_res.error().message());

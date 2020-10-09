@@ -162,6 +162,9 @@ namespace libp2p::connection {
     boost::optional<std::unique_ptr<crypto::aes::AesCtr>> remote_decryptor_;
 
     std::queue<uint8_t> user_data_buffer_;
+
+    std::shared_ptr<common::ByteArray> read_buffer_;
+
     common::Logger log_ = common::createLogger("SECCONN");
   };
 }  // namespace libp2p::connection

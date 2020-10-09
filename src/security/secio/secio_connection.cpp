@@ -138,6 +138,9 @@ namespace libp2p::connection {
     } else {
       return Error::UNSUPPORTED_CIPHER;
     }
+
+    read_buffer_ = std::make_shared<common::ByteArray>(kMaxFrameSize);
+
     return outcome::success();
   }
 
@@ -260,10 +263,9 @@ namespace libp2p::connection {
   }
 
   void SecioConnection::readNextMessage(ReadCallbackFunc cb) {
-    auto buffer{std::make_shared<common::ByteArray>(kMaxFrameSize)};
     raw_connection_->read(
-        *buffer, kLenMarkerSize,
-        [self{shared_from_this()}, buffer,
+        *read_buffer_, kLenMarkerSize,
+        [self{shared_from_this()}, buffer=read_buffer_,
          cb{std::move(cb)}](outcome::result<size_t> read_bytes_res) mutable {
           IO_OUTCOME_TRY(len_marker_size, read_bytes_res, cb)
           if (len_marker_size != kLenMarkerSize) {
