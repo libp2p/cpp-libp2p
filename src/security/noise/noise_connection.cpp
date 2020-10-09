@@ -48,6 +48,10 @@ namespace libp2p::connection {
         already_wrote_{0} {
     BOOST_ASSERT(raw_connection_);
     BOOST_ASSERT(key_marshaller_);
+    BOOST_ASSERT(encoder_cs_);
+    BOOST_ASSERT(decoder_cs_);
+    BOOST_ASSERT(frame_buffer_);
+    BOOST_ASSERT(framer_);
   }
 
   bool NoiseConnection::isClosed() const {

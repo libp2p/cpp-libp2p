@@ -9,6 +9,7 @@
 #include <libp2p/common/logger.hpp>
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
+#include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/crypto/x25519_provider.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_id.hpp>
@@ -16,6 +17,7 @@
 #include <libp2p/security/noise/crypto/state.hpp>
 #include <libp2p/security/noise/handshake_message_marshaller.hpp>
 #include <libp2p/security/noise/insecure_rw.hpp>
+#include <libp2p/security/security_adaptor.hpp>
 
 namespace libp2p::security::noise {
 
@@ -25,7 +27,10 @@ namespace libp2p::security::noise {
    public:
     explicit Handshake(crypto::KeyPair local_key,
                        std::shared_ptr<connection::RawConnection> connection,
-                       bool is_initiator);
+                       bool is_initiator,
+                       SecurityAdaptor::SecConnCallbackFunc cb);
+
+    void connect();
 
    private:
     const std::string kPayloadPrefix = "noise-libp2p-static-key:";
@@ -53,7 +58,9 @@ namespace libp2p::security::noise {
     const crypto::KeyPair local_key_;  // ???
     std::shared_ptr<connection::RawConnection> conn_;
     bool initiator_;  /// false for incoming connections
+    SecurityAdaptor::SecConnCallbackFunc connection_cb_;
 
+    std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
     std::shared_ptr<ByteArray> read_buffer_;
     InsecureReadWriter rw_;
 

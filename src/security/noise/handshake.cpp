@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <memory>
+
 #include <libp2p/security/noise/handshake.hpp>
 
 #include <libp2p/common/byteutil.hpp>
@@ -13,6 +15,7 @@
 #include <libp2p/security/noise/crypto/noise_sha256.hpp>
 #include <libp2p/security/noise/crypto/state.hpp>
 #include <libp2p/security/noise/handshake_message.hpp>
+#include <libp2p/security/noise/noise_connection.hpp>
 
 #ifndef UNIQUE_NAME
 #define UNIQUE_NAME(base) base##__LINE__
@@ -46,14 +49,23 @@ namespace libp2p::security::noise {
 
   Handshake::Handshake(crypto::KeyPair local_key,
                        std::shared_ptr<connection::RawConnection> connection,
-                       bool is_initiator)
+                       bool is_initiator,
+                       SecurityAdaptor::SecConnCallbackFunc cb)
       : local_key_{std::move(local_key)},
         conn_{std::move(connection)},
         initiator_{is_initiator},
+        connection_cb_{std::move(cb)},
         read_buffer_{std::make_shared<ByteArray>(kMaxMsgLen)},
         rw_{conn_, read_buffer_},
         handshake_state_{std::make_unique<HandshakeState>()} {
     read_buffer_->resize(kMaxMsgLen);
+  }
+
+  void Handshake::connect() {
+    auto result = runHandshake();
+    if (result.has_error()) {
+      connection_cb_(result.error());
+    }
   }
 
   void Handshake::setCipherStates(std::shared_ptr<CipherState> cs1,
@@ -237,7 +249,6 @@ namespace libp2p::security::noise {
                 });
           });
     }
-
     return outcome::success();
   }
 
@@ -250,6 +261,11 @@ namespace libp2p::security::noise {
       log_->error("handshake failed for unknown reason");
     }
     log_->info("Handshake succeeded");
+
+
+    connection::NoiseConnection x(conn_, local_key_.publicKey,
+                                  libp2p::crypto::PublicKey::remote_peer_pubkey_, key_marshaller_, enc_,
+                                  dec_);
   }
 
 }  // namespace libp2p::security::noise

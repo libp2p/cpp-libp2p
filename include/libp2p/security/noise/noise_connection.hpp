@@ -27,7 +27,7 @@ namespace libp2p::connection {
 
     ~NoiseConnection() override = default;
 
-    NoiseConnection(
+    explicit NoiseConnection(
         std::shared_ptr<RawConnection> raw_connection,
         crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,

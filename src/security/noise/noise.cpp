@@ -4,6 +4,7 @@
  */
 
 #include <libp2p/security/noise/noise.hpp>
+#include <libp2p/security/noise/handshake.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, Noise::Error, e) {
   using E = libp2p::security::Noise::Error;
@@ -23,7 +24,7 @@ namespace libp2p::security {
   void Noise::secureInbound(std::shared_ptr<connection::RawConnection> inbound,
                             SecurityAdaptor::SecConnCallbackFunc cb) {
     log_->info("securing inbound connection");
-
+//    noise::Handshake h();
   }
 
 
