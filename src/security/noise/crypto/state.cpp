@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <cstring>
 #include <limits>
 #include <sstream>
 

@@ -13,7 +13,7 @@
 namespace libp2p::crypto::hmac {
   class HmacProviderCtrImpl : public HmacProviderCtr {
    public:
-    HmacProviderCtrImpl(HashType hash_type, const ByteArray &key);
+    HmacProviderCtrImpl(HashType hash_type, gsl::span<const uint8_t> key);
 
     ~HmacProviderCtrImpl() override;
 
@@ -29,8 +29,8 @@ namespace libp2p::crypto::hmac {
 
     HashType hashType() const override;
 
-  private:
-    void sinkCtx();
+   private:
+    void sinkCtx(size_t digest_size);
 
     HashType hash_type_;
     ByteArray key_;

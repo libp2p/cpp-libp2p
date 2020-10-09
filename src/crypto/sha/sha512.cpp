@@ -3,13 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <cstring>
+
 #include <openssl/sha.h>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/sha/sha512.hpp>
 
 namespace libp2p::crypto {
 
-  Sha512::Sha512() {
+  Sha512::Sha512() {  // NOLINT
     initialized_ = 1 == SHA512_Init(&ctx_);
   }
 

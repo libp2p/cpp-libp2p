@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <cstring>
+
 #include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
 
 #include <openssl/hmac.h>
@@ -85,9 +87,9 @@ namespace libp2p::crypto::hmac {
   //  }
 
   HmacProviderCtrImpl::HmacProviderCtrImpl(HashType hash_type,
-                                           const ByteArray &key)
+                                           gsl::span<const uint8_t> key)
       : hash_type_{hash_type},
-        key_{key},
+        key_(key.begin(), key.end()),
         hash_st_{hash_type_ == HashType::SHA1
                      ? EVP_sha1()
                      : (hash_type_ == HashType::SHA256 ? EVP_sha256()
@@ -112,7 +114,7 @@ namespace libp2p::crypto::hmac {
   }
 
   HmacProviderCtrImpl::~HmacProviderCtrImpl() {
-    sinkCtx();
+    sinkCtx(HmacProviderCtrImpl::digestSize());
   }
 
   outcome::result<void> HmacProviderCtrImpl::write(
@@ -151,7 +153,7 @@ namespace libp2p::crypto::hmac {
   }
 
   outcome::result<void> HmacProviderCtrImpl::reset() {
-    sinkCtx();
+    sinkCtx(digestSize());
     hmac_ctx_ = HMAC_CTX_new();
     if (nullptr == hmac_ctx_
         or 1
@@ -177,10 +179,10 @@ namespace libp2p::crypto::hmac {
     return 0;
   }
 
-  void HmacProviderCtrImpl::sinkCtx() {
+  void HmacProviderCtrImpl::sinkCtx(size_t digest_size) {
     if (initialized_) {
       std::vector<uint8_t> data;
-      data.resize(digestSize());
+      data.resize(digest_size);
       unsigned len{0};
       HMAC_Final(hmac_ctx_, data.data(), &len);
       HMAC_CTX_free(hmac_ctx_);

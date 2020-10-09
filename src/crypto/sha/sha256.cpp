@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <cstring>
+
 #include <libp2p/crypto/sha/sha256.hpp>
 
 #include <openssl/sha.h>
@@ -24,7 +26,7 @@ namespace libp2p::crypto {
     return out;
   }
 
-  Sha256::Sha256() {
+  Sha256::Sha256() {  // NOLINT
     initialized_ = 1 == SHA256_Init(&ctx_);
   }
 

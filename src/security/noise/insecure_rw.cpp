@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <arpa/inet.h>
+
 #include <libp2p/security/noise/insecure_rw.hpp>
 
 #include <libp2p/common/byteutil.hpp>
