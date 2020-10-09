@@ -50,6 +50,7 @@ namespace libp2p::security::noise {
   Handshake::Handshake(crypto::KeyPair local_key,
                        std::shared_ptr<connection::RawConnection> connection,
                        bool is_initiator,
+                       boost::optional<peer::PeerId> remote_peer_id,
                        SecurityAdaptor::SecConnCallbackFunc cb)
       : local_key_{std::move(local_key)},
         conn_{std::move(connection)},
@@ -57,7 +58,8 @@ namespace libp2p::security::noise {
         connection_cb_{std::move(cb)},
         read_buffer_{std::make_shared<ByteArray>(kMaxMsgLen)},
         rw_{conn_, read_buffer_},
-        handshake_state_{std::make_unique<HandshakeState>()} {
+        handshake_state_{std::make_unique<HandshakeState>()},
+        remote_peer_id_{std::move(remote_peer_id)} {
     read_buffer_->resize(kMaxMsgLen);
   }
 
@@ -255,17 +257,22 @@ namespace libp2p::security::noise {
   void Handshake::hscb(outcome::result<bool> secured) {
     if (secured.has_error()) {
       log_->error("handshake failed, {}", secured.error().message());
-      return;
+      return connection_cb_(secured.error());
     }
     if (not secured.value()) {
       log_->error("handshake failed for unknown reason");
+      return connection_cb_(std::errc::io_error);
     }
+    if (not remote_peer_pubkey_) {
+      log_->error("Remote peer static pubkey remains unknown");
+      return connection_cb_(std::errc::connection_aborted);
+    }
+
+    auto secured_connection = std::make_shared<connection::NoiseConnection>(
+        conn_, local_key_.publicKey, remote_peer_pubkey_.value(),
+        key_marshaller_, enc_, dec_);
     log_->info("Handshake succeeded");
-
-
-    connection::NoiseConnection x(conn_, local_key_.publicKey,
-                                  libp2p::crypto::PublicKey::remote_peer_pubkey_, key_marshaller_, enc_,
-                                  dec_);
+    connection_cb_(std::move(secured_connection));
   }
 
 }  // namespace libp2p::security::noise

@@ -7,6 +7,7 @@
 #define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_NOISE_HPP
 
 #include <libp2p/common/logger.hpp>
+#include <libp2p/crypto/key.hpp>
 #include <libp2p/security/security_adaptor.hpp>
 
 namespace libp2p::security {
@@ -22,6 +23,8 @@ namespace libp2p::security {
     static constexpr auto kNoiseProtocolName =
         "Noise_XX_25519_ChaChaPoly_SHA256";
 
+    explicit Noise(crypto::KeyPair local_key);
+
     ~Noise() override = default;
 
     peer::Protocol getProtocolId() const override;
@@ -34,6 +37,7 @@ namespace libp2p::security {
 
    private:
     common::Logger log_ = common::createLogger("Noise");
+    libp2p::crypto::KeyPair local_key_;
   };
 
 }  // namespace libp2p::security

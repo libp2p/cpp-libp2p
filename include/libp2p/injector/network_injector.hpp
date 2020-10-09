@@ -29,6 +29,7 @@
 #include <libp2p/network/impl/transport_manager_impl.hpp>
 #include <libp2p/peer/impl/identity_manager_impl.hpp>
 #include <libp2p/protocol_muxer/multiselect.hpp>
+#include <libp2p/security/noise.hpp>
 #include <libp2p/security/plaintext.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include <libp2p/security/secio.hpp>
@@ -281,7 +282,7 @@ namespace libp2p::injector {
         di::bind<protocol_muxer::ProtocolMuxer>().template to<protocol_muxer::Multiselect>(),
 
         // default adaptors
-        di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext, security::Secio>(),  // NOLINT
+        di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext, security::Secio, security::Noise>(),  // NOLINT
         di::bind<muxer::MuxerAdaptor *[]>().template to<muxer::Yamux, muxer::Mplex>(),  // NOLINT
         di::bind<transport::TransportAdaptor *[]>().template to<transport::TcpTransport>(),  // NOLINT
 
