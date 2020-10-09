@@ -184,7 +184,6 @@ namespace libp2p::protocol::gossip {
         // unban outbound connection only if inbound one exists
         unban(ctx);
       }
-      ctx->is_connecting = false;
     }
 
     size_t stream_id = 0;
@@ -225,7 +224,7 @@ namespace libp2p::protocol::gossip {
                           bool connection_must_exist) {
     using C = network::ConnectionManager::Connectedness;
 
-    if (ctx->is_connecting) {
+    if (ctx->is_connecting || ctx->outbound_stream) {
       return;
     }
 
@@ -264,6 +263,7 @@ namespace libp2p::protocol::gossip {
         [wptr = weak_from_this(), this, ctx=ctx] (auto &&rstream) mutable {
             auto self = wptr.lock();
             if (self) {
+              ctx->is_connecting = false;
               if (!rstream) {
                 log_.info("outbound connection failed, error={}",
                           rstream.error().message());
@@ -288,7 +288,6 @@ namespace libp2p::protocol::gossip {
 
     auto ts = scheduler_->now() + kBanInterval;
     ctx->banned_until = ts;
-    ctx->is_connecting = false;
     ctx->message_builder->clear();
     for (auto &s : ctx->inbound_streams) {
       s->close();
