@@ -12,8 +12,8 @@
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/protocol/echo.hpp>
+#include <libp2p/security/noise.hpp>
 #include <libp2p/security/plaintext.hpp>
-#include <libp2p/security/secio.hpp>
 
 bool isInsecure(int argc, char **argv) {
   if (2 == argc) {
@@ -34,7 +34,7 @@ struct ServerContext {
 ServerContext initSecureServer(const libp2p::crypto::KeyPair &keypair) {
   auto injector = libp2p::injector::makeHostInjector(
       libp2p::injector::useKeyPair(keypair),
-      libp2p::injector::useSecurityAdaptors<libp2p::security::Secio>());
+      libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>());
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
   return {.host = host, .io_context = context};
