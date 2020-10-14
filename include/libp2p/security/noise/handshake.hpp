@@ -25,11 +25,15 @@ namespace libp2p::security::noise {
 
   class Handshake : public std::enable_shared_from_this<Handshake> {
    public:
-    explicit Handshake(crypto::KeyPair local_key,
-                       std::shared_ptr<connection::RawConnection> connection,
-                       bool is_initiator,
-                       boost::optional<peer::PeerId> remote_peer_id,
-                       SecurityAdaptor::SecConnCallbackFunc cb);
+    explicit Handshake(
+        std::shared_ptr<crypto::CryptoProvider> crypto_provider,
+        std::unique_ptr<security::noise::HandshakeMessageMarshaller>
+            noise_marshaller,
+        crypto::KeyPair local_key,
+        std::shared_ptr<connection::RawConnection> connection,
+        bool is_initiator, boost::optional<peer::PeerId> remote_peer_id,
+        SecurityAdaptor::SecConnCallbackFunc cb,
+        std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
     void connect();
 
@@ -56,19 +60,19 @@ namespace libp2p::security::noise {
     void hscb(outcome::result<bool> secured);
 
     // constructor params
-    const crypto::KeyPair local_key_;  // ???
+    std::shared_ptr<crypto::CryptoProvider> crypto_provider_;
+    std::unique_ptr<security::noise::HandshakeMessageMarshaller>
+        noise_marshaller_;
+    const crypto::KeyPair local_key_;
     std::shared_ptr<connection::RawConnection> conn_;
     bool initiator_;  /// false for incoming connections
     SecurityAdaptor::SecConnCallbackFunc connection_cb_;
 
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
     std::shared_ptr<ByteArray> read_buffer_;
-    InsecureReadWriter rw_;
+    std::shared_ptr<InsecureReadWriter> rw_;
 
     // other params
-    std::shared_ptr<crypto::CryptoProvider> crypto_provider_;  // todo init
-    std::unique_ptr<security::noise::HandshakeMessageMarshaller>
-        noise_marshaller_;  // todo init
     std::unique_ptr<HandshakeState> handshake_state_;
 
     std::shared_ptr<CipherState> enc_;

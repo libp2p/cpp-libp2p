@@ -18,14 +18,21 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, NoiseConnection::Error, e) {
   }
 }
 
-#define _OUTCOME_CB1(t, r) \
-  auto && (t){r};          \
-  if (!(t))                \
-    return cb((t).error());
-#define _OUTCOME_CB(t, l, r) \
-  _OUTCOME_CB1(t, r)         \
-  auto && (l){(r).value()};
-#define OUTCOME_CB(l, r) _OUTCOME_CB(BOOST_OUTCOME_TRY_UNIQUE_NAME, (l), (r))
+#ifndef UNIQUE_NAME
+#define UNIQUE_NAME(base) base##__LINE__
+#endif  // UNIQUE_NAME
+
+#define OUTCOME_CB_I(var, res) \
+  auto && (var) = (res);       \
+  if ((var).has_error()) {     \
+    return cb((var).error());  \
+  }
+
+#define OUTCOME_CB_NAME_I(var, val, res) \
+  OUTCOME_CB_I(var, res)                 \
+  auto && (val) = (var).value();
+
+#define OUTCOME_CB(name, res) OUTCOME_CB_NAME_I(UNIQUE_NAME(name), name, res)
 
 namespace libp2p::connection {
   NoiseConnection::NoiseConnection(
@@ -52,6 +59,7 @@ namespace libp2p::connection {
     BOOST_ASSERT(decoder_cs_);
     BOOST_ASSERT(frame_buffer_);
     BOOST_ASSERT(framer_);
+    frame_buffer_->resize(0);
   }
 
   bool NoiseConnection::isClosed() const {
@@ -82,7 +90,7 @@ namespace libp2p::connection {
 
   void NoiseConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
                                  libp2p::basic::Reader::ReadCallbackFunc cb) {
-    if (!frame_buffer_->empty()) {
+    if (not frame_buffer_->empty()) {
       auto n{std::min(bytes, frame_buffer_->size())};
       auto begin{frame_buffer_->begin()};
       auto end{begin + n};

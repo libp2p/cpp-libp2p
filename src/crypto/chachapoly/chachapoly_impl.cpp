@@ -55,9 +55,11 @@ namespace libp2p::crypto::chachapoly {
 
     // does actual memory allocation
     result.resize(len + block_size_ + 16, 0u);
-    IF1(EVP_EncryptUpdate(ctx, nullptr, &len, aad.data(), aad.size()),
-        "Failed to apply additional authentication data during encryption.",
-        OpenSslError::FAILED_ENCRYPT_UPDATE)
+    if (not aad.empty()) {
+      IF1(EVP_EncryptUpdate(ctx, nullptr, &len, aad.data(), aad.size()),
+          "Failed to apply additional authentication data during encryption.",
+          OpenSslError::FAILED_ENCRYPT_UPDATE)
+    }
 
     IF1(EVP_EncryptUpdate(ctx, result.data(), &len, plaintext.data(),
                           plaintext.size()),
@@ -106,9 +108,11 @@ namespace libp2p::crypto::chachapoly {
         OpenSslError::FAILED_INITIALIZE_OPERATION)
 
     int len{0};
-    IF1(EVP_DecryptUpdate(ctx, nullptr, &len, aad.data(), aad.size()),
-        "Failed to apply additional authentication data during decryption.",
-        OpenSslError::FAILED_DECRYPT_UPDATE)
+    if (not aad.empty()) {
+      IF1(EVP_DecryptUpdate(ctx, nullptr, &len, aad.data(), aad.size()),
+          "Failed to apply additional authentication data during decryption.",
+          OpenSslError::FAILED_DECRYPT_UPDATE)
+    }
 
     IF1(EVP_DecryptUpdate(ctx, result.data(), &len, ciphertext.data(),
                           ciphertext.size() - 16),
@@ -125,15 +129,5 @@ namespace libp2p::crypto::chachapoly {
     result.resize(ciphertext.size() - 16);
     return result;
   }
-  // todo remove
-  //  outcome::result<ByteArray> ChaCha20Poly1305Impl::crypt(
-  //      gsl::span<const uint8_t> data, gsl::span<const uint8_t> aad) {
-  //    auto nonce = asArray<Nonce>(nonce64to12(nonce_));
-  //    ++nonce_;
-  //    if (Mode::ENCRYPT == mode_) {
-  //      return encrypt(nonce, data, aad);
-  //    }
-  //    return decrypt(nonce, data, aad);
-  //  }
 
 }  // namespace libp2p::crypto::chachapoly

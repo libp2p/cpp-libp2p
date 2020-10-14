@@ -24,14 +24,7 @@ target_link_libraries(p2p_noise
     p2p_x25519_provider
     p2p_hmac_provider
     p2p_chachapoly_provider
-#    p2p_secio_propose_message_marshaller
-#    p2p_secio_exchange_message_marshaller
-#    p2p_secio_protobuf
-#    p2p_protobuf_message_read_writer
-#    p2p_logger
-#    p2p_crypto_error
-#    p2p_crypto_provider
-#    p2p_sha
+    p2p_hexutil
     )
 
 libp2p_add_library(p2p_noise_handshake_message_marshaller

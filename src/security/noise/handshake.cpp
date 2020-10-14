@@ -47,17 +47,24 @@ namespace libp2p::security::noise {
                                              std::move(cipher));
   }
 
-  Handshake::Handshake(crypto::KeyPair local_key,
-                       std::shared_ptr<connection::RawConnection> connection,
-                       bool is_initiator,
-                       boost::optional<peer::PeerId> remote_peer_id,
-                       SecurityAdaptor::SecConnCallbackFunc cb)
-      : local_key_{std::move(local_key)},
+  Handshake::Handshake(
+      std::shared_ptr<crypto::CryptoProvider> crypto_provider,
+      std::unique_ptr<security::noise::HandshakeMessageMarshaller>
+          noise_marshaller,
+      crypto::KeyPair local_key,
+      std::shared_ptr<connection::RawConnection> connection, bool is_initiator,
+      boost::optional<peer::PeerId> remote_peer_id,
+      SecurityAdaptor::SecConnCallbackFunc cb,
+      std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller)
+      : crypto_provider_{std::move(crypto_provider)},
+        noise_marshaller_{std::move(noise_marshaller)},
+        local_key_{std::move(local_key)},
         conn_{std::move(connection)},
         initiator_{is_initiator},
         connection_cb_{std::move(cb)},
+        key_marshaller_{std::move(key_marshaller)},
         read_buffer_{std::make_shared<ByteArray>(kMaxMsgLen)},
-        rw_{conn_, read_buffer_},
+        rw_{std::make_shared<InsecureReadWriter>(conn_, read_buffer_)},
         handshake_state_{std::make_unique<HandshakeState>()},
         remote_peer_id_{std::move(remote_peer_id)} {
     read_buffer_->resize(kMaxMsgLen);
@@ -103,16 +110,15 @@ namespace libp2p::security::noise {
                                        basic::Writer::WriteCallbackFunc cb) {
     IO_OUTCOME_TRY(write_result, handshake_state_->writeMessage({}, payload),
                    cb);
-    auto write_cb =
-        [self{shared_from_this()}, cb{std::move(cb)},
-         wr{std::move(write_result)}](outcome::result<size_t> result) {
-          IO_OUTCOME_TRY(bytes_written, result, cb);
-          if (wr.cs1 and wr.cs2) {
-            self->setCipherStates(wr.cs1, wr.cs2);
-          }
-          cb(bytes_written);
-        };
-    rw_.write(write_result.data, write_cb);
+    auto write_cb = [self{shared_from_this()}, cb{std::move(cb)},
+                     wr{write_result}](outcome::result<size_t> result) {
+      IO_OUTCOME_TRY(bytes_written, result, cb);
+      if (wr.cs1 and wr.cs2) {
+        self->setCipherStates(wr.cs1, wr.cs2);
+      }
+      cb(bytes_written);
+    };
+    rw_->write(write_result.data, write_cb);
   }
 
   void Handshake::readHandshakeMessage(
@@ -127,7 +133,7 @@ namespace libp2p::security::noise {
       shared_data->swap(rr.data);
       cb(std::move(shared_data));
     };
-    rw_.read(read_cb);
+    rw_->read(read_cb);
   }
 
   outcome::result<void> Handshake::handleRemoteHandshakePayload(
@@ -183,7 +189,7 @@ namespace libp2p::security::noise {
           {},
           [self{shared_from_this()}, payload{std::move(payload)}](auto result) {
             IO_OUTCOME_TRY(bytes_written, result, self->hscb);
-            if (0 != bytes_written) {
+            if (0 == bytes_written) {
               return self->hscb(std::errc::bad_message);
             }
             //
@@ -204,10 +210,8 @@ namespace libp2p::security::noise {
               self->sendHandshakeMessage(
                   payload, [self, to_write(payload.size())](auto result) {
                     IO_OUTCOME_TRY(bytes_written, result, self->hscb);
-                    if (to_write != bytes_written) {
-                      return self->hscb(std::errc::broken_pipe);
-                    }
-                    self->hscb(true);  // todo init connection somehow
+                    unused(bytes_written);
+                    self->hscb(true);
                   });
             });
           });
@@ -231,9 +235,7 @@ namespace libp2p::security::noise {
             self->sendHandshakeMessage(
                 payload, [self, to_write(payload.size())](auto result) {
                   IO_OUTCOME_TRY(bytes_written, result, self->hscb);
-                  if (bytes_written != to_write) {
-                    return self->hscb(std::errc::broken_pipe);
-                  }
+                  unused(bytes_written);
                   //
                   // Incoming connection. Stage 2
                   //
@@ -246,7 +248,7 @@ namespace libp2p::security::noise {
                     if (handle_result.has_error()) {
                       self->hscb(handle_result.error());
                     }
-                    self->hscb(true);  // may be init connection here instead
+                    self->hscb(true);
                   });
                 });
           });
