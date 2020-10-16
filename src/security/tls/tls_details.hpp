@@ -26,7 +26,7 @@ namespace libp2p::security::tls_details {
     std::vector<uint8_t> certificate;
 
     /// private key in ASN1 DER format
-    std::array<uint8_t, 121> private_key;
+    std::array<uint8_t, 121> private_key{};
   };
 
   /// Creates self-signed certificate with libp2p-specific extension

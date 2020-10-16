@@ -6,13 +6,12 @@
 #ifndef LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_IMPL_HPP
 #define LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_IMPL_HPP
 
-#include <libp2p/crypto/hmac_provider.hpp>
 #include <gsl/span>
+#include <libp2p/crypto/hmac_provider.hpp>
 
 namespace libp2p::crypto::hmac {
-  class HmacProviderImpl : public HmacProvider {
-    using HashType = common::HashType;
 
+  class HmacProviderImpl : public HmacProvider {
    public:
     outcome::result<ByteArray> calculateDigest(
         HashType hash_type, const ByteArray &key,

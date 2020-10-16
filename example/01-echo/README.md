@@ -9,8 +9,8 @@ The last two examples can be used to test a compatibility between the implementa
 
 ## C++ Server and Client
 
-Currently, `libp2p_echo_server` can operate in two modes - via Plaintext or SECIO security protocols.
-By default, it is launched in SECIO secured mode.
+Currently, `libp2p_echo_server` can operate in two modes - via Plaintext or Noise security protocols.
+By default, it is launched in Noise secured mode.
 To run it with Plaintext exclusive mode just add `-insecure` command-line argument.
 
 ```bash
