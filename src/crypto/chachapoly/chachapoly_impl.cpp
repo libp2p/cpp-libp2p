@@ -16,10 +16,8 @@ namespace libp2p::crypto::chachapoly {
     return (result);           \
   }
 
-  ChaCha20Poly1305Impl::ChaCha20Poly1305Impl(Key key)  //, Mode default_mode)
+  ChaCha20Poly1305Impl::ChaCha20Poly1305Impl(Key key)
       : key_{key},
-        // mode_{default_mode},
-        nonce_{0},
         cipher_{EVP_chacha20_poly1305()},
         block_size_{EVP_CIPHER_block_size(cipher_)} {}
 
@@ -118,13 +116,11 @@ namespace libp2p::crypto::chachapoly {
                           ciphertext.size() - 16),
         "Ciphertext decryption failed.", OpenSslError::FAILED_DECRYPT_UPDATE)
 
-    if (1
-        != EVP_DecryptFinal_ex(ctx,
-                               result.data() + len,  // NOLINT
-                               &len)) {
-      log_->error("Failed to finalize decryption.");
-      return OpenSslError::FAILED_DECRYPT_FINALIZE;
-    }
+    IF1(EVP_DecryptFinal_ex(ctx,
+                            result.data() + len,  // NOLINT
+                            &len),
+        "Failed to finalize decryption.",
+        OpenSslError::FAILED_DECRYPT_FINALIZE);
 
     result.resize(ciphertext.size() - 16);
     return result;

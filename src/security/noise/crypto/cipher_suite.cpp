@@ -10,7 +10,7 @@
 namespace libp2p::security::noise {
 
   CipherSuiteImpl::CipherSuiteImpl(std::shared_ptr<DiffieHellman> dh,
-                                   std::shared_ptr<NamedHash> hash,
+                                   std::shared_ptr<NamedHasher> hash,
                                    std::shared_ptr<NamedAEADCipher> cipher)
       : dh_{std::move(dh)},
         hash_{std::move(hash)},
@@ -33,7 +33,7 @@ namespace libp2p::security::noise {
     return dh_->dhName();
   }
 
-  std::shared_ptr<crypto::Hash> CipherSuiteImpl::hash() {
+  std::shared_ptr<crypto::Hasher> CipherSuiteImpl::hash() {
     return hash_->hash();
   }
 
@@ -54,6 +54,5 @@ namespace libp2p::security::noise {
     s << dhName() << "_" << cipherName() << "_" << hashName();
     return s.str();
   }
-
 
 }  // namespace libp2p::security::noise

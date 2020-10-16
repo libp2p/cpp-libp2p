@@ -14,9 +14,9 @@ namespace libp2p::crypto {
 
   using libp2p::crypto::common::HashType;
 
-  class Hash {
+  class Hasher {
    public:
-    virtual ~Hash() = default;
+    virtual ~Hasher() = default;
 
     /// appends a new chunk of data
     virtual outcome::result<void> write(gsl::span<const uint8_t> data) = 0;

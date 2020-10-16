@@ -29,7 +29,7 @@ namespace libp2p::crypto::x25519 {
     virtual ~X25519Provider() = default;
 
     /**
-     * Generates a keypair using x25519 curve
+     * Generates a keypair using x25519 algo
      * @return a keypair
      */
     virtual outcome::result<Keypair> generate() const = 0;

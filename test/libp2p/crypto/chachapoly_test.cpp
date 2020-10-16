@@ -13,7 +13,6 @@
 
 using libp2p::crypto::chachapoly::ChaCha20Poly1305Impl;
 using libp2p::crypto::chachapoly::Key;
-using libp2p::crypto::chachapoly::Mode;
 using libp2p::crypto::chachapoly::Nonce;
 
 using libp2p::crypto::asArray;
@@ -125,7 +124,7 @@ class ChaChaPolyTest : public testing::Test {
  * @then the result is equal to the test string
  */
 TEST_F(ChaChaPolyTest, Basic) {
-  ChaCha20Poly1305Impl codec(key);//, Mode::ENCRYPT);
+  ChaCha20Poly1305Impl codec(key);
   Bytes data = "afafafdeadbeef"_unhex;
   EXPECT_OUTCOME_TRUE(ciphertext, codec.encrypt(nonce, data, aad))
   EXPECT_OUTCOME_TRUE(plaintext, codec.decrypt(nonce, ciphertext, aad))
@@ -138,7 +137,7 @@ TEST_F(ChaChaPolyTest, Basic) {
  * @then the encryption result equals to expected
  */
 TEST_F(ChaChaPolyTest, Encrypt) {
-  ChaCha20Poly1305Impl codec(key);//, Mode::ENCRYPT);
+  ChaCha20Poly1305Impl codec(key);
 
   EXPECT_OUTCOME_TRUE(result, codec.encrypt(nonce, plaintext, aad));
   ASSERT_EQ(result, ciphertext);
@@ -150,29 +149,8 @@ TEST_F(ChaChaPolyTest, Encrypt) {
  * @then the decryption result equals to expected
  */
 TEST_F(ChaChaPolyTest, Decrypt) {
-  ChaCha20Poly1305Impl codec(key);//, Mode::DECRYPT);
+  ChaCha20Poly1305Impl codec(key);
 
   EXPECT_OUTCOME_TRUE(result, codec.decrypt(nonce, ciphertext, aad));
   ASSERT_EQ(result, plaintext);
 }
-
-//disabled due to broken interface
-///**
-// * @given two stream ciphers with automatic nonce generation
-// * @when the same message gets transmitted twice
-// * @then cipher texts are different and gets decrypted to the correct messages
-// */
-//TEST_F(ChaChaPolyTest, DISABLED_Stream) {
-//  ChaCha20Poly1305Impl encoder(key, Mode::ENCRYPT);
-//  ChaCha20Poly1305Impl decoder(key, Mode::DECRYPT);
-//
-//  EXPECT_OUTCOME_TRUE(ciphertext1, encoder.crypt(plaintext, aad));
-//  EXPECT_OUTCOME_TRUE(ciphertext2, encoder.crypt(plaintext, aad));
-//
-//  EXPECT_OUTCOME_TRUE(plaintext1, decoder.crypt(ciphertext1, aad));
-//  EXPECT_OUTCOME_TRUE(plaintext2, decoder.crypt(ciphertext2, aad));
-//
-//  ASSERT_NE(ciphertext1, ciphertext2);
-//  ASSERT_EQ(plaintext1, plaintext);
-//  ASSERT_EQ(plaintext2, plaintext);
-//}

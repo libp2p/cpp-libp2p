@@ -8,14 +8,14 @@
 
 namespace libp2p::security::noise {
 
-  outcome::result<DHKey> DiffieHellmanImpl::generate() {
+  outcome::result<DHKey> NoiseDiffieHellmanImpl::generate() {
     OUTCOME_TRY(keypair, x25519.generate());
     ByteArray priv{keypair.private_key.begin(), keypair.private_key.end()};
     ByteArray pub{keypair.public_key.begin(), keypair.public_key.end()};
     return DHKey{.priv = std::move(priv), .pub = std::move(pub)};
   }
 
-  outcome::result<ByteArray> DiffieHellmanImpl::dh(
+  outcome::result<ByteArray> NoiseDiffieHellmanImpl::dh(
       const ByteArray &private_key, const ByteArray &public_key) {
     crypto::x25519::PrivateKey priv;
     crypto::x25519::PublicKey pub;
@@ -27,11 +27,11 @@ namespace libp2p::security::noise {
     return x25519.dh(priv, pub);
   }
 
-  int DiffieHellmanImpl::dhSize() const {
+  int NoiseDiffieHellmanImpl::dhSize() const {
     return 32;
   }
 
-  std::string DiffieHellmanImpl::dhName() const {
+  std::string NoiseDiffieHellmanImpl::dhName() const {
     return "25519";
   }
 }  // namespace libp2p::security::noise

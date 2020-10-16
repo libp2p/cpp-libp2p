@@ -21,13 +21,9 @@ namespace libp2p::connection {
   class NoiseConnection : public SecureConnection,
                           public std::enable_shared_from_this<NoiseConnection> {
    public:
-    enum class Error {
-      FAILURE = 1,
-    };
-
     ~NoiseConnection() override = default;
 
-    explicit NoiseConnection(
+    NoiseConnection(
         std::shared_ptr<RawConnection> raw_connection,
         crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
@@ -77,7 +73,5 @@ namespace libp2p::connection {
     common::Logger log_ = common::createLogger("NoiseConn");
   };
 }  // namespace libp2p::connection
-
-OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, NoiseConnection::Error);
 
 #endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_NOISE_CONNECTION_HPP

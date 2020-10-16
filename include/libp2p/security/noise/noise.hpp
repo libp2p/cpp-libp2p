@@ -17,18 +17,11 @@ namespace libp2p::security {
   class Noise : public SecurityAdaptor,
                 public std::enable_shared_from_this<Noise> {
    public:
-    enum class Error {
-      FAILURE = 1,
-    };
-
     static constexpr auto kProtocolId = "/noise";
-    static constexpr auto kNoiseProtocolName =
-        "Noise_XX_25519_ChaChaPoly_SHA256";
 
-    explicit Noise(
-        crypto::KeyPair local_key,
-        std::shared_ptr<crypto::CryptoProvider> crypto_provider,
-        std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
+    Noise(crypto::KeyPair local_key,
+          std::shared_ptr<crypto::CryptoProvider> crypto_provider,
+          std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
     ~Noise() override = default;
 
@@ -48,7 +41,5 @@ namespace libp2p::security {
   };
 
 }  // namespace libp2p::security
-
-OUTCOME_HPP_DECLARE_ERROR(libp2p::security, Noise::Error);
 
 #endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_NOISE_HPP

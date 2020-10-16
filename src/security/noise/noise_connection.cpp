@@ -8,16 +8,6 @@
 #include <libp2p/crypto/x25519_provider/x25519_provider_impl.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
 
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, NoiseConnection::Error, e) {
-  using E = libp2p::connection::NoiseConnection::Error;
-  switch (e) {
-    case E::FAILURE:
-      return "failure";
-    default:
-      return "Unknown error";
-  }
-}
-
 #ifndef UNIQUE_NAME
 #define UNIQUE_NAME(base) base##__LINE__
 #endif  // UNIQUE_NAME

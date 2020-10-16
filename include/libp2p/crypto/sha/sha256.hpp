@@ -9,11 +9,11 @@
 #include <openssl/sha.h>
 #include <gsl/span>
 #include <libp2p/common/types.hpp>
-#include <libp2p/crypto/hash.hpp>
+#include <libp2p/crypto/hasher.hpp>
 
 namespace libp2p::crypto {
 
-  class Sha256 : public Hash {
+  class Sha256 : public Hasher {
    public:
     Sha256();
 
@@ -31,7 +31,7 @@ namespace libp2p::crypto {
 
     HashType hashType() const override;
 
-  private:
+   private:
     void sinkCtx();
 
     SHA256_CTX ctx_;

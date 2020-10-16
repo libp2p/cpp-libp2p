@@ -14,7 +14,7 @@ namespace libp2p::crypto::chachapoly {
 
   class ChaCha20Poly1305Impl : public ChaCha20Poly1305 {
    public:
-    ChaCha20Poly1305Impl( Key key/*, Mode default_mode*/);
+    explicit ChaCha20Poly1305Impl(Key key);
 
     outcome::result<ByteArray> encrypt(const Nonce &nonce,
                                        gsl::span<const uint8_t> plaintext,
@@ -24,13 +24,8 @@ namespace libp2p::crypto::chachapoly {
                                        gsl::span<const uint8_t> ciphertext,
                                        gsl::span<const uint8_t> aad) override;
 
-//    outcome::result<ByteArray> crypt(gsl::span<const uint8_t> data,
-//                                     gsl::span<const uint8_t> aad) override;
-
    private:
     const Key key_;
-    //const Mode mode_;
-    uint64_t nonce_;
     const EVP_CIPHER *cipher_;
     const int block_size_;
     libp2p::common::Logger log_ =

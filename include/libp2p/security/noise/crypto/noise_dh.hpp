@@ -12,7 +12,7 @@
 namespace libp2p::security::noise {
 
   /// X25519 DH
-  class DiffieHellmanImpl : public DiffieHellman {
+  class NoiseDiffieHellmanImpl : public DiffieHellman {
    public:
     outcome::result<DHKey> generate() override;
 

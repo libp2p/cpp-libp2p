@@ -10,11 +10,11 @@
 
 namespace libp2p::security::noise {
 
-  std::string SHA256::hashName() const {
+  std::string NoiseSHA256HasherImpl::hashName() const {
     return "SHA256";
   }
 
-  std::shared_ptr<libp2p::crypto::Hash> SHA256::hash() {
+  std::shared_ptr<libp2p::crypto::Hasher> NoiseSHA256HasherImpl::hash() {
     return std::make_shared<libp2p::crypto::Sha256>();
   }
 

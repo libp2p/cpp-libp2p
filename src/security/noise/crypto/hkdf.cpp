@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
+#include <libp2p/crypto/hmac_provider/hmac_provider_ctr_impl.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::noise, HKDFError, e) {

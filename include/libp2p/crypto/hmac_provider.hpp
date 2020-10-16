@@ -9,7 +9,7 @@
 #include <gsl/span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
-#include <libp2p/crypto/hash.hpp>
+#include <libp2p/crypto/hasher.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto::hmac {
@@ -18,7 +18,7 @@ namespace libp2p::crypto::hmac {
   using HashType = common::HashType;
 
   /// HMAC that supports stream data feeding interface
-  class HmacProviderCtr : public Hash {};
+  class HmacProviderCtr : public Hasher {};
 
   /**
    * @class HmacProvider provides HMAC functionality

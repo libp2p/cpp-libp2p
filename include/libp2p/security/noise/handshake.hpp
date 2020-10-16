@@ -25,7 +25,7 @@ namespace libp2p::security::noise {
 
   class Handshake : public std::enable_shared_from_this<Handshake> {
    public:
-    explicit Handshake(
+    Handshake(
         std::shared_ptr<crypto::CryptoProvider> crypto_provider,
         std::unique_ptr<security::noise::HandshakeMessageMarshaller>
             noise_marshaller,

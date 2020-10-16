@@ -11,11 +11,11 @@
 #include <openssl/sha.h>
 #include <gsl/span>
 #include <libp2p/common/types.hpp>
-#include <libp2p/crypto/hash.hpp>
+#include <libp2p/crypto/hasher.hpp>
 
 namespace libp2p::crypto {
 
-  class Sha512 : public Hash {
+  class Sha512 : public Hasher {
    public:
     Sha512();
 

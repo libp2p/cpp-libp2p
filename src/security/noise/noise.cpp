@@ -7,16 +7,6 @@
 #include <libp2p/security/noise/handshake_message_marshaller_impl.hpp>
 #include <libp2p/security/noise/noise.hpp>
 
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, Noise::Error, e) {
-  using E = libp2p::security::Noise::Error;
-  switch (e) {  // NOLINT
-    case E::FAILURE:
-      return "failure";
-    default:
-      return "Unknown error";
-  }
-}
-
 namespace libp2p::security {
   peer::Protocol Noise::getProtocolId() const {
     return kProtocolId;

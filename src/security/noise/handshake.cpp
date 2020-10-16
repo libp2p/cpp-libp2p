@@ -40,8 +40,8 @@ namespace libp2p::security::noise {
   }  // namespace
 
   std::shared_ptr<CipherSuite> defaultCipherSuite() {
-    auto dh = std::make_shared<DiffieHellmanImpl>();
-    auto hash = std::make_shared<SHA256>();
+    auto dh = std::make_shared<NoiseDiffieHellmanImpl>();
+    auto hash = std::make_shared<NoiseSHA256HasherImpl>();
     auto cipher = std::make_shared<NamedCCPImpl>();
     return std::make_shared<CipherSuiteImpl>(std::move(dh), std::move(hash),
                                              std::move(cipher));
@@ -170,7 +170,7 @@ namespace libp2p::security::noise {
   outcome::result<void> Handshake::runHandshake() {
     auto cipher_suite = defaultCipherSuite();
     OUTCOME_TRY(keypair, cipher_suite->generate());
-    HandshakeStateConfig config(defaultCipherSuite(), handshakeXX(), initiator_,
+    HandshakeStateConfig config(defaultCipherSuite(), handshakeXX, initiator_,
                                 keypair);
     OUTCOME_TRY(handshake_state_->init(std::move(config)));
     OUTCOME_TRY(payload, generateHandshakePayload(keypair));

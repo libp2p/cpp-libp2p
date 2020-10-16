@@ -15,13 +15,6 @@
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto::chachapoly {
-
-  enum class Mode {
-    // the constants are the same as in OpenSSL
-    DECRYPT = 0,
-    ENCRYPT = 1,
-  };
-
   using libp2p::common::ByteArray;
   using Key = std::array<uint8_t, 32>;
   using Nonce = std::array<uint8_t, 12>;
@@ -29,13 +22,6 @@ namespace libp2p::crypto::chachapoly {
   class ChaCha20Poly1305 {
    public:
     virtual ~ChaCha20Poly1305() = default;
-
-    /*
-     * NB:
-     * Descendants are to implement a constructor or other method to set the
-     * mode which crypt method should perform (encrypt or decrypt) as well as
-     * the key setup.
-     */
 
     /**
      * Does authenticated encryption with associated data (AEAD)

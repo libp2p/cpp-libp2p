@@ -63,8 +63,6 @@ namespace libp2p::security::noise {
 
     explicit SymmetricState(std::shared_ptr<CipherSuite> cipher_suite);
 
-    //    using CipherState::CipherState; ??
-
     outcome::result<void> initializeSymmetric(
         gsl::span<const uint8_t> handshake_name);
 
@@ -93,7 +91,6 @@ namespace libp2p::security::noise {
     bool hasKey() const;
 
    private:
-    // names below has come from go-libp2p-noise :(
     bool has_key_ = false;         // has_k
     ByteArray chaining_key_;       // ck
     ByteArray hash_;               // h
@@ -108,9 +105,9 @@ namespace libp2p::security::noise {
 
   class HandshakeStateConfig {
    public:
-    explicit HandshakeStateConfig(std::shared_ptr<CipherSuite> cipher_suite,
-                                  HandshakePattern pattern, bool is_initiator,
-                                  DHKey local_static_keypair);
+    HandshakeStateConfig(std::shared_ptr<CipherSuite> cipher_suite,
+                         HandshakePattern pattern, bool is_initiator,
+                         DHKey local_static_keypair);
 
     HandshakeStateConfig &setPrologue(gsl::span<const uint8_t> prologue);
 

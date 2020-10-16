@@ -12,7 +12,7 @@
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/common_functions.hpp>
-#include <libp2p/crypto/hash.hpp>
+#include <libp2p/crypto/hasher.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::security::noise {
@@ -65,11 +65,11 @@ namespace libp2p::security::noise {
     virtual std::string dhName() const = 0;
   };
 
-  class NamedHash {
+  class NamedHasher {
    public:
-    virtual ~NamedHash() = default;
+    virtual ~NamedHasher() = default;
 
-    virtual std::shared_ptr<crypto::Hash> hash() = 0;
+    virtual std::shared_ptr<crypto::Hasher> hash() = 0;
 
     virtual std::string hashName() const = 0;
   };
@@ -97,8 +97,9 @@ namespace libp2p::security::noise {
     virtual std::string cipherName() const = 0;
   };
 
+  /// A set of three algos: DH, hash and AEAD cipher
   class CipherSuite : public DiffieHellman,
-                      public NamedHash,
+                      public NamedHasher,
                       public NamedAEADCipher {
    public:
     virtual ~CipherSuite() = default;
