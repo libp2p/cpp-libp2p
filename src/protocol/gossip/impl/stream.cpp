@@ -11,7 +11,7 @@
 #include <libp2p/protocol/gossip/impl/message_parser.hpp>
 #include <libp2p/protocol/gossip/impl/peer_context.hpp>
 
-#define TRACE_ENABLED 1
+#define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
 
 namespace libp2p::protocol::gossip {

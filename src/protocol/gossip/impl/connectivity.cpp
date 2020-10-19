@@ -217,6 +217,8 @@ namespace libp2p::protocol::gossip {
     if (!ctx->outbound_stream) {
       // make stream for writing
       dial(ctx, true);
+    } else {
+      flush(ctx);
     }
   }
 
