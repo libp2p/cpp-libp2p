@@ -17,9 +17,12 @@ import (
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/peerstore"
+	noise "github.com/libp2p/go-libp2p-noise"
+
 
 	golog "github.com/ipfs/go-log"
 	ma "github.com/multiformats/go-multiaddr"
+	gologging "github.com/whyrusleeping/go-logging"
 )
 
 // makeBasicHost creates a LibP2P host with a random peer ID listening on the
@@ -52,6 +55,8 @@ func makeBasicHost(listenPort int, insecure bool, randseed int64) (host.Host, er
 
 	if insecure {
 		opts = append(opts, libp2p.NoSecurity)
+	} else {
+	    opts = append(opts, libp2p.Security(noise.ID, noise.New))
 	}
 
 	basicHost, err := libp2p.New(context.Background(), opts...)
@@ -81,7 +86,7 @@ func main() {
 	// string IDs (i.e. "swarm"). We can control the verbosity level for
 	// all loggers with:
 	// golog.SetAllLoggers(golog.LevelInfo) // Change to DEBUG for extra info
-	golog.SetDebugLogging()
+	golog.SetAllLoggers(golog.LogLevel(gologging.INFO)) // Change to DEBUG for extra info
 
 	// Parse options from the command line
 	listenF := flag.Int("l", 0, "wait for incoming connections")

@@ -4,9 +4,16 @@
 ##
 
 addtest(hexutil_test
-  hexutil_test.cpp
-  )
+    hexutil_test.cpp
+    )
 target_link_libraries(hexutil_test
-  p2p_hexutil
-  p2p_literals
-  )
+    p2p_hexutil
+    p2p_literals
+    )
+
+addtest(byteutil_test
+    byteutil_test.cpp
+    )
+target_link_libraries(byteutil_test
+    p2p_byteutil
+    )

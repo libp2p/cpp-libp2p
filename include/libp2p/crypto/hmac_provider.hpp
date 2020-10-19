@@ -9,9 +9,17 @@
 #include <gsl/span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
+#include <libp2p/crypto/hasher.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto::hmac {
+
+  using ByteArray = libp2p::common::ByteArray;
+  using HashType = common::HashType;
+
+  /// HMAC that supports stream data feeding interface
+  class HmacProviderCtr : public Hasher {};
+
   /**
    * @class HmacProvider provides HMAC functionality
    * allows calculating message authentication code
@@ -19,12 +27,9 @@ namespace libp2p::crypto::hmac {
    * and a secret cryptographic key
    */
   class HmacProvider {
-    using HashType = common::HashType;
-
    public:
-    using ByteArray = libp2p::common::ByteArray;
-
     virtual ~HmacProvider() = default;
+
     /**
      * @brief calculates digests
      * @param hash_type hash type

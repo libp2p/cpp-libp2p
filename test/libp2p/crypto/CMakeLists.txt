@@ -16,6 +16,15 @@ target_link_libraries(aes_test
     p2p_literals
     )
 
+addtest(chachapoly_test
+    chachapoly_test.cpp
+    )
+target_link_libraries(chachapoly_test
+    p2p_chachapoly_provider
+    p2p_testutil
+    p2p_literals
+    )
+
 addtest(ecdsa_test
     ecdsa_provider_test.cpp
     )
@@ -74,4 +83,12 @@ addtest(secp256k1_test
 target_link_libraries(secp256k1_test
     p2p_secp256k1_provider
     p2p_multibase_codec
+    )
+
+addtest(x25519_test
+    x25519_provider_test.cpp
+    )
+target_link_libraries(x25519_test
+    p2p_x25519_provider
+    p2p_literals
     )

@@ -1,0 +1,8 @@
+syntax = "proto3";
+package libp2p.security.noise.protobuf;
+
+message NoiseHandshakePayload {
+  bytes identity_key = 1;
+  bytes identity_sig = 2;
+  bytes data = 3;
+}

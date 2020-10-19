@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+add_subdirectory(noise)
 add_subdirectory(plaintext)
 add_subdirectory(secio)
 add_subdirectory(tls)
