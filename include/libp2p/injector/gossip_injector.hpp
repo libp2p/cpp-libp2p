@@ -14,14 +14,14 @@
 
 namespace libp2p::injector {
 
-  auto useGossipConfig(const protocol::gossip::Config& c) {
+  inline auto useGossipConfig(const protocol::gossip::Config& c) {
     return boost::di::bind<protocol::gossip::Config>().template to(
         c)[boost::di::override];
   }
 
   // clang-format off
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
-  auto makeGossipInjector(Ts &&... args) {
+  inline auto makeGossipInjector(Ts &&... args) {
     using namespace boost;  // NOLINT
 
     // clang-format off

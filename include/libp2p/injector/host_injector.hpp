@@ -18,7 +18,7 @@
 namespace libp2p::injector {
 
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
-  auto makeHostInjector(Ts &&... args) {
+  inline auto makeHostInjector(Ts &&... args) {
     using namespace boost;  // NOLINT
 
     // clang-format off
