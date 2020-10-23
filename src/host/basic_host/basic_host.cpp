@@ -39,8 +39,10 @@ namespace libp2p::host {
 
   peer::PeerInfo BasicHost::getPeerInfo() const {
     auto addresses = getAddresses();
-    auto interfaces = getAddressesInterfaces();
     auto observed = getObservedAddresses();
+    auto interfaces = getAddressesInterfaces();
+
+    // TODO(xDimon): Needs to filter special interfaces (e.g. INADDR_ANY, etc.)
 
     std::set<multi::Multiaddress> unique_addresses;
     unique_addresses.insert(addresses.begin(), addresses.end());
