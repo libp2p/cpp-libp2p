@@ -9,12 +9,12 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/protocol/common/asio/asio_scheduler.hpp>
-#include <libp2p/protocol/kademlia/impl/kad_impl.hpp>
-#include <libp2p/protocol/kademlia/node_id.hpp>
+#include <libp2p/protocol/kad/impl/kad_impl.hpp>
+#include <libp2p/protocol/kad/node_id.hpp>
 
 #include "factory.hpp"
 
-namespace libp2p::protocol::kademlia::example {
+namespace libp2p::protocol::kad::example {
 
   static const uint16_t kPortBase = 40000;
 
@@ -56,7 +56,9 @@ namespace libp2p::protocol::kademlia::example {
           : index(i), o(std::move(obj)) {
         kad = std::make_shared<KadImpl>(o.host, sch, o.routing_table,
                                         createDefaultValueStoreBackend(),
-                                        getConfig());
+                                        getConfig(),
+                                        std::make_shared<crypto::random::BoostRandomGenerator>()
+                                        );
       }
 
       void checkPeers() {
@@ -253,11 +255,11 @@ namespace libp2p::protocol::kademlia::example {
     debug_logger->set_level(spdlog::level::debug);
   }
 
-}  //  namespace libp2p::protocol::kademlia::example
+}  //  namespace libp2p::protocol::kad::example
 
 int main(int argc, char *argv[]) {
   namespace p = libp2p::protocol;
-  namespace x = libp2p::protocol::kademlia::example;
+  namespace x = libp2p::protocol::kad::example;
   try {
     size_t hosts_count = 6;
     bool kad_log_debug = false;

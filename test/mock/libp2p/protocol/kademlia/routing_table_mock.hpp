@@ -6,7 +6,7 @@
 #ifndef LIBP2P_KAD_ROUTING_TABLE_MOCK_HPP
 #define LIBP2P_KAD_ROUTING_TABLE_MOCK_HPP
 
-#include <libp2p/protocol/kademlia/routing_table.hpp>
+#include <libp2p/protocol/kad/routing_table.hpp>
 
 #include <gmock/gmock.h>
 

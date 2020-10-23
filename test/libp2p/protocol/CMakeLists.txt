@@ -4,7 +4,7 @@
 #
 
 add_subdirectory(common)
-add_subdirectory(kademlia)
+add_subdirectory(kad)
 add_subdirectory(gossip)
 
 addtest(identify_test

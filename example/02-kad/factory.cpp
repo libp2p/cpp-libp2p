@@ -9,9 +9,9 @@
 #include <boost/di/extension/scopes/shared.hpp>
 
 #include <libp2p/injector/host_injector.hpp>
-#include <libp2p/protocol/kademlia/impl/routing_table_impl.hpp>
+#include <libp2p/protocol/kad/impl/routing_table_impl.hpp>
 
-namespace libp2p::protocol::kademlia::example {
+namespace libp2p::protocol::kad::example {
 
   boost::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str) {
     auto server_ma_res = libp2p::multi::Multiaddress::create(str);
@@ -102,4 +102,4 @@ namespace libp2p::protocol::kademlia::example {
     return c;
   }
 
-}  // namespace libp2p::protocol::kademlia::example
+}  // namespace libp2p::protocol::kad::example
