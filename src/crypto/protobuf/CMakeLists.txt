@@ -6,3 +6,4 @@
 add_proto_library(p2p_keys_proto
     keys.proto
     )
+#libp2p_install(p2p_keys_proto)

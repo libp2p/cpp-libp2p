@@ -8,10 +8,10 @@ file(GLOB_RECURSE
 
 # Adding clang-format target if executable is found
 if(NOT CLANG_FORMAT_BIN)
-  find_program(CLANG_FORMAT_BIN "clang-format")
+  find_program(CLANG_FORMAT_BIN NAMES clang-format clang-format-9 clang-format-8 clang-format-7)
 endif()
 
-if(CLANG_FORMAT_BIN)
+if(CLANG_FORMAT_BIN AND NOT TARGET clang-format)
   message(STATUS "Target clang-format enabled")
   add_custom_target(
     clang-format

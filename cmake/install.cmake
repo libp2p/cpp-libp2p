@@ -9,10 +9,12 @@ function(libp2p_install targets)
       PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
       FRAMEWORK DESTINATION ${CMAKE_INSTALL_PREFIX}
       )
+  kagome_install(${targets})
+
 endfunction()
 
 install(
-    DIRECTORY ${CMAKE_SOURCE_DIR}/include/libp2p
+    DIRECTORY ${CMAKE_SOURCE_DIR}/libs/libp2p
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 install(
