@@ -7,9 +7,8 @@
 #define LIBP2P_PROTOCOL_KADEMLIA_PEERROUTING
 
 #include <functional>
-#include <libp2p/peer/peer_id.hpp>
-#include <libp2p/peer/peer_info.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <libp2p/protocol/kademlia/common.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -19,14 +18,13 @@ namespace libp2p::protocol::kademlia {
   // or even a DHT (like herein).
   class PeerRouting {
    public:
-    using FoundPeerInfoHandler =
-        std::function<void(outcome::result<peer::PeerInfo>)>;
-
     virtual ~PeerRouting() = default;
 
-    /// Searches for a peer with given @param ID, @returns PeerInfo
-    // with relevant addresses.
-    virtual outcome::result<void> findPeer(const peer::PeerId &peer_id,
+	  virtual void addPeer(const PeerInfo& peer_info, bool permanent) = 0;
+
+	  /// Searches for a peer with given @param ID, @returns PeerInfo
+    /// with relevant addresses.
+    virtual outcome::result<void> findPeer(const PeerId &peer_id,
                                            FoundPeerInfoHandler handler) = 0;
   };
 

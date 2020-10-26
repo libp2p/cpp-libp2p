@@ -51,7 +51,7 @@ namespace libp2p::protocol::kademlia {
   class ValueStoreImpl : public ValueStore,
                          public std::enable_shared_from_this<ValueStoreImpl> {
    public:
-    ValueStoreImpl(std::shared_ptr<const Config> config,
+    ValueStoreImpl(const Config &config,
                    std::shared_ptr<ValueStoreBackend> backend,
                    std::shared_ptr<Scheduler> scheduler);
 
@@ -64,7 +64,7 @@ namespace libp2p::protocol::kademlia {
    private:
     void onRefreshTimer();
 
-    std::shared_ptr<const Config> config_;
+    const Config &config_;
     std::shared_ptr<ValueStoreBackend> backend_;
     std::shared_ptr<Scheduler> scheduler_;
 

@@ -37,15 +37,16 @@ namespace {
 namespace libp2p::protocol::kademlia {
 
   RoutingTableImpl::RoutingTableImpl(
+      const Config &config,
       std::shared_ptr<peer::IdentityManager> identity_manager,
-      std::shared_ptr<event::Bus> bus, const Config &config)
+      std::shared_ptr<event::Bus> bus)
       : identity_manager_(std::move(identity_manager)),
         local_([this] {
           BOOST_ASSERT(identity_manager_ != nullptr);
           return identity_manager_->getId();
         }()),
         bus_(std::move(bus)),
-        bucket_size_(config.maxBucketSize()) {
+        bucket_size_(config.maxBucketSize) {
     BOOST_ASSERT(bus_ != nullptr);
     BOOST_ASSERT(bucket_size_ > 1);
     buckets_.emplace_back();  // create initial bucket

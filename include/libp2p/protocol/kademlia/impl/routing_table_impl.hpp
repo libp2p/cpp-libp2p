@@ -55,7 +55,7 @@ namespace libp2p::protocol::kademlia {
 
     void moveToFront(const peer::PeerId &p) {
       remove(p);
-	    push_front(p);
+      push_front(p);
     }
 
     Bucket split(size_t commonLenPrefix, const NodeId &target) {
@@ -85,8 +85,9 @@ namespace libp2p::protocol::kademlia {
       PEER_REJECTED_NO_CAPACITY
     };
 
-    RoutingTableImpl(std::shared_ptr<peer::IdentityManager> identity_manager,
-                     std::shared_ptr<event::Bus> bus, const Config &config);
+    RoutingTableImpl(const Config &config,
+                     std::shared_ptr<peer::IdentityManager> identity_manager,
+                     std::shared_ptr<event::Bus> bus);
 
     outcome::result<void> update(const peer::PeerId &pid) override;
 

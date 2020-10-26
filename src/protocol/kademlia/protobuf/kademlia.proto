@@ -2,7 +2,7 @@ syntax = "proto3";
 
 // https://github.com/libp2p/specs/blob/cb971aa17b2ee6bb7f20df6daed2e7cd4c7e861d/kad-dht/README.md
 
-package kademlia.pb;
+package libp2p.protocol.kademlia.pb;
 
 // Record represents a dht record that contains a value
 // for a key value pair

@@ -7,11 +7,10 @@
 #define LIBP2P_PROTOCOL_KADEMLIA_CONTENTROUTING
 
 #include <functional>
-#include <libp2p/peer/peer_id.hpp>
-#include <libp2p/peer/peer_info.hpp>
+#include <vector>
+
 #include <libp2p/outcome/outcome.hpp>
-#include <libp2p/protocol/kademlia/content_id.hpp>
-#include <string>
+#include <libp2p/protocol/kademlia/common.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -19,18 +18,18 @@ namespace libp2p::protocol::kademlia {
   class ContentRouting {
    public:
     using FoundProvidersHandler =
-        std::function<void(outcome::result<std::vector<peer::PeerInfo>>)>;
+        std::function<void(outcome::result<std::vector<PeerInfo>>)>;
 
     virtual ~ContentRouting() = default;
 
     // Provide adds the given CID to the content routing system.
     // If 'true' is passed, it also announces it, otherwise it is just kept in
     // the local accounting of which objects are being provided.
-    virtual outcome::result<void> provide(const ContentId &cid, bool need_notify) = 0;
+    virtual outcome::result<void> provide(const Key &key, bool need_notify) = 0;
 
     // Search for peers who are able to provide a given key.
     virtual outcome::result<void> findProviders(
-		    const ContentId &cid, size_t limit, FoundProvidersHandler handler) = 0;
+        const Key &key, size_t limit, FoundProvidersHandler handler) = 0;
   };
 
 }  // namespace libp2p::protocol::kademlia

@@ -15,35 +15,32 @@
 
 namespace libp2p::protocol::kademlia {
 
-  ValueStoreImpl::ValueStoreImpl(std::shared_ptr<const Config> config,
+  ValueStoreImpl::ValueStoreImpl(const Config &config,
                                  std::shared_ptr<ValueStoreBackend> backend,
                                  std::shared_ptr<Scheduler> scheduler)
-      : config_(std::move(config)),
+      : config_(config),
         backend_(std::move(backend)),
         scheduler_(std::move(scheduler)) {
-    BOOST_ASSERT(config_ != nullptr);
     BOOST_ASSERT(backend_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
-    BOOST_ASSERT(config_->storageRecordTTL()
-                 > config_->storageWipingInterval());
+    BOOST_ASSERT(config_.storageRecordTTL > config_.storageWipingInterval);
 
     table_ = std::make_unique<Table>();
 
-    refresh_timer_ = scheduler_->schedule(
-        scheduler::toTicks(config_->storageWipingInterval()),
-        [this] { onRefreshTimer(); });
+    refresh_timer_ =
+        scheduler_->schedule(scheduler::toTicks(config_.storageWipingInterval),
+                             [this] { onRefreshTimer(); });
   }
 
-  outcome::result<void> ValueStoreImpl::putValue(ValueStore::Key key,
-                                                 ValueStore::Value value) {
+  outcome::result<void> ValueStoreImpl::putValue(Key key, Value value) {
     // TODO(xDimon): Need to validate here
 
     OUTCOME_TRY(backend_->putValue(key, value));
 
     auto now = scheduler_->now();
-    auto expire_time = now + scheduler::toTicks(config_->storageRecordTTL());
+    auto expire_time = now + scheduler::toTicks(config_.storageRecordTTL);
 
-	  auto &idx = table_->get<ByKey>();
+    auto &idx = table_->get<ByKey>();
 
     if (auto it = idx.find(key); it == idx.end()) {
       // new k-v pair, needs initial advertise
@@ -51,8 +48,7 @@ namespace libp2p::protocol::kademlia {
       // TODO(xDimon): broadcast about providing this key
       // ___.broadcastThisProvider(key);
 
-      table_->insert(
-          {key, expire_time, now});
+      table_->insert({key, expire_time, now});
 
     } else {
       // updated or refreshed value, reschedule expiration
@@ -65,8 +61,7 @@ namespace libp2p::protocol::kademlia {
     return outcome::success();
   }
 
-  outcome::result<std::pair<ValueStore::Value, ValueStore::Time>>
-  ValueStoreImpl::getValue(const ValueStore::Key &key) const {
+  outcome::result<ValueAndTime> ValueStoreImpl::getValue(const Key &key) const {
     auto &idx = table_->get<ByKey>();
     auto it = idx.find(key);
     if (it == idx.end()) {
@@ -80,21 +75,21 @@ namespace libp2p::protocol::kademlia {
     auto now = scheduler_->now();
 
     // cleanup expired records
-	  auto &idx_by_expiration = table_->get<ByExpireTime>();
-    for (auto i = idx_by_expiration.begin(); i != idx_by_expiration.end(); ) {
+    auto &idx_by_expiration = table_->get<ByExpireTime>();
+    for (auto i = idx_by_expiration.begin(); i != idx_by_expiration.end();) {
       if (i->expire_time > now) {
-	      break;
+        break;
       }
 
-	    auto ci = i++;
-	    if (backend_->erase(ci->key)) {
-	      idx_by_expiration.erase(ci);
+      auto ci = i++;
+      if (backend_->erase(ci->key)) {
+        idx_by_expiration.erase(ci);
       }
     }
 
     // refresh if time arrived
-	  auto &idx_by_refresing = table_->get<ByRefreshTime>();
-	  for (auto i = idx_by_refresing.begin(); i != idx_by_refresing.end(); ++i) {
+    auto &idx_by_refresing = table_->get<ByRefreshTime>();
+    for (auto i = idx_by_refresing.begin(); i != idx_by_refresing.end(); ++i) {
       if (i->refresh_time > now) {
         break;
       }
@@ -104,12 +99,12 @@ namespace libp2p::protocol::kademlia {
 
       idx_by_refresing.modify(i, [this](auto &record) {
         record.refresh_time +=
-            scheduler::toTicks(config_->storageRefreshInterval());
+            scheduler::toTicks(config_.storageRefreshInterval);
       });
     }
 
     refresh_timer_.reschedule(
-        scheduler::toTicks(config_->storageRefreshInterval()));
+        scheduler::toTicks(config_.storageRefreshInterval));
   }
 
 }  // namespace libp2p::protocol::kademlia

@@ -6,10 +6,10 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_ROUTING
 #define LIBP2P_PROTOCOL_KADEMLIA_ROUTING
 
+#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/kademlia/content_routing.hpp>
 #include <libp2p/protocol/kademlia/peer_routing.hpp>
 #include <libp2p/protocol/kademlia/value_store.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -19,7 +19,8 @@ namespace libp2p::protocol::kademlia {
 
     /**
      * Kicks off the bootstrap process
-     * For each call, we generate a random node ID and we look it up via the process defined in 'Node lookups'.
+     * For each call, we generate a random node ID and we look it up via the
+     * process defined in 'Node lookups'.
      */
     virtual outcome::result<void> bootstrap() = 0;
   };

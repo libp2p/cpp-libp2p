@@ -16,64 +16,49 @@
 #include <libp2p/protocol/kad/impl/local_value_store.hpp>
 #include <libp2p/protocol/kad/impl/routing_table_impl.hpp>
 
+#include <libp2p/protocol/kademlia/config.hpp>
+#include <libp2p/protocol/kademlia/impl/kademlia_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/routing_table_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/value_store_backend_default.hpp>
+#include <libp2p/protocol/kademlia/impl/value_store_impl.hpp>
+
 namespace libp2p::injector {
 
-  inline auto useKademliaConfig(
+  inline auto useOldKademliaConfig(
       const protocol::kad::KademliaConfig &config) {
     return boost::di::bind<protocol::kad::KademliaConfig>().template to(
         std::move(config))[boost::di::override];
   }
 
-  // sr25519 kp getter
-  template <typename Injector>
-  std::shared_ptr<libp2p::protocol::kad::Kad> get_kad(
-      const Injector &injector) {
-    static auto initialized =
-        boost::optional<std::shared_ptr<libp2p::protocol::kad::Kad>>(
-            boost::none);
-    if (initialized) {
-      return initialized.value();
-    }
-
-    auto host = injector.template create<std::shared_ptr<Host>>();
-
-    auto scheduler =
-        injector.template create<std::shared_ptr<protocol::Scheduler>>();
-    auto table = injector.template create<
-        std::shared_ptr<protocol::kad::RoutingTable>>();
-    auto storage = injector.template create<
-        std::unique_ptr<protocol::kad::ValueStoreBackend>>();
-    auto config =
-        injector.template create<protocol::kad::KademliaConfig>();
-    auto random_generator = injector.template create<
-        std::shared_ptr<crypto::random::RandomGenerator>>();
-
-    initialized = std::make_shared<libp2p::protocol::kad::KadImpl>(
-        std::move(host), std::move(scheduler), std::move(table),
-        std::move(storage), config, std::move(random_generator));
-    return initialized.value();
+  inline auto useKademliaConfig(const protocol::kademlia::Config &config) {
+    return boost::di::bind<protocol::kademlia::Config>().template to(
+        std::move(config))[boost::di::override];
   }
 
-  // clang-format off
-template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
-auto makeKademliaInjector(Ts &&... args) {
-	using namespace boost;  // NOLINT
+  template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
+  auto makeKademliaInjector(Ts &&... args) {
+    return di::make_injector<InjectorConfig>(
+        // clang-format off
 
-	// clang-format off
-	  return di::make_injector<InjectorConfig>(
+				di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
+				di::bind<crypto::random::RandomGenerator>.template to<crypto::random::BoostRandomGenerator>(),
+				di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
 
-			  di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
-			  di::bind<crypto::random::RandomGenerator>.template to<crypto::random::BoostRandomGenerator>(),
-			  di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
+				di::bind<protocol::kad::KademliaConfig>.template to(protocol::kad::KademliaConfig {}),
+				di::bind<protocol::kad::RoutingTable>.template to<protocol::kad::RoutingTableImpl>(),
+				di::bind<protocol::kad::Kad>.to([](auto const &inj) { return get_kad(inj); }),
 
-			  di::bind<protocol::kad::KademliaConfig>.template to(protocol::kad::KademliaConfig {}),
-			  di::bind<protocol::kad::RoutingTable>.template to<protocol::kad::RoutingTableImpl>(),
-			  di::bind<protocol::kad::Kad>.to([](auto const &inj) { return get_kad(inj); }),
+				di::bind<protocol::kademlia::Config>.template to(protocol::kademlia::Config{}),
+				di::bind<protocol::kademlia::RoutingTable>.template to<protocol::kademlia::RoutingTableImpl>(),
+				di::bind<protocol::kademlia::ValueStoreBackend>.template to<protocol::kademlia::ValueStoreBackendDefault>(),
+				di::bind<protocol::kademlia::ValueStore>.template to<protocol::kademlia::ValueStoreImpl>(),
+				di::bind<protocol::kademlia::Kademlia>.template to<protocol::kademlia::KademliaImpl>(),
 
-			  // user-defined overrides...
-			  std::forward<decltype(args)>(args)...
-	  );
-	  // clang-format on
+
+        // user-defined overrides...
+        std::forward<decltype(args)>(args)...
+        // clang-format on
+    );
   }
 
 }  // namespace libp2p::injector
