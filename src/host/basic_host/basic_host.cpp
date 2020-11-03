@@ -109,6 +109,26 @@ namespace libp2p::host {
     network_->getListener().start();
   }
 
+  event::Handle BasicHost::setOnNewConnectionHandler(NewConnectionHandler &h) const {
+    return bus_->getChannel<network::event::OnNewConnectionChannel>().subscribe(
+        [h{std::move(h)}](auto &&conn) {
+          if (auto connection = conn.lock()) {
+            auto remote_peer_res = connection->remotePeer();
+            if (!remote_peer_res)
+              return;
+
+            auto remote_peer_addr_res = connection->remoteMultiaddr();
+            if (!remote_peer_addr_res)
+              return;
+
+            if (h != nullptr)
+              h(peer::PeerInfo{std::move(remote_peer_res.value()),
+                               std::vector<multi::Multiaddress>{
+                                   std::move(remote_peer_addr_res.value())}});
+          }
+        });
+  }
+
   void BasicHost::stop() {
     network_->getListener().stop();
   }
