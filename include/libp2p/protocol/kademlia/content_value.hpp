@@ -14,7 +14,7 @@
 namespace libp2p::protocol::kademlia {
 
   /// DHT value
-  struct ContentValue : std::vector<uint8_t>{};
+  struct ContentValue : std::vector<uint8_t> {};
 
 }  // namespace libp2p::protocol::kademlia
 

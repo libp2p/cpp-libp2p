@@ -16,10 +16,33 @@ namespace libp2p::protocol::kademlia {
 
   namespace {
     struct RandomWalk {
+      /**
+       * True if random walking is enabled
+       */
       bool enabled = true;
+
+      /**
+       * Number of random walks for a period
+       * @note Default: 1
+       */
       size_t queries_per_period = 1;
+
+      /**
+       * Period of random walks' series
+       * @note Default: 5min
+       */
       std::chrono::seconds interval = 30s;
+
+      /**
+       * Timeout for one random walk
+       * @note Default: 10s
+       */
       std::chrono::seconds timeout = 10s;
+
+      /**
+       * Delay beetween random walks in serie
+       * @note Default: 10s
+       */
       std::chrono::seconds delay = 10s;
     };
   }  // namespace
@@ -32,78 +55,78 @@ namespace libp2p::protocol::kademlia {
      * @returns kademlia protocol id
      * @note Default: "ipfs/kad/1.0"
      */
-    std::string_view protocolId = "/ipfs/kad/1.0.0";
+    peer::Protocol protocolId = "/ipfs/kad/1.0.0";
 
     /**
-     * @returns delay between kicks off bootstrap
-     * @note Default: 5 minutes
+     * True if application is not announce himself
      */
-    std::chrono::seconds bootstrapKickOfInterval = 5min;
+    bool passiveMode = false;
 
     /**
-     * @returns how many times of 'Node lookups' process should be done per
-     * bootstrap
-     * @note Default: 1 time
-     */
-    size_t queryCount = 1;
-
-    /**
-     * @returns how many times of 'Node lookups' process should be done per
-     * bootstrap
-     * @note Default: 10
-     */
-    size_t queryTimeout = 10;
-
-    /**
-     * @returns minimal responses from distinct nodes to check for consistency
-     * before returning an answer.
+     * Minimal responses from distinct nodes to check for consistency before
+     * returning an answer.
      * @note Default: 0
      */
     size_t valueLookupsQuorum = 0;
 
-
-	  /**
-		 * @returns man number of concurrent request
-		 * @note Default: 3
-		 */
-	  size_t requestConcurency = 3;
-
-
-	  /**
-		 * @returns count of closer peers.
-		 * @note Default: 6
-		 */
-	  size_t closerPeerCount = 6;
-
+    /**
+     * Maximum number of concurrent request
+     * @note Default: 3
+     */
+    size_t requestConcurency = 3;
 
     /**
-     * @returns TTL of record in storage
+     * Target amount of closer peers.
+     * @note Default: 6
+     */
+    size_t closerPeerCount = 6;
+
+    /**
+     * TTL of record in storage
      * @note Default: 24h
      */
     std::chrono::seconds storageRecordTTL = 24h;
 
     /**
-     * @returns Interval of wiping expired records
+     * Interval of wiping expired records
      * @note Default: 1h
      */
     std::chrono::seconds storageWipingInterval = 1h;
 
     /**
-     * @returns Interval of refresh storage.
+     * Interval of refresh storage.
      * This is implementation specified property.
      * @note Default: 5m
      */
     std::chrono::seconds storageRefreshInterval = 5min;
 
     /**
-     * @returns Max size of bucket
+     * TTL of provider record
+     * @note Default: 24h
+     */
+    std::chrono::seconds providerRecordTTL = 24h;
+
+    /**
+     * Interval of wiping expired provider records
+     * @note Default: 1h
+     */
+    std::chrono::seconds providerWipingInterval = 2min;
+
+    /**
+     * Max providers number per one key
+     * @note Default: 6
+     */
+    size_t maxProvidersPerKey = 6;
+
+    /**
+     * Maximum size of bucket
      * This is implementation specified property.
      * @note Default: 20
      */
     size_t maxBucketSize = 20;
 
     /**
-     * @returns Random walk config
+     * Random walk config
      */
     RandomWalk randomWalk{};
   };

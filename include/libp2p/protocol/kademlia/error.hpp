@@ -20,7 +20,10 @@ namespace libp2p::protocol::kademlia {
     CONTENT_VALIDATION_FAILED = 7,
     TIMEOUT = 8,
     IN_PROGRESS,
-		FULFILLED
+    FULFILLED,
+    NOT_IMPLEMENTED,
+    INTERNAL_ERROR,
+    SESSION_CLOSED
   };
 }
 

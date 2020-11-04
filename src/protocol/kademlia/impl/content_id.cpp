@@ -24,8 +24,7 @@ namespace libp2p::protocol::kademlia {
   ContentId::ContentId(const void *bytes, size_t size)
       : data(multi::ContentIdentifierCodec::encodeCIDV0(bytes, size)) {}
 
-  boost::optional<ContentId> ContentId::fromWire(
-      const std::string &s) {
+  boost::optional<ContentId> ContentId::fromWire(const std::string &s) {
     gsl::span<const uint8_t> bytes(
         reinterpret_cast<const uint8_t *>(s.data()),  // NOLINT
         s.size());
@@ -42,8 +41,7 @@ namespace libp2p::protocol::kademlia {
     return ContentId(FromWire{}, res.value().content_address.toBuffer());
   }
 
-  ContentId::ContentId(FromWire, std::vector<uint8_t> v)
-      : data(std::move(v)) {}
+  ContentId::ContentId(FromWire, std::vector<uint8_t> v) : data(std::move(v)) {}
 
 }  // namespace libp2p::protocol::kademlia
 

@@ -6,65 +6,84 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_SESSION
 #define LIBP2P_PROTOCOL_KADEMLIA_SESSION
 
+#include <functional>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/multi/uvarint.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
-#include <libp2p/protocol/kad/impl/kad_session_host.hpp>
+#include <libp2p/protocol/kademlia/error.hpp>
+#include <libp2p/protocol/kademlia/impl/response_handler.hpp>
+#include <libp2p/protocol/kademlia/impl/session_host.hpp>
 
 namespace libp2p::protocol::kademlia {
 
-class PeerFinder;
+  class FindPeerExecutor;
 
-class Session
-		: public std::enable_shared_from_this<Session> {
-public:
-    enum class State {
-      closed = 0,
-      reading_from_peer,
-      writing_to_peer
-    };
+  class Session : public std::enable_shared_from_this<Session> {
+   public:
+    Session(std::weak_ptr<SessionHost> session_host,
+            std::weak_ptr<Scheduler> scheduler,
+            std::shared_ptr<connection::Stream> stream,
+            scheduler::Ticks operations_timeout = 0);
 
-		Session(std::weak_ptr<PeerFinder> host,
-		                   std::shared_ptr<connection::Stream> stream,
-		                   scheduler::Ticks operations_timeout=0);
+    ~Session();
 
-		bool write(const std::vector<uint8_t>& buffer);
+    std::shared_ptr<connection::Stream> stream() const {
+      return stream_;
+    }
 
-		bool read();
+    boost::optional<Message::Type> expectedResponseType() const {
+      return expected_response_type_;
+    }
 
-		// state is impl defined
-		State state() {
-			return state_;
-		}
-		void state(State new_state) {
-			state_ = new_state;
-		}
+    bool read();
 
-		void close();
+    bool write(const std::shared_ptr<std::vector<uint8_t>> &buffer,
+               const std::shared_ptr<ResponseHandler> &response_handler);
 
-private:
-		void onLengthRead(boost::optional<multi::UVarint> varint_opt);
+    bool canBeClosed() const {
+      return not closed_ && writing_ == 0 && reading_ == 0;
+    }
 
-		void onMessageRead(outcome::result<size_t> res);
+    void close(outcome::result<void> = outcome::success());
 
-		void onMessageWritten(outcome::result<size_t> res);
+   private:
+    void onLengthRead(boost::optional<multi::UVarint> varint_opt);
 
-		void setTimeout();
-		void cancelTimeout();
+    void onMessageRead(outcome::result<size_t> res);
 
-		std::weak_ptr<PeerFinder> host_;
-		std::shared_ptr<connection::Stream> stream_;
+    void onMessageWritten(
+        outcome::result<size_t> res,
+        const std::shared_ptr<ResponseHandler> &response_handler);
 
-		// true if msg length is read and waiting for message body
-		bool reading_ = false;
+    void setReadingTimeout();
+    void cancelReadingTimeout();
 
-		// session-defined state
-		State state_ = State::closed;
+    void setResponseTimeout(
+        const std::shared_ptr<ResponseHandler> &response_handler);
+    void cancelResponseTimeout(
+        const std::shared_ptr<ResponseHandler> &response_handler);
 
-		const scheduler::Ticks operations_timeout_;
-		Scheduler::Handle timeout_handle_;
-};
+    std::unordered_map<std::shared_ptr<ResponseHandler>, Scheduler::Handle>
+        response_handlers_;
 
-}  // namespace libp2p::protocol::kad
+    std::weak_ptr<SessionHost> session_host_;
+    std::weak_ptr<Scheduler> scheduler_;
+    std::shared_ptr<connection::Stream> stream_;
+
+    std::vector<uint8_t> inner_buffer_;
+
+    std::atomic_size_t reading_ = 0;
+    std::atomic_size_t writing_ = 0;
+    bool closed_ = false;
+
+    const scheduler::Ticks operations_timeout_;
+    Scheduler::Handle reading_timeout_handle_;
+
+    boost::optional<Message::Type> expected_response_type_;
+
+    static std::atomic_size_t instance_number;
+    SubLogger log_;
+  };
+}  // namespace libp2p::protocol::kademlia
 
 #endif  // LIBP2P_PROTOCOL_KADEMLIA_SESSION

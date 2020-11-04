@@ -86,7 +86,7 @@ namespace libp2p::protocol::kademlia {
   }  // namespace
 
   void Message::clear() {
-    type = kPing;
+    type = Type::kPing;
     key.clear();
     record.reset();
     closer_peers.reset();
@@ -100,7 +100,7 @@ namespace libp2p::protocol::kademlia {
       return false;
     }
     type = static_cast<Type>(pb_msg.type());
-    if (int(type) > kPing) {
+    if (type > Type::kPing) {
       return false;
     }
     assign_blob(key, pb_msg.key());
@@ -166,7 +166,7 @@ namespace libp2p::protocol::kademlia {
   Message createFindNodeRequest(const PeerId &node,
                                 boost::optional<PeerInfo> self_announce) {
     Message msg;
-    msg.type = Message::kFindNode;
+    msg.type = Message::Type::kFindNode;
     msg.key = node.toVector();
     if (self_announce) {
       msg.selfAnnounce(std::move(self_announce.value()));
@@ -176,18 +176,39 @@ namespace libp2p::protocol::kademlia {
 
   Message createAddProviderRequest(PeerInfo self, const Key &key) {
     Message msg;
-    msg.type = Message::kAddProvider;
+    msg.type = Message::Type::kAddProvider;
     msg.key = key.data;
     msg.provider_peers = Message::Peers{
         {Message::Peer{std::move(self), Message::Connectedness::CAN_CONNECT}}};
     return msg;
   }
 
-  Message createGetValueRequest(const Key &key) {
+  Message createGetProvidersRequest(const Key &key,
+                                    boost::optional<PeerInfo> self_announce) {
     Message msg;
-    msg.type = Message::kAddProvider;
+    msg.type = Message::Type::kGetProviders;
     msg.key = key.data;
+    if (self_announce) {
+      msg.selfAnnounce(std::move(self_announce.value()));
+    }
     return msg;
   }
 
+  Message createPutValueRequest(const Key &key,
+                                    boost::optional<PeerInfo> self_announce) {
+    Message msg;
+    msg.type = Message::Type::kPutValue;
+    msg.key = key.data;
+	  if (self_announce) {
+		  msg.selfAnnounce(std::move(self_announce.value()));
+	  }
+    return msg;
+  }
+
+  Message createGetValueRequest(const Key &key) {
+    Message msg;
+    msg.type = Message::Type::kGetValue;
+    msg.key = key.data;
+    return msg;
+  }
 }  // namespace libp2p::protocol::kademlia

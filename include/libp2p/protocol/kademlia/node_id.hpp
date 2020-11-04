@@ -60,7 +60,7 @@ namespace libp2p::protocol::kademlia {
 
     explicit NodeId(const peer::PeerId &pid) : data_(sha256(pid.toVector())) {}
 
-    explicit NodeId(const ContentId& ca) : data_(sha256(ca.data)) {}
+    explicit NodeId(const ContentId &ca) : data_(sha256(ca.data)) {}
 
     inline bool operator==(const NodeId &other) const {
       return data_ == other.data_;
@@ -123,6 +123,6 @@ namespace libp2p::protocol::kademlia {
     Hash256 hfrom;
   };
 
-}  // namespace libp2p::protocol::kad
+}  // namespace libp2p::protocol::kademlia
 
 #endif  // LIBP2P_PROTOCOL_KADEMLIA_NODEID

@@ -2,16 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 libp2p_add_library(p2p_kademlia
-    routing_table_impl.cpp
+    peer_routing_table_impl.cpp
+    content_routing_table_impl.cpp
     kademlia_impl.cpp
-#    kad_server.cpp
-#    kad_message.cpp
     session.cpp
-    value_store_impl.cpp
-    value_store_backend_default.cpp
-#    content_providers_store.cpp
-#    content_address.cpp
-    peer_finder.cpp
+    storage_impl.cpp
+    storage_backend_default.cpp
+    content_id.cpp
+    peer_info_with_distance.cpp
+    find_peer_executor.cpp
+    find_providers_executor.cpp
     )
 target_link_libraries(p2p_kademlia
     scheduler

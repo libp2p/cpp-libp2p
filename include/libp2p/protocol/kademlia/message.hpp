@@ -13,7 +13,7 @@ namespace libp2p::protocol::kademlia {
 
   /// Wire protocol message. May be either request or response
   struct Message {
-    enum Type {
+    enum class Type {
       kPutValue = 0,
       kGetValue = 1,
       kAddProvider = 2,
@@ -38,7 +38,7 @@ namespace libp2p::protocol::kademlia {
     };
     using Peers = std::vector<Peer>;
 
-    Type type = kPing;
+    Type type = Type::kPing;
     std::vector<uint8_t> key;
     boost::optional<Record> record;
     boost::optional<Peers> closer_peers;
@@ -65,6 +65,9 @@ namespace libp2p::protocol::kademlia {
   Message createGetValueRequest(const Key &key);
 
   Message createAddProviderRequest(PeerInfo self, const Key &key);
+
+  Message createGetProvidersRequest(const Key &key,
+                                    boost::optional<PeerInfo> self_announce);
 
 }  // namespace libp2p::protocol::kademlia
 #endif  // LIBP2P_PROTOCOL_KADEMLIA_MESSAGE

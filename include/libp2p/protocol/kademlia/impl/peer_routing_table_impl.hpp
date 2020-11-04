@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_ROUTINGTABLEIMPL
-#define LIBP2P_PROTOCOL_KADEMLIA_ROUTINGTABLEIMPL
-
-#include <deque>
+#ifndef LIBP2P_PROTOCOL_KADEMLIA_PEERROUTINGTABLEIMPL
+#define LIBP2P_PROTOCOL_KADEMLIA_PEERROUTINGTABLEIMPL
 
 #include <boost/assert.hpp>
+#include <deque>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/peer/identity_manager.hpp>
+#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
+#include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
-#include <libp2p/protocol/kademlia/routing_table.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -75,9 +75,11 @@ namespace libp2p::protocol::kademlia {
     }
   };
 
-  class RoutingTableImpl : public RoutingTable {
+  class PeerRoutingTableImpl
+      : public PeerRoutingTable,
+        public std::enable_shared_from_this<PeerRoutingTableImpl> {
    public:
-    ~RoutingTableImpl() override = default;
+    ~PeerRoutingTableImpl() override = default;
 
     enum class Error {
       SUCCESS = 0,
@@ -85,9 +87,10 @@ namespace libp2p::protocol::kademlia {
       PEER_REJECTED_NO_CAPACITY
     };
 
-    RoutingTableImpl(const Config &config,
-                     std::shared_ptr<peer::IdentityManager> identity_manager,
-                     std::shared_ptr<event::Bus> bus);
+    PeerRoutingTableImpl(
+        const Config &config,
+        std::shared_ptr<peer::IdentityManager> identity_manager,
+        std::shared_ptr<event::Bus> bus);
 
     outcome::result<void> update(const peer::PeerId &pid) override;
 
@@ -110,11 +113,12 @@ namespace libp2p::protocol::kademlia {
 
     void nextBucket();
 
-    libp2p::common::Logger log_ = libp2p::common::createLogger("kad");
+    SubLogger log_;
   };
 
 }  // namespace libp2p::protocol::kademlia
 
-OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::kademlia, RoutingTableImpl::Error);
+OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::kademlia,
+                          PeerRoutingTableImpl::Error);
 
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_ROUTINGTABLEIMPL
+#endif  // LIBP2P_PROTOCOL_KADEMLIA_PEERROUTINGTABLEIMPL

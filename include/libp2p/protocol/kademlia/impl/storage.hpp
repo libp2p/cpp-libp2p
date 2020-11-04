@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_VALUESTORE
-#define LIBP2P_PROTOCOL_KADEMLIA_VALUESTORE
+#ifndef LIBP2P_PROTOCOL_KADEMLIA_STORAGE
+#define LIBP2P_PROTOCOL_KADEMLIA_STORAGE
 
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
@@ -12,20 +12,22 @@
 namespace libp2p::protocol::kademlia {
 
   /**
-   * Basic Put/Get interface of Kademlia
+   * Frontend of key-value storage
    */
-  class ValueStore {
+  class Storage {
    public:
-    virtual ~ValueStore() = default;
+    virtual ~Storage() = default;
 
     /// Adds @param value corresponding to given @param key.
     virtual outcome::result<void> putValue(Key key, Value value) = 0;
 
     /// Searches for the @return value corresponding to given @param key.
-    virtual outcome::result<void> getValue(const Key &key,
-                                           FoundValueHandler handler) const = 0;
+    virtual outcome::result<ValueAndTime> getValue(const Key &key) const = 0;
+
+    /// @returns true if it has value corresponding to given @param key.
+    virtual bool hasValue(const Key &key) const = 0;
   };
 
 }  // namespace libp2p::protocol::kademlia
 
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_VALUESTORE
+#endif  // LIBP2P_PROTOCOL_KADEMLIA_STORAGE

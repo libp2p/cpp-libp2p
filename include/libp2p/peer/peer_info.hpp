@@ -8,9 +8,9 @@
 
 #include <vector>
 
+#include <libp2p/common/logger.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_id.hpp>
-#include <libp2p/common/logger.hpp>
 
 namespace libp2p::peer {
 
@@ -24,6 +24,18 @@ namespace libp2p::peer {
     bool operator!=(const PeerInfo &other) const {
       return !(*this == other);
     }
+
+    struct EqualByPeerId {
+      bool operator()(const PeerInfo &lhs, const PeerInfo &rhs) const noexcept {
+        return lhs.id == rhs.id;
+      }
+    };
+
+    struct CompareByPeerId {
+      bool operator()(const PeerInfo &lhs, const PeerInfo &rhs) const noexcept {
+        return lhs.id.toVector() < rhs.id.toVector();
+      }
+    };
   };
 
 }  // namespace libp2p::peer

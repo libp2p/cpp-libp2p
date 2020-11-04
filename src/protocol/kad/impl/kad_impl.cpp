@@ -60,7 +60,7 @@ namespace libp2p::protocol::kad {
     // start listening
     if (start_server) {
       server_ = std::make_shared<KadServer>(*host_, *this);
-	    server_->start();
+      server_->start();
     }
 
     // subscribe to new connection
@@ -338,7 +338,7 @@ namespace libp2p::protocol::kad {
     }
 
     // remove himself
-	  peer::PeerInfo self = host_->getPeerInfo();
+    peer::PeerInfo self = host_->getPeerInfo();
     v.erase(self);
 
     return findPeer(peer, v, std::move(f));

@@ -17,9 +17,6 @@ namespace libp2p::protocol::kademlia {
   // ContentRouting is used to find information about who has what content.
   class ContentRouting {
    public:
-    using FoundProvidersHandler =
-        std::function<void(outcome::result<std::vector<PeerInfo>>)>;
-
     virtual ~ContentRouting() = default;
 
     // Provide adds the given CID to the content routing system.

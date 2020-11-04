@@ -4,144 +4,259 @@
  */
 
 #include <libp2p/basic/varint_reader.hpp>
-#include <libp2p/protocol/kademlia/impl/peer_finder.hpp>
+#include <libp2p/protocol/kademlia/error.hpp>
+#include <libp2p/protocol/kademlia/impl/find_peer_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
-#include <libp2p/protocol/kademlia/error.hpp>
 
 namespace libp2p::protocol::kademlia {
 
-  Session::Session(std::weak_ptr<PeerFinder> host,
+  std::atomic_size_t Session::instance_number = 0;
+
+  Session::Session(std::weak_ptr<SessionHost> session_host,
+                   std::weak_ptr<Scheduler> scheduler,
                    std::shared_ptr<connection::Stream> stream,
                    scheduler::Ticks operations_timeout)
-      : host_(std::move(host)),
+      : session_host_(std::move(session_host)),
+        scheduler_(std::move(scheduler)),
         stream_(std::move(stream)),
-        operations_timeout_(operations_timeout) {}
+        operations_timeout_(operations_timeout),
+        log_("kad", "Session", ++instance_number) {
+    log_.debug("created");
+  }
+
+  Session::~Session() {
+    log_.debug("destroyed");
+  }
 
   bool Session::read() {
-    if (reading_ || stream_->isClosedForRead() || host_.expired()) {
+    if (stream_->isClosedForRead()) {
+      close(Error::STREAM_RESET);
       return false;
     }
-    reading_ = true;
+
+    ++reading_;
+
     libp2p::basic::VarintReader::readVarint(
         stream_,
-        [host_wptr = host_, self_wptr = weak_from_this(),
-         this](boost::optional<multi::UVarint> varint_opt) {
-          if (host_wptr.expired() || self_wptr.expired()) {
-            return;
-          }
-          onLengthRead(std::move(varint_opt));
+        [wp = weak_from_this()](boost::optional<multi::UVarint> varint_opt) {
+          if (auto self = wp.lock())
+            self->onLengthRead(std::move(varint_opt));
         });
-    setTimeout();
+
+    setReadingTimeout();
     return true;
   }
 
-  bool Session::write(const std::vector<uint8_t>& buffer) {
-    if (stream_->isClosedForWrite() || host_.expired()) {
+  bool Session::write(
+      const std::shared_ptr<std::vector<uint8_t>> &buffer,
+      const std::shared_ptr<ResponseHandler> &response_handler) {
+    if (stream_->isClosedForWrite()) {
+      close(Error::STREAM_RESET);
       return false;
     }
-    auto data = buffer.data();
-    auto sz = buffer.size();
-    stream_->write(
-        gsl::span(data, sz), sz,
-        [host_wptr = host_, self_wptr = weak_from_this(), this,
-         buffer = std::move(buffer)](outcome::result<size_t> result) {
-          if (host_wptr.expired() || self_wptr.expired()) {
-            return;
-          }
-          onMessageWritten(result);
-        });
-    setTimeout();
+
+    ++writing_;
+
+    stream_->write(gsl::span(buffer->data(), buffer->size()), buffer->size(),
+                   [wp = weak_from_this(), buffer,
+                    response_handler](outcome::result<size_t> result) {
+                     if (auto self = wp.lock()) {
+                       self->onMessageWritten(std::move(result),
+                                              std::move(response_handler));
+                     }
+                   });
+
+    setResponseTimeout(response_handler);
     return true;
+  }
+
+  void Session::close(outcome::result<void> reason) {
+    if (closed_) {
+      return;
+    }
+
+    closed_ = true;
+
+    if (reason.has_value()) {
+      reason = Error::SESSION_CLOSED;
+    }
+
+    for (auto &pair : response_handlers_) {
+      pair.second.cancel();
+      pair.first->onResult(shared_from_this(), reason.as_failure());
+    }
+    response_handlers_.clear();
+
+    cancelReadingTimeout();
+
+    stream_->close([self{shared_from_this()}](outcome::result<void>) {});
+
+    if (auto session_host = session_host_.lock()) {
+      session_host->closeSession(stream_);
+    }
   }
 
   void Session::onLengthRead(boost::optional<multi::UVarint> varint_opt) {
-    auto host = host_.lock();
-    if (!host || state_ == State::closed) {
+    if (closed_) {
       return;
     }
-    if (!varint_opt) {
-      cancelTimeout();
-      host->onCompleted(stream_.get(), Error::MESSAGE_PARSE_ERROR);
+
+    if (not varint_opt) {
+      close(Error::MESSAGE_PARSE_ERROR);
       return;
     }
+
     auto msg_len = varint_opt->toUInt64();
-//    if (!buffer_) {
-//      buffer_ = std::make_shared<std::vector<uint8_t>>(msg_len, 0);
-//    } else {
-//      buffer_->resize(msg_len);
-//    }
-//    stream_->read(gsl::span(buffer_->data(), msg_len), msg_len,
-//                  [host_wptr = host_, self_wptr = weak_from_this(), this,
-//                   buffer = buffer_](auto &&res) {
-//                    if (host_wptr.expired() || self_wptr.expired()) {
-//                      return;
-//                    }
-//                    onMessageRead(std::forward<decltype(res)>(res));
-//                  });
+    inner_buffer_.resize(msg_len);
+
+    stream_->read(gsl::span(inner_buffer_.data(), inner_buffer_.size()),
+                  msg_len, [wp = weak_from_this()](auto &&res) {
+                    if (auto self = wp.lock()) {
+                      self->onMessageRead(std::forward<decltype(res)>(res));
+                    }
+                  });
   }
 
   void Session::onMessageRead(outcome::result<size_t> res) {
-    cancelTimeout();
-    auto host = host_.lock();
-    if (!host || state_ == State::closed) {
+    cancelReadingTimeout();
+
+    if (closed_) {
       return;
     }
-    reading_ = false;
-    if (!res) {
-      host->onCompleted(stream_.get(), res.error());
+
+    if (not res) {
+      close(res.as_failure());
       return;
     }
-//    if (buffer_->size() != res.value()) {
-//      host->onCompleted(stream_.get(), Error::MESSAGE_PARSE_ERROR);
-//      return;
-//    }
-//    Message msg;
-//    if (!msg.deserialize(buffer_->data(), buffer_->size())) {
-//      host->onCompleted(stream_.get(), Error::MESSAGE_PARSE_ERROR);
-//      return;
-//    }
-//    host->onMessage(stream_.get(), std::move(msg));
-  }
 
-  void Session::onMessageWritten(outcome::result<size_t> res) {
-    cancelTimeout();
-    auto host = host_.lock();
-    if (!host || state_ == State::closed) {
+    if (inner_buffer_.size() != res.value()) {
+      close(Error::MESSAGE_PARSE_ERROR);
       return;
     }
-    if (res) {
-      host->onCompleted(stream_.get(), Error::SUCCESS);
-    } else {
-      host->onCompleted(stream_.get(), res.error());
+
+    Message msg;
+    if (!msg.deserialize(inner_buffer_.data(), inner_buffer_.size())) {
+      close(Error::MESSAGE_PARSE_ERROR);
+      return;
+    }
+
+    --reading_;
+
+    bool pocessed = false;
+    for (auto it = response_handlers_.begin();
+         it != response_handlers_.end();) {
+      auto cit = it++;
+      auto &[response_handler, timeout_handle] = *cit;
+      if (response_handler->match(msg)) {
+        timeout_handle.cancel();
+        response_handler->onResult(shared_from_this(), msg);
+        response_handlers_.erase(cit);
+        pocessed = true;
+      }
+    }
+
+    // Propogate to session host
+    if (not pocessed) {
+      if (auto session_host = session_host_.lock()) {
+        session_host->onMessage(shared_from_this(), std::move(msg));
+      }
+    }
+
+    // Continue to wait some response
+    if (not response_handlers_.empty()) {
+      read();
+    }
+
+    if (canBeClosed()) {
+      close();
     }
   }
 
-  void Session::close() {
-    state_ = State::closed;
-    cancelTimeout();
-    stream_->close([self{shared_from_this()}](outcome::result<void>) {});
+  void Session::onMessageWritten(
+      outcome::result<size_t> res,
+      const std::shared_ptr<ResponseHandler> &response_handler) {
+    if (not res) {
+      close(res.as_failure());
+      return;
+    }
+
+    --writing_;
+
+    if (not response_handlers_.empty()) {
+      read();
+    }
+
+    if (canBeClosed()) {
+      close();
+    }
   }
 
-  void Session::setTimeout() {
+  void Session::setReadingTimeout() {
     if (operations_timeout_ == 0) {
       return;
     }
-    auto host = host_.lock();
-    if (!host) {
+
+    auto scheduler = scheduler_.lock();
+    if (not scheduler) {
+      close(Error::INTERNAL_ERROR);
       return;
     }
-//    timeout_handle_ = host->scheduler().schedule(
-//        operations_timeout_, [host_wptr = host_, this] {
-//          if (host_wptr.expired()) {
-//            return;
-//          }
-//          host_wptr.lock()->onCompleted(stream_.get(), Error::TIMEOUT);
-//        });
+
+    reading_timeout_handle_ =
+        scheduler->schedule(operations_timeout_, [wp = weak_from_this()] {
+          if (auto self = wp.lock()) {
+            self->close(Error::TIMEOUT);
+          }
+        });
   }
 
-  void Session::cancelTimeout() {
-    timeout_handle_.cancel();
+  void Session::cancelReadingTimeout() {
+    reading_timeout_handle_.cancel();
+  }
+
+  void Session::setResponseTimeout(
+      const std::shared_ptr<ResponseHandler> &response_handler) {
+    if (not response_handler) {
+      return;
+    }
+
+    if (response_handler->responseTimeout() == 0) {
+      return;
+    }
+
+    auto scheduler = scheduler_.lock();
+    if (not scheduler) {
+      close(Error::INTERNAL_ERROR);
+      return;
+    }
+
+    response_handlers_.emplace(
+        response_handler,
+        scheduler->schedule(response_handler->responseTimeout(),
+                            [wp = weak_from_this(), response_handler] {
+                              if (auto self = wp.lock()) {
+                                if (response_handler) {
+                                  self->cancelResponseTimeout(response_handler);
+                                  response_handler->onResult(self,
+                                                             Error::TIMEOUT);
+                                  self->close();
+                                }
+                              }
+                            }));
+  }
+
+  void Session::cancelResponseTimeout(
+      const std::shared_ptr<ResponseHandler> &response_handler) {
+    if (not response_handler) {
+      return;
+    }
+
+    if (auto it = response_handlers_.find(response_handler);
+        it != response_handlers_.end()) {
+      it->second.cancel();
+      response_handlers_.erase(it);
+    }
   }
 
 }  // namespace libp2p::protocol::kademlia

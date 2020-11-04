@@ -3,26 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/kademlia/impl/value_store_impl.hpp>
-
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index_container.hpp>
+#include <libp2p/protocol/kademlia/config.hpp>
+#include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
+#include <libp2p/protocol/kademlia/error.hpp>
+#include <libp2p/protocol/kademlia/impl/storage_impl.hpp>
 #include <unordered_map>
-
-#include <boost/system/error_code.hpp>
-#include <libp2p/protocol/kad/config.hpp>
 
 namespace libp2p::protocol::kademlia {
 
-  ValueStoreImpl::ValueStoreImpl(const Config &config,
-                                 std::shared_ptr<ValueStoreBackend> backend,
-                                 std::shared_ptr<Scheduler> scheduler)
+  StorageImpl::StorageImpl(const Config &config,
+                           std::shared_ptr<StorageBackend> backend,
+                           std::shared_ptr<Scheduler> scheduler,
+                           std::shared_ptr<event::Bus> bus)
       : config_(config),
         backend_(std::move(backend)),
-        scheduler_(std::move(scheduler)) {
+        scheduler_(std::move(scheduler)),
+        bus_(std::move(bus)) {
     BOOST_ASSERT(backend_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
+    BOOST_ASSERT(bus_ != nullptr);
     BOOST_ASSERT(config_.storageRecordTTL > config_.storageWipingInterval);
 
     table_ = std::make_unique<Table>();
@@ -32,9 +33,7 @@ namespace libp2p::protocol::kademlia {
                              [this] { onRefreshTimer(); });
   }
 
-  outcome::result<void> ValueStoreImpl::putValue(Key key, Value value) {
-    // TODO(xDimon): Need to validate here
-
+  outcome::result<void> StorageImpl::putValue(Key key, Value value) {
     OUTCOME_TRY(backend_->putValue(key, value));
 
     auto now = scheduler_->now();
@@ -43,15 +42,10 @@ namespace libp2p::protocol::kademlia {
     auto &idx = table_->get<ByKey>();
 
     if (auto it = idx.find(key); it == idx.end()) {
-      // new k-v pair, needs initial advertise
-
-      // TODO(xDimon): broadcast about providing this key
-      // ___.broadcastThisProvider(key);
-
       table_->insert({key, expire_time, now});
-
+      bus_->getChannel<events::ContentProvidedChannel>().publish(
+          std::move(key));
     } else {
-      // updated or refreshed value, reschedule expiration
       table_->modify(it, [expire_time, now](auto &record) {
         record.expire_time = expire_time;
         record.updated_at = now;
@@ -61,17 +55,26 @@ namespace libp2p::protocol::kademlia {
     return outcome::success();
   }
 
-  outcome::result<ValueAndTime> ValueStoreImpl::getValue(const Key &key) const {
+  outcome::result<ValueAndTime> StorageImpl::getValue(const Key &key) const {
     auto &idx = table_->get<ByKey>();
     auto it = idx.find(key);
     if (it == idx.end()) {
-      return boost::system::error_code{};  // Error::VALUE_NOT_FOUND;
+      return Error::VALUE_NOT_FOUND;
     }
     OUTCOME_TRY(value, backend_->getValue(key));
     return {value, it->updated_at};
   }
 
-  void ValueStoreImpl::onRefreshTimer() {
+  bool StorageImpl::hasValue(const Key &key) const {
+    auto &idx = table_->get<ByKey>();
+    auto it = idx.find(key);
+    if (it == idx.end()) {
+      return false;
+    }
+    return it->updated_at > scheduler_->now();
+  }
+
+  void StorageImpl::onRefreshTimer() {
     auto now = scheduler_->now();
 
     // cleanup expired records
@@ -94,8 +97,8 @@ namespace libp2p::protocol::kademlia {
         break;
       }
 
-      // TODO(xDimon): broadcast about providing this key
-      // ___.broadcastThisProvider(key);
+      bus_->getChannel<events::ContentProvidedChannel>().publish(
+          std::move(i->key));
 
       idx_by_refresing.modify(i, [this](auto &record) {
         record.refresh_time +=

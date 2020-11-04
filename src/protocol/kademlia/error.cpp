@@ -30,6 +30,12 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, Error, e) {
       return "operation in progress";
     case E::FULFILLED:
       return "operation already was done";
+    case E::NOT_IMPLEMENTED:
+      return "feature is not implemented";
+    case E::INTERNAL_ERROR:
+      return "internal error";
+    case E::SESSION_CLOSED:
+      return "session was closed";
   }
   return "unknown error (libp2p::protocol::kademlia::Error)";
 }

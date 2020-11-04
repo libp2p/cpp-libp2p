@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/kademlia/impl/routing_table_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/peer_routing_table_impl.hpp>
 
 #include <numeric>
 
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, RoutingTableImpl::Error,
-                            e) {
-  using E = libp2p::protocol::kademlia::RoutingTableImpl::Error;
+OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia,
+                            PeerRoutingTableImpl::Error, e) {
+  using E = libp2p::protocol::kademlia::PeerRoutingTableImpl::Error;
 
   switch (e) {
     case E::SUCCESS:
@@ -36,7 +36,7 @@ namespace {
 
 namespace libp2p::protocol::kademlia {
 
-  RoutingTableImpl::RoutingTableImpl(
+  PeerRoutingTableImpl::PeerRoutingTableImpl(
       const Config &config,
       std::shared_ptr<peer::IdentityManager> identity_manager,
       std::shared_ptr<event::Bus> bus)
@@ -46,13 +46,14 @@ namespace libp2p::protocol::kademlia {
           return identity_manager_->getId();
         }()),
         bus_(std::move(bus)),
-        bucket_size_(config.maxBucketSize) {
+        bucket_size_(config.maxBucketSize),
+        log_("kad", "PeerRoutingTable") {
     BOOST_ASSERT(bus_ != nullptr);
     BOOST_ASSERT(bucket_size_ > 1);
     buckets_.emplace_back();  // create initial bucket
   }
 
-  void RoutingTableImpl::remove(const peer::PeerId &peer_id) {
+  void PeerRoutingTableImpl::remove(const peer::PeerId &peer_id) {
     size_t cpl = NodeId(peer_id).commonPrefixLen(local_);
     auto bucket_id = getBucketId(buckets_, cpl);
     auto &bucket = buckets_.at(bucket_id);
@@ -60,7 +61,7 @@ namespace libp2p::protocol::kademlia {
     bus_->getChannel<events::PeerRemovedChannel>().publish(peer_id);
   }
 
-  std::vector<peer::PeerId> RoutingTableImpl::getNearestPeers(
+  std::vector<peer::PeerId> PeerRoutingTableImpl::getNearestPeers(
       const NodeId &node_id, size_t count) {
     size_t cpl = node_id.commonPrefixLen(local_);
     size_t bucketId = getBucketId(buckets_, cpl);
@@ -89,7 +90,7 @@ namespace libp2p::protocol::kademlia {
     return bucket.toVector();
   }
 
-  outcome::result<void> RoutingTableImpl::update(const peer::PeerId &pid) {
+  outcome::result<void> PeerRoutingTableImpl::update(const peer::PeerId &pid) {
     NodeId nodeId(pid);
     size_t cpl = nodeId.commonPrefixLen(local_);
 
@@ -137,7 +138,7 @@ namespace libp2p::protocol::kademlia {
     return Error::PEER_REJECTED_NO_CAPACITY;
   }
 
-  void RoutingTableImpl::nextBucket() {
+  void PeerRoutingTableImpl::nextBucket() {
     // This is the last bucket, which allegedly is a mixed bag containing
     // peers not belonging in dedicated (unfolded) buckets. _allegedly_ is
     // used here to denote that *all* peers in the last bucket might feasibly
@@ -156,13 +157,13 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  size_t RoutingTableImpl::size() const {
+  size_t PeerRoutingTableImpl::size() const {
     return std::accumulate(
         buckets_.begin(), buckets_.end(), 0u,
         [](size_t num, const Bucket &bucket) { return num + bucket.size(); });
   }
 
-  std::vector<peer::PeerId> RoutingTableImpl::getAllPeers() const {
+  std::vector<peer::PeerId> PeerRoutingTableImpl::getAllPeers() const {
     std::vector<peer::PeerId> vec;
     for (auto &bucket : buckets_) {
       vec.insert(vec.end(), bucket.begin(), bucket.end());
