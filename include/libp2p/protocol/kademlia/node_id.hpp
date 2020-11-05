@@ -55,12 +55,22 @@ namespace libp2p::protocol::kademlia {
     explicit NodeId(const Hash256 &h) : data_(h) {}
 
     explicit NodeId(const void *bytes) {
-      memcpy(data_.data(), bytes, 32);
+      memcpy(data_.data(), bytes, data_.size());
     }
 
-    explicit NodeId(const peer::PeerId &pid) : data_(sha256(pid.toVector())) {}
+    explicit NodeId(const peer::PeerId &pid) {
+      crypto::Sha256 hash;
+      hash.write(pid.toVector()).value();
+      memcpy(data_.data(), hash.digest().value().data(),
+             std::min(hash.digestSize(), data_.size()));
+    }
 
-    explicit NodeId(const ContentId &ca) : data_(sha256(ca.data)) {}
+    explicit NodeId(const ContentId &ca) {
+      crypto::Sha256 hash;
+      hash.write(ca.data).value();
+      memcpy(data_.data(), hash.digest().value().data(),
+             std::min(hash.digestSize(), data_.size()));
+    }
 
     inline bool operator==(const NodeId &other) const {
       return data_ == other.data_;
@@ -102,7 +112,10 @@ namespace libp2p::protocol::kademlia {
 
   struct XorDistanceComparator {
     explicit XorDistanceComparator(const peer::PeerId &from) {
-      hfrom = sha256(from.toVector());
+      crypto::Sha256 hash;
+      hash.write(from.toVector()).value();
+      memcpy(hfrom.data(), hash.digest().value().data(),
+             std::min<size_t>(hash.digestSize(), hfrom.size()));
     }
 
     explicit XorDistanceComparator(const NodeId &from)

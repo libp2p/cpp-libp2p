@@ -12,7 +12,7 @@
 
 namespace libp2p::protocol::kademlia {
 
-	class Session;
+  class Session;
 
   class ResponseHandler {
    public:
@@ -26,7 +26,7 @@ namespace libp2p::protocol::kademlia {
 
     /// Tries to apply @param res, @returns true if success
     virtual void onResult(const std::shared_ptr<Session> &session,
-                          outcome::result<Message> res) = 0;
+                          outcome::result<Message> msg_res) = 0;
   };
 
 }  // namespace libp2p::protocol::kademlia

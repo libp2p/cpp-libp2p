@@ -6,3 +6,4 @@
 add_proto_library(p2p_noise_proto
     noise.proto
     )
+libp2p_install(p2p_noise_proto)

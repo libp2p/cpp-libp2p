@@ -23,7 +23,7 @@ namespace libp2p::protocol::kademlia {
 
     /// Searches for the @return value corresponding to given @param key.
     virtual outcome::result<void> getValue(const Key &key,
-                                           FoundValueHandler handler) const = 0;
+                                           FoundValueHandler handler) = 0;
   };
 
 }  // namespace libp2p::protocol::kademlia

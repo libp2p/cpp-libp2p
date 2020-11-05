@@ -56,18 +56,18 @@ namespace libp2p::protocol::kademlia {
     void selfAnnounce(PeerInfo self);
   };
 
-  // self is a protocol extension if this is server (i.e. announce)
-  Message createFindNodeRequest(const PeerId &node,
+  Message createPutValueRequest(const Key &key, const Value &value);
+
+  Message createGetValueRequest(const Key &key,
                                 boost::optional<PeerInfo> self_announce);
-
-  Message createPutValueRequest(const Key &key, Value value);
-
-  Message createGetValueRequest(const Key &key);
 
   Message createAddProviderRequest(PeerInfo self, const Key &key);
 
   Message createGetProvidersRequest(const Key &key,
                                     boost::optional<PeerInfo> self_announce);
+
+  Message createFindNodeRequest(const PeerId &node,
+                                boost::optional<PeerInfo> self_announce);
 
 }  // namespace libp2p::protocol::kademlia
 #endif  // LIBP2P_PROTOCOL_KADEMLIA_MESSAGE

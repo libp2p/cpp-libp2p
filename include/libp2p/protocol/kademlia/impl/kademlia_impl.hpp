@@ -13,6 +13,7 @@
 #include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
+#include <libp2p/protocol/kademlia/impl/executors_factory.hpp>
 #include <libp2p/protocol/kademlia/impl/message_observer.hpp>
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/session_host.hpp>
@@ -22,11 +23,13 @@
 
 namespace libp2p::protocol::kademlia {
 
+  class PutValueExecutor;
   class FindPeerExecutor;
-  class FindProvidersExecutor;
+  class GetProvidersExecutor;
 
   class KademliaImpl final : public Kademlia,
                              public SessionHost,
+                             public ExecutorsFactory,
                              public std::enable_shared_from_this<KademliaImpl> {
    public:
     KademliaImpl(
@@ -50,7 +53,7 @@ namespace libp2p::protocol::kademlia {
 
     /// @see ValueStore::getValue
     outcome::result<void> getValue(const Key &key,
-                                   FoundValueHandler handler) const override;
+                                   FoundValueHandler handler) override;
 
     /// @see ContentRouting::provide
     outcome::result<void> provide(const Key &key, bool need_notify) override;
@@ -87,17 +90,29 @@ namespace libp2p::protocol::kademlia {
 
     void handleProtocol(protocol::BaseProtocol::StreamResult stream_res);
 
+    std::shared_ptr<PutValueExecutor> createPutValueExecutor(
+        ContentId key, ContentValue value,
+        std::vector<PeerId> addressees) override;
+
+    std::shared_ptr<GetValueExecutor> createGetValueExecutor(
+        ContentId sought_key, std::unordered_set<PeerInfo> nearest_peer_infos,
+        FoundValueHandler handler) override;
+
+    std::shared_ptr<AddProviderExecutor> createAddProviderExecutor(
+        ContentId key,
+        std::unordered_set<PeerInfo> nearest_peer_infos) override;
+
+    std::shared_ptr<GetProvidersExecutor> createGetProvidersExecutor(
+        ContentId sought_content_id,
+        std::unordered_set<PeerInfo> nearest_peer_infos,
+        FoundProvidersHandler handler) override;
+
     std::shared_ptr<FindPeerExecutor> createFindPeerExecutor(
-        boost::optional<PeerInfo> self_peer_info, PeerId sought_peer_id,
-        std::unordered_set<PeerInfo> nearest_peer_infos,
-        FoundPeerInfoHandler handler);
+        PeerId sought_peer_id, std::unordered_set<PeerInfo> nearest_peer_infos,
+        FoundPeerInfoHandler handler) override;
 
-    std::shared_ptr<FindProvidersExecutor> createFindProvidersExecutor(
-        boost::optional<PeerInfo> self_peer_info, ContentId sought_key,
-        std::unordered_set<PeerInfo> nearest_peer_infos,
-        FoundProvidersHandler handler);
-
-    std::vector<PeerId> getNearestPeers(const NodeId &id);
+    std::vector<PeerId> getNearestPeerIds(const NodeId &id);
+    std::unordered_set<PeerInfo> getNearestPeerInfos(const NodeId &id);
 
     outcome::result<void> findRandomPeer();
     void randomWalk();

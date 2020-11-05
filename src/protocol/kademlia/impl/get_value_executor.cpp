@@ -3,46 +3,56 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/error.hpp>
-#include <libp2p/protocol/kademlia/impl/find_peer_executor.hpp>
+#include <libp2p/protocol/kademlia/impl/get_value_executor.hpp>
+#include <libp2p/protocol/kademlia/impl/put_value_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
 
 namespace libp2p::protocol::kademlia {
 
-  std::atomic_size_t FindPeerExecutor::instance_number = 0;
+  std::atomic_size_t GetValueExecutor::instance_number = 0;
 
-  FindPeerExecutor::FindPeerExecutor(
+  GetValueExecutor::GetValueExecutor(
       const Config &config, std::shared_ptr<Host> host,
       std::shared_ptr<SessionHost> session_host,
-      std::shared_ptr<PeerRouting> peer_routing, PeerId sought_peer_id,
+      std::shared_ptr<PeerRouting> peer_routing,
+      std::shared_ptr<ExecutorsFactory> executor_factory,
+      ContentId sought_content_id,
       std::unordered_set<PeerInfo> nearest_peer_infos,
-      FoundPeerInfoHandler handler)
+      FoundValueHandler handler)
       : config_(config),
         host_(std::move(host)),
         session_host_(std::move(session_host)),
         peer_routing_(std::move(peer_routing)),
-        sought_peer_id_(std::move(sought_peer_id)),
-        sought_peer_id_as_content_id_(sought_peer_id_.toVector()),
+        executor_factory_(std::move(executor_factory)),
+        sought_content_id_(std::move(sought_content_id)),
         nearest_peer_infos_(
             std::move(reinterpret_cast<decltype(nearest_peer_infos_) &>(
                 nearest_peer_infos))),
         handler_(std::move(handler)),
-        log_("kad", "FindPeerExecutor", ++instance_number) {
+        log_("kad", "GetValueExecutor", ++instance_number) {
+    BOOST_ASSERT(host_ != nullptr);
+    BOOST_ASSERT(session_host_ != nullptr);
+    BOOST_ASSERT(peer_routing_ != nullptr);
+    BOOST_ASSERT(executor_factory_ != nullptr);
     std::for_each(nearest_peer_infos_.begin(), nearest_peer_infos_.end(),
                   [this](auto &peer_info) {
-                    queue_.emplace(peer_info,
-                                   ContentId(sought_peer_id_.toVector()));
+                    queue_.emplace(peer_info, sought_content_id_);
                   });
+    received_records_ = std::make_unique<Table>();
     log_.debug("created");
   }
 
-  FindPeerExecutor::~FindPeerExecutor() {
+  GetValueExecutor::~GetValueExecutor() {
     log_.debug("destroyed");
   }
 
-  outcome::result<void> FindPeerExecutor::start() {
+  outcome::result<void> GetValueExecutor::start() {
     if (started_) {
       return Error::IN_PROGRESS;
     }
@@ -59,7 +69,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     Message request =
-        createFindNodeRequest(sought_peer_id_, std::move(self_announce));
+        createGetValueRequest(sought_content_id_, std::move(self_announce));
     if (!request.serialize(*serialized_request_)) {
       return Error::MESSAGE_SERIALIZE_ERROR;
     }
@@ -69,11 +79,10 @@ namespace libp2p::protocol::kademlia {
     log_.debug("started");
 
     spawn();
-
     return outcome::success();
   };
 
-  void FindPeerExecutor::spawn() {
+  void GetValueExecutor::spawn() {
     while (started_ and not done_ and not queue_.empty()
            and requests_in_progress_ < config_.requestConcurency) {
       auto &peer_info = *queue_.top();
@@ -98,7 +107,7 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  void FindPeerExecutor::onConnected(
+  void GetValueExecutor::onConnected(
       outcome::result<std::shared_ptr<connection::Stream>> stream_res) {
     if (not stream_res) {
       --requests_in_progress_;
@@ -129,29 +138,29 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  bool FindPeerExecutor::match(const Message &msg) const {
+  bool GetValueExecutor::match(const Message &msg) const {
     return
         // Check if message type is appropriate
-        msg.type == Message::Type::kFindNode
+        msg.type == Message::Type::kGetValue
         // Check if response is accorded to request
-        && msg.key == sought_peer_id_.toVector();
+        && msg.key == sought_content_id_.data;
   }
 
-  void FindPeerExecutor::onResult(const std::shared_ptr<Session> &session,
-                                  outcome::result<Message> res) {
+  void GetValueExecutor::onResult(const std::shared_ptr<Session> &session,
+                                  outcome::result<Message> msg_res) {
     gsl::final_action respawn([this] {
       --requests_in_progress_;
       spawn();
     });
 
     // Check if gotten some message
-    if (not res) {
+    if (not msg_res) {
       log_.warn("Result from {}: {}; active {} req.",
                 session->stream()->remotePeerId().value().toBase58(),
-                res.error().message(), requests_in_progress_);
+                msg_res.error().message(), requests_in_progress_);
       return;
     }
-    auto &msg = res.value();
+    auto &msg = msg_res.value();
 
     // Skip inappropriate messages
     if (not match(msg)) {
@@ -163,9 +172,6 @@ namespace libp2p::protocol::kademlia {
     auto &remote_peer_id = remote_peer_id_res.value();
 
     auto self_peer_id = host_->getId();
-
-    log_.debug("Result from {}: gotten; active {} req.",
-               remote_peer_id.toBase58(), requests_in_progress_);
 
     // Append gotten peer to queue
     if (msg.closer_peers) {
@@ -187,22 +193,42 @@ namespace libp2p::protocol::kademlia {
 
         // New peer add to queue
         if (nearest_peer_infos_.emplace(peer.info).second) {
-          queue_.emplace(peer.info, sought_peer_id_as_content_id_);
+          queue_.emplace(peer.info, sought_content_id_);
         }
       }
     }
 
     if (msg.record) {
-      // TODO(xDimon): Need to implement selection of result by quorum
+      // TODO(xDimon): Validation here
 
-      done_ = true;
-      log_.debug("done");
-      handler_(PeerInfo{
-          .id = sought_peer_id_,
-          // TODO(xDimon): How to read bytes to vector of multiaddresses?
-          .addresses = {}  // {msg.record->value}
-      });
+      auto &value = msg.record.value().value;
+
+      received_records_->insert({remote_peer_id, std::move(value)});
+
+      if (received_records_->size() >= config_.valueLookupsQuorum) {
+        // TODO(xDimon): Get best
+        Value best;
+
+        // Return result to upstear
+        done_ = true;
+        log_.debug("done");
+        handler_(best);
+
+        // Inform peer of new value
+        std::vector<PeerId> addressees;
+        auto &idx_by_value = received_records_->get<ByValue>();
+        for (auto &[peer, value] : idx_by_value) {
+          if (value != best) {
+            addressees.emplace_back(peer);
+          }
+        }
+
+        if (not addressees.empty()) {
+          auto put_value_executor = executor_factory_->createPutValueExecutor(
+              sought_content_id_, std::move(value), std::move(addressees));
+          [[maybe_unused]] auto res = put_value_executor->start();
+        }
+      }
     }
   }
-
 }  // namespace libp2p::protocol::kademlia

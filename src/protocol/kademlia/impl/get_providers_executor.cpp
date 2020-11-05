@@ -5,44 +5,42 @@
 
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/error.hpp>
-#include <libp2p/protocol/kademlia/impl/find_peer_executor.hpp>
+#include <libp2p/protocol/kademlia/impl/get_providers_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
 
 namespace libp2p::protocol::kademlia {
 
-  std::atomic_size_t FindPeerExecutor::instance_number = 0;
+  std::atomic_size_t GetProvidersExecutor::instance_number = 0;
 
-  FindPeerExecutor::FindPeerExecutor(
+  GetProvidersExecutor::GetProvidersExecutor(
       const Config &config, std::shared_ptr<Host> host,
       std::shared_ptr<SessionHost> session_host,
-      std::shared_ptr<PeerRouting> peer_routing, PeerId sought_peer_id,
+      std::shared_ptr<PeerRouting> peer_routing, ContentId sought_content_id,
       std::unordered_set<PeerInfo> nearest_peer_infos,
-      FoundPeerInfoHandler handler)
+      FoundProvidersHandler handler)
       : config_(config),
         host_(std::move(host)),
         session_host_(std::move(session_host)),
         peer_routing_(std::move(peer_routing)),
-        sought_peer_id_(std::move(sought_peer_id)),
-        sought_peer_id_as_content_id_(sought_peer_id_.toVector()),
+        sought_content_id_(std::move(sought_content_id)),
         nearest_peer_infos_(
             std::move(reinterpret_cast<decltype(nearest_peer_infos_) &>(
                 nearest_peer_infos))),
         handler_(std::move(handler)),
-        log_("kad", "FindPeerExecutor", ++instance_number) {
+        log_("kad", "FindProvidersExecutor", ++instance_number) {
     std::for_each(nearest_peer_infos_.begin(), nearest_peer_infos_.end(),
                   [this](auto &peer_info) {
-                    queue_.emplace(peer_info,
-                                   ContentId(sought_peer_id_.toVector()));
+                    queue_.emplace(peer_info, sought_content_id_);
                   });
     log_.debug("created");
   }
 
-  FindPeerExecutor::~FindPeerExecutor() {
+  GetProvidersExecutor::~GetProvidersExecutor() {
     log_.debug("destroyed");
   }
 
-  outcome::result<void> FindPeerExecutor::start() {
+  outcome::result<void> GetProvidersExecutor::start() {
     if (started_) {
       return Error::IN_PROGRESS;
     }
@@ -59,7 +57,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     Message request =
-        createFindNodeRequest(sought_peer_id_, std::move(self_announce));
+        createGetProvidersRequest(sought_content_id_, std::move(self_announce));
     if (!request.serialize(*serialized_request_)) {
       return Error::MESSAGE_SERIALIZE_ERROR;
     }
@@ -73,7 +71,7 @@ namespace libp2p::protocol::kademlia {
     return outcome::success();
   };
 
-  void FindPeerExecutor::spawn() {
+  void GetProvidersExecutor::spawn() {
     while (started_ and not done_ and not queue_.empty()
            and requests_in_progress_ < config_.requestConcurency) {
       auto &peer_info = *queue_.top();
@@ -98,7 +96,7 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  void FindPeerExecutor::onConnected(
+  void GetProvidersExecutor::onConnected(
       outcome::result<std::shared_ptr<connection::Stream>> stream_res) {
     if (not stream_res) {
       --requests_in_progress_;
@@ -129,29 +127,29 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  bool FindPeerExecutor::match(const Message &msg) const {
+  bool GetProvidersExecutor::match(const Message &msg) const {
     return
         // Check if message type is appropriate
-        msg.type == Message::Type::kFindNode
+        msg.type == Message::Type::kGetProviders
         // Check if response is accorded to request
-        && msg.key == sought_peer_id_.toVector();
+        && msg.key == sought_content_id_.data;
   }
 
-  void FindPeerExecutor::onResult(const std::shared_ptr<Session> &session,
-                                  outcome::result<Message> res) {
+  void GetProvidersExecutor::onResult(const std::shared_ptr<Session> &session,
+                                      outcome::result<Message> msg_res) {
     gsl::final_action respawn([this] {
       --requests_in_progress_;
       spawn();
     });
 
     // Check if gotten some message
-    if (not res) {
+    if (not msg_res) {
       log_.warn("Result from {}: {}; active {} req.",
                 session->stream()->remotePeerId().value().toBase58(),
-                res.error().message(), requests_in_progress_);
+                msg_res.error().message(), requests_in_progress_);
       return;
     }
-    auto &msg = res.value();
+    auto &msg = msg_res.value();
 
     // Skip inappropriate messages
     if (not match(msg)) {
@@ -170,38 +168,55 @@ namespace libp2p::protocol::kademlia {
     // Append gotten peer to queue
     if (msg.closer_peers) {
       for (auto &peer : msg.closer_peers.value()) {
-        // Add/Update peer info
-        if (peer.conn_status != Message::Connectedness::CAN_NOT_CONNECT) {
-          peer_routing_->addPeer(peer.info, false);
+        if (peer.conn_status == Message::Connectedness::CAN_NOT_CONNECT) {
+          continue;
         }
+
+        // Add/Update peer info
+        peer_routing_->addPeer(peer.info, false);
 
         // Skip himself
         if (peer.info.id == self_peer_id) {
           continue;
         }
 
-        // Skip remote
-        if (peer.info.id == remote_peer_id) {
-          continue;
-        }
-
         // New peer add to queue
         if (nearest_peer_infos_.emplace(peer.info).second) {
-          queue_.emplace(peer.info, sought_peer_id_as_content_id_);
+          queue_.emplace(peer.info, sought_content_id_);
         }
       }
     }
 
-    if (msg.record) {
-      // TODO(xDimon): Need to implement selection of result by quorum
+    // Providers found
+    if (msg.provider_peers) {
+      for (auto &peer : msg.provider_peers.value()) {
+        if (peer.conn_status == Message::Connectedness::CAN_NOT_CONNECT) {
+          continue;
+        }
 
-      done_ = true;
-      log_.debug("done");
-      handler_(PeerInfo{
-          .id = sought_peer_id_,
-          // TODO(xDimon): How to read bytes to vector of multiaddresses?
-          .addresses = {}  // {msg.record->value}
-      });
+        // Add/Update peer info
+        peer_routing_->addPeer(peer.info, false);
+
+        providers_.emplace(peer.info.id);
+      }
+
+      if (providers_.size() > required_providers_amount_) {
+        std::vector<PeerInfo> result;
+        for (auto &&peer_id : std::move(providers_)) {
+          auto peer_info =
+              host_->getPeerRepository().getPeerInfo(std::move(peer_id));
+          auto connectedness =
+              host_->getNetwork().getConnectionManager().connectedness(
+                  peer_info);
+          if (connectedness != Message::Connectedness::CAN_NOT_CONNECT) {
+            result.emplace_back(std::move(peer_info));
+          }
+        }
+
+        done_ = true;
+        log_.debug("done");
+        handler_(std::move(result));
+      }
     }
   }
 

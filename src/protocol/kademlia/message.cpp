@@ -163,11 +163,18 @@ namespace libp2p::protocol::kademlia {
         {Message::Peer{std::move(self), Message::Connectedness::CAN_CONNECT}}};
   }
 
-  Message createFindNodeRequest(const PeerId &node,
+  Message createPutValueRequest(const Key &key, const Value &value) {
+    Message msg;
+    msg.type = Message::Type::kPutValue;
+    msg.record.emplace(Message::Record{key, value, "timestamp"});
+    return msg;
+  }
+
+  Message createGetValueRequest(const Key &key,
                                 boost::optional<PeerInfo> self_announce) {
     Message msg;
-    msg.type = Message::Type::kFindNode;
-    msg.key = node.toVector();
+    msg.type = Message::Type::kGetValue;
+    msg.key = key.data;
     if (self_announce) {
       msg.selfAnnounce(std::move(self_announce.value()));
     }
@@ -194,21 +201,15 @@ namespace libp2p::protocol::kademlia {
     return msg;
   }
 
-  Message createPutValueRequest(const Key &key,
-                                    boost::optional<PeerInfo> self_announce) {
+  Message createFindNodeRequest(const PeerId &node,
+                                boost::optional<PeerInfo> self_announce) {
     Message msg;
-    msg.type = Message::Type::kPutValue;
-    msg.key = key.data;
-	  if (self_announce) {
-		  msg.selfAnnounce(std::move(self_announce.value()));
-	  }
+    msg.type = Message::Type::kFindNode;
+    msg.key = node.toVector();
+    if (self_announce) {
+      msg.selfAnnounce(std::move(self_announce.value()));
+    }
     return msg;
   }
 
-  Message createGetValueRequest(const Key &key) {
-    Message msg;
-    msg.type = Message::Type::kGetValue;
-    msg.key = key.data;
-    return msg;
-  }
 }  // namespace libp2p::protocol::kademlia
