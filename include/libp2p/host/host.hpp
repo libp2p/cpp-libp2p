@@ -50,7 +50,7 @@ namespace libp2p {
      * @brief Stores OnNewConnectionHandler.
      * @param h handler function to store
      */
-    virtual event::Handle setOnNewConnectionHandler(NewConnectionHandler &h) const = 0;
+    virtual event::Handle setOnNewConnectionHandler(const NewConnectionHandler &h) const = 0;
 
     /**
      * @brief Get a version of this Libp2p client

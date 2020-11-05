@@ -109,7 +109,7 @@ namespace libp2p::host {
     network_->getListener().start();
   }
 
-  event::Handle BasicHost::setOnNewConnectionHandler(NewConnectionHandler &h) const {
+  event::Handle BasicHost::setOnNewConnectionHandler(const NewConnectionHandler &h) const {
     return bus_->getChannel<network::event::OnNewConnectionChannel>().subscribe(
         [h{std::move(h)}](auto &&conn) {
           if (auto connection = conn.lock()) {
