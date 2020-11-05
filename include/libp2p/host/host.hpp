@@ -39,10 +39,18 @@ namespace libp2p {
     using StreamResultHandler = std::function<void(
         outcome::result<std::shared_ptr<connection::Stream>>)>;
 
+    using NewConnectionHandler = std::function<void(peer::PeerInfo &&)>;
+
     /**
      * @brief Get a version of Libp2p, supported by this Host
      */
     virtual std::string_view getLibp2pVersion() const = 0;
+
+    /**
+     * @brief Stores OnNewConnectionHandler.
+     * @param h handler function to store
+     */
+    virtual event::Handle setOnNewConnectionHandler(const NewConnectionHandler &h) const = 0;
 
     /**
      * @brief Get a version of this Libp2p client
