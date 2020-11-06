@@ -103,9 +103,6 @@ namespace libp2p::protocol::kademlia {
       return outcome::success();
     }
 
-    // TODO(warchant): check for latency here
-    // https://sourcegraph.com/github.com/libp2p/go-libp2p-kbucket@HEAD/-/blob/table.go#L81
-
     if (bucket.size() < bucket_size_) {
       bucket.push_front(pid);
       bus_->getChannel<events::PeerAddedChannel>().publish(pid);

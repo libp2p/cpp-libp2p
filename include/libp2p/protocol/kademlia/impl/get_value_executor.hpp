@@ -18,6 +18,7 @@
 #include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
+#include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/executors_factory.hpp>
 #include <libp2p/protocol/kademlia/impl/peer_info_with_distance.hpp>
 #include <libp2p/protocol/kademlia/impl/response_handler.hpp>
@@ -34,6 +35,7 @@ namespace libp2p::protocol::kademlia {
     GetValueExecutor(const Config &config, std::shared_ptr<Host> host,
                      std::shared_ptr<SessionHost> session_host,
                      std::shared_ptr<PeerRouting> peer_routing,
+                     std::shared_ptr<ContentRoutingTable> content_routing_table,
                      std::shared_ptr<ExecutorsFactory> executor_factory,
                      ContentId sought_content_id_,
                      std::unordered_set<PeerInfo> nearest_peer_infos,
@@ -70,6 +72,7 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Host> host_;
     std::shared_ptr<SessionHost> session_host_;
     std::shared_ptr<PeerRouting> peer_routing_;
+    std::shared_ptr<ContentRoutingTable> content_routing_table_;
     std::shared_ptr<ExecutorsFactory> executor_factory_;
 
     // Secondary

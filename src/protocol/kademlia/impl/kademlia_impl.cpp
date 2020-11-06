@@ -109,16 +109,27 @@ namespace libp2p::protocol::kademlia {
   }
 
   outcome::result<void> KademliaImpl::putValue(Key key, Value value) {
-	  log_.debug("CALL: PutValue");
+    log_.debug("CALL: PutValue");
 
-    return storage_->putValue(key, std::move(value));
-    // TODO(xDimon): Do we need to broadcast of provider?
+    bool need_notify = not config_.passiveMode and not storage_->hasValue(key);
+
+    if (auto res = storage_->putValue(key, std::move(value));
+        not res.has_value()) {
+      return res.as_failure();
+    }
+
     // TODO(xDimon): Do we need to be registered in content routing?
+    content_routing_table_->addProvider(key, host_->getId());
+
+    // TODO(xDimon): Do we need to broadcast about providing of this key?
+    [[maybe_unused]] auto res = provide(key, need_notify);
+
+    return outcome::success();
   }
 
   outcome::result<void> KademliaImpl::getValue(const Key &key,
                                                FoundValueHandler handler) {
-	  log_.debug("CALL: GetValue");
+    log_.debug("CALL: GetValue");
 
     // Check if has actual value locally
     if (auto res = storage_->getValue(std::move(key)); res.has_value()) {
@@ -131,11 +142,11 @@ namespace libp2p::protocol::kademlia {
       }
     }
 
-	  auto nearest_peer_infos = getNearestPeerInfos(NodeId(key));
-	  if (nearest_peer_infos.empty()) {
-		  log_.info("Can't add provider : no peers to connect to");
-		  return Error::NO_PEERS;
-	  }
+    auto nearest_peer_infos = getNearestPeerInfos(NodeId(key));
+    if (nearest_peer_infos.empty()) {
+      log_.info("Can't add provider : no peers to connect to");
+      return Error::NO_PEERS;
+    }
 
     auto get_value_executor =
         createGetValueExecutor(key, std::move(nearest_peer_infos), handler);
@@ -145,7 +156,7 @@ namespace libp2p::protocol::kademlia {
 
   outcome::result<void> KademliaImpl::provide(const Key &key,
                                               bool need_notify) {
-	  log_.debug("CALL: Provide");
+    log_.debug("CALL: Provide");
 
     // TODO(xDimon): Do we need to be registered in content routing?
 
@@ -167,7 +178,7 @@ namespace libp2p::protocol::kademlia {
 
   outcome::result<void> KademliaImpl::findProviders(
       const Key &key, size_t limit, FoundProvidersHandler handler) {
-	  log_.debug("CALL: FindProviders");
+    log_.debug("CALL: FindProviders");
 
     // Try to find locally
     auto providers = content_routing_table_->getProvidersFor(key, limit);
@@ -184,14 +195,14 @@ namespace libp2p::protocol::kademlia {
       return Error::NO_PEERS;
     }
 
-    auto find_providers_executor =
-        createGetProvidersExecutor(key, std::move(nearest_peer_infos), std::move(handler));
+    auto find_providers_executor = createGetProvidersExecutor(
+        key, std::move(nearest_peer_infos), std::move(handler));
 
     return find_providers_executor->start();
   }
 
   void KademliaImpl::addPeer(const PeerInfo &peer_info, bool permanent) {
-	  log_.debug("CALL: AddPeer");
+    log_.debug("CALL: AddPeer");
 
     // TODO(xDimon): Should to merge new address list with existent
     // TODO(xDimon): Will be better to inform if peer was really updated
@@ -214,7 +225,7 @@ namespace libp2p::protocol::kademlia {
 
   outcome::result<void> KademliaImpl::findPeer(const peer::PeerId &peer_id,
                                                FoundPeerInfoHandler handler) {
-	  log_.debug("CALL: FindPeer ({})", peer_id.toBase58());
+    log_.debug("CALL: FindPeer ({})", peer_id.toBase58());
 
     // Try to find locally
     auto peer_info = host_->getPeerRepository().getPeerInfo(peer_id);
@@ -228,14 +239,15 @@ namespace libp2p::protocol::kademlia {
       return outcome::success();
     }
 
-	  auto nearest_peer_infos = getNearestPeerInfos(NodeId(peer_id));
-	  if (nearest_peer_infos.empty()) {
-		  log_.debug("Can't find peer {}: no peers to connect to", peer_id.toBase58());
-		  return Error::NO_PEERS;
-	  }
+    auto nearest_peer_infos = getNearestPeerInfos(NodeId(peer_id));
+    if (nearest_peer_infos.empty()) {
+      log_.debug("Can't find peer {}: no peers to connect to",
+                 peer_id.toBase58());
+      return Error::NO_PEERS;
+    }
 
-    auto find_peer_executor =
-        createFindPeerExecutor(peer_id, std::move(nearest_peer_infos), std::move(handler));
+    auto find_peer_executor = createFindPeerExecutor(
+        peer_id, std::move(nearest_peer_infos), std::move(handler));
 
     return find_peer_executor->start();
   }
@@ -310,16 +322,16 @@ namespace libp2p::protocol::kademlia {
     log_.info("{}", __FUNCTION__);
 
     if (not msg.record) {
-      log_.warn("PutValue failed: no record im message");
+      log_.warn("incoming PutValue failed: no record in message");
       return;
     }
     auto &[key, value, ts] = msg.record.value();
 
     // TODO(artem): validate with external validator
 
-    auto res = storage_->putValue(key, std::move(value));
+    auto res = putValue(key, std::move(value));
     if (!res) {
-      log_.warn("PutValue failed: {}", res.error().message());
+      log_.warn("incoming PutValue failed: {}", res.error().message());
     }
 
     session->close(Error::SUCCESS);
@@ -330,13 +342,13 @@ namespace libp2p::protocol::kademlia {
     log_.info("{}", __FUNCTION__);
 
     if (msg.key.empty()) {
-      log_.warn("GetValue failed: empty key in message");
+      log_.warn("incoming GetValue failed: empty key in message");
       return;
     }
 
     auto cid_res = ContentId::fromWire(msg.key);
     if (!cid_res) {
-      log_.warn("GetValue failed: invalid key in message");
+      log_.warn("incoming GetValue failed: invalid key in message");
       return;
     }
     auto &cid = cid_res.value();
@@ -637,7 +649,7 @@ namespace libp2p::protocol::kademlia {
       FoundValueHandler handler) {
     return std::make_shared<GetValueExecutor>(
         config_, host_, shared_from_this(), shared_from_this(),
-        shared_from_this(), std::move(sought_key),
+        content_routing_table_, shared_from_this(), std::move(sought_key),
         std::move(nearest_peer_infos), std::move(handler));
   }
 

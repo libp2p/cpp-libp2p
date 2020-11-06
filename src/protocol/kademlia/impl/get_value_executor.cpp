@@ -21,6 +21,7 @@ namespace libp2p::protocol::kademlia {
       const Config &config, std::shared_ptr<Host> host,
       std::shared_ptr<SessionHost> session_host,
       std::shared_ptr<PeerRouting> peer_routing,
+      std::shared_ptr<ContentRoutingTable> content_routing_table,
       std::shared_ptr<ExecutorsFactory> executor_factory,
       ContentId sought_content_id,
       std::unordered_set<PeerInfo> nearest_peer_infos,
@@ -29,6 +30,7 @@ namespace libp2p::protocol::kademlia {
         host_(std::move(host)),
         session_host_(std::move(session_host)),
         peer_routing_(std::move(peer_routing)),
+        content_routing_table_(std::move(content_routing_table)),
         executor_factory_(std::move(executor_factory)),
         sought_content_id_(std::move(sought_content_id)),
         nearest_peer_infos_(
@@ -39,6 +41,7 @@ namespace libp2p::protocol::kademlia {
     BOOST_ASSERT(host_ != nullptr);
     BOOST_ASSERT(session_host_ != nullptr);
     BOOST_ASSERT(peer_routing_ != nullptr);
+    BOOST_ASSERT(content_routing_table_ != nullptr);
     BOOST_ASSERT(executor_factory_ != nullptr);
     std::for_each(nearest_peer_infos_.begin(), nearest_peer_infos_.end(),
                   [this](auto &peer_info) {
@@ -220,6 +223,8 @@ namespace libp2p::protocol::kademlia {
         for (auto &[peer, value] : idx_by_value) {
           if (value != best) {
             addressees.emplace_back(peer);
+          } else {
+            content_routing_table_->addProvider(sought_content_id_, peer);
           }
         }
 
