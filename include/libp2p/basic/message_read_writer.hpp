@@ -20,7 +20,8 @@ namespace libp2p::basic {
    */
   class MessageReadWriter {
    public:
-    using ReadCallback = outcome::result<std::shared_ptr<std::vector<uint8_t>>>;
+    using ResultType = std::shared_ptr<std::vector<uint8_t>>;
+    using ReadCallback = outcome::result<ResultType>;
     using ReadCallbackFunc = std::function<void(ReadCallback)>;
 
     virtual ~MessageReadWriter() = default;

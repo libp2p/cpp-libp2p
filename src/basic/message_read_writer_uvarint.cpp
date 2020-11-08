@@ -30,24 +30,23 @@ namespace libp2p::basic {
           }
 
           auto msg_len = varint_opt->toUInt64();
-          auto buffer = std::make_shared<std::vector<uint8_t>>(msg_len, 0);
-          self->conn_->read(
-              *buffer, msg_len,
-              [self, buffer, cb = std::move(cb)](auto &&res) mutable {
-                if (!res) {
-                  return cb(res.error());
-                }
-                cb(std::move(buffer));
-              });
+          if (0 != msg_len) {
+            auto buffer = std::make_shared<std::vector<uint8_t>>(msg_len, 0);
+            self->conn_->read(
+                *buffer, msg_len,
+                [self, buffer, cb = std::move(cb)](auto &&res) mutable {
+                  if (!res) {
+                    return cb(res.error());
+                  }
+                  cb(std::move(buffer));
+                });
+          } else
+            cb(ResultType{});
         });
   }
 
   void MessageReadWriterUvarint::write(gsl::span<const uint8_t> buffer,
                                        Writer::WriteCallbackFunc cb) {
-    if (buffer.empty()) {
-      return cb(MessageReadWriterError::BUFFER_IS_EMPTY);
-    }
-
     auto varint_len = multi::UVarint{static_cast<uint64_t>(buffer.size())};
 
     auto msg_bytes = std::make_shared<std::vector<uint8_t>>();
