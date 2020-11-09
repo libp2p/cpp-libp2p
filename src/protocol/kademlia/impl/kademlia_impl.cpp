@@ -26,6 +26,7 @@ namespace libp2p::protocol::kademlia {
       std::shared_ptr<Storage> storage,
       std::shared_ptr<ContentRoutingTable> content_routing_table,
       std::shared_ptr<PeerRoutingTable> peer_routing_table,
+      std::shared_ptr<Validator> validator,
       std::shared_ptr<Scheduler> scheduler, std::shared_ptr<event::Bus> bus,
       std::shared_ptr<crypto::random::RandomGenerator> random_generator)
       : config_(config),
@@ -33,6 +34,7 @@ namespace libp2p::protocol::kademlia {
         storage_(std::move(storage)),
         content_routing_table_(std::move(content_routing_table)),
         peer_routing_table_(std::move(peer_routing_table)),
+        validator_(std::move(validator)),
         scheduler_(std::move(scheduler)),
         bus_(std::move(bus)),
         random_generator_(std::move(random_generator)),
@@ -43,6 +45,7 @@ namespace libp2p::protocol::kademlia {
     BOOST_ASSERT(storage_ != nullptr);
     BOOST_ASSERT(content_routing_table_ != nullptr);
     BOOST_ASSERT(peer_routing_table_ != nullptr);
+    BOOST_ASSERT(validator_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
     BOOST_ASSERT(bus_ != nullptr);
     BOOST_ASSERT(random_generator_ != nullptr);
@@ -649,8 +652,9 @@ namespace libp2p::protocol::kademlia {
       FoundValueHandler handler) {
     return std::make_shared<GetValueExecutor>(
         config_, host_, shared_from_this(), shared_from_this(),
-        content_routing_table_, shared_from_this(), std::move(sought_key),
-        std::move(nearest_peer_infos), std::move(handler));
+        content_routing_table_, validator_, shared_from_this(),
+        std::move(sought_key), std::move(nearest_peer_infos),
+        std::move(handler));
   }
 
   std::shared_ptr<PutValueExecutor> KademliaImpl::createPutValueExecutor(

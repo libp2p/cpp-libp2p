@@ -7,15 +7,13 @@
 #define LIBP2P_PROTOCOL_KADEMLIA_VALIDATOR
 
 #include <libp2p/outcome/outcome.hpp>
+#include <libp2p/protocol/kademlia/common.hpp>
 #include <vector>
 
 namespace libp2p::protocol::kademlia {
 
   class Validator {
    public:
-    using Key = std::string;
-    using Value = std::string;
-
     virtual ~Validator() = default;
 
     /**
@@ -26,8 +24,8 @@ namespace libp2p::protocol::kademlia {
      * @returns an error if it's invalid (e.g., expired, signed by the wrong
      * key, etc.)
      */
-    virtual outcome::result<void> validator(const Key &key,
-                                            const Value &value) = 0;
+    virtual outcome::result<void> validate(const Key &key,
+                                           const Value &value) = 0;
 
     /**
      * Selects the best record from the set of records (by time, order or other

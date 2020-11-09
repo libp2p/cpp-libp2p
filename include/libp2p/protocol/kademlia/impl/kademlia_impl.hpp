@@ -19,6 +19,7 @@
 #include <libp2p/protocol/kademlia/impl/session_host.hpp>
 #include <libp2p/protocol/kademlia/impl/storage.hpp>
 #include <libp2p/protocol/kademlia/kademlia.hpp>
+#include <libp2p/protocol/kademlia/validator.hpp>
 #include <unordered_map>
 
 namespace libp2p::protocol::kademlia {
@@ -37,6 +38,7 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<Storage> storage,
         std::shared_ptr<ContentRoutingTable> content_routing_table,
         std::shared_ptr<PeerRoutingTable> peer_routing_table,
+        std::shared_ptr<Validator> validator,
         std::shared_ptr<Scheduler> scheduler, std::shared_ptr<event::Bus> bus,
         std::shared_ptr<crypto::random::RandomGenerator> random_generator);
 
@@ -124,6 +126,7 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Storage> storage_;
     std::shared_ptr<ContentRoutingTable> content_routing_table_;
     std::shared_ptr<PeerRoutingTable> peer_routing_table_;
+    std::shared_ptr<Validator> validator_;
     std::shared_ptr<Scheduler> scheduler_;
     std::shared_ptr<event::Bus> bus_;
     std::shared_ptr<crypto::random::RandomGenerator> random_generator_;

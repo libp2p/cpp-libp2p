@@ -22,6 +22,7 @@ namespace libp2p::protocol::kademlia {
       std::shared_ptr<SessionHost> session_host,
       std::shared_ptr<PeerRouting> peer_routing,
       std::shared_ptr<ContentRoutingTable> content_routing_table,
+      std::shared_ptr<Validator> validator,
       std::shared_ptr<ExecutorsFactory> executor_factory,
       ContentId sought_content_id,
       std::unordered_set<PeerInfo> nearest_peer_infos,
@@ -31,6 +32,7 @@ namespace libp2p::protocol::kademlia {
         session_host_(std::move(session_host)),
         peer_routing_(std::move(peer_routing)),
         content_routing_table_(std::move(content_routing_table)),
+        validator_(std::move(validator)),
         executor_factory_(std::move(executor_factory)),
         sought_content_id_(std::move(sought_content_id)),
         nearest_peer_infos_(

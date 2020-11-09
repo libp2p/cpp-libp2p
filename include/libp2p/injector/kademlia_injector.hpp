@@ -18,6 +18,7 @@
 #include <libp2p/protocol/kademlia/impl/peer_routing_table_impl.hpp>
 #include <libp2p/protocol/kademlia/impl/storage_backend_default.hpp>
 #include <libp2p/protocol/kademlia/impl/storage_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/validator_default.hpp>
 
 namespace libp2p::injector {
 
@@ -78,6 +79,7 @@ namespace libp2p::injector {
 				di::bind<protocol::kademlia::PeerRoutingTable>.template to<protocol::kademlia::PeerRoutingTableImpl>(),
 				di::bind<protocol::kademlia::StorageBackend>.template to<protocol::kademlia::StorageBackendDefault>(),
 				di::bind<protocol::kademlia::Storage>.template to<protocol::kademlia::StorageImpl>(),
+				di::bind<protocol::kademlia::Validator>.template to<protocol::kademlia::ValidatorDefault>(),
 
 				di::bind<protocol::kademlia::MessageObserver>.template to<protocol::kademlia::KademliaImpl>().in(di::singleton),
 				di::bind<protocol::kademlia::Kademlia>.template to<protocol::kademlia::KademliaImpl>().in(di::singleton),
