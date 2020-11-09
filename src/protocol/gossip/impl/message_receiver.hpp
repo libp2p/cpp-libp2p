@@ -6,7 +6,7 @@
 #ifndef LIBP2P_PROTOCOL_GOSSIP_MESSAGE_RECEIVER_HPP
 #define LIBP2P_PROTOCOL_GOSSIP_MESSAGE_RECEIVER_HPP
 
-#include <libp2p/protocol/gossip/impl/common.hpp>
+#include "common.hpp"
 
 namespace libp2p::protocol::gossip {
 

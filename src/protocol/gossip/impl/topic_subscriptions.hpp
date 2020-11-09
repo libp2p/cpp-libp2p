@@ -9,7 +9,8 @@
 #include <deque>
 
 #include <libp2p/protocol/common/sublogger.hpp>
-#include <libp2p/protocol/gossip/impl/peer_set.hpp>
+
+#include "peer_set.hpp"
 
 namespace libp2p::protocol::gossip {
 

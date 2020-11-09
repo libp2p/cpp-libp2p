@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/topic_subscriptions.hpp>
+#include "topic_subscriptions.hpp"
 
 #include <algorithm>
 #include <cassert>
 
-#include <libp2p/protocol/gossip/impl/connectivity.hpp>
-#include <libp2p/protocol/gossip/impl/message_builder.hpp>
+#include "connectivity.hpp"
+#include "message_builder.hpp"
 
 namespace libp2p::protocol::gossip {
 

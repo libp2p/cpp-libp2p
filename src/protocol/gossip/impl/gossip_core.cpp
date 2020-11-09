@@ -3,18 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/gossip_core.hpp>
+#include "gossip_core.hpp"
 
 #include <cassert>
 
 #include <libp2p/common/hexutil.hpp>
 
-#include <libp2p/protocol/gossip/impl/connectivity.hpp>
-#include <libp2p/protocol/gossip/impl/local_subscriptions.hpp>
-#include <libp2p/protocol/gossip/impl/message_builder.hpp>
-#include <libp2p/protocol/gossip/impl/remote_subscriptions.hpp>
+#include "connectivity.hpp"
+#include "local_subscriptions.hpp"
+#include "message_builder.hpp"
+#include "remote_subscriptions.hpp"
 
 namespace libp2p::protocol::gossip {
+
+  std::shared_ptr<Gossip> create(std::shared_ptr<Scheduler> scheduler,
+                                 std::shared_ptr<Host> host,
+                                 Config config) {
+    return std::make_shared<GossipCore>(std::move(config), std::move(scheduler),
+                                        std::move(host));
+  }
 
   // clang-format off
   GossipCore::GossipCore(Config config, std::shared_ptr<Scheduler> scheduler,
@@ -65,6 +72,7 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::start() {
     if (started_) {
+      log_.warn("already started");
       return;
     }
 

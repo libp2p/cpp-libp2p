@@ -9,7 +9,7 @@
 #include <map>
 #include <unordered_set>
 
-#include <libp2p/protocol/gossip/impl/common.hpp>
+#include "common.hpp"
 
 namespace pubsub::pb {
   // protobuf entities forward declaration

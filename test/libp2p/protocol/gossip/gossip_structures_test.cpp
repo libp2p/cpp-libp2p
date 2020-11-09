@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/message_cache.hpp>
-#include <libp2p/protocol/gossip/impl/peer_set.hpp>
+#include "src/protocol/gossip/impl/message_cache.hpp"
+#include "src/protocol/gossip/impl/peer_set.hpp"
 
 #include <gtest/gtest.h>
 #include "testutil/libp2p/peer.hpp"

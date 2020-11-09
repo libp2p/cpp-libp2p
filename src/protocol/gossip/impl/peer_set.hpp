@@ -9,7 +9,7 @@
 #include <functional>
 #include <set>
 
-#include <libp2p/protocol/gossip/impl/peer_context.hpp>
+#include "peer_context.hpp"
 
 namespace libp2p::protocol::gossip {
 

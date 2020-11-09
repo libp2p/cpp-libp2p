@@ -9,8 +9,8 @@
 #include <map>
 
 #include <libp2p/protocol/common/subscriptions.hpp>
-#include <libp2p/protocol/gossip/gossip.hpp>
-#include <libp2p/protocol/gossip/impl/common.hpp>
+
+#include "common.hpp"
 
 namespace libp2p::protocol::gossip {
 

@@ -6,7 +6,7 @@
 #ifndef LIBP2P_PROTOCOL_GOSSIP_MESSAGE_PARSER_HPP
 #define LIBP2P_PROTOCOL_GOSSIP_MESSAGE_PARSER_HPP
 
-#include <libp2p/protocol/gossip/impl/common.hpp>
+#include "common.hpp"
 
 namespace pubsub::pb {
   // protobuf message forward declaration

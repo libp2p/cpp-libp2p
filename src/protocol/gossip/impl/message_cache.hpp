@@ -13,7 +13,7 @@
 #include <boost/multi_index/ordered_index_fwd.hpp>
 #include <boost/multi_index_container_fwd.hpp>
 
-#include <libp2p/protocol/gossip/impl/common.hpp>
+#include "common.hpp"
 
 namespace libp2p::protocol::gossip {
 

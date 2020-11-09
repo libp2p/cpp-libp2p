@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <cassert>
+#include "local_subscriptions.hpp"
 
-#include <libp2p/protocol/gossip/impl/local_subscriptions.hpp>
+#include <cassert>
 
 namespace libp2p::protocol::gossip {
 

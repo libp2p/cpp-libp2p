@@ -11,7 +11,8 @@
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/multi/uvarint.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
-#include <libp2p/protocol/gossip/impl/common.hpp>
+
+#include "common.hpp"
 
 namespace libp2p::protocol::gossip {
 

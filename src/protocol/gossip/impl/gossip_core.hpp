@@ -6,15 +6,17 @@
 #ifndef LIBP2P_PROTOCOL_GOSSIP_CORE_HPP
 #define LIBP2P_PROTOCOL_GOSSIP_CORE_HPP
 
+#include <libp2p/protocol/gossip/gossip.hpp>
+
 #include <map>
 
 #include <libp2p/host/host.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/common/sublogger.hpp>
-#include <libp2p/protocol/gossip/gossip.hpp>
-#include <libp2p/protocol/gossip/impl/message_cache.hpp>
-#include <libp2p/protocol/gossip/impl/message_receiver.hpp>
-#include <libp2p/protocol/gossip/impl/peer_set.hpp>
+
+#include "message_cache.hpp"
+#include "message_receiver.hpp"
+#include "peer_set.hpp"
 
 namespace libp2p::protocol::gossip {
 

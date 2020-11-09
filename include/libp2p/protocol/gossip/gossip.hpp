@@ -18,6 +18,13 @@
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/common/subscription.hpp>
 
+namespace libp2p {
+  struct Host;
+  namespace protocol {
+    class Scheduler;
+  }
+}  // namespace libp2p
+
 namespace libp2p::protocol::gossip {
 
   /// Gossip pub-sub protocol config
@@ -114,6 +121,11 @@ namespace libp2p::protocol::gossip {
     /// Publishes to topics. Returns false if validation fails or not started
     virtual bool publish(const TopicSet &topic, ByteArray data) = 0;
   };
+
+  // Creates Gossip object
+  std::shared_ptr<Gossip> create(std::shared_ptr<Scheduler> scheduler,
+                                 std::shared_ptr<Host> host,
+                                 Config config = Config{});
 
 }  // namespace libp2p::protocol::gossip
 

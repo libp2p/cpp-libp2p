@@ -8,7 +8,8 @@
 
 #include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/common/sublogger.hpp>
-#include <libp2p/protocol/gossip/impl/topic_subscriptions.hpp>
+
+#include "topic_subscriptions.hpp"
 
 namespace libp2p::protocol::gossip {
 

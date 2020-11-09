@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/message_builder.hpp>
-#include <libp2p/protocol/gossip/impl/peer_context.hpp>
+#include "message_builder.hpp"
+#include "peer_context.hpp"
 
 namespace libp2p::protocol::gossip {
 

@@ -3,21 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/stream.hpp>
+#include "stream.hpp"
 
 #include <cassert>
 
 #include <libp2p/basic/varint_reader.hpp>
-#include <libp2p/protocol/gossip/impl/message_parser.hpp>
-#include <libp2p/protocol/gossip/impl/peer_context.hpp>
+
+#include "message_parser.hpp"
+#include "peer_context.hpp"
 
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
 
 namespace libp2p::protocol::gossip {
 
-  Stream::Stream(size_t stream_id, const Config &config, Scheduler &scheduler,
-                 const Feedback &feedback, MessageReceiver &msg_receiver,
+  Stream::Stream(size_t stream_id,
+                 const Config &config,
+                 Scheduler &scheduler,
+                 const Feedback &feedback,
+                 MessageReceiver &msg_receiver,
                  std::shared_ptr<connection::Stream> stream,
                  PeerContextPtr peer)
       : stream_id_(stream_id),
@@ -77,9 +81,10 @@ namespace libp2p::protocol::gossip {
 
     read_buffer_->resize(msg_len);
 
-    stream_->read(gsl::span(read_buffer_->data(), msg_len), msg_len,
-                  [self_wptr = weak_from_this(), this,
-                   buffer = read_buffer_](auto &&res) {
+    stream_->read(gsl::span(read_buffer_->data(), msg_len),
+                  msg_len,
+                  [self_wptr = weak_from_this(), this, buffer = read_buffer_](
+                      auto &&res) {
                     if (self_wptr.expired()) {
                       return;
                     }
@@ -133,7 +138,7 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    auto& buffer = serialization_res.value();
+    auto &buffer = serialization_res.value();
     if (buffer->empty()) {
       return;
     }
@@ -171,9 +176,8 @@ namespace libp2p::protocol::gossip {
     // clang-format on
 
     if (timeout_ > 0) {
-      timeout_handle_ = scheduler_.schedule(
-          timeout_,
-          [self_wptr = weak_from_this(), this] {
+      timeout_handle_ =
+          scheduler_.schedule(timeout_, [self_wptr = weak_from_this(), this] {
             if (self_wptr.expired() || closed_) {
               return;
             }
@@ -205,7 +209,7 @@ namespace libp2p::protocol::gossip {
     endWrite();
 
     if (!pending_buffers_.empty()) {
-      SharedBuffer& buffer = pending_buffers_.front();
+      SharedBuffer &buffer = pending_buffers_.front();
       pending_bytes_ -= buffer->size();
       beginWrite(std::move(buffer));
       pending_buffers_.pop_front();
@@ -213,12 +217,14 @@ namespace libp2p::protocol::gossip {
   }
 
   void Stream::asyncPostError(Error error) {
-    scheduler_.schedule([this, self_wptr = weak_from_this(), error] {
-      if (self_wptr.expired() || closed_) {
-        return;
-      }
-      feedback_(peer_, error);
-    }).detach();
+    scheduler_
+        .schedule([this, self_wptr = weak_from_this(), error] {
+          if (self_wptr.expired() || closed_) {
+            return;
+          }
+          feedback_(peer_, error);
+        })
+        .detach();
   }
 
   void Stream::endWrite() {
@@ -231,7 +237,8 @@ namespace libp2p::protocol::gossip {
     endWrite();
     closed_ = true;
     stream_->close([self{shared_from_this()}](outcome::result<void>) {
-      TRACE("stream {} closed for peer {}", self->stream_id_, self->peer_->str);
+      common::createLogger("gossip")->debug(
+          "stream {} closed for peer {}", self->stream_id_, self->peer_->str);
     });
   }
 

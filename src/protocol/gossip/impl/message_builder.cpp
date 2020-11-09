@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/message_builder.hpp>
+#include "message_builder.hpp"
 
 #include <libp2p/multi/uvarint.hpp>
 

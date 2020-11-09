@@ -11,8 +11,9 @@
 #include <libp2p/host/host.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/common/sublogger.hpp>
-#include <libp2p/protocol/gossip/impl/peer_set.hpp>
-#include <libp2p/protocol/gossip/impl/stream.hpp>
+
+#include "peer_set.hpp"
+#include "stream.hpp"
 
 namespace libp2p::protocol::gossip {
 

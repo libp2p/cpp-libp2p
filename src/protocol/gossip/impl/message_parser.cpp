@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/message_parser.hpp>
+#include "message_parser.hpp"
 
 #include <libp2p/common/logger.hpp>
-#include <libp2p/protocol/gossip/impl/message_receiver.hpp>
+
+#include "message_receiver.hpp"
 
 #include <generated/protocol/gossip/protobuf/rpc.pb.h>
 

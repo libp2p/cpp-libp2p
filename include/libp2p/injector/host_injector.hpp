@@ -14,6 +14,7 @@
 #include <libp2p/peer/impl/peer_repository_impl.hpp>
 #include <libp2p/peer/key_repository/inmem_key_repository.hpp>
 #include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
+#include <libp2p/protocol/common/asio/asio_scheduler.hpp>
 
 namespace libp2p::injector {
 
@@ -34,6 +35,9 @@ namespace libp2p::injector {
         di::bind<peer::AddressRepository>.template to<peer::InmemAddressRepository>(),
         di::bind<peer::KeyRepository>.template to<peer::InmemKeyRepository>(),
         di::bind<peer::ProtocolRepository>.template to<peer::InmemProtocolRepository>(),
+
+        di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
+        di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
 
         // user-defined overrides...
         std::forward<decltype(args)>(args)...
