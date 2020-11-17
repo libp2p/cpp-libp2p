@@ -98,6 +98,11 @@ namespace libp2p::protocol::kademlia {
   }
 
   void Session::onLengthRead(boost::optional<multi::UVarint> varint_opt) {
+    if (stream_->isClosedForRead()) {
+      close(Error::STREAM_RESET);
+      return;
+    }
+
     if (closed_) {
       return;
     }
@@ -137,8 +142,32 @@ namespace libp2p::protocol::kademlia {
 
     Message msg;
     if (!msg.deserialize(inner_buffer_.data(), inner_buffer_.size())) {
-      close(Error::MESSAGE_PARSE_ERROR);
+      close(Error::MESSAGE_DESERIALIZE_ERROR);
       return;
+    }
+
+    switch (msg.type) {
+      case Message::Type::kPutValue:
+        log_.debug("Incoming PutValue message");
+        break;
+      case Message::Type::kGetValue:
+        log_.debug("Incoming GetValue message");
+        break;
+      case Message::Type::kAddProvider:
+        log_.debug("Incoming AddProvider message");
+        break;
+      case Message::Type::kGetProviders:
+        log_.debug("Incoming GetProviders message");
+        break;
+      case Message::Type::kFindNode:
+        log_.debug("Incoming FindNode message");
+        break;
+      case Message::Type::kPing:
+        log_.debug("Incoming Ping message");
+        break;
+      default:
+        close(Error::UNEXPECTED_MESSAGE_TYPE);
+        return;
     }
 
     --reading_;

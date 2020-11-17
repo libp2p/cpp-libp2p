@@ -5,9 +5,10 @@
 
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
-#include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
 #include <libp2p/protocol/kademlia/error.hpp>
+#include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/storage_impl.hpp>
 #include <unordered_map>
 
@@ -15,15 +16,12 @@ namespace libp2p::protocol::kademlia {
 
   StorageImpl::StorageImpl(const Config &config,
                            std::shared_ptr<StorageBackend> backend,
-                           std::shared_ptr<Scheduler> scheduler,
-                           std::shared_ptr<event::Bus> bus)
+                           std::shared_ptr<Scheduler> scheduler)
       : config_(config),
         backend_(std::move(backend)),
-        scheduler_(std::move(scheduler)),
-        bus_(std::move(bus)) {
+        scheduler_(std::move(scheduler)) {
     BOOST_ASSERT(backend_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
-    BOOST_ASSERT(bus_ != nullptr);
     BOOST_ASSERT(config_.storageRecordTTL > config_.storageWipingInterval);
 
     table_ = std::make_unique<Table>();
@@ -32,6 +30,8 @@ namespace libp2p::protocol::kademlia {
         scheduler_->schedule(scheduler::toTicks(config_.storageWipingInterval),
                              [this] { onRefreshTimer(); });
   }
+
+  StorageImpl::~StorageImpl() = default;
 
   outcome::result<void> StorageImpl::putValue(Key key, Value value) {
     OUTCOME_TRY(backend_->putValue(key, value));
@@ -43,8 +43,6 @@ namespace libp2p::protocol::kademlia {
 
     if (auto it = idx.find(key); it == idx.end()) {
       table_->insert({key, expire_time, now});
-      bus_->getChannel<events::ContentProvidedChannel>().publish(
-          std::move(key));
     } else {
       table_->modify(it, [expire_time, now](auto &record) {
         record.expire_time = expire_time;
@@ -96,9 +94,6 @@ namespace libp2p::protocol::kademlia {
       if (i->refresh_time > now) {
         break;
       }
-
-      bus_->getChannel<events::ContentProvidedChannel>().publish(
-          std::move(i->key));
 
       idx_by_refresing.modify(i, [this](auto &record) {
         record.refresh_time +=

@@ -53,7 +53,8 @@ namespace libp2p::protocol::kademlia {
     using Ticks = scheduler::Ticks;
     using AbsTime = Ticks;
 
-    ContentRoutingTableImpl(const Config &config, Scheduler &scheduler);
+    ContentRoutingTableImpl(const Config &config, Scheduler &scheduler,
+                            std::shared_ptr<event::Bus> bus);
 
     ~ContentRoutingTableImpl() override;
 
@@ -66,6 +67,7 @@ namespace libp2p::protocol::kademlia {
     void onCleanupTimer();
 
     Scheduler &scheduler_;
+    std::shared_ptr<event::Bus> bus_;
     const Scheduler::Ticks record_expiration_;
     const Scheduler::Ticks cleanup_timer_interval_;
     const size_t max_providers_per_key_;

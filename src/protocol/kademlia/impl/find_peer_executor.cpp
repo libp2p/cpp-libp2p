@@ -16,25 +16,29 @@ namespace libp2p::protocol::kademlia {
   FindPeerExecutor::FindPeerExecutor(
       const Config &config, std::shared_ptr<Host> host,
       std::shared_ptr<SessionHost> session_host,
-      std::shared_ptr<PeerRouting> peer_routing, PeerId sought_peer_id,
-      std::unordered_set<PeerInfo> nearest_peer_infos,
+      std::shared_ptr<PeerRouting> peer_routing,
+      std::shared_ptr<PeerRoutingTable> peer_routing_table,
+      std::shared_ptr<Scheduler> scheduler, PeerId sought_peer_id,
       FoundPeerInfoHandler handler)
       : config_(config),
         host_(std::move(host)),
         session_host_(std::move(session_host)),
         peer_routing_(std::move(peer_routing)),
+        peer_routing_table_(std::move(peer_routing_table)),
+        scheduler_(std::move(scheduler)),
         sought_peer_id_(std::move(sought_peer_id)),
-        sought_peer_id_as_content_id_(sought_peer_id_.toVector()),
-        nearest_peer_infos_(
-            std::move(reinterpret_cast<decltype(nearest_peer_infos_) &>(
-                nearest_peer_infos))),
+        target_(sought_peer_id_),
         handler_(std::move(handler)),
         log_("kad", "FindPeerExecutor", ++instance_number) {
-    std::for_each(nearest_peer_infos_.begin(), nearest_peer_infos_.end(),
-                  [this](auto &peer_info) {
-                    queue_.emplace(peer_info,
-                                   ContentId(sought_peer_id_.toVector()));
-                  });
+    auto nearest_peer_ids = peer_routing_table_->getNearestPeers(
+        NodeId(sought_peer_id_), config_.closerPeerCount * 2);
+
+    nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
+                             std::move_iterator(nearest_peer_ids.end()));
+
+    std::for_each(nearest_peer_ids_.begin(), nearest_peer_ids_.end(),
+                  [this](auto &peer_id) { queue_.emplace(peer_id, target_); });
+
     log_.debug("created");
   }
 
@@ -68,20 +72,64 @@ namespace libp2p::protocol::kademlia {
 
     log_.debug("started");
 
+    scheduler_->schedule(scheduler::toTicks(config_.randomWalk.timeout),
+                         [wp = weak_from_this()] {
+                           if (auto self = wp.lock()) {
+                             self->done(Error::TIMEOUT);
+                           }
+                         }).detach();
+
     spawn();
 
     return outcome::success();
   };
 
+  void FindPeerExecutor::done(outcome::result<PeerInfo> result) {
+    bool x = false;
+    if (not done_.compare_exchange_strong(x, true)) {
+      return;
+    }
+    if (result.has_value()) {
+      log_.debug("done: peer is found");
+    } else {
+      log_.debug("done: {}", result.error().message());
+    }
+    handler_(result);
+  }
+
   void FindPeerExecutor::spawn() {
+    if (done_) {
+      return;
+    }
+
+    auto self_peer_id = host_->getId();
+
     while (started_ and not done_ and not queue_.empty()
            and requests_in_progress_ < config_.requestConcurency) {
-      auto &peer_info = *queue_.top();
+      auto peer_id = *queue_.top();
       queue_.pop();
+
+      // Exclude yoursef, because not found locally anyway
+      if (peer_id == self_peer_id) {
+        continue;
+      }
+
+      // Get peer info
+      auto peer_info = host_->getPeerRepository().getPeerInfo(peer_id);
+      if (peer_info.addresses.empty()) {
+        continue;
+      }
+
+      // Check if connectable
+      auto connectedness =
+          host_->getNetwork().getConnectionManager().connectedness(peer_info);
+      if (connectedness == Message::Connectedness::CAN_NOT_CONNECT) {
+        continue;
+      }
 
       ++requests_in_progress_;
 
-      log_.debug("connecting to {}; active {} req.", peer_info.id.toBase58(),
+      log_.debug("connecting to {}; active {} req.", peer_id.toBase58(),
                  requests_in_progress_);
 
       host_->newStream(
@@ -92,9 +140,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     if (requests_in_progress_ == 0) {
-      done_ = true;
-      log_.debug("done");
-      handler_(Error::VALUE_NOT_FOUND);
+      done(Error::VALUE_NOT_FOUND);
     }
   }
 
@@ -114,10 +160,18 @@ namespace libp2p::protocol::kademlia {
     assert(stream->remoteMultiaddr().has_value());
 
     std::string addr(stream->remoteMultiaddr().value().getStringAddress());
-    log_.debug("connected to {}; active {} req.", addr, requests_in_progress_);
 
-    auto session = session_host_->openSession(stream);
+//    if (done_) {
+//	    --requests_in_progress_;
+//	    log_.warn("connected to {} too late; active {} req.", addr,
+//	              requests_in_progress_);
+//	    stream->close([](auto){});
+//	    return;
+//    }
 
+	  log_.debug("connected to {}; active {} req.", addr, requests_in_progress_);
+
+	  auto session = session_host_->openSession(stream);
     if (!session->write(serialized_request_, shared_from_this())) {
       --requests_in_progress_;
 
@@ -132,9 +186,9 @@ namespace libp2p::protocol::kademlia {
   bool FindPeerExecutor::match(const Message &msg) const {
     return
         // Check if message type is appropriate
-        msg.type == Message::Type::kFindNode
-        // Check if response is accorded to request
-        && msg.key == sought_peer_id_.toVector();
+        msg.type == Message::Type::kFindNode;
+    //        // Check if response is accorded to request
+    //        && msg.key == sought_peer_id_.toVector()
   }
 
   void FindPeerExecutor::onResult(const std::shared_ptr<Session> &session,
@@ -146,7 +200,7 @@ namespace libp2p::protocol::kademlia {
 
     // Check if gotten some message
     if (not res) {
-      log_.warn("Result from {}: {}; active {} req.",
+      log_.warn("Result from {} is failed: {}; active {} req.",
                 session->stream()->remotePeerId().value().toBase58(),
                 res.error().message(), requests_in_progress_);
       return;
@@ -164,15 +218,29 @@ namespace libp2p::protocol::kademlia {
 
     auto self_peer_id = host_->getId();
 
-    log_.debug("Result from {}: gotten; active {} req.",
+    log_.debug("Result from {} is gotten; active {} req.",
                remote_peer_id.toBase58(), requests_in_progress_);
 
     // Append gotten peer to queue
     if (msg.closer_peers) {
       for (auto &peer : msg.closer_peers.value()) {
+       	// Skip non connectable peers
+        if (peer.conn_status == Message::Connectedness::CAN_NOT_CONNECT) {
+          continue;
+        }
+
         // Add/Update peer info
-        if (peer.conn_status != Message::Connectedness::CAN_NOT_CONNECT) {
-          peer_routing_->addPeer(peer.info, false);
+        peer_routing_->addPeer(peer.info, false);
+
+        // It is done, just add peer and that's all
+        if (done_) {
+        	continue;
+        }
+
+        // Found
+        if (peer.info.id == sought_peer_id_) {
+          done(peer.info);
+          continue;
         }
 
         // Skip himself
@@ -186,22 +254,10 @@ namespace libp2p::protocol::kademlia {
         }
 
         // New peer add to queue
-        if (nearest_peer_infos_.emplace(peer.info).second) {
-          queue_.emplace(peer.info, sought_peer_id_as_content_id_);
+        if (auto [it, ok] = nearest_peer_ids_.emplace(peer.info.id); ok) {
+          queue_.emplace(*it, target_);
         }
       }
-    }
-
-    if (msg.record) {
-      // TODO(xDimon): Need to implement selection of result by quorum
-
-      done_ = true;
-      log_.debug("done");
-      handler_(PeerInfo{
-          .id = sought_peer_id_,
-          // TODO(xDimon): How to read bytes to vector of multiaddresses?
-          .addresses = {}  // {msg.record->value}
-      });
     }
   }
 

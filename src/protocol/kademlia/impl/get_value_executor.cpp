@@ -91,7 +91,6 @@ namespace libp2p::protocol::kademlia {
     while (started_ and not done_ and not queue_.empty()
            and requests_in_progress_ < config_.requestConcurency) {
       auto &peer_info = *queue_.top();
-      queue_.pop();
 
       ++requests_in_progress_;
 
@@ -103,6 +102,8 @@ namespace libp2p::protocol::kademlia {
           [self = shared_from_this()](auto &&stream_res) {
             self->onConnected(std::forward<decltype(stream_res)>(stream_res));
           });
+
+	    queue_.pop();
     }
 
     if (requests_in_progress_ == 0) {
@@ -160,7 +161,7 @@ namespace libp2p::protocol::kademlia {
 
     // Check if gotten some message
     if (not msg_res) {
-      log_.warn("Result from {}: {}; active {} req.",
+      log_.warn("Result from {} failed: {}; active {} req.",
                 session->stream()->remotePeerId().value().toBase58(),
                 msg_res.error().message(), requests_in_progress_);
       return;
@@ -176,15 +177,18 @@ namespace libp2p::protocol::kademlia {
     BOOST_ASSERT(remote_peer_id_res.has_value());
     auto &remote_peer_id = remote_peer_id_res.value();
 
-    auto self_peer_id = host_->getId();
+	  auto self_peer_id = host_->getId();
+
+	  log_.debug("Result from {} is gotten; active {} req.",
+	             remote_peer_id.toBase58(), requests_in_progress_);
 
     // Append gotten peer to queue
     if (msg.closer_peers) {
       for (auto &peer : msg.closer_peers.value()) {
-        // Add/Update peer info
-        if (peer.conn_status != Message::Connectedness::CAN_NOT_CONNECT) {
-          peer_routing_->addPeer(peer.info, false);
-        }
+//        // Add/Update peer info
+//        if (peer.conn_status != Message::Connectedness::CAN_NOT_CONNECT) {
+//          peer_routing_->addPeer(peer.info, false);
+//        }
 
         // Skip himself
         if (peer.info.id == self_peer_id) {

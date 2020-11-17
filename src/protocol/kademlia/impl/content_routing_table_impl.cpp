@@ -11,13 +11,16 @@
 
 namespace libp2p::protocol::kademlia {
 
-  ContentRoutingTableImpl::ContentRoutingTableImpl(const Config &config,
-                                                   Scheduler &scheduler)
+  ContentRoutingTableImpl::ContentRoutingTableImpl(
+      const Config &config, Scheduler &scheduler,
+      std::shared_ptr<event::Bus> bus)
       : scheduler_(scheduler),
+        bus_(std::move(bus)),
         record_expiration_(scheduler::toTicks(config.providerRecordTTL)),
         cleanup_timer_interval_(
             scheduler::toTicks(config.providerWipingInterval)),
         max_providers_per_key_(config.maxProvidersPerKey) {
+    BOOST_ASSERT(bus_ != nullptr);
     table_ = std::make_unique<Table>();
 
     cleanup_timer_ = scheduler_.schedule([this] {
@@ -39,7 +42,7 @@ namespace libp2p::protocol::kademlia {
     auto [begin, end] = idx.equal_range(key);
     for (auto it = begin; it != end; ++it) {
       result.push_back(it->peer);
-      if (result.size() >= limit) {
+      if (limit > 0 and result.size() >= limit) {
         break;
       }
     }
@@ -54,12 +57,11 @@ namespace libp2p::protocol::kademlia {
     auto oldest = begin;
     auto equal = idx.end();
     size_t count = 0;
-    for (auto it = begin; it != end; ++it) {
+    for (auto it = begin; it != end; ++it, ++count) {
       if (it->peer == peer) {
         equal = it;
         break;
       }
-      ++count;
       if (it->expire_time < oldest->expire_time) {
         oldest = it;
       }
@@ -73,24 +75,20 @@ namespace libp2p::protocol::kademlia {
       idx.erase(oldest);
     }
     table_->insert({key, peer, expires});
+    bus_->getChannel<events::AddContentProviderChannel>().publish({key, peer});
   }
 
   void ContentRoutingTableImpl::onCleanupTimer() {
     auto current_time = scheduler_.now();
 
-    for (;;) {
-      // cleanup expired records
-      auto &idx = table_->get<ByExpireTime>();
-      if (idx.empty()) {
+    // cleanup expired records
+    auto &idx = table_->get<ByExpireTime>();
+    for (auto i = idx.begin(); i != idx.end(); ) {
+      if (i->expire_time > current_time) {
         break;
       }
-      for (;;) {
-        auto it = idx.begin();
-        if (it->expire_time > current_time) {
-          break;
-        }
-        idx.erase(it);
-      }
+      auto ci = i++;
+      idx.erase(ci);
     }
 
     cleanup_timer_.reschedule(cleanup_timer_interval_);

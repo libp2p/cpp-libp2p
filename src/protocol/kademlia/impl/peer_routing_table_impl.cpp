@@ -28,8 +28,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia,
 namespace {
   using libp2p::protocol::kademlia::Bucket;
 
-  size_t getBucketId(std::vector<Bucket> &buckets, size_t cpl) {
-    BOOST_ASSERT(!buckets.empty());
+  size_t getBucketId(const std::vector<Bucket> &buckets, size_t cpl) {
+    BOOST_ASSERT(not buckets.empty());
     return cpl >= buckets.size() ? buckets.size() - 1 : cpl;
   }
 }  // namespace
@@ -100,6 +100,7 @@ namespace libp2p::protocol::kademlia {
     // Trying to find and move to front
     auto it = std::remove(bucket.rbegin(), bucket.rend(), pid);
     if (it != bucket.rend()) {
+    	*it = pid;
       return outcome::success();
     }
 

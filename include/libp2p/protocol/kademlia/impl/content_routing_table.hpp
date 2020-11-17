@@ -15,8 +15,9 @@ namespace libp2p::protocol::kademlia {
 
   namespace events {
 
-    using ContentProvidedChannel =
-        event::channel_decl<struct ContentProvided, const ContentId &>;
+    using AddContentProviderChannel =
+        event::channel_decl<struct AddContentProvider,
+                            std::pair<const ContentId &, const peer::PeerId &>>;
 
   }  // namespace events
 

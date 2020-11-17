@@ -13,9 +13,13 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, Error, e) {
     case E::NO_PEERS:
       return "no peers found";
     case E::MESSAGE_PARSE_ERROR:
+      return "message parse error";
+    case E::MESSAGE_DESERIALIZE_ERROR:
       return "message deserialize error";
     case E::MESSAGE_SERIALIZE_ERROR:
       return "message serialize error";
+    case E::MESSAGE_WRONG:
+      return "invalid message data";
     case E::UNEXPECTED_MESSAGE_TYPE:
       return "unexpected_message_type";
     case E::STREAM_RESET:

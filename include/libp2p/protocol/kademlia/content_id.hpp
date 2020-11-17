@@ -42,7 +42,7 @@ namespace libp2p::protocol::kademlia {
 
    private:
     struct FromWire {};
-    ContentId(FromWire, std::vector<uint8_t> v);
+    ContentId(FromWire, gsl::span<const uint8_t> bytes);
   };
 
 }  // namespace libp2p::protocol::kademlia

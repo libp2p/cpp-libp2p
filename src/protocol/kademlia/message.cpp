@@ -32,7 +32,8 @@ namespace libp2p::protocol::kademlia {
         return boost::none;
       }
 
-      auto peer_id_res = PeerId::fromBase58(src.id());
+      auto peer_id_res = PeerId::fromBytes(
+          gsl::span<uint8_t>((uint8_t *)src.id().data(), src.id().size()));
       if (!peer_id_res) {
         // TODO(artem): log
         return boost::none;
@@ -40,7 +41,8 @@ namespace libp2p::protocol::kademlia {
 
       std::vector<multi::Multiaddress> addresses;
       for (const auto &addr : src.addrs()) {
-        auto res = multi::Multiaddress::create(addr);
+        auto res = multi::Multiaddress::create(
+            gsl::span<const uint8_t>((const uint8_t *)addr.data(), addr.size()));
         if (!res) {
           // TODO(artem): log
           return boost::none;
@@ -131,9 +133,11 @@ namespace libp2p::protocol::kademlia {
     if (closer_peers) {
       for (const auto &p : closer_peers.value()) {
         pb::Message_Peer *pb_peer = pb_msg.add_closerpeers();
-        pb_peer->set_id(p.info.id.toBase58());
+	      auto& pid_v = p.info.id.toVector();
+        pb_peer->set_id(std::string(pid_v.begin(), pid_v.end()));
         for (const auto &addr : p.info.addresses) {
-          pb_peer->add_addrs(std::string(addr.getStringAddress()));
+	        auto& bytes = addr.getBytesAddress();
+          pb_peer->add_addrs(std::string(bytes.begin(), bytes.end()));
         }
         pb_peer->set_connection(pb::Message_ConnectionType(p.conn_status));
       }
@@ -141,9 +145,11 @@ namespace libp2p::protocol::kademlia {
     if (provider_peers) {
       for (const auto &p : provider_peers.value()) {
         pb::Message_Peer *pb_peer = pb_msg.add_providerpeers();
-        pb_peer->set_id(p.info.id.toBase58());
+	      auto& pid_v = p.info.id.toVector();
+	      pb_peer->set_id(std::string(pid_v.begin(), pid_v.end()));
         for (const auto &addr : p.info.addresses) {
-          pb_peer->add_addrs(std::string(addr.getStringAddress()));
+	        auto& bytes = addr.getBytesAddress();
+	        pb_peer->add_addrs(std::string(bytes.begin(), bytes.end()));
         }
         pb_peer->set_connection(pb::Message_ConnectionType(p.conn_status));
       }

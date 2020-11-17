@@ -6,10 +6,11 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_STORAGEIMPL
 #define LIBP2P_PROTOCOL_KADEMLIA_STORAGEIMPL
 
-#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/hashed_index_fwd.hpp>
 #include <boost/multi_index/member.hpp>
-#include <boost/multi_index_container.hpp>
-#include <libp2p/event/bus.hpp>
+#include <boost/multi_index/ordered_index_fwd.hpp>
+#include <boost/multi_index/tag.hpp>
+#include <boost/multi_index_container_fwd.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/storage.hpp>
@@ -51,10 +52,9 @@ namespace libp2p::protocol::kademlia {
 
    public:
     StorageImpl(const Config &config, std::shared_ptr<StorageBackend> backend,
-                std::shared_ptr<Scheduler> scheduler,
-                std::shared_ptr<event::Bus> bus);
+                std::shared_ptr<Scheduler> scheduler);
 
-    ~StorageImpl() override = default;
+    ~StorageImpl() override;
 
     outcome::result<void> putValue(Key key, Value value) override;
 
@@ -69,7 +69,6 @@ namespace libp2p::protocol::kademlia {
     const Config &config_;
     std::shared_ptr<StorageBackend> backend_;
     std::shared_ptr<Scheduler> scheduler_;
-    std::shared_ptr<event::Bus> bus_;
 
     std::unique_ptr<Table> table_;
     Scheduler::Handle refresh_timer_;

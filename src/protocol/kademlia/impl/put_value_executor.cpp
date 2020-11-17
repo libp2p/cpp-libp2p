@@ -57,7 +57,7 @@ namespace libp2p::protocol::kademlia {
   };
 
   void PutValueExecutor::spawn() {
-    while (started_ and not done_ and addressees_idx_ >= addressees_.size()
+    while (started_ and not done_ and addressees_idx_ < addressees_.size()
            and requests_in_progress_ < config_.requestConcurency) {
       auto &peer_id = addressees_[addressees_idx_++];
       auto peer_info =

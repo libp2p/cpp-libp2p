@@ -106,11 +106,10 @@ namespace libp2p::protocol::kademlia {
 
     std::shared_ptr<GetProvidersExecutor> createGetProvidersExecutor(
         ContentId sought_content_id,
-        std::unordered_set<PeerInfo> nearest_peer_infos,
         FoundProvidersHandler handler) override;
 
     std::shared_ptr<FindPeerExecutor> createFindPeerExecutor(
-        PeerId sought_peer_id, std::unordered_set<PeerInfo> nearest_peer_infos,
+        PeerId peer_id,
         FoundPeerInfoHandler handler) override;
 
     std::vector<PeerId> getNearestPeerIds(const NodeId &id);
@@ -143,9 +142,6 @@ namespace libp2p::protocol::kademlia {
 
     // Subscribtion to new connections
     event::Handle new_connection_subscription_;
-
-    // Subscribtion to new provided key
-    event::Handle new_provided_key_subscription_;
 
     struct StreamPtrComparator {
       bool operator()(const std::shared_ptr<connection::Stream> &lhs,

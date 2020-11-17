@@ -8,7 +8,7 @@
 namespace libp2p::protocol::kademlia {
 
   PeerInfoWithDistance::PeerInfoWithDistance(const PeerInfo &peer_info,
-                                             const ContentId& target)
+                                             const ContentId &target)
       : peer_info_(peer_info) {
     auto &p1 = peer_info.id.toVector();
     auto &p2 = target.data;
@@ -23,4 +23,5 @@ namespace libp2p::protocol::kademlia {
                        distance_.size())
         < 0;
   }
+
 }  // namespace libp2p::protocol::kademlia
