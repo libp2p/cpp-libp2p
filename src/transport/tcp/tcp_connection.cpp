@@ -11,10 +11,10 @@ namespace libp2p::transport {
 
   TcpConnection::TcpConnection(boost::asio::io_context &ctx,
                                boost::asio::ip::tcp::socket &&socket)
-      : context_(ctx), socket_(std::move(socket)) {}
+      : context_(ctx), socket_(std::move(socket)), deadline_timer_(context_) {}
 
   TcpConnection::TcpConnection(boost::asio::io_context &ctx)
-      : context_(ctx), socket_(context_) {}
+      : context_(ctx), socket_(context_), deadline_timer_(context_) {}
 
   outcome::result<void> TcpConnection::close() {
     boost::system::error_code ec;
@@ -90,9 +90,41 @@ namespace libp2p::transport {
   void TcpConnection::connect(
       const TcpConnection::ResolverResultsType &iterator,
       TcpConnection::ConnectCallbackFunc cb) {
+    connect(iterator, std::move(cb), std::chrono::milliseconds(0));
+  }
+
+  void TcpConnection::connect(
+      const TcpConnection::ResolverResultsType &iterator,
+      ConnectCallbackFunc cb, std::chrono::milliseconds timeout) {
+    if (timeout > std::chrono::milliseconds(0)) {
+      connecting_with_timeout_ = true;
+      deadline_timer_.expires_from_now(
+          boost::posix_time::milliseconds(timeout.count()));
+      deadline_timer_.async_wait([self{shared_from_this()},
+                                  cb](const boost::system::error_code &error) {
+        if (not self->connection_phase_done_) {
+          if (not error) {
+            // timeout happened, timer expired before connection was
+            // established
+            self->connection_phase_done_ = true;
+            cb(boost::system::error_code{boost::system::errc::timed_out,
+                                         boost::system::generic_category()},
+               Tcp::endpoint{});
+            // probably need to call self->close();
+          }
+          // Another case is: boost::asio::error::operation_aborted == error
+          // connection was established before timeout and timer has been
+          // cancelled
+        }
+      });
+    }
     boost::asio::async_connect(socket_, iterator,
                                [self{shared_from_this()}, cb{std::move(cb)}](
                                    auto &&ec, auto &&endpoint) {
+                                 self->connection_phase_done_ = true;
+                                 if (self->connecting_with_timeout_) {
+                                   self->deadline_timer_.cancel();
+                                 }
                                  self->initiator_ = true;
                                  cb(std::forward<decltype(ec)>(ec),
                                     std::forward<decltype(endpoint)>(endpoint));

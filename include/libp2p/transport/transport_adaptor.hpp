@@ -15,9 +15,9 @@
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/event/emitter.hpp>
 #include <libp2p/multi/multiaddress.hpp>
+#include <libp2p/outcome/outcome.hpp>  // for outcome::result
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/transport/transport_listener.hpp>
-#include <libp2p/outcome/outcome.hpp>  // for outcome::result
 
 namespace libp2p::transport {
 
@@ -34,14 +34,29 @@ namespace libp2p::transport {
     ~TransportAdaptor() override = default;
 
     /**
-     * Try to establish connection with a peer
+     * Try to establish connection with a peer without timeout
      * @param remoteId id of remote peer to dial
      * @param address of the peer
      * @param handler callback that will be executed on connection/error
      * @return connection in case of success, error otherwise
      */
+    inline void dial(const peer::PeerId &remoteId, multi::Multiaddress address,
+                     HandlerFunc handler) {
+      dial(remoteId, std::move(address), std::move(handler),
+           std::chrono::milliseconds(0));
+    }
+
+    /**
+     * Try to establish connection with a peer with specific timeout
+     * @param remoteId id of remote peer to dial
+     * @param address of the peer
+     * @param handler callback that will be executed on connection/error
+     * @param timeout in milliseconds for connection establishing
+     * @return connection in case of success, error otherwise
+     */
     virtual void dial(const peer::PeerId &remoteId, multi::Multiaddress address,
-                      HandlerFunc handler) = 0;
+                      HandlerFunc handler,
+                      std::chrono::milliseconds timeout) = 0;
 
     /**
      * Create a listener for incoming connections of this Transport; in case

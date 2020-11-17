@@ -6,6 +6,7 @@
 #ifndef LIBP2P_HOST_HPP
 #define LIBP2P_HOST_HPP
 
+#include <chrono>
 #include <functional>
 #include <string_view>
 
@@ -14,12 +15,12 @@
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/network/network.hpp>
 #include <libp2p/network/router.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/peer_info.hpp>
 #include <libp2p/peer/peer_repository.hpp>
 #include <libp2p/peer/protocol.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p {
   /**
@@ -50,7 +51,8 @@ namespace libp2p {
      * @brief Stores OnNewConnectionHandler.
      * @param h handler function to store
      */
-    virtual event::Handle setOnNewConnectionHandler(const NewConnectionHandler &h) const = 0;
+    virtual event::Handle setOnNewConnectionHandler(
+        const NewConnectionHandler &h) const = 0;
 
     /**
      * @brief Get a version of this Libp2p client
@@ -122,9 +124,23 @@ namespace libp2p {
      * @param protocol "speak" using this protocol
      * @param handler callback, will be executed on success or fail
      */
+    void newStream(const peer::PeerInfo &p, const peer::Protocol &protocol,
+                   const StreamResultHandler &handler) {
+      newStream(p, protocol, handler, std::chrono::milliseconds(0));
+    }
+
+    /**
+     * @brief Open new stream to the peer {@param p} with protocol {@param
+     * protocol} with a specific timeout.
+     * @param p stream will be opened to this peer
+     * @param protocol "speak" using this protocol
+     * @param handler callback, will be executed on success or fail
+     * @param timeout in milliseconds
+     */
     virtual void newStream(const peer::PeerInfo &p,
                            const peer::Protocol &protocol,
-                           const StreamResultHandler &handler) = 0;
+                           const StreamResultHandler &handler,
+                           std::chrono::milliseconds timeout) = 0;
 
     /**
      * @brief Create listener on given multiaddress.
