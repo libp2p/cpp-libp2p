@@ -131,6 +131,10 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::crypto, KeyValidatorError, e) {
       return "public key is not derived from private";
     case KeyValidatorError::DIFFERENT_KEY_TYPES:
       return "key types in pair don't match";
+    case KeyValidatorError::UNSUPPORTED_CRYPTO_ALGORYTHM:
+      return "crypto algorythm is not implemented";
+    case KeyValidatorError::UNKNOWN_CRYPTO_ALGORYTHM:
+      return "unknown crypto algorythm";
   }
 
   return "unknown KeyValidator error";

@@ -32,6 +32,9 @@ namespace libp2p::crypto::validator {
     outcome::result<void> validateSecp256k1(const PrivateKey &key) const;
     outcome::result<void> validateSecp256k1(const PublicKey &key) const;
 
+    outcome::result<void> validateEcdsa(const PrivateKey &key) const;
+    outcome::result<void> validateEcdsa(const PublicKey &key) const;
+
     std::shared_ptr<CryptoProvider> crypto_provider_;
   };
 }  // namespace libp2p::crypto::validator
