@@ -117,29 +117,33 @@ TEST(YamuxAcceptanceTest, PingPong) {
 
   ASSERT_TRUE(transport_listener->listen(ma)) << "is port 40009 busy?";
 
-  transport->dial(testutil::randomPeerId(), ma, [&](auto &&conn_res) {
-    EXPECT_OUTCOME_TRUE(conn, conn_res)
-    conn->start();
+  transport->dial(
+      testutil::randomPeerId(), ma,
+      [&](auto &&conn_res) {
+        EXPECT_OUTCOME_TRUE(conn, conn_res)
+        conn->start();
 
-    conn->newStream([&](auto &&stream_res) mutable {
-      EXPECT_OUTCOME_TRUE(stream, stream_res)
-      auto stream_read_buffer =
-          std::make_shared<ByteArray>(kPongBytes.size(), 0);
+        conn->newStream([&](auto &&stream_res) mutable {
+          EXPECT_OUTCOME_TRUE(stream, stream_res)
+          auto stream_read_buffer =
+              std::make_shared<ByteArray>(kPongBytes.size(), 0);
 
-      // proof our streams have parallelism: set up both read and write on the
-      // stream and make sure they are successfully executed
-      stream->read(*stream_read_buffer, stream_read_buffer->size(),
-                   [&, stream_read_buffer](auto &&res) {
-                     ASSERT_EQ(*stream_read_buffer, kPongBytes);
-                     stream_read = true;
-                   });
+          // proof our streams have parallelism: set up both read and write on
+          // the stream and make sure they are successfully executed
+          stream->read(*stream_read_buffer, stream_read_buffer->size(),
+                       [&, stream_read_buffer](auto &&res) {
+                         ASSERT_EQ(*stream_read_buffer, kPongBytes);
+                         stream_read = true;
+                       });
 
-      stream->write(kPingBytes, kPingBytes.size(), [&stream_wrote](auto &&res) {
-        ASSERT_TRUE(res);
-        stream_wrote = true;
-      });
-    });
-  });
+          stream->write(kPingBytes, kPingBytes.size(),
+                        [&stream_wrote](auto &&res) {
+                          ASSERT_TRUE(res);
+                          stream_wrote = true;
+                        });
+        });
+      },
+      0ms);
 
   // let the streams make their jobs
   context->run_for(500ms);

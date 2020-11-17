@@ -51,9 +51,12 @@ class IdentifyTest : public testing::Test {
       identify_pb_msg_.add_protocols(proto);
     }
     identify_pb_msg_.set_observedaddr(
-        std::string{(const char*)remote_multiaddr_.getBytesAddress().data(), remote_multiaddr_.getBytesAddress().size()});
+        std::string{(const char *)remote_multiaddr_.getBytesAddress().data(),
+                    remote_multiaddr_.getBytesAddress().size()});
     for (const auto &addr : listen_addresses_) {
-      identify_pb_msg_.add_listenaddrs(std::string{(const char*)addr.getBytesAddress().data(), addr.getBytesAddress().size()});
+      identify_pb_msg_.add_listenaddrs(
+          std::string{(const char *)addr.getBytesAddress().data(),
+                      addr.getBytesAddress().size()});
     }
     identify_pb_msg_.set_publickey(marshalled_pubkey_.data(),
                                    marshalled_pubkey_.size());
@@ -203,7 +206,7 @@ TEST_F(IdentifyTest, Receive) {
   EXPECT_CALL(*connection_, remoteMultiaddr())
       .WillOnce(Return(remote_multiaddr_));
 
-  EXPECT_CALL(host_, newStream(kPeerInfo, kIdentifyProto, _))
+  EXPECT_CALL(host_, newStream(kPeerInfo, kIdentifyProto, _, _))
       .WillOnce(ReturnStreamRes(std::static_pointer_cast<Stream>(stream_)));
 
   EXPECT_CALL(*stream_, read(_, 1, _))

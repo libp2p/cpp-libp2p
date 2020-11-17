@@ -118,7 +118,7 @@ TEST_F(IdentifyDeltaTest, Send) {
       .WillOnce(Return(kPeerInfo));
 
   // stream handling and message sending
-  EXPECT_CALL(host_, newStream(kPeerInfo, kIdentifyDeltaProtocol, _))
+  EXPECT_CALL(host_, newStream(kPeerInfo, kIdentifyDeltaProtocol, _, _))
       .WillOnce(InvokeLambda(stream_));
   EXPECT_CALL(*stream_,
               write(gsl::span<const uint8_t>(msg_added_protos_bytes_),
