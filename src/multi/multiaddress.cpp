@@ -271,7 +271,7 @@ namespace libp2p::multi {
       return false;
     }
 
-    auto str = p->name;
+    auto str = '/' + std::string(p->name) + '/';
     return this->stringified_address_.find(str) != std::string::npos;
   }
 

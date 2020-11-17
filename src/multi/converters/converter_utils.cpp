@@ -11,10 +11,10 @@
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/converters/conversion_error.hpp>
+#include <libp2p/multi/converters/dns_converter.hpp>
 #include <libp2p/multi/converters/ip_v4_converter.hpp>
 #include <libp2p/multi/converters/ip_v6_converter.hpp>
 #include <libp2p/multi/converters/ipfs_converter.hpp>
-#include <libp2p/multi/converters/dns_converter.hpp>
 #include <libp2p/multi/converters/tcp_converter.hpp>
 #include <libp2p/multi/converters/udp_converter.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
@@ -112,7 +112,8 @@ namespace libp2p::multi::converters {
     }
   }
 
-  outcome::result<std::string> bytesToMultiaddrString(gsl::span<const uint8_t> bytes) {
+  outcome::result<std::string> bytesToMultiaddrString(
+      gsl::span<const uint8_t> bytes) {
     std::string results;
 
     size_t lastpos = 0;
@@ -140,26 +141,78 @@ namespace libp2p::multi::converters {
 
         results += "/";
         results += protocol->name;
-        results += "/";
 
-        // TODO(Akvinikym): 25.02.19 PRE-49: add more protocols
+        if (protocol->size == 0) {
+          continue;
+        }
+
         try {
-          if (protocol->name == "ip4") {
-            results += boost::asio::ip::make_address_v4(
-                           std::stoul(address, nullptr, 16))
-                           .to_string();
-          } else if (protocol->name == "ip6") {
-            OUTCOME_TRY(addr_bytes, unhex(address));
-            std::array<uint8_t, 16> arr{};
-            std::copy_n(addr_bytes.begin(), 16, arr.begin());
-            results += boost::asio::ip::make_address_v6(arr).to_string();
+          switch (protocol->code) {
+            case Protocol::Code::DNS:
+            case Protocol::Code::DNS4:
+            case Protocol::Code::DNS6:
+            case Protocol::Code::DNS_ADDR: {
+              // fetch the size of the address based on the varint prefix
+              auto prefixedvarint = hex.substr(lastpos, 2);
+              OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
 
-          } else if (protocol->name == "tcp") {
-            results += std::to_string(std::stoul(address, nullptr, 16));
-          } else if (protocol->name == "udp") {
-            results += std::to_string(std::stoul(address, nullptr, 16));
-          } else {
-            return ConversionError::NOT_IMPLEMENTED;
+              auto addrsize = UVarint(prefixBytes).toUInt64();
+
+              // get the ipfs address as hex values
+              auto hex_domain_name = hex.substr(lastpos + 2, addrsize * 2);
+              OUTCOME_TRY(domain_name, unhex(hex_domain_name));
+
+              lastpos += addrsize * 2 + 2;
+
+              // Add domain name
+              results += "/";
+              results += std::string(domain_name.begin(), domain_name.end());
+
+              auto i = std::find_if_not(
+                  domain_name.begin(), domain_name.end(), [](auto c) {
+                    return std::isalnum(c) || c == '-' || c == '.';
+                  });
+              if (i != domain_name.end()) {
+                return ConversionError::INVALID_ADDRESS;
+              }
+              break;
+            }
+
+            case Protocol::Code::IP4: {
+              // Add IP
+              results += "/";
+              results += boost::asio::ip::make_address_v4(
+                             std::stoul(address, nullptr, 16))
+                             .to_string();
+              break;
+            }
+
+            case Protocol::Code::IP6: {
+              // Add IP
+              OUTCOME_TRY(addr_bytes, unhex(address));
+              std::array<uint8_t, 16> arr{};
+              std::copy_n(addr_bytes.begin(), 16, arr.begin());
+              results += "/";
+              results += boost::asio::ip::make_address_v6(arr).to_string();
+              break;
+            }
+
+            case Protocol::Code::TCP:
+            case Protocol::Code::UDP: {
+              // Add port
+              results += "/";
+              results += std::to_string(std::stoul(address, nullptr, 16));
+              break;
+            }
+
+            case Protocol::Code::QUIC:
+            case Protocol::Code::WS:
+            case Protocol::Code::WSS:
+              // No details
+              break;
+
+            default:
+              return ConversionError::NOT_IMPLEMENTED;
           }
         } catch (const std::exception &e) {
           return ConversionError::INVALID_ADDRESS;
