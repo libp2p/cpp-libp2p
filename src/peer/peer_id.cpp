@@ -65,6 +65,10 @@ namespace libp2p::peer {
     return PeerId{hash};
   }
 
+  bool PeerId::operator<(const PeerId &other) const {
+    return this->hash_ < other.hash_;
+  }
+
   bool PeerId::operator==(const PeerId &other) const {
     return this->hash_ == other.hash_;
   }
