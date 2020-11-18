@@ -69,6 +69,7 @@ namespace libp2p::connection {
     std::shared_ptr<security::noise::InsecureReadWriter> framer_;
     size_t already_read_;
     size_t already_wrote_;
+    size_t plaintext_len_to_write_;
     common::ByteArray writing_;
     common::Logger log_ = common::createLogger("NoiseConn");
   };

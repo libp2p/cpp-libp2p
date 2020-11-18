@@ -42,7 +42,8 @@ namespace libp2p::connection {
         framer_{std::make_shared<security::noise::InsecureReadWriter>(
             raw_connection_, frame_buffer_)},
         already_read_{0},
-        already_wrote_{0} {
+        already_wrote_{0},
+        plaintext_len_to_write_{0} {
     BOOST_ASSERT(raw_connection_);
     BOOST_ASSERT(key_marshaller_);
     BOOST_ASSERT(encoder_cs_);
@@ -99,9 +100,14 @@ namespace libp2p::connection {
 
   void NoiseConnection::write(gsl::span<const uint8_t> in, size_t bytes,
                               libp2p::basic::Writer::WriteCallbackFunc cb) {
+    if (0 == plaintext_len_to_write_) {
+      plaintext_len_to_write_ = bytes;
+    }
     if (bytes == 0) {
-      auto n{already_wrote_};
+      BOOST_ASSERT(already_wrote_ >= plaintext_len_to_write_);
+      auto n{plaintext_len_to_write_};
       already_wrote_ = 0;
+      plaintext_len_to_write_ = 0;
       return cb(n);
     }
     auto n{std::min(bytes, security::noise::kMaxPlainText)};
