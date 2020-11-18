@@ -126,8 +126,10 @@ namespace libp2p::protocol::kad {
         if (it->expire_time > current_time) {
           break;
         }
-        local_storage_->erase(it->key);
-        idx.erase(it);
+        auto res = local_storage_->erase(it->key);
+        if (res.has_value()) {
+          idx.erase(it);
+        }
       }
     }
 

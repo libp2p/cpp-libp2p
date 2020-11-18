@@ -9,7 +9,6 @@
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <libp2p/protocol/identify/identify_push.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/host/host_mock.hpp"
@@ -45,26 +44,26 @@ class IdentifyDeltaTest : public testing::Test {
     }
 
     added_proto_len_ =
-        UVarint{static_cast<uint64_t>(msg_added_protos_.ByteSize())};
+        UVarint{msg_added_protos_.ByteSizeLong()};
     msg_added_protos_bytes_.insert(msg_added_protos_bytes_.end(),
                                    added_proto_len_.toVector().begin(),
                                    added_proto_len_.toVector().end());
     msg_added_protos_bytes_.insert(msg_added_protos_bytes_.end(),
-                                   msg_added_protos_.ByteSize(), 0);
+                                   msg_added_protos_.ByteSizeLong(), 0);
     msg_added_protos_.SerializeToArray(
         msg_added_protos_bytes_.data() + added_proto_len_.size(),
-        msg_added_protos_.ByteSize());
+        msg_added_protos_.ByteSizeLong());
 
     added_rm_proto_len_ =
-        UVarint{static_cast<uint64_t>(msg_added_rm_protos_.ByteSize())};
+        UVarint{msg_added_rm_protos_.ByteSizeLong()};
     msg_added_rm_protos_bytes_.insert(msg_added_rm_protos_bytes_.end(),
                                       added_rm_proto_len_.toVector().begin(),
                                       added_rm_proto_len_.toVector().end());
     msg_added_rm_protos_bytes_.insert(msg_added_rm_protos_bytes_.end(),
-                                      msg_added_rm_protos_.ByteSize(), 0);
+                                      msg_added_rm_protos_.ByteSizeLong(), 0);
     msg_added_rm_protos_.SerializeToArray(
         msg_added_rm_protos_bytes_.data() + added_rm_proto_len_.size(),
-        msg_added_rm_protos_.ByteSize());
+        msg_added_rm_protos_.ByteSizeLong());
   }
 
   HostMock host_;

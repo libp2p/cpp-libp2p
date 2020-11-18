@@ -66,11 +66,9 @@ namespace libp2p::protocol::kademlia {
    private:
     void onCleanupTimer();
 
+    const Config& config_;
     Scheduler &scheduler_;
     std::shared_ptr<event::Bus> bus_;
-    const Scheduler::Ticks record_expiration_;
-    const Scheduler::Ticks cleanup_timer_interval_;
-    const size_t max_providers_per_key_;
     std::unique_ptr<Table> table_;
     Scheduler::Handle cleanup_timer_;
   };

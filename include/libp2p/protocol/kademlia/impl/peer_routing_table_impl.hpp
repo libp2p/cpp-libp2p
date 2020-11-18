@@ -104,14 +104,15 @@ namespace libp2p::protocol::kademlia {
     size_t size() const override;
 
    private:
-    std::vector<Bucket> buckets_;
-
-    std::shared_ptr<peer::IdentityManager> identity_manager_;
-    const NodeId local_;
-    std::shared_ptr<event::Bus> bus_;
-    size_t bucket_size_;
-
     void nextBucket();
+
+    const Config &config_;
+    std::shared_ptr<peer::IdentityManager> identity_manager_;
+    std::shared_ptr<event::Bus> bus_;
+
+	  const NodeId local_;
+
+    std::vector<Bucket> buckets_;
 
     SubLogger log_;
   };

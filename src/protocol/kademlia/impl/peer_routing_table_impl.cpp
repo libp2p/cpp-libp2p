@@ -40,16 +40,17 @@ namespace libp2p::protocol::kademlia {
       const Config &config,
       std::shared_ptr<peer::IdentityManager> identity_manager,
       std::shared_ptr<event::Bus> bus)
-      : identity_manager_(std::move(identity_manager)),
+      : config_(config),
+        identity_manager_(std::move(identity_manager)),
+        bus_(std::move(bus)),
         local_([this] {
           BOOST_ASSERT(identity_manager_ != nullptr);
           return identity_manager_->getId();
         }()),
-        bus_(std::move(bus)),
-        bucket_size_(config.maxBucketSize),
         log_("kad", "PeerRoutingTable") {
+    BOOST_ASSERT(identity_manager_ != nullptr);
     BOOST_ASSERT(bus_ != nullptr);
-    BOOST_ASSERT(bucket_size_ > 1);
+    BOOST_ASSERT(config_.maxBucketSize > 1);
     buckets_.emplace_back();  // create initial bucket
   }
 
@@ -100,11 +101,11 @@ namespace libp2p::protocol::kademlia {
     // Trying to find and move to front
     auto it = std::remove(bucket.rbegin(), bucket.rend(), pid);
     if (it != bucket.rend()) {
-    	*it = pid;
+      *it = pid;
       return outcome::success();
     }
 
-    if (bucket.size() < bucket_size_) {
+    if (bucket.size() < config_.maxBucketSize) {
       bucket.push_front(pid);
       bus_->getChannel<events::PeerAddedChannel>().publish(pid);
       return outcome::success();
@@ -124,7 +125,7 @@ namespace libp2p::protocol::kademlia {
       }
 
       auto &lastBucket = buckets_.at(bid);
-      if (lastBucket.size() >= bucket_size_) {
+      if (lastBucket.size() >= config_.maxBucketSize) {
         return Error::PEER_REJECTED_NO_CAPACITY;
       }
 
@@ -150,7 +151,7 @@ namespace libp2p::protocol::kademlia {
     buckets_.push_back(std::move(newBucket));
 
     auto newLastBucket = buckets_.rbegin();
-    if (newLastBucket->size() > bucket_size_) {
+    if (newLastBucket->size() > config_.maxBucketSize) {
       nextBucket();
     }
   }

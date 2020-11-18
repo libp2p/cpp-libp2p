@@ -14,18 +14,14 @@ namespace libp2p::protocol::kademlia {
   ContentRoutingTableImpl::ContentRoutingTableImpl(
       const Config &config, Scheduler &scheduler,
       std::shared_ptr<event::Bus> bus)
-      : scheduler_(scheduler),
-        bus_(std::move(bus)),
-        record_expiration_(scheduler::toTicks(config.providerRecordTTL)),
-        cleanup_timer_interval_(
-            scheduler::toTicks(config.providerWipingInterval)),
-        max_providers_per_key_(config.maxProvidersPerKey) {
+      : config_(config), scheduler_(scheduler), bus_(std::move(bus)) {
     BOOST_ASSERT(bus_ != nullptr);
     table_ = std::make_unique<Table>();
 
     cleanup_timer_ = scheduler_.schedule([this] {
-      cleanup_timer_ =
-          scheduler_.schedule(cleanup_timer_interval_, [wp = weak_from_this()] {
+      cleanup_timer_ = scheduler_.schedule(
+          scheduler::toTicks(config_.providerWipingInterval),
+          [wp = weak_from_this()] {
             if (auto self = wp.lock()) {
               self->onCleanupTimer();
             }
@@ -51,7 +47,8 @@ namespace libp2p::protocol::kademlia {
 
   void ContentRoutingTableImpl::addProvider(const ContentId &key,
                                             const peer::PeerId &peer) {
-    auto expires = scheduler_.now() + record_expiration_;
+    auto expires =
+        scheduler_.now() + scheduler::toTicks(config_.providerRecordTTL);
     auto &idx = table_->get<ByKey>();
     auto [begin, end] = idx.equal_range(key);
     auto oldest = begin;
@@ -71,11 +68,11 @@ namespace libp2p::protocol::kademlia {
       table_->modify(equal, [expires](Record &r) { r.expire_time = expires; });
       return;
     }
-    if (count >= max_providers_per_key_) {
+    if (count >= config_.maxProvidersPerKey) {
       idx.erase(oldest);
     }
     table_->insert({key, peer, expires});
-    bus_->getChannel<events::AddContentProviderChannel>().publish({key, peer});
+    bus_->getChannel<events::ProvideContentChannel>().publish({key, peer});
   }
 
   void ContentRoutingTableImpl::onCleanupTimer() {
@@ -83,7 +80,7 @@ namespace libp2p::protocol::kademlia {
 
     // cleanup expired records
     auto &idx = table_->get<ByExpireTime>();
-    for (auto i = idx.begin(); i != idx.end(); ) {
+    for (auto i = idx.begin(); i != idx.end();) {
       if (i->expire_time > current_time) {
         break;
       }
@@ -91,7 +88,8 @@ namespace libp2p::protocol::kademlia {
       idx.erase(ci);
     }
 
-    cleanup_timer_.reschedule(cleanup_timer_interval_);
+    cleanup_timer_.reschedule(
+        scheduler::toTicks(config_.providerWipingInterval));
   }
 
 }  // namespace libp2p::protocol::kademlia
