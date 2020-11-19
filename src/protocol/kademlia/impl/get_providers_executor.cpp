@@ -191,6 +191,10 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
+  scheduler::Ticks GetProvidersExecutor::responseTimeout() const {
+    return scheduler::toTicks(config_.responseTimeout);
+  }
+
   bool GetProvidersExecutor::match(const Message &msg) const {
     return
         // Check if message type is appropriate

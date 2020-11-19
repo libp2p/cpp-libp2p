@@ -92,7 +92,7 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<peer::IdentityManager> identity_manager,
         std::shared_ptr<event::Bus> bus);
 
-    outcome::result<void> update(const peer::PeerId &pid) override;
+    outcome::result<bool> update(const peer::PeerId &pid) override;
 
     void remove(const peer::PeerId &peer_id) override;
 
@@ -110,7 +110,7 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<peer::IdentityManager> identity_manager_;
     std::shared_ptr<event::Bus> bus_;
 
-	  const NodeId local_;
+    const NodeId local_;
 
     std::vector<Bucket> buckets_;
 

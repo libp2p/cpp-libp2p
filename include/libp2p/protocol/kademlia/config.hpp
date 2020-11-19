@@ -126,6 +126,13 @@ namespace libp2p::protocol::kademlia {
     size_t maxBucketSize = 20;
 
     /**
+     * Maximum time to waiting response
+     * This is implementation specified property.
+     * @note Default: 10s
+     */
+    std::chrono::seconds responseTimeout = 10s;
+
+    /**
      * Random walk config
      */
     RandomWalk randomWalk{};

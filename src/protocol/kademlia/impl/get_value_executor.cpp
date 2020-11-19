@@ -145,6 +145,10 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
+  scheduler::Ticks GetValueExecutor::responseTimeout() const {
+    return scheduler::toTicks(config_.responseTimeout);
+  }
+
   bool GetValueExecutor::match(const Message &msg) const {
     return
         // Check if message type is appropriate
@@ -209,15 +213,28 @@ namespace libp2p::protocol::kademlia {
     }
 
     if (msg.record) {
-      // TODO(xDimon): Validation here
-
       auto &value = msg.record.value().value;
 
-      received_records_->insert({remote_peer_id, std::move(value)});
+      auto validation_res = validator_->validate(sought_content_id_, value);
+      if (not validation_res.has_value()) {
+        log_.debug("Result from {} is invalid", remote_peer_id.toBase58());
+        return;
+      }
+
+      received_records_->insert({remote_peer_id, value});
 
       if (received_records_->size() >= config_.valueLookupsQuorum) {
-        // TODO(xDimon): Get best
-        Value best;
+        std::vector<Value> values;
+        std::transform(received_records_->begin(), received_records_->end(),
+                       std::back_inserter(values),
+                       [](auto &record) { return record.value; });
+
+        auto index_res = validator_->select(sought_content_id_, values);
+        if (not index_res.has_value()) {
+          log_.debug("Can't select best value of {} provided", values.size());
+          return;
+        }
+        auto& best = values[index_res.value()];
 
         // Return result to upstear
         done_ = true;

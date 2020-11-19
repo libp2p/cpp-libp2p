@@ -9,24 +9,28 @@
 
 namespace libp2p::peer {
 
-  outcome::result<void> InmemAddressRepository::addAddresses(
+  outcome::result<bool> InmemAddressRepository::addAddresses(
       const PeerId &p, gsl::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
+	  bool added = false;
     auto peer_it = db_.emplace(p, std::make_shared<ttlmap>()).first;
     auto &addresses = *peer_it->second;
 
     auto expires_at = Clock::now() + ttl;
     for (const auto &m : ma) {
-      addresses.emplace(m, expires_at);
-      signal_added_(p, m);
+      if (addresses.emplace(m, expires_at).second) {
+        signal_added_(p, m);
+        added = true;
+      }
     }
 
-    return outcome::success();
+    return added;
   }
 
-  outcome::result<void> InmemAddressRepository::upsertAddresses(
+  outcome::result<bool> InmemAddressRepository::upsertAddresses(
       const PeerId &p, gsl::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
+    bool added = false;
     auto peer_it = db_.emplace(p, std::make_shared<ttlmap>()).first;
     auto &addresses = *peer_it->second;
 
@@ -35,12 +39,13 @@ namespace libp2p::peer {
       auto [addr_it, added] = addresses.emplace(m, expires_at);
       if (added) {
         signal_added_(p, m);
+        added = true;
       } else {
         addr_it->second = expires_at;
       }
     }
 
-    return outcome::success();
+    return added;
   }
 
   outcome::result<void> InmemAddressRepository::updateAddresses(

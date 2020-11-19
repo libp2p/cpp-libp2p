@@ -20,12 +20,9 @@ namespace libp2p::protocol::kademlia {
     /// Ctor for consistency. Data will contain sha256 of empty input
     ContentId();
 
-    explicit ContentId(const std::string &str);
+    explicit ContentId(std::string_view str);
 
     explicit ContentId(const std::vector<uint8_t> &v);
-
-    // TODO(artem): use gsl::span<const T> + std::enable_if (integral types)
-    ContentId(const void *bytes, size_t size);
 
     bool operator<(const ContentId &x) const {
       return data < x.data;
@@ -36,7 +33,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     /// Validates and stores CID received from the network
-    static boost::optional<ContentId> fromWire(const std::string &s);
+    static boost::optional<ContentId> fromWire(std::string_view str);
 
     static boost::optional<ContentId> fromWire(gsl::span<const uint8_t> bytes);
 

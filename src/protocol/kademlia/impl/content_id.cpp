@@ -15,7 +15,7 @@ namespace libp2p::protocol::kademlia {
   ContentId::ContentId()
       : data(multi::ContentIdentifierCodec::encodeCIDV0("", 0)) {}
 
-  ContentId::ContentId(const std::string &str) {
+  ContentId::ContentId(std::string_view str) {
     libp2p::crypto::Sha256 hasher;
     auto write_res = hasher.write(gsl::span<const uint8_t>(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -36,10 +36,10 @@ namespace libp2p::protocol::kademlia {
   ContentId::ContentId(const std::vector<uint8_t> &v)
       : data(multi::ContentIdentifierCodec::encodeCIDV0(v.data(), v.size())) {}
 
-  boost::optional<ContentId> ContentId::fromWire(const std::string &s) {
+  boost::optional<ContentId> ContentId::fromWire(std::string_view str) {
     gsl::span<const uint8_t> bytes(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        reinterpret_cast<const uint8_t *>(s.data()), s.size());
+        reinterpret_cast<const uint8_t *>(str.data()), str.size());
     return fromWire(bytes);
   }
 

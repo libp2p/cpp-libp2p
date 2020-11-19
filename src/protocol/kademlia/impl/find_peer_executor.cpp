@@ -183,6 +183,10 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
+  scheduler::Ticks FindPeerExecutor::responseTimeout() const {
+    return scheduler::toTicks(config_.responseTimeout);
+  }
+
   bool FindPeerExecutor::match(const Message &msg) const {
     return
         // Check if message type is appropriate

@@ -13,6 +13,13 @@ namespace libp2p::protocol::kademlia {
 
   /// Wire protocol message. May be either request or response
   struct Message {
+    enum class Error {
+      INVALID_CONNECTEDNESS = 1,
+      INVALID_PEER_ID,
+      INVALID_ADDRESSES,
+      INVALID_KEY,
+    };
+
     enum class Type {
       kPutValue = 0,
       kGetValue = 1,
@@ -20,8 +27,6 @@ namespace libp2p::protocol::kademlia {
       kGetProviders = 3,
       kFindNode = 4,
       kPing = 5,
-
-      kTableSize
     };
 
     struct Record {
@@ -54,6 +59,13 @@ namespace libp2p::protocol::kademlia {
 
     // adds this peer listening address to closer_peers
     void selfAnnounce(PeerInfo self);
+
+    const std::string &errorMessage() const {
+      return error_message_;
+    }
+
+   private:
+    std::string error_message_;
   };
 
   Message createPutValueRequest(const Key &key, const Value &value);
@@ -70,4 +82,7 @@ namespace libp2p::protocol::kademlia {
                                 boost::optional<PeerInfo> self_announce);
 
 }  // namespace libp2p::protocol::kademlia
+
+OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::kademlia, Message::Error);
+
 #endif  // LIBP2P_PROTOCOL_KADEMLIA_MESSAGE

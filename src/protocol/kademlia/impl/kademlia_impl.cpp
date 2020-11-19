@@ -117,14 +117,6 @@ namespace libp2p::protocol::kademlia {
       return res.as_failure();
     }
 
-    //	// TODO(xDimon): Do we need to be registered in content routing?
-    //	content_routing_table_->addProvider(key, host_->getId());
-    //
-    //	// TODO(xDimon): Do we need to broadcast about providing of this key?
-    //  bool need_notify = not config_.passiveMode and not
-    //  storage_->hasValue(key);
-    //	[[maybe_unused]] auto res = provide(key, need_notify);
-
     return outcome::success();
   }
 
@@ -133,7 +125,7 @@ namespace libp2p::protocol::kademlia {
     log_.debug("CALL: GetValue");
 
     // Check if has actual value locally
-    if (auto res = storage_->getValue(std::move(key)); res.has_value()) {
+    if (auto res = storage_->getValue(key); res.has_value()) {
       auto &[value, ts] = res.value();
       if (scheduler_->now() < ts) {
         if (handler) {
@@ -187,7 +179,7 @@ namespace libp2p::protocol::kademlia {
       if (limit > 0 && providers.size() > limit) {
         std::vector<PeerInfo> result;
         result.reserve(limit);
-        for (auto provider : providers) {
+        for (auto &provider : providers) {
           // Get peer info
           auto peer_info = host_->getPeerRepository().getPeerInfo(provider);
           if (peer_info.addresses.empty()) {
@@ -227,21 +219,29 @@ namespace libp2p::protocol::kademlia {
   void KademliaImpl::addPeer(const PeerInfo &peer_info, bool permanent) {
     log_.debug("CALL: AddPeer");
 
-    // TODO(xDimon): Will be better to inform if peer was really updated
-    auto res =
+    auto upsert_res =
         host_->getPeerRepository().getAddressRepository().upsertAddresses(
             peer_info.id,
             gsl::span(peer_info.addresses.data(), peer_info.addresses.size()),
             permanent ? peer::ttl::kPermanent : peer::ttl::kDay);
-    if (res) {
-      res = peer_routing_table_->update(peer_info.id);
-      log_.debug("{} is successfully added to peer routing table",
-                 peer_info.id.toBase58());
+    if (not upsert_res) {
+      log_.debug("{} was skipped at addind to peer routing table: {}",
+                 peer_info.id.toBase58(), upsert_res.error().message());
       return;
     }
 
-    log_.debug("{} was not added to peer routing table: {}",
-               peer_info.id.toBase58(), res.error().message());
+    auto update_res = peer_routing_table_->update(peer_info.id);
+    if (not update_res) {
+      log_.debug("{} was not added to peer routing table: {}",
+                 peer_info.id.toBase58(), update_res.error().message());
+      return;
+    }
+    if (update_res.value()) {
+      log_.debug("{} was added to peer routing table", peer_info.id.toBase58());
+    } else {
+      log_.trace("{} was updated to peer routing table",
+                 peer_info.id.toBase58());
+    }
   }
 
   outcome::result<void> KademliaImpl::findPeer(const peer::PeerId &peer_id,
@@ -402,13 +402,11 @@ namespace libp2p::protocol::kademlia {
       BOOST_UNREACHABLE_RETURN();
     }
 
-    session->write(std::move(buffer), {});
+    session->write(buffer, {});
   }
 
   void KademliaImpl::onAddProvider(const std::shared_ptr<Session> &session,
                                    Message &&msg) {
-    // TODO(artem): validate against sender id
-
     if (not msg.provider_peers) {
       log_.warn("AddProvider failed: no provider_peers im message");
       return;
@@ -417,9 +415,13 @@ namespace libp2p::protocol::kademlia {
     ContentId cid(msg.key);
     auto &providers = msg.provider_peers.value();
     for (auto &provider : providers) {
-      content_routing_table_->addProvider(cid, provider.info.id);
-      addPeer(std::move(provider.info),  // Moved, because will not used anymore
-              false);
+      if (auto peer_id_res = session->stream()->remotePeerId()) {
+        if (peer_id_res.value() == provider.info.id) {
+          // Save providers who have provided themselves
+          content_routing_table_->addProvider(cid, provider.info.id);
+          addPeer(provider.info, false);
+        }
+      }
     }
   }
 
@@ -457,13 +459,6 @@ namespace libp2p::protocol::kademlia {
         }
       }
 
-      //      if (peers.size() < config_.closerPeerCount &&
-      //      storage_->hasValue(cid)) {
-      //        // this host also provides
-      //        peers.push_back(
-      //            {host_->getPeerInfo(), Message::Connectedness::CONNECTED});
-      //      }
-
       if (not peers.empty()) {
         msg.provider_peers = std::move(peers);
       }
@@ -500,7 +495,7 @@ namespace libp2p::protocol::kademlia {
       BOOST_UNREACHABLE_RETURN();
     }
 
-    session->write(std::move(buffer), {});
+    session->write(buffer, {});
   }
 
   void KademliaImpl::onFindNode(const std::shared_ptr<Session> &session,
@@ -508,26 +503,11 @@ namespace libp2p::protocol::kademlia {
     if (msg.closer_peers) {
       for (auto &p : msg.closer_peers.value()) {
         if (p.conn_status != Message::Connectedness::CAN_NOT_CONNECT) {
-          addPeer(std::move(p.info),  // Moved, because will be reset anyway
-                  false);
+          addPeer(p.info, false);
         }
       }
       msg.closer_peers.reset();
     }
-
-    //    auto cid_res = ContentId::fromWire(msg.key);
-    //    if (not cid_res) {
-    //      session->close(Error::MESSAGE_WRONG);
-    //      return;
-    //    }
-    //    auto& cid = cid_res.value();
-    //
-    //    if (storage_->hasValue(cid)) {
-    //      if (auto res = storage_->getValue(cid); res.has_value()) {
-    //        auto &[value, ts] = res.value();
-    //        msg.record = {{cid, value, std::to_string(ts)}};
-    //      }
-    //    }
 
     auto id_res =
         peer::PeerId::fromBytes(gsl::span(msg.key.data(), msg.key.size()));
@@ -572,7 +552,7 @@ namespace libp2p::protocol::kademlia {
       BOOST_UNREACHABLE_RETURN();
     }
 
-    session->write(std::move(buffer), {});
+    session->write(buffer, {});
   }
 
   void KademliaImpl::onPing(const std::shared_ptr<Session> &session,
@@ -585,7 +565,7 @@ namespace libp2p::protocol::kademlia {
       BOOST_UNREACHABLE_RETURN();
     }
 
-    session->write(std::move(buffer), {});
+    session->write(buffer, {});
   }
 
   outcome::result<void> KademliaImpl::findRandomPeer() {

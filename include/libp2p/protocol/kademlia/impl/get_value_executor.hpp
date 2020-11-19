@@ -48,9 +48,7 @@ namespace libp2p::protocol::kademlia {
     outcome::result<void> start();
 
     /// @see ResponseHandler::responseTimeout
-    scheduler::Ticks responseTimeout() const override {
-      return scheduler::toTicks(10s);  // TODO(xDimon): Need to read from config
-    }
+    scheduler::Ticks responseTimeout() const override;
 
     /// @see ResponseHandler::match
     bool match(const Message &msg) const override;

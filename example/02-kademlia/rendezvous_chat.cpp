@@ -112,7 +112,6 @@ void handleIncomingStream(
   if (auto [it, ok] = sessions.emplace(std::move(session)); ok) {
     (*it)->read();
   }
-  return;
 }
 
 void handleOutgoingStream(
@@ -133,7 +132,6 @@ void handleOutgoingStream(
   if (auto [it, ok] = sessions.emplace(std::move(session)); ok) {
     (*it)->read();
   }
-  return;
 }
 
 int main(int argc, char *argv[]) {
@@ -148,19 +146,19 @@ int main(int argc, char *argv[]) {
     auto bootstrap_nodes = [] {
       std::vector<std::string> addresses = {
           // clang-format off
-		"/dnsaddr/bootstrap.libp2p.io/ipfs/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
-		"/dnsaddr/bootstrap.libp2p.io/ipfs/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
-		"/dnsaddr/bootstrap.libp2p.io/ipfs/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
-		"/dnsaddr/bootstrap.libp2p.io/ipfs/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
-		"/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",            // mars.i.ipfs.io
-		"/ip4/104.236.179.241/tcp/4001/ipfs/QmSoLPppuBtQSGwKDZT2M73ULpjvfd3aZ6ha4oFGL1KrGM",           // pluto.i.ipfs.io
-		"/ip4/128.199.219.111/tcp/4001/ipfs/QmSoLSafTMBsPKadTEgaXctDQVcqN88CNLHXMkTNwMKPnu",           // saturn.i.ipfs.io
-		"/ip4/104.236.76.40/tcp/4001/ipfs/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64",             // venus.i.ipfs.io
-		"/ip4/178.62.158.247/tcp/4001/ipfs/QmSoLer265NRgSp2LA3dPaeykiS1J6DifTC88f5uVQKNAd",            // earth.i.ipfs.io
-		"/ip6/2604:a880:1:20::203:d001/tcp/4001/ipfs/QmSoLPppuBtQSGwKDZT2M73ULpjvfd3aZ6ha4oFGL1KrGM",  // pluto.i.ipfs.io
-		"/ip6/2400:6180:0:d0::151:6001/tcp/4001/ipfs/QmSoLSafTMBsPKadTEgaXctDQVcqN88CNLHXMkTNwMKPnu",  // saturn.i.ipfs.io
-		"/ip6/2604:a880:800:10::4a:5001/tcp/4001/ipfs/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64", // venus.i.ipfs.io
-		"/ip6/2a03:b0c0:0:1010::23:1001/tcp/4001/ipfs/QmSoLer265NRgSp2LA3dPaeykiS1J6DifTC88f5uVQKNAd", // earth.i.ipfs.io
+          "/dnsaddr/bootstrap.libp2p.io/ipfs/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+          "/dnsaddr/bootstrap.libp2p.io/ipfs/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+          "/dnsaddr/bootstrap.libp2p.io/ipfs/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+          "/dnsaddr/bootstrap.libp2p.io/ipfs/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+          "/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",            // mars.i.ipfs.io
+          "/ip4/104.236.179.241/tcp/4001/ipfs/QmSoLPppuBtQSGwKDZT2M73ULpjvfd3aZ6ha4oFGL1KrGM",           // pluto.i.ipfs.io
+          "/ip4/128.199.219.111/tcp/4001/ipfs/QmSoLSafTMBsPKadTEgaXctDQVcqN88CNLHXMkTNwMKPnu",           // saturn.i.ipfs.io
+          "/ip4/104.236.76.40/tcp/4001/ipfs/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64",             // venus.i.ipfs.io
+          "/ip4/178.62.158.247/tcp/4001/ipfs/QmSoLer265NRgSp2LA3dPaeykiS1J6DifTC88f5uVQKNAd",            // earth.i.ipfs.io
+          "/ip6/2604:a880:1:20::203:d001/tcp/4001/ipfs/QmSoLPppuBtQSGwKDZT2M73ULpjvfd3aZ6ha4oFGL1KrGM",  // pluto.i.ipfs.io
+          "/ip6/2400:6180:0:d0::151:6001/tcp/4001/ipfs/QmSoLSafTMBsPKadTEgaXctDQVcqN88CNLHXMkTNwMKPnu",  // saturn.i.ipfs.io
+          "/ip6/2604:a880:800:10::4a:5001/tcp/4001/ipfs/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64", // venus.i.ipfs.io
+          "/ip6/2a03:b0c0:0:1010::23:1001/tcp/4001/ipfs/QmSoLer265NRgSp2LA3dPaeykiS1J6DifTC88f5uVQKNAd", // earth.i.ipfs.io
           // clang-format on
       };
 
@@ -177,9 +175,9 @@ int main(int argc, char *argv[]) {
       }
 
       std::vector<libp2p::peer::PeerInfo> v;
-      for (auto i : addresses_by_peer_id) {
+      for (auto &i : addresses_by_peer_id) {
         v.emplace_back(libp2p::peer::PeerInfo{
-            .id = std::move(i.first), .addresses = {std::move(i.second)}});
+            .id = i.first, .addresses = {std::move(i.second)}});
       }
 
       return v;
@@ -191,14 +189,14 @@ int main(int argc, char *argv[]) {
     // 12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV
     libp2p::crypto::KeyPair kp = {
         // clang-format off
-			.publicKey = {{
-				.type = libp2p::crypto::Key::Type::Ed25519,
-				.data = libp2p::common::unhex("48453469c62f4885373099421a7365520b5ffb0d93726c124166be4b81d852e6").value()
-			}},
-			.privateKey = {{
-				.type = libp2p::crypto::Key::Type::Ed25519,
-				.data = libp2p::common::unhex("4a9361c525840f7086b893d584ebbe475b4ec7069951d2e897e8bceb0a3f35ce").value()
-			}},
+        .publicKey = {{
+          .type = libp2p::crypto::Key::Type::Ed25519,
+          .data = libp2p::common::unhex("48453469c62f4885373099421a7365520b5ffb0d93726c124166be4b81d852e6").value()
+        }},
+        .privateKey = {{
+          .type = libp2p::crypto::Key::Type::Ed25519,
+          .data = libp2p::common::unhex("4a9361c525840f7086b893d584ebbe475b4ec7069951d2e897e8bceb0a3f35ce").value()
+        }},
         // clang-format on
     };
 
@@ -208,7 +206,7 @@ int main(int argc, char *argv[]) {
     kademlia_config.requestConcurency = 20;
 
     auto injector = libp2p::injector::makeHostInjector(
-//        libp2p::injector::useKeyPair(kp),
+        //        libp2p::injector::useKeyPair(kp), // Use predefined keypair
         libp2p::injector::makeKademliaInjector(
             libp2p::injector::useKademliaConfig(kademlia_config)));
 
@@ -220,10 +218,11 @@ int main(int argc, char *argv[]) {
         injector
             .create<std::shared_ptr<libp2p::protocol::kademlia::Kademlia>>();
 
-    // handle streams for observed protocol
+    // Handle streams for observed protocol
     host->setProtocolHandler("/chat/1.0.0", handleIncomingStream);
     host->setProtocolHandler("/chat/1.1.0", handleIncomingStream);
 
+    // Key for group of chat
     libp2p::protocol::kademlia::ContentId content_id("meet me here");
 
     io->post([&] {
@@ -242,6 +241,7 @@ int main(int argc, char *argv[]) {
 
       kademlia->start();
 
+      // Activate providing
       auto &scheduler = injector.create<libp2p::protocol::Scheduler &>();
       scheduler
           .schedule([&, content_id] {
@@ -250,6 +250,7 @@ int main(int argc, char *argv[]) {
           })
           .detach();
 
+      // Ask provider from world
       scheduler
           .schedule(
               libp2p::protocol::scheduler::toTicks(std::chrono::seconds(15)),
@@ -273,6 +274,7 @@ int main(int argc, char *argv[]) {
               })
           .detach();
 
+      // Say to world about his providing
       scheduler
           .schedule(
               libp2p::protocol::scheduler::toTicks(std::chrono::seconds(30)),
@@ -284,8 +286,10 @@ int main(int argc, char *argv[]) {
     });
 
     boost::asio::posix::stream_descriptor in(*io, ::dup(STDIN_FILENO));
-    std::array<uint8_t, 1 << 12> buffer;
+    std::array<uint8_t, 1 << 12> buffer{};
 
+    // Asynchronous transmit data from standard input to peers, that's privided
+    // same content id
     std::function<void()> read_from_console = [&] {
       in.async_read_some(boost::asio::buffer(buffer), [&](auto ec, auto size) {
         auto i = std::find_if(buffer.begin(), buffer.begin() + size + 1,

@@ -91,7 +91,7 @@ namespace libp2p::protocol::kademlia {
     return bucket.toVector();
   }
 
-  outcome::result<void> PeerRoutingTableImpl::update(const peer::PeerId &pid) {
+  outcome::result<bool> PeerRoutingTableImpl::update(const peer::PeerId &pid) {
     NodeId nodeId(pid);
     size_t cpl = nodeId.commonPrefixLen(local_);
 
@@ -102,13 +102,13 @@ namespace libp2p::protocol::kademlia {
     auto it = std::remove(bucket.rbegin(), bucket.rend(), pid);
     if (it != bucket.rend()) {
       *it = pid;
-      return outcome::success();
+      return false;
     }
 
     if (bucket.size() < config_.maxBucketSize) {
       bucket.push_front(pid);
       bus_->getChannel<events::PeerAddedChannel>().publish(pid);
-      return outcome::success();
+      return true;
     }
 
     if (bucketId == buckets_.size() - 1) {
@@ -131,7 +131,7 @@ namespace libp2p::protocol::kademlia {
 
       lastBucket.push_front(pid);
       bus_->getChannel<events::PeerAddedChannel>().publish(pid);
-      return outcome::success();
+      return false;
     }
 
     return Error::PEER_REJECTED_NO_CAPACITY;
