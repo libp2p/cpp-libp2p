@@ -17,7 +17,7 @@ namespace libp2p::protocol::kademlia {
 
     outcome::result<void> putValue(Key key, Value value) override;
 
-    outcome::result<Value> getValue(const Key &key) override;
+    outcome::result<Value> getValue(const Key &key) const override;
 
     outcome::result<void> erase(const Key &key) override;
 

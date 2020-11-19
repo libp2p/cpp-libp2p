@@ -22,7 +22,7 @@ namespace libp2p::protocol::kademlia {
     virtual outcome::result<void> putValue(Key key, Value value) = 0;
 
     /// Searches for the @return value corresponding to given @param key.
-    virtual outcome::result<Value> getValue(const Key &key) = 0;
+    virtual outcome::result<Value> getValue(const Key &key) const = 0;
 
     /// Removes value corresponded to given @param key.
     virtual outcome::result<void> erase(const Key &key) = 0;

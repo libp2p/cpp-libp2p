@@ -13,7 +13,7 @@ namespace libp2p::protocol::kademlia {
     return outcome::success();
   }
 
-  outcome::result<Value> StorageBackendDefault::getValue(const Key &key) {
+  outcome::result<Value> StorageBackendDefault::getValue(const Key &key) const {
     if (auto it = values_.find(key); it != values_.end()) {
       return it->second;
     }
