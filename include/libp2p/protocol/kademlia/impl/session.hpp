@@ -81,6 +81,7 @@ namespace libp2p::protocol::kademlia {
 
     boost::optional<Message::Type> expected_response_type_;
 
+    static std::atomic_size_t instance_number;
     SubLogger log_;
   };
 }  // namespace libp2p::protocol::kademlia

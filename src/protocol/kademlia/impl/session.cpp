@@ -11,7 +11,8 @@
 
 namespace libp2p::protocol::kademlia {
 
-  static std::atomic_size_t instance_number = 0;
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+  std::atomic_size_t Session::instance_number = 0;
 
   Session::Session(std::weak_ptr<SessionHost> session_host,
                    std::weak_ptr<Scheduler> scheduler,
