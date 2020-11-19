@@ -45,8 +45,9 @@ namespace libp2p::protocol::kademlia {
         return Message::Error::INVALID_CONNECTEDNESS;
       }
 
-      auto peer_id_res = PeerId::fromBytes(
-          gsl::span<uint8_t>((uint8_t *)src.id().data(), src.id().size()));
+      auto peer_id_res = PeerId::fromBytes(gsl::span<const uint8_t>(
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          reinterpret_cast<const uint8_t *>(src.id().data()), src.id().size()));
       if (!peer_id_res) {
         return Message::Error::INVALID_PEER_ID;
       }
@@ -54,7 +55,8 @@ namespace libp2p::protocol::kademlia {
       std::vector<multi::Multiaddress> addresses;
       for (const auto &addr : src.addrs()) {
         auto res = multi::Multiaddress::create(gsl::span<const uint8_t>(
-            (const uint8_t *)addr.data(), addr.size()));
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            reinterpret_cast<const uint8_t *>(addr.data()), addr.size()));
         if (!res) {
           return Message::Error::INVALID_ADDRESSES;
         }

@@ -18,11 +18,12 @@ struct Cmp {
                   const std::shared_ptr<Session> &rhs) const;
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::set<std::shared_ptr<Session>, Cmp> sessions;
 
 class Session : public std::enable_shared_from_this<Session> {
  public:
-  Session(std::shared_ptr<libp2p::connection::Stream> stream)
+  explicit Session(std::shared_ptr<libp2p::connection::Stream> stream)
       : stream_(std::move(stream)),
         incoming_(std::make_shared<std::vector<uint8_t>>(1 << 12)){};
 
@@ -183,7 +184,7 @@ int main(int argc, char *argv[]) {
       return v;
     }();
 
-    auto ma = libp2p::multi::Multiaddress::create(argv[1]).value();
+    auto ma = libp2p::multi::Multiaddress::create(argv[1]).value();  // NOLINT
 
     // resulting PeerId should be
     // 12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV

@@ -11,6 +11,7 @@
 
 namespace libp2p::protocol::kademlia {
 
+  // NOLINTNEXTIME(cppcoreguidelines-avoid-non-const-global-variables)
   std::atomic_size_t Session::instance_number = 0;
 
   Session::Session(std::weak_ptr<SessionHost> session_host,
@@ -62,8 +63,7 @@ namespace libp2p::protocol::kademlia {
                    [wp = weak_from_this(), buffer,
                     response_handler](outcome::result<size_t> result) {
                      if (auto self = wp.lock()) {
-                       self->onMessageWritten(std::move(result),
-                                              std::move(response_handler));
+                       self->onMessageWritten(result, response_handler);
                      }
                    });
 

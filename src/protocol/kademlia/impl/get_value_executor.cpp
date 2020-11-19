@@ -15,6 +15,7 @@
 
 namespace libp2p::protocol::kademlia {
 
+  // NOLINTNEXTIME(cppcoreguidelines-avoid-non-const-global-variables)
   std::atomic_size_t GetValueExecutor::instance_number = 0;
 
   GetValueExecutor::GetValueExecutor(

@@ -18,15 +18,14 @@ namespace {
   inline std::string fromMultiaddrToString(
       const libp2p::multi::Multiaddress &ma) {
     auto const &addr = ma.getBytesAddress();
-    return std::string(reinterpret_cast<const char *>(addr.data()),
-                       addr.size());  // NOLINT
+    return std::string(addr.begin(), addr.end());
   }
 
   inline libp2p::outcome::result<libp2p::multi::Multiaddress>
   fromStringToMultiaddr(const std::string &addr) {
-    return libp2p::multi::Multiaddress::create(
-        gsl::span<const uint8_t>(reinterpret_cast<const uint8_t *>(addr.data()),
-                                 addr.size()));  // NOLINT
+    return libp2p::multi::Multiaddress::create(gsl::span<const uint8_t>(
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        reinterpret_cast<const uint8_t *>(addr.data()), addr.size()));
   }
 }  // namespace
 

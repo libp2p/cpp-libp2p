@@ -21,7 +21,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     std::reference_wrapper<const PeerInfo> peer_info_;
-    common::Hash256 distance_;
+    common::Hash256 distance_{};
   };
 
   struct PeerIdWithDistance {
@@ -42,7 +42,7 @@ namespace libp2p::protocol::kademlia {
       return peer_id_.get();
     }
 
-    operator PeerId() const {
+    explicit operator PeerId() const {
       return peer_id_.get();
     }
 

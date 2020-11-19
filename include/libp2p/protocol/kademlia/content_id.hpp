@@ -8,6 +8,7 @@
 
 #include <gsl/span>
 #include <vector>
+#include <string_view>
 
 #include <boost/optional.hpp>
 
