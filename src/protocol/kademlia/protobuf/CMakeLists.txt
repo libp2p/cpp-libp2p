@@ -4,4 +4,3 @@
 add_proto_library(p2p_kademlia_proto
     kademlia.proto
     )
-libp2p_install(p2p_kademlia_proto)
