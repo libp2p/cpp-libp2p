@@ -35,8 +35,9 @@ namespace libp2p::protocol::kademlia {
         validator_(std::move(validator)),
         executor_factory_(std::move(executor_factory)),
         sought_content_id_(std::move(sought_content_id)),
-        nearest_peer_infos_(
-            std::move(reinterpret_cast<decltype(nearest_peer_infos_) &>(
+        nearest_peer_infos_(std::move(
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            reinterpret_cast<decltype(nearest_peer_infos_) &>(
                 nearest_peer_infos))),
         handler_(std::move(handler)),
         log_("kad", "GetValueExecutor", ++instance_number) {
@@ -103,7 +104,7 @@ namespace libp2p::protocol::kademlia {
             self->onConnected(std::forward<decltype(stream_res)>(stream_res));
           });
 
-	    queue_.pop();
+      queue_.pop();
     }
 
     if (requests_in_progress_ == 0) {
@@ -177,18 +178,18 @@ namespace libp2p::protocol::kademlia {
     BOOST_ASSERT(remote_peer_id_res.has_value());
     auto &remote_peer_id = remote_peer_id_res.value();
 
-	  auto self_peer_id = host_->getId();
+    auto self_peer_id = host_->getId();
 
-	  log_.debug("Result from {} is gotten; active {} req.",
-	             remote_peer_id.toBase58(), requests_in_progress_);
+    log_.debug("Result from {} is gotten; active {} req.",
+               remote_peer_id.toBase58(), requests_in_progress_);
 
     // Append gotten peer to queue
     if (msg.closer_peers) {
       for (auto &peer : msg.closer_peers.value()) {
-//        // Add/Update peer info
-//        if (peer.conn_status != Message::Connectedness::CAN_NOT_CONNECT) {
-//          peer_routing_->addPeer(peer.info, false);
-//        }
+        // Add/Update peer info
+        if (peer.conn_status != Message::Connectedness::CAN_NOT_CONNECT) {
+          peer_routing_->addPeer(peer.info, false);
+        }
 
         // Skip himself
         if (peer.info.id == self_peer_id) {
