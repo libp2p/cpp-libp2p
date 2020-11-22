@@ -29,10 +29,10 @@ namespace libp2p::protocol::kademlia {
         public std::enable_shared_from_this<GetProvidersExecutor> {
    public:
     GetProvidersExecutor(const Config &config, std::shared_ptr<Host> host,
+                         std::shared_ptr<Scheduler> scheduler,
                          std::shared_ptr<SessionHost> session_host,
                          std::shared_ptr<PeerRouting> peer_routing,
                          std::shared_ptr<PeerRoutingTable> peer_routing_table,
-                         std::shared_ptr<Scheduler> scheduler,
                          ContentId sought_key, FoundProvidersHandler handler);
 
     ~GetProvidersExecutor() override;
@@ -64,10 +64,10 @@ namespace libp2p::protocol::kademlia {
     // Primary
     const Config &config_;
     std::shared_ptr<Host> host_;
+    std::shared_ptr<Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
     std::shared_ptr<PeerRouting> peer_routing_;
     std::shared_ptr<PeerRoutingTable> peer_routing_table_;
-	  std::shared_ptr<Scheduler> scheduler_;
     const Key content_id_;
     const NodeId target_;
 

@@ -30,6 +30,7 @@ namespace libp2p::protocol::kademlia {
       : public std::enable_shared_from_this<PutValueExecutor> {
    public:
     PutValueExecutor(const Config &config, std::shared_ptr<Host> host,
+                     std::shared_ptr<Scheduler> scheduler,
                      std::shared_ptr<SessionHost> session_host, ContentId key,
                      ContentValue value, std::vector<PeerId> addressees);
 
@@ -50,6 +51,7 @@ namespace libp2p::protocol::kademlia {
     // Primary
     const Config &config_;
     std::shared_ptr<Host> host_;
+    std::shared_ptr<Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
     ContentId key_;
     ContentValue value_;

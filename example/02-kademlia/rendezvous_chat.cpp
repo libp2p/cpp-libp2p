@@ -242,13 +242,15 @@ int main(int argc, char *argv[]) {
 
       kademlia->start();
 
-      // Activate providing
       auto &scheduler = injector.create<libp2p::protocol::Scheduler &>();
+
+      // Activate providing
       scheduler
-          .schedule([&, content_id] {
-            [[maybe_unused]] auto res =
-                kademlia->provide(content_id, not kademlia_config.passiveMode);
-          })
+          .schedule(
+              [&, content_id] {
+                [[maybe_unused]] auto res = kademlia->provide(
+                    content_id, not kademlia_config.passiveMode);
+              })
           .detach();
 
       // Ask provider from world

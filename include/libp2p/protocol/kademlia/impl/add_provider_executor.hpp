@@ -23,46 +23,49 @@
 
 namespace libp2p::protocol::kademlia {
 
-class AddProviderExecutor
-		: public std::enable_shared_from_this<AddProviderExecutor> {
-public:
-		AddProviderExecutor(const Config &config, std::shared_ptr<Host> host,
-		                 std::shared_ptr<SessionHost> session_host, ContentId key,
-		                 std::vector<PeerInfo> addressees);
+  class AddProviderExecutor
+      : public std::enable_shared_from_this<AddProviderExecutor> {
+   public:
+    AddProviderExecutor(const Config &config, std::shared_ptr<Host> host,
+                        std::shared_ptr<Scheduler> scheduler,
 
-		~AddProviderExecutor();
+                        std::shared_ptr<SessionHost> session_host,
+                        ContentId key, std::vector<PeerInfo> addressees);
 
-		outcome::result<void> start();
+    ~AddProviderExecutor();
 
-private:
-		/// Spawns new request
-		void spawn();
+    outcome::result<void> start();
 
-		/// Handles result of connection
-		void onConnected(
-				outcome::result<std::shared_ptr<connection::Stream>> stream_res);
+   private:
+    /// Spawns new request
+    void spawn();
 
-		static std::atomic_size_t instance_number;
+    /// Handles result of connection
+    void onConnected(
+        outcome::result<std::shared_ptr<connection::Stream>> stream_res);
 
-		// Primary
-		const Config &config_;
-		std::shared_ptr<Host> host_;
-		std::shared_ptr<SessionHost> session_host_;
-		ContentId key_;
-		std::vector<PeerInfo> addressees_;
+    static std::atomic_size_t instance_number;
 
-		size_t addressees_idx_ = 0;
+    // Primary
+    const Config &config_;
+    std::shared_ptr<Host> host_;
+    std::shared_ptr<Scheduler> scheduler_;
+    std::shared_ptr<SessionHost> session_host_;
+    ContentId key_;
+    std::vector<PeerInfo> addressees_;
 
-		// Secondary
+    size_t addressees_idx_ = 0;
 
-		std::shared_ptr<std::vector<uint8_t>> serialized_request_;
-		size_t requests_in_progress_ = 0;
+    // Secondary
 
-		bool started_ = false;
-		bool done_ = false;
+    std::shared_ptr<std::vector<uint8_t>> serialized_request_;
+    size_t requests_in_progress_ = 0;
 
-		SubLogger log_;
-};
+    bool started_ = false;
+    bool done_ = false;
+
+    SubLogger log_;
+  };
 
 }  // namespace libp2p::protocol::kademlia
 

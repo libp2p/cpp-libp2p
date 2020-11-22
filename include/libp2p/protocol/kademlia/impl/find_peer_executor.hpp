@@ -12,16 +12,16 @@
 
 #include <libp2p/common/types.hpp>
 #include <libp2p/host/host.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
+#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/peer_info_with_distance.hpp>
+#include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/response_handler.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/impl/session_host.hpp>
 #include <libp2p/protocol/kademlia/peer_routing.hpp>
-#include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -30,12 +30,11 @@ namespace libp2p::protocol::kademlia {
         public std::enable_shared_from_this<FindPeerExecutor> {
    public:
     FindPeerExecutor(const Config &config, std::shared_ptr<Host> host,
+                     std::shared_ptr<Scheduler> scheduler,
                      std::shared_ptr<SessionHost> session_host,
                      std::shared_ptr<PeerRouting> peer_routing,
                      std::shared_ptr<PeerRoutingTable> peer_routing_table,
-                     std::shared_ptr<Scheduler> scheduler,
-                     PeerId peer_id,
-                     FoundPeerInfoHandler handler);
+                     PeerId peer_id, FoundPeerInfoHandler handler);
 
     ~FindPeerExecutor() override;
 
@@ -66,20 +65,20 @@ namespace libp2p::protocol::kademlia {
     // Primary
     const Config &config_;
     std::shared_ptr<Host> host_;
+    std::shared_ptr<Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
     std::shared_ptr<PeerRouting> peer_routing_;
-		std::shared_ptr<PeerRoutingTable> peer_routing_table_;
-    std::shared_ptr<Scheduler> scheduler_;
+    std::shared_ptr<PeerRoutingTable> peer_routing_table_;
 
     // Secondary
     const PeerId sought_peer_id_;
     const NodeId target_;
-	  std::unordered_set<PeerId> nearest_peer_ids_;
-	  FoundPeerInfoHandler handler_;
+    std::unordered_set<PeerId> nearest_peer_ids_;
+    FoundPeerInfoHandler handler_;
 
-	  // Auxiliary
-	  std::shared_ptr<std::vector<uint8_t>> serialized_request_;
-	  std::priority_queue<PeerIdWithDistance> queue_;
+    // Auxiliary
+    std::shared_ptr<std::vector<uint8_t>> serialized_request_;
+    std::priority_queue<PeerIdWithDistance> queue_;
     size_t requests_in_progress_ = 0;
     bool started_ = false;
     std::atomic_bool done_ = false;

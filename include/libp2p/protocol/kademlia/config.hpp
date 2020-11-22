@@ -133,6 +133,13 @@ namespace libp2p::protocol::kademlia {
     std::chrono::seconds responseTimeout = 10s;
 
     /**
+     * Maximum time to connection
+     * This is implementation specified property.
+     * @note Default: 3s
+     */
+    std::chrono::seconds connectionTimeout = 5s;
+
+    /**
      * Random walk config
      */
     RandomWalk randomWalk{};
