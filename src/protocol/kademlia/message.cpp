@@ -130,13 +130,14 @@ namespace libp2p::protocol::kademlia {
         return false;
       }
     }
-    auto res = assign_peers(closer_peers, pb_msg.closerpeers());
-    if (not res) {
-      error_message_ = "Bad closer peers: " + res.error().message();
+    auto closer_res = assign_peers(closer_peers, pb_msg.closerpeers());
+    if (not closer_res) {
+      error_message_ = "Bad closer peers: " + closer_res.error().message();
       return false;
     }
-    if (not res) {
-      error_message_ = "Bad provider peers: " + res.error().message();
+    auto provider_res = assign_peers(provider_peers, pb_msg.providerpeers());
+    if (not provider_res) {
+      error_message_ = "Bad provider peers: " + provider_res.error().message();
       return false;
     }
     return true;
