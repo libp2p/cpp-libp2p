@@ -16,6 +16,7 @@
 #include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/peer_info_with_distance.hpp>
+#include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/response_handler.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/impl/session_host.hpp>
@@ -28,13 +29,14 @@ namespace libp2p::protocol::kademlia {
    public:
     AddProviderExecutor(const Config &config, std::shared_ptr<Host> host,
                         std::shared_ptr<Scheduler> scheduler,
-
                         std::shared_ptr<SessionHost> session_host,
-                        ContentId key, std::vector<PeerInfo> addressees);
+                        const std::shared_ptr<PeerRoutingTable>& peer_routing_table,
+                        ContentId key);
 
     ~AddProviderExecutor();
 
     outcome::result<void> start();
+    void done();
 
    private:
     /// Spawns new request
@@ -51,18 +53,19 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Host> host_;
     std::shared_ptr<Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
-    ContentId key_;
-    std::vector<PeerInfo> addressees_;
-
-    size_t addressees_idx_ = 0;
 
     // Secondary
+    ContentId key_;
+    const NodeId target_;
+    std::unordered_set<PeerId> nearest_peer_ids_;
 
+    // Auxiliary
     std::shared_ptr<std::vector<uint8_t>> serialized_request_;
+    std::priority_queue<PeerIdWithDistance> queue_;
+    size_t requests_succeed_ = 0;
     size_t requests_in_progress_ = 0;
-
     bool started_ = false;
-    bool done_ = false;
+    std::atomic_bool done_ = false;
 
     SubLogger log_;
   };

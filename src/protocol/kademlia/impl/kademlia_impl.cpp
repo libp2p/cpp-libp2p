@@ -14,7 +14,7 @@
 #include <libp2p/protocol/kademlia/impl/add_provider_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/find_peer_executor.hpp>
-#include <libp2p/protocol/kademlia/impl/get_providers_executor.hpp>
+#include <libp2p/protocol/kademlia/impl/find_providers_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/get_value_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/kademlia_impl.hpp>
 #include <libp2p/protocol/kademlia/impl/put_value_executor.hpp>
@@ -157,14 +157,7 @@ namespace libp2p::protocol::kademlia {
       return outcome::success();
     }
 
-    auto nearest_peer_infos = getNearestPeerInfos(NodeId(key));
-    if (nearest_peer_infos.empty()) {
-      log_.info("Can't do Provide request: no peers to connect to");
-      return Error::NO_PEERS;
-    }
-
-    auto add_provider_executor =
-        createAddProviderExecutor(key, std::move(nearest_peer_infos));
+    auto add_provider_executor = createAddProviderExecutor(key);
 
     return add_provider_executor->start();
   }
@@ -711,20 +704,19 @@ namespace libp2p::protocol::kademlia {
         std::move(value), std::move(addressees));
   }
 
-  std::shared_ptr<GetProvidersExecutor>
+  std::shared_ptr<FindProvidersExecutor>
   KademliaImpl::createGetProvidersExecutor(ContentId sought_key,
                                            FoundProvidersHandler handler) {
-    return std::make_shared<GetProvidersExecutor>(
+    return std::make_shared<FindProvidersExecutor>(
         config_, host_, scheduler_, shared_from_this(), shared_from_this(),
         peer_routing_table_, std::move(sought_key), std::move(handler));
   }
 
   std::shared_ptr<AddProviderExecutor> KademliaImpl::createAddProviderExecutor(
-      ContentId key, std::unordered_set<PeerInfo> nearest_peer_infos) {
+      ContentId key) {
     return std::make_shared<AddProviderExecutor>(
-        config_, host_, scheduler_, shared_from_this(), std::move(key),
-        std::vector<PeerInfo>(std::move_iterator(nearest_peer_infos.begin()),
-                              std::move_iterator(nearest_peer_infos.end())));
+        config_, host_, scheduler_, shared_from_this(), peer_routing_table_,
+        std::move(key));
   }
 
   std::shared_ptr<FindPeerExecutor> KademliaImpl::createFindPeerExecutor(

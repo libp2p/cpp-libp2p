@@ -19,20 +19,19 @@ namespace libp2p::protocol::kademlia {
       std::shared_ptr<Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
       std::shared_ptr<PeerRouting> peer_routing,
-      std::shared_ptr<PeerRoutingTable> peer_routing_table,
+      const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
       PeerId sought_peer_id, FoundPeerInfoHandler handler)
       : config_(config),
         host_(std::move(host)),
         scheduler_(std::move(scheduler)),
         session_host_(std::move(session_host)),
         peer_routing_(std::move(peer_routing)),
-        peer_routing_table_(std::move(peer_routing_table)),
         sought_peer_id_(std::move(sought_peer_id)),
         target_(sought_peer_id_),
         handler_(std::move(handler)),
         log_("kad", "FindPeerExecutor", ++instance_number) {
-    auto nearest_peer_ids = peer_routing_table_->getNearestPeers(
-        NodeId(sought_peer_id_), config_.closerPeerCount * 2);
+    auto nearest_peer_ids = peer_routing_table->getNearestPeers(
+        target_, config_.closerPeerCount * 2);
 
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));
@@ -219,20 +218,21 @@ namespace libp2p::protocol::kademlia {
   }
 
   void FindPeerExecutor::onResult(const std::shared_ptr<Session> &session,
-                                  outcome::result<Message> res) {
+                                  outcome::result<Message> msg_res) {
     gsl::final_action respawn([this] {
       --requests_in_progress_;
       spawn();
     });
 
     // Check if gotten some message
-    if (not res) {
+    if (not msg_res) {
       log_.warn("Result from {} is failed: {}; active {}, in queue {}",
                 session->stream()->remotePeerId().value().toBase58(),
-                res.error().message(), requests_in_progress_, queue_.size());
+                msg_res.error().message(), requests_in_progress_,
+                queue_.size());
       return;
     }
-    auto &msg = res.value();
+    auto &msg = msg_res.value();
 
     // Skip inappropriate messages
     if (not match(msg)) {
@@ -275,7 +275,6 @@ namespace libp2p::protocol::kademlia {
         // Found
         if (peer.info.id == sought_peer_id_) {
           done(peer.info);
-          continue;
         }
 
         // Skip himself

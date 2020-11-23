@@ -5,7 +5,7 @@
 
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/error.hpp>
-#include <libp2p/protocol/kademlia/impl/get_providers_executor.hpp>
+#include <libp2p/protocol/kademlia/impl/find_providers_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
@@ -13,27 +13,26 @@
 namespace libp2p::protocol::kademlia {
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-  std::atomic_size_t GetProvidersExecutor::instance_number = 0;
+  std::atomic_size_t FindProvidersExecutor::instance_number = 0;
 
-  GetProvidersExecutor::GetProvidersExecutor(
+  FindProvidersExecutor::FindProvidersExecutor(
       const Config &config, std::shared_ptr<Host> host,
       std::shared_ptr<Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
       std::shared_ptr<PeerRouting> peer_routing,
-      std::shared_ptr<PeerRoutingTable> peer_routing_table,
+      const std::shared_ptr<PeerRoutingTable>& peer_routing_table,
       ContentId content_id, FoundProvidersHandler handler)
       : config_(config),
         host_(std::move(host)),
         scheduler_(std::move(scheduler)),
         session_host_(std::move(session_host)),
         peer_routing_(std::move(peer_routing)),
-        peer_routing_table_(std::move(peer_routing_table)),
         content_id_(std::move(content_id)),
         target_(content_id_),
         handler_(std::move(handler)),
         log_("kad", "FindProvidersExecutor", ++instance_number) {
-    auto nearest_peer_ids = peer_routing_table_->getNearestPeers(
-        NodeId(content_id_), config_.closerPeerCount * 2);
+    auto nearest_peer_ids = peer_routing_table->getNearestPeers(
+        target_, config_.closerPeerCount * 2);
 
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));
@@ -44,11 +43,11 @@ namespace libp2p::protocol::kademlia {
     log_.debug("created");
   }
 
-  GetProvidersExecutor::~GetProvidersExecutor() {
+  FindProvidersExecutor::~FindProvidersExecutor() {
     log_.debug("destroyed");
   }
 
-  outcome::result<void> GetProvidersExecutor::start() {
+  outcome::result<void> FindProvidersExecutor::start() {
     if (started_) {
       return Error::IN_PROGRESS;
     }
@@ -88,7 +87,7 @@ namespace libp2p::protocol::kademlia {
     return outcome::success();
   };
 
-  void GetProvidersExecutor::done() {
+  void FindProvidersExecutor::done() {
     bool x = false;
     if (not done_.compare_exchange_strong(x, true)) {
       return;
@@ -108,8 +107,12 @@ namespace libp2p::protocol::kademlia {
     handler_(std::move(result));
   }
 
-  void GetProvidersExecutor::spawn() {
-    auto self_peer_id = host_->getId();
+  void FindProvidersExecutor::spawn() {
+     if (done_) {
+      return;
+    }
+
+   auto self_peer_id = host_->getId();
 
     while (started_ and not done_ and not queue_.empty()
            and requests_in_progress_ < config_.requestConcurency) {
@@ -140,7 +143,7 @@ namespace libp2p::protocol::kademlia {
                  requests_in_progress_, queue_.size());
 
       auto holder =
-          std::make_shared<std::pair<std::shared_ptr<GetProvidersExecutor>,
+          std::make_shared<std::pair<std::shared_ptr<FindProvidersExecutor>,
                                      scheduler::Handle>>();
 
       holder->first = shared_from_this();
@@ -166,13 +169,11 @@ namespace libp2p::protocol::kademlia {
     }
 
     if (requests_in_progress_ == 0) {
-      done_ = true;
-      log_.debug("done");
-      handler_(Error::VALUE_NOT_FOUND);
+      done();
     }
   }
 
-  void GetProvidersExecutor::onConnected(
+  void FindProvidersExecutor::onConnected(
       outcome::result<std::shared_ptr<connection::Stream>> stream_res) {
     if (not stream_res) {
       --requests_in_progress_;
@@ -214,11 +215,11 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  scheduler::Ticks GetProvidersExecutor::responseTimeout() const {
+  scheduler::Ticks FindProvidersExecutor::responseTimeout() const {
     return scheduler::toTicks(config_.responseTimeout);
   }
 
-  bool GetProvidersExecutor::match(const Message &msg) const {
+  bool FindProvidersExecutor::match(const Message &msg) const {
     return
         // Check if message type is appropriate
         msg.type == Message::Type::kGetProviders
@@ -226,7 +227,7 @@ namespace libp2p::protocol::kademlia {
         && msg.key == content_id_.data;
   }
 
-  void GetProvidersExecutor::onResult(const std::shared_ptr<Session> &session,
+  void FindProvidersExecutor::onResult(const std::shared_ptr<Session> &session,
                                       outcome::result<Message> msg_res) {
     gsl::final_action respawn([this] {
       --requests_in_progress_;
@@ -281,7 +282,7 @@ namespace libp2p::protocol::kademlia {
       }
 
       // If we have enough providers, that's all
-      if (providers_.size() > required_providers_amount_) {
+      if (providers_.size() >= required_providers_amount_) {
         done();
       }
     }
@@ -322,7 +323,7 @@ namespace libp2p::protocol::kademlia {
 
         // New peer add to queue
         if (auto [it, ok] = nearest_peer_ids_.emplace(peer.info.id); ok) {
-          queue_.emplace(*it, content_id_);
+          queue_.emplace(*it, target_);
         }
       }
     }

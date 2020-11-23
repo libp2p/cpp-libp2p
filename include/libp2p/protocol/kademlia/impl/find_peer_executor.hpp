@@ -29,12 +29,13 @@ namespace libp2p::protocol::kademlia {
       : public ResponseHandler,
         public std::enable_shared_from_this<FindPeerExecutor> {
    public:
-    FindPeerExecutor(const Config &config, std::shared_ptr<Host> host,
-                     std::shared_ptr<Scheduler> scheduler,
-                     std::shared_ptr<SessionHost> session_host,
-                     std::shared_ptr<PeerRouting> peer_routing,
-                     std::shared_ptr<PeerRoutingTable> peer_routing_table,
-                     PeerId peer_id, FoundPeerInfoHandler handler);
+    FindPeerExecutor(
+        const Config &config, std::shared_ptr<Host> host,
+        std::shared_ptr<Scheduler> scheduler,
+        std::shared_ptr<SessionHost> session_host,
+        std::shared_ptr<PeerRouting> peer_routing,
+        const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
+        PeerId peer_id, FoundPeerInfoHandler handler);
 
     ~FindPeerExecutor() override;
 
@@ -68,7 +69,6 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
     std::shared_ptr<PeerRouting> peer_routing_;
-    std::shared_ptr<PeerRoutingTable> peer_routing_table_;
 
     // Secondary
     const PeerId sought_peer_id_;

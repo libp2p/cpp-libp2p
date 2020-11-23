@@ -24,18 +24,18 @@
 
 namespace libp2p::protocol::kademlia {
 
-  class GetProvidersExecutor
+  class FindProvidersExecutor
       : public ResponseHandler,
-        public std::enable_shared_from_this<GetProvidersExecutor> {
+        public std::enable_shared_from_this<FindProvidersExecutor> {
    public:
-    GetProvidersExecutor(const Config &config, std::shared_ptr<Host> host,
-                         std::shared_ptr<Scheduler> scheduler,
-                         std::shared_ptr<SessionHost> session_host,
-                         std::shared_ptr<PeerRouting> peer_routing,
-                         std::shared_ptr<PeerRoutingTable> peer_routing_table,
-                         ContentId sought_key, FoundProvidersHandler handler);
+    FindProvidersExecutor(const Config &config, std::shared_ptr<Host> host,
+                          std::shared_ptr<Scheduler> scheduler,
+                          std::shared_ptr<SessionHost> session_host,
+                          std::shared_ptr<PeerRouting> peer_routing,
+                          const std::shared_ptr<PeerRoutingTable>& peer_routing_table,
+                          ContentId key, FoundProvidersHandler handler);
 
-    ~GetProvidersExecutor() override;
+    ~FindProvidersExecutor() override;
 
     outcome::result<void> start();
 
@@ -67,7 +67,6 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
     std::shared_ptr<PeerRouting> peer_routing_;
-    std::shared_ptr<PeerRoutingTable> peer_routing_table_;
     const Key content_id_;
     const NodeId target_;
 

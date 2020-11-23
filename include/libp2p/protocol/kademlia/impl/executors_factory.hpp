@@ -26,7 +26,7 @@ namespace libp2p::protocol::kademlia {
   class PutValueExecutor;
   class GetValueExecutor;
   class AddProviderExecutor;
-  class GetProvidersExecutor;
+  class FindProvidersExecutor;
   class FindPeerExecutor;
 
   class ExecutorsFactory {
@@ -41,9 +41,9 @@ namespace libp2p::protocol::kademlia {
         FoundValueHandler handler) = 0;
 
     virtual std::shared_ptr<AddProviderExecutor> createAddProviderExecutor(
-        ContentId key, std::unordered_set<PeerInfo> nearest_peer_infos) = 0;
+        ContentId key) = 0;
 
-    virtual std::shared_ptr<GetProvidersExecutor> createGetProvidersExecutor(
+    virtual std::shared_ptr<FindProvidersExecutor> createGetProvidersExecutor(
         ContentId sought_key, FoundProvidersHandler handler) = 0;
 
     virtual std::shared_ptr<FindPeerExecutor> createFindPeerExecutor(

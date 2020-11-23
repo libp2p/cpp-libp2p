@@ -53,17 +53,16 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Host> host_;
     std::shared_ptr<Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
-    ContentId key_;
-    ContentValue value_;
-    std::vector<PeerId> addressees_;
-
-    size_t addressees_idx_ = 0;
 
     // Secondary
+    ContentId key_;
+    ContentValue value_;
 
+    // Auxiliary
     std::shared_ptr<std::vector<uint8_t>> serialized_request_;
+    std::vector<PeerId> addressees_;
+    size_t addressees_idx_ = 0;
     size_t requests_in_progress_ = 0;
-
     bool started_ = false;
     bool done_ = false;
 

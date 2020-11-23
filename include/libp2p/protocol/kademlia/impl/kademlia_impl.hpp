@@ -26,7 +26,7 @@ namespace libp2p::protocol::kademlia {
 
   class PutValueExecutor;
   class FindPeerExecutor;
-  class GetProvidersExecutor;
+  class FindProvidersExecutor;
 
   class KademliaImpl final : public Kademlia,
                              public SessionHost,
@@ -101,16 +101,13 @@ namespace libp2p::protocol::kademlia {
         FoundValueHandler handler) override;
 
     std::shared_ptr<AddProviderExecutor> createAddProviderExecutor(
-        ContentId key,
-        std::unordered_set<PeerInfo> nearest_peer_infos) override;
+        ContentId key) override;
 
-    std::shared_ptr<GetProvidersExecutor> createGetProvidersExecutor(
-        ContentId sought_content_id,
-        FoundProvidersHandler handler) override;
+    std::shared_ptr<FindProvidersExecutor> createGetProvidersExecutor(
+        ContentId sought_content_id, FoundProvidersHandler handler) override;
 
     std::shared_ptr<FindPeerExecutor> createFindPeerExecutor(
-        PeerId peer_id,
-        FoundPeerInfoHandler handler) override;
+        PeerId peer_id, FoundPeerInfoHandler handler) override;
 
     std::vector<PeerId> getNearestPeerIds(const NodeId &id);
     std::unordered_set<PeerInfo> getNearestPeerInfos(const NodeId &id);
