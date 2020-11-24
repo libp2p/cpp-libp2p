@@ -8,6 +8,7 @@
 
 #define BOOST_ASIO_NO_DEPRECATED
 
+#include <atomic>
 #include <chrono>
 
 #include <boost/asio.hpp>
@@ -111,7 +112,7 @@ namespace libp2p::transport {
     Tcp::socket socket_;
     bool initiator_ = false;
     bool connecting_with_timeout_ = false;
-    bool connection_phase_done_ = false;
+    std::atomic_bool connection_phase_done_;
     boost::asio::deadline_timer deadline_timer_;
 
     boost::system::error_code handle_errcode(
