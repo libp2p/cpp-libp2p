@@ -137,14 +137,7 @@ namespace libp2p::protocol::kademlia {
       }
     }
 
-    auto nearest_peer_infos = getNearestPeerInfos(NodeId(key));
-    if (nearest_peer_infos.empty()) {
-      log_.info("Can't do GetValue request: no peers to connect to");
-      return Error::NO_PEERS;
-    }
-
-    auto get_value_executor =
-        createGetValueExecutor(key, std::move(nearest_peer_infos), handler);
+    auto get_value_executor = createGetValueExecutor(key, handler);
 
     return get_value_executor->start();
   }
@@ -262,44 +255,6 @@ namespace libp2p::protocol::kademlia {
         createFindPeerExecutor(peer_id, std::move(handler));
 
     return find_peer_executor->start();
-  }
-
-  std::vector<PeerId> KademliaImpl::getNearestPeerIds(const NodeId &id) {
-    return peer_routing_table_->getNearestPeers(id,
-                                                config_.closerPeerCount * 2);
-  }
-
-  std::unordered_set<PeerInfo> KademliaImpl::getNearestPeerInfos(
-      const NodeId &id) {
-    // Get nearest peer
-    auto nearest_peer_ids = getNearestPeerIds(id);
-
-    std::unordered_set<PeerInfo> nearest_peer_infos;
-
-    // Try to find over nearest peers
-    for (const auto &nearest_peer_id : nearest_peer_ids) {
-      // Exclude yoursef, because not found locally anyway
-      if (nearest_peer_id == self_id_) {
-        continue;
-      }
-
-      // Get peer info
-      auto info = host_->getPeerRepository().getPeerInfo(nearest_peer_id);
-      if (info.addresses.empty()) {
-        continue;
-      }
-
-      // Check if connectable
-      auto connectedness =
-          host_->getNetwork().getConnectionManager().connectedness(info);
-      if (connectedness == Message::Connectedness::CAN_NOT_CONNECT) {
-        continue;
-      }
-
-      nearest_peer_infos.emplace(std::move(info));
-    }
-
-    return nearest_peer_infos;
   }
 
   void KademliaImpl::onMessage(const std::shared_ptr<Session> &session,
@@ -535,21 +490,8 @@ namespace libp2p::protocol::kademlia {
 
     log_.debug("MSG: FindNode ({})", multi::detail::encodeBase58(cid.data));
 
-//  auto id_res =
-//      peer::PeerId::fromBytes(gsl::span(msg.key.data(), msg.key.size()));
-//  if (not id_res.has_value()) {
-//    auto cid_res = multi::ContentIdentifierCodec::decode(
-//        gsl::span(msg.key.data(), msg.key.size()));
-//    if (cid_res.has_value()) {
-//      auto &cid = cid_res.value();
-//      if (cid.version == multi::ContentIdentifier::Version::V1
-//          && cid.content_type == multi::MulticodecType::Code::RAW) {
-//        id_res = peer::PeerId::fromBytes(cid.content_address.toBuffer());
-//      }
-//    }
-//  }
-
-    auto ids = getNearestPeerIds(NodeId(cid));
+    auto ids = peer_routing_table_->getNearestPeers(
+        NodeId(cid), config_.closerPeerCount * 2);
 
     std::vector<Message::Peer> peers;
     peers.reserve(config_.closerPeerCount);
@@ -689,16 +631,6 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  std::shared_ptr<GetValueExecutor> KademliaImpl::createGetValueExecutor(
-      ContentId sought_key, std::unordered_set<PeerInfo> nearest_peer_infos,
-      FoundValueHandler handler) {
-    return std::make_shared<GetValueExecutor>(
-        config_, host_, scheduler_, shared_from_this(), shared_from_this(),
-        content_routing_table_, validator_, shared_from_this(),
-        std::move(sought_key), std::move(nearest_peer_infos),
-        std::move(handler));
-  }
-
   std::shared_ptr<PutValueExecutor> KademliaImpl::createPutValueExecutor(
       ContentId key, ContentValue value, std::vector<PeerId> addressees) {
     return std::make_shared<PutValueExecutor>(
@@ -706,19 +638,27 @@ namespace libp2p::protocol::kademlia {
         std::move(value), std::move(addressees));
   }
 
-  std::shared_ptr<FindProvidersExecutor>
-  KademliaImpl::createGetProvidersExecutor(ContentId sought_key,
-                                           FoundProvidersHandler handler) {
-    return std::make_shared<FindProvidersExecutor>(
+  std::shared_ptr<GetValueExecutor> KademliaImpl::createGetValueExecutor(
+      ContentId key, FoundValueHandler handler) {
+    return std::make_shared<GetValueExecutor>(
         config_, host_, scheduler_, shared_from_this(), shared_from_this(),
-        peer_routing_table_, std::move(sought_key), std::move(handler));
+        content_routing_table_, peer_routing_table_, shared_from_this(),
+        validator_, std::move(key), std::move(handler));
   }
 
   std::shared_ptr<AddProviderExecutor> KademliaImpl::createAddProviderExecutor(
-      ContentId key) {
+      ContentId content_id) {
     return std::make_shared<AddProviderExecutor>(
         config_, host_, scheduler_, shared_from_this(), peer_routing_table_,
-        std::move(key));
+        std::move(content_id));
+  }
+
+  std::shared_ptr<FindProvidersExecutor>
+  KademliaImpl::createGetProvidersExecutor(ContentId content_id,
+                                           FoundProvidersHandler handler) {
+    return std::make_shared<FindProvidersExecutor>(
+        config_, host_, scheduler_, shared_from_this(), peer_routing_table_,
+        std::move(content_id), std::move(handler));
   }
 
   std::shared_ptr<FindPeerExecutor> KademliaImpl::createFindPeerExecutor(

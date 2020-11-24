@@ -26,10 +26,9 @@ namespace libp2p::protocol::kademlia {
       std::shared_ptr<SessionHost> session_host,
       std::shared_ptr<PeerRouting> peer_routing,
       std::shared_ptr<ContentRoutingTable> content_routing_table,
-      std::shared_ptr<Validator> validator,
+      const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
       std::shared_ptr<ExecutorsFactory> executor_factory,
-      ContentId sought_content_id,
-      std::unordered_set<PeerInfo> nearest_peer_infos,
+      std::shared_ptr<Validator> validator, ContentId key,
       FoundValueHandler handler)
       : config_(config),
         host_(std::move(host)),
@@ -37,24 +36,29 @@ namespace libp2p::protocol::kademlia {
         session_host_(std::move(session_host)),
         peer_routing_(std::move(peer_routing)),
         content_routing_table_(std::move(content_routing_table)),
-        validator_(std::move(validator)),
         executor_factory_(std::move(executor_factory)),
-        sought_content_id_(std::move(sought_content_id)),
-        nearest_peer_infos_(std::move(
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            reinterpret_cast<decltype(nearest_peer_infos_) &>(
-                nearest_peer_infos))),
+        validator_(std::move(validator)),
+        key_(std::move(key)),
         handler_(std::move(handler)),
+        target_(key_),
         log_("kad", "GetValueExecutor", ++instance_number) {
     BOOST_ASSERT(host_ != nullptr);
+    BOOST_ASSERT(scheduler_ != nullptr);
     BOOST_ASSERT(session_host_ != nullptr);
     BOOST_ASSERT(peer_routing_ != nullptr);
     BOOST_ASSERT(content_routing_table_ != nullptr);
     BOOST_ASSERT(executor_factory_ != nullptr);
-    std::for_each(nearest_peer_infos_.begin(), nearest_peer_infos_.end(),
-                  [this](auto &peer_info) {
-                    queue_.emplace(peer_info, sought_content_id_);
-                  });
+    BOOST_ASSERT(validator_ != nullptr);
+
+    auto nearest_peer_ids = peer_routing_table->getNearestPeers(
+        target_, config_.closerPeerCount * 2);
+
+    nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
+                             std::move_iterator(nearest_peer_ids.end()));
+
+    std::for_each(nearest_peer_ids_.begin(), nearest_peer_ids_.end(),
+                  [this](auto &peer_id) { queue_.emplace(peer_id, target_); });
+
     received_records_ = std::make_unique<Table>();
     log_.debug("created");
   }
@@ -79,8 +83,7 @@ namespace libp2p::protocol::kademlia {
       self_announce = host_->getPeerInfo();
     }
 
-    Message request =
-        createGetValueRequest(sought_content_id_, std::move(self_announce));
+    Message request = createGetValueRequest(key_, std::move(self_announce));
     if (!request.serialize(*serialized_request_)) {
       return Error::MESSAGE_SERIALIZE_ERROR;
     }
@@ -94,9 +97,34 @@ namespace libp2p::protocol::kademlia {
   };
 
   void GetValueExecutor::spawn() {
+    if (done_) {
+      return;
+    }
+
+    auto self_peer_id = host_->getId();
+
     while (started_ and not done_ and not queue_.empty()
            and requests_in_progress_ < config_.requestConcurency) {
-      auto &peer_info = *queue_.top();
+      auto peer_id = *queue_.top();
+      queue_.pop();
+
+      // Exclude yoursef, because not found locally anyway
+      if (peer_id == self_peer_id) {
+        continue;
+      }
+
+      // Get peer info
+      auto peer_info = host_->getPeerRepository().getPeerInfo(peer_id);
+      if (peer_info.addresses.empty()) {
+        continue;
+      }
+
+      // Check if connectable
+      auto connectedness =
+          host_->getNetwork().getConnectionManager().connectedness(peer_info);
+      if (connectedness == Message::Connectedness::CAN_NOT_CONNECT) {
+        continue;
+      }
 
       ++requests_in_progress_;
 
@@ -126,8 +154,6 @@ namespace libp2p::protocol::kademlia {
             }
           },
           config_.connectionTimeout);
-
-      queue_.pop();
     }
 
     if (requests_in_progress_ == 0) {
@@ -179,7 +205,7 @@ namespace libp2p::protocol::kademlia {
         // Check if message type is appropriate
         msg.type == Message::Type::kGetValue
         // Check if response is accorded to request
-        && msg.key == sought_content_id_.data;
+        && msg.key == key_.data;
   }
 
   void GetValueExecutor::onResult(const std::shared_ptr<Session> &session,
@@ -243,8 +269,8 @@ namespace libp2p::protocol::kademlia {
         }
 
         // New peer add to queue
-        if (nearest_peer_infos_.emplace(peer.info).second) {
-          queue_.emplace(peer.info, sought_content_id_);
+        if (auto [it, ok] = nearest_peer_ids_.emplace(peer.info.id); ok) {
+          queue_.emplace(*it, target_);
         }
       }
     }
@@ -252,7 +278,7 @@ namespace libp2p::protocol::kademlia {
     if (msg.record) {
       auto &value = msg.record.value().value;
 
-      auto validation_res = validator_->validate(sought_content_id_, value);
+      auto validation_res = validator_->validate(key_, value);
       if (not validation_res.has_value()) {
         log_.debug("Result from {} is invalid", remote_peer_id.toBase58());
         return;
@@ -266,7 +292,7 @@ namespace libp2p::protocol::kademlia {
                        std::back_inserter(values),
                        [](auto &record) { return record.value; });
 
-        auto index_res = validator_->select(sought_content_id_, values);
+        auto index_res = validator_->select(key_, values);
         if (not index_res.has_value()) {
           log_.debug("Can't select best value of {} provided", values.size());
           return;
@@ -285,13 +311,13 @@ namespace libp2p::protocol::kademlia {
           if (value != best) {
             addressees.emplace_back(peer);
           } else {
-            content_routing_table_->addProvider(sought_content_id_, peer);
+            content_routing_table_->addProvider(key_, peer);
           }
         }
 
         if (not addressees.empty()) {
           auto put_value_executor = executor_factory_->createPutValueExecutor(
-              sought_content_id_, std::move(value), std::move(addressees));
+              key_, std::move(value), std::move(addressees));
           [[maybe_unused]] auto res = put_value_executor->start();
         }
       }

@@ -98,20 +98,16 @@ namespace libp2p::protocol::kademlia {
         std::vector<PeerId> addressees) override;
 
     std::shared_ptr<GetValueExecutor> createGetValueExecutor(
-        ContentId sought_key, std::unordered_set<PeerInfo> nearest_peer_infos,
-        FoundValueHandler handler) override;
+        ContentId key, FoundValueHandler handler) override;
 
     std::shared_ptr<AddProviderExecutor> createAddProviderExecutor(
-        ContentId key) override;
+        ContentId content_id) override;
 
     std::shared_ptr<FindProvidersExecutor> createGetProvidersExecutor(
-        ContentId sought_content_id, FoundProvidersHandler handler) override;
+        ContentId content_id, FoundProvidersHandler handler) override;
 
     std::shared_ptr<FindPeerExecutor> createFindPeerExecutor(
         PeerId peer_id, FoundPeerInfoHandler handler) override;
-
-    std::vector<PeerId> getNearestPeerIds(const NodeId &id);
-    std::unordered_set<PeerInfo> getNearestPeerInfos(const NodeId &id);
 
     outcome::result<void> findRandomPeer();
     void randomWalk();

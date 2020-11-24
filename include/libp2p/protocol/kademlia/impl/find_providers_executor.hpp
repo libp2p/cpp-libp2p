@@ -29,12 +29,12 @@ namespace libp2p::protocol::kademlia {
       : public ResponseHandler,
         public std::enable_shared_from_this<FindProvidersExecutor> {
    public:
-    FindProvidersExecutor(const Config &config, std::shared_ptr<Host> host,
-                          std::shared_ptr<Scheduler> scheduler,
-                          std::shared_ptr<SessionHost> session_host,
-                          std::shared_ptr<PeerRouting> peer_routing,
-                          const std::shared_ptr<PeerRoutingTable>& peer_routing_table,
-                          ContentId key, FoundProvidersHandler handler);
+    FindProvidersExecutor(
+        const Config &config, std::shared_ptr<Host> host,
+        std::shared_ptr<Scheduler> scheduler,
+        std::shared_ptr<SessionHost> session_host,
+        const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
+        ContentId key, FoundProvidersHandler handler);
 
     ~FindProvidersExecutor() override;
 
@@ -67,14 +67,12 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Host> host_;
     std::shared_ptr<Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
-    std::shared_ptr<PeerRouting> peer_routing_;
     const Key content_id_;
-    const NodeId target_;
+    FoundProvidersHandler handler_;
 
     // Secondary
-    size_t required_providers_amount_ = 1;
+    const NodeId target_;
     std::unordered_set<PeerId> nearest_peer_ids_;
-    FoundProvidersHandler handler_;
 
     // Auxiliary
     std::shared_ptr<std::vector<uint8_t>> serialized_request_;

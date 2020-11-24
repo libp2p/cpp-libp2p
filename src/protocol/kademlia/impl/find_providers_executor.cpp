@@ -19,18 +19,20 @@ namespace libp2p::protocol::kademlia {
       const Config &config, std::shared_ptr<Host> host,
       std::shared_ptr<Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
-      std::shared_ptr<PeerRouting> peer_routing,
-      const std::shared_ptr<PeerRoutingTable>& peer_routing_table,
+      const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
       ContentId content_id, FoundProvidersHandler handler)
       : config_(config),
         host_(std::move(host)),
         scheduler_(std::move(scheduler)),
         session_host_(std::move(session_host)),
-        peer_routing_(std::move(peer_routing)),
         content_id_(std::move(content_id)),
-        target_(content_id_),
         handler_(std::move(handler)),
+        target_(content_id_),
         log_("kad", "FindProvidersExecutor", ++instance_number) {
+    BOOST_ASSERT(host_ != nullptr);
+    BOOST_ASSERT(scheduler_ != nullptr);
+    BOOST_ASSERT(session_host_ != nullptr);
+
     auto nearest_peer_ids = peer_routing_table->getNearestPeers(
         target_, config_.closerPeerCount * 2);
 
@@ -108,11 +110,11 @@ namespace libp2p::protocol::kademlia {
   }
 
   void FindProvidersExecutor::spawn() {
-     if (done_) {
+    if (done_) {
       return;
     }
 
-   auto self_peer_id = host_->getId();
+    auto self_peer_id = host_->getId();
 
     while (started_ and not done_ and not queue_.empty()
            and requests_in_progress_ < config_.requestConcurency) {
@@ -228,7 +230,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   void FindProvidersExecutor::onResult(const std::shared_ptr<Session> &session,
-                                      outcome::result<Message> msg_res) {
+                                       outcome::result<Message> msg_res) {
     gsl::final_action respawn([this] {
       --requests_in_progress_;
       spawn();
@@ -282,7 +284,7 @@ namespace libp2p::protocol::kademlia {
       }
 
       // If we have enough providers, that's all
-      if (providers_.size() >= required_providers_amount_) {
+      if (providers_.size() >= config_.maxProvidersPerKey) {
         done();
       }
     }

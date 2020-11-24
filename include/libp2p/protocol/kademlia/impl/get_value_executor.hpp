@@ -35,16 +35,16 @@ namespace libp2p::protocol::kademlia {
       : public ResponseHandler,
         public std::enable_shared_from_this<GetValueExecutor> {
    public:
-    GetValueExecutor(const Config &config, std::shared_ptr<Host> host,
-                     std::shared_ptr<Scheduler> scheduler,
-                     std::shared_ptr<SessionHost> session_host,
-                     std::shared_ptr<PeerRouting> peer_routing,
-                     std::shared_ptr<ContentRoutingTable> content_routing_table,
-                     std::shared_ptr<Validator> validator,
-                     std::shared_ptr<ExecutorsFactory> executor_factory,
-                     ContentId sought_content_id_,
-                     std::unordered_set<PeerInfo> nearest_peer_infos,
-                     FoundValueHandler handler);
+    GetValueExecutor(
+        const Config &config, std::shared_ptr<Host> host,
+        std::shared_ptr<Scheduler> scheduler,
+        std::shared_ptr<SessionHost> session_host,
+        std::shared_ptr<PeerRouting> peer_routing,
+        std::shared_ptr<ContentRoutingTable> content_routing_table,
+        const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
+        std::shared_ptr<ExecutorsFactory> executor_factory,
+        std::shared_ptr<Validator> validator, ContentId key,
+        FoundValueHandler handler);
 
     ~GetValueExecutor() override;
 
@@ -77,17 +77,18 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<SessionHost> session_host_;
     std::shared_ptr<PeerRouting> peer_routing_;
     std::shared_ptr<ContentRoutingTable> content_routing_table_;
-    std::shared_ptr<Validator> validator_;
     std::shared_ptr<ExecutorsFactory> executor_factory_;
-
-    // Secondary
-    const ContentId sought_content_id_;
-    std::unordered_set<PeerInfo, std::hash<PeerInfo>, PeerInfo::EqualByPeerId>
-        nearest_peer_infos_;
+    std::shared_ptr<Validator> validator_;
+    const ContentId key_;
     FoundValueHandler handler_;
 
+    // Secondary
+    const NodeId target_;
+    std::unordered_set<PeerId> nearest_peer_ids_;
+
+    // Auxiliary
     std::shared_ptr<std::vector<uint8_t>> serialized_request_;
-    std::priority_queue<PeerInfoWithDistance> queue_;  // Pn
+    std::priority_queue<PeerIdWithDistance> queue_;
     size_t requests_in_progress_ = 0;
 
     struct ByPeerId;
@@ -109,11 +110,7 @@ namespace libp2p::protocol::kademlia {
                 boost::multi_index::tag<ByValue>,
                 boost::multi_index::member<Record, Value, &Record::value>>>>;
 
-    std::unique_ptr<Table> received_records_;  // cnt
-
-    boost::optional<PeerId> best_value_;    // best
-    std::vector<PeerId> best_peers_;        // Pb
-    std::unordered_set<PeerId> requested_;  // Pq
+    std::unique_ptr<Table> received_records_;
 
     bool started_ = false;
     bool done_ = false;
