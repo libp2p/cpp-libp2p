@@ -78,7 +78,8 @@ TEST_F(DialerTest, DialNewConnection) {
   EXPECT_CALL(*tmgr, findBest(ma1)).WillOnce(Return(transport));
 
   // transport->dial returns valid connection
-  EXPECT_CALL(*transport, dial(pinfo.id, ma1, _, std::chrono::milliseconds(0)))
+  EXPECT_CALL(*transport,
+              dial(pinfo.id, ma1, _, std::chrono::milliseconds::zero()))
       .WillOnce(Arg2CallbackWithArg(outcome::success(connection)));
 
   bool executed = false;

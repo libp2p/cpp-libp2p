@@ -90,13 +90,13 @@ namespace libp2p::transport {
   void TcpConnection::connect(
       const TcpConnection::ResolverResultsType &iterator,
       TcpConnection::ConnectCallbackFunc cb) {
-    connect(iterator, std::move(cb), std::chrono::milliseconds(0));
+    connect(iterator, std::move(cb), std::chrono::milliseconds::zero());
   }
 
   void TcpConnection::connect(
       const TcpConnection::ResolverResultsType &iterator,
       ConnectCallbackFunc cb, std::chrono::milliseconds timeout) {
-    if (timeout > std::chrono::milliseconds(0)) {
+    if (timeout > std::chrono::milliseconds::zero()) {
       connecting_with_timeout_ = true;
       deadline_timer_.expires_from_now(
           boost::posix_time::milliseconds(timeout.count()));

@@ -13,7 +13,7 @@ namespace libp2p::transport {
                           multi::Multiaddress address,
                           TransportAdaptor::HandlerFunc handler) {
     dial(remoteId, std::move(address), std::move(handler),
-         std::chrono::milliseconds(0));
+         std::chrono::milliseconds::zero());
   }
 
   void TcpTransport::dial(const peer::PeerId &remoteId,
