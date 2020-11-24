@@ -59,14 +59,14 @@ namespace libp2p::protocol::kademlia {
     }
 
     explicit NodeId(const peer::PeerId &pid) {
-	    crypto::Sha256 hasher;
-	    auto write_res = hasher.write(pid.toVector());
-	    BOOST_ASSERT(write_res.has_value());
-	    auto digest_res = hasher.digest();
-	    BOOST_ASSERT(digest_res.has_value());
-	    auto &hash = digest_res.value();
+      crypto::Sha256 hasher;
+      auto write_res = hasher.write(pid.toVector());
+      BOOST_ASSERT(write_res.has_value());
+      auto digest_res = hasher.digest();
+      BOOST_ASSERT(digest_res.has_value());
+      auto &hash = digest_res.value();
 
-	    memcpy(data_.data(), hash.data(), std::min(hash.size(), data_.size()));
+      memcpy(data_.data(), hash.data(), std::min(hash.size(), data_.size()));
     }
 
     explicit NodeId(const ContentId &content_id) {

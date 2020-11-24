@@ -7,6 +7,7 @@
 #include <iostream>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/injector/kademlia_injector.hpp>
+#include <libp2p/multi/content_identifier_codec.hpp>
 #include <memory>
 #include <set>
 #include <vector>
@@ -226,6 +227,43 @@ int main(int argc, char *argv[]) {
     // Key for group of chat
     libp2p::protocol::kademlia::ContentId content_id("meet me here");
 
+    auto &scheduler = injector.create<libp2p::protocol::Scheduler &>();
+
+    std::function<void()> find_providers = [&] {
+      [[maybe_unused]] auto res1 = kademlia->findProviders(
+          content_id, 0,
+          [&](libp2p::outcome::result<std::vector<libp2p::peer::PeerInfo>>
+                  res) {
+            scheduler
+                .schedule(libp2p::protocol::scheduler::toTicks(
+                              kademlia_config.randomWalk.interval),
+                          find_providers)
+                .detach();
+
+            if (not res) {
+              std::cerr << "Cannot find providers: " << res.error().message()
+                        << std::endl;
+              return;
+            }
+
+            auto &providers = res.value();
+            for (auto &provider : providers) {
+              host->newStream(provider, "/chat/1.1.0", handleOutgoingStream);
+            }
+          });
+    };
+
+    std::function<void()> provide = [&, content_id] {
+      [[maybe_unused]] auto res =
+          kademlia->provide(content_id, not kademlia_config.passiveMode);
+
+      scheduler
+          .schedule(libp2p::protocol::scheduler::toTicks(
+                        kademlia_config.randomWalk.interval),
+                    provide)
+          .detach();
+    };
+
     io->post([&] {
       auto listen = host->listen(ma);
       if (not listen) {
@@ -240,52 +278,20 @@ int main(int argc, char *argv[]) {
 
       host->start();
 
-      kademlia->start();
+      auto cid = libp2p::multi::ContentIdentifierCodec::decode(content_id.data)
+                     .value();
+      auto peer_id =
+          libp2p::peer::PeerId::fromHash(cid.content_address).value();
 
-      auto &scheduler = injector.create<libp2p::protocol::Scheduler &>();
+      [[maybe_unused]] auto res = kademlia->findPeer(peer_id, [&](auto) {
+        // Say to world about his providing
+        provide();
 
-      // Activate providing
-      scheduler
-          .schedule(
-              [&, content_id] {
-                [[maybe_unused]] auto res = kademlia->provide(
-                    content_id, not kademlia_config.passiveMode);
-              })
-          .detach();
+        // Ask provider from world
+        find_providers();
 
-      // Ask provider from world
-      scheduler
-          .schedule(
-              libp2p::protocol::scheduler::toTicks(std::chrono::seconds(15)),
-              [&, content_id] {
-                [[maybe_unused]] auto res1 = kademlia->findProviders(
-                    content_id, 0,
-                    [&](libp2p::outcome::result<
-                        std::vector<libp2p::peer::PeerInfo>>
-                            res) {
-                      if (not res) {
-                        std::cerr << "Cannot find providers: "
-                                  << res.error().message() << std::endl;
-                        return;
-                      }
-                      auto &providers = res.value();
-                      for (auto &provider : providers) {
-                        host->newStream(provider, "/chat/1.1.0",
-                                        handleOutgoingStream);
-                      }
-                    });
-              })
-          .detach();
-
-      // Say to world about his providing
-      scheduler
-          .schedule(
-              libp2p::protocol::scheduler::toTicks(std::chrono::seconds(30)),
-              [&, content_id] {
-                [[maybe_unused]] auto res = kademlia->provide(
-                    content_id, not kademlia_config.passiveMode);
-              })
-          .detach();
+        kademlia->start();
+      });
     });
 
     boost::asio::posix::stream_descriptor in(*io, ::dup(STDIN_FILENO));
