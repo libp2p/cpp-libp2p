@@ -6,9 +6,6 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_CONTENTROUTING
 #define LIBP2P_PROTOCOL_KADEMLIA_CONTENTROUTING
 
-#include <functional>
-#include <vector>
-
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 

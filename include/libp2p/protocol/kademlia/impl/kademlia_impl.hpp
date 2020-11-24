@@ -6,6 +6,12 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_KADEMLIAIMPL
 #define LIBP2P_PROTOCOL_KADEMLIA_KADEMLIAIMPL
 
+#include <libp2p/protocol/kademlia/impl/executors_factory.hpp>
+#include <libp2p/protocol/kademlia/impl/session_host.hpp>
+#include <libp2p/protocol/kademlia/kademlia.hpp>
+
+#include <unordered_map>
+
 #include <libp2p/crypto/random_generator.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
@@ -13,14 +19,9 @@
 #include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
-#include <libp2p/protocol/kademlia/impl/executors_factory.hpp>
-#include <libp2p/protocol/kademlia/impl/message_observer.hpp>
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
-#include <libp2p/protocol/kademlia/impl/session_host.hpp>
 #include <libp2p/protocol/kademlia/impl/storage.hpp>
-#include <libp2p/protocol/kademlia/kademlia.hpp>
 #include <libp2p/protocol/kademlia/validator.hpp>
-#include <unordered_map>
 
 namespace libp2p::protocol::kademlia {
 

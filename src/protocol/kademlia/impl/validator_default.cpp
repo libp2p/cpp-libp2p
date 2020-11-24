@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/kademlia/error.hpp>
 #include <libp2p/protocol/kademlia/impl/validator_default.hpp>
+
+#include <libp2p/protocol/kademlia/error.hpp>
 
 namespace libp2p::protocol::kademlia {
 

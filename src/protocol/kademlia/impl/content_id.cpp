@@ -6,6 +6,7 @@
 #include <libp2p/protocol/kademlia/content_id.hpp>
 
 #include <cstring>
+
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/multi/content_identifier.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>

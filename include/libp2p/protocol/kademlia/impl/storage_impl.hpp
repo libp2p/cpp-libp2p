@@ -6,14 +6,16 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_STORAGEIMPL
 #define LIBP2P_PROTOCOL_KADEMLIA_STORAGEIMPL
 
+#include <libp2p/protocol/kademlia/impl/storage.hpp>
+
 #include <boost/multi_index/hashed_index_fwd.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index_fwd.hpp>
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container_fwd.hpp>
+
 #include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
-#include <libp2p/protocol/kademlia/impl/storage.hpp>
 #include <libp2p/protocol/kademlia/storage_backend.hpp>
 
 namespace libp2p::protocol::kademlia {

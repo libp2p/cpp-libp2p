@@ -6,6 +6,8 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_CONTENTROUTINGIMPL
 #define LIBP2P_PROTOCOL_KADEMLIA_CONTENTROUTINGIMPL
 
+#include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
+
 #include <boost/multi_index/hashed_index_fwd.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index_fwd.hpp>
@@ -14,7 +16,6 @@
 #include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
-#include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
 
 namespace libp2p::protocol::kademlia {
 

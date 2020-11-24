@@ -6,9 +6,10 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_MESSAGEOBSERVER
 #define LIBP2P_PROTOCOL_KADEMLIA_MESSAGEOBSERVER
 
+#include <memory>
+
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
-#include <memory>
 
 namespace libp2p::protocol::kademlia {
 

@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <libp2p/protocol/kademlia/impl/kademlia_impl.hpp>
+
+#include <unordered_set>
+
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/multi/content_identifier.hpp>
@@ -16,10 +20,8 @@
 #include <libp2p/protocol/kademlia/impl/find_peer_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/find_providers_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/get_value_executor.hpp>
-#include <libp2p/protocol/kademlia/impl/kademlia_impl.hpp>
 #include <libp2p/protocol/kademlia/impl/put_value_executor.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
-#include <unordered_set>
 
 namespace libp2p::protocol::kademlia {
 

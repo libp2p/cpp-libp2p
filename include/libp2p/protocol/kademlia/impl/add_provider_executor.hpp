@@ -15,7 +15,7 @@
 #include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
-#include <libp2p/protocol/kademlia/impl/peer_info_with_distance.hpp>
+#include <libp2p/protocol/kademlia/impl/peer_id_with_distance.hpp>
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/response_handler.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>

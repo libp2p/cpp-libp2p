@@ -11,19 +11,6 @@
 
 namespace libp2p::protocol::kademlia {
 
-  struct PeerInfoWithDistance {
-    PeerInfoWithDistance(const PeerInfo &peer_info, const ContentId &target);
-
-    bool operator<(const PeerInfoWithDistance &other) const noexcept;
-
-    const PeerInfo &operator*() const {
-      return peer_info_.get();
-    }
-
-    std::reference_wrapper<const PeerInfo> peer_info_;
-    common::Hash256 distance_{};
-  };
-
   struct PeerIdWithDistance {
 
     template <typename T>

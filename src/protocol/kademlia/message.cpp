@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <functional>
-#include <libp2p/multi/uvarint.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
 
+#include <functional>
+
 #include <generated/protocol/kademlia/protobuf/kademlia.pb.h>
+#include <libp2p/multi/uvarint.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, Message::Error, e) {
   using E = libp2p::protocol::kademlia::Message::Error;

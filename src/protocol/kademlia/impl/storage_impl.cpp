@@ -3,14 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <libp2p/protocol/kademlia/impl/storage_impl.hpp>
+
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
+#include <unordered_map>
+
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/error.hpp>
-#include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
-#include <libp2p/protocol/kademlia/impl/storage_impl.hpp>
-#include <unordered_map>
 
 namespace libp2p::protocol::kademlia {
 

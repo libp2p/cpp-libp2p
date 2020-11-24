@@ -6,11 +6,10 @@
 #ifndef LIBP2P_KADEMLIA_KADEMLIA_CONTENTID
 #define LIBP2P_KADEMLIA_KADEMLIA_CONTENTID
 
-#include <gsl/span>
-#include <vector>
-#include <string_view>
-
 #include <boost/optional.hpp>
+#include <gsl/span>
+#include <string_view>
+#include <vector>
 
 namespace libp2p::protocol::kademlia {
 

@@ -8,10 +8,10 @@
 
 #include <bitset>
 #include <cstring>
+#include <gsl/span>
 #include <memory>
 #include <vector>
 
-#include <gsl/span>
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>

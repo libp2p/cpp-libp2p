@@ -10,7 +10,6 @@ libp2p_add_library(p2p_kademlia
     storage_backend_default.cpp
     validator_default.cpp
     content_id.cpp
-    peer_info_with_distance.cpp
     put_value_executor.cpp
     get_value_executor.cpp
     add_provider_executor.cpp

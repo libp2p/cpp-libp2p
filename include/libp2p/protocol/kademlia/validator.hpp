@@ -6,9 +6,10 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_VALIDATOR
 #define LIBP2P_PROTOCOL_KADEMLIA_VALIDATOR
 
+#include <vector>
+
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
-#include <vector>
 
 namespace libp2p::protocol::kademlia {
 

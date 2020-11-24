@@ -6,7 +6,6 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_CONFIG
 #define LIBP2P_PROTOCOL_KADEMLIA_CONFIG
 
-#include <chrono>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 

@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <libp2p/protocol/kademlia/impl/find_peer_executor.hpp>
+
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/error.hpp>
-#include <libp2p/protocol/kademlia/impl/find_peer_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
 

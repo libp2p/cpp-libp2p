@@ -6,7 +6,6 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_PEERROUTING
 #define LIBP2P_PROTOCOL_KADEMLIA_PEERROUTING
 
-#include <functional>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 

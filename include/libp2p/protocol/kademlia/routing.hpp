@@ -6,10 +6,11 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_ROUTING
 #define LIBP2P_PROTOCOL_KADEMLIA_ROUTING
 
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/kademlia/content_routing.hpp>
 #include <libp2p/protocol/kademlia/peer_routing.hpp>
 #include <libp2p/protocol/kademlia/value_store.hpp>
+
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::protocol::kademlia {
 

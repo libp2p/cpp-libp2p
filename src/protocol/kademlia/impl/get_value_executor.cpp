@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <libp2p/protocol/kademlia/impl/get_value_executor.hpp>
+
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
+
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/error.hpp>
-#include <libp2p/protocol/kademlia/impl/get_value_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/put_value_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>

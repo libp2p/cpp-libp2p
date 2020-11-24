@@ -4,6 +4,7 @@
  */
 
 #include <libp2p/protocol/kademlia/impl/storage_backend_default.hpp>
+
 #include <libp2p/protocol/kademlia/error.hpp>
 
 namespace libp2p::protocol::kademlia {

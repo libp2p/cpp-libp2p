@@ -6,13 +6,15 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_GETVALUEEXECUTOR
 #define LIBP2P_PROTOCOL_KADEMLIA_GETVALUEEXECUTOR
 
-#include <memory>
-#include <queue>
-#include <unordered_set>
+#include <libp2p/protocol/kademlia/impl/response_handler.hpp>
 
 #include <boost/multi_index/hashed_index_fwd.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index_container_fwd.hpp>
+#include <memory>
+#include <queue>
+#include <unordered_set>
+
 #include <libp2p/common/types.hpp>
 #include <libp2p/host/host.hpp>
 #include <libp2p/protocol/common/sublogger.hpp>
@@ -20,8 +22,8 @@
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/executors_factory.hpp>
-#include <libp2p/protocol/kademlia/impl/peer_info_with_distance.hpp>
-#include <libp2p/protocol/kademlia/impl/response_handler.hpp>
+#include <libp2p/protocol/kademlia/impl/peer_id_with_distance.hpp>
+#include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/impl/session_host.hpp>
 #include <libp2p/protocol/kademlia/peer_routing.hpp>

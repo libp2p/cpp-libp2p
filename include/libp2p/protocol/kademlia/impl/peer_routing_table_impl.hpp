@@ -6,13 +6,15 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_PEERROUTINGTABLEIMPL
 #define LIBP2P_PROTOCOL_KADEMLIA_PEERROUTINGTABLEIMPL
 
+#include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
+
 #include <boost/assert.hpp>
 #include <deque>
+
 #include <libp2p/event/bus.hpp>
 #include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
-#include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
 
 namespace libp2p::protocol::kademlia {
