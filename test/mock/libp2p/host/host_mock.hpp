@@ -16,8 +16,7 @@ namespace libp2p {
    public:
     ~HostMock() override = default;
 
-    MOCK_CONST_METHOD1(setOnNewConnectionHandler,
-                       event::Handle(const NewConnectionHandler &));
+    MOCK_CONST_METHOD1(setOnNewConnectionHandler, event::Handle(const NewConnectionHandler &));
     MOCK_CONST_METHOD0(getLibp2pVersion, std::string_view());
     MOCK_CONST_METHOD0(getLibp2pClientVersion, std::string_view());
     MOCK_CONST_METHOD0(getId, peer::PeerId());
@@ -38,10 +37,6 @@ namespace libp2p {
     MOCK_METHOD3(newStream,
                  void(const peer::PeerInfo &p, const peer::Protocol &protocol,
                       const StreamResultHandler &handler));
-    MOCK_METHOD4(newStream,
-                 void(const peer::PeerInfo &p, const peer::Protocol &protocol,
-                      const StreamResultHandler &handler,
-                      std::chrono::milliseconds));
     MOCK_METHOD1(listen, outcome::result<void>(const multi::Multiaddress &ma));
     MOCK_METHOD1(closeListener,
                  outcome::result<void>(const multi::Multiaddress &ma));

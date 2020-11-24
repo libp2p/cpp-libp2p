@@ -10,8 +10,8 @@
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/network/connection_manager_mock.hpp"
-#include "mock/libp2p/network/listener_mock.hpp"
 #include "mock/libp2p/network/router_mock.hpp"
+#include "mock/libp2p/network/listener_mock.hpp"
 #include "mock/libp2p/network/transport_manager_mock.hpp"
 #include "mock/libp2p/peer/address_repository_mock.hpp"
 #include "mock/libp2p/protocol_muxer/protocol_muxer_mock.hpp"
@@ -78,8 +78,10 @@ TEST_F(DialerTest, DialNewConnection) {
   EXPECT_CALL(*tmgr, findBest(ma1)).WillOnce(Return(transport));
 
   // transport->dial returns valid connection
-  EXPECT_CALL(*transport, dial(pinfo.id, ma1, _, _))
+  EXPECT_CALL(*transport, dial(pinfo.id, ma1, _))
       .WillOnce(Arg2CallbackWithArg(outcome::success(connection)));
+
+
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
@@ -104,14 +106,11 @@ TEST_F(DialerTest, DialNoAddresses) {
   // no addresses supplied
   peer::PeerInfo pinfo = {pid, {}};
   bool executed = false;
-  dialer->dial(
-      pinfo,
-      [&](auto &&rconn) {
-        EXPECT_OUTCOME_FALSE(e, rconn);
-        EXPECT_EQ(e.value(), (int)std::errc::destination_address_required);
-        executed = true;
-      },
-      std::chrono::milliseconds(0));
+  dialer->dial(pinfo, [&](auto &&rconn) {
+    EXPECT_OUTCOME_FALSE(e, rconn);
+    EXPECT_EQ(e.value(), (int)std::errc::destination_address_required);
+    executed = true;
+  });
 
   ASSERT_TRUE(executed);
 }
@@ -131,14 +130,11 @@ TEST_F(DialerTest, DialNoTransports) {
   EXPECT_CALL(*tmgr, findBest(ma1)).WillOnce(Return(nullptr));
 
   bool executed = false;
-  dialer->dial(
-      pinfo,
-      [&](auto &&rconn) {
-        EXPECT_OUTCOME_FALSE(e, rconn);
-        EXPECT_EQ(e.value(), (int)std::errc::address_family_not_supported);
-        executed = true;
-      },
-      std::chrono::milliseconds(0));
+  dialer->dial(pinfo, [&](auto &&rconn) {
+    EXPECT_OUTCOME_FALSE(e, rconn);
+    EXPECT_EQ(e.value(), (int)std::errc::address_family_not_supported);
+    executed = true;
+  });
 
   ASSERT_TRUE(executed);
 }
@@ -154,14 +150,11 @@ TEST_F(DialerTest, DialExistingConnection) {
       .WillOnce(Return(connection));
 
   bool executed = false;
-  dialer->dial(
-      pinfo,
-      [&](auto &&rconn) {
-        EXPECT_OUTCOME_TRUE(conn, rconn);
-        (void)conn;
-        executed = true;
-      },
-      std::chrono::milliseconds(0));
+  dialer->dial(pinfo, [&](auto &&rconn) {
+    EXPECT_OUTCOME_TRUE(conn, rconn);
+    (void)conn;
+    executed = true;
+  });
 
   ASSERT_TRUE(executed);
 }
@@ -188,14 +181,11 @@ TEST_F(DialerTest, NewStreamFailed) {
   EXPECT_CALL(*connection, newStream(_)).WillOnce(Arg0CallbackWithArg(r));
 
   bool executed = false;
-  dialer->newStream(
-      pinfo, protocol,
-      [&](auto &&rstream) {
-        EXPECT_OUTCOME_FALSE(e, rstream);
-        EXPECT_EQ(e.value(), (int)std::errc::io_error);
-        executed = true;
-      },
-      std::chrono::milliseconds(0));
+  dialer->newStream(pinfo, protocol, [&](auto &&rstream) {
+    EXPECT_OUTCOME_FALSE(e, rstream);
+    EXPECT_EQ(e.value(), (int)std::errc::io_error);
+    executed = true;
+  });
   ASSERT_TRUE(executed);
 }
 
@@ -217,14 +207,11 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
       .WillOnce(Arg3CallbackWithArg(r));
 
   bool executed = false;
-  dialer->newStream(
-      pinfo, protocol,
-      [&](auto &&rstream) {
-        EXPECT_OUTCOME_FALSE(e, rstream);
-        EXPECT_EQ(e.value(), (int)std::errc::io_error);
-        executed = true;
-      },
-      std::chrono::milliseconds(0));
+  dialer->newStream(pinfo, protocol, [&](auto &&rstream) {
+    EXPECT_OUTCOME_FALSE(e, rstream);
+    EXPECT_EQ(e.value(), (int)std::errc::io_error);
+    executed = true;
+  });
   ASSERT_TRUE(executed);
 }
 
@@ -245,13 +232,10 @@ TEST_F(DialerTest, NewStreamSuccess) {
       .WillOnce(Arg3CallbackWithArg(protocol));
 
   bool executed = false;
-  dialer->newStream(
-      pinfo, protocol,
-      [&](auto &&rstream) {
-        EXPECT_OUTCOME_TRUE(s, rstream);
-        (void)s;
-        executed = true;
-      },
-      std::chrono::milliseconds(0));
+  dialer->newStream(pinfo, protocol, [&](auto &&rstream) {
+    EXPECT_OUTCOME_TRUE(s, rstream);
+    (void)s;
+    executed = true;
+  });
   ASSERT_TRUE(executed);
 }
