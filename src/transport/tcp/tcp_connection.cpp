@@ -109,11 +109,11 @@ namespace libp2p::transport {
       deadline_timer_.async_wait([self{shared_from_this()},
                                   cb](const boost::system::error_code &error) {
         bool expected = false;
-        if (self->connection_phase_done_.compare_exchange_strong(expected, true)) {
+        if (self->connection_phase_done_.compare_exchange_strong(expected,
+                                                                 true)) {
           if (not error) {
             // timeout happened, timer expired before connection was
             // established
-            self->socket_.close();
             cb(boost::system::error_code{boost::system::errc::timed_out,
                                          boost::system::generic_category()},
                Tcp::endpoint{});
@@ -133,8 +133,11 @@ namespace libp2p::transport {
                                                                        true)) {
             BOOST_ASSERT(expected);
             // connection phase already done - means that user's callback was
-            // already called and the socket state was properly invalidated,
-            // nothing else is required to do
+            // already called by timer expiration so we are closing socket if it
+            // was actually connected
+            if (not ec) {
+              self->socket_.close();
+            }
             return;
           }
           if (self->connecting_with_timeout_) {
