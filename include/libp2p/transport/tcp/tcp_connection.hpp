@@ -72,8 +72,7 @@ namespace libp2p::transport {
      * @param iterator list of resolved IP addresses of remote service.
      * @param cb callback executed on operation completion.
      */
-    inline void connect(const ResolverResultsType &iterator,
-                        ConnectCallbackFunc cb);
+    void connect(const ResolverResultsType &iterator, ConnectCallbackFunc cb);
 
     /**
      * @brief Connect to a remote service with a time limit for connection

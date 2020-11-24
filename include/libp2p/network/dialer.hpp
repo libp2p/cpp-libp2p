@@ -29,7 +29,7 @@ namespace libp2p::network {
     using StreamResultFunc = std::function<void(StreamResult)>;
 
     // Establishes a connection or returns existing one to a given peer
-    inline void dial(const peer::PeerInfo &p, DialResultFunc cb) {
+    virtual void dial(const peer::PeerInfo &p, DialResultFunc cb) {
       dial(p, std::move(cb), std::chrono::milliseconds(0));
     }
 
@@ -40,8 +40,9 @@ namespace libp2p::network {
 
     // NewStream returns a new stream to given peer p.
     // If there is no connection to p, attempts to create one.
-    inline void newStream(const peer::PeerInfo &p,
-                          const peer::Protocol &protocol, StreamResultFunc cb) {
+    virtual void newStream(const peer::PeerInfo &p,
+                           const peer::Protocol &protocol,
+                           StreamResultFunc cb) {
       newStream(p, protocol, std::move(cb), std::chrono::milliseconds(0));
     }
 

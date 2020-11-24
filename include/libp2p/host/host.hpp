@@ -124,8 +124,9 @@ namespace libp2p {
      * @param protocol "speak" using this protocol
      * @param handler callback, will be executed on success or fail
      */
-    void newStream(const peer::PeerInfo &p, const peer::Protocol &protocol,
-                   const StreamResultHandler &handler) {
+    virtual void newStream(const peer::PeerInfo &p,
+                           const peer::Protocol &protocol,
+                           const StreamResultHandler &handler) {
       newStream(p, protocol, handler, std::chrono::milliseconds(0));
     }
 
