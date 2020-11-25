@@ -153,7 +153,10 @@ namespace libp2p::host {
     return *bus_;
   }
 
-  void BasicHost::connect(const peer::PeerInfo &p) {
-    network_->getDialer().dial(p, [](auto && /* ignored */) {});
+  void BasicHost::connect(const peer::PeerInfo &peer_info,
+                          const ConnectionResultHandler& handler,
+                          std::chrono::milliseconds timeout) {
+    network_->getDialer().dial(peer_info, handler, timeout);
   }
+
 }  // namespace libp2p::host

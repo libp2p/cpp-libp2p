@@ -202,7 +202,7 @@ TEST_F(IdentifyTest, Receive) {
   EXPECT_CALL(*connection_, remoteMultiaddr())
       .WillOnce(Return(remote_multiaddr_));
 
-  EXPECT_CALL(host_, newStream(kPeerInfo, kIdentifyProto, _))
+  EXPECT_CALL(host_, newStream(kPeerInfo, kIdentifyProto, _, _))
       .WillOnce(ReturnStreamRes(std::static_pointer_cast<Stream>(stream_)));
 
   EXPECT_CALL(*stream_, read(_, 1, _))
