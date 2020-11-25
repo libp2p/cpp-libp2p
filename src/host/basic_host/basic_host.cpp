@@ -87,8 +87,9 @@ namespace libp2p::host {
 
   void BasicHost::newStream(const peer::PeerInfo &p,
                             const peer::Protocol &protocol,
-                            const Host::StreamResultHandler &handler) {
-    network_->getDialer().newStream(p, protocol, handler);
+                            const Host::StreamResultHandler &handler,
+                            std::chrono::milliseconds timeout) {
+    network_->getDialer().newStream(p, protocol, handler, timeout);
   }
 
   outcome::result<void> BasicHost::listen(const multi::Multiaddress &ma) {
@@ -109,7 +110,8 @@ namespace libp2p::host {
     network_->getListener().start();
   }
 
-  event::Handle BasicHost::setOnNewConnectionHandler(const NewConnectionHandler &h) const {
+  event::Handle BasicHost::setOnNewConnectionHandler(
+      const NewConnectionHandler &h) const {
     return bus_->getChannel<network::event::OnNewConnectionChannel>().subscribe(
         [h{std::move(h)}](auto &&conn) {
           if (auto connection = conn.lock()) {

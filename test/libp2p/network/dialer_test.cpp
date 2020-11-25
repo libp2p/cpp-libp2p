@@ -10,8 +10,8 @@
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/network/connection_manager_mock.hpp"
-#include "mock/libp2p/network/router_mock.hpp"
 #include "mock/libp2p/network/listener_mock.hpp"
+#include "mock/libp2p/network/router_mock.hpp"
 #include "mock/libp2p/network/transport_manager_mock.hpp"
 #include "mock/libp2p/peer/address_repository_mock.hpp"
 #include "mock/libp2p/protocol_muxer/protocol_muxer_mock.hpp"
@@ -78,10 +78,9 @@ TEST_F(DialerTest, DialNewConnection) {
   EXPECT_CALL(*tmgr, findBest(ma1)).WillOnce(Return(transport));
 
   // transport->dial returns valid connection
-  EXPECT_CALL(*transport, dial(pinfo.id, ma1, _))
+  EXPECT_CALL(*transport,
+              dial(pinfo.id, ma1, _, std::chrono::milliseconds::zero()))
       .WillOnce(Arg2CallbackWithArg(outcome::success(connection)));
-
-
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {

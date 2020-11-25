@@ -54,7 +54,8 @@ namespace libp2p::host {
         const std::function<bool(const peer::Protocol &)> &predicate) override;
 
     void newStream(const peer::PeerInfo &p, const peer::Protocol &protocol,
-                   const StreamResultHandler &handler) override;
+                   const StreamResultHandler &handler,
+                   std::chrono::milliseconds timeout) override;
 
     outcome::result<void> listen(const multi::Multiaddress &ma) override;
 
@@ -75,7 +76,8 @@ namespace libp2p::host {
 
     event::Bus &getBus() override;
 
-    event::Handle setOnNewConnectionHandler(const NewConnectionHandler &h) const override;
+    event::Handle setOnNewConnectionHandler(
+        const NewConnectionHandler &h) const override;
 
    private:
     std::shared_ptr<peer::IdentityManager> idmgr_;

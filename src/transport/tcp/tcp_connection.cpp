@@ -11,10 +11,16 @@ namespace libp2p::transport {
 
   TcpConnection::TcpConnection(boost::asio::io_context &ctx,
                                boost::asio::ip::tcp::socket &&socket)
-      : context_(ctx), socket_(std::move(socket)) {}
+      : context_(ctx),
+        socket_(std::move(socket)),
+        connection_phase_done_{false},
+        deadline_timer_(context_) {}
 
   TcpConnection::TcpConnection(boost::asio::io_context &ctx)
-      : context_(ctx), socket_(context_) {}
+      : context_(ctx),
+        socket_(context_),
+        connection_phase_done_{false},
+        deadline_timer_(context_) {}
 
   outcome::result<void> TcpConnection::close() {
     boost::system::error_code ec;
@@ -90,13 +96,57 @@ namespace libp2p::transport {
   void TcpConnection::connect(
       const TcpConnection::ResolverResultsType &iterator,
       TcpConnection::ConnectCallbackFunc cb) {
-    boost::asio::async_connect(socket_, iterator,
-                               [self{shared_from_this()}, cb{std::move(cb)}](
-                                   auto &&ec, auto &&endpoint) {
-                                 self->initiator_ = true;
-                                 cb(std::forward<decltype(ec)>(ec),
-                                    std::forward<decltype(endpoint)>(endpoint));
-                               });
+    connect(iterator, std::move(cb), std::chrono::milliseconds::zero());
+  }
+
+  void TcpConnection::connect(
+      const TcpConnection::ResolverResultsType &iterator,
+      ConnectCallbackFunc cb, std::chrono::milliseconds timeout) {
+    if (timeout > std::chrono::milliseconds::zero()) {
+      connecting_with_timeout_ = true;
+      deadline_timer_.expires_from_now(
+          boost::posix_time::milliseconds(timeout.count()));
+      deadline_timer_.async_wait([self{shared_from_this()},
+                                  cb](const boost::system::error_code &error) {
+        bool expected = false;
+        if (self->connection_phase_done_.compare_exchange_strong(expected,
+                                                                 true)) {
+          if (not error) {
+            // timeout happened, timer expired before connection was
+            // established
+            cb(boost::system::error_code{boost::system::errc::timed_out,
+                                         boost::system::generic_category()},
+               Tcp::endpoint{});
+          }
+          // Another case is: boost::asio::error::operation_aborted == error
+          // connection was established before timeout and timer has been
+          // cancelled
+        }
+      });
+    }
+    boost::asio::async_connect(
+        socket_, iterator,
+        [self{shared_from_this()}, cb{std::move(cb)}](auto &&ec,
+                                                      auto &&endpoint) {
+          bool expected = false;
+          if (not self->connection_phase_done_.compare_exchange_strong(expected,
+                                                                       true)) {
+            BOOST_ASSERT(expected);
+            // connection phase already done - means that user's callback was
+            // already called by timer expiration so we are closing socket if it
+            // was actually connected
+            if (not ec) {
+              self->socket_.close();
+            }
+            return;
+          }
+          if (self->connecting_with_timeout_) {
+            self->deadline_timer_.cancel();
+          }
+          self->initiator_ = true;
+          cb(std::forward<decltype(ec)>(ec),
+             std::forward<decltype(endpoint)>(endpoint));
+        });
   }
 
   template <typename Callback>

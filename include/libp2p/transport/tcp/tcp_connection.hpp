@@ -8,12 +8,17 @@
 
 #define BOOST_ASIO_NO_DEPRECATED
 
+#include <atomic>
+#include <chrono>
+
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 
-namespace libp2p::security { class TlsAdaptor; }
+namespace libp2p::security {
+  class TlsAdaptor;
+}
 
 namespace libp2p::transport {
 
@@ -70,6 +75,16 @@ namespace libp2p::transport {
      */
     void connect(const ResolverResultsType &iterator, ConnectCallbackFunc cb);
 
+    /**
+     * @brief Connect to a remote service with a time limit for connection
+     * establishing.
+     * @param iterator list of resolved IP addresses of remote service.
+     * @param cb callback executed on operation completion.
+     * @param timeout in milliseconds for connection establishing.
+     */
+    void connect(const ResolverResultsType &iterator, ConnectCallbackFunc cb,
+                 std::chrono::milliseconds timeout);
+
     void read(gsl::span<uint8_t> out, size_t bytes,
               ReadCallbackFunc cb) override;
 
@@ -96,6 +111,9 @@ namespace libp2p::transport {
     boost::asio::io_context &context_;
     Tcp::socket socket_;
     bool initiator_ = false;
+    bool connecting_with_timeout_ = false;
+    std::atomic_bool connection_phase_done_;
+    boost::asio::deadline_timer deadline_timer_;
 
     boost::system::error_code handle_errcode(
         const boost::system::error_code &e) noexcept;
