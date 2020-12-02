@@ -608,14 +608,14 @@ namespace libp2p::protocol::kademlia {
   void KademliaImpl::handleProtocol(
       protocol::BaseProtocol::StreamResult stream_res) {
     if (!stream_res) {
-      log_.info("incoming connection failed due to '{}'",
+      log_.info("incoming stream failed due to '{}'",
                 stream_res.error().message());
       return;
     }
 
     auto &stream = stream_res.value();
 
-    log_.debug("incoming connection from '{}'",
+    log_.debug("incoming stream from '{}'",
                stream->remoteMultiaddr().value().getStringAddress());
 
     addPeer(peer::PeerInfo{stream->remotePeerId().value(),
