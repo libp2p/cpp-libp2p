@@ -198,13 +198,10 @@ namespace libp2p::protocol::gossip {
 
     TRACE("written {} bytes to {}:{}", res.value(), peer_->str, stream_id_);
 
-    /*
-     * TODO (noise protocol and bytes count mismatch issue)
     if (writing_bytes_ != res.value()) {
       feedback_(peer_, Error::MESSAGE_WRITE_ERROR);
       return;
     }
-     */
 
     endWrite();
 
