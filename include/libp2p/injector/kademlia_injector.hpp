@@ -52,14 +52,23 @@ namespace libp2p::injector {
             .template create<std::shared_ptr<protocol::kademlia::Storage>>();
     [[maybe_unused]] auto table = injector.template create<
         std::shared_ptr<protocol::kademlia::PeerRoutingTable>>();
+    [[maybe_unused]] auto content_routing_table = injector.template create<
+        std::shared_ptr<protocol::kademlia::ContentRoutingTable>>();
+    [[maybe_unused]] auto validator =
+        injector
+            .template create<std::shared_ptr<protocol::kademlia::Validator>>();
     [[maybe_unused]] auto scheduler =
         injector.template create<std::shared_ptr<protocol::Scheduler>>();
     [[maybe_unused]] auto random_generator = injector.template create<
         std::shared_ptr<crypto::random::RandomGenerator>>();
+    [[maybe_unused]] auto bus =
+        injector.template create<std::shared_ptr<event::Bus>>();
 
     initialized = std::make_shared<libp2p::protocol::kademlia::KademliaImpl>(
-        config, std::move(host), std::move(storage), std::move(table),
-        std::move(scheduler), std::move(random_generator));
+        config, std::move(host), std::move(storage),
+        std::move(content_routing_table), std::move(table),
+        std::move(validator), std::move(scheduler), std::move(bus),
+        std::move(random_generator));
     return initialized.value();
   }
 
@@ -70,9 +79,9 @@ namespace libp2p::injector {
     return di::make_injector<InjectorConfig>(
         // clang-format off
 
-				di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
+				//di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
 				di::bind<crypto::random::RandomGenerator>.template to<crypto::random::BoostRandomGenerator>(),
-				di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
+				//di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
 
 				di::bind<protocol::kademlia::Config>.template to<protocol::kademlia::Config>().in(di::singleton),
 				di::bind<protocol::kademlia::ContentRoutingTable>.template to<protocol::kademlia::ContentRoutingTableImpl>(),

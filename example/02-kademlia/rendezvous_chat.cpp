@@ -207,18 +207,18 @@ int main(int argc, char *argv[]) {
     kademlia_config.randomWalk.interval = std::chrono::seconds(300);
     kademlia_config.requestConcurency = 20;
 
-    auto injector = libp2p::injector::makeHostInjector(
-        //        libp2p::injector::useKeyPair(kp), // Use predefined keypair
+    auto injector =  // libp2p::injector::makeHostInjector(
+                     //        libp2p::injector::useKeyPair(kp), // Use
+                     //        predefined keypair
         libp2p::injector::makeKademliaInjector(
-            libp2p::injector::useKademliaConfig(kademlia_config)));
+            libp2p::injector::makeHostInjector(),
+            libp2p::injector::useKademliaConfig(kademlia_config));
 
     auto io = injector.create<std::shared_ptr<boost::asio::io_context>>();
 
     auto host = injector.create<std::shared_ptr<libp2p::Host>>();
 
-    auto kademlia =
-        injector
-            .create<std::shared_ptr<libp2p::protocol::kademlia::Kademlia>>();
+    auto kademlia = libp2p::injector::get_kademlia(injector);
 
     // Handle streams for observed protocol
     host->setProtocolHandler("/chat/1.0.0", handleIncomingStream);
