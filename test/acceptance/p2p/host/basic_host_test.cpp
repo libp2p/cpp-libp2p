@@ -147,7 +147,8 @@ TEST_F(BasicHostTest, NewStream) {
   peer::Protocol protocol = "/proto/1.0.0";
 
   EXPECT_CALL(network, getDialer()).WillOnce(ReturnRef(*dialer));
-  EXPECT_CALL(*dialer, newStream(pinfo, protocol, _))
+  EXPECT_CALL(*dialer,
+              newStream(pinfo, protocol, _, std::chrono::milliseconds::zero()))
       .WillOnce(Arg2CallbackWithArg(stream));
 
   bool executed = false;

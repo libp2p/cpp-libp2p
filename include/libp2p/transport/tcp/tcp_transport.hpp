@@ -30,6 +30,10 @@ namespace libp2p::transport {
     void dial(const peer::PeerId &remoteId, multi::Multiaddress address,
               TransportAdaptor::HandlerFunc handler) override;
 
+    void dial(const peer::PeerId &remoteId, multi::Multiaddress address,
+              TransportAdaptor::HandlerFunc handler,
+              std::chrono::milliseconds timeout) override;
+
     std::shared_ptr<TransportListener> createListener(
         TransportListener::HandlerFunc handler) override;
 

@@ -16,6 +16,5 @@ target_link_libraries(asio_scheduler_test
     p2p_inmem_key_repository
     p2p_inmem_protocol_repository
     p2p_literals
-    p2p_kad
     asio_scheduler
     )

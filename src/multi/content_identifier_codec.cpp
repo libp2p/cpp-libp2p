@@ -55,13 +55,13 @@ namespace libp2p::multi {
     if (cid.version == ContentIdentifier::Version::V1) {
       UVarint version(static_cast<uint64_t>(cid.version));
       common::append(bytes, version.toBytes());
-      UVarint type(cid.content_type);
+      UVarint type(static_cast<uint64_t>(cid.content_type));
       common::append(bytes, type.toBytes());
       auto const &hash = cid.content_address.toBuffer();
       common::append(bytes, hash);
 
     } else if (cid.version == ContentIdentifier::Version::V0) {
-      if (cid.content_type != MulticodecType::DAG_PB) {
+      if (cid.content_type != MulticodecType::Code::DAG_PB) {
         return EncodeError::INVALID_CONTENT_TYPE;
       }
       if (cid.content_address.getType() != HashType::sha256) {
@@ -78,14 +78,33 @@ namespace libp2p::multi {
 
   std::vector<uint8_t> ContentIdentifierCodec::encodeCIDV0(
       const void *byte_buffer, size_t sz) {
+    libp2p::crypto::Sha256 hasher;
+    auto write_res = hasher.write(gsl::span<const uint8_t>(
+        reinterpret_cast<const uint8_t *>(byte_buffer), sz));  // NOLINT
+    BOOST_ASSERT(write_res.has_value());
+
+    auto digest_res = hasher.digest();
+    BOOST_ASSERT(digest_res.has_value());
+
+    auto &hash = digest_res.value();
+
     std::vector<uint8_t> bytes;
-    bytes.resize(34);
-    bytes[0] = 0x12;  // sha256 hash type
-    bytes[1] = 0x20;  // hash length
-    auto hash =
-        crypto::sha256(gsl::span<uint8_t>((uint8_t *)byte_buffer,  // NOLINT
-                                          sz));
-    memcpy(&bytes[2], hash.data(), 0x20);
+    bytes.reserve(hash.size());
+    bytes.push_back(static_cast<uint8_t>(HashType::sha256));
+    bytes.push_back(hash.size());
+    std::copy(hash.begin(), hash.end(), std::back_inserter(bytes));
+    return bytes;
+  }
+
+  std::vector<uint8_t> ContentIdentifierCodec::encodeCIDV1(
+      MulticodecType::Code content_type, const Multihash &mhash) {
+    std::vector<uint8_t> bytes;
+    // Reserve space for CID version size + content-type size + multihash size
+    bytes.reserve(1 + 1 + mhash.toBuffer().size());
+    bytes.push_back(1);  // CID version
+    bytes.push_back(static_cast<uint8_t>(content_type)); // Content-Type
+    std::copy(mhash.toBuffer().begin(), mhash.toBuffer().end(),
+              std::back_inserter(bytes));  // multihash data
     return bytes;
   }
 
@@ -94,7 +113,7 @@ namespace libp2p::multi {
     if (bytes.size() == 34 and bytes[0] == 0x12 and bytes[1] == 0x20) {
       OUTCOME_TRY(hash, Multihash::createFromBytes(bytes));
       return ContentIdentifier(ContentIdentifier::Version::V0,
-                               MulticodecType::DAG_PB, std::move(hash));
+                               MulticodecType::Code::DAG_PB, std::move(hash));
     }
     auto version_opt = UVarint::create(bytes);
     if (!version_opt) {

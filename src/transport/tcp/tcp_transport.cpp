@@ -12,6 +12,14 @@ namespace libp2p::transport {
   void TcpTransport::dial(const peer::PeerId &remoteId,
                           multi::Multiaddress address,
                           TransportAdaptor::HandlerFunc handler) {
+    dial(remoteId, std::move(address), std::move(handler),
+         std::chrono::milliseconds::zero());
+  }
+
+  void TcpTransport::dial(const peer::PeerId &remoteId,
+                          multi::Multiaddress address,
+                          TransportAdaptor::HandlerFunc handler,
+                          std::chrono::milliseconds timeout) {
     if (!canDial(address)) {
       return handler(std::errc::address_family_not_supported);
     }
@@ -21,23 +29,25 @@ namespace libp2p::transport {
     auto [host, port] = detail::getHostAndTcpPort(address);
 
     auto connect = [self{shared_from_this()}, conn, handler{std::move(handler)},
-                    remoteId](auto ec, auto r) mutable {
+                    remoteId, timeout](auto ec, auto r) mutable {
       if (ec) {
         return handler(ec);
       }
 
-      conn->connect(r,
-                    [self, conn, handler{std::move(handler)}, remoteId](
-                        auto ec, auto &e) mutable {
-                      if (ec) {
-                        return handler(ec);
-                      }
+      conn->connect(
+          r,
+          [self, conn, handler{std::move(handler)}, remoteId](auto ec,
+                                                              auto &e) mutable {
+            if (ec) {
+              return handler(ec);
+            }
 
-                      auto session = std::make_shared<UpgraderSession>(
-                          self->upgrader_, std::move(conn), handler);
+            auto session = std::make_shared<UpgraderSession>(
+                self->upgrader_, std::move(conn), handler);
 
-                      session->secureOutbound(remoteId);
-                    });
+            session->secureOutbound(remoteId);
+          },
+          timeout);
     };
 
     using P = multi::Protocol::Code;

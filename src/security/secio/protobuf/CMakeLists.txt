@@ -4,5 +4,5 @@
 #
 
 add_proto_library(p2p_secio_protobuf
-        secio.proto
-        )
+    secio.proto
+    )

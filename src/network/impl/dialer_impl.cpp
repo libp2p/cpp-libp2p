@@ -12,7 +12,8 @@
 
 namespace libp2p::network {
 
-  void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb) {
+  void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb,
+                        std::chrono::milliseconds timeout) {
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
 
@@ -50,7 +51,8 @@ namespace libp2p::network {
 
               // return connection to the user
               cb(rconn.value());
-            });
+            },
+            timeout);
         return;
       }
     }
@@ -61,7 +63,8 @@ namespace libp2p::network {
 
   void DialerImpl::newStream(const peer::PeerInfo &p,
                              const peer::Protocol &protocol,
-                             StreamResultFunc cb) {
+                             StreamResultFunc cb,
+                             std::chrono::milliseconds timeout) {
     // 1. make new connection or reuse existing
     this->dial(
         p,
@@ -105,7 +108,8 @@ namespace libp2p::network {
                       cb(std::move(stream));
                     });
               });
-        });
+        },
+        timeout);
   }
 
   DialerImpl::DialerImpl(

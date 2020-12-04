@@ -16,18 +16,33 @@ namespace libp2p::protocol {
   /// instances
   class SubLogger {
    public:
-    template <typename T=int>
-    explicit SubLogger(const std::string &tag,
-                       spdlog::string_view_t prefix = "", T instance = T{})
+    explicit SubLogger(const std::string &tag)
+        : log_(common::createLogger(tag)) {}
+
+    explicit SubLogger(const std::string &tag, spdlog::string_view_t prefix)
+        : log_(common::createLogger(tag)) {
+      setInstanceName(prefix);
+    }
+
+    template <typename T>
+    explicit SubLogger(const std::string &tag, spdlog::string_view_t prefix,
+                       T instance)
         : log_(common::createLogger(tag)) {
       setInstanceName(prefix, instance);
     }
 
+    void setInstanceName(spdlog::string_view_t prefix) {
+      prefix_ = fmt::format("{}: ", prefix);
+      prefix_size_ = prefix_.size();
+    }
+
     template <typename T>
-    void setInstanceName(spdlog::string_view_t prefix, T instance = T{}) {
-      if constexpr (std::is_pointer<T>::value
-                    and not std::is_same<T, const char *>::value) {
+    void setInstanceName(spdlog::string_view_t prefix, T instance) {
+      if constexpr (std::is_pointer_v<
+                        T> and not std::is_same_v<T, const char *>) {
         prefix_ = fmt::format("{} {}: ", prefix, (void *)instance);  // NOLINT;
+      } else if constexpr (std::is_integral_v<T> and sizeof(T) > 1) {
+        prefix_ = fmt::format("{}#{}: ", prefix, instance);
       } else {
         prefix_ = fmt::format("{} {}: ", prefix, instance);
       }

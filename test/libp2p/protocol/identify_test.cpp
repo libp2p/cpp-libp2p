@@ -12,7 +12,6 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/multi/uvarint.hpp>
 #include <libp2p/network/connection_manager.hpp>
-#include <libp2p/network/network.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
@@ -61,16 +60,16 @@ class IdentifyTest : public testing::Test {
     identify_pb_msg_.set_agentversion(kClientVersion);
 
     pb_msg_len_varint_ = std::make_shared<UVarint>(
-        static_cast<uint64_t>(identify_pb_msg_.ByteSize()));
+        identify_pb_msg_.ByteSizeLong());
     identify_pb_msg_bytes_.insert(
         identify_pb_msg_bytes_.end(),
         std::make_move_iterator(pb_msg_len_varint_->toVector().begin()),
         std::make_move_iterator(pb_msg_len_varint_->toVector().end()));
     identify_pb_msg_bytes_.insert(identify_pb_msg_bytes_.end(),
-                                  identify_pb_msg_.ByteSize(), 0);
+                                  identify_pb_msg_.ByteSizeLong(), 0);
     identify_pb_msg_.SerializeToArray(
         identify_pb_msg_bytes_.data() + pb_msg_len_varint_->size(),
-        identify_pb_msg_.ByteSize());
+        identify_pb_msg_.ByteSizeLong());
 
     id_msg_processor_ = std::make_shared<IdentifyMessageProcessor>(
         host_, conn_manager_, id_manager_, key_marshaller_);
@@ -203,7 +202,7 @@ TEST_F(IdentifyTest, Receive) {
   EXPECT_CALL(*connection_, remoteMultiaddr())
       .WillOnce(Return(remote_multiaddr_));
 
-  EXPECT_CALL(host_, newStream(kPeerInfo, kIdentifyProto, _))
+  EXPECT_CALL(host_, newStream(kPeerInfo, kIdentifyProto, _, _))
       .WillOnce(ReturnStreamRes(std::static_pointer_cast<Stream>(stream_)));
 
   EXPECT_CALL(*stream_, read(_, 1, _))

@@ -52,7 +52,12 @@ namespace libp2p::transport {
   }
 
   outcome::result<multi::Multiaddress> TcpListener::getListenMultiaddr() const {
-    return detail::makeAddress(acceptor_.local_endpoint());
+  	boost::system::error_code ec;
+	  auto endpoint = acceptor_.local_endpoint(ec);
+	  if (ec) {
+	  	return ec;
+	  }
+    return detail::makeAddress(endpoint);
   }
 
   bool TcpListener::isClosed() const {

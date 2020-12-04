@@ -39,8 +39,10 @@ namespace libp2p::host {
 
   peer::PeerInfo BasicHost::getPeerInfo() const {
     auto addresses = getAddresses();
-    auto interfaces = getAddressesInterfaces();
     auto observed = getObservedAddresses();
+    auto interfaces = getAddressesInterfaces();
+
+    // TODO(xDimon): Needs to filter special interfaces (e.g. INADDR_ANY, etc.)
 
     std::set<multi::Multiaddress> unique_addresses;
     unique_addresses.insert(addresses.begin(), addresses.end());
@@ -87,8 +89,9 @@ namespace libp2p::host {
 
   void BasicHost::newStream(const peer::PeerInfo &p,
                             const peer::Protocol &protocol,
-                            const Host::StreamResultHandler &handler) {
-    network_->getDialer().newStream(p, protocol, handler);
+                            const Host::StreamResultHandler &handler,
+                            std::chrono::milliseconds timeout) {
+    network_->getDialer().newStream(p, protocol, handler, timeout);
   }
 
   outcome::result<void> BasicHost::listen(const multi::Multiaddress &ma) {
@@ -109,7 +112,8 @@ namespace libp2p::host {
     network_->getListener().start();
   }
 
-  event::Handle BasicHost::setOnNewConnectionHandler(const NewConnectionHandler &h) const {
+  event::Handle BasicHost::setOnNewConnectionHandler(
+      const NewConnectionHandler &h) const {
     return bus_->getChannel<network::event::OnNewConnectionChannel>().subscribe(
         [h{std::move(h)}](auto &&conn) {
           if (auto connection = conn.lock()) {
@@ -149,7 +153,10 @@ namespace libp2p::host {
     return *bus_;
   }
 
-  void BasicHost::connect(const peer::PeerInfo &p) {
-    network_->getDialer().dial(p, [](auto && /* ignored */) {});
+  void BasicHost::connect(const peer::PeerInfo &peer_info,
+                          const ConnectionResultHandler& handler,
+                          std::chrono::milliseconds timeout) {
+    network_->getDialer().dial(peer_info, handler, timeout);
   }
+
 }  // namespace libp2p::host

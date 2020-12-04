@@ -42,7 +42,9 @@ namespace libp2p::host {
 
     std::vector<multi::Multiaddress> getObservedAddresses() const override;
 
-    void connect(const peer::PeerInfo &p) override;
+    void connect(const peer::PeerInfo &peer_info,
+                 const ConnectionResultHandler &handler,
+                 std::chrono::milliseconds timeout) override;
 
     void setProtocolHandler(
         const peer::Protocol &proto,
@@ -54,7 +56,8 @@ namespace libp2p::host {
         const std::function<bool(const peer::Protocol &)> &predicate) override;
 
     void newStream(const peer::PeerInfo &p, const peer::Protocol &protocol,
-                   const StreamResultHandler &handler) override;
+                   const StreamResultHandler &handler,
+                   std::chrono::milliseconds timeout) override;
 
     outcome::result<void> listen(const multi::Multiaddress &ma) override;
 
@@ -75,7 +78,8 @@ namespace libp2p::host {
 
     event::Bus &getBus() override;
 
-    event::Handle setOnNewConnectionHandler(const NewConnectionHandler &h) const override;
+    event::Handle setOnNewConnectionHandler(
+        const NewConnectionHandler &h) const override;
 
    private:
     std::shared_ptr<peer::IdentityManager> idmgr_;

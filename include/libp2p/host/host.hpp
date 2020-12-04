@@ -6,6 +6,7 @@
 #ifndef LIBP2P_HOST_HPP
 #define LIBP2P_HOST_HPP
 
+#include <chrono>
 #include <functional>
 #include <string_view>
 
@@ -14,12 +15,12 @@
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/network/network.hpp>
 #include <libp2p/network/router.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/peer_info.hpp>
 #include <libp2p/peer/peer_repository.hpp>
 #include <libp2p/peer/protocol.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p {
   /**
@@ -36,8 +37,12 @@ namespace libp2p {
   struct Host {
     virtual ~Host() = default;
 
-    using StreamResultHandler = std::function<void(
-        outcome::result<std::shared_ptr<connection::Stream>>)>;
+    using ConnectionResult =
+        outcome::result<std::shared_ptr<connection::CapableConnection>>;
+    using ConnectionResultHandler = std::function<void(ConnectionResult)>;
+
+    using StreamResult = outcome::result<std::shared_ptr<connection::Stream>>;
+    using StreamResultHandler = std::function<void(StreamResult)>;
 
     using NewConnectionHandler = std::function<void(peer::PeerInfo &&)>;
 
@@ -50,7 +55,8 @@ namespace libp2p {
      * @brief Stores OnNewConnectionHandler.
      * @param h handler function to store
      */
-    virtual event::Handle setOnNewConnectionHandler(const NewConnectionHandler &h) const = 0;
+    virtual event::Handle setOnNewConnectionHandler(
+        const NewConnectionHandler &h) const = 0;
 
     /**
      * @brief Get a version of this Libp2p client
@@ -109,22 +115,61 @@ namespace libp2p {
         const std::function<bool(const peer::Protocol &)> &predicate) = 0;
 
     /**
-     * @brief Initiates connection to the peer {@param p}. If connection exists,
-     * does nothing.
-     * @param p peer to connect.
+     * @brief Initiates connection to the peer {@param peer_info}.
+     * @param peer_info peer to connect.
+     * @param handler callback, will be executed on success or fail
+     * @param timeout in milliseconds
      */
-    virtual void connect(const peer::PeerInfo &p) = 0;
+    virtual void connect(const peer::PeerInfo &peer_info,
+                         const ConnectionResultHandler &handler,
+                         std::chrono::milliseconds timeout) = 0;
 
     /**
-     * @brief Open new stream to the peer {@param p} with protocol {@param
-     * protocol}.
-     * @param p stream will be opened to this peer
+     * @brief Initiates connection to the peer {@param peer_info}.
+     * @param peer_info peer to connect.
+     * @param handler callback, will be executed on success or fail
+     */
+    inline void connect(const peer::PeerInfo &peer_info,
+                        const ConnectionResultHandler &handler) {
+      connect(peer_info, handler, std::chrono::milliseconds::zero());
+    };
+
+    /**
+     * @brief Initiates connection to the peer {@param peer_info}. If connection
+     * exists, does nothing.
+     * @param peer_info peer to connect.
+     */
+    inline void connect(const peer::PeerInfo &peer_info) {
+      connect(
+          peer_info, [](auto &&) {}, std::chrono::milliseconds::zero());
+    };
+
+    /**
+     * @brief Open new stream to the peer {@param peer_info} with protocol
+     * {@param protocol} with a specific timeout.
+     * @param peer_info stream will be opened to this peer
+     * @param protocol "speak" using this protocol
+     * @param handler callback, will be executed on success or fail
+     * @param timeout in milliseconds
+     */
+    virtual void newStream(const peer::PeerInfo &peer_info,
+                           const peer::Protocol &protocol,
+                           const StreamResultHandler &handler,
+                           std::chrono::milliseconds timeout) = 0;
+
+    /**
+     * @brief Open new stream to the peer {@param peer_info} with protocol
+     * {@param protocol}.
+     * @param peer_info stream will be opened to this peer
      * @param protocol "speak" using this protocol
      * @param handler callback, will be executed on success or fail
      */
-    virtual void newStream(const peer::PeerInfo &p,
-                           const peer::Protocol &protocol,
-                           const StreamResultHandler &handler) = 0;
+    inline void newStream(const peer::PeerInfo &peer_info,
+                          const peer::Protocol &protocol,
+                          const StreamResultHandler &handler) {
+      newStream(peer_info, protocol, handler,
+                std::chrono::milliseconds::zero());
+    }
 
     /**
      * @brief Create listener on given multiaddress.

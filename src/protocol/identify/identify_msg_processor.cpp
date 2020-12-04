@@ -15,15 +15,19 @@
 #include <libp2p/protocol/identify/utils.hpp>
 
 namespace {
-  inline std::string fromMultiaddrToString(const libp2p::multi::Multiaddress &ma) {
+  inline std::string fromMultiaddrToString(
+      const libp2p::multi::Multiaddress &ma) {
     auto const &addr = ma.getBytesAddress();
-    return std::string(reinterpret_cast<const char*>(addr.data()), addr.size()); // NOLINT
+    return std::string(addr.begin(), addr.end());
   }
 
-  inline libp2p::outcome::result<libp2p::multi::Multiaddress> fromStringToMultiaddr(const std::string &addr) {
-    return libp2p::multi::Multiaddress::create(gsl::span<const uint8_t>(reinterpret_cast<const uint8_t*>(addr.data()), addr.size())); // NOLINT
+  inline libp2p::outcome::result<libp2p::multi::Multiaddress>
+  fromStringToMultiaddr(const std::string &addr) {
+    return libp2p::multi::Multiaddress::create(gsl::span<const uint8_t>(
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        reinterpret_cast<const uint8_t *>(addr.data()), addr.size()));
   }
-}
+}  // namespace
 
 namespace libp2p::protocol {
   IdentifyMessageProcessor::IdentifyMessageProcessor(
@@ -342,10 +346,10 @@ namespace libp2p::protocol {
     auto &addr_repo = host_.getPeerRepository().getAddressRepository();
 
     // invalidate previously known addresses of that peer
-    auto add_res = addr_repo.updateAddresses(peer_id, peer::ttl::kTransient);
-    if (!add_res) {
+    auto update_res = addr_repo.updateAddresses(peer_id, peer::ttl::kTransient);
+    if (!update_res) {
       log_->debug("cannot update listen addresses of the peer {}: {}",
-                  peer_id.toBase58(), add_res.error().message());
+                  peer_id.toBase58(), update_res.error().message());
     }
 
     // memorize the addresses
@@ -359,13 +363,13 @@ namespace libp2p::protocol {
          && (conn_manager_.connectedness({peer_id, addresses.value()})
              == network::ConnectionManager::Connectedness::CONNECTED));
 
-    add_res = addr_repo.upsertAddresses(
+    auto upsert_res = addr_repo.upsertAddresses(
         peer_id, listen_addresses,
         permanent_ttl ? peer::ttl::kPermanent : peer::ttl::kRecentlyConnected);
 
-    if (!add_res) {
+    if (!upsert_res) {
       log_->error("cannot add addresses to peer {}: {}", peer_id.toBase58(),
-                  add_res.error().message());
+                  upsert_res.error().message());
     }
   }
 }  // namespace libp2p::protocol

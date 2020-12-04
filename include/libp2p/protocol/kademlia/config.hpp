@@ -3,64 +3,147 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_KADEMLIA_CONFIG_HPP
-#define LIBP2P_KADEMLIA_CONFIG_HPP
+#ifndef LIBP2P_PROTOCOL_KADEMLIA_CONFIG
+#define LIBP2P_PROTOCOL_KADEMLIA_CONFIG
 
-#include <chrono>
-#include <cstddef>
-#include <string_view>
-
-/**
- * Default constants and settings specified here.
- *
- * https://sourcegraph.com/github.com/libp2p/js-libp2p-kad-dht/-/blob/src/constants.js#L31:51
- */
+#include <libp2p/outcome/outcome.hpp>
+#include <libp2p/protocol/kademlia/common.hpp>
 
 namespace libp2p::protocol::kademlia {
 
-  using std::chrono_literals::operator""h;    // hours
-  using std::chrono_literals::operator""min;  // minutes
-  using std::chrono_literals::operator""s;    // seconds
+  using namespace std::chrono_literals;
 
-  struct RandomWalk {
-    bool enabled = true;
-    size_t queries_per_period = 1;
-    std::chrono::seconds interval = 5min;
-    std::chrono::seconds timeout = 10s;
-    std::chrono::seconds delay = 10s;
-  };
+  namespace {
+    struct RandomWalk {
+      /**
+       * True if random walking is enabled
+       */
+      bool enabled = true;
 
-  struct KademliaConfig {
+      /**
+       * Number of random walks for a period
+       * @note Default: 1
+       */
+      size_t queries_per_period = 1;
+
+      /**
+       * Period of random walks' series
+       * @note Default: 5min
+       */
+      std::chrono::seconds interval = 30s;
+
+      /**
+       * Timeout for one random walk
+       * @note Default: 10s
+       */
+      std::chrono::seconds timeout = 10s;
+
+      /**
+       * Delay beetween random walks in serie
+       * @note Default: 10s
+       */
+      std::chrono::seconds delay = 10s;
+    };
+  }  // namespace
+
+  class Config {
+   public:
+    Config() = default;
+
+    /**
+     * @returns kademlia protocol id
+     * @note Default: "ipfs/kad/1.0"
+     */
+    peer::Protocol protocolId = "/ipfs/kad/1.0.0";
+
+    /**
+     * True if application is not announce himself
+     */
+    bool passiveMode = false;
+
+    /**
+     * Minimal responses from distinct nodes to check for consistency before
+     * returning an answer.
+     * @note Default: 0
+     */
+    size_t valueLookupsQuorum = 0;
+
+    /**
+     * Maximum number of concurrent request
+     * @note Default: 3
+     */
+    size_t requestConcurency = 3;
+
+    /**
+     * Target amount of closer peers.
+     * @note Default: 6
+     */
+    size_t closerPeerCount = 6;
+
+    /**
+     * TTL of record in storage
+     * @note Default: 24h
+     */
+    std::chrono::seconds storageRecordTTL = 24h;
+
+    /**
+     * Interval of wiping expired records
+     * @note Default: 1h
+     */
+    std::chrono::seconds storageWipingInterval = 1h;
+
+    /**
+     * Interval of refresh storage.
+     * This is implementation specified property.
+     * @note Default: 5m
+     */
+    std::chrono::seconds storageRefreshInterval = 5min;
+
+    /**
+     * TTL of provider record
+     * @note Default: 24h
+     */
+    std::chrono::seconds providerRecordTTL = 24h;
+
+    /**
+     * Interval of wiping expired provider records
+     * @note Default: 1h
+     */
+    std::chrono::seconds providerWipingInterval = 2min;
+
+    /**
+     * Max providers number per one key
+     * @note Default: 6
+     */
+    size_t maxProvidersPerKey = 6;
+
+    /**
+     * Maximum size of bucket
+     * This is implementation specified property.
+     * @note Default: 20
+     */
+    size_t maxBucketSize = 20;
+
+    /**
+     * Maximum time to waiting response
+     * This is implementation specified property.
+     * @note Default: 10s
+     */
+    std::chrono::seconds responseTimeout = 10s;
+
+    /**
+     * Maximum time to connection
+     * This is implementation specified property.
+     * @note Default: 3s
+     */
+    std::chrono::seconds connectionTimeout = 5s;
+
+    /**
+     * Random walk config
+     */
     RandomWalk randomWalk{};
-
-    std::chrono::seconds max_record_age = 36h;
-
-    std::string_view protocolId = "/ipfs/kad/1.0.0";
-
-    std::string_view providers_prefix = "/providers/";
-
-    size_t providers_lru_cache_size = 256;
-
-    std::chrono::seconds providers_validity = 24h;
-
-    std::chrono::seconds providers_cleanup_interval = 1h;
-
-    std::chrono::seconds read_message_timeout = 10s;
-
-    /// The number of records that will be retrieved on a call to getMany()
-    size_t get_many_records_count = 16;
-
-    /// K is the maximum number of requests to perform before returning failure
-    size_t K = 20;
-
-    /// Alpha is the concurrency for asynchronous requests
-    size_t ALPHA = 3;
-
-    size_t closer_peers_count = 6;
-
-    size_t max_message_size = 2u << 22u;  // 4 MB
   };
 
 }  // namespace libp2p::protocol::kademlia
 
-#endif  // LIBP2P_KADEMLIA_CONFIG_HPP
+#endif  // LIBP2P_PROTOCOL_KADEMLIA_ROUTING
