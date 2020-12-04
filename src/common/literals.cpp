@@ -11,16 +11,18 @@
 #include <libp2p/multi/multihash.hpp>
 #include <libp2p/peer/peer_id.hpp>
 
+#include <algorithm>
+
 namespace libp2p::common {
   libp2p::common::Hash256 operator""_hash256(const char *c, size_t s) {
     libp2p::common::Hash256 hash{};
-    std::copy_n(c, std::min(s, 32ul), hash.rbegin());
+    std::copy_n(c, std::min(s, static_cast<size_t>(32u)), hash.rbegin());
     return hash;
   }
 
   libp2p::common::Hash512 operator""_hash512(const char *c, size_t s) {
     libp2p::common::Hash512 hash{};
-    std::copy_n(c, std::min(s, 64ul), hash.rbegin());
+    std::copy_n(c, std::min(s, static_cast<size_t>(64u)), hash.rbegin());
     return hash;
   }
 
