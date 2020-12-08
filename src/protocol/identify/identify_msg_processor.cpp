@@ -60,9 +60,8 @@ namespace libp2p::protocol {
       msg.set_observedaddr(fromMultiaddrToString(remote_addr.value()));
     }
 
-    // set addresses we are listening on
-    for (const auto &addr :
-         host_.getNetwork().getListener().getListenAddresses()) {
+    // set addresses we are available on
+    for (const auto &addr : host_.getPeerInfo().addresses) {
       msg.add_listenaddrs(fromMultiaddrToString(addr));
     }
 

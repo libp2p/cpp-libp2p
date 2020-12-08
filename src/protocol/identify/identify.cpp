@@ -15,9 +15,10 @@ namespace {
 }  // namespace
 
 namespace libp2p::protocol {
-  Identify::Identify(std::shared_ptr<IdentifyMessageProcessor> msg_processor,
+  Identify::Identify(Host &host,
+                     std::shared_ptr<IdentifyMessageProcessor> msg_processor,
                      event::Bus &event_bus)
-      : msg_processor_{std::move(msg_processor)}, bus_{event_bus} {
+      : host_{host}, msg_processor_{std::move(msg_processor)}, bus_{event_bus} {
     BOOST_ASSERT(msg_processor_);
   }
 
@@ -51,10 +52,18 @@ namespace libp2p::protocol {
     BOOST_ASSERT(!started_);
     started_ = true;
 
+    host_.setProtocolHandler(
+        kIdentifyProto,
+        [wp = weak_from_this()](protocol::BaseProtocol::StreamResult rstream) {
+          if (auto self = wp.lock()) {
+            self->handle(std::move(rstream));
+          }
+        });
+
     sub_ = bus_.getChannel<network::event::OnNewConnectionChannel>().subscribe(
-        [self{weak_from_this()}](auto &&conn) {
-          if (auto s = self.lock()) {
-            return s->onNewConnection(conn);
+        [wp = weak_from_this()](auto &&conn) {
+          if (auto self = wp.lock()) {
+            return self->onNewConnection(conn);
           }
         });
   }
@@ -88,5 +97,4 @@ namespace libp2p::protocol {
           self->msg_processor_->receiveIdentify(std::move(stream_res.value()));
         });
   }
-
 }  // namespace libp2p::protocol
