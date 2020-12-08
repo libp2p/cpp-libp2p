@@ -46,6 +46,8 @@ namespace libp2p::host {
                  const ConnectionResultHandler &handler,
                  std::chrono::milliseconds timeout) override;
 
+    void disconnect(const peer::PeerId &peer_id) override;
+
     void setProtocolHandler(
         const peer::Protocol &proto,
         const std::function<connection::Stream::Handler> &handler) override;

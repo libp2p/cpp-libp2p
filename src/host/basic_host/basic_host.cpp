@@ -154,9 +154,13 @@ namespace libp2p::host {
   }
 
   void BasicHost::connect(const peer::PeerInfo &peer_info,
-                          const ConnectionResultHandler& handler,
+                          const ConnectionResultHandler &handler,
                           std::chrono::milliseconds timeout) {
     network_->getDialer().dial(peer_info, handler, timeout);
+  }
+
+  void BasicHost::disconnect(const peer::PeerId &peer_id) {
+    network_->closeConnections(peer_id);
   }
 
 }  // namespace libp2p::host
