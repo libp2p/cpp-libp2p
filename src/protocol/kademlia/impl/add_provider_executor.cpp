@@ -59,10 +59,9 @@ namespace libp2p::protocol::kademlia {
 
     Message request = createAddProviderRequest(std::move(self_peer_info), key_);
     if (!request.serialize(*serialized_request_)) {
+      done_ = true;
       return Error::MESSAGE_SERIALIZE_ERROR;
     }
-
-    started_ = true;
 
     log_.debug("started");
 

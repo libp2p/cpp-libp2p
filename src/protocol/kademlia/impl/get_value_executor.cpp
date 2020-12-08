@@ -85,10 +85,9 @@ namespace libp2p::protocol::kademlia {
 
     Message request = createGetValueRequest(key_, std::move(self_announce));
     if (!request.serialize(*serialized_request_)) {
+      done_ = true;
       return Error::MESSAGE_SERIALIZE_ERROR;
     }
-
-    started_ = true;
 
     log_.debug("started");
 

@@ -49,10 +49,9 @@ namespace libp2p::protocol::kademlia {
 
     Message request = createPutValueRequest(key_, value_);
     if (!request.serialize(*serialized_request_)) {
+      done_ = true;
       return Error::MESSAGE_SERIALIZE_ERROR;
     }
-
-    started_ = true;
 
     log_.debug("started");
 

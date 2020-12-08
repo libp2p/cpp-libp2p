@@ -207,6 +207,15 @@ namespace libp2p::protocol::kademlia {
 
   void KademliaImpl::addPeer(const PeerInfo &peer_info, bool permanent) {
     log_.debug("CALL: AddPeer ({})", peer_info.id.toBase58());
+    for (auto &addr : peer_info.addresses) {
+      log_.debug("         addr: {}", addr.getStringAddress());
+    }
+
+    if (peer_info.addresses.empty()) {
+      log_.debug("{} was skipped because has not adresses",
+                 peer_info.id.toBase58());
+      return;
+    }
 
     auto upsert_res =
         host_->getPeerRepository().getAddressRepository().upsertAddresses(
@@ -615,12 +624,9 @@ namespace libp2p::protocol::kademlia {
 
     auto &stream = stream_res.value();
 
-    log_.debug("incoming stream from '{}'",
-               stream->remoteMultiaddr().value().getStringAddress());
+    log_.debug("incoming stream with {}",
+               stream->remotePeerId().value().toBase58());
 
-    addPeer(peer::PeerInfo{stream->remotePeerId().value(),
-                           {stream->remoteMultiaddr().value()}},
-            false);
 
     auto session = openSession(stream);
 
