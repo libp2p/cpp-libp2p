@@ -103,11 +103,9 @@ class IdentifyTest : public testing::Test {
   std::vector<peer::Protocol> protocols_{"/http/5.0.1", "/dogeproto/2.2.8"};
 
   std::vector<multi::Multiaddress> listen_addresses_{
-      "/ip4/1.1.1.1/tcp/1001"_multiaddr,
-      "/ip4/1.1.1.1/tcp/1002"_multiaddr};
+      "/ip4/1.1.1.1/tcp/1001"_multiaddr, "/ip4/1.1.1.1/tcp/1002"_multiaddr};
 
-  multi::Multiaddress observer_address_ =
-      "/ip4/1.1.1.1/tcp/1234"_multiaddr;
+  multi::Multiaddress observer_address_ = "/ip4/1.1.1.1/tcp/1234"_multiaddr;
 
   std::vector<uint8_t> marshalled_pubkey_{0x11, 0x22, 0x33, 0x44};
   std::vector<uint8_t> pubkey_data_{0x55, 0x66, 0x77, 0x88};
@@ -122,8 +120,7 @@ class IdentifyTest : public testing::Test {
 
   const peer::PeerId kOwnPeerId =
       PeerId::fromPublicKey(ProtobufKey{marshalled_pubkey_}).value();
-  const peer::PeerInfo kOwnPeerInfo{
-      kOwnPeerId, listen_addresses_};
+  const peer::PeerInfo kOwnPeerInfo{kOwnPeerId, listen_addresses_};
 
   const std::string kLibp2pVersion = "ipfs/0.1.0";
   const std::string kClientVersion = "cpp-libp2p/0.1.0";
@@ -141,13 +138,6 @@ class IdentifyTest : public testing::Test {
 };
 
 ACTION_P2(Success, buf, res) {
-
-  int o = 1;
-  identify::pb::Identify a;
-  auto ar = a.ParseFromArray(arg0.data() + o, arg0.size() - o);
-  identify::pb::Identify e;
-  auto er = e.ParseFromArray(buf.data() + o, buf.size() - o);
-
   // better compare here, as this will show diff
   ASSERT_EQ(arg0, buf);
   ASSERT_EQ(arg1, buf.size());
@@ -169,8 +159,7 @@ TEST_F(IdentifyTest, Send) {
   EXPECT_CALL(host_, getRouter()).WillOnce(ReturnRef(router_));
   EXPECT_CALL(router_, getSupportedProtocols()).WillOnce(Return(protocols_));
 
-  EXPECT_CALL(*stream_, remotePeerId())
-      .WillRepeatedly(Return(kRemotePeerId));
+  EXPECT_CALL(*stream_, remotePeerId()).WillRepeatedly(Return(kRemotePeerId));
 
   EXPECT_CALL(*stream_, remoteMultiaddr())
       .WillRepeatedly(Return(outcome::success(remote_multiaddr_)));
