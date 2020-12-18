@@ -109,7 +109,7 @@ namespace libp2p::connection {
      * default sliding window size of the stream - how much unread bytes can be
      * on both sides
      */
-    static constexpr uint32_t kDefaultWindowSize = 256 * 1024;  // in bytes
+    static constexpr uint32_t kDefaultWindowSize = 16 * 1024 * 1024;  // in bytes
 
     /// how much unacked bytes can we have on our side
     uint32_t receive_window_size_ = kDefaultWindowSize;
