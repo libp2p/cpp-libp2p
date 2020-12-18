@@ -38,9 +38,10 @@ namespace libp2p::connection {
 
   YamuxFrame::ByteArray newStreamMsg(YamuxFrame::StreamId stream_id) {
     TRACE("yamux newStreamMsg, stream_id={}", stream_id);
-    return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
-                                  YamuxFrame::FrameType::DATA,
-                                  YamuxFrame::Flag::SYN, stream_id, 0);
+    // setting max window size from go impl immediately (16MiB)
+    return YamuxFrame::frameBytes(
+        YamuxFrame::kDefaultVersion, YamuxFrame::FrameType::WINDOW_UPDATE,
+        YamuxFrame::Flag::SYN, stream_id, 16 * 1024 * 1024 - 256 * 1024);
   }
 
   YamuxFrame::ByteArray ackStreamMsg(YamuxFrame::StreamId stream_id) {
