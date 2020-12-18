@@ -208,8 +208,8 @@ namespace libp2p::protocol::kademlia {
     return
         // Check if message type is appropriate
         msg.type == Message::Type::kFindNode;
-    //        // Check if response is accorded to request
-    //        && msg.key == sought_peer_id_.toVector()
+    // Check if response is accorded to request
+    // && msg.key == sought_peer_id_.toVector()
   }
 
   void FindPeerExecutor::onResult(const std::shared_ptr<Session> &session,
