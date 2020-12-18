@@ -182,6 +182,9 @@ namespace libp2p::protocol::kademlia {
     log_.debug("connected to {}; active {}, in queue {}", addr,
                requests_in_progress_, queue_.size());
 
+    log_.debug("outgoing stream with {}",
+               stream->remotePeerId().value().toBase58());
+
     auto session = session_host_->openSession(stream);
 
     if (!session->write(serialized_request_, shared_from_this())) {

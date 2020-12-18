@@ -192,16 +192,11 @@ namespace libp2p::protocol::kademlia {
 
     std::string addr(stream->remoteMultiaddr().value().getStringAddress());
 
-    //  if (done_) {
-    //    --requests_in_progress_;
-    //    log_.warn("connected to {} too late; active {}, in queue {}", addr,
-    //              requests_in_progress_, queue_.size());
-    //    stream->close([](auto) {});
-    //    return;
-    //  }
-
     log_.debug("connected to {}; active {}, in queue {}", addr,
                requests_in_progress_, queue_.size());
+
+    log_.debug("outgoing stream with {}",
+               stream->remotePeerId().value().toBase58());
 
     auto session = session_host_->openSession(stream);
 

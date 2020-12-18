@@ -174,6 +174,9 @@ namespace libp2p::protocol::kademlia {
     log_.debug("connected to {}; done {}, active {}, in queue {}", addr,
                requests_succeed_, requests_in_progress_, queue_.size());
 
+    log_.debug("outgoing stream with {}",
+               stream->remotePeerId().value().toBase58());
+
     auto session = session_host_->openSession(stream);
 
     --requests_in_progress_;
