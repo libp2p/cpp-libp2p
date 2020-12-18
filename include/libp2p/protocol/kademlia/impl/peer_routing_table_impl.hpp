@@ -20,12 +20,7 @@
 namespace libp2p::protocol::kademlia {
 
   /**
-   * @class Bucket
-   *
    * Single bucket which holds peers.
-   *
-   * @see
-   * https://sourcegraph.com/github.com/libp2p/go-libp2p-kbucket@HEAD/-/blob/bucket.go
    */
   class Bucket : public std::deque<peer::PeerId> {
    public:
