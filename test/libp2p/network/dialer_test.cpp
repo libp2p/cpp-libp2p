@@ -55,11 +55,53 @@ struct DialerTest : public ::testing::Test {
       std::make_shared<DialerImpl>(proto_muxer, tmgr, cmgr, listener);
 
   multi::Multiaddress ma1 = "/ip4/127.0.0.1/tcp/1"_multiaddr;
+  multi::Multiaddress ma2 = "/ip4/127.0.0.1/tcp/2"_multiaddr;
   peer::PeerId pid = "1"_peerid;
   peer::Protocol protocol = "/protocol/1.0.0";
 
   peer::PeerInfo pinfo{.id = pid, .addresses = {ma1}};
+  peer::PeerInfo pinfo_two_addrs{.id = pid, .addresses = {ma1, ma2}};
 };
+
+/**
+ * @given a peer with two multiaddresses
+ * @when a dial to the first address fails
+ * @then the dialer will try the second supplied address too
+ */
+TEST_F(DialerTest, DialAllTheAddresses) {
+  // we dont have connection already
+  EXPECT_CALL(*cmgr, getBestConnectionForPeer(pinfo.id))
+      .WillOnce(Return(nullptr));
+
+  // connection is stored
+  EXPECT_CALL(*listener, onConnection(_)).Times(1);
+
+  // we have transport to dial
+  EXPECT_CALL(*tmgr, findBest(ma1)).WillOnce(Return(transport));
+  EXPECT_CALL(*tmgr, findBest(ma2)).WillOnce(Return(transport));
+
+  // transport->dial returns an error for the first address
+  EXPECT_CALL(
+      *transport,
+      dial(pinfo_two_addrs.id, ma1, _, std::chrono::milliseconds::zero()))
+      .WillOnce(
+          Arg2CallbackWithArg(outcome::failure(std::errc::connection_refused)));
+
+  // transport->dial returns valid connection for the second address
+  EXPECT_CALL(
+      *transport,
+      dial(pinfo_two_addrs.id, ma2, _, std::chrono::milliseconds::zero()))
+      .WillOnce(Arg2CallbackWithArg(outcome::success(connection)));
+
+  bool executed = false;
+  dialer->dial(pinfo_two_addrs, [&](auto &&rconn) {
+    EXPECT_OUTCOME_TRUE(conn, rconn);
+    (void)conn;
+    executed = true;
+  });
+
+  ASSERT_TRUE(executed);
+}
 
 /**
  * @given no known connections to peer, have 1 transport, 1 address supplied
