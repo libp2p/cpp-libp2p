@@ -192,7 +192,7 @@ namespace libp2p::protocol::kademlia {
     if (!session->write(serialized_request_, shared_from_this())) {
       --requests_in_progress_;
 
-      log_.warn("write to {} failed; active {}, in queue {}", addr,
+      log_.debug("write to {} failed; active {}, in queue {}", addr,
                 requests_in_progress_, queue_.size());
 
       spawn();

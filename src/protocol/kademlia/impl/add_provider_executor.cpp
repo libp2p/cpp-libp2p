@@ -183,10 +183,10 @@ namespace libp2p::protocol::kademlia {
 
     if (session->write(serialized_request_, {})) {
       ++requests_succeed_;
-      log_.warn("write to {} successfuly; done {}, active {}, in queue {}",
+      log_.debug("write to {} successfuly; done {}, active {}, in queue {}",
                 addr, requests_succeed_, requests_in_progress_, queue_.size());
     } else {
-      log_.warn("write to {} failed; done {}, active {}, in queue {}", addr,
+      log_.debug("write to {} failed; done {}, active {}, in queue {}", addr,
                 requests_succeed_, requests_in_progress_, queue_.size());
     }
 
