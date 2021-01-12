@@ -8,13 +8,14 @@
 
 ### rendezvous_chat
 
-`./rendezvous_chat [LISTEN_ADDR]`
+```bash
+./rendezvous_chat [LISTEN_ADDR]
+```
 
 where `LISTEN_ADDR` is libp2p address for incoming connection
 
-Explanation by example: `./rendezvous_chat /ip4/127.0.0.1/tcp/3333` means that
-
-* local node will listen to port 3333
+Explanation by example: 
+`./rendezvous_chat /ip4/127.0.0.1/tcp/3333` means that local node will listen port 3333 on IP 127.0.0.1
 
 ### What is happening after launching
 1. app connects to botstrap nodes and start random-walking mechanism to collect peers info
@@ -40,3 +41,6 @@ Hello! Are you from?
 12D3KooWN4U92XG49kSjJ6p5TUEWxj76V432HfbmQAXwryLApkue < Hello! Are you from?
 12D3KooWN4U92XG49kSjJ6p5TUEWxj76V432HfbmQAXwryLApkue > Hi! I'm from Soramitsu.
 ```
+
+### Note
+Finding partner can take some time. You can start two clients on the different ports (or IPs), but it is important that clients can connect to each other.
