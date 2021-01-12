@@ -624,6 +624,12 @@ namespace libp2p::protocol::kademlia {
 
     auto &stream = stream_res.value();
 
+    if (stream->remotePeerId().value() == self_id_) {
+      log_.debug("incoming stream with themselves");
+      stream->reset();
+      return;
+    }
+
     log_.debug("incoming stream with {}",
                stream->remotePeerId().value().toBase58());
 
