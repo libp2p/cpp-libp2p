@@ -10,8 +10,7 @@
 
 namespace libp2p::protocol::kademlia {
   enum class Error {
-    SUCCESS = 0,
-    NO_PEERS,
+    NO_PEERS = 1,
     MESSAGE_PARSE_ERROR,
     MESSAGE_DESERIALIZE_ERROR,
     MESSAGE_SERIALIZE_ERROR,

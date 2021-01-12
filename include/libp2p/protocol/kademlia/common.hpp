@@ -29,7 +29,8 @@ namespace libp2p::protocol::kademlia {
   using ValueAndTime = std::pair<Value, Time>;
 
   using FoundPeerInfoHandler = std::function<void(outcome::result<PeerInfo>)>;
-  using FoundProvidersHandler = std::function<void(outcome::result<std::vector<PeerInfo>>)>;
+  using FoundProvidersHandler =
+      std::function<void(outcome::result<std::vector<PeerInfo>>)>;
   using FoundValueHandler = std::function<void(outcome::result<Value>)>;
 
 }  // namespace libp2p::protocol::kademlia
