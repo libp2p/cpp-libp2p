@@ -28,24 +28,32 @@ namespace libp2p::network {
     using StreamResult = outcome::result<std::shared_ptr<connection::Stream>>;
     using StreamResultFunc = std::function<void(StreamResult)>;
 
-    // Establishes a connection or returns existing one to a given peer with a
-    // specific timeout
+    /**
+     * Establishes a connection or returns existing one to a given peer with a
+     * specific timeout
+     */
     virtual void dial(const peer::PeerInfo &p, DialResultFunc cb,
                       std::chrono::milliseconds timeout) = 0;
 
-    // Establishes a connection or returns existing one to a given peer
+    /**
+     * Establishes a connection or returns existing one to a given peer
+     */
     inline void dial(const peer::PeerInfo &p, DialResultFunc cb) {
       dial(p, std::move(cb), std::chrono::milliseconds::zero());
     }
 
-    // NewStream returns a new stream to given peer p with a specific timeout.
-    // If there is no connection to p, attempts to create one.
+    /**
+     * NewStream returns a new stream to given peer p with a specific timeout.
+     * If there is no connection to p, attempts to create one.
+     */
     virtual void newStream(const peer::PeerInfo &peer_info,
                            const peer::Protocol &protocol, StreamResultFunc cb,
                            std::chrono::milliseconds timeout) = 0;
 
-    // NewStream returns a new stream to given peer p.
-    // If there is no connection to p, attempts to create one.
+    /**
+     * NewStream returns a new stream to given peer p.
+     * If there is no connection to p, attempts to create one.
+     */
     inline void newStream(const peer::PeerInfo &peer_info,
                           const peer::Protocol &protocol, StreamResultFunc cb) {
       newStream(peer_info, protocol, std::move(cb),
