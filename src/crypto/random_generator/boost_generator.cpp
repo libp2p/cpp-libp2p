@@ -7,7 +7,7 @@
 
 namespace libp2p::crypto::random {
 
-  inline uint8_t BoostRandomGenerator::randomByte() {
+  uint8_t BoostRandomGenerator::randomByte() {
     return distribution_(generator_); // NOLINT
   }
 
