@@ -20,8 +20,7 @@ namespace libp2p::multi {
    */
   class MulticodecType {
    public:
-    /// TODO(Harrm) add more codes
-    enum Code {
+    enum class Code {
       IDENTITY = 0x00,
       SHA1 = 0x11,
       SHA2_256 = 0x12,

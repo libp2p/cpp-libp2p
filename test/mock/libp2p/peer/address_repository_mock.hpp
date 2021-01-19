@@ -16,11 +16,11 @@ namespace libp2p::peer {
 
     // address repository
     MOCK_METHOD3(addAddresses,
-                 outcome::result<void>(const PeerId &,
+                 outcome::result<bool>(const PeerId &,
                                        gsl::span<const multi::Multiaddress>,
                                        Milliseconds));
     MOCK_METHOD3(upsertAddresses,
-                 outcome::result<void>(const PeerId &,
+                 outcome::result<bool>(const PeerId &,
                                        gsl::span<const multi::Multiaddress>,
                                        Milliseconds));
 

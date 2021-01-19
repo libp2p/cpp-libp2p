@@ -3,18 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_KAD_NODE_ID_HPP
-#define LIBP2P_KAD_NODE_ID_HPP
+#ifndef LIBP2P_PROTOCOL_KADEMLIA_NODEID
+#define LIBP2P_PROTOCOL_KADEMLIA_NODEID
 
 #include <bitset>
 #include <cstring>
+#include <gsl/span>
 #include <memory>
 #include <vector>
 
-#include <gsl/span>
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
+#include <libp2p/protocol/kademlia/content_id.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -54,12 +55,30 @@ namespace libp2p::protocol::kademlia {
     explicit NodeId(const Hash256 &h) : data_(h) {}
 
     explicit NodeId(const void *bytes) {
-      memcpy(data_.data(), bytes, 32);
+      memcpy(data_.data(), bytes, data_.size());
     }
 
-    explicit NodeId(const peer::PeerId &pid) : data_(sha256(pid.toVector())) {}
+    explicit NodeId(const peer::PeerId &pid) {
+      crypto::Sha256 hasher;
+      auto write_res = hasher.write(pid.toVector());
+      BOOST_ASSERT(write_res.has_value());
+      auto digest_res = hasher.digest();
+      BOOST_ASSERT(digest_res.has_value());
+      auto &hash = digest_res.value();
 
-    explicit NodeId(const ContentAddress& ca) : data_(sha256(ca.data)) {}
+      memcpy(data_.data(), hash.data(), std::min(hash.size(), data_.size()));
+    }
+
+    explicit NodeId(const ContentId &content_id) {
+      crypto::Sha256 hasher;
+      auto write_res = hasher.write(content_id.data);
+      BOOST_ASSERT(write_res.has_value());
+      auto digest_res = hasher.digest();
+      BOOST_ASSERT(digest_res.has_value());
+      auto &hash = digest_res.value();
+
+      memcpy(data_.data(), hash.data(), std::min(hash.size(), data_.size()));
+    }
 
     inline bool operator==(const NodeId &other) const {
       return data_ == other.data_;
@@ -75,7 +94,7 @@ namespace libp2p::protocol::kademlia {
 
     /// number of common prefix bits between this and NodeId
     inline size_t commonPrefixLen(const NodeId &other) const {
-      constexpr int uint8_bits = 8;
+      constexpr int uint8_bits = CHAR_BIT;
       constexpr auto size = Hash256().size();
       Hash256 d = distance(other);
       for (size_t i = 0; i < size; ++i) {
@@ -101,7 +120,10 @@ namespace libp2p::protocol::kademlia {
 
   struct XorDistanceComparator {
     explicit XorDistanceComparator(const peer::PeerId &from) {
-      hfrom = sha256(from.toVector());
+      crypto::Sha256 hash;
+      hash.write(from.toVector()).value();
+      memcpy(hfrom.data(), hash.digest().value().data(),
+             std::min<size_t>(hash.digestSize(), hfrom.size()));
     }
 
     explicit XorDistanceComparator(const NodeId &from)
@@ -124,4 +146,4 @@ namespace libp2p::protocol::kademlia {
 
 }  // namespace libp2p::protocol::kademlia
 
-#endif  // LIBP2P_KAD_NODE_ID_HPP
+#endif  // LIBP2P_PROTOCOL_KADEMLIA_NODEID

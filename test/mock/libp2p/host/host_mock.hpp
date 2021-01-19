@@ -34,10 +34,10 @@ namespace libp2p {
                  void(const peer::Protocol &,
                       const std::function<connection::Stream::Handler> &,
                       const std::function<bool(const peer::Protocol &)> &));
-    MOCK_METHOD1(connect, void(const peer::PeerInfo &));
-    MOCK_METHOD3(newStream,
-                 void(const peer::PeerInfo &p, const peer::Protocol &protocol,
-                      const StreamResultHandler &handler));
+    MOCK_METHOD3(connect,
+                 void(const peer::PeerInfo &, const ConnectionResultHandler &,
+                      std::chrono::milliseconds));
+    MOCK_METHOD1(disconnect, void(const peer::PeerId &));
     MOCK_METHOD4(newStream,
                  void(const peer::PeerInfo &p, const peer::Protocol &protocol,
                       const StreamResultHandler &handler,

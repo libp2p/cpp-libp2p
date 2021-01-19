@@ -24,11 +24,11 @@ namespace libp2p::peer {
    */
   class InmemAddressRepository : public AddressRepository {
    public:
-    outcome::result<void> addAddresses(const PeerId &p,
+    outcome::result<bool> addAddresses(const PeerId &p,
                                        gsl::span<const multi::Multiaddress> ma,
                                        Milliseconds ttl) override;
 
-    outcome::result<void> upsertAddresses(
+    outcome::result<bool> upsertAddresses(
         const PeerId &p, gsl::span<const multi::Multiaddress> ma,
         Milliseconds ttl) override;
 

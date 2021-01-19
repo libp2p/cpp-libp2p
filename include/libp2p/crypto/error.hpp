@@ -64,12 +64,14 @@ namespace libp2p::crypto {
   };
 
   enum class KeyValidatorError {
-    WRONG_PUBLIC_KEY_SIZE = 1,  ///< public key has wrong size
-    WRONG_PRIVATE_KEY_SIZE,     ///< private key has wrong size
-    INVALID_PUBLIC_KEY,         ///< invalid public key
-    INVALID_PRIVATE_KEY,        ///< private key cannot be decoded
-    KEYS_DONT_MATCH,            ///< public key is not derived from private
-    DIFFERENT_KEY_TYPES,        ///< key types in pair don't match
+    WRONG_PUBLIC_KEY_SIZE = 1,     ///< public key has wrong size
+    WRONG_PRIVATE_KEY_SIZE,        ///< private key has wrong size
+    INVALID_PUBLIC_KEY,            ///< invalid public key
+    INVALID_PRIVATE_KEY,           ///< private key cannot be decoded
+    KEYS_DONT_MATCH,               ///< public key is not derived from private
+    DIFFERENT_KEY_TYPES,           ///< key types in pair don't match
+    UNSUPPORTED_CRYPTO_ALGORYTHM,  ///< crypto algorythm is not implemented
+    UNKNOWN_CRYPTO_ALGORYTHM,      ///< unknown crypto algorythm
   };
 }  // namespace libp2p::crypto
 

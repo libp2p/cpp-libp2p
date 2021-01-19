@@ -60,6 +60,9 @@ namespace libp2p::transport::detail {
             || ma.hasProtocol(P::DNS4) || ma.hasProtocol(P::DNS6)
             || ma.hasProtocol(P::DNS))
         && ma.hasProtocol(P::TCP);
+
+    // TODO(xDimon): Support 'DNSADDR' addresses.
+    //  Issue: https://github.com/libp2p/cpp-libp2p/issues/97
   }
 
   inline auto getFirstProtocol(const multi::Multiaddress &ma) {
