@@ -18,10 +18,10 @@ Explanation by example:
 `./rendezvous_chat /ip4/127.0.0.1/tcp/3333` means that local node will listen port 3333 on IP 127.0.0.1
 
 ### What is happening after launching
-1. App connects to bootstrap nodes and starts random-walking mechanism to collect peer infos
+1. App connects to bootstrap nodes and starts random-walk to collect peer infos
 2. The network (known peers) is notified about owns providing of chat features
-3. The app starts searching for others providers with the same chat features
-4. The app connects to the found peers and accepts incoming connectionsThe app connects to the found peers and accepts incoming connections
+3. The app starts searching for other providers with the same chat protocol
+4. The app connects to the found peers and accepts incoming connections
 
 ### Normal work
 First message in terminal contains own peer_id:
