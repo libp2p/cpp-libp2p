@@ -117,7 +117,7 @@ namespace libp2p::security {
             auto &&res) mutable { SECIO_OUTCOME_VOID_TRY(res, conn, cb) },
         own_proposal_bytes);
     dialer->storeLocalPeerProposalBytes(own_proposal_bytes);
-    log_->debug("proposal sent");
+    log_->trace("proposal sent");
   }
 
   void Secio::receiveProposeMessage(
@@ -136,7 +136,7 @@ namespace libp2p::security {
                                                remote_peer_propose),
               conn, cb)
           dialer->storeRemotePeerProposalBytes(remote_peer_proposal_bytes);
-          self->log_->debug("remote peer proposal received");
+          self->log_->trace("remote peer proposal received");
           self->remote_peer_rand_.swap(remote_peer_propose.rand);
           self->sendExchangeMessage(conn, dialer, cb);
         },
@@ -169,7 +169,7 @@ namespace libp2p::security {
         [self{shared_from_this()}, conn, dialer,
          cb{std::move(cb)}](auto &&res) {
           SECIO_OUTCOME_VOID_TRY(res, conn, cb)
-          self->log_->debug("exchange message sent");
+          self->log_->trace("exchange message sent");
           self->receiveExchangeMessage(conn, dialer, cb);
         });
   }
@@ -184,7 +184,7 @@ namespace libp2p::security {
           SECIO_OUTCOME_TRY(remote_proto_exchange, res, conn, cb)
           auto remote_exchange{
               self->exchange_marshaller_->protoToHandy(remote_proto_exchange)};
-          self->log_->debug("remote exchange message received");
+          self->log_->trace("remote exchange message received");
           SECIO_OUTCOME_TRY(remote_corpus,
                             dialer->getCorpus(false, remote_exchange.epubkey),
                             conn, cb)
@@ -247,7 +247,7 @@ namespace libp2p::security {
                           or *buffer != self->propose_message_.rand) {
                         return cb(Error::INITIAL_PACKET_VERIFICATION_FAILED);
                       }
-                      self->log_->info("connection initialized");
+                      self->log_->trace("connection initialized");
                       cb(secio_conn);
                     });
               });

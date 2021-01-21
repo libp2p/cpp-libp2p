@@ -9,74 +9,72 @@
 
 namespace libp2p::peer {
 
-  outcome::result<void> InmemAddressRepository::addAddresses(
+  outcome::result<bool> InmemAddressRepository::addAddresses(
       const PeerId &p, gsl::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
-    auto it = db_.find(p);
-    if (it == db_.end()) {
-      // no map allocated for given peer p
-      db_.insert({p, std::make_shared<ttlmap>()});
-      it = db_.find(p);
-    }
+	  bool added = false;
+    auto peer_it = db_.emplace(p, std::make_shared<ttlmap>()).first;
+    auto &addresses = *peer_it->second;
 
+    auto expires_at = Clock::now() + ttl;
     for (const auto &m : ma) {
-      it->second->insert({m, Clock::now() + ttl});
-      signal_added_(p, m);
-    }
-
-    return outcome::success();
-  }
-
-  outcome::result<void> InmemAddressRepository::upsertAddresses(
-      const PeerId &p, gsl::span<const multi::Multiaddress> ma,
-      AddressRepository::Milliseconds ttl) {
-    auto it = db_.find(p);
-    if (it == db_.end()) {
-      // peer not found
-      return addAddresses(p, ma, ttl);
-    }
-
-    auto expires_in = Clock::now() + ttl;
-    for (const auto &m : ma) {
-      auto item_it = it->second->find(m);
-      if (item_it == it->second->end()) {
-        it->second->insert({m, expires_in});
+      if (addresses.emplace(m, expires_at).second) {
         signal_added_(p, m);
-      } else {
-        item_it->second = expires_in;
+        added = true;
       }
     }
 
-    return outcome::success();
+    return added;
+  }
+
+  outcome::result<bool> InmemAddressRepository::upsertAddresses(
+      const PeerId &p, gsl::span<const multi::Multiaddress> ma,
+      AddressRepository::Milliseconds ttl) {
+    bool added = false;
+    auto peer_it = db_.emplace(p, std::make_shared<ttlmap>()).first;
+    auto &addresses = *peer_it->second;
+
+    auto expires_at = Clock::now() + ttl;
+    for (auto &m : ma) {
+      auto [addr_it, added] = addresses.emplace(m, expires_at);
+      if (added) {
+        signal_added_(p, m);
+        added = true;
+      } else {
+        addr_it->second = expires_at;
+      }
+    }
+
+    return added;
   }
 
   outcome::result<void> InmemAddressRepository::updateAddresses(
       const PeerId &p, Milliseconds ttl) {
-    auto it = db_.find(p);
-    if (it == db_.end()) {
+    auto peer_it = db_.find(p);
+    if (peer_it == db_.end()) {
       return PeerError::NOT_FOUND;
     }
+    auto &addresses = *peer_it->second;
 
-    auto expires_in = Clock::now() + ttl;
-    for (auto &item : *it->second) {
-      item.second = expires_in;
-    }
+    auto expires_at = Clock::now() + ttl;
+    std::for_each(addresses.begin(), addresses.end(),
+                  [expires_at](auto &item) { item.second = expires_at; });
 
     return outcome::success();
-  }
+  }  // namespace libp2p::peer
 
   outcome::result<std::vector<multi::Multiaddress>>
   InmemAddressRepository::getAddresses(const PeerId &p) const {
-    auto it = db_.find(p);
-    if (it == db_.end()) {
+    auto peer_it = db_.find(p);
+    if (peer_it == db_.end()) {
       return PeerError::NOT_FOUND;
     }
+    auto &addresses = *peer_it->second;
 
     std::vector<multi::Multiaddress> ma;
-    ma.reserve(it->second->size());
-    for (auto &item : *it->second) {
-      ma.push_back(item.first);
-    }
+    ma.reserve(addresses.size());
+    std::transform(addresses.begin(), addresses.end(), std::back_inserter(ma),
+                   [](auto &item) { return item.first; });
     return ma;
   }
 

@@ -58,11 +58,12 @@ namespace libp2p::peer {
      * @param p peer
      * @param ma set of multiaddresses
      * @param ttl time to live for inserted multiaddresses
-     * @return error when no peer {@param p} has been found
+     * @return true/false if address was added or not,
+     *  error when no peer {@param p} has been found
      *
      * @note triggers #onAddressAdded for each address
      */
-    virtual outcome::result<void> addAddresses(
+    virtual outcome::result<bool> addAddresses(
         const PeerId &p, gsl::span<const multi::Multiaddress> ma,
         Milliseconds ttl) = 0;
 
@@ -72,12 +73,13 @@ namespace libp2p::peer {
      * @param p peer
      * @param ma set of addresses
      * @param ttl ttl
-     * @return error when no peer {@param p} has been found
+     * @return true/false if at least one new address was added or not,
+     *  error when no peer {@param p} has been found
      *
 
      * @note triggers #onAddressAdded when any new addresses are inserted
      */
-    virtual outcome::result<void> upsertAddresses(
+    virtual outcome::result<bool> upsertAddresses(
         const PeerId &p, gsl::span<const multi::Multiaddress> ma,
         Milliseconds ttl) = 0;
 

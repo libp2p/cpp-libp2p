@@ -40,6 +40,10 @@ namespace libp2p::multi {
     /// Encodes arbitrary byte buffer into CID v.0 wire format
     static std::vector<uint8_t> encodeCIDV0(const void *byte_buffer, size_t sz);
 
+    /// Encodes arbitrary byte buffer into CID v.1 wire format
+    static std::vector<uint8_t> encodeCIDV1(MulticodecType::Code content_type,
+                                            const Multihash &mhash);
+
     static outcome::result<ContentIdentifier> decode(
         gsl::span<const uint8_t> bytes);
 

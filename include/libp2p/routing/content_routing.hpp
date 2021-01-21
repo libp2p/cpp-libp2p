@@ -8,7 +8,7 @@
 
 #include <libp2p/event/subscription.hpp>
 #include <libp2p/peer/peer_info.hpp>
-#include <libp2p/protocol/kademlia/common.hpp>
+#include <libp2p/protocol/kad/common.hpp>
 
 namespace libp2p::protocol::kademlia {
 

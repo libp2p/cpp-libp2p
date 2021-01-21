@@ -7,10 +7,14 @@
 
 namespace libp2p::crypto::random {
 
+  uint8_t BoostRandomGenerator::randomByte() {
+    return distribution_(generator_); // NOLINT
+  }
+
   std::vector<uint8_t> BoostRandomGenerator::randomBytes(size_t len) {
     std::vector<uint8_t> buffer(len, 0);
     for (size_t i = 0; i < len; ++i) {
-      unsigned char byte = distribution_(generator_);
+      unsigned char byte = BoostRandomGenerator::randomByte();
       buffer[i] = byte;  // NOLINT
     }
     return buffer;

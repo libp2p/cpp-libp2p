@@ -24,12 +24,14 @@ namespace libp2p::network {
                std::shared_ptr<ListenerManager> listener);
 
     // Establishes a connection to a given peer
-    void dial(const peer::PeerInfo &p, DialResultFunc cb) override;
+    void dial(const peer::PeerInfo &p, DialResultFunc cb,
+              std::chrono::milliseconds timeout) override;
 
     // NewStream returns a new stream to given peer p.
     // If there is no connection to p, attempts to create one.
     void newStream(const peer::PeerInfo &p, const peer::Protocol &protocol,
-                   StreamResultFunc cb) override;
+                   StreamResultFunc cb,
+                   std::chrono::milliseconds timeout) override;
 
    private:
     std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect_;

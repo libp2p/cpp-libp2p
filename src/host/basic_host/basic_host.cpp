@@ -39,16 +39,43 @@ namespace libp2p::host {
 
   peer::PeerInfo BasicHost::getPeerInfo() const {
     auto addresses = getAddresses();
-    auto interfaces = getAddressesInterfaces();
     auto observed = getObservedAddresses();
+    auto interfaces = getAddressesInterfaces();
 
     std::set<multi::Multiaddress> unique_addresses;
-    unique_addresses.insert(addresses.begin(), addresses.end());
-    unique_addresses.insert(interfaces.begin(), interfaces.end());
-    unique_addresses.insert(observed.begin(), observed.end());
+    unique_addresses.insert(std::make_move_iterator(addresses.begin()),
+                            std::make_move_iterator(addresses.end()));
+    unique_addresses.insert(std::make_move_iterator(interfaces.begin()),
+                            std::make_move_iterator(interfaces.end()));
+    unique_addresses.insert(std::make_move_iterator(observed.begin()),
+                            std::make_move_iterator(observed.end()));
 
-    std::vector<multi::Multiaddress> unique_addr_list(unique_addresses.begin(),
-                                                      unique_addresses.end());
+    // TODO(xDimon): Needs to filter special interfaces (e.g. INADDR_ANY, etc.)
+    for (auto i = unique_addresses.begin(); i != unique_addresses.end();) {
+      bool is_good_addr = true;
+      for (auto &pv : i->getProtocolsWithValues()) {
+        if (pv.first.code == multi::Protocol::Code::IP4) {
+          if (pv.second == "0.0.0.0") {
+            is_good_addr = false;
+            break;
+          }
+        } else if (pv.first.code == multi::Protocol::Code::IP6) {
+          if (pv.second == "::") {
+            is_good_addr = false;
+            break;
+          }
+        }
+      }
+      if (not is_good_addr) {
+        i = unique_addresses.erase(i);
+      } else {
+        ++i;
+      }
+    }
+
+    std::vector<multi::Multiaddress> unique_addr_list(
+        std::make_move_iterator(unique_addresses.begin()),
+        std::make_move_iterator(unique_addresses.end()));
 
     return {getId(), std::move(unique_addr_list)};
   }
@@ -87,8 +114,9 @@ namespace libp2p::host {
 
   void BasicHost::newStream(const peer::PeerInfo &p,
                             const peer::Protocol &protocol,
-                            const Host::StreamResultHandler &handler) {
-    network_->getDialer().newStream(p, protocol, handler);
+                            const Host::StreamResultHandler &handler,
+                            std::chrono::milliseconds timeout) {
+    network_->getDialer().newStream(p, protocol, handler, timeout);
   }
 
   outcome::result<void> BasicHost::listen(const multi::Multiaddress &ma) {
@@ -109,7 +137,8 @@ namespace libp2p::host {
     network_->getListener().start();
   }
 
-  event::Handle BasicHost::setOnNewConnectionHandler(const NewConnectionHandler &h) const {
+  event::Handle BasicHost::setOnNewConnectionHandler(
+      const NewConnectionHandler &h) const {
     return bus_->getChannel<network::event::OnNewConnectionChannel>().subscribe(
         [h{std::move(h)}](auto &&conn) {
           if (auto connection = conn.lock()) {
@@ -149,7 +178,14 @@ namespace libp2p::host {
     return *bus_;
   }
 
-  void BasicHost::connect(const peer::PeerInfo &p) {
-    network_->getDialer().dial(p, [](auto && /* ignored */) {});
+  void BasicHost::connect(const peer::PeerInfo &peer_info,
+                          const ConnectionResultHandler &handler,
+                          std::chrono::milliseconds timeout) {
+    network_->getDialer().dial(peer_info, handler, timeout);
   }
+
+  void BasicHost::disconnect(const peer::PeerId &peer_id) {
+    network_->closeConnections(peer_id);
+  }
+
 }  // namespace libp2p::host

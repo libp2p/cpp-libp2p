@@ -31,13 +31,13 @@ const Multihash EXAMPLE_MULTIHASH =
     "12206e6ff7950a36187a801613426e858dce686cd7d7e3c0fc42ee0330072d245c95"_multihash;
 
 TEST(CidTest, PrettyString) {
-  ContentIdentifier c1(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
-                       ZERO_MULTIHASH);
+  ContentIdentifier c1(ContentIdentifier::Version::V1,
+                       MulticodecType::Code::IDENTITY, ZERO_MULTIHASH);
   ASSERT_EQ(c1.toPrettyString("base58"),
             "base58 - cidv1 - identity - sha2-256-256-"
                 + libp2p::common::hex_lower(ZERO_MULTIHASH.getHash()));
-  ContentIdentifier c2(ContentIdentifier::Version::V0, MulticodecType::DAG_PB,
-                       EXAMPLE_MULTIHASH);
+  ContentIdentifier c2(ContentIdentifier::Version::V0,
+                       MulticodecType::Code::DAG_PB, EXAMPLE_MULTIHASH);
   ASSERT_EQ(c2.toPrettyString("base64"),
             "base64 - cidv0 - dag-pb - sha2-256-256-"
                 + libp2p::common::hex_lower(EXAMPLE_MULTIHASH.getHash()));
@@ -52,8 +52,8 @@ TEST(CidTest, PrettyString) {
 TEST(CidTest, MultibaseStringSuccess) {
   const Multihash reference_multihash =
       "12209658BF8A26B986DEE4ACEB8227B6A74D638CE4CDB2D72CD19516A6F83F1BFDD3"_multihash;
-  ContentIdentifier cid(ContentIdentifier::Version::V0, MulticodecType::DAG_PB,
-                        reference_multihash);
+  ContentIdentifier cid(ContentIdentifier::Version::V0,
+                        MulticodecType::Code::DAG_PB, reference_multihash);
   EXPECT_OUTCOME_TRUE(cid_string, ContentIdentifierCodec::toString(cid))
   ASSERT_EQ(cid_string, "QmYTYMTdkVyB8we45bdXfZuDu5vCjRVX8QNTFLhC7K8C7t");
 }
@@ -67,8 +67,8 @@ TEST(CidTest, MultibaseStringSuccess) {
 TEST(CidTest, MultibaseStringSuccessCIDV1) {
   const Multihash reference_multihash =
       "12202D5BB7C3AFBE68C05BCD109D890DCA28CEB0105BF529EA1111F9EF8B44B217B9"_multihash;
-  ContentIdentifier cid(ContentIdentifier::Version::V1, MulticodecType::RAW,
-                        reference_multihash);
+  ContentIdentifier cid(ContentIdentifier::Version::V1,
+                        MulticodecType::Code::RAW, reference_multihash);
   EXPECT_OUTCOME_TRUE(cid_string, ContentIdentifierCodec::toString(cid))
   ASSERT_EQ(cid_string,
             "bafkreibnlo34hl56ndafxtiqtweq3sriz2ybaw7vfhvbcepz56fujmqxxe");
@@ -83,8 +83,8 @@ TEST(CidTest, MultibaseStringSuccessCIDV1) {
 TEST(CidTest, MultibaseStringOfBaseSuccessCIDV1) {
   const Multihash reference_multihash =
       "12202D5BB7C3AFBE68C05BCD109D890DCA28CEB0105BF529EA1111F9EF8B44B217B9"_multihash;
-  ContentIdentifier cid(ContentIdentifier::Version::V1, MulticodecType::RAW,
-                        reference_multihash);
+  ContentIdentifier cid(ContentIdentifier::Version::V1,
+                        MulticodecType::Code::RAW, reference_multihash);
   EXPECT_OUTCOME_TRUE(cid_string,
                       ContentIdentifierCodec::toStringOfBase(
                           cid, MultibaseCodec::Encoding::BASE58))
@@ -100,8 +100,8 @@ TEST(CidTest, MultibaseStringOfBaseSuccessCIDV1) {
 TEST(CidTest, MultibaseStringOfBaseSuccessCIDV0) {
   const Multihash reference_multihash =
       "12209658BF8A26B986DEE4ACEB8227B6A74D638CE4CDB2D72CD19516A6F83F1BFDD3"_multihash;
-  ContentIdentifier cid(ContentIdentifier::Version::V0, MulticodecType::DAG_PB,
-                        reference_multihash);
+  ContentIdentifier cid(ContentIdentifier::Version::V0,
+                        MulticodecType::Code::DAG_PB, reference_multihash);
   EXPECT_OUTCOME_TRUE(cid_string,
                       ContentIdentifierCodec::toStringOfBase(
                           cid, MultibaseCodec::Encoding::BASE58))
@@ -117,8 +117,8 @@ TEST(CidTest, MultibaseStringOfBaseSuccessCIDV0) {
 TEST(CidTest, MultibaseStringOfBaseCIDV0InvalidBase) {
   const Multihash reference_multihash =
       "12209658BF8A26B986DEE4ACEB8227B6A74D638CE4CDB2D72CD19516A6F83F1BFDD3"_multihash;
-  ContentIdentifier cid(ContentIdentifier::Version::V0, MulticodecType::DAG_PB,
-                        reference_multihash);
+  ContentIdentifier cid(ContentIdentifier::Version::V0,
+                        MulticodecType::Code::DAG_PB, reference_multihash);
   EXPECT_OUTCOME_FALSE(error,
                        ContentIdentifierCodec::toStringOfBase(
                            cid, MultibaseCodec::Encoding::BASE32_LOWER))
@@ -135,7 +135,8 @@ TEST(CidTest, MultibaseFromStringSuccessCIDV1) {
   const Multihash reference_multihash =
       "12202D5BB7C3AFBE68C05BCD109D890DCA28CEB0105BF529EA1111F9EF8B44B217B9"_multihash;
   ContentIdentifier reference_cid(ContentIdentifier::Version::V1,
-                                  MulticodecType::RAW, reference_multihash);
+                                  MulticodecType::Code::RAW,
+                                  reference_multihash);
   const std::string reference_string_cid =
       "bafkreibnlo34hl56ndafxtiqtweq3sriz2ybaw7vfhvbcepz56fujmqxxe";
   EXPECT_OUTCOME_TRUE(cid,
@@ -153,7 +154,8 @@ TEST(CidTest, MultibaseFromStringSuccessCIDV0) {
   const Multihash reference_multihash =
       "12209658BF8A26B986DEE4ACEB8227B6A74D638CE4CDB2D72CD19516A6F83F1BFDD3"_multihash;
   ContentIdentifier reference_cid(ContentIdentifier::Version::V0,
-                                  MulticodecType::DAG_PB, reference_multihash);
+                                  MulticodecType::Code::DAG_PB,
+                                  reference_multihash);
   const std::string reference_string_cid =
       "QmYTYMTdkVyB8we45bdXfZuDu5vCjRVX8QNTFLhC7K8C7t";
 
@@ -181,19 +183,19 @@ TEST(CidTest, MultibaseFromStringShortCid) {
  */
 TEST(CidTest, CompareDifferentVersion) {
   ContentIdentifier c0_v0(ContentIdentifier::Version::V0,
-                          MulticodecType::IDENTITY, ZERO_MULTIHASH);
+                          MulticodecType::Code::IDENTITY, ZERO_MULTIHASH);
   ContentIdentifier c0_v1(ContentIdentifier::Version::V1,
-                          MulticodecType::IDENTITY, ZERO_MULTIHASH);
+                          MulticodecType::Code::IDENTITY, ZERO_MULTIHASH);
   ASSERT_TRUE(c0_v0 < c0_v1);
   ASSERT_FALSE(c0_v0 < c0_v0);
   ASSERT_FALSE(c0_v1 < c0_v1);
 
   ContentIdentifier c1_v1(ContentIdentifier::Version::V1,
-                          MulticodecType::IDENTITY, ZERO_MULTIHASH);
+                          MulticodecType::Code::IDENTITY, ZERO_MULTIHASH);
   ASSERT_TRUE(c0_v0 < c1_v1);
 
-  ContentIdentifier c2_v0(ContentIdentifier::Version::V0, MulticodecType::SHA1,
-                          ZERO_MULTIHASH);
+  ContentIdentifier c2_v0(ContentIdentifier::Version::V0,
+                          MulticodecType::Code::SHA1, ZERO_MULTIHASH);
   ASSERT_TRUE(c0_v0 < c2_v0);
   ASSERT_TRUE(c0_v0 < c0_v1);
 }
@@ -204,10 +206,10 @@ TEST(CidTest, CompareDifferentVersion) {
  * @then lesser type is always less
  */
 TEST(CidTest, CompareDifferentTypes) {
-  ContentIdentifier c1(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
-                       ZERO_MULTIHASH);
-  ContentIdentifier c2(ContentIdentifier::Version::V1, MulticodecType::SHA1,
-                       ZERO_MULTIHASH);
+  ContentIdentifier c1(ContentIdentifier::Version::V1,
+                       MulticodecType::Code::IDENTITY, ZERO_MULTIHASH);
+  ContentIdentifier c2(ContentIdentifier::Version::V1,
+                       MulticodecType::Code::SHA1, ZERO_MULTIHASH);
   ASSERT_TRUE(c1 < c2);
   ASSERT_FALSE(c2 < c1);
   ASSERT_FALSE(c1 < c1);
@@ -220,10 +222,10 @@ TEST(CidTest, CompareDifferentTypes) {
  * @then lesser hash is always less
  */
 TEST(CidTest, CompareDifferentHashes) {
-  ContentIdentifier c1(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
-                       ZERO_MULTIHASH);
-  ContentIdentifier c2(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
-                       EXAMPLE_MULTIHASH);
+  ContentIdentifier c1(ContentIdentifier::Version::V1,
+                       MulticodecType::Code::IDENTITY, ZERO_MULTIHASH);
+  ContentIdentifier c2(ContentIdentifier::Version::V1,
+                       MulticodecType::Code::IDENTITY, EXAMPLE_MULTIHASH);
   ASSERT_TRUE(c1 < c2);
   ASSERT_FALSE(c2 < c1);
   ASSERT_FALSE(c1 < c1);
@@ -235,8 +237,8 @@ class CidEncodeTest
           ContentIdentifier, libp2p::outcome::result<std::vector<uint8_t>>>> {};
 
 TEST(CidTest, Create) {
-  ContentIdentifier c(ContentIdentifier::Version::V0, MulticodecType::IDENTITY,
-                      EXAMPLE_MULTIHASH);
+  ContentIdentifier c(ContentIdentifier::Version::V0,
+                      MulticodecType::Code::IDENTITY, EXAMPLE_MULTIHASH);
   ASSERT_EQ(c.content_address, EXAMPLE_MULTIHASH);
 }
 
@@ -286,32 +288,34 @@ TEST_P(CidEncodeDecodeTest, DecodedMatchesOriginal) {
 
 const std::vector<
     std::pair<ContentIdentifier, libp2p::outcome::result<std::vector<uint8_t>>>>
-    encodeSuite{{ContentIdentifier(ContentIdentifier::Version::V0,
-                                   MulticodecType::SHA1, ZERO_MULTIHASH),
-                 ContentIdentifierCodec::EncodeError::INVALID_CONTENT_TYPE},
-                {ContentIdentifier(ContentIdentifier::Version::V0,
-                                   MulticodecType::DAG_PB, ZERO_MULTIHASH),
-                 ZERO_MULTIHASH.toBuffer()}};
+    encodeSuite{
+        {ContentIdentifier(ContentIdentifier::Version::V0,
+                           MulticodecType::Code::SHA1, ZERO_MULTIHASH),
+         ContentIdentifierCodec::EncodeError::INVALID_CONTENT_TYPE},
+        {ContentIdentifier(ContentIdentifier::Version::V0,
+                           MulticodecType::Code::DAG_PB, ZERO_MULTIHASH),
+         ZERO_MULTIHASH.toBuffer()}};
 
 INSTANTIATE_TEST_CASE_P(EncodeTests, CidEncodeTest,
                         testing::ValuesIn(encodeSuite));
 
 const std::vector<
     std::pair<std::vector<uint8_t>, libp2p::outcome::result<ContentIdentifier>>>
-    decodeSuite{{EXAMPLE_MULTIHASH.toBuffer(),
-                 ContentIdentifier(ContentIdentifier::Version::V0,
-                                   MulticodecType::DAG_PB, EXAMPLE_MULTIHASH)}};
+    decodeSuite{
+        {EXAMPLE_MULTIHASH.toBuffer(),
+         ContentIdentifier(ContentIdentifier::Version::V0,
+                           MulticodecType::Code::DAG_PB, EXAMPLE_MULTIHASH)}};
 
 INSTANTIATE_TEST_CASE_P(DecodeTests, CidDecodeTest,
                         testing::ValuesIn(decodeSuite));
 
 const std::vector<ContentIdentifier> encodeDecodeSuite = {
-    ContentIdentifier(ContentIdentifier::Version::V0, MulticodecType::DAG_PB,
-                      EXAMPLE_MULTIHASH),
-    ContentIdentifier(ContentIdentifier::Version::V1, MulticodecType::IDENTITY,
-                      ZERO_MULTIHASH),
-    ContentIdentifier(ContentIdentifier::Version::V1, MulticodecType::SHA1,
-                      EXAMPLE_MULTIHASH)};
+    ContentIdentifier(ContentIdentifier::Version::V0,
+                      MulticodecType::Code::DAG_PB, EXAMPLE_MULTIHASH),
+    ContentIdentifier(ContentIdentifier::Version::V1,
+                      MulticodecType::Code::IDENTITY, ZERO_MULTIHASH),
+    ContentIdentifier(ContentIdentifier::Version::V1,
+                      MulticodecType::Code::SHA1, EXAMPLE_MULTIHASH)};
 
 INSTANTIATE_TEST_CASE_P(EncodeDecodeTest, CidEncodeDecodeTest,
                         testing::ValuesIn(encodeDecodeSuite));

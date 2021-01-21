@@ -55,18 +55,23 @@ namespace libp2p::multi {
   Multiaddress::FactoryResult Multiaddress::create(std::string_view address) {
     // convert string address to bytes and make sure they represent valid
     // address
-    auto result = converters::multiaddrToBytes(address);
-    if (!result) {
+    auto bytes_result = converters::multiaddrToBytes(address);
+    if (!bytes_result) {
       return Error::INVALID_INPUT;
     }
-    auto &&bytes = result.value();
+    auto &&bytes = bytes_result.value();
+
+    auto str_res = converters::bytesToMultiaddrString(bytes);
+    BOOST_ASSERT(str_res.has_value());
+    auto &&str = str_res.value();
 
     return Multiaddress{
-        std::string{address},
+        std::move(str),
         ByteBuffer{std::vector<uint8_t>{bytes.begin(), bytes.end()}}};
   }
 
-  Multiaddress::FactoryResult Multiaddress::create(gsl::span<const uint8_t> bytes) {
+  Multiaddress::FactoryResult Multiaddress::create(
+      gsl::span<const uint8_t> bytes) {
     auto conversion_res = converters::bytesToMultiaddrString(bytes);
     if (!conversion_res) {
       return Error::INVALID_INPUT;
@@ -134,7 +139,7 @@ namespace libp2p::multi {
       auto alt_pos =
           stringified_address_.rfind(proto == "/ipfs" ? "/p2p" : "/ipfs");
       if (alt_pos != std::string::npos) {
-        if(str_pos == std::string::npos) {
+        if (str_pos == std::string::npos) {
           str_pos = alt_pos;
         } else {
           str_pos = std::max(str_pos, alt_pos);
@@ -271,7 +276,7 @@ namespace libp2p::multi {
       return false;
     }
 
-    auto str = p->name;
+    auto str = '/' + std::string(p->name) + '/';
     return this->stringified_address_.find(str) != std::string::npos;
   }
 
