@@ -41,9 +41,7 @@ namespace libp2p::connection {
             std::make_shared<common::ByteArray>(security::noise::kMaxMsgLen)},
         framer_{std::make_shared<security::noise::InsecureReadWriter>(
             raw_connection_, frame_buffer_)},
-        already_read_{0},
-        already_wrote_{0},
-        plaintext_len_to_write_{0} {
+        already_read_{0} {
     BOOST_ASSERT(raw_connection_);
     BOOST_ASSERT(key_marshaller_);
     BOOST_ASSERT(encoder_cs_);
@@ -100,25 +98,28 @@ namespace libp2p::connection {
 
   void NoiseConnection::write(gsl::span<const uint8_t> in, size_t bytes,
                               libp2p::basic::Writer::WriteCallbackFunc cb) {
-    if (0 == plaintext_len_to_write_) {
-      plaintext_len_to_write_ = bytes;
-    }
-    if (bytes == 0) {
-      BOOST_ASSERT(already_wrote_ >= plaintext_len_to_write_);
-      auto n{plaintext_len_to_write_};
-      already_wrote_ = 0;
-      plaintext_len_to_write_ = 0;
-      return cb(n);
+    WriteContext context{.bytes_written = 0, .to_write = bytes};
+    write(in, bytes, context, std::move(cb));
+  }
+
+  void NoiseConnection::write(gsl::span<const uint8_t> in, size_t bytes,
+                              NoiseConnection::WriteContext ctx,
+                              basic::Writer::WriteCallbackFunc cb) {
+    if (0 == bytes) {
+      BOOST_ASSERT(ctx.bytes_written >= ctx.to_write);
+      return cb(ctx.to_write);
     }
     auto n{std::min(bytes, security::noise::kMaxPlainText)};
     OUTCOME_CB(encrypted, encoder_cs_->encrypt({}, in.subspan(0, n), {}));
     writing_ = std::move(encrypted);
     framer_->write(writing_,
                    [self{shared_from_this()}, in{in.subspan(n)},
-                    bytes{bytes - n}, cb{std::move(cb)}](auto _n) {
+                    bytes{bytes - n}, cb{std::move(cb)}, ctx](auto _n) {
                      OUTCOME_CB(n, _n);
-                     self->already_wrote_ += n;
-                     self->write(in, bytes, cb);
+                     WriteContext context{.bytes_written = ctx.bytes_written,
+                                          .to_write = ctx.to_write};
+                     context.bytes_written += n;
+                     self->write(in, bytes, context, cb);
                    });
   }
 
