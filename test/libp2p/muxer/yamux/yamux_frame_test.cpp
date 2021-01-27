@@ -76,8 +76,8 @@ TEST_F(YamuxFrameTest, NewStreamMsg) {
 
   SCOPED_TRACE("NewStreamMsg");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::DATA, YamuxFrame::Flag::SYN,
-             default_stream_id, 0, ByteArray{});
+             YamuxFrame::FrameType::WINDOW_UPDATE, YamuxFrame::Flag::SYN,
+             default_stream_id, 16 * 1024 * 1024 - 256 * 1024, ByteArray{});
 }
 
 /**
