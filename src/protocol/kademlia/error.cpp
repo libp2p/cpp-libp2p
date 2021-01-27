@@ -8,8 +8,6 @@
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, Error, e) {
   using E = libp2p::protocol::kademlia::Error;
   switch (e) {
-    case E::SUCCESS:
-      return "success";
     case E::NO_PEERS:
       return "no peers found";
     case E::MESSAGE_PARSE_ERROR:

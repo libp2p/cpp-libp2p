@@ -85,10 +85,9 @@ namespace libp2p::protocol::kademlia {
 
     Message request = createGetValueRequest(key_, std::move(self_announce));
     if (!request.serialize(*serialized_request_)) {
+      done_ = true;
       return Error::MESSAGE_SERIALIZE_ERROR;
     }
-
-    started_ = true;
 
     log_.debug("started");
 
@@ -183,13 +182,16 @@ namespace libp2p::protocol::kademlia {
     log_.debug("connected to {}; active {}, in queue {}", addr,
                requests_in_progress_, queue_.size());
 
+    log_.debug("outgoing stream with {}",
+               stream->remotePeerId().value().toBase58());
+
     auto session = session_host_->openSession(stream);
 
     if (!session->write(serialized_request_, shared_from_this())) {
       --requests_in_progress_;
 
-      log_.warn("write to {} failed; active {}, in queue {}", addr,
-                requests_in_progress_, queue_.size());
+      log_.debug("write to {} failed; active {}, in queue {}", addr,
+                 requests_in_progress_, queue_.size());
 
       spawn();
       return;

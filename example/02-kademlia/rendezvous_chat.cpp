@@ -8,6 +8,7 @@
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/injector/kademlia_injector.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
+#include <libp2p/protocol/common/sublogger.hpp>
 #include <memory>
 #include <set>
 #include <vector>
@@ -18,6 +19,9 @@ struct Cmp {
   bool operator()(const std::shared_ptr<Session> &lhs,
                   const std::shared_ptr<Session> &rhs) const;
 };
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+boost::optional<libp2p::peer::PeerId> self_id;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::set<std::shared_ptr<Session>, Cmp> sessions;
@@ -105,6 +109,12 @@ void handleIncomingStream(
   }
   auto &stream = stream_res.value();
 
+  // reject incoming stream with themselves
+  if (stream->remotePeerId().value() == self_id) {
+    stream->reset();
+    return;
+  }
+
   std::cout << stream->remotePeerId().value().toBase58()
             << " + incoming stream from "
             << stream->remoteMultiaddr().value().getStringAddress()
@@ -125,6 +135,12 @@ void handleOutgoingStream(
   }
   auto &stream = stream_res.value();
 
+  // reject outgoing stream to themselves
+  if (stream->remotePeerId().value() == self_id) {
+    stream->reset();
+    return;
+  }
+
   std::cout << stream->remotePeerId().value().toBase58()
             << " + outgoing stream to "
             << stream->remoteMultiaddr().value().getStringAddress()
@@ -137,7 +153,9 @@ void handleOutgoingStream(
 }
 
 int main(int argc, char *argv[]) {
-  spdlog::set_level(spdlog::level::debug);
+  spdlog::set_level(spdlog::level::off);
+  auto log = libp2p::common::createLogger("kad");
+  log->set_level(spdlog::level::info);
 
   try {
     if (argc < 1) {
@@ -177,6 +195,7 @@ int main(int argc, char *argv[]) {
       }
 
       std::vector<libp2p::peer::PeerInfo> v;
+      v.reserve(addresses_by_peer_id.size());
       for (auto &i : addresses_by_peer_id) {
         v.emplace_back(libp2p::peer::PeerInfo{
             .id = i.first, .addresses = {std::move(i.second)}});
@@ -207,18 +226,22 @@ int main(int argc, char *argv[]) {
     kademlia_config.randomWalk.interval = std::chrono::seconds(300);
     kademlia_config.requestConcurency = 20;
 
-    auto injector =  // libp2p::injector::makeHostInjector(
-                     //        libp2p::injector::useKeyPair(kp), // Use
-                     //        predefined keypair
+    auto injector = libp2p::injector::makeHostInjector(
+        //        libp2p::injector::useKeyPair(kp), // Use predefined keypair
         libp2p::injector::makeKademliaInjector(
-            libp2p::injector::makeHostInjector(),
-            libp2p::injector::useKademliaConfig(kademlia_config));
+            libp2p::injector::useKademliaConfig(kademlia_config)));
 
     auto io = injector.create<std::shared_ptr<boost::asio::io_context>>();
 
     auto host = injector.create<std::shared_ptr<libp2p::Host>>();
 
-    auto kademlia = libp2p::injector::get_kademlia(injector);
+    self_id = host->getId();
+
+    std::cerr << self_id->toBase58() << " * started" << std::endl;
+
+    auto kademlia =
+        injector
+            .create<std::shared_ptr<libp2p::protocol::kademlia::Kademlia>>();
 
     // Handle streams for observed protocol
     host->setProtocolHandler("/chat/1.0.0", handleIncomingStream);
@@ -308,7 +331,7 @@ int main(int argc, char *argv[]) {
           auto out = std::make_shared<std::vector<uint8_t>>();
           out->assign(buffer.begin(), buffer.begin() + size);
 
-          for (auto &session : sessions) {
+          for (const auto &session : sessions) {
             session->write(out);
           }
         }

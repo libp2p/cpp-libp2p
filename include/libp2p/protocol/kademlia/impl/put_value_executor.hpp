@@ -63,6 +63,7 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<std::vector<uint8_t>> serialized_request_;
     std::vector<PeerId> addressees_;
     size_t addressees_idx_ = 0;
+    size_t requests_succeed_ = 0;
     size_t requests_in_progress_ = 0;
     bool started_ = false;
     bool done_ = false;

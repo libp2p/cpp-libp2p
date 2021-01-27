@@ -23,7 +23,7 @@ namespace libp2p::crypto::random {
     ~BoostRandomGenerator() override = default;
 
     /**
-     * @brief generators random byte
+     * @brief generates a random byte
      * @return random byte
      */
     uint8_t randomByte() override;

@@ -109,7 +109,7 @@ namespace libp2p::protocol::kademlia {
      * Interval of wiping expired provider records
      * @note Default: 1h
      */
-    std::chrono::seconds providerWipingInterval = 2min;
+    std::chrono::seconds providerWipingInterval = 1h;
 
     /**
      * Max providers number per one key
@@ -136,7 +136,7 @@ namespace libp2p::protocol::kademlia {
      * This is implementation specified property.
      * @note Default: 3s
      */
-    std::chrono::seconds connectionTimeout = 5s;
+    std::chrono::seconds connectionTimeout = 3s;
 
     /**
      * Random walk config

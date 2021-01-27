@@ -49,10 +49,9 @@ namespace libp2p::protocol::kademlia {
 
     Message request = createPutValueRequest(key_, value_);
     if (!request.serialize(*serialized_request_)) {
+      done_ = true;
       return Error::MESSAGE_SERIALIZE_ERROR;
     }
-
-    started_ = true;
 
     log_.debug("started");
 
@@ -125,16 +124,26 @@ namespace libp2p::protocol::kademlia {
     assert(stream->remoteMultiaddr().has_value());
 
     std::string addr(stream->remoteMultiaddr().value().getStringAddress());
-    log_.debug("connected to {}; active {}, in queue {}", addr,
-               requests_in_progress_, addressees_.size() - addressees_idx_);
+    log_.debug("connected to {}; done{}, active {}, in queue {}", addr,
+               requests_succeed_, requests_in_progress_,
+               addressees_.size() - addressees_idx_);
+
+    log_.debug("outgoing stream with {}",
+               stream->remotePeerId().value().toBase58());
 
     auto session = session_host_->openSession(stream);
 
-    if (!session->write(serialized_request_, {})) {
-      --requests_in_progress_;
+    --requests_in_progress_;
 
-      log_.warn("write to {} failed; active {}, in queue {}", addr,
-                requests_in_progress_, addressees_.size() - addressees_idx_);
+    if (session->write(serialized_request_, {})) {
+      ++requests_succeed_;
+      log_.debug("write to {} successfuly; done {}, active {}, in queue {}",
+                addr, requests_succeed_, requests_in_progress_,
+                addressees_.size() - addressees_idx_);
+    } else {
+      log_.debug("write to {} failed; done {}, active {}, in queue {}", addr,
+                requests_succeed_, requests_in_progress_,
+                addressees_.size() - addressees_idx_);
     }
 
     spawn();

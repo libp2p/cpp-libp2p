@@ -38,8 +38,8 @@ namespace libp2p::crypto::random {
      */
     template <typename Container>
     void fillRandomly(Container &container) {
-      //      static_assert(std::is_integral_v<Container::value_type>);
-      //      static_assert(sizeof(Container::value_type == 1));
+      static_assert(std::is_integral_v<typename Container::value_type>);
+      static_assert(sizeof(typename Container::value_type) == 1);
       std::transform(container.begin(), container.end(), container.begin(),
                      [this](auto) { return randomByte(); });
     }
@@ -49,8 +49,8 @@ namespace libp2p::crypto::random {
      */
     template <typename Container>
     void fillRandomly(Container &container, size_t count) {
-      static_assert(std::is_integral_v<Container::value_type>);
-      static_assert(sizeof(Container::value_type == 1));
+      static_assert(std::is_integral_v<typename Container::value_type>);
+      static_assert(sizeof(typename Container::value_type) == 1);
       while (count--) {
         container.push_back(randomByte());
       }

@@ -50,17 +50,20 @@ class IdentifyTest : public testing::Test {
       identify_pb_msg_.add_protocols(proto);
     }
     identify_pb_msg_.set_observedaddr(
-        std::string{(const char*)remote_multiaddr_.getBytesAddress().data(), remote_multiaddr_.getBytesAddress().size()});
+        std::string(remote_multiaddr_.getBytesAddress().begin(),
+                    remote_multiaddr_.getBytesAddress().end()));
     for (const auto &addr : listen_addresses_) {
-      identify_pb_msg_.add_listenaddrs(std::string{(const char*)addr.getBytesAddress().data(), addr.getBytesAddress().size()});
+      identify_pb_msg_.add_listenaddrs(std::string(
+          addr.getBytesAddress().begin(), addr.getBytesAddress().end()));
     }
     identify_pb_msg_.set_publickey(marshalled_pubkey_.data(),
                                    marshalled_pubkey_.size());
     identify_pb_msg_.set_protocolversion(kLibp2pVersion);
     identify_pb_msg_.set_agentversion(kClientVersion);
 
-    pb_msg_len_varint_ = std::make_shared<UVarint>(
-        identify_pb_msg_.ByteSizeLong());
+    pb_msg_len_varint_ =
+        std::make_shared<UVarint>(identify_pb_msg_.ByteSizeLong());
+
     identify_pb_msg_bytes_.insert(
         identify_pb_msg_bytes_.end(),
         std::make_move_iterator(pb_msg_len_varint_->toVector().begin()),
@@ -73,7 +76,7 @@ class IdentifyTest : public testing::Test {
 
     id_msg_processor_ = std::make_shared<IdentifyMessageProcessor>(
         host_, conn_manager_, id_manager_, key_marshaller_);
-    identify_ = std::make_shared<Identify>(id_msg_processor_, bus_);
+    identify_ = std::make_shared<Identify>(host_, id_msg_processor_, bus_);
   }
 
   HostMock host_;
@@ -101,21 +104,24 @@ class IdentifyTest : public testing::Test {
   std::vector<peer::Protocol> protocols_{"/http/5.0.1", "/dogeproto/2.2.8"};
 
   std::vector<multi::Multiaddress> listen_addresses_{
-      "/ip4/111.111.111.111/udp/21"_multiaddr,
-      "/ip4/222.222.222.222/tcp/57"_multiaddr};
-  std::vector<multi::Multiaddress> observed_addresses_{
-      "/ip4/222.222.222.222/tcp/60"_multiaddr};
+      "/ip4/1.1.1.1/tcp/1001"_multiaddr, "/ip4/1.1.1.1/tcp/1002"_multiaddr};
 
-  std::vector<uint8_t> marshalled_pubkey_{0x11, 0x22, 0x33, 0x44},
-      pubkey_data_{0x55, 0x66, 0x77, 0x88};
+  multi::Multiaddress observer_address_ = "/ip4/1.1.1.1/tcp/1234"_multiaddr;
+
+  std::vector<uint8_t> marshalled_pubkey_{0x11, 0x22, 0x33, 0x44};
+  std::vector<uint8_t> pubkey_data_{0x55, 0x66, 0x77, 0x88};
   PublicKey pubkey_{{Key::Type::RSA, pubkey_data_}};
   KeyPair key_pair_{pubkey_, PrivateKey{}};
 
   const peer::PeerId kRemotePeerId =
       PeerId::fromPublicKey(ProtobufKey{marshalled_pubkey_}).value();
-  multi::Multiaddress remote_multiaddr_ = "/ip4/93.32.12.54/tcp/228"_multiaddr;
-  const peer::PeerInfo kPeerInfo{
+  multi::Multiaddress remote_multiaddr_ = "/ip4/2.2.2.2/tcp/1234"_multiaddr;
+  const peer::PeerInfo kRemotePeerInfo{
       kRemotePeerId, std::vector<multi::Multiaddress>{remote_multiaddr_}};
+
+  const peer::PeerId kOwnPeerId =
+      PeerId::fromPublicKey(ProtobufKey{marshalled_pubkey_}).value();
+  const peer::PeerInfo kOwnPeerInfo{kOwnPeerId, listen_addresses_};
 
   const std::string kLibp2pVersion = "ipfs/0.1.0";
   const std::string kClientVersion = "cpp-libp2p/0.1.0";
@@ -154,14 +160,12 @@ TEST_F(IdentifyTest, Send) {
   EXPECT_CALL(host_, getRouter()).WillOnce(ReturnRef(router_));
   EXPECT_CALL(router_, getSupportedProtocols()).WillOnce(Return(protocols_));
 
+  EXPECT_CALL(*stream_, remotePeerId()).WillRepeatedly(Return(kRemotePeerId));
+
   EXPECT_CALL(*stream_, remoteMultiaddr())
-      .Times(2)
       .WillRepeatedly(Return(outcome::success(remote_multiaddr_)));
 
-  EXPECT_CALL(host_, getNetwork()).WillOnce(ReturnRef(network_));
-  EXPECT_CALL(network_, getListener()).WillOnce(ReturnRef(listener_));
-  EXPECT_CALL(listener_, getListenAddresses())
-      .WillOnce(Return(listen_addresses_));
+  EXPECT_CALL(host_, getPeerInfo()).WillOnce(Return(kOwnPeerInfo));
 
   EXPECT_CALL(id_manager_, getKeyPair()).WillOnce(ReturnRef(Const(key_pair_)));
   EXPECT_CALL(
@@ -172,13 +176,12 @@ TEST_F(IdentifyTest, Send) {
   EXPECT_CALL(host_, getLibp2pVersion()).WillOnce(Return(kLibp2pVersion));
   EXPECT_CALL(host_, getLibp2pClientVersion()).WillOnce(Return(kClientVersion));
 
-  EXPECT_CALL(*stream_, remotePeerId()).WillOnce(Return(kRemotePeerId));
-
   // handle Identify request and check it
   EXPECT_CALL(*stream_, write(_, _, _))
       .WillOnce(Success(gsl::span<const uint8_t>(identify_pb_msg_bytes_.data(),
                                                  identify_pb_msg_bytes_.size()),
                         outcome::success(identify_pb_msg_bytes_.size())));
+
   identify_->handle(std::static_pointer_cast<Stream>(stream_));
 }
 
@@ -198,11 +201,13 @@ ACTION_P(ReturnStreamRes, s) {
  * peer to be identified @and accepts the received message
  */
 TEST_F(IdentifyTest, Receive) {
+  EXPECT_CALL(host_, setProtocolHandler(kIdentifyProto, _)).WillOnce(Return());
+
   EXPECT_CALL(*connection_, remotePeer()).WillOnce(Return(kRemotePeerId));
   EXPECT_CALL(*connection_, remoteMultiaddr())
       .WillOnce(Return(remote_multiaddr_));
 
-  EXPECT_CALL(host_, newStream(kPeerInfo, kIdentifyProto, _, _))
+  EXPECT_CALL(host_, newStream(kRemotePeerInfo, kIdentifyProto, _, _))
       .WillOnce(ReturnStreamRes(std::static_pointer_cast<Stream>(stream_)));
 
   EXPECT_CALL(*stream_, read(_, 1, _))

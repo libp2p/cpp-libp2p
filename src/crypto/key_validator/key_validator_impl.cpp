@@ -169,12 +169,14 @@ namespace libp2p::crypto::validator {
   outcome::result<void> KeyValidatorImpl::validateEcdsa(
       const PrivateKey &key) const {
     // TODO(xDimon): Check if it possible to validate ECDSA key by some way.
+    //  issue: https://github.com/libp2p/cpp-libp2p/issues/103
     return outcome::success();
   }
 
   outcome::result<void> KeyValidatorImpl::validateEcdsa(
       const PublicKey &key) const {
     // TODO(xDimon): Check if it possible to validate ECDSA key by some way.
+    //  issue: https://github.com/libp2p/cpp-libp2p/issues/103
     return outcome::success();
   }
 

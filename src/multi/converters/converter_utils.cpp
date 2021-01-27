@@ -72,6 +72,7 @@ namespace libp2p::multi::converters {
       }
     }
 
+    // TODO(xDimon): Replace hex-unhex steps by using bytes directly
     return unhex(processed);
   }
 
@@ -131,7 +132,7 @@ namespace libp2p::multi::converters {
         return ConversionError::NO_SUCH_PROTOCOL;
       }
 
-      if (protocol->name != "ipfs" and protocol->name != "p2p") {
+      if (protocol->code != Protocol::Code::P2P) {
         lastpos = lastpos
             + UVarint::calculateSize(pid_bytes.subspan(lastpos / 2)) * 2;
         std::string address;
@@ -235,9 +236,7 @@ namespace libp2p::multi::converters {
             addrbuf, MultibaseCodecImpl::Encoding::BASE58);
         encode_res.erase(0, 1);  // because multibase contains a char that
                                  // denotes which base is used
-        results += "/";
-        results += protocol->name;
-        results += "/" + encode_res;
+        results += "/p2p/" + encode_res;
         lastpos += addrsize * 2 + 2;
       }
     }

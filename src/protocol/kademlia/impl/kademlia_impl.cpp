@@ -207,6 +207,15 @@ namespace libp2p::protocol::kademlia {
 
   void KademliaImpl::addPeer(const PeerInfo &peer_info, bool permanent) {
     log_.debug("CALL: AddPeer ({})", peer_info.id.toBase58());
+    for (auto &addr : peer_info.addresses) {
+      log_.debug("         addr: {}", addr.getStringAddress());
+    }
+
+    if (peer_info.addresses.empty()) {
+      log_.debug("{} was skipped because has not adresses",
+                 peer_info.id.toBase58());
+      return;
+    }
 
     auto upsert_res =
         host_->getPeerRepository().getAddressRepository().upsertAddresses(
@@ -608,19 +617,21 @@ namespace libp2p::protocol::kademlia {
   void KademliaImpl::handleProtocol(
       protocol::BaseProtocol::StreamResult stream_res) {
     if (!stream_res) {
-      log_.info("incoming stream failed due to '{}'",
+      log_.warn("incoming stream failed due to '{}'",
                 stream_res.error().message());
       return;
     }
 
     auto &stream = stream_res.value();
 
-    log_.debug("incoming stream from '{}'",
-               stream->remoteMultiaddr().value().getStringAddress());
+    if (stream->remotePeerId().value() == self_id_) {
+      log_.debug("incoming stream with themselves");
+      stream->reset();
+      return;
+    }
 
-    addPeer(peer::PeerInfo{stream->remotePeerId().value(),
-                           {stream->remoteMultiaddr().value()}},
-            false);
+    log_.debug("incoming stream with {}",
+               stream->remotePeerId().value().toBase58());
 
     auto session = openSession(stream);
 

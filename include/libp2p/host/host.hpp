@@ -145,6 +145,11 @@ namespace libp2p {
     };
 
     /**
+     * Closes all connections (outbound and inbound) to given {@param peer_id}
+     */
+    virtual void disconnect(const peer::PeerId &peer_id) = 0;
+
+    /**
      * @brief Open new stream to the peer {@param peer_info} with protocol
      * {@param protocol} with a specific timeout.
      * @param peer_info stream will be opened to this peer

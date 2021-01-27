@@ -22,17 +22,6 @@
 
 namespace libp2p::injector {
 
-  template <
-      typename T, typename C = std::decay_t<T>,
-      typename = std::enable_if<std::is_same_v<C, protocol::kademlia::Config>>>
-  inline auto useKademliaConfig(T &&c) {
-    return boost::di::bind<C>().template to(
-        [c = std::forward<C>(c)](const auto &injector) mutable -> const C & {
-          static C instance = std::move(c);
-          return instance;
-        })[boost::di::override];
-  }
-
   template <typename Injector>
   std::shared_ptr<libp2p::protocol::kademlia::Kademlia> get_kademlia(
       const Injector &injector) {
@@ -72,6 +61,17 @@ namespace libp2p::injector {
     return initialized.value();
   }
 
+  template <
+      typename T, typename C = std::decay_t<T>,
+      typename = std::enable_if<std::is_same_v<C, protocol::kademlia::Config>>>
+  inline auto useKademliaConfig(T &&c) {
+    return boost::di::bind<C>().template to(
+        [c = std::forward<C>(c)](const auto &injector) mutable -> const C & {
+          static C instance = std::move(c);
+          return instance;
+        })[boost::di::override];
+  }
+
   // clang-format off
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
   auto makeKademliaInjector(Ts &&... args) {
@@ -79,27 +79,26 @@ namespace libp2p::injector {
     return di::make_injector<InjectorConfig>(
         // clang-format off
 
-				//di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
-				di::bind<crypto::random::RandomGenerator>.template to<crypto::random::BoostRandomGenerator>(),
-				//di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
+        di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
+        di::bind<crypto::random::RandomGenerator>.template to<crypto::random::BoostRandomGenerator>(),
+        di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
 
-				di::bind<protocol::kademlia::Config>.template to<protocol::kademlia::Config>().in(di::singleton),
-				di::bind<protocol::kademlia::ContentRoutingTable>.template to<protocol::kademlia::ContentRoutingTableImpl>(),
-				di::bind<protocol::kademlia::PeerRoutingTable>.template to<protocol::kademlia::PeerRoutingTableImpl>(),
-				di::bind<protocol::kademlia::StorageBackend>.template to<protocol::kademlia::StorageBackendDefault>(),
-				di::bind<protocol::kademlia::Storage>.template to<protocol::kademlia::StorageImpl>(),
-				di::bind<protocol::kademlia::Validator>.template to<protocol::kademlia::ValidatorDefault>(),
+        di::bind<protocol::kademlia::Config>.template to<protocol::kademlia::Config>().in(di::singleton),
+        di::bind<protocol::kademlia::ContentRoutingTable>.template to<protocol::kademlia::ContentRoutingTableImpl>(),
+        di::bind<protocol::kademlia::PeerRoutingTable>.template to<protocol::kademlia::PeerRoutingTableImpl>(),
+        di::bind<protocol::kademlia::StorageBackend>.template to<protocol::kademlia::StorageBackendDefault>(),
+        di::bind<protocol::kademlia::Storage>.template to<protocol::kademlia::StorageImpl>(),
+        di::bind<protocol::kademlia::Validator>.template to<protocol::kademlia::ValidatorDefault>(),
 
-				di::bind<protocol::kademlia::MessageObserver>.template to<protocol::kademlia::KademliaImpl>().in(di::singleton),
-				di::bind<protocol::kademlia::Kademlia>.template to<protocol::kademlia::KademliaImpl>().in(di::singleton),
-//				di::bind<protocol::kademlia::MessageObserver>.template to([](auto const &inj) { return get_kademlia(inj); }),
-//				di::bind<protocol::kademlia::Kademlia>.template to([](auto const &inj) { return get_kademlia(inj); }),
+        di::bind<protocol::kademlia::MessageObserver>.template to<protocol::kademlia::KademliaImpl>().in(di::singleton),
+        di::bind<protocol::kademlia::Kademlia>.template to<protocol::kademlia::KademliaImpl>().in(di::singleton),
 
         // user-defined overrides...
         std::forward<decltype(args)>(args)...
         // clang-format on
     );
   }
+
 
 }  // namespace libp2p::injector
 
