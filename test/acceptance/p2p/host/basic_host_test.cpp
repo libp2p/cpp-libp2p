@@ -132,7 +132,7 @@ TEST_F(BasicHostTest, GetAddressesInterfaces) {
 TEST_F(BasicHostTest, Connect) {
   peer::PeerInfo pinfo{"2"_peerid, {ma1}};
   EXPECT_CALL(network, getDialer()).WillOnce(ReturnRef(*dialer));
-  EXPECT_CALL(*dialer, dial(pinfo, _)).Times(1);
+  EXPECT_CALL(*dialer, dial(pinfo, _, _)).Times(1);
 
   host->connect(pinfo);
 }

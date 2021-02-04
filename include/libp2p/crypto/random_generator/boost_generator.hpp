@@ -21,6 +21,13 @@ namespace libp2p::crypto::random {
   class BoostRandomGenerator : public CSPRNG {
    public:
     ~BoostRandomGenerator() override = default;
+
+    /**
+     * @brief generates a random byte
+     * @return random byte
+     */
+    uint8_t randomByte() override;
+
     /**
      * @brief generators random bytes
      * @param len number of bytes

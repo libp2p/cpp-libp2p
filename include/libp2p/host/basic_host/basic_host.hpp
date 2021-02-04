@@ -42,7 +42,11 @@ namespace libp2p::host {
 
     std::vector<multi::Multiaddress> getObservedAddresses() const override;
 
-    void connect(const peer::PeerInfo &p) override;
+    void connect(const peer::PeerInfo &peer_info,
+                 const ConnectionResultHandler &handler,
+                 std::chrono::milliseconds timeout) override;
+
+    void disconnect(const peer::PeerId &peer_id) override;
 
     void setProtocolHandler(
         const peer::Protocol &proto,

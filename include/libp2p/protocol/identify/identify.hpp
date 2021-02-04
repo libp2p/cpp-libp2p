@@ -32,7 +32,8 @@ namespace libp2p::protocol {
      * @param msg_processor to work with Identify messages
      * @param event_bus - bus, over which the events arrive
      */
-    Identify(std::shared_ptr<IdentifyMessageProcessor> msg_processor,
+    Identify(Host &host,
+             std::shared_ptr<IdentifyMessageProcessor> msg_processor,
              event::Bus &event_bus);
 
     ~Identify() override = default;
@@ -76,6 +77,7 @@ namespace libp2p::protocol {
     void onNewConnection(
         const std::weak_ptr<connection::CapableConnection> &conn);
 
+    Host &host_;
     std::shared_ptr<IdentifyMessageProcessor> msg_processor_;
     event::Bus &bus_;
     event::Handle sub_;  // will unsubscribe during destruction by itself

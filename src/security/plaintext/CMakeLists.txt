@@ -23,6 +23,6 @@ libp2p_add_library(p2p_plaintext_exchange_message_marshaller
     )
 target_link_libraries(p2p_plaintext_exchange_message_marshaller
     Boost::boost
-    p2p_plaintext_protobuf
+    p2p_plaintext_proto
     p2p_key_marshaller
     )
