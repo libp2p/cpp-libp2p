@@ -42,5 +42,11 @@ int main(int argc, char *argv[]) {
         });
   });
   // run the IO context
-  context->run();
+  try {
+    context->run();
+  } catch (const boost::system::error_code &ec) {
+    std::cout << "Example cannot run: " << ec.message() << std::endl;
+  } catch (...) {
+    std::cout << "Unknown error happened" << std::endl;
+  }
 }
