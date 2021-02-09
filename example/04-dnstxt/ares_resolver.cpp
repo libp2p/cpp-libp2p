@@ -12,7 +12,7 @@
 #include <libp2p/outcome/outcome.hpp>
 
 int main(int argc, char *argv[]) {
-  auto ares = std::make_shared<libp2p::network::cares::Ares>();
+  libp2p::network::cares::Ares ares;
   spdlog::set_level(spdlog::level::trace);
 
   // create a default Host via an injector
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
   // the guard to preserve context's running state when tasks queue is empty
   auto work_guard = boost::asio::make_work_guard(*context);
   context->post([&] {
-    ares->resolveTxt(
+    ares.resolveTxt(
         "_dnsaddr.bootstrap.libp2p.io", context,
         [&](libp2p::outcome::result<std::vector<std::string>> result) -> void {
           if (result.has_error()) {
@@ -36,8 +36,8 @@ int main(int argc, char *argv[]) {
             }
           }
           // work guard is used only for example purposes.
-          // normal conditions for libp2p imply the main context is running and
-          // serving listeners or something at the moment
+          // normal conditions for libp2p imply the main context is running
+          // and serving listeners or something at the moment
           work_guard.reset();
         });
   });
