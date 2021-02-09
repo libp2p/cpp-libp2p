@@ -89,7 +89,7 @@ namespace libp2p::peer {
     auto &addresses = *peer_it->second;
 
     auto expires_at = Clock::now() + ttl;
-    for (auto &m : ma) {
+    for (const auto &m : ma) {
       auto [addr_it, added] = addresses.emplace(m, expires_at);
       if (added) {
         signal_added_(p, m);

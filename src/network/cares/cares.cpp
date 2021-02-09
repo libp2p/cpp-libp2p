@@ -58,9 +58,11 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::network::cares, Ares::Error, e) {
 
 namespace libp2p::network::cares {
 
-  std::atomic_bool Ares::initialized_{false};
-  std::list<std::shared_ptr<Ares::RequestContext>> Ares::requests_{};
-  common::Logger Ares::log_ = common::createLogger("Ares");
+  // linting of the three lines is disabled due to clang-tidy bug
+  // https://bugs.llvm.org/show_bug.cgi?id=48040
+  std::atomic_bool Ares::initialized_{false};                          // NOLINT
+  std::list<std::shared_ptr<Ares::RequestContext>> Ares::requests_{};  // NOLINT
+  common::Logger Ares::log_ = common::createLogger("Ares");            // NOLINT
 
   Ares::Ares() {
     bool expected{false};
@@ -78,16 +80,14 @@ namespace libp2p::network::cares {
   }
 
   Ares::~Ares() {
-    bool expected{true};
-    if (not initialized_.compare_exchange_strong(expected, false)) {
-      log_->debug("C-ares library destruction happened more than once");
-    }
+    initialized_.store(false);
     ares_library_cleanup();
   }
 
-  void Ares::resolveTxt(std::string uri,
-                        std::weak_ptr<boost::asio::io_context> io_context,
-                        Ares::TxtCallback callback) const {
+  void Ares::resolveTxt(
+      const std::string &uri,
+      const std::weak_ptr<boost::asio::io_context> &io_context,
+      Ares::TxtCallback callback) {
     if (not initialized_.load()) {
       log_->debug(
           "Unable to execute DNS TXT request to %s due to c-ares library is "
@@ -108,8 +108,8 @@ namespace libp2p::network::cares {
       return;
     }
 
-    auto request = std::make_shared<RequestContext>(
-        std::move(io_context), std::move(uri), std::move(callback));
+    auto request =
+        std::make_shared<RequestContext>(io_context, uri, std::move(callback));
     requests_.push_back(request);
 
     try {
@@ -136,8 +136,8 @@ namespace libp2p::network::cares {
     log_->debug("IO context has expired");
   }
 
-  void Ares::txtCallback(void *arg, int status, int timeouts,
-                         unsigned char *abuf, int alen) {
+  void Ares::txtCallback(void *arg, int status, int, unsigned char *abuf,
+                         int alen) {
     auto *request_ptr{static_cast<RequestContext *>(arg)};
     auto processError = [request_ptr](int status_code) -> bool {
       if (ARES_SUCCESS != status_code) {
@@ -179,14 +179,14 @@ namespace libp2p::network::cares {
 
   void Ares::waitAresChannel(::ares_channel channel) {
     while (true) {
-      struct timeval *tvp{nullptr};
+      struct timeval *tvp{nullptr};  // NOLINT
       struct timeval tv {};
       fd_set read_fds;
       fd_set write_fds;
-      int nfds{0};
+      int nfds{0};  // NOLINT
 
-      FD_ZERO(&read_fds);
-      FD_ZERO(&write_fds);
+      FD_ZERO(&read_fds);   // NOLINT
+      FD_ZERO(&write_fds);  // NOLINT
       nfds = ::ares_fds(channel, &read_fds, &write_fds);
       if (0 == nfds) {
         break;
