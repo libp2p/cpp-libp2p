@@ -6,6 +6,7 @@
 #include <libp2p/network/cares/cares.hpp>
 
 #include <cstring>
+#include <stdexcept>
 #include <thread>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::network::cares, Ares::Error, e) {
@@ -15,6 +16,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::network::cares, Ares::Error, e) {
       return "C-ares library is not initialized";
     case E::CHANNEL_INIT_FAILURE:
       return "C-ares channel initialization failed";
+    case E::THREAD_FAILED:
+      return "Ares unable to start worker thread";
     case E::E_NO_DATA:
       return "The query completed but contains no answers";
     case E::E_BAD_QUERY:
@@ -67,7 +70,7 @@ namespace libp2p::network::cares {
       log_->debug("C-ares library got initialized more than once");
     } else if (auto status = ::ares_library_init(ARES_LIB_INIT_ALL);
                ARES_SUCCESS != status) {
-      log_->error("Unable to initialize c-ares library - %s",
+      log_->error("Unable to initialize c-ares library - {}",
                   ::ares_strerror(status));
       // on library initialization failure we set initialized = false
       assert(initialized_.compare_exchange_strong(expected, false));
@@ -99,7 +102,7 @@ namespace libp2p::network::cares {
     options.timeout = 30'000;
     status = ares_init_options(&channel, &options, ARES_OPT_TIMEOUTMS);
     if (ARES_SUCCESS != status) {
-      log_->debug("Unable to initialize c-ares channel for request to %s - %s",
+      log_->debug("Unable to initialize c-ares channel for request to {} - {}",
                   uri, ::ares_strerror(status));
       reportError(io_context, std::move(callback), Error::CHANNEL_INIT_FAILURE);
       return;
@@ -109,13 +112,18 @@ namespace libp2p::network::cares {
         std::move(io_context), std::move(uri), std::move(callback));
     requests_.push_back(request);
 
-    std::thread worker([channel, request{std::move(request)}] {
-      ::ares_query(channel, request->uri.c_str(), ns_c_in, ns_t_txt,
-                   Ares::txtCallback, request.get());
-      Ares::waitAresChannel(channel);
-      ::ares_destroy(channel);
-    });
-    worker.detach();
+    try {
+      std::thread worker([channel, request] {
+        ::ares_query(channel, request->uri.c_str(), ns_c_in, ns_t_txt,
+                     Ares::txtCallback, request.get());
+        Ares::waitAresChannel(channel);
+        ::ares_destroy(channel);
+      });
+      worker.detach();
+    } catch (std::runtime_error &e) {
+      log_->error("Ares unable to start worker thread - {}", e.what());
+      request->callback(Error::THREAD_FAILED);
+    }
   }
 
   void Ares::reportError(

@@ -38,6 +38,7 @@ namespace libp2p::network::cares {
     enum class Error {
       NOT_INITIALIZED = 1,
       CHANNEL_INIT_FAILURE,
+      THREAD_FAILED,
       // the following are the codes returned to callback by ::ares_query
       E_NO_DATA,
       E_BAD_QUERY,
