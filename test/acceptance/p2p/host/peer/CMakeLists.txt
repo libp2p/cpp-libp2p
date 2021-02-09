@@ -16,4 +16,6 @@ target_link_libraries(p2p_test_peer
     p2p_inmem_protocol_repository
     p2p_protocol_echo
     p2p_client_test_session
+    p2p_cares
+    p2p_dnsaddr_resolver
     )

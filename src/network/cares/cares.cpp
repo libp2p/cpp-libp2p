@@ -5,6 +5,7 @@
 
 #include <libp2p/network/cares/cares.hpp>
 
+#include <cstring>
 #include <thread>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::network::cares, Ares::Error, e) {
@@ -61,14 +62,11 @@ namespace libp2p::network::cares {
   Ares::Ares() {
     bool expected{false};
     bool first_init = initialized_.compare_exchange_strong(expected, true);
-    // assert reveals multiple ares initialization which is a misuse
-    assert(first_init);
     if (not first_init) {
       // atomic change failed, thus it was already initialized
       log_->debug("C-ares library got initialized more than once");
-    }
-    if (auto status = ::ares_library_init(ARES_LIB_INIT_ALL);
-        ARES_SUCCESS != status) {
+    } else if (auto status = ::ares_library_init(ARES_LIB_INIT_ALL);
+               ARES_SUCCESS != status) {
       log_->error("Unable to initialize c-ares library - %s",
                   ::ares_strerror(status));
       // on library initialization failure we set initialized = false
@@ -78,13 +76,15 @@ namespace libp2p::network::cares {
 
   Ares::~Ares() {
     bool expected{true};
-    assert(initialized_.compare_exchange_strong(expected, false));
+    if (not initialized_.compare_exchange_strong(expected, false)) {
+      log_->debug("C-ares library destruction happened more than once");
+    }
     ares_library_cleanup();
   }
 
   void Ares::resolveTxt(std::string uri,
                         std::weak_ptr<boost::asio::io_context> io_context,
-                        Ares::TxtCallback callback) {
+                        Ares::TxtCallback callback) const {
     if (not initialized_.load()) {
       log_->debug(
           "Unable to execute DNS TXT request to %s due to c-ares library is "
@@ -156,15 +156,13 @@ namespace libp2p::network::cares {
          current = current->next) {
       std::string txt;
       txt.resize(current->length);
-      memcpy(txt.data(), current->txt, current->length);
+      std::memcpy(txt.data(), current->txt, current->length);
       result.emplace_back(std::move(txt));
     }
     ::ares_free_data(reply);
     if (auto ctx = request_ptr->io_context.lock()) {
       ctx->post([callback{std::move(request_ptr->callback)},
-                 reply{std::move(result)}] {
-        callback(reply);
-      });
+                 reply{std::move(result)}] { callback(reply); });
     } else {
       log_->debug("IO context has expired");
     }

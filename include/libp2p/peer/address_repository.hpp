@@ -18,6 +18,8 @@
 
 namespace libp2p::peer {
 
+  constexpr std::string_view kBootstrapAddress = "/dnsaddr/bootstrap.libp2p.io";
+
   namespace ttl {
 
     /// permanent addresses, for example, bootstrap nodes
@@ -50,8 +52,35 @@ namespace libp2p::peer {
 
    public:
     using AddressCallback = void(const PeerId &, const multi::Multiaddress &);
+    using BootstrapCallback = void(outcome::result<void>);
 
     ~AddressRepository() override = default;
+
+    /**
+     * @brief Populate repository with peer infos discovered through the default
+     * libp2p bootstrap address
+     * @param cb - callback to accept the number of discovered peers or an error
+     * of any
+     */
+    virtual void bootstrap(std::function<BootstrapCallback> cb) {
+      auto ma_res = multi::Multiaddress::create(kBootstrapAddress);
+      if (ma_res.has_error()) {
+        cb(ma_res.error());
+        return;
+      }
+      bootstrap(ma_res.value(), cb);
+    }
+
+    /**
+     * @brief Populate repository with peer infos discovered through the
+     * specified bootstrap address
+     * @param ma - bootstrap node multiaddress, address format is
+     * "/dnsaddr/<hostname>"
+     * @param cb - callback to accept the number of discovered peers or an error
+     * if any
+     */
+    virtual void bootstrap(const multi::Multiaddress &ma,
+                           std::function<BootstrapCallback> cb) = 0;
 
     /**
      * @brief Add addresses to a given peer {@param p}

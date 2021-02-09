@@ -81,7 +81,7 @@ namespace libp2p::network::cares {
 
     void resolveTxt(std::string uri,
                     std::weak_ptr<boost::asio::io_context> io_context,
-                    TxtCallback callback);
+                    TxtCallback callback) const;
 
    private:
     struct RequestContext {

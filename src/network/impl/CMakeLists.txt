@@ -55,3 +55,11 @@ libp2p_add_library(p2p_connection_manager
 target_link_libraries(p2p_connection_manager
     Boost::boost
     )
+
+libp2p_add_library(p2p_dnsaddr_resolver
+    dnsaddr_resolver_impl.cpp
+    )
+target_link_libraries(p2p_dnsaddr_resolver
+    Boost::boost
+    p2p_cares
+    )
