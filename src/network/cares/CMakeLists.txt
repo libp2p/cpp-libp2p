@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-find_package(Threads)
-
 libp2p_add_library(p2p_cares
     cares.cpp
     )

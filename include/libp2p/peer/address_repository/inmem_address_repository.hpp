@@ -28,15 +28,15 @@ namespace libp2p::peer {
    */
   class InmemAddressRepository
       : public AddressRepository,
-        std::enable_shared_from_this<InmemAddressRepository> {
+        public std::enable_shared_from_this<InmemAddressRepository> {
    public:
     static constexpr auto kDefaultTtl = std::chrono::milliseconds(1000);
 
-    InmemAddressRepository(
+    explicit InmemAddressRepository(
         std::shared_ptr<network::DnsaddrResolver> dnsaddr_resolver);
 
     void bootstrap(const multi::Multiaddress &ma,
-                   std::function<BootstrapCallback> cb);
+                   std::function<BootstrapCallback> cb) override;
 
     outcome::result<bool> addAddresses(const PeerId &p,
                                        gsl::span<const multi::Multiaddress> ma,

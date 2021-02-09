@@ -26,9 +26,8 @@ namespace libp2p::network {
       BAD_ADDR_IN_RESPONSE,
     };
 
-    explicit DnsaddrResolverImpl(
-        std::shared_ptr<boost::asio::io_context> io_context,
-        const cares::Ares &cares);
+    DnsaddrResolverImpl(std::shared_ptr<boost::asio::io_context> io_context,
+                        const cares::Ares &cares);
 
     void load(multi::Multiaddress address, AddressesCallback callback) override;
 
