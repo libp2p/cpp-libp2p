@@ -22,7 +22,7 @@
 #include <libp2p/common/logger.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
-namespace libp2p::network::cares {
+namespace libp2p::network::c_ares {
 
   /**
    *
@@ -116,8 +116,8 @@ namespace libp2p::network::cares {
     static common::Logger log_;
   };
 
-}  // namespace libp2p::network::cares
+}  // namespace libp2p::network::c_ares
 
-OUTCOME_HPP_DECLARE_ERROR(libp2p::network::cares, Ares::Error);
+OUTCOME_HPP_DECLARE_ERROR(libp2p::network::c_ares, Ares::Error);
 
 #endif  // LIBP2P_INCLUDE_LIBP2P_NETWORK_CARES_CARES_HPP

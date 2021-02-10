@@ -12,7 +12,7 @@
 #include <libp2p/outcome/outcome.hpp>
 
 int main(int argc, char *argv[]) {
-  libp2p::network::cares::Ares ares;
+  libp2p::network::c_ares::Ares ares;
   spdlog::set_level(spdlog::level::trace);
 
   // create a default Host via an injector

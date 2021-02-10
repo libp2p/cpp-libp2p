@@ -27,7 +27,7 @@ namespace libp2p::network {
     };
 
     DnsaddrResolverImpl(std::shared_ptr<boost::asio::io_context> io_context,
-                        const cares::Ares &cares);
+                        const c_ares::Ares &cares);
 
     void load(multi::Multiaddress address, AddressesCallback callback) override;
 
@@ -38,7 +38,7 @@ namespace libp2p::network {
 
     std::shared_ptr<boost::asio::io_context> io_context_;
     // captured by reference intentionally to force DI use the single instance
-    const cares::Ares &cares_;
+    const c_ares::Ares &cares_;
   };
 
 }  // namespace libp2p::network

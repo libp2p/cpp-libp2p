@@ -22,7 +22,7 @@
 
 using namespace libp2p;  // NOLINT
 
-libp2p::network::cares::Ares Peer::cares_;
+libp2p::network::c_ares::Ares Peer::cares_;
 
 Peer::Peer(Peer::Duration timeout, bool secure)
     : muxed_config_{1024576, 1000},

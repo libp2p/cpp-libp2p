@@ -9,8 +9,8 @@
 #include <stdexcept>
 #include <thread>
 
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::network::cares, Ares::Error, e) {
-  using E = libp2p::network::cares::Ares::Error;
+OUTCOME_CPP_DEFINE_CATEGORY(libp2p::network::c_ares, Ares::Error, e) {
+  using E = libp2p::network::c_ares::Ares::Error;
   switch (e) {
     case E::NOT_INITIALIZED:
       return "C-ares library is not initialized";
@@ -56,7 +56,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::network::cares, Ares::Error, e) {
   }
 }
 
-namespace libp2p::network::cares {
+namespace libp2p::network::c_ares {
 
   // linting of the three lines is disabled due to clang-tidy bug
   // https://bugs.llvm.org/show_bug.cgi?id=48040
@@ -80,8 +80,10 @@ namespace libp2p::network::cares {
   }
 
   Ares::~Ares() {
-    initialized_.store(false);
-    ares_library_cleanup();
+    bool expected{true};
+    if (initialized_.compare_exchange_strong(expected, false)) {
+      ares_library_cleanup();
+    }
   }
 
   void Ares::resolveTxt(
@@ -90,7 +92,7 @@ namespace libp2p::network::cares {
       Ares::TxtCallback callback) {
     if (not initialized_.load()) {
       log_->debug(
-          "Unable to execute DNS TXT request to %s due to c-ares library is "
+          "Unable to execute DNS TXT request to {} due to c-ares library is "
           "not initialized",
           uri);
       reportError(io_context, std::move(callback), Error::NOT_INITIALIZED);
@@ -120,7 +122,7 @@ namespace libp2p::network::cares {
         ::ares_destroy(channel);
       });
       worker.detach();
-    } catch (std::runtime_error &e) {
+    } catch (const std::runtime_error &e) {
       log_->error("Ares unable to start worker thread - {}", e.what());
       request->callback(Error::THREAD_FAILED);
     }
@@ -139,21 +141,18 @@ namespace libp2p::network::cares {
   void Ares::txtCallback(void *arg, int status, int, unsigned char *abuf,
                          int alen) {
     auto *request_ptr{static_cast<RequestContext *>(arg)};
-    auto processError = [request_ptr](int status_code) -> bool {
-      if (ARES_SUCCESS != status_code) {
-        reportError(request_ptr->io_context, request_ptr->callback,
-                    kQueryErrors.at(status_code));
-        removeRequest(request_ptr);
-        return true;
-      }
-      return false;
-    };
-    if (processError(status)) {
+    if (ARES_SUCCESS != status) {
+      reportError(request_ptr->io_context, request_ptr->callback,
+                  kQueryErrors.at(status));
+      removeRequest(request_ptr);
       return;
     }
     ::ares_txt_reply *reply{nullptr};
     auto parse_status = ::ares_parse_txt_reply(abuf, alen, &reply);
-    if (processError(parse_status)) {
+    if (ARES_SUCCESS != parse_status) {
+      reportError(request_ptr->io_context, request_ptr->callback,
+                  kQueryErrors.at(parse_status));
+      removeRequest(request_ptr);
       if (nullptr != reply) {
         ::ares_free_data(reply);
       }
@@ -204,4 +203,4 @@ namespace libp2p::network::cares {
         });
   }
 
-}  // namespace libp2p::network::cares
+}  // namespace libp2p::network::c_ares
