@@ -75,7 +75,9 @@ namespace libp2p::network::c_ares {
       log_->error("Unable to initialize c-ares library - {}",
                   ::ares_strerror(status));
       // on library initialization failure we set initialized = false
-      assert(initialized_.compare_exchange_strong(expected, false));
+      [[maybe_unused]] bool switched_back_on_error{
+          initialized_.compare_exchange_strong(expected, false)};
+      assert(switched_back_on_error);
     }
   }
 
