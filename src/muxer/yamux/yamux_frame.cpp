@@ -15,20 +15,25 @@ namespace libp2p::connection {
   YamuxFrame::ByteArray YamuxFrame::frameBytes(uint8_t version, FrameType type,
                                                Flag flag, uint32_t stream_id,
                                                uint32_t length,
-                                               gsl::span<const uint8_t> data) {
+                                               bool reserve_space) {
     using common::putUint16BE;
     using common::putUint32BE;
     using common::putUint8;
 
     ByteArray bytes;
-    bytes.reserve(kHeaderLength);  // minimum header size
+
+    size_t space = kHeaderLength;
+    if (type == FrameType::DATA && reserve_space) {
+      space += length;
+    }
+    bytes.reserve(space);
+
     // TODO(akvinikym) 03.10.19 PRE-319: refine the functions
     putUint32BE(putUint32BE(putUint16BE(putUint8(putUint8(bytes, version),
                                                  static_cast<uint8_t>(type)),
                                         static_cast<uint16_t>(flag)),
                             stream_id),
                 length);
-    bytes.insert(bytes.end(), data.begin(), data.end());
     return bytes;
   }
 
@@ -38,10 +43,9 @@ namespace libp2p::connection {
 
   YamuxFrame::ByteArray newStreamMsg(YamuxFrame::StreamId stream_id) {
     TRACE("yamux newStreamMsg, stream_id={}", stream_id);
-    // setting max window size from go impl immediately (16MiB)
-    return YamuxFrame::frameBytes(
-        YamuxFrame::kDefaultVersion, YamuxFrame::FrameType::WINDOW_UPDATE,
-        YamuxFrame::Flag::SYN, stream_id, 16 * 1024 * 1024 - 256 * 1024);
+    return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
+                                  YamuxFrame::FrameType::DATA,
+                                  YamuxFrame::Flag::SYN, stream_id, 0);
   }
 
   YamuxFrame::ByteArray ackStreamMsg(YamuxFrame::StreamId stream_id) {
@@ -78,12 +82,11 @@ namespace libp2p::connection {
   }
 
   YamuxFrame::ByteArray dataMsg(YamuxFrame::StreamId stream_id,
-                                gsl::span<const uint8_t> data) {
+                                uint32_t data_length, bool reserve_space) {
     TRACE("yamux dataMsg, stream_id={}, size={}", stream_id, data.size());
-    return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
-                                  YamuxFrame::FrameType::DATA,
-                                  YamuxFrame::Flag::NONE, stream_id,
-                                  static_cast<uint32_t>(data.size()), data);
+    return YamuxFrame::frameBytes(
+        YamuxFrame::kDefaultVersion, YamuxFrame::FrameType::DATA,
+        YamuxFrame::Flag::NONE, stream_id, data_length, reserve_space);
   }
 
   YamuxFrame::ByteArray goAwayMsg(YamuxFrame::GoAwayError error) {
@@ -132,11 +135,6 @@ namespace libp2p::connection {
     frame.stream_id = ntohl(common::convert<uint32_t>(&frame_bytes[4]));
     // NOLINTNEXTLINE
     frame.length = ntohl(common::convert<uint32_t>(&frame_bytes[8]));
-
-    const auto &data_begin = frame_bytes.begin() + YamuxFrame::kHeaderLength;
-    if (data_begin != frame_bytes.end()) {
-      frame.data = std::vector<uint8_t>(data_begin, frame_bytes.end());
-    }
 
     return frame;
   }

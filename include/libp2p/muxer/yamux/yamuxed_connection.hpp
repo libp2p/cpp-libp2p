@@ -6,19 +6,15 @@
 #ifndef LIBP2P_YAMUXED_CONNECTION_HPP
 #define LIBP2P_YAMUXED_CONNECTION_HPP
 
-#include <functional>
-#include <map>
-#include <queue>
+#include <unordered_map>
 
-#include <boost/asio/streambuf.hpp>
-#include <libp2p/common/logger.hpp>
-#include <libp2p/common/types.hpp>
+#include <libp2p/basic/read_buffer.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
+#include <libp2p/muxer/yamux/yamux_reading_state.hpp>
+#include <libp2p/muxer/yamux/yamux_stream.hpp>
 
 namespace libp2p::connection {
-  struct YamuxFrame;
-  class YamuxStream;
 
   /**
    * Implementation of stream multiplexer - connection, which has only one
@@ -26,22 +22,18 @@ namespace libp2p::connection {
    * several applications
    * Read more: https://github.com/hashicorp/yamux/blob/master/spec.md
    */
-  class YamuxedConnection
+  class YamuxedConnection final
       : public CapableConnection,
+        public YamuxStreamFeedback,
         public std::enable_shared_from_this<YamuxedConnection> {
    public:
     using StreamId = uint32_t;
-    using Buffer = common::ByteArray;
 
-    enum class Error {
-      NO_SUCH_STREAM = 1,
-      YAMUX_IS_CLOSED,
-      TOO_MANY_STREAMS,
-      FORBIDDEN_CALL,
-      OTHER_SIDE_ERROR,
-      INTERNAL_ERROR,
-      CLOSED_BY_PEER,
-    };
+    YamuxedConnection(const YamuxedConnection &other) = delete;
+    YamuxedConnection &operator=(const YamuxedConnection &other) = delete;
+    YamuxedConnection(YamuxedConnection &&other) = delete;
+    YamuxedConnection &operator=(YamuxedConnection &&other) = delete;
+    ~YamuxedConnection() override = default;
 
     /**
      * Create a new YamuxedConnection instance
@@ -51,12 +43,6 @@ namespace libp2p::connection {
      */
     explicit YamuxedConnection(std::shared_ptr<SecureConnection> connection,
                                muxer::MuxedConnectionConfig config = {});
-
-    YamuxedConnection(const YamuxedConnection &other) = delete;
-    YamuxedConnection &operator=(const YamuxedConnection &other) = delete;
-    YamuxedConnection(YamuxedConnection &&other) noexcept = delete;
-    YamuxedConnection &operator=(YamuxedConnection &&other) noexcept = delete;
-    ~YamuxedConnection() override = default;
 
     void start() override;
 
@@ -82,6 +68,41 @@ namespace libp2p::connection {
 
     bool isClosed() const override;
 
+    void deferReadCallback(outcome::result<size_t> res,
+                           ReadCallbackFunc cb) override;
+    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
+
+   private:
+    using Streams = std::unordered_map<StreamId, std::shared_ptr<YamuxStream>>;
+
+    using PendingOutboundStreams =
+        std::unordered_map<StreamId, StreamHandlerFunc>;
+
+    using Buffer = common::ByteArray;
+
+    struct WriteQueueItem {
+      // TODO(artem): reform in buffers (shared + vector writes)
+
+      Buffer packet;
+      StreamId stream_id;
+      bool some;
+    };
+
+    // YamuxStreamFeedback interface overrides
+
+    /// Stream transfers data to connection
+    void writeStreamData(uint32_t stream_id, gsl::span<const uint8_t> data,
+                         bool some) override;
+
+    /// Stream acknowledges received bytes
+    void ackReceivedBytes(uint32_t stream_id, uint32_t bytes) override;
+
+    /// Stream defers callback to avoid reentrancy
+    void deferCall(std::function<void()>) override;
+
+    /// Stream closes (if immediately==false then all pending data will be sent)
+    void resetStream(uint32_t stream_id, bool immediately) override;
+
     /// usage of these four methods is highly not recommended or even forbidden:
     /// use stream over this connection instead
     void read(gsl::span<uint8_t> out, size_t bytes,
@@ -93,228 +114,93 @@ namespace libp2p::connection {
     void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
-   private:
-    struct WriteData {
-      Buffer data{};
-      std::function<void(outcome::result<size_t>)> cb{};
-      bool some = false;  // true, if writeSome is to be called over the data
-    };
-    std::queue<WriteData> write_queue_;
-    bool is_writing_ = false;
+    /// Initiates async readSome on connection
+    void continueReading();
 
-    // indicates whether start() has been executed or not
-    bool started_ = false;
+    /// Read callback
+    void onRead(outcome::result<size_t> res);
 
-    /**
-     * Write message to the connection; ensures no more than one wright
-     * would be executed at one time
-     * @param write_data - data to be written with a callback
-     */
-    void write(WriteData write_data);
+    /// Processes incoming header, called from YamuxReadingState
+    bool processHeader(boost::optional<YamuxFrame> header);
 
-    /**
-     * First part of writing loop, which takes queued messaged to be written
-     */
-    void doWrite();
+    /// Processes incoming data, called from YamuxReadingState
+    bool processData(gsl::span<uint8_t> segment, StreamId stream_id, bool rst,
+                     bool fin);
 
-    /**
-     * Finishing part of writing loop
-     * @param res, with which the last write finished
-     */
-    void writeCompleted(outcome::result<size_t> res);
+    /// Processes incoming GO_AWAY frame
+    void processGoAway(const YamuxFrame &frame);
 
-    /// buffers to store header and data parts of Yamux frame, which were
-    /// read last
-    Buffer header_buffer_;
-    Buffer data_buffer_;
+    /// Processes incoming frame with SYN flag
+    bool processSyn(const YamuxFrame &frame);
 
-    /**
-     * First part of reader loop, which is going to read a header
-     */
-    void doReadHeader();
+    /// Processes incoming frame with ACK flag
+    bool processAck(const YamuxFrame &frame);
 
-    /**
-     * Finishing part of the reader loop
-     * @param res, with which the last read finished
-     */
-    void readHeaderCompleted(outcome::result<size_t> res);
+    /// Processes incoming frame with FIN flag
+    bool processFin(const YamuxFrame &frame);
 
-    /**
-     * Read a data part of Yamux frame
-     * @param data_size - size of the data to be read
-     * @param cb - callback, which is called, when the data is read
-     */
-    void doReadData(size_t data_size, basic::Reader::ReadCallbackFunc cb);
+    /// Processes incoming frame with RST flag
+    bool processRst(const YamuxFrame &frame);
 
-    /**
-     * Process frame of data or window update type
-     * @param frame to be processed
-     */
-    void processDataOrWindowUpdateFrame(const YamuxFrame &frame);
+    /// Processes incoming WINDOW_UPDATE message
+    bool processWindowUpdate(const YamuxFrame &frame);
 
-    /**
-     * Process frame of ping type
-     * @param frame to be processed
-     */
-    void processPingFrame(const YamuxFrame &frame);
+    /// Closes everything, notifies streams and handlers
+    void close(std::error_code notify_streams_code,
+               boost::optional<YamuxFrame::GoAwayError> reply_to_peer_code);
 
-    /**
-     * Process frame of go away type
-     * @param frame to be processed
-     */
-    void processGoAwayFrame(const YamuxFrame &frame);
+    /// Writes data to underlying connection or (if is_writing_) enqueues them
+    /// If stream_id != 0, stream will be acknowledged about data written
+    void enqueue(Buffer packet, StreamId stream_id = 0, bool some = false);
 
-    /**
-     * Reset all streams, which were created over this connection
-     */
-    void resetAllStreams(outcome::result<void> reason);
+    /// Performs write into connection
+    void doWrite(WriteQueueItem packet);
 
-    /**
-     * Find stream with such id in local streams
-     * @param stream_id to be found
-     * @return stream, if it is opened on this side, nullptr otherwise
-     */
-    std::shared_ptr<YamuxStream> findStream(StreamId stream_id);
+    /// Write callback
+    void onDataWritten(outcome::result<size_t> res, StreamId stream_id,
+                       bool some);
 
-    /**
-     * Register a new stream in this instance, making it active
-     * @param stream_id to be registered
-     * @return pointer to a newly registered stream
-     */
-    std::shared_ptr<YamuxStream> registerNewStream(StreamId stream_id);
+    /// Find stream helper
+    boost::optional<Streams::iterator> findStream(StreamId stream_id);
 
-    /**
-     * If there is data in this length, buffer it to the according stream
-     * @param stream, for which the data arrived
-     * @param frame, which can have some data inside
-     * @return true if there is some data in the frame, and the function is
-     * going to read it, false otherwise
-     * @param discard_data - set to true, if the data is to be discarded after
-     * read
-     */
-    void processData(std::shared_ptr<YamuxStream> stream,
-                     const YamuxFrame &frame, bool discard_data);
-
-    /**
-     * Process a window update by notifying a related stream about a change
-     * in window size
-     * @param stream to be notified
-     * @param window_delta - delta of window size (can be both positive and
-     * negative)
-     */
-    void processWindowUpdate(const std::shared_ptr<YamuxStream> &stream,
-                             uint32_t window_delta);
-
-    /**
-     * Close stream for reads on this side
-     * @param stream_id to be closed
-     */
-    void closeStreamForRead(StreamId stream_id);
-
-    /**
-     * Close stream for writes from this side
-     * @param stream_id to be closed
-     * @param cb - callback to be called, when operation finishes
-     */
-    void closeStreamForWrite(StreamId stream_id,
-                             std::function<void(outcome::result<void>)> cb);
-
-    /**
-     * Close stream entirely
-     * @param stream_id to be closed
-     */
-    void removeStream(StreamId stream_id);
-
-    /**
-     * Get a stream id, with which a new stream is to be created
-     * @return new id
-     */
-    StreamId getNewStreamId();
-
-    /**
-     * Close this Yamux session
-     */
-    void closeSession(outcome::result<void> reason);
+    /// Copy of config
+    const muxer::MuxedConnectionConfig config_;
 
     /// Underlying connection
     std::shared_ptr<SecureConnection> connection_;
 
+    /// True if started
+    bool started_ = false;
+
+    /// TODO(artem): change read() interface to reduce copying
+    std::shared_ptr<Buffer> raw_read_buffer_;
+
+    /// Buffering and segmenting
+    YamuxReadingState reading_state_;
+
+    /// True if waiting for current write operation to complete
+    bool is_writing_ = false;
+
+    /// Write queue
+    std::deque<WriteQueueItem> write_queue_;
+
+    /// Active streams
+    Streams streams_;
+
+    /// Streams just created. Need to call handlers after all
+    /// data is processed. StreamHandlerFunc is null for inbound streams
+    std::vector<std::pair<StreamId, StreamHandlerFunc>> fresh_streams_;
+
     /// Handler for new inbound streams
     NewStreamHandlerFunc new_stream_handler_;
 
-    /// Config constants
-    muxer::MuxedConnectionConfig config_;
+    /// New stream id (odd if underlying connection is outbound)
+    StreamId new_stream_id_ = 0;
 
-    /// Last stream id to be incremented
-    uint32_t last_created_stream_id_;
-
-    /// Streams
-    std::unordered_map<StreamId, std::shared_ptr<YamuxStream>> streams_;
-
-    libp2p::common::Logger log_ = libp2p::common::createLogger("yx-conn");
-
-    /// YAMUX STREAM API
-
-    friend class YamuxStream;
-
-    using NotifyeeCallback = std::function<bool()>;
-
-    /**
-     * Add a handler function, which is called, when a window update is
-     * received
-     * @param stream_id of the stream which is to be notified
-     * @param handler to be called; if it returns true, it's removed from
-     * the list of handlers for that stream
-     * @note this is done through a function and not event emitters, as each
-     * stream is to receive that event independently based on id
-     */
-    void streamOnWindowUpdate(StreamId stream_id, NotifyeeCallback cb);
-    std::map<StreamId, NotifyeeCallback> window_updates_subs_;
-
-    /**
-     * Write bytes to the connection; before calling this method, the stream
-     * must ensure that no write operations are currently running
-     * @param stream_id, for which the bytes are to be written
-     * @param in - bytes to be written
-     * @param bytes - number of bytes to be written
-     * @param some - some or all bytes must be written
-     * @param cb - callback to be called after write attempt with number of
-     * bytes written or error
-     */
-    void streamWrite(StreamId stream_id, gsl::span<const uint8_t> in,
-                     size_t bytes, bool some,
-                     basic::Writer::WriteCallbackFunc cb);
-
-    /**
-     * Send an acknowledgement, that a number of bytes was consumed by the
-     * stream
-     * @param stream_id of the stream
-     * @param bytes - number of consumed bytes
-     * @param cb - callback to be called, when operation finishes
-     */
-    void streamAckBytes(StreamId stream_id, uint32_t bytes,
-                        std::function<void(outcome::result<void>)> cb);
-
-    /**
-     * Send a message, which denotes, that this stream is not going to write
-     * any bytes from now on
-     * @param stream_id of the stream
-     * @param cb - callback to be called, when operation finishes
-     */
-    void streamClose(StreamId stream_id,
-                     std::function<void(outcome::result<void>)> cb);
-
-    /**
-     * Send a message, which denotes, that this stream is not going to write
-     * or read any bytes from now on
-     * @param stream_id of the stream
-     * @param cb - callback to be called, when operation finishes
-     */
-    void streamReset(StreamId stream_id,
-                     std::function<void(outcome::result<void>)> cb);
+    /// Pending outbound streams
+    PendingOutboundStreams pending_outbound_streams_;
   };
-}  // namespace libp2p::connection
 
-OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, YamuxedConnection::Error)
+}  // namespace libp2p::connection
 
 #endif  // LIBP2P_YAMUX_IMPL_HPP

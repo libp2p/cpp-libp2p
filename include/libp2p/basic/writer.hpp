@@ -8,8 +8,9 @@
 
 #include <functional>
 
-#include <boost/system/error_code.hpp>
 #include <gsl/span>
+
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::basic {
 
@@ -50,6 +51,16 @@ namespace libp2p::basic {
      */
     virtual void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                            WriteCallbackFunc cb) = 0;
+
+    /**
+     * @brief Defers reporting error state to callback to avoid reentrancy
+     * (i.e. callback will not be called before initiator function returns)
+     * @param ec error code
+     * @param cb callback
+     *
+     * @note if (!ec) then this function does nothing
+     */
+    virtual void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) = 0;
   };
 
 }  // namespace libp2p::basic

@@ -7,262 +7,104 @@
 
 #include <cassert>
 
-#define TRACE_ENABLED 0
-#include <libp2p/common/trace.hpp>
-
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxStream::Error, e) {
-  using E = libp2p::connection::YamuxStream::Error;
-  switch (e) {
-    case E::NOT_READABLE:
-      return "the stream is closed for reads";
-    case E::NOT_WRITABLE:
-      return "the stream is closed for writes";
-    case E::INVALID_ARGUMENT:
-      return "provided argument is invalid";
-    case E::RECEIVE_OVERFLOW:
-      return "received unconsumed data amount is greater than it can be";
-    case E::IS_WRITING:
-      return "there is already a pending write operation on this stream";
-    case E::IS_READING:
-      return "there is already a pending read operation on this stream";
-    case E::INVALID_WINDOW_SIZE:
-      return "either window size greater than the maximum one or less than "
-             "current number of unconsumed bytes was tried to be set";
-    case E::CONNECTION_IS_DEAD:
-      return "connection, over which this stream is created, is destroyed";
-    case E::INTERNAL_ERROR:
-      return "internal error happened";
-  }
-  return "unknown error";
-}
+#include <libp2p/muxer/yamux/yamux_error.hpp>
+#include <libp2p/common/logger.hpp>
 
 namespace libp2p::connection {
 
-  YamuxStream::YamuxStream(std::weak_ptr<YamuxedConnection> yamuxed_connection,
-                           YamuxedConnection::StreamId stream_id,
-                           uint32_t maximum_window_size)
-      : yamuxed_connection_{std::move(yamuxed_connection)},
-        stream_id_{stream_id},
-        maximum_window_size_{maximum_window_size} {}
+  namespace {
+    auto log() {
+      static auto logger = common::createLogger("yx-stream");
+      return logger.get();
+    }
+  }  // namespace
+
+  YamuxStream::YamuxStream(
+      std::shared_ptr<connection::SecureConnection> connection,
+      YamuxStreamFeedback& feedback, uint32_t stream_id, size_t window_size,
+      size_t maximum_window_size, size_t write_queue_limit)
+      : connection_(std::move(connection)),
+        feedback_(feedback),
+        stream_id_(stream_id),
+        send_window_size_(window_size),
+        receive_window_size_(window_size),
+        maximum_window_size_(maximum_window_size),
+        write_queue_(write_queue_limit) {
+    assert(connection_);
+    assert(stream_id_ > 0);
+    assert(send_window_size_ <= maximum_window_size_);
+    assert(receive_window_size_ <= maximum_window_size_);
+    assert(write_queue_limit >= maximum_window_size_);
+  }
 
   void YamuxStream::read(gsl::span<uint8_t> out, size_t bytes,
                          ReadCallbackFunc cb) {
-    return read(out, bytes, std::move(cb), false);
+    defer_callbacks_ = true;
+    doRead(out, bytes, std::move(cb), false);
+    defer_callbacks_ = false;
   }
 
   void YamuxStream::readSome(gsl::span<uint8_t> out, size_t bytes,
                              ReadCallbackFunc cb) {
-    return read(out, bytes, std::move(cb), true);
+    defer_callbacks_ = true;
+    doRead(out, bytes, std::move(cb), true);
+    defer_callbacks_ = false;
   }
 
-  void YamuxStream::beginRead(ReadCallbackFunc cb, gsl::span<uint8_t> out,
-                              size_t bytes, bool some) {
-    assert(!is_reading_);
-    assert(!read_cb_);
-    TRACE("yamux stream {} beginRead", stream_id_);
-    read_cb_ = std::move(cb);
-    external_read_buffer_ = out;
-    bytes_waiting_ = bytes;
-    reading_some_ = some;
-    is_reading_ = true;
-  }
-
-  void YamuxStream::endRead(outcome::result<size_t> result) {
-    TRACE("yamux stream {} endRead", stream_id_);
-
-    // N.B. reentrancy of read_cb_{read} is allowed
-    is_reading_ = false;
-    bytes_waiting_ = 0;
-    reading_some_ = false;
-    if (read_cb_) {
-      auto cb = std::move(read_cb_);
-      read_cb_ = ReadCallbackFunc{};
-      cb(result);
-    }
-  }
-
-  outcome::result<size_t> YamuxStream::tryConsumeReadBuffer(
-      gsl::span<uint8_t> out, size_t bytes, bool some) {
-    // will try to consume n bytes if applicable
-    auto n = std::min(read_buffer_.size(), bytes);
-
-    TRACE("stream {}: need {} bytes, available {} bytes", stream_id_, bytes, n);
-
-    if ((some && n > 0) || (!some && n == bytes)) {
-      auto copied = boost::asio::buffer_copy(boost::asio::buffer(out.data(), n),
-                                             read_buffer_.data(), n);
-      if (copied != n) {
-        return Error::INTERNAL_ERROR;
+  void YamuxStream::deferReadCallback(outcome::result<size_t> res,
+                                      ReadCallbackFunc cb) {
+    feedback_.deferCall([wptr = weak_from_this(), res, cb = std::move(cb)]() {
+      auto self = wptr.lock();
+      if (self && !self->closed_by_client_) {
+        cb(res);
       }
-
-      sendAck(n);
-      return n;
-    }
-
-    // cannot consume required bytes from existing read buffer
-    return 0;
-  }
-
-  void YamuxStream::sendAck(size_t bytes) {
-    read_buffer_.consume(bytes);
-    receive_window_size_ += bytes;
-
-    if (!is_readable_ || yamuxed_connection_.expired()) {
-      return;
-    }
-    yamuxed_connection_.lock()->streamAckBytes(
-        stream_id_, bytes,
-        [self{shared_from_this()}](outcome::result<void> res) {
-          if (!res) {
-            return self->onConnectionReset(res.error());
-          }
-        });
-  }
-
-  void YamuxStream::read(gsl::span<uint8_t> out, size_t bytes,
-                         ReadCallbackFunc cb, bool some) {
-    assert(cb);
-
-    if (!cb || bytes == 0 || out.empty()
-        || static_cast<size_t>(out.size()) < bytes) {
-      return cb(Error::INVALID_ARGUMENT);
-    }
-
-    if (is_reading_) {
-      return cb(Error::IS_READING);
-    }
-
-    auto res = tryConsumeReadBuffer(out, bytes, some);
-    if (!res || res.value() > 0) {
-      return cb(res);
-    }
-
-    // is_readable_ flag is set due to FIN flag from the other side.
-    // Nevertheless, unconsumed data may exist at the moment
-    if (!is_readable_) {
-      return endRead(Error::NOT_READABLE);
-    }
-
-    if (yamuxed_connection_.expired()) {
-      return endRead(Error::CONNECTION_IS_DEAD);
-    }
-
-    // cannot return immediately, wait for incoming data
-    beginRead(std::move(cb), out, bytes, some);
+    });
   }
 
   void YamuxStream::write(gsl::span<const uint8_t> in, size_t bytes,
                           WriteCallbackFunc cb) {
-    return write(in, bytes, std::move(cb), false);
+    defer_callbacks_ = true;
+    doWrite(in, bytes, std::move(cb), false);
+    defer_callbacks_ = false;
   }
 
   void YamuxStream::writeSome(gsl::span<const uint8_t> in, size_t bytes,
                               WriteCallbackFunc cb) {
-    return write(in, bytes, std::move(cb), true);
+    defer_callbacks_ = true;
+    doWrite(in, bytes, std::move(cb), true);
+    defer_callbacks_ = false;
   }
 
-  void YamuxStream::beginWrite(WriteCallbackFunc cb) {
-    assert(!is_writing_);
-    assert(!write_cb_);
-    TRACE("yamux stream {} beginWrite", stream_id_);
-    write_cb_ = std::move(cb);
-    is_writing_ = true;
-  }
-
-  void YamuxStream::endWrite(outcome::result<size_t> result) {
-    TRACE("yamux stream {} endWrite", stream_id_);
-
-    // N.B. reentrancy of write_cb_{write} is allowed
-    is_writing_ = false;
-    if (write_cb_) {
-      auto cb = std::move(write_cb_);
-      write_cb_ = WriteCallbackFunc{};
-      cb(result);
-    }
-
-    std::lock_guard<std::mutex> lock(write_queue_mutex_);
-    // check if new write messages were received while stream was writing
-    // and propagate these messages
-    if (not write_queue_.empty()) {
-      auto [in, bytes, cb, some] = write_queue_.front();
-      write_queue_.pop_front();
-      write(in, bytes, cb, some);
-    }
-  }
-
-  void YamuxStream::write(gsl::span<const uint8_t> in, size_t bytes,
-                          WriteCallbackFunc cb, bool some) {
-    if (!is_writable_) {
-      return cb(Error::NOT_WRITABLE);
-    }
-    if (is_writing_) {
-      std::lock_guard<std::mutex> lock(write_queue_mutex_);
-
-      std::vector<uint8_t> in_vector(in.begin(), in.end());
-      write_queue_.emplace_back(in_vector, bytes, cb, some);
-      return;
-    }
-
-    beginWrite(std::move(cb));
-
-    auto write_lambda = [self{shared_from_this()}, bytes,
-                         some](gsl::span<const uint8_t> in) mutable -> bool {
-      if (self->send_window_size_ >= bytes) {
-        // we can write - window size on the other side allows us
-        auto conn_wptr = self->yamuxed_connection_;
-        if (conn_wptr.expired()) {
-          self->endWrite(Error::CONNECTION_IS_DEAD);
-        } else {
-          conn_wptr.lock()->streamWrite(self->stream_id_, in, bytes, some,
-                                        [self](outcome::result<size_t> res) {
-                                          if (res) {
-                                            self->send_window_size_ -=
-                                                res.value();
-                                          }
-                                          self->endWrite(res);
-                                        });
-        }
-        return true;
+  void YamuxStream::deferWriteCallback(std::error_code ec,
+                                       WriteCallbackFunc cb) {
+    feedback_.deferCall([wptr = weak_from_this(), ec, cb = std::move(cb)]() {
+      auto self = wptr.lock();
+      if (self && !self->closed_by_client_) {
+        cb(ec);
       }
-      return false;
-    };
-
-    // if we can write now - do it and return
-    if (write_lambda(in)) {
-      return;
-    }
-
-    // else, subscribe to window updates, so that when the window gets wide
-    // enough, we could write
-    if (yamuxed_connection_.expired()) {
-      return endWrite(Error::CONNECTION_IS_DEAD);
-    }
-    yamuxed_connection_.lock()->streamOnWindowUpdate(
-        stream_id_,
-        [write_lambda = std::move(write_lambda),
-         in_bytes = std::vector<uint8_t>{in.begin(), in.end()}]() mutable {
-          return write_lambda(in_bytes);
-        });
+    });
   }
 
   bool YamuxStream::isClosed() const noexcept {
-    return !is_readable_ && !is_writable_;
+    return close_reason_.value() != 0;
   }
 
   void YamuxStream::close(VoidResultHandlerFunc cb) {
-    if (is_writing_) {
-      return cb(Error::IS_WRITING);
-    }
+    closed_by_client_ = true;
 
-    is_writing_ = true;
-    if (yamuxed_connection_.expired()) {
-      return cb(Error::CONNECTION_IS_DEAD);
+    feedback_.resetStream(stream_id_, false);
+
+    doClose(YamuxError::STREAM_CLOSED_BY_HOST, false);
+
+    // TODO send FIN instead make close_cb_
+
+    if (cb) {
+      feedback_.deferCall([wptr = weak_from_this(), cb = std::move(cb)]() {
+        if (!wptr.expired()) {
+          cb(outcome::success());
+        }
+      });
     }
-    yamuxed_connection_.lock()->streamClose(
-        stream_id_, [self{shared_from_this()}, cb = std::move(cb)](auto &&res) {
-          self->is_writing_ = false;
-          cb(std::forward<decltype(res)>(res));
-        });
   }
 
   bool YamuxStream::isClosedForRead() const noexcept {
@@ -274,139 +116,262 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::reset() {
-    if (is_writing_) {
-      return;
-    }
+    closed_by_client_ = true;
 
-    is_writing_ = true;
-    if (yamuxed_connection_.expired()) {
-      return;
-    }
-    yamuxed_connection_.lock()->streamReset(
-        stream_id_, [self{shared_from_this()}](auto && /*ignore*/) {
-          self->is_writing_ = false;
-          self->resetStream();
-        });
+    feedback_.resetStream(stream_id_, true);
+
+    doClose(YamuxError::STREAM_RESET_BY_HOST, false);
   }
 
   void YamuxStream::adjustWindowSize(uint32_t new_size,
                                      VoidResultHandlerFunc cb) {
-    if (is_writing_) {
-      return cb(Error::IS_WRITING);
-    }
-
-    if (new_size > maximum_window_size_ || new_size < read_buffer_.size()) {
-      return cb(Error::INVALID_WINDOW_SIZE);
-    }
-
-    is_writing_ = true;
-    if (yamuxed_connection_.expired()) {
-      return cb(Error::CONNECTION_IS_DEAD);
-    }
-    yamuxed_connection_.lock()->streamAckBytes(
-        stream_id_, new_size - receive_window_size_,
-        [self{shared_from_this()}, cb = std::move(cb), new_size](auto &&res) {
-          self->is_writing_ = false;
-          if (!res) {
-            return cb(res.error());
+    if (new_size > maximum_window_size_ || new_size < receive_window_size_) {
+      if (cb) {
+        feedback_.deferCall([wptr = weak_from_this(), cb = std::move(cb)]() {
+          auto self = wptr.lock();
+          if (!self) {
+            return;
           }
-          self->receive_window_size_ = new_size;
-          cb(outcome::success());
+          if (!self->close_reason_) {
+            cb(YamuxError::INVALID_WINDOW_SIZE);
+          } else {
+            cb(self->close_reason_);
+          }
         });
+      }
+      return;
+    }
+
+    feedback_.ackReceivedBytes(stream_id_, new_size - receive_window_size_);
+
+    if (cb) {
+      window_size_cb_ = [wptr = weak_from_this(), cb = std::move(cb),
+                         new_size](auto &&res) {
+        auto self = wptr.lock();
+        if (!self) {
+          return;
+        }
+        if (!self->close_reason_) {
+          cb(self->close_reason_);
+        } else if (self->receive_window_size_ >= new_size) {
+          cb(outcome::success());
+        } else {
+          // continue waiting
+          return;
+        }
+        self->window_size_cb_ = VoidResultHandlerFunc{};
+      };
+    }
   }
 
   outcome::result<peer::PeerId> YamuxStream::remotePeerId() const {
-    if (auto conn = yamuxed_connection_.lock()) {
-      return conn->remotePeer();
-    }
-    return Error::CONNECTION_IS_DEAD;
+    return connection_->remotePeer();
   }
 
   outcome::result<bool> YamuxStream::isInitiator() const {
-    if (auto conn = yamuxed_connection_.lock()) {
-      return conn->isInitiator();
-    }
-    return Error::CONNECTION_IS_DEAD;
+    return connection_->isInitiator();
   }
 
   outcome::result<multi::Multiaddress> YamuxStream::localMultiaddr() const {
-    if (auto conn = yamuxed_connection_.lock()) {
-      return conn->localMultiaddr();
-    }
-    return Error::CONNECTION_IS_DEAD;
+    return connection_->localMultiaddr();
   }
 
   outcome::result<multi::Multiaddress> YamuxStream::remoteMultiaddr() const {
-    if (auto conn = yamuxed_connection_.lock()) {
-      return conn->remoteMultiaddr();
-    }
-    return Error::CONNECTION_IS_DEAD;
+    return connection_->remoteMultiaddr();
   }
 
-  void YamuxStream::resetStream() {
+  void YamuxStream::increaseSendWindow(size_t delta) {
+    send_window_size_ += delta;
+    doWrite();
+  }
+
+  bool YamuxStream::onDataRead(gsl::span<uint8_t> bytes, bool fin, bool rst) {
+    if (close_reason_) {
+      return true;
+    }
+
+    auto sz = static_cast<size_t>(bytes.size());
+
+    bool read_completed = false;
+    bool overflow = false;
+
+    if (sz > 0) {
+      overflow = receive_window_size_
+          < (internal_read_buffer_.size() + external_read_buffer_.size()
+             + bytes.size());
+
+      if (is_reading_) {
+        auto bytes_needed = static_cast<size_t>(external_read_buffer_.size());
+        size_t consumed =
+            internal_read_buffer_.addAndConsume(bytes, external_read_buffer_);
+        if (reading_some_) {
+          read_completed = true;
+          read_message_size_ = consumed;
+        } else if (bytes_needed == consumed) {
+          read_completed = true;
+        } else {
+          assert(consumed < bytes_needed);
+
+          external_read_buffer_ = external_read_buffer_.subspan(consumed);
+        }
+      }
+    }
+
+    if (fin) {
+      is_readable_ = false;
+    }
+
+    if (overflow) {
+      doClose(YamuxError::RECEIVE_WINDOW_OVERFLOW, false);
+    } else if (rst) {
+      doClose(YamuxError::STREAM_RESET_BY_PEER, false);
+    } else if (sz > 0) {
+      feedback_.ackReceivedBytes(stream_id_, sz);
+      receive_window_size_ += sz;
+      if (window_size_cb_) {
+        window_size_cb_(outcome::success());
+      }
+    }
+
+    if (read_completed) {
+      readCompleted();
+    }
+
+    return !overflow;
+  }
+
+  void YamuxStream::onDataWritten(size_t bytes) {
+    if (!write_queue_.ack(bytes)) {
+      log()->error("write queue ack failed");
+      feedback_.resetStream(stream_id_, true);
+      doClose(YamuxError::INTERNAL_ERROR, true);
+    }
+  }
+
+  void YamuxStream::closedByConnection(std::error_code ec) {
+    doClose(ec, true);
+  }
+
+  void YamuxStream::doClose(std::error_code ec, bool notify_read_callback) {
+    assert(ec);
+
+    close_reason_ = ec;
     is_readable_ = false;
-    is_writable_ = false;
+
+    if (notify_read_callback) {
+      internal_read_buffer_.clear();
+      if (is_reading_) {
+        assert(!closed_by_client_);
+
+        is_reading_ = false;
+        assert(read_cb_);
+        auto cb = std::move(read_cb_);
+        read_cb_ = ReadCallbackFunc{};
+        cb(ec);
+      }
+    }
+
+    if (!closed_by_client_) {
+      write_queue_.broadcast(
+          [this](const basic::Writer::WriteCallbackFunc &cb) -> bool {
+            if (!closed_by_client_) {
+              cb(close_reason_);
+            }
+
+            // reentrancy may occur here
+            return !closed_by_client_;
+          });
+
+      write_queue_.clear();
+    }
   }
 
-  outcome::result<void> YamuxStream::commitData(gsl::span<const uint8_t> data,
-                                                size_t data_size) {
-    if (data_size > receive_window_size_) {
-      return Error::RECEIVE_OVERFLOW;
+  void YamuxStream::doRead(gsl::span<uint8_t> out, size_t bytes,
+                           ReadCallbackFunc cb, bool some) {
+    assert(cb);
+
+    if (!cb || bytes == 0 || out.empty()
+        || static_cast<size_t>(out.size()) < bytes) {
+      return deferReadCallback(YamuxError::INVALID_ARGUMENT,
+                               std::move(cb));
     }
 
-    size_t bytes_remain = data_size;
-    bool inplace_readop = false;
+    if (close_reason_) {
+      return deferReadCallback(close_reason_, std::move(cb));
+    }
 
-    if (read_buffer_.size() == 0 && bytes_waiting_ > 0) {
-      // will try to consume n bytes w/o copying to intermediate buffer
-      auto n = std::min(data_size, bytes_waiting_);
+    if (is_reading_) {
+      return deferReadCallback(YamuxError::STREAM_IS_READING, std::move(cb));
+    }
 
-      TRACE("stream {}: need {} bytes, available {} bytes", stream_id_,
-            bytes_waiting_, n);
+    if (!is_readable_) {
+      // half closed
+      return deferReadCallback(YamuxError::STREAM_NOT_READABLE, std::move(cb));
+    }
 
-      if ((reading_some_ && n > 0) || (!reading_some_ && n == bytes_waiting_)) {
-        memcpy(external_read_buffer_.data(), data.data(), n);
-        sendAck(n);
-        bytes_remain -= n;
-        inplace_readop = true;
+    is_reading_ = true;
+    read_cb_ = std::move(cb);
+    external_read_buffer_ = out;
+    read_message_size_ = bytes;
+    reading_some_ = some;
+    external_read_buffer_ = external_read_buffer_.subspan(read_message_size_);
+
+    size_t consumed = internal_read_buffer_.consume(external_read_buffer_);
+    if (consumed > 0) {
+      if (some) {
+        read_message_size_ = consumed;
       }
+      external_read_buffer_ = external_read_buffer_.subspan(consumed);
     }
 
-    if (bytes_remain > 0) {
-      if (boost::asio::buffer_copy(
-              read_buffer_.prepare(bytes_remain),
-              boost::asio::const_buffer(data.data() + data_size - bytes_remain,
-                                        bytes_remain))
-          != bytes_remain) {
-        return Error::INTERNAL_ERROR;
-      }
-      read_buffer_.commit(bytes_remain);
+    if (external_read_buffer_.empty()) {
+      // read completed, defer callback
+      deferReadCallback(read_message_size_, [this](auto) { readCompleted(); });
     }
-
-    receive_window_size_ -= data_size;
-
-    if (inplace_readop) {
-      assert(read_cb_);
-      assert(data_size - bytes_remain > 0);
-      endRead(data_size - bytes_remain);
-    } else if (bytes_waiting_ > 0) {
-      assert(read_cb_);
-      auto res = tryConsumeReadBuffer(external_read_buffer_, bytes_waiting_,
-                                      reading_some_);
-      if (!res || res.value() > 0) {
-        endRead(res);
-      }
-    }
-
-    return outcome::success();
   }
 
-  void YamuxStream::onConnectionReset(outcome::result<size_t> reason) {
-    assert(reason.has_error());
+  void YamuxStream::readCompleted() {
+    if (is_reading_) {
+      is_reading_ = false;
+      size_t read_message_size = read_message_size_;
+      read_message_size_ = 0;
+      reading_some_ = false;
+      if (read_cb_) {
+        auto cb = std::move(read_cb_);
+        read_cb_ = ReadCallbackFunc{};
+        cb(read_message_size);
+      }
+    }
+  }
 
-    resetStream();
-    endRead(reason);
-    endWrite(reason);
+  void YamuxStream::doWrite() {
+    gsl::span<const uint8_t> data;
+    bool some = false;
+    while (send_window_size_ > 0 && !close_reason_) {
+      send_window_size_ = write_queue_.dequeue(send_window_size_, data, some);
+      if (data.empty()) {
+        break;
+      }
+      feedback_.writeStreamData(stream_id_, data, some);
+    }
+  }
+
+  void YamuxStream::doWrite(gsl::span<const uint8_t> in, size_t bytes,
+                            WriteCallbackFunc cb, bool some) {
+    if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
+      return deferWriteCallback(YamuxError::INVALID_ARGUMENT,
+                                std::move(cb));
+    }
+
+    if (!is_writable_) {
+      return deferWriteCallback(YamuxError::STREAM_NOT_WRITABLE, std::move(cb));
+    }
+
+    if (close_reason_) {
+      return deferWriteCallback(close_reason_, std::move(cb));
+    }
+
+    doWrite();
   }
 
 }  // namespace libp2p::connection

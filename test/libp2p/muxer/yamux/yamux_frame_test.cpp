@@ -16,7 +16,7 @@ class YamuxFrameTest : public ::testing::Test {
   ~YamuxFrameTest() override = default;
 
   static constexpr size_t data_length = 6;
-  static constexpr YamuxedConnection::StreamId default_stream_id = 1;
+  static constexpr YamuxFrame::StreamId default_stream_id = 1;
   static constexpr uint32_t default_ping_value = 337;
 
   ByteArray data{"1234456789AB"_unhex};
@@ -26,8 +26,7 @@ class YamuxFrameTest : public ::testing::Test {
    */
   void checkFrame(boost::optional<YamuxFrame> frame_opt, uint8_t version,
                   YamuxFrame::FrameType type, YamuxFrame::Flag flag,
-                  YamuxedConnection::StreamId stream_id, uint32_t length,
-                  const ByteArray &frame_data) {
+                  YamuxFrame::StreamId stream_id, uint32_t length) {
     ASSERT_TRUE(frame_opt);
     auto frame = *frame_opt;
     ASSERT_EQ(frame.version, version);
@@ -35,7 +34,6 @@ class YamuxFrameTest : public ::testing::Test {
     ASSERT_EQ(frame.flags, static_cast<uint16_t>(flag));
     ASSERT_EQ(frame.stream_id, stream_id);
     ASSERT_EQ(frame.length, length);
-    ASSERT_EQ(frame.data, frame_data);
   }
 };
 
@@ -45,13 +43,13 @@ class YamuxFrameTest : public ::testing::Test {
  * @then the frame is parsed successfully
  */
 TEST_F(YamuxFrameTest, ParseFrameSuccess) {
-  ByteArray data_frame_bytes = dataMsg(default_stream_id, data);
+  ByteArray data_frame_bytes = dataMsg(default_stream_id, data.size());
   auto frame_opt = parseFrame(data_frame_bytes);
 
   SCOPED_TRACE("ParseFrameSuccess");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
              YamuxFrame::FrameType::DATA, YamuxFrame::Flag::NONE,
-             default_stream_id, data_length, data);
+             default_stream_id, data_length);
 }
 
 /**
@@ -76,8 +74,8 @@ TEST_F(YamuxFrameTest, NewStreamMsg) {
 
   SCOPED_TRACE("NewStreamMsg");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::WINDOW_UPDATE, YamuxFrame::Flag::SYN,
-             default_stream_id, 16 * 1024 * 1024 - 256 * 1024, ByteArray{});
+             YamuxFrame::FrameType::DATA, YamuxFrame::Flag::SYN,
+             default_stream_id, 0);
 }
 
 /**
@@ -92,7 +90,7 @@ TEST_F(YamuxFrameTest, AckStreamMsg) {
   SCOPED_TRACE("AckStreamMsg");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
              YamuxFrame::FrameType::DATA, YamuxFrame::Flag::ACK,
-             default_stream_id, 0, ByteArray{});
+             default_stream_id, 0);
 }
 
 /**
@@ -107,7 +105,7 @@ TEST_F(YamuxFrameTest, CloseStreamMsg) {
   SCOPED_TRACE("CloseStreamMsg");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
              YamuxFrame::FrameType::DATA, YamuxFrame::Flag::FIN,
-             default_stream_id, 0, ByteArray{});
+             default_stream_id, 0);
 }
 
 /**
@@ -122,7 +120,7 @@ TEST_F(YamuxFrameTest, ResetStreamMsg) {
   SCOPED_TRACE("ResetStreamMsg");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
              YamuxFrame::FrameType::DATA, YamuxFrame::Flag::RST,
-             default_stream_id, 0, ByteArray{});
+             default_stream_id, 0);
 }
 
 /**
@@ -137,7 +135,7 @@ TEST_F(YamuxFrameTest, PingOutMsg) {
   SCOPED_TRACE("PingOutMsg");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
              YamuxFrame::FrameType::PING, YamuxFrame::Flag::SYN, 0,
-             default_ping_value, ByteArray{});
+             default_ping_value);
 }
 
 /**
@@ -152,7 +150,7 @@ TEST_F(YamuxFrameTest, PingResponseMsg) {
   SCOPED_TRACE("PingResponseMsg");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
              YamuxFrame::FrameType::PING, YamuxFrame::Flag::ACK, 0,
-             default_ping_value, ByteArray{});
+             default_ping_value);
 }
 
 /**
@@ -167,6 +165,5 @@ TEST_F(YamuxFrameTest, GoAwayMsg) {
   SCOPED_TRACE("GoAwayMsg");
   checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
              YamuxFrame::FrameType::GO_AWAY, YamuxFrame::Flag::NONE, 0,
-             static_cast<uint32_t>(YamuxFrame::GoAwayError::PROTOCOL_ERROR),
-             ByteArray{});
+             static_cast<uint32_t>(YamuxFrame::GoAwayError::PROTOCOL_ERROR));
 }

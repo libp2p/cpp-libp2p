@@ -127,6 +127,16 @@ namespace libp2p::connection {
     write(in, bytes, std::move(cb));
   }
 
+  void NoiseConnection::deferReadCallback(outcome::result<size_t> res,
+                                      ReadCallbackFunc cb) {
+    raw_connection_->deferReadCallback(res, std::move(cb));
+  }
+
+  void NoiseConnection::deferWriteCallback(std::error_code ec,
+                                       WriteCallbackFunc cb) {
+    raw_connection_->deferWriteCallback(ec, std::move(cb));
+  }
+
   bool NoiseConnection::isInitiator() const noexcept {
     return raw_connection_->isInitiator();
   }

@@ -14,6 +14,8 @@ namespace libp2p::network {
 
   void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb,
                         std::chrono::milliseconds timeout) {
+    // TODO(107): Reentrancy
+
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
 
@@ -97,6 +99,8 @@ namespace libp2p::network {
     }
 
     if (not dialled) {
+      // TODO(107): Reentrancy
+
       // we did not find supported transport
       cb(std::errc::address_family_not_supported);
     }

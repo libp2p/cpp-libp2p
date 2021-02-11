@@ -17,8 +17,7 @@ namespace libp2p::connection {
    public:
     PlaintextConnection(
         std::shared_ptr<RawConnection> raw_connection,
-        crypto::PublicKey localPubkey,
-        crypto::PublicKey remotePubkey,
+        crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
     ~PlaintextConnection() override = default;
@@ -35,21 +34,22 @@ namespace libp2p::connection {
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 
-    void read(gsl::span<uint8_t> out,
-              size_t bytes,
+    void read(gsl::span<uint8_t> out, size_t bytes,
               ReadCallbackFunc cb) override;
 
-    void readSome(gsl::span<uint8_t> out,
-                  size_t bytes,
+    void readSome(gsl::span<uint8_t> out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
-    void write(gsl::span<const uint8_t> in,
-               size_t bytes,
+    void deferReadCallback(outcome::result<size_t> res,
+                           ReadCallbackFunc cb) override;
+
+    void write(gsl::span<const uint8_t> in, size_t bytes,
                WriteCallbackFunc cb) override;
 
-    void writeSome(gsl::span<const uint8_t> in,
-                   size_t bytes,
+    void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
+
+    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
     bool isClosed() const override;
 

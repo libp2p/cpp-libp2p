@@ -36,11 +36,21 @@ namespace libp2p::transport {
   }
 
   outcome::result<multi::Multiaddress> TcpConnection::remoteMultiaddr() {
-    return detail::makeAddress(socket_.remote_endpoint());
+    boost::system::error_code ec;
+    auto endpoint(socket_.remote_endpoint(ec));
+    if (ec) {
+      return ec;
+    }
+    return detail::makeAddress(endpoint);
   }
 
   outcome::result<multi::Multiaddress> TcpConnection::localMultiaddr() {
-    return detail::makeAddress(socket_.local_endpoint());
+    boost::system::error_code ec;
+    auto endpoint(socket_.local_endpoint(ec));
+    if (ec) {
+      return ec;
+    }
+    return detail::makeAddress(endpoint);
   }
 
   bool TcpConnection::isInitiator() const noexcept {
@@ -56,6 +66,8 @@ namespace libp2p::transport {
     //          emit<OnConnectionAborted>(OnConnectionAborted{});
     //        }
     ////      }
+
+    // TODO(artem) if (isClosed()) notify stream and bus
 
     return e;
   }
@@ -151,8 +163,8 @@ namespace libp2p::transport {
 
   template <typename Callback>
   auto closeOnError(TcpConnection &conn, Callback &&cb) {
-    return [cb{std::move(cb)}, conn{conn.shared_from_this()}](auto &&ec,
-                                                              auto &&result) {
+    return [cb{std::forward<Callback>(cb)}, conn{conn.shared_from_this()}](
+               auto &&ec, auto &&result) {
       if (ec == boost::asio::error::broken_pipe) {
         std::ignore = conn->close();
       }
@@ -185,6 +197,24 @@ namespace libp2p::transport {
                                 TcpConnection::WriteCallbackFunc cb) {
     socket_.async_write_some(detail::makeBuffer(in, bytes),
                              closeOnError(*this, cb));
+  }
+
+  void TcpConnection::deferReadCallback(outcome::result<size_t> res,
+                                        ReadCallbackFunc cb) {
+    // TODO(107)
+    //    if (ec && cb) {
+    // weak from this!!
+    //      scheduler_->schedule([cb{std::move(cb)}, ec] { cb(ec); });
+    //    }
+  }
+
+  void TcpConnection::deferWriteCallback(std::error_code ec,
+                                         WriteCallbackFunc cb) {
+    // TODO(107)
+    //    if (ec && cb) {
+    // weak from this!!
+    //      scheduler_->schedule([cb{std::move(cb)}, ec] { cb(ec); });
+    //    }
   }
 
 }  // namespace libp2p::transport

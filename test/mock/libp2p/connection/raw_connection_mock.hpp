@@ -30,6 +30,10 @@ namespace libp2p::connection {
     MOCK_METHOD3(writeSome,
                  void(gsl::span<const uint8_t>, size_t,
                       Writer::WriteCallbackFunc));
+    MOCK_METHOD2(deferReadCallback,
+                 void(outcome::result<size_t>, Reader::ReadCallbackFunc));
+    MOCK_METHOD2(deferWriteCallback,
+                 void(std::error_code, Writer::WriteCallbackFunc));
 
     bool isInitiator() const noexcept override {
       return isInitiator_hack();

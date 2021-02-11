@@ -16,6 +16,7 @@
 #include <libp2p/security/plaintext.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include <libp2p/transport/tcp.hpp>
+#include <libp2p/muxer/yamux/yamux_error.hpp>
 #include <mock/libp2p/crypto/key_validator_mock.hpp>
 #include <mock/libp2p/transport/upgrader_mock.hpp>
 #include "testutil/libp2p/peer.hpp"
@@ -105,7 +106,7 @@ struct Server : public std::enable_shared_from_this<Server> {
     stream->readSome(
         *buf, buf->size(), [buf, stream, this](outcome::result<size_t> rread) {
           if (!rread) {
-            if (rread.error() == YamuxedConnection::Error::CLOSED_BY_PEER
+            if (rread.error() == YamuxError::CONNECTION_CLOSED_BY_PEER
             || rread.error() == MplexStream::Error::CONNECTION_IS_DEAD) {
               return;
             }

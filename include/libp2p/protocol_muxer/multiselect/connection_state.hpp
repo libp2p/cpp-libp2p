@@ -82,6 +82,7 @@ namespace libp2p::protocol_muxer {
               std::function<void(const outcome::result<void> &)> handler) {
       // if there are already enough bytes in our buffer, return them
       if (read_buffer->size() >= n) {
+        // TODO(107): Reentrancy
         return handler(outcome::success());
       }
 

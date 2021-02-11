@@ -174,6 +174,16 @@ namespace libp2p::connection {
     return raw_connection_->remoteMultiaddr();
   }
 
+  void SecioConnection::deferReadCallback(outcome::result<size_t> res,
+                                          ReadCallbackFunc cb) {
+    raw_connection_->deferReadCallback(res, std::move(cb));
+  }
+
+  void SecioConnection::deferWriteCallback(std::error_code ec,
+                                           WriteCallbackFunc cb) {
+    raw_connection_->deferWriteCallback(ec, std::move(cb));
+  }
+
   inline void SecioConnection::popUserData(gsl::span<uint8_t> out,
                                            size_t bytes) {
     auto to{out.begin()};
@@ -186,6 +196,8 @@ namespace libp2p::connection {
 
   void SecioConnection::read(gsl::span<uint8_t> out, size_t bytes,
                              basic::Reader::ReadCallbackFunc cb) {
+    // TODO(107): Reentrancy
+
     if (!isInitialized()) {
       log_->error("Reading on unintialized connection");
       cb(Error::CONN_NOT_INITIALIZED);
@@ -230,6 +242,8 @@ namespace libp2p::connection {
 
   void SecioConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
                                  basic::Reader::ReadCallbackFunc cb) {
+    // TODO(107): Reentrancy
+
     if (!isInitialized()) {
       cb(Error::CONN_NOT_INITIALIZED);
       return;
@@ -327,6 +341,8 @@ namespace libp2p::connection {
 
   void SecioConnection::write(gsl::span<const uint8_t> in, size_t bytes,
                               basic::Writer::WriteCallbackFunc cb) {
+    // TODO(107): Reentrancy
+
     if (!isInitialized()) {
       cb(Error::CONN_NOT_INITIALIZED);
     }

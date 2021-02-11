@@ -7,6 +7,7 @@
 #define LIBP2P_BYTEUTIL_HPP
 
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 namespace libp2p::common {

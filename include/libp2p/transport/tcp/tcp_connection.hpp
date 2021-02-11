@@ -91,11 +91,16 @@ namespace libp2p::transport {
     void readSome(gsl::span<uint8_t> out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
+    void deferReadCallback(outcome::result<size_t> res,
+                        ReadCallbackFunc cb) override;
+
     void write(gsl::span<const uint8_t> in, size_t bytes,
                WriteCallbackFunc cb) override;
 
     void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
+
+    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 
@@ -114,6 +119,8 @@ namespace libp2p::transport {
     bool connecting_with_timeout_ = false;
     std::atomic_bool connection_phase_done_;
     boost::asio::deadline_timer deadline_timer_;
+
+    // TODO(107) : scheduler here
 
     boost::system::error_code handle_errcode(
         const boost::system::error_code &e) noexcept;

@@ -6,17 +6,18 @@
 #ifndef LIBP2P_YAMUX_FRAME_HPP
 #define LIBP2P_YAMUX_FRAME_HPP
 
+#include <boost/optional.hpp>
 #include <gsl/span>
+
 #include <libp2p/common/types.hpp>
-#include <libp2p/muxer/yamux/yamuxed_connection.hpp>
 
 namespace libp2p::connection {
   /**
-   * Header with optional data, which is sent and accepted with Yamux protocol
+   * Header which is sent and accepted with Yamux protocol
    */
   struct YamuxFrame {
     using ByteArray = common::ByteArray;
-    using StreamId = YamuxedConnection::StreamId;
+    using StreamId = uint32_t;
     static constexpr uint32_t kHeaderLength = 12;
 
     enum class FrameType : uint8_t {
@@ -38,14 +39,13 @@ namespace libp2p::connection {
       INTERNAL_ERROR = 2
     };
     static constexpr uint8_t kDefaultVersion = 0;
-    static constexpr uint32_t kDefaultWindowSize = 256;
+    static constexpr uint32_t kDefaultWindowSize = 256 * 1024;
 
     uint8_t version;
     FrameType type;
     uint16_t flags;
     StreamId stream_id;
     uint32_t length;
-    ByteArray data;
 
     /**
      * Get bytes representation of the Yamux frame with given parameters
@@ -57,8 +57,7 @@ namespace libp2p::connection {
      */
     static ByteArray frameBytes(
         uint8_t version, FrameType type, Flag flag, uint32_t stream_id,
-        uint32_t length,
-        gsl::span<const uint8_t> data = gsl::span<const uint8_t>());
+        uint32_t length, bool reserve_space = true);
 
     /**
      * Check if the (\param flag) is set in this frame
@@ -114,9 +113,11 @@ namespace libp2p::connection {
    * @param stream_id to be put into the message
    * @param data to be put into the message
    * @return bytes of the message
+   *
+   * TODO(artem): reform in buffers (shared + vector writes)
    */
   common::ByteArray dataMsg(YamuxFrame::StreamId stream_id,
-                            gsl::span<const uint8_t> data);
+                            uint32_t data_length, bool reserve_space = true);
 
   /**
    * Create a message, which breaks a connection with a peer

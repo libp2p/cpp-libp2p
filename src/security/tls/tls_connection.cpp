@@ -150,6 +150,11 @@ namespace libp2p::connection {
     socket_.async_read_some(makeBuffer(out, bytes), closeOnError(*this, cb));
   }
 
+  void TlsConnection::deferReadCallback(outcome::result<size_t> res,
+                                     Reader::ReadCallbackFunc cb) {
+    raw_connection_->deferReadCallback(res, std::move(cb));
+  }
+
   void TlsConnection::write(gsl::span<const uint8_t> in, size_t bytes,
                             Writer::WriteCallbackFunc cb) {
     log().trace("writing {} bytes", bytes);
@@ -161,6 +166,11 @@ namespace libp2p::connection {
                                 Writer::WriteCallbackFunc cb) {
     log().trace("writing some up to {} bytes", bytes);
     socket_.async_write_some(makeBuffer(in, bytes), closeOnError(*this, cb));
+  }
+
+  void TlsConnection::deferWriteCallback(std::error_code ec,
+                                      Writer::WriteCallbackFunc cb) {
+    raw_connection_->deferWriteCallback(ec, std::move(cb));
   }
 
   bool TlsConnection::isClosed() const {

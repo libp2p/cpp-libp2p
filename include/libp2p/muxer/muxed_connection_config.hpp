@@ -14,9 +14,8 @@ namespace libp2p::muxer {
    * Config of muxed connection
    */
   struct MuxedConnectionConfig {
-   public:
     /// how much unconsumed data each stream can have stored locally
-    size_t maximum_window_size = 1024 * 1024;
+    size_t maximum_window_size = 16 * 1024 * 1024;
 
     /// how much streams can be supported by Yamux at one time
     size_t maximum_streams = 1000;

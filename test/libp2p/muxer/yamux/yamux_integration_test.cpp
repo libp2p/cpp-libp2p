@@ -242,7 +242,8 @@ TEST_F(YamuxIntegrationTest, StreamFromServer) {
  */
 TEST_F(YamuxIntegrationTest, StreamWrite) {
   ByteArray data{{0x12, 0x34, 0xAA}};
-  auto expected_data_msg = dataMsg(kDefaulExpectedStreamId, data);
+  auto expected_data_msg = dataMsg(kDefaulExpectedStreamId, data.size());
+  expected_data_msg.insert(expected_data_msg.end(), data.begin(), data.end());
   auto received_data_msg =
       std::make_shared<ByteArray>(expected_data_msg.size(), 0);
 
@@ -288,7 +289,8 @@ TEST_F(YamuxIntegrationTest, StreamWrite) {
  */
 TEST_F(YamuxIntegrationTest, StreamRead) {
   ByteArray data{{0x12, 0x34, 0xAA}};
-  auto written_data_msg = dataMsg(kDefaulExpectedStreamId, data);
+  auto written_data_msg = dataMsg(kDefaulExpectedStreamId, data.size());
+  written_data_msg.insert(written_data_msg.end(), data.begin(), data.end());
   auto rcvd_data_msg = std::make_shared<ByteArray>(data.size(), 0);
 
   transport_->dial(
