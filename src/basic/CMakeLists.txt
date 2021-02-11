@@ -32,3 +32,17 @@ libp2p_add_library(p2p_protobuf_message_read_writer
 target_link_libraries(p2p_protobuf_message_read_writer
     p2p_message_read_writer
     )
+
+libp2p_add_library(p2p_read_buffer
+    read_buffer.cpp
+    )
+target_link_libraries(p2p_read_buffer
+    p2p_logger
+    )
+
+libp2p_add_library(p2p_write_queue
+    write_queue.cpp
+    )
+target_link_libraries(p2p_write_queue
+    p2p_logger
+    )
