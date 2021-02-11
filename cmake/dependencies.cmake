@@ -25,6 +25,11 @@ find_package(OpenSSL REQUIRED)
 hunter_add_package(Protobuf)
 find_package(Protobuf CONFIG REQUIRED)
 
+find_package(Threads)
+
+hunter_add_package(c-ares)
+find_package(c-ares CONFIG REQUIRED)
+
 # https://docs.hunter.sh/en/latest/packages/pkg/spdlog.html
 hunter_add_package(spdlog)
 find_package(spdlog CONFIG REQUIRED)

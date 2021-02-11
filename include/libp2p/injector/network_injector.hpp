@@ -23,6 +23,7 @@
 #include <libp2p/muxer/yamux.hpp>
 #include <libp2p/network/impl/connection_manager_impl.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
+#include <libp2p/network/impl/dnsaddr_resolver_impl.hpp>
 #include <libp2p/network/impl/listener_manager_impl.hpp>
 #include <libp2p/network/impl/network_impl.hpp>
 #include <libp2p/network/impl/router_impl.hpp>
@@ -273,6 +274,7 @@ namespace libp2p::injector {
         di::bind<security::secio::ExchangeMessageMarshaller>().template to<security::secio::ExchangeMessageMarshallerImpl>(),
 
         // internal
+        di::bind<network::DnsaddrResolver>().template to <network::DnsaddrResolverImpl>(),
         di::bind<network::Router>().template to<network::RouterImpl>(),
         di::bind<network::ConnectionManager>().template to<network::ConnectionManagerImpl>(),
         di::bind<network::ListenerManager>().template to<network::ListenerManagerImpl>(),
