@@ -4,6 +4,7 @@
 #
 
 add_subdirectory(impl)
+add_subdirectory(cares)
 
 libp2p_add_library(p2p_default_network
     default_network.cpp

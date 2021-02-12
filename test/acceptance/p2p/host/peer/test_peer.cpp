@@ -13,6 +13,7 @@
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
+#include <libp2p/network/impl/dnsaddr_resolver_impl.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include <libp2p/security/secio/exchange_message_marshaller_impl.hpp>
 #include <libp2p/security/secio/propose_message_marshaller_impl.hpp>
@@ -20,6 +21,8 @@
 #include "acceptance/p2p/host/protocol/client_test_session.hpp"
 
 using namespace libp2p;  // NOLINT
+
+libp2p::network::c_ares::Ares Peer::cares_;
 
 Peer::Peer(Peer::Duration timeout, bool secure)
     : muxed_config_{1024576, 1000},
@@ -160,7 +163,11 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto network = std::make_unique<network::NetworkImpl>(
       std::move(listener), std::move(dialer), cmgr);
 
-  auto addr_repo = std::make_shared<peer::InmemAddressRepository>();
+  auto dnsaddr_resolver =
+      std::make_shared<network::DnsaddrResolverImpl>(context_, cares_);
+
+  auto addr_repo =
+      std::make_shared<peer::InmemAddressRepository>(dnsaddr_resolver);
 
   auto key_repo = std::make_shared<peer::InmemKeyRepository>();
 

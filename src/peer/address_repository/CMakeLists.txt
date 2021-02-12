@@ -10,4 +10,5 @@ target_link_libraries(p2p_inmem_address_repository
     p2p_multiaddress
     p2p_peer_errors
     p2p_peer_id
+    p2p_dnsaddr_resolver
     )
