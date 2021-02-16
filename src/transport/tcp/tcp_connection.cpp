@@ -7,14 +7,34 @@
 
 #include <libp2p/transport/tcp/tcp_util.hpp>
 
+#define TRACE_ENABLED 0
+#include <libp2p/common/trace.hpp>
+
 namespace libp2p::transport {
+
+  namespace {
+    auto &log() {
+      static common::Logger logger = common::createLogger("tcp-conn");
+      return *logger;
+    }
+
+    inline std::error_code convert(boost::system::errc::errc_t ec) {
+      return std::error_code(static_cast<int>(ec), std::system_category());
+    }
+
+    inline std::error_code convert(std::error_code ec) {
+      return ec;
+    }
+  }  // namespace
 
   TcpConnection::TcpConnection(boost::asio::io_context &ctx,
                                boost::asio::ip::tcp::socket &&socket)
       : context_(ctx),
         socket_(std::move(socket)),
         connection_phase_done_{false},
-        deadline_timer_(context_) {}
+        deadline_timer_(context_) {
+    std::ignore = saveMultiaddresses();
+  }
 
   TcpConnection::TcpConnection(boost::asio::io_context &ctx)
       : context_(ctx),
@@ -23,62 +43,82 @@ namespace libp2p::transport {
         deadline_timer_(context_) {}
 
   outcome::result<void> TcpConnection::close() {
-    boost::system::error_code ec;
-    socket_.close(ec);
-    if (ec) {
-      return handle_errcode(ec);
-    }
+    closed_by_host_ = true;
+    close(convert(boost::system::errc::connection_aborted));
     return outcome::success();
   }
 
+  void TcpConnection::close(std::error_code reason) {
+    assert(reason);
+
+    if (!close_reason_) {
+      close_reason_ = reason;
+      log().debug("{} closing with reason: {}", debug_str_,
+                  close_reason_.message());
+    }
+    if (socket_.is_open()) {
+      boost::system::error_code ec;
+      socket_.close(ec);
+    }
+  }
+
   bool TcpConnection::isClosed() const {
-    return !socket_.is_open();
+    return closed_by_host_ || !socket_.is_open();
   }
 
   outcome::result<multi::Multiaddress> TcpConnection::remoteMultiaddr() {
-    boost::system::error_code ec;
-    auto endpoint(socket_.remote_endpoint(ec));
-    if (ec) {
-      return ec;
+    if (!remote_multiaddress_) {
+      auto res = saveMultiaddresses();
+      if (!res) {
+        return res.error();
+      }
     }
-    return detail::makeAddress(endpoint);
+    return remote_multiaddress_.value();
   }
 
   outcome::result<multi::Multiaddress> TcpConnection::localMultiaddr() {
-    boost::system::error_code ec;
-    auto endpoint(socket_.local_endpoint(ec));
-    if (ec) {
-      return ec;
+    if (!local_multiaddress_) {
+      auto res = saveMultiaddresses();
+      if (!res) {
+        return res.error();
+      }
     }
-    return detail::makeAddress(endpoint);
+    return local_multiaddress_.value();
   }
 
   bool TcpConnection::isInitiator() const noexcept {
     return initiator_;
   }
 
-  boost::system::error_code TcpConnection::handle_errcode(
-      const boost::system::error_code &e) noexcept {
-    // TODO(warchant): handle client disconnected; handle connection timeout
-    ////      if (e.category() == boost::asio::error::get_misc_category()) {
-    //        if (e.value() == boost::asio::error::eof) {
-    //          using connection::emits::OnConnectionAborted;
-    //          emit<OnConnectionAborted>(OnConnectionAborted{});
-    //        }
-    ////      }
-
-    // TODO(artem) if (isClosed()) notify stream and bus
-
-    return e;
-  }
+  namespace {
+    template <typename Callback>
+    auto closeOnError(TcpConnection &conn, Callback cb) {
+      return [cb{std::move(cb)}, wptr{conn.weak_from_this()}](auto ec,
+                                                              auto result) {
+        if (!wptr.expired()) {
+          if (ec) {
+            wptr.lock()->close(convert(ec));
+            return cb(std::forward<decltype(ec)>(ec));
+          }
+          TRACE("{} {}", wptr.lock()->debug_str_, result);
+          cb(result);
+        } else {
+          TRACE("connection wptr expired");
+        }
+      };
+    }
+  }  // namespace
 
   void TcpConnection::resolve(const TcpConnection::Tcp::endpoint &endpoint,
                               TcpConnection::ResolveCallbackFunc cb) {
     auto resolver = std::make_shared<Tcp::resolver>(context_);
     resolver->async_resolve(
         endpoint,
-        [resolver, cb{std::move(cb)}](const ErrorCode &ec, auto &&iterator) {
-          cb(ec, std::forward<decltype(iterator)>(iterator));
+        [wptr{weak_from_this()}, resolver, cb{std::move(cb)}](
+            const ErrorCode &ec, auto &&iterator) {
+          if (!wptr.expired()) {
+            cb(ec, std::forward<decltype(iterator)>(iterator));
+          }
         });
   }
 
@@ -88,8 +128,11 @@ namespace libp2p::transport {
     auto resolver = std::make_shared<Tcp::resolver>(context_);
     resolver->async_resolve(
         host_name, port,
-        [resolver, cb{std::move(cb)}](const ErrorCode &ec, auto &&iterator) {
-          cb(ec, std::forward<decltype(iterator)>(iterator));
+        [wptr{weak_from_this()}, resolver, cb{std::move(cb)}](
+            const ErrorCode &ec, auto &&iterator) {
+          if (!wptr.expired()) {
+            cb(ec, std::forward<decltype(iterator)>(iterator));
+          }
         });
   }
 
@@ -100,8 +143,11 @@ namespace libp2p::transport {
     auto resolver = std::make_shared<Tcp::resolver>(context_);
     resolver->async_resolve(
         protocol, host_name, port,
-        [resolver, cb{std::move(cb)}](const ErrorCode &ec, auto &&iterator) {
-          cb(ec, std::forward<decltype(iterator)>(iterator));
+        [wptr{weak_from_this()}, resolver, cb{std::move(cb)}](
+            const ErrorCode &ec, auto &&iterator) {
+          if (!wptr.expired()) {
+            cb(ec, std::forward<decltype(iterator)>(iterator));
+          }
         });
   }
 
@@ -118,35 +164,43 @@ namespace libp2p::transport {
       connecting_with_timeout_ = true;
       deadline_timer_.expires_from_now(
           boost::posix_time::milliseconds(timeout.count()));
-      deadline_timer_.async_wait([self{shared_from_this()},
-                                  cb](const boost::system::error_code &error) {
-        bool expected = false;
-        if (self->connection_phase_done_.compare_exchange_strong(expected,
-                                                                 true)) {
-          if (not error) {
-            // timeout happened, timer expired before connection was
-            // established
-            cb(boost::system::error_code{boost::system::errc::timed_out,
-                                         boost::system::generic_category()},
-               Tcp::endpoint{});
-          }
-          // Another case is: boost::asio::error::operation_aborted == error
-          // connection was established before timeout and timer has been
-          // cancelled
-        }
-      });
+      deadline_timer_.async_wait(
+          [wptr{weak_from_this()}, cb](const boost::system::error_code &error) {
+            auto self = wptr.lock();
+            if (!self || self->closed_by_host_) {
+              return;
+            }
+            bool expected = false;
+            if (self->connection_phase_done_.compare_exchange_strong(expected,
+                                                                     true)) {
+              if (not error) {
+                // timeout happened, timer expired before connection was
+                // established
+                cb(boost::system::error_code{boost::system::errc::timed_out,
+                                             boost::system::generic_category()},
+                   Tcp::endpoint{});
+              }
+              // Another case is: boost::asio::error::operation_aborted == error
+              // connection was established before timeout and timer has been
+              // cancelled
+            }
+          });
     }
     boost::asio::async_connect(
         socket_, iterator,
-        [self{shared_from_this()}, cb{std::move(cb)}](auto &&ec,
-                                                      auto &&endpoint) {
+        [wptr{weak_from_this()}, cb{std::move(cb)}](auto &&ec,
+                                                    auto &&endpoint) {
+          auto self = wptr.lock();
+          if (!self || self->closed_by_host_) {
+            return;
+          }
           bool expected = false;
           if (not self->connection_phase_done_.compare_exchange_strong(expected,
                                                                        true)) {
             BOOST_ASSERT(expected);
             // connection phase already done - means that user's callback was
-            // already called by timer expiration so we are closing socket if it
-            // was actually connected
+            // already called by timer expiration so we are closing socket if
+            // it was actually connected
             if (not ec) {
               self->socket_.close();
             }
@@ -156,65 +210,99 @@ namespace libp2p::transport {
             self->deadline_timer_.cancel();
           }
           self->initiator_ = true;
+          std::ignore = self->saveMultiaddresses();
           cb(std::forward<decltype(ec)>(ec),
              std::forward<decltype(endpoint)>(endpoint));
         });
   }
 
-  template <typename Callback>
-  auto closeOnError(TcpConnection &conn, Callback &&cb) {
-    return [cb{std::forward<Callback>(cb)}, conn{conn.shared_from_this()}](
-               auto &&ec, auto &&result) {
-      if (ec == boost::asio::error::broken_pipe) {
-        std::ignore = conn->close();
-      }
-      if (ec) {
-        return cb(std::forward<decltype(ec)>(ec));
-      }
-      cb(result);
-    };
-  }
-
   void TcpConnection::read(gsl::span<uint8_t> out, size_t bytes,
                            TcpConnection::ReadCallbackFunc cb) {
+    TRACE("{} read {}", debug_str_, bytes);
     boost::asio::async_read(socket_, detail::makeBuffer(out, bytes),
                             closeOnError(*this, cb));
   }
 
   void TcpConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
                                TcpConnection::ReadCallbackFunc cb) {
+    TRACE("{} read some up to {}", debug_str_, bytes);
     socket_.async_read_some(detail::makeBuffer(out, bytes),
                             closeOnError(*this, cb));
   }
 
   void TcpConnection::write(gsl::span<const uint8_t> in, size_t bytes,
                             TcpConnection::WriteCallbackFunc cb) {
+    TRACE("{} write {}", debug_str_, bytes);
     boost::asio::async_write(socket_, detail::makeBuffer(in, bytes),
                              closeOnError(*this, cb));
   }
 
   void TcpConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
                                 TcpConnection::WriteCallbackFunc cb) {
+    TRACE("{} write some up to {}", debug_str_, bytes);
     socket_.async_write_some(detail::makeBuffer(in, bytes),
                              closeOnError(*this, cb));
   }
 
+  namespace {
+    template <typename Callback, typename Arg>
+    void deferCallback(boost::asio::io_context &ctx,
+                       std::weak_ptr<TcpConnection> wptr, bool &closed_by_host,
+                       Callback cb, Arg arg) {
+      // defers callback to the next event loop cycle,
+      // cb will be called iff TcpConnection is still alive
+      // and was not closed by host's side
+      boost::asio::post(
+          ctx,
+          [wptr = std::move(wptr), cb = std::move(cb), arg, &closed_by_host]() {
+            if (!wptr.expired() && !closed_by_host) {
+              cb(arg);
+            }
+          });
+    }
+  }  // namespace
+
   void TcpConnection::deferReadCallback(outcome::result<size_t> res,
                                         ReadCallbackFunc cb) {
-    // TODO(107)
-    //    if (ec && cb) {
-    // weak from this!!
-    //      scheduler_->schedule([cb{std::move(cb)}, ec] { cb(ec); });
-    //    }
+    deferCallback(context_, weak_from_this(), std::ref(closed_by_host_),
+                  std::move(cb), res);
   }
 
   void TcpConnection::deferWriteCallback(std::error_code ec,
                                          WriteCallbackFunc cb) {
-    // TODO(107)
-    //    if (ec && cb) {
-    // weak from this!!
-    //      scheduler_->schedule([cb{std::move(cb)}, ec] { cb(ec); });
-    //    }
+    deferCallback(context_, weak_from_this(), std::ref(closed_by_host_),
+                  std::move(cb), ec);
+  }
+
+  outcome::result<void> TcpConnection::saveMultiaddresses() {
+    boost::system::error_code ec;
+    if (socket_.is_open()) {
+      if (!local_multiaddress_) {
+        auto endpoint(socket_.local_endpoint(ec));
+        if (!ec) {
+          OUTCOME_TRY(addr, detail::makeAddress(endpoint));
+          local_multiaddress_ = std::move(addr);
+        }
+      }
+      if (!remote_multiaddress_) {
+        auto endpoint(socket_.remote_endpoint(ec));
+        if (!ec) {
+          OUTCOME_TRY(addr, detail::makeAddress(endpoint));
+          remote_multiaddress_ = std::move(addr);
+        }
+      }
+    } else {
+      return convert(boost::system::errc::not_connected);
+    }
+    if (ec) {
+      return convert(ec);
+    }
+#ifndef NDEBUG
+    debug_str_ = fmt::format(
+        "{} {} {}", local_multiaddress_->getStringAddress(),
+        initiator_ ? "->" : "<-", remote_multiaddress_->getStringAddress());
+#endif
+    return outcome::success();
   }
 
 }  // namespace libp2p::transport
