@@ -269,13 +269,16 @@ namespace libp2p::regression {
   };
 
   void runEventLoop(std::shared_ptr<boost::asio::io_context> io) {
-    using std::chrono_literals::operator""ms;
-
     boost::asio::signal_set signals(*io, SIGINT, SIGTERM);
     signals.async_wait(
         [&io](const boost::system::error_code &, int) { io->stop(); });
 
-    io->run_for(3000ms);
+    auto max_duration = std::chrono::milliseconds(300);
+    if (std::getenv("TRACE_DEBUG") != nullptr) {
+      max_duration = std::chrono::seconds(86400);
+    }
+
+    io->run_for(max_duration);
   }
 
 }  // namespace libp2p::regression
@@ -307,10 +310,11 @@ void testStreamsGetNotifiedAboutEOF(InjectorArgs &&... args) {
         server_read = true;
         return node.write();
       case Stats::READ_FAILURE:
+      case Stats::WRITE_FAILURE:
         eof_passed = true;
         break;
       default:
-        break;
+        return;
     }
     io->stop();
   };
@@ -324,6 +328,7 @@ void testStreamsGetNotifiedAboutEOF(InjectorArgs &&... args) {
       case Stats::WRITE:
         return node.read();
       case Stats::READ:
+        TRACE("server eof");
         client_read = true;
 
         // disconnect
@@ -492,6 +497,20 @@ TEST(StreamsRegression, YamuxTLSStreamsGetNotifiedAboutEOF) {
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
           .template to<libp2p::muxer::Yamux>()[boost::di::override],
       libp2p::injector::useSecurityAdaptors<libp2p::security::TlsAdaptor>());
+}
+
+TEST(StreamsRegression, OutboundYamuxNoiseConnectionAcceptsStreams) {
+  testOutboundConnectionAcceptsStreams(
+      boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
+          .template to<libp2p::muxer::Yamux>()[boost::di::override],
+      libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>());
+}
+
+TEST(StreamsRegression, YamuxNoiseStreamsGetNotifiedAboutEOF) {
+  testStreamsGetNotifiedAboutEOF(
+      boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
+          .template to<libp2p::muxer::Yamux>()[boost::di::override],
+      libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>());
 }
 
 int main(int argc, char *argv[]) {

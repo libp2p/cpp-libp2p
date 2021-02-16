@@ -74,10 +74,10 @@ struct ServerStream : std::enable_shared_from_this<ServerStream> {
  * @when the client sets up a listener on that server @and writes 'PING'
  * @then the 'PONG' message is received by the client
  */
-TEST(YamuxAcceptanceTest, PingPong) {
+TEST(YamuxAcceptanceTest, DISABLED_PingPong) {
   auto ma = "/ip4/127.0.0.1/tcp/40009"_multiaddr;
   auto stream_read = false, stream_wrote = false;
-  auto context = std::make_shared<boost::asio::io_context>(1);
+  auto context = std::make_shared<boost::asio::io_context>();
 
   auto upgrader = std::make_shared<UpgraderMock>();
   EXPECT_CALL(*upgrader, upgradeToSecureInbound(_, _))
@@ -146,4 +146,16 @@ TEST(YamuxAcceptanceTest, PingPong) {
 
   EXPECT_TRUE(stream_read);
   EXPECT_TRUE(stream_wrote);
+}
+
+int main(int argc, char *argv[]) {
+  if (std::getenv("TRACE_DEBUG") != nullptr
+      || (argc > 1 && std::string("trace") == argv[1])) {
+    spdlog::set_level(spdlog::level::trace);
+  } else {
+    spdlog::set_level(spdlog::level::info);
+  }
+
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
