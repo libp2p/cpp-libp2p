@@ -82,12 +82,10 @@ jobs:
         sudo pip3 install cmake requests gitpython gcovr pyyaml
     - name: "cmake"
       run: cmake . -GNinja -Bbuild-coverage -DCOVERAGE=ON -DEXAMPLES=OFF
-    - name: CPU Core Count
-      uses: SimenB/github-actions-cpu-cores@v1
     - name: "build report"
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-      run: cmake --build build-coverage --target ctest_coverage -- -j ${{ steps.cpu-cores.outputs.count }}
+      run: cmake --build build-coverage --target ctest_coverage -- -j4
     - name: "upload"
       uses: codecov/codecov-action@v1.2.1
       with:
