@@ -90,7 +90,7 @@ jobs:
       uses: codecov/codecov-action@v1.2.1
       with:
         files: build-coverage/ctest_coverage.xml
-        verbose: true
+        verbose: false
 
 # TODO(warchant): on CI (linux/clang) this can not be built, figure out why
 #    - name: install & test
