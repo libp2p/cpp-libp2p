@@ -5,7 +5,7 @@
 
 #include <libp2p/protocol_muxer/multiselect/multiselect.hpp>
 
-#define TRACE_ENABLED 0
+#define TRACE_ENABLED 1
 #include <libp2p/common/trace.hpp>
 
 namespace libp2p::protocol_muxer {
@@ -237,6 +237,7 @@ namespace libp2p::protocol_muxer {
   void Multiselect::negotiationRoundFinished(
       const std::shared_ptr<ConnectionState> &connection_state,
       const Protocol &chosen_protocol) {
+    TRACE("Multiselect::negotiationRoundFinished: {}", chosen_protocol);
     connection_state->proto_callback(chosen_protocol);
     clearResources(connection_state);
   }

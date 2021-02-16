@@ -121,10 +121,6 @@ namespace libp2p::network {
           }
           auto &&conn = rconn.value();
 
-          if (!conn->isInitiator()) {
-            TRACE("dialer: opening outbound stream inside inbound connection");
-          }
-
           // 2. open new stream on that connection
           conn->newStream(
               [this, cb{std::move(cb)},
