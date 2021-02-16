@@ -71,7 +71,7 @@ jobs:
       with:
         submodules: true
         clean: true
-        fetch-depth: 1
+        fetch-depth: 0
     - name: "install dependencies"
       run: |
         set -e
