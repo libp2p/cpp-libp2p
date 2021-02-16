@@ -126,7 +126,7 @@ namespace libp2p::basic {
     assert(!fragments_.empty());
     auto *p = out.data();
     auto n = fragments_.front().size() - first_byte_offset_;
-    assert(n < fragments_.front().size());
+    assert(n <= fragments_.front().size());
 
     memcpy(p, fragments_.front().data() + first_byte_offset_, n);  // NOLINT
 
