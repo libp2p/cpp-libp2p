@@ -9,19 +9,19 @@
 
 namespace libp2p::basic {
 
-  bool WriteQueue::enqueue(DataRef data, bool some,
+  bool WriteQueue::canEnqueue(size_t size) const {
+    return (size + total_unsent_size_ <= size_limit_);
+  }
+
+  void WriteQueue::enqueue(DataRef data, bool some,
                            Writer::WriteCallbackFunc cb) {
     auto data_sz = static_cast<size_t>(data.size());
 
     assert(data_sz > 0);
-
-    if (data_sz + total_unsent_size_ > size_limit_) {
-      return false;
-    }
+    assert(canEnqueue(data_sz));
 
     total_unsent_size_ += data_sz;
     queue_.push_back({data, 0, 0, data_sz, some, std::move(cb)});
-    return true;
   }
 
   size_t WriteQueue::dequeue(size_t window_size, DataRef &out, bool &some) {

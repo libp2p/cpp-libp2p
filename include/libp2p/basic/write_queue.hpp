@@ -21,8 +21,11 @@ namespace libp2p::basic {
     explicit WriteQueue(size_t size_limit = kDefaultSizeLimit)
         : size_limit_(size_limit) {}
 
-    /// Enqueues data, returns false on overflow
-    bool enqueue(DataRef data, bool some, basic::Writer::WriteCallbackFunc cb);
+    /// Returns false if size will overflow the buffer
+    bool canEnqueue(size_t size) const;
+
+    /// Enqueues data
+    void enqueue(DataRef data, bool some, basic::Writer::WriteCallbackFunc cb);
 
     /// Returns new window size
     size_t dequeue(size_t window_size, DataRef &out, bool &some);
