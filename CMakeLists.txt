@@ -37,6 +37,9 @@ print("C flags: ${CMAKE_C_FLAGS}")
 print("CXX flags: ${CMAKE_CXX_FLAGS}")
 print("Using CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
 
+# the property is out of "if TESTING" scope due to addtest func is out too
+set_property(GLOBAL PROPERTY TEST_TARGETS)
+
 include(CheckCXXCompilerFlag)
 include(cmake/install.cmake)
 include(cmake/libp2p_add_library.cmake)
@@ -77,9 +80,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # TODO(warchant): add flags https://github.com/lefticus/cppbestpractices/blob/master/02-Use_the_Tools_Available.md#msvc
 endif ()
 
-if (COVERAGE)
-  include(cmake/coverage.cmake)
-endif ()
 if (CLANG_TIDY)
   include(cmake/clang-tidy.cmake)
 endif ()
@@ -98,8 +98,11 @@ add_subdirectory(src)
 if(EXAMPLES)
   add_subdirectory(example)
 endif()
-
-if(TESTING)
+if(TESTING OR COVERAGE)
   enable_testing()
   add_subdirectory(test)
 endif()
+
+if (COVERAGE)
+  include(cmake/coverage.cmake)
+endif ()
