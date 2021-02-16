@@ -100,7 +100,7 @@ namespace libp2p::transport {
             wptr.lock()->close(convert(ec));
             return cb(std::forward<decltype(ec)>(ec));
           }
-          TRACE("{} {}", wptr.lock()->debug_str_, result);
+          TRACE("{} {}", wptr.lock()->str(), result);
           cb(result);
         } else {
           TRACE("connection wptr expired");

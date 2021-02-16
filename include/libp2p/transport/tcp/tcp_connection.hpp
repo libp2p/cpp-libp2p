@@ -116,6 +116,11 @@ namespace libp2p::transport {
     /// or from close() if is closing by the host
     void close(std::error_code reason);
 
+    // TODO (artem) make RawConnection::id()->string or str() or whatever
+    const std::string &str() const {
+      return debug_str_;
+    }
+
    private:
     outcome::result<void> saveMultiaddresses();
 
@@ -137,10 +142,8 @@ namespace libp2p::transport {
 
     friend class security::TlsAdaptor;
 
-#ifndef NDEBUG
-   public:
+    // TODO (artem) make RawConnection::id()->string or so
     std::string debug_str_;
-#endif
   };
 }  // namespace libp2p::transport
 
