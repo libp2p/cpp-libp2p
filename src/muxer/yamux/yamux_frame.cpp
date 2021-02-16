@@ -28,12 +28,12 @@ namespace libp2p::connection {
     }
     bytes.reserve(space);
 
-    // TODO(akvinikym) 03.10.19 PRE-319: refine the functions
-    putUint32BE(putUint32BE(putUint16BE(putUint8(putUint8(bytes, version),
-                                                 static_cast<uint8_t>(type)),
-                                        static_cast<uint16_t>(flag)),
-                            stream_id),
-                length);
+    putUint8(bytes, version);
+    putUint8(bytes, static_cast<uint8_t>(type));
+    putUint16BE(bytes, static_cast<uint8_t>(flag));
+    putUint32BE(bytes, stream_id);
+    putUint32BE(bytes, length);
+
     return bytes;
   }
 

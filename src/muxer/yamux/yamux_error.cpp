@@ -24,6 +24,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxError, e) {
       return "Yamux: stream is not readable";
     case E::STREAM_NOT_WRITABLE:
       return "Yamux: stream is not writable";
+    case E::STREAM_WRITE_BUFFER_OVERFLOW:
+      return "Yamux: stream write buffer overflow: slow peer";
     case E::STREAM_CLOSED_BY_HOST:
       return "Yamux: stream closed by host";
     case E::STREAM_RESET_BY_HOST:
@@ -39,7 +41,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxError, e) {
     case E::CONNECTION_CLOSED_BY_PEER:
       return "Yamux: connection closed by peer";
     case E::PROTOCOL_ERROR:
-      return "Yamux: protocol error";
+      return "Yamux: protocol violation or garbage received from peer";
     default:
       break;
   }

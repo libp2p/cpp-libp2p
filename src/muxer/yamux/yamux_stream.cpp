@@ -7,8 +7,8 @@
 
 #include <cassert>
 
-#include <libp2p/muxer/yamux/yamux_error.hpp>
 #include <libp2p/common/logger.hpp>
+#include <libp2p/muxer/yamux/yamux_error.hpp>
 
 namespace libp2p::connection {
 
@@ -21,7 +21,7 @@ namespace libp2p::connection {
 
   YamuxStream::YamuxStream(
       std::shared_ptr<connection::SecureConnection> connection,
-      YamuxStreamFeedback& feedback, uint32_t stream_id, size_t window_size,
+      YamuxStreamFeedback &feedback, uint32_t stream_id, size_t window_size,
       size_t maximum_window_size, size_t write_queue_limit)
       : connection_(std::move(connection)),
         feedback_(feedback),
@@ -39,16 +39,12 @@ namespace libp2p::connection {
 
   void YamuxStream::read(gsl::span<uint8_t> out, size_t bytes,
                          ReadCallbackFunc cb) {
-    defer_callbacks_ = true;
     doRead(out, bytes, std::move(cb), false);
-    defer_callbacks_ = false;
   }
 
   void YamuxStream::readSome(gsl::span<uint8_t> out, size_t bytes,
                              ReadCallbackFunc cb) {
-    defer_callbacks_ = true;
     doRead(out, bytes, std::move(cb), true);
-    defer_callbacks_ = false;
   }
 
   void YamuxStream::deferReadCallback(outcome::result<size_t> res,
@@ -63,16 +59,12 @@ namespace libp2p::connection {
 
   void YamuxStream::write(gsl::span<const uint8_t> in, size_t bytes,
                           WriteCallbackFunc cb) {
-    defer_callbacks_ = true;
     doWrite(in, bytes, std::move(cb), false);
-    defer_callbacks_ = false;
   }
 
   void YamuxStream::writeSome(gsl::span<const uint8_t> in, size_t bytes,
                               WriteCallbackFunc cb) {
-    defer_callbacks_ = true;
     doWrite(in, bytes, std::move(cb), true);
-    defer_callbacks_ = false;
   }
 
   void YamuxStream::deferWriteCallback(std::error_code ec,
@@ -292,8 +284,7 @@ namespace libp2p::connection {
 
     if (!cb || bytes == 0 || out.empty()
         || static_cast<size_t>(out.size()) < bytes) {
-      return deferReadCallback(YamuxError::INVALID_ARGUMENT,
-                               std::move(cb));
+      return deferReadCallback(YamuxError::INVALID_ARGUMENT, std::move(cb));
     }
 
     if (close_reason_) {
@@ -314,7 +305,7 @@ namespace libp2p::connection {
     external_read_buffer_ = out;
     read_message_size_ = bytes;
     reading_some_ = some;
-    external_read_buffer_ = external_read_buffer_.subspan(read_message_size_);
+    external_read_buffer_ = external_read_buffer_.first(read_message_size_);
 
     size_t consumed = internal_read_buffer_.consume(external_read_buffer_);
     if (consumed > 0) {
@@ -359,8 +350,7 @@ namespace libp2p::connection {
   void YamuxStream::doWrite(gsl::span<const uint8_t> in, size_t bytes,
                             WriteCallbackFunc cb, bool some) {
     if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
-      return deferWriteCallback(YamuxError::INVALID_ARGUMENT,
-                                std::move(cb));
+      return deferWriteCallback(YamuxError::INVALID_ARGUMENT, std::move(cb));
     }
 
     if (!is_writable_) {
@@ -371,6 +361,12 @@ namespace libp2p::connection {
       return deferWriteCallback(close_reason_, std::move(cb));
     }
 
+    if (!write_queue_.canEnqueue(bytes)) {
+      return deferWriteCallback(YamuxError::STREAM_WRITE_BUFFER_OVERFLOW,
+                                std::move(cb));
+    }
+
+    write_queue_.enqueue(in.first(bytes), some, std::move(cb));
     doWrite();
   }
 
