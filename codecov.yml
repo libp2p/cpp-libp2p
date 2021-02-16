@@ -1,0 +1,6 @@
+ignore:
+  - "test"
+
+comment:
+  require_head: no
+  require_base: no
