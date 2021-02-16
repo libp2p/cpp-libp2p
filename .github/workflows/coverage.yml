@@ -29,8 +29,8 @@ jobs:
         sudo pip3 install cmake requests gitpython gcovr pyyaml
     - name: "cmake"
       env:
-        CC:   clang-10
-        CXX:  clang++-10
+        CC: clang
+        CXX: clang++
       run: cmake . -GNinja -Bbuild-coverage -DCOVERAGE=ON -DEXAMPLES=OFF
     - name: "build report"
       env:
