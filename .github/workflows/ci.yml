@@ -1,6 +1,6 @@
 name: CI
 
-on: 
+on:
   push:
     branches:
     - master
@@ -45,7 +45,7 @@ jobs:
         fi
 
         sudo python3 -m pip install --upgrade pip
-        sudo pip3 install scikit-build 
+        sudo pip3 install scikit-build
         sudo pip3 install cmake requests gitpython gcovr pyyaml
     - name: cmake
       env:
@@ -61,6 +61,37 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
       run: cmake --build build --target test
+
+  coverage:
+    name: "Prepare code coverage report"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      name: checkout
+      with:
+        submodules: true
+        clean: true
+        fetch-depth: 1
+    - name: "install dependencies"
+      run: |
+        set -e
+        sudo apt-get update || true
+        sudo apt-get install -y ninja-build
+        sudo python3 -m pip install --upgrade pip
+        sudo pip3 install scikit-build
+        sudo pip3 install cmake requests gitpython gcovr pyyaml
+    - name: "cmake"
+      run: cmake . -GNinja -Bbuild-coverage -DCOVERAGE=ON -DEXAMPLES=OFF
+    - name: "build tests and produce report"
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+      run: cmake --build build-coverage --target ctest_coverage -- -j4
+    - name: "upload report to codecov.io"
+      uses: codecov/codecov-action@v1.2.1
+      with:
+        files: ctest_coverage.xml
+        verbose: true
+
 # TODO(warchant): on CI (linux/clang) this can not be built, figure out why
 #    - name: install & test
 #      run: |
