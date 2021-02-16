@@ -83,6 +83,7 @@ namespace libp2p::connection {
 
   void YamuxStream::close(VoidResultHandlerFunc cb) {
     closed_by_client_ = true;
+    is_writable_ = false;
 
     feedback_.resetStream(stream_id_, false);
 
