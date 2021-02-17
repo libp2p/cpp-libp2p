@@ -617,8 +617,6 @@ namespace libp2p::connection {
 
   void YamuxedConnection::onDataWritten(outcome::result<size_t> res,
                                         StreamId stream_id, bool some) {
-    is_writing_ = false;
-
     if (!res) {
       // write error
       close(res.error(), boost::none);
@@ -649,6 +647,8 @@ namespace libp2p::connection {
       }
     }
 
+    is_writing_ = false;
+    
     if (started_ && !write_queue_.empty()) {
       auto next_packet = std::move(write_queue_.front());
       write_queue_.pop_front();
