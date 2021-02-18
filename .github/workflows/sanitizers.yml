@@ -89,7 +89,7 @@ jobs:
       env:
         CC: clang
         CXX: clang++
-      run: cmake . -GNinja -Bbuild-tsan -DTESTING=ON -DTSAN=ON -DEXAMPLES=OFF
+      run: cmake . -GNinja -Bbuild-tsan -DTESTING=OFF -DTSAN=ON -DEXAMPLES=ON
     - name: "build"
       run: cmake --build build-tsan --target example_ares_resolver -- -j4
     - name: "run"
