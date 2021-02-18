@@ -7,8 +7,10 @@
 
 #include <boost/asio/error.hpp>
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/muxer/yamux/yamux_error.hpp>
+
+#define TRACE_ENABLED 1
+#include <libp2p/common/trace.hpp>
 
 namespace libp2p::connection {
 
@@ -24,7 +26,7 @@ namespace libp2p::connection {
 
     inline std::tuple<gsl::span<uint8_t>, gsl::span<uint8_t>> split(
         gsl::span<uint8_t> span, size_t n) {
-      return {span.subspan(0, n), span.subspan(n)};
+      return {span.first(n), span.subspan(n)};
     }
 
     inline bool isOutbound(uint32_t our_stream_id, uint32_t their_stream_id) {
@@ -175,6 +177,7 @@ namespace libp2p::connection {
   }
 
   void YamuxedConnection::continueReading() {
+    TRACE("YamuxedConnection::continueReading");
     connection_->readSome(*raw_read_buffer_, raw_read_buffer_->size(),
                           [wptr = weak_from_this(), buffer = raw_read_buffer_](
                               outcome::result<size_t> res) {
@@ -202,10 +205,12 @@ namespace libp2p::connection {
     auto n = res.value();
     gsl::span<uint8_t> bytes_read(*raw_read_buffer_);
 
+    TRACE("read {} bytes", n);
+
     assert(n <= raw_read_buffer_->size());
 
     if (n < raw_read_buffer_->size()) {
-      bytes_read = bytes_read.subspan(0, n);
+      bytes_read = bytes_read.first(n);
     }
 
     reading_state_.onDataReceived(bytes_read);
@@ -254,6 +259,8 @@ namespace libp2p::connection {
             YamuxFrame::GoAwayError::PROTOCOL_ERROR);
       return false;
     }
+
+    TRACE("YamuxedConnection::processHeader");
 
     auto &frame = header.value();
 
@@ -315,6 +322,9 @@ namespace libp2p::connection {
       std::ignore = stream->onDataRead(segment, fin, rst);
       return true;
     }
+
+    TRACE("YamuxedConnection::processData, stream={}, size={}", stream_id,
+          segment.size());
 
     bool ok = found.value()->second->onDataRead(segment, fin, rst);
     if (!ok) {
@@ -648,7 +658,7 @@ namespace libp2p::connection {
     }
 
     is_writing_ = false;
-    
+
     if (started_ && !write_queue_.empty()) {
       auto next_packet = std::move(write_queue_.front());
       write_queue_.pop_front();

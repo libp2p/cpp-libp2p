@@ -185,6 +185,8 @@ namespace libp2p::connection {
 
     auto sz = static_cast<size_t>(bytes.size());
 
+    log()->debug("stream {} read {} bytes", stream_id_, sz);
+
     bool read_completed = false;
     bool overflow = false;
 

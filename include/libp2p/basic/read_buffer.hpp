@@ -87,9 +87,6 @@ namespace libp2p::basic {
         size_t expected_size = 0,
         size_t memory_threshold = kDefaultMemoryThreshold);
 
-    /// Returns true if all expected bytes filled
-    bool isFilled() const;
-
     /// Expects the next message of a given size, if the current one is
     /// not read to the end, it will be discarded
     void expect(size_t size);

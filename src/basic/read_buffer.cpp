@@ -196,10 +196,6 @@ namespace libp2p::basic {
       : memory_threshold_(memory_threshold), expected_size_(expected_size) {
   }
 
-  bool FixedBufferCollector::isFilled() const {
-    return expected_size_ > buffer_.size();
-  }
-
   void FixedBufferCollector::expect(size_t size) {
     expected_size_ = size;
     buffer_.clear();

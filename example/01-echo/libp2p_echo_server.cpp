@@ -56,6 +56,10 @@ int main(int argc, char **argv) {
   using libp2p::crypto::PublicKey;
   using libp2p::common::operator""_unhex;
 
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
+    spdlog::set_level(spdlog::level::trace);
+  }
+
   // resulting PeerId should be
   // 12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV
   KeyPair keypair{PublicKey{{Key::Type::Ed25519,

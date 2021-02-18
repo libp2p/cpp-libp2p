@@ -12,11 +12,20 @@
 #include <boost/asio/streambuf.hpp>
 #include <gsl/span>
 #include <libp2p/basic/readwriter.hpp>
+#include <libp2p/common/logger.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/protocol_muxer/multiselect/multiselect_error.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
 
 namespace libp2p::protocol_muxer {
+
+  namespace {
+    auto &log() {
+      static auto logger = common::createLogger("multiselect-conn-state");
+      return *logger;
+    }
+  }  // namespace
+
   class Multiselect;
   using ByteArray = libp2p::common::ByteArray;
 
@@ -80,9 +89,9 @@ namespace libp2p::protocol_muxer {
      */
     void read(size_t n,
               std::function<void(const outcome::result<void> &)> handler) {
-//      if (n == 0) {
-//        return;
-//      }
+      //      if (n == 0) {
+      //        return;
+      //      }
 
       // if there are already enough bytes in our buffer, return them
       if (read_buffer->size() >= n) {
@@ -97,6 +106,7 @@ namespace libp2p::protocol_muxer {
           [self{shared_from_this()}, buf, h = std::move(handler),
            to_read](auto &&res) {
             if (!res) {
+              log().info("read error {}", res.error().message());
               return h(res.error());
             }
             if (boost::asio::buffer_copy(

@@ -20,8 +20,11 @@ int main(int argc, char *argv[]) {
   using libp2p::crypto::PublicKey;
   using libp2p::common::operator""_unhex;
 
+  auto run_duration = std::chrono::seconds(5);
+
   if (std::getenv("TRACE_DEBUG") != nullptr) {
     spdlog::set_level(spdlog::level::trace);
+    run_duration = std::chrono::seconds(86400);
   } else {
     spdlog::set_level(spdlog::level::err);
   }
@@ -93,5 +96,5 @@ int main(int argc, char *argv[]) {
   });
 
   // run the IO context
-  context->run_for(std::chrono::seconds(5));
+  context->run_for(run_duration);
 }
