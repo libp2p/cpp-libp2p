@@ -2,6 +2,7 @@ config/__pycahe__
 **/__pycache__/*
 __pycache__/*
 build/*
+build*
 *.DS_Store
 *.vscode/
 *.swp

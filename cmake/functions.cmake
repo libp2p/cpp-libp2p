@@ -22,6 +22,7 @@ function(addtest test_name)
       LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/test_lib
       )
   disable_clang_tidy(${test_name})
+  set_property(GLOBAL APPEND PROPERTY TEST_TARGETS ${test_name})
 endfunction()
 
 function(addtest_part test_name)

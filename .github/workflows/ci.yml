@@ -1,6 +1,6 @@
 name: CI
 
-on: 
+on:
   push:
     branches:
     - master
@@ -45,7 +45,7 @@ jobs:
         fi
 
         sudo python3 -m pip install --upgrade pip
-        sudo pip3 install scikit-build 
+        sudo pip3 install scikit-build
         sudo pip3 install cmake requests gitpython gcovr pyyaml
     - name: cmake
       env:
@@ -61,6 +61,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
       run: cmake --build build --target test
+
 # TODO(warchant): on CI (linux/clang) this can not be built, figure out why
 #    - name: install & test
 #      run: |
