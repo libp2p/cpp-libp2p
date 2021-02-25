@@ -391,7 +391,7 @@ namespace libp2p::connection {
 
     if (bytes_available_now > 0) {
       internal_read_buffer_.consume(external_read_buffer_);
-    } 
+    }
   }
 
   void YamuxStream::readCompleted() {

@@ -205,7 +205,7 @@ namespace libp2p::connection {
     auto n = res.value();
     gsl::span<uint8_t> bytes_read(*raw_read_buffer_);
 
-    TRACE("read {} bytes", n);
+    log()->debug("read {} bytes", n);
 
     assert(n <= raw_read_buffer_->size());
 
@@ -305,6 +305,11 @@ namespace libp2p::connection {
   bool YamuxedConnection::processData(gsl::span<uint8_t> segment,
                                       StreamId stream_id, bool rst, bool fin) {
     assert(stream_id != 0);
+
+    if (segment.empty() && !rst && !fin) {
+      log()->debug("zero data for stream {}", stream_id);
+      assert(rst || fin);
+    }
 
     auto it = streams_.find(stream_id);
     if (it == streams_.end()) {
