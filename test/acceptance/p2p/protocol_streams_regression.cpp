@@ -64,8 +64,8 @@ namespace libp2p::regression {
     using Behavior = std::function<void(Node &node)>;
 
     template <typename... InjectorArgs>
-    Node(int node_id, const Behavior &behavior,
-         std::shared_ptr<boost::asio::io_context> io, InjectorArgs &&... args)
+    Node(int node_id, bool jumbo_msg, const Behavior &behavior,
+         std::shared_ptr<boost::asio::io_context> io, InjectorArgs &&...args)
         : behavior_(behavior) {
       stats_.node_id = node_id;
       auto injector =
@@ -76,7 +76,12 @@ namespace libp2p::regression {
               std::forward<decltype(args)>(args)...);
       host_ = injector.template create<std::shared_ptr<Host>>();
 
-      write_buf_ = std::make_shared<common::ByteArray>(getId().toVector());
+      if (!jumbo_msg) {
+        write_buf_ = std::make_shared<common::ByteArray>(getId().toVector());
+      } else {
+        static const size_t kJumboSize = 40 * 1024 * 1024;
+        write_buf_ = std::make_shared<common::ByteArray>(kJumboSize, 0x99);
+      }
       read_buf_ = std::make_shared<common::ByteArray>();
       read_buf_->resize(write_buf_->size());
     }
@@ -211,6 +216,7 @@ namespace libp2p::regression {
       } else {
         stats_.put(Stats::ACCEPTED);
         accepted_stream_ = std::move(rstream.value());
+        //accepted_stream_->adjustWindowSize(4*1024*1024, [](auto){});
       }
       behavior_(*this);
     }
@@ -225,6 +231,7 @@ namespace libp2p::regression {
         TRACE("({}): connected", stats_.node_id);
         stats_.put(Stats::CONNECTED);
         connected_stream_ = std::move(rstream.value());
+        //connected_stream_->adjustWindowSize(4*1024*1024, [](auto){});
       }
       behavior_(*this);
     }
@@ -273,7 +280,7 @@ namespace libp2p::regression {
     signals.async_wait(
         [&io](const boost::system::error_code &, int) { io->stop(); });
 
-    auto max_duration = std::chrono::milliseconds(300);
+    auto max_duration = std::chrono::seconds(30);
     if (std::getenv("TRACE_DEBUG") != nullptr) {
       max_duration = std::chrono::seconds(86400);
     }
@@ -285,8 +292,8 @@ namespace libp2p::regression {
 
 // TEST(StreamsRegression, StreamsGetNotifiedAboutEOF) {
 template <typename... InjectorArgs>
-void testStreamsGetNotifiedAboutEOF(InjectorArgs &&... args) {
-  using namespace libp2p::regression; //NOLINT
+void testStreamsGetNotifiedAboutEOF(bool jumbo_msg, InjectorArgs &&...args) {
+  using namespace libp2p::regression;  // NOLINT
 
   constexpr size_t kServerId = 0;
   constexpr size_t kClientId = 1;
@@ -347,9 +354,9 @@ void testStreamsGetNotifiedAboutEOF(InjectorArgs &&... args) {
 
   io = std::make_shared<boost::asio::io_context>();
 
-  server = std::make_shared<Node>(kServerId, server_behavior, io,
+  server = std::make_shared<Node>(kServerId, jumbo_msg, server_behavior, io,
                                   std::forward<decltype(args)>(args)...);
-  client = std::make_shared<Node>(kClientId, client_behavior, io,
+  client = std::make_shared<Node>(kClientId, jumbo_msg, client_behavior, io,
                                   std::forward<decltype(args)>(args)...);
 
   io->post([&]() {
@@ -364,13 +371,15 @@ void testStreamsGetNotifiedAboutEOF(InjectorArgs &&... args) {
   EXPECT_TRUE(client_read);
   EXPECT_TRUE(eof_passed);
 
-  if (server) server->stop();
-  if (client) client->stop();
+  if (server)
+    server->stop();
+  if (client)
+    client->stop();
 }
 
 template <typename... InjectorArgs>
-void testOutboundConnectionAcceptsStreams(InjectorArgs &&... args) {
-  using namespace libp2p::regression; //NOLINT
+void testOutboundConnectionAcceptsStreams(InjectorArgs &&...args) {
+  using namespace libp2p::regression;  // NOLINT
 
   constexpr size_t kServerId = 0;
   constexpr size_t kClientId = 1;
@@ -440,9 +449,9 @@ void testOutboundConnectionAcceptsStreams(InjectorArgs &&... args) {
 
   io = std::make_shared<boost::asio::io_context>();
 
-  server = std::make_shared<Node>(kServerId, server_behavior, io,
+  server = std::make_shared<Node>(kServerId, false, server_behavior, io,
                                   std::forward<decltype(args)>(args)...);
-  client = std::make_shared<Node>(kClientId, client_behavior, io,
+  client = std::make_shared<Node>(kClientId, false, client_behavior, io,
                                   std::forward<decltype(args)>(args)...);
 
   io->post([&]() {
@@ -457,18 +466,30 @@ void testOutboundConnectionAcceptsStreams(InjectorArgs &&... args) {
   EXPECT_TRUE(client_read_from_accepted_stream);
   EXPECT_TRUE(server_read_from_connected_stream);
 
-  if (server) server->stop();
-  if (client) client->stop();
+  if (server)
+    server->stop();
+  if (client)
+    client->stop();
 }
 
 TEST(StreamsRegression, YamuxStreamsGetNotifiedAboutEOF) {
   testStreamsGetNotifiedAboutEOF(
+      false,
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
           .template to<libp2p::muxer::Yamux>()[boost::di::override]);
 }
 
+TEST(StreamsRegression, YamuxStreamsGetNotifiedAboutEOFJumboMsg) {
+  testStreamsGetNotifiedAboutEOF(
+      true,
+      boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
+          .template to<libp2p::muxer::Yamux>()[boost::di::override]);
+}
+
+
 TEST(StreamsRegression, MplexStreamsGetNotifiedAboutEOF) {
   testStreamsGetNotifiedAboutEOF(
+      false,
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
           .template to<libp2p::muxer::Mplex>()[boost::di::override]);
 }
@@ -494,6 +515,7 @@ TEST(StreamsRegression, OutboundYamuxTLSConnectionAcceptsStreams) {
 
 TEST(StreamsRegression, YamuxTLSStreamsGetNotifiedAboutEOF) {
   testStreamsGetNotifiedAboutEOF(
+      false,
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
           .template to<libp2p::muxer::Yamux>()[boost::di::override],
       libp2p::injector::useSecurityAdaptors<libp2p::security::TlsAdaptor>());
@@ -508,6 +530,15 @@ TEST(StreamsRegression, OutboundYamuxNoiseConnectionAcceptsStreams) {
 
 TEST(StreamsRegression, YamuxNoiseStreamsGetNotifiedAboutEOF) {
   testStreamsGetNotifiedAboutEOF(
+      false,
+      boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
+          .template to<libp2p::muxer::Yamux>()[boost::di::override],
+      libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>());
+}
+
+TEST(StreamsRegression, YamuxNoiseStreamsGetNotifiedAboutEOFJumboMsg) {
+  testStreamsGetNotifiedAboutEOF(
+      true,
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
           .template to<libp2p::muxer::Yamux>()[boost::di::override],
       libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>());
