@@ -70,13 +70,13 @@ namespace libp2p::connection {
       already_read_ = 0;
       return cb(n);
     }
-    readSome(
-        out, bytes,
-        [self{shared_from_this()}, out, bytes, cb{std::move(cb)}](auto _n) {
-          OUTCOME_CB(n, _n);
-          self->already_read_ += n;
-          self->read(out.subspan(n), bytes - n, cb);
-        });
+    readSome(out, bytes,
+             [self{shared_from_this()}, out, bytes,
+              cb{std::move(cb)}](auto _n) mutable {
+               OUTCOME_CB(n, _n);
+               self->already_read_ += n;
+               self->read(out.subspan(n), bytes - n, std::move(cb));
+             });
   }
 
   void NoiseConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
@@ -89,13 +89,13 @@ namespace libp2p::connection {
       frame_buffer_->erase(begin, end);
       return cb(n);
     }
-    framer_->read(
-        [self{shared_from_this()}, out, bytes, cb{std::move(cb)}](auto _data) {
-          OUTCOME_CB(data, _data);
-          OUTCOME_CB(decrypted, self->decoder_cs_->decrypt({}, *data, {}));
-          self->frame_buffer_->assign(decrypted.begin(), decrypted.end());
-          self->readSome(out, bytes, cb);
-        });
+    framer_->read([self{shared_from_this()}, out, bytes,
+                   cb{std::move(cb)}](auto _data) mutable {
+      OUTCOME_CB(data, _data);
+      OUTCOME_CB(decrypted, self->decoder_cs_->decrypt({}, *data, {}));
+      self->frame_buffer_->assign(decrypted.begin(), decrypted.end());
+      self->readSome(out, bytes, std::move(cb));
+    });
   }
 
   void NoiseConnection::write(gsl::span<const uint8_t> in, size_t bytes,
@@ -115,10 +115,10 @@ namespace libp2p::connection {
     writing_ = std::move(encrypted);
     framer_->write(writing_,
                    [self{shared_from_this()}, in{in.subspan(n)},
-                    bytes{bytes - n}, cb{std::move(cb)}](auto _n) {
+                    bytes{bytes - n}, cb{std::move(cb)}](auto _n) mutable {
                      OUTCOME_CB(n, _n);
                      self->already_wrote_ += n;
-                     self->write(in, bytes, cb);
+                     self->write(in, bytes, std::move(cb));
                    });
   }
 
@@ -128,12 +128,12 @@ namespace libp2p::connection {
   }
 
   void NoiseConnection::deferReadCallback(outcome::result<size_t> res,
-                                      ReadCallbackFunc cb) {
+                                          ReadCallbackFunc cb) {
     raw_connection_->deferReadCallback(res, std::move(cb));
   }
 
   void NoiseConnection::deferWriteCallback(std::error_code ec,
-                                       WriteCallbackFunc cb) {
+                                           WriteCallbackFunc cb) {
     raw_connection_->deferWriteCallback(ec, std::move(cb));
   }
 

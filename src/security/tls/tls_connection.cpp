@@ -147,11 +147,12 @@ namespace libp2p::connection {
   void TlsConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
                                Reader::ReadCallbackFunc cb) {
     log().trace("reading some up to {} bytes", bytes);
-    socket_.async_read_some(makeBuffer(out, bytes), closeOnError(*this, cb));
+    socket_.async_read_some(makeBuffer(out, bytes),
+                            closeOnError(*this, std::move(cb)));
   }
 
   void TlsConnection::deferReadCallback(outcome::result<size_t> res,
-                                     Reader::ReadCallbackFunc cb) {
+                                        Reader::ReadCallbackFunc cb) {
     raw_connection_->deferReadCallback(res, std::move(cb));
   }
 
@@ -159,17 +160,18 @@ namespace libp2p::connection {
                             Writer::WriteCallbackFunc cb) {
     log().trace("writing {} bytes", bytes);
     boost::asio::async_write(socket_, makeBuffer(in, bytes),
-                             closeOnError(*this, cb));
+                             closeOnError(*this, std::move(cb)));
   }
 
   void TlsConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
                                 Writer::WriteCallbackFunc cb) {
     log().trace("writing some up to {} bytes", bytes);
-    socket_.async_write_some(makeBuffer(in, bytes), closeOnError(*this, cb));
+    socket_.async_write_some(makeBuffer(in, bytes),
+                             closeOnError(*this, std::move(cb)));
   }
 
   void TlsConnection::deferWriteCallback(std::error_code ec,
-                                      Writer::WriteCallbackFunc cb) {
+                                         Writer::WriteCallbackFunc cb) {
     raw_connection_->deferWriteCallback(ec, std::move(cb));
   }
 
