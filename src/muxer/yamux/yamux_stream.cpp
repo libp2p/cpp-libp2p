@@ -153,43 +153,35 @@ namespace libp2p::connection {
 
   void YamuxStream::adjustWindowSize(uint32_t new_size,
                                      VoidResultHandlerFunc cb) {
-    if (close_reason_ || new_size > maximum_window_size_
-        || new_size < receive_window_size_) {
-      if (cb) {
-        feedback_.deferCall([wptr = weak_from_this(), cb = std::move(cb)]() {
-          auto self = wptr.lock();
-          if (!self) {
-            return;
-          }
-          if (!self->close_reason_) {
-            cb(YamuxError::INVALID_WINDOW_SIZE);
-          } else {
-            cb(self->close_reason_);
-          }
-        });
+    std::error_code ec = close_reason_;
+    if (!ec) {
+      if (!is_readable_) {
+        ec = YamuxError::STREAM_NOT_READABLE;
+      } else if (new_size > maximum_window_size_
+                 || new_size < receive_window_size_) {
+        ec = YamuxError::INVALID_WINDOW_SIZE;
       }
-      return;
     }
 
-    feedback_.ackReceivedBytes(stream_id_, new_size - receive_window_size_);
+    if (!ec) {
+      // Doing this optimistic way, if other side don't like the window update
+      // then it would RST
+
+      feedback_.ackReceivedBytes(stream_id_, new_size - receive_window_size_);
+      receive_window_size_ = new_size;
+    }
 
     if (cb) {
-      window_size_cb_ = [wptr = weak_from_this(), cb = std::move(cb),
-                         new_size](auto &&res) {
-        auto self = wptr.lock();
-        if (!self) {
+      feedback_.deferCall([wptr = weak_from_this(), cb = std::move(cb), ec]() {
+        if (wptr.expired() || wptr.lock()->no_more_callbacks_) {
           return;
         }
-        if (self->close_reason_) {
-          cb(self->close_reason_);
-        } else if (self->receive_window_size_ >= new_size) {
+        if (!ec) {
           cb(outcome::success());
         } else {
-          // continue waiting
-          return;
+          cb(ec);
         }
-        self->window_size_cb_ = VoidResultHandlerFunc{};
-      };
+      });
     }
   }
 
@@ -211,8 +203,8 @@ namespace libp2p::connection {
 
   void YamuxStream::increaseSendWindow(size_t delta) {
     send_window_size_ += delta;
-    TRACE("stream {} send window changed by {} to {}", stream_id_,
-                 delta, send_window_size_);
+    TRACE("stream {} send window changed by {} to {}", stream_id_, delta,
+          send_window_size_);
     doWrite();
   }
 
