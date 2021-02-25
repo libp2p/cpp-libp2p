@@ -24,6 +24,9 @@ namespace libp2p::basic {
     /// Returns false if size will overflow the buffer
     bool canEnqueue(size_t size) const;
 
+    /// Returns bytes enqueued and not yet sent
+    size_t unsentBytes() const;
+
     /// Enqueues data
     void enqueue(DataRef data, bool some, basic::Writer::WriteCallbackFunc cb);
 

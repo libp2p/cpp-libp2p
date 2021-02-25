@@ -8,6 +8,7 @@
 #include <cassert>
 
 #include <libp2p/muxer/yamux/yamux_error.hpp>
+#include <libp2p/muxer/yamux/yamux_frame.hpp>
 
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
@@ -23,19 +24,19 @@ namespace libp2p::connection {
 
   YamuxStream::YamuxStream(
       std::shared_ptr<connection::SecureConnection> connection,
-      YamuxStreamFeedback &feedback, uint32_t stream_id, size_t window_size,
+      YamuxStreamFeedback &feedback, uint32_t stream_id,
       size_t maximum_window_size, size_t write_queue_limit)
       : connection_(std::move(connection)),
         feedback_(feedback),
         stream_id_(stream_id),
-        send_window_size_(window_size),
-        receive_window_size_(window_size),
+        window_size_(YamuxFrame::kInitialWindowSize),
+        peers_window_size_(YamuxFrame::kInitialWindowSize),
         maximum_window_size_(maximum_window_size),
         write_queue_(write_queue_limit) {
     assert(connection_);
     assert(stream_id_ > 0);
-    assert(send_window_size_ <= maximum_window_size_);
-    assert(receive_window_size_ <= maximum_window_size_);
+    assert(window_size_ <= maximum_window_size_);
+    assert(peers_window_size_ <= maximum_window_size_);
     assert(write_queue_limit >= maximum_window_size_);
   }
 
@@ -158,17 +159,17 @@ namespace libp2p::connection {
       if (!is_readable_) {
         ec = YamuxError::STREAM_NOT_READABLE;
       } else if (new_size > maximum_window_size_
-                 || new_size < receive_window_size_) {
+                 || new_size < peers_window_size_) {
         ec = YamuxError::INVALID_WINDOW_SIZE;
       }
     }
 
-    if (!ec) {
+    if (!ec && new_size > peers_window_size_) {
       // Doing this optimistic way, if other side don't like the window update
       // then it would RST
 
-      feedback_.ackReceivedBytes(stream_id_, new_size - receive_window_size_);
-      receive_window_size_ = new_size;
+      feedback_.ackReceivedBytes(stream_id_, new_size - peers_window_size_);
+      peers_window_size_ = new_size;
     }
 
     if (cb) {
@@ -202,10 +203,12 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::increaseSendWindow(size_t delta) {
-    send_window_size_ += delta;
-    TRACE("stream {} send window changed by {} to {}", stream_id_, delta,
-          send_window_size_);
-    doWrite();
+    if (delta > 0) {
+      window_size_ += delta;
+      TRACE("stream {} send window increased by {} to {}", stream_id_, delta,
+            window_size_);
+      doWrite();
+    }
   }
 
   YamuxStream::DataFromConnectionResult YamuxStream::onDataRead(
@@ -250,8 +253,18 @@ namespace libp2p::connection {
         internal_read_buffer_.add(bytes);
       }
 
-      overflow = receive_window_size_
-          < (internal_read_buffer_.size() + external_read_buffer_.size());
+      if (!internal_read_buffer_.empty()) {
+        overflow = (internal_read_buffer_.size() > peers_window_size_);
+        if (overflow) {
+          log()->debug("read buffer overflow {} > {}, stream {}",
+                       internal_read_buffer_.size(), peers_window_size_,
+                       stream_id_);
+        } else {
+          TRACE("stream {} receive window reduced by {} to {}", stream_id_,
+                internal_read_buffer_.size(),
+                peers_window_size_ - internal_read_buffer_.size());
+        }
+      }
     }
 
     if (isClosed()) {
@@ -282,7 +295,8 @@ namespace libp2p::connection {
 
     if (bytes_consumed > 0) {
       feedback_.ackReceivedBytes(stream_id_, bytes_consumed);
-      receive_window_size_ += bytes_consumed;
+      TRACE("stream {} receive window increased by {} to {}", stream_id_,
+            bytes_consumed, peers_window_size_ - internal_read_buffer_.size());
     }
 
     return kKeepStream;
@@ -403,25 +417,34 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::doWrite() {
+    size_t initial_window_size = window_size_;
+
     gsl::span<const uint8_t> data;
     bool some = false;
     while (!close_reason_) {
-      send_window_size_ = write_queue_.dequeue(send_window_size_, data, some);
+      window_size_ = write_queue_.dequeue(window_size_, data, some);
       if (data.empty()) {
         break;
       }
+      TRACE("stream {} dequeued {}/{} bytes to write", stream_id_, data.size(),
+            write_queue_.unsentBytes() + data.size());
       feedback_.writeStreamData(stream_id_, data, some);
     }
 
-    if (!is_writable_ && !close_reason_ && send_window_size_ > 0) {
+    if (initial_window_size != window_size_) {
+      TRACE("stream {} send window size reduced from {} to {}", stream_id_,
+            initial_window_size, window_size_);
+    }
+
+    if (!is_writable_ && !close_reason_ && window_size_ > 0) {
       // closing stream for writes, sends FIN
       feedback_.streamClosed(stream_id_);
 
       if (!is_readable_) {
         doClose(YamuxError::STREAM_CLOSED_BY_HOST, false);
       } else {
-        // let bytes be consumed with peers FIN even if no reader
-        receive_window_size_ = maximum_window_size_;
+        // let bytes be consumed with peers FIN even if no reader (???)
+        peers_window_size_ = maximum_window_size_;
       }
     }
   }

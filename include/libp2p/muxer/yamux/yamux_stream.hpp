@@ -48,8 +48,7 @@ namespace libp2p::connection {
 
     YamuxStream(std::shared_ptr<connection::SecureConnection> connection,
                 YamuxStreamFeedback &feedback, uint32_t stream_id,
-                size_t window_size, size_t maximum_window_size,
-                size_t write_queue_limit);
+                size_t maximum_window_size, size_t write_queue_limit);
 
     void read(gsl::span<uint8_t> out, size_t bytes,
               ReadCallbackFunc cb) override;
@@ -150,13 +149,13 @@ namespace libp2p::connection {
     /// Non zero reason means that stream is closed and the reason of it
     std::error_code close_reason_;
 
-    /// Send window size
-    size_t send_window_size_;
+    /// Max bytes allowed to send
+    size_t window_size_;
 
-    /// Receive window size
-    size_t receive_window_size_;
+    /// Receive window size: max buffered unreceived bytes
+    size_t peers_window_size_;
 
-    /// Maximum window size
+    /// Maximum window size allowed for peer
     size_t maximum_window_size_;
 
     /// Write queue with callbacks

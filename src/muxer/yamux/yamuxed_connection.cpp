@@ -53,9 +53,9 @@ namespace libp2p::connection {
             }) {
     assert(connection_);
     assert(config_.maximum_streams > 0);
-    assert(config_.maximum_window_size >= YamuxFrame::kDefaultWindowSize);
+    assert(config_.maximum_window_size >= YamuxFrame::kInitialWindowSize);
 
-    raw_read_buffer_->resize(YamuxFrame::kDefaultWindowSize + 4096);
+    raw_read_buffer_->resize(YamuxFrame::kInitialWindowSize + 4096);
     new_stream_id_ = (connection_->isInitiator() ? 1 : 2);
   }
 
@@ -397,8 +397,7 @@ namespace libp2p::connection {
 
     // create new stream
     streams_[frame.stream_id] = std::make_shared<YamuxStream>(
-        shared_from_this(), *this, frame.stream_id,
-        YamuxFrame::kDefaultWindowSize, config_.maximum_window_size,
+        shared_from_this(), *this, frame.stream_id, config_.maximum_window_size,
         basic::WriteQueue::kDefaultSizeLimit);
 
     enqueue(ackStreamMsg(frame.stream_id));
@@ -447,8 +446,7 @@ namespace libp2p::connection {
     log()->debug("creating outbound stream {}", frame.stream_id);
 
     streams_[frame.stream_id] = std::make_shared<YamuxStream>(
-        shared_from_this(), *this, frame.stream_id,
-        YamuxFrame::kDefaultWindowSize, config_.maximum_window_size,
+        shared_from_this(), *this, frame.stream_id, config_.maximum_window_size,
         basic::WriteQueue::kDefaultSizeLimit);
 
     // handler will be called after all inbound bytes processed

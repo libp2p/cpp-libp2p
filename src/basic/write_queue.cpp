@@ -13,6 +13,10 @@ namespace libp2p::basic {
     return (size + total_unsent_size_ <= size_limit_);
   }
 
+  size_t WriteQueue::unsentBytes() const {
+    return total_unsent_size_;
+  }
+
   void WriteQueue::enqueue(DataRef data, bool some,
                            Writer::WriteCallbackFunc cb) {
     auto data_sz = static_cast<size_t>(data.size());
@@ -63,6 +67,12 @@ namespace libp2p::basic {
       }
     }
 
+    assert(item.unacknowledged + item.acknowledged + item.unsent
+           == static_cast<size_t>(item.data.size()));
+
+    assert(total_unsent_size_ >= sz);
+    total_unsent_size_ -= sz;
+
     return window_size - sz;
   }
 
@@ -84,15 +94,12 @@ namespace libp2p::basic {
     bool completed = false;
 
     if (item.some) {
-      assert(total_unsent_size_ >= total_size);
-      total_unsent_size_ -= total_size;
       completed = true;
+      total_size = size;
+
     } else {
       item.unacknowledged -= size;
       item.acknowledged += size;
-
-      assert(total_unsent_size_ >= size);
-      total_unsent_size_ -= size;
 
       completed = (item.acknowledged == total_size);
     }
@@ -111,7 +118,7 @@ namespace libp2p::basic {
       --active_index_;
     }
     if (cb) {
-      cb(size);
+      cb(total_size);
     }
 
     return true;

@@ -39,7 +39,7 @@ namespace libp2p::connection {
       INTERNAL_ERROR = 2
     };
     static constexpr uint8_t kDefaultVersion = 0;
-    static constexpr uint32_t kDefaultWindowSize = 256 * 1024;
+    static constexpr uint32_t kInitialWindowSize = 256 * 1024;
 
     uint8_t version;
     FrameType type;
