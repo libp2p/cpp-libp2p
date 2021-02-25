@@ -388,6 +388,10 @@ namespace libp2p::connection {
     read_message_size_ = bytes;
     reading_some_ = some;
     external_read_buffer_ = external_read_buffer_.first(read_message_size_);
+
+    if (bytes_available_now > 0) {
+      internal_read_buffer_.consume(external_read_buffer_);
+    } 
   }
 
   void YamuxStream::readCompleted() {
