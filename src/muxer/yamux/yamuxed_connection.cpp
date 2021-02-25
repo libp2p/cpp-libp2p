@@ -222,15 +222,16 @@ namespace libp2p::connection {
     std::vector<std::pair<StreamId, StreamHandlerFunc>> streams_created;
     streams_created.swap(fresh_streams_);
     for (const auto &[id, handler] : streams_created) {
-      auto found = findStream(id);
+      auto it = streams_.find(id);
 
-      assert(found);
-      if (!found) {
+      assert(it != streams_.end());
+
+      if (it == streams_.end()) {
         log()->critical("fresh_streams_ inconsistency!");
         continue;
       }
 
-      auto stream = found.value()->second;
+      auto stream = it->second;
 
       if (!handler) {
         // inbound
@@ -305,8 +306,8 @@ namespace libp2p::connection {
                                       StreamId stream_id, bool rst, bool fin) {
     assert(stream_id != 0);
 
-    auto found = findStream(stream_id);
-    if (!found) {
+    auto it = streams_.find(stream_id);
+    if (it == streams_.end()) {
       // this may be due to overflow in previous fragments of same message
       log()->debug(
           "stream {} no longer exists, discarding further fragments of data "
@@ -317,8 +318,8 @@ namespace libp2p::connection {
     }
 
     if (rst) {
-      auto stream = std::move(found.value()->second);
-      streams_.erase(stream_id);
+      auto stream = std::move(it->second);
+      eraseStream(stream_id);
       std::ignore = stream->onDataRead(segment, fin, rst);
       return true;
     }
@@ -326,12 +327,17 @@ namespace libp2p::connection {
     TRACE("YamuxedConnection::processData, stream={}, size={}", stream_id,
           segment.size());
 
-    bool ok = found.value()->second->onDataRead(segment, fin, rst);
-    if (!ok) {
+    auto result = it->second->onDataRead(segment, fin, rst);
+    if (result == YamuxStream::kKeepStream) {
+      return true;
+    }
+
+    eraseStream(stream_id);
+    reading_state_.discardDataMessage();
+
+    if (result == YamuxStream::kRemoveStreamAndSendRst) {
       // overflow, reset this stream
       enqueue(resetStreamMsg(stream_id));
-      streams_.erase(stream_id);
-      reading_state_.discardDataMessage();
     }
     return true;
   }
@@ -456,7 +462,7 @@ namespace libp2p::connection {
       // FIN flag
       stream->onDataRead(gsl::span<uint8_t>{}, true, false);
       if (stream->isClosed()) {
-        streams_.erase(it);
+        eraseStream(frame.stream_id);
         if (isOutbound(new_stream_id_, frame.stream_id)) {
           // almost not probable
           pending_outbound_streams_.erase(frame.stream_id);
@@ -475,23 +481,23 @@ namespace libp2p::connection {
       return true;
     }
 
-    auto stream_found = findStream(frame.stream_id);
-    if (stream_found) {
+    auto it = streams_.find(frame.stream_id);
+    if (it != streams_.end()) {
       log()->debug("RST to stream {}", frame.stream_id);
 
-      auto stream = std::move(stream_found.value()->second);
-      streams_.erase(stream_found.value());
-      stream->closedByConnection(YamuxError::STREAM_RESET_BY_PEER);
+      auto stream = std::move(it->second);
+      eraseStream(frame.stream_id);
+      stream->onDataRead(gsl::span<uint8_t>{}, false, true);
       return true;
     }
 
     if (isOutbound(new_stream_id_, frame.stream_id)) {
-      auto it = pending_outbound_streams_.find(frame.stream_id);
-      if (it != pending_outbound_streams_.end()) {
+      auto it2 = pending_outbound_streams_.find(frame.stream_id);
+      if (it2 != pending_outbound_streams_.end()) {
         log()->debug("RST to pending outbound stream {}", frame.stream_id);
 
-        auto cb = std::move(it->second);
-        pending_outbound_streams_.erase(it);
+        auto cb = std::move(it2->second);
+        pending_outbound_streams_.erase(it2);
         cb(YamuxError::STREAM_RESET_BY_PEER);
         return true;
       }
@@ -504,9 +510,6 @@ namespace libp2p::connection {
   bool YamuxedConnection::processWindowUpdate(const YamuxFrame &frame) {
     auto it = streams_.find(frame.stream_id);
     if (it != streams_.end()) {
-      log()->debug("window update of stream {} by {}", frame.stream_id,
-                   frame.length);
-
       it->second->increaseSendWindow(frame.length);
     } else {
       log()->debug("processWindowUpdate: stream {} not found", frame.stream_id);
@@ -574,29 +577,31 @@ namespace libp2p::connection {
                                     [cb = std::move(cb)](auto) { cb(); });
   }
 
-  void YamuxedConnection::resetStream(StreamId stream_id, bool immediately) {
-    if (immediately) {
-      // send RST and remove stream immediately
-      enqueue(resetStreamMsg(stream_id));
-      streams_.erase(stream_id);
-    } else {
-      // send FIN and reset stream only if other side has closed this way
+  void YamuxedConnection::resetStream(StreamId stream_id) {
+    log()->debug("RST from stream {}", stream_id);
+    enqueue(resetStreamMsg(stream_id));
+    eraseStream(stream_id);
+  }
 
-      auto found = findStream(stream_id);
-      if (!found) {
-        log()->error("YamuxedConnection::resetStream: stream {} not found",
-                     stream_id);
-        return;
-      }
+  void YamuxedConnection::streamClosed(uint32_t stream_id) {
+    // send FIN and reset stream only if other side has closed this way
 
-      enqueue(closeStreamMsg(stream_id));
+    log()->debug("FIN from stream {}", stream_id);
 
-      auto &stream = found.value()->second;
-      assert(stream->isClosedForWrite());
+    auto it = streams_.find(stream_id);
+    if (it == streams_.end()) {
+      log()->error("YamuxedConnection::streamClosed: stream {} not found",
+                   stream_id);
+      return;
+    }
 
-      if (stream->isClosedForRead()) {
-        streams_.erase(found.value());
-      }
+    enqueue(closeStreamMsg(stream_id));
+
+    auto &stream = it->second;
+    assert(stream->isClosedForWrite());
+
+    if (stream->isClosedForRead()) {
+      eraseStream(stream_id);
     }
   }
 
@@ -647,12 +652,12 @@ namespace libp2p::connection {
       }
 
       if (sz > 0) {
-        auto found = findStream(stream_id);
-        if (!found) {
+        auto it = streams_.find(stream_id);
+        if (it == streams_.end()) {
           log()->debug("onDataWritten : stream {} no longer exists", stream_id);
         } else {
           // stream can now call write callbacks
-          found.value()->second->onDataWritten(sz);
+          it->second->onDataWritten(sz);
         }
       }
     }
@@ -666,13 +671,9 @@ namespace libp2p::connection {
     }
   }
 
-  boost::optional<YamuxedConnection::Streams::iterator>
-  YamuxedConnection::findStream(StreamId stream_id) {
-    auto it = streams_.find(stream_id);
-    if (it != streams_.end()) {
-      return it;
-    }
-    return boost::none;
+  void YamuxedConnection::eraseStream(StreamId stream_id) {
+    log()->debug("erasing stream {}", stream_id);
+    streams_.erase(stream_id);
   }
 
 }  // namespace libp2p::connection

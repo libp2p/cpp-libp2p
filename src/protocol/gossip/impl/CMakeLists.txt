@@ -20,7 +20,7 @@ target_link_libraries(p2p_gossip
     p2p_byteutil
     p2p_multiaddress
     p2p_varint_reader
-    scheduler
+    p2p_scheduler
     subscription
     p2p_peer_id
     p2p_cid

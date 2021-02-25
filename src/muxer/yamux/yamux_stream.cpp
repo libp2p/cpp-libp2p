@@ -49,9 +49,13 @@ namespace libp2p::connection {
 
   void YamuxStream::deferReadCallback(outcome::result<size_t> res,
                                       ReadCallbackFunc cb) {
+    if (no_more_callbacks_) {
+      log()->debug("{} closed by client, ignoring callback");
+      return;
+    }
     feedback_.deferCall([wptr = weak_from_this(), res, cb = std::move(cb)]() {
       auto self = wptr.lock();
-      if (self && !self->closed_by_client_) {
+      if (self && !self->no_more_callbacks_) {
         cb(res);
       }
     });
@@ -69,9 +73,13 @@ namespace libp2p::connection {
 
   void YamuxStream::deferWriteCallback(std::error_code ec,
                                        WriteCallbackFunc cb) {
+    if (no_more_callbacks_) {
+      log()->debug("{} closed by client, ignoring callback");
+      return;
+    }
     feedback_.deferCall([wptr = weak_from_this(), ec, cb = std::move(cb)]() {
       auto self = wptr.lock();
-      if (self && !self->closed_by_client_) {
+      if (self && !self->no_more_callbacks_) {
         cb(ec);
       }
     });
@@ -82,21 +90,41 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::close(VoidResultHandlerFunc cb) {
-    closed_by_client_ = true;
-    is_writable_ = false;
+    close_cb_ = std::move(cb);
 
-    feedback_.resetStream(stream_id_, false);
+    if (isClosed()) {
+      if (close_cb_) {
+        feedback_.deferCall([wptr = weak_from_this()] {
+          auto self = wptr.lock();
+          if (self) {
+            self->closeCompleted();
+          }
+        });
+      }
+      return;
+    }
 
-    doClose(YamuxError::STREAM_CLOSED_BY_HOST, false);
+    if (!isClosedForWrite()) {
+      // closing for writes
+      is_writable_ = false;
 
-    // TODO send FIN instead make close_cb_
+      // sends FIN after data is sent
+      doWrite();
+    }
+  }
 
-    if (cb) {
-      feedback_.deferCall([wptr = weak_from_this(), cb = std::move(cb)]() {
-        if (!wptr.expired()) {
-          cb(outcome::success());
-        }
-      });
+  void YamuxStream::closeCompleted() {
+    if (!close_reason_) {
+      close_reason_ = YamuxError::STREAM_CLOSED_BY_HOST;
+    }
+    if (close_cb_) {
+      auto cb = std::move(close_cb_);
+      close_cb_ = decltype(close_cb_){};
+      if (close_reason_ == YamuxError::STREAM_CLOSED_BY_HOST) {
+        cb(outcome::success());
+      } else {
+        cb(close_reason_);
+      }
     }
   }
 
@@ -109,16 +137,22 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::reset() {
-    closed_by_client_ = true;
-
-    feedback_.resetStream(stream_id_, true);
-
-    doClose(YamuxError::STREAM_RESET_BY_HOST, false);
+    is_readable_ = false;
+    is_writable_ = false;
+    no_more_callbacks_ = true;
+    close_reason_ = YamuxError::STREAM_RESET_BY_HOST;
+    write_queue_.clear();
+    internal_read_buffer_.clear();
+    read_cb_ = decltype(read_cb_){};
+    window_size_cb_ = decltype(window_size_cb_){};
+    close_cb_ = decltype(close_cb_){};
+    feedback_.resetStream(stream_id_);
   }
 
   void YamuxStream::adjustWindowSize(uint32_t new_size,
                                      VoidResultHandlerFunc cb) {
-    if (new_size > maximum_window_size_ || new_size < receive_window_size_) {
+    if (close_reason_ || new_size > maximum_window_size_
+        || new_size < receive_window_size_) {
       if (cb) {
         feedback_.deferCall([wptr = weak_from_this(), cb = std::move(cb)]() {
           auto self = wptr.lock();
@@ -144,7 +178,7 @@ namespace libp2p::connection {
         if (!self) {
           return;
         }
-        if (!self->close_reason_) {
+        if (self->close_reason_) {
           cb(self->close_reason_);
         } else if (self->receive_window_size_ >= new_size) {
           cb(outcome::success());
@@ -175,70 +209,95 @@ namespace libp2p::connection {
 
   void YamuxStream::increaseSendWindow(size_t delta) {
     send_window_size_ += delta;
+    log()->debug("stream {} send window changed by {} to {}", stream_id_,
+                 delta, send_window_size_);
     doWrite();
   }
 
-  bool YamuxStream::onDataRead(gsl::span<uint8_t> bytes, bool fin, bool rst) {
-    if (close_reason_) {
-      return true;
-    }
-
+  YamuxStream::DataFromConnectionResult YamuxStream::onDataRead(
+      gsl::span<uint8_t> bytes, bool fin, bool rst) {
     auto sz = static_cast<size_t>(bytes.size());
-
     log()->debug("stream {} read {} bytes", stream_id_, sz);
 
-    bool read_completed = false;
     bool overflow = false;
+    bool read_completed = false;
+    size_t bytes_consumed = 0;
 
+    // First transfer bytes to client if available
     if (sz > 0) {
-      overflow = receive_window_size_
-          < (internal_read_buffer_.size() + external_read_buffer_.size()
-             + bytes.size());
-
       if (is_reading_) {
         auto bytes_needed = static_cast<size_t>(external_read_buffer_.size());
-        size_t consumed =
-            internal_read_buffer_.addAndConsume(bytes, external_read_buffer_);
-        if (reading_some_) {
-          read_completed = true;
-          read_message_size_ = consumed;
-        } else if (bytes_needed == consumed) {
-          read_completed = true;
-        } else {
-          assert(consumed < bytes_needed);
 
-          external_read_buffer_ = external_read_buffer_.subspan(consumed);
+        assert(bytes_needed > 0);
+        assert(internal_read_buffer_.empty());
+
+        // if sz > bytes_needed then internal buffer will be non empty after
+        // this
+        bytes_consumed =
+            internal_read_buffer_.addAndConsume(bytes, external_read_buffer_);
+
+        assert(bytes_consumed > 0);
+
+        external_read_buffer_ = external_read_buffer_.subspan(bytes_consumed);
+
+        read_completed = external_read_buffer_.empty();
+        if (reading_some_) {
+          read_message_size_ = bytes_consumed;
+          read_completed = true;
         }
+
+        if (read_completed) {
+          readCompleted();
+          // after this call, state may change
+        } else {
+          assert(bytes_consumed < bytes_needed);
+        }
+      } else {
+        internal_read_buffer_.add(bytes);
       }
+
+      overflow = receive_window_size_
+          < (internal_read_buffer_.size() + external_read_buffer_.size());
+    }
+
+    if (isClosed()) {
+      // already closed, maybe error
+      return kRemoveStreamAndSendRst;
+    }
+
+    if (rst) {
+      doClose(YamuxError::STREAM_RESET_BY_PEER, false);
+      return kRemoveStream;
     }
 
     if (fin) {
       is_readable_ = false;
+      if (!is_writable_) {
+        doClose(YamuxError::STREAM_CLOSED_BY_HOST, false);
+
+        // connection will remove stream
+        return kRemoveStream;
+      }
+      return kKeepStream;
     }
 
     if (overflow) {
       doClose(YamuxError::RECEIVE_WINDOW_OVERFLOW, false);
-    } else if (rst) {
-      doClose(YamuxError::STREAM_RESET_BY_PEER, false);
-    } else if (sz > 0) {
-      feedback_.ackReceivedBytes(stream_id_, sz);
-      receive_window_size_ += sz;
-      if (window_size_cb_) {
-        window_size_cb_(outcome::success());
-      }
+      return kRemoveStreamAndSendRst;
     }
 
-    if (read_completed) {
-      readCompleted();
+    if (bytes_consumed > 0) {
+      feedback_.ackReceivedBytes(stream_id_, bytes_consumed);
+      receive_window_size_ += bytes_consumed;
     }
 
-    return !overflow;
+    return kKeepStream;
   }
 
   void YamuxStream::onDataWritten(size_t bytes) {
     if (!write_queue_.ack(bytes)) {
       log()->error("write queue ack failed");
-      feedback_.resetStream(stream_id_, true);
+      feedback_.resetStream(stream_id_);
       doClose(YamuxError::INTERNAL_ERROR, true);
     }
   }
@@ -252,29 +311,34 @@ namespace libp2p::connection {
 
     close_reason_ = ec;
     is_readable_ = false;
+    is_writable_ = false;
 
     if (notify_read_callback) {
       internal_read_buffer_.clear();
       if (is_reading_) {
-        assert(!closed_by_client_);
-
         is_reading_ = false;
         assert(read_cb_);
         auto cb = std::move(read_cb_);
         read_cb_ = ReadCallbackFunc{};
-        cb(ec);
+        if (!no_more_callbacks_) {
+          cb(ec);
+        }
       }
     }
 
-    if (!closed_by_client_) {
+    if (close_cb_) {
+      closeCompleted();
+    }
+
+    if (!no_more_callbacks_) {
       write_queue_.broadcast(
           [this](const basic::Writer::WriteCallbackFunc &cb) -> bool {
-            if (!closed_by_client_) {
+            if (!no_more_callbacks_) {
               cb(close_reason_);
             }
 
             // reentrancy may occur here
-            return !closed_by_client_;
+            return !no_more_callbacks_;
           });
 
       write_queue_.clear();
@@ -290,6 +354,20 @@ namespace libp2p::connection {
       return deferReadCallback(YamuxError::INVALID_ARGUMENT, std::move(cb));
     }
 
+    // If something is still in read buffer, the client can consume these bytes
+    auto bytes_available_now = internal_read_buffer_.size();
+    if (bytes_available_now >= bytes || (some && bytes_available_now > 0)) {
+      out = out.first(bytes);
+      size_t consumed = internal_read_buffer_.consume(out);
+
+      assert(consumed > 0);
+
+      if (is_readable_) {
+        feedback_.ackReceivedBytes(stream_id_, consumed);
+      }
+      return deferReadCallback(consumed, std::move(cb));
+    }
+
     if (close_reason_) {
       return deferReadCallback(close_reason_, std::move(cb));
     }
@@ -300,7 +378,8 @@ namespace libp2p::connection {
 
     if (!is_readable_) {
       // half closed
-      return deferReadCallback(YamuxError::STREAM_NOT_READABLE, std::move(cb));
+      return deferReadCallback(YamuxError::STREAM_NOT_READABLE,
+                               std::move(read_cb_));
     }
 
     is_reading_ = true;
@@ -309,19 +388,6 @@ namespace libp2p::connection {
     read_message_size_ = bytes;
     reading_some_ = some;
     external_read_buffer_ = external_read_buffer_.first(read_message_size_);
-
-    size_t consumed = internal_read_buffer_.consume(external_read_buffer_);
-    if (consumed > 0) {
-      if (some) {
-        read_message_size_ = consumed;
-      }
-      external_read_buffer_ = external_read_buffer_.subspan(consumed);
-    }
-
-    if (external_read_buffer_.empty()) {
-      // read completed, defer callback
-      deferReadCallback(read_message_size_, [this](auto) { readCompleted(); });
-    }
   }
 
   void YamuxStream::readCompleted() {
@@ -341,12 +407,24 @@ namespace libp2p::connection {
   void YamuxStream::doWrite() {
     gsl::span<const uint8_t> data;
     bool some = false;
-    while (send_window_size_ > 0 && !close_reason_) {
+    while (!close_reason_) {
       send_window_size_ = write_queue_.dequeue(send_window_size_, data, some);
       if (data.empty()) {
         break;
       }
       feedback_.writeStreamData(stream_id_, data, some);
+    }
+
+    if (!is_writable_ && !close_reason_ && send_window_size_ > 0) {
+      // closing stream for writes, sends FIN
+      feedback_.streamClosed(stream_id_);
+
+      if (!is_readable_) {
+        doClose(YamuxError::STREAM_CLOSED_BY_HOST, false);
+      } else {
+        // let bytes be consumed with peers FIN even if no reader
+        receive_window_size_ = maximum_window_size_;
+      }
     }
   }
 

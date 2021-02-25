@@ -20,8 +20,8 @@ namespace libp2p::connection {
     virtual ~YamuxStreamFeedback() = default;
 
     /// Stream transfers data to connection
-    virtual void writeStreamData(uint32_t stream_id, gsl::span<const uint8_t> data,
-                       bool some) = 0;
+    virtual void writeStreamData(uint32_t stream_id,
+                                 gsl::span<const uint8_t> data, bool some) = 0;
 
     /// Stream acknowledges received bytes
     virtual void ackReceivedBytes(uint32_t stream_id, uint32_t bytes) = 0;
@@ -29,8 +29,11 @@ namespace libp2p::connection {
     /// Stream defers callback to avoid reentrancy
     virtual void deferCall(std::function<void()>) = 0;
 
-    /// Stream closes (if immediately==false then all pending data will be sent)
-    virtual void resetStream(uint32_t stream_id, bool immediately) = 0;
+    /// Stream closes
+    virtual void resetStream(uint32_t stream_id) = 0;
+
+    /// Stream closed, remove from active streams if 2FINs were sent
+    virtual void streamClosed(uint32_t stream_id) = 0;
   };
 
   /// Stream implementation, used by Yamux multiplexer
@@ -44,7 +47,7 @@ namespace libp2p::connection {
     ~YamuxStream() override = default;
 
     YamuxStream(std::shared_ptr<connection::SecureConnection> connection,
-                YamuxStreamFeedback& feedback, uint32_t stream_id,
+                YamuxStreamFeedback &feedback, uint32_t stream_id,
                 size_t window_size, size_t maximum_window_size,
                 size_t write_queue_limit);
 
@@ -88,14 +91,21 @@ namespace libp2p::connection {
     /// Increases send window. Called from Connection
     void increaseSendWindow(size_t delta);
 
+    enum DataFromConnectionResult {
+      kKeepStream,
+      kRemoveStream,
+      kRemoveStreamAndSendRst,
+    };
+
     /// Called from Connection. New data received and/or FIN/RST flags
     /// Returns false on window overflow
-    bool onDataRead(gsl::span<uint8_t> bytes, bool fin, bool rst);
+    DataFromConnectionResult onDataRead(gsl::span<uint8_t> bytes, bool fin,
+                                        bool rst);
 
     /// Data written into the wire. Called from Connection
     void onDataWritten(size_t bytes);
 
-    /// Connection closed
+    /// Connection closed by network error
     void closedByConnection(std::error_code ec);
 
    private:
@@ -116,6 +126,9 @@ namespace libp2p::connection {
     void doWrite(gsl::span<const uint8_t> in, size_t bytes,
                  WriteCallbackFunc cb, bool some);
 
+    /// Called after FIN was sent
+    void closeCompleted();
+
     /// Underlying connection (secured)
     std::shared_ptr<connection::SecureConnection> connection_;
 
@@ -132,10 +145,7 @@ namespace libp2p::connection {
     bool is_writable_ = true;
 
     /// If set to true, then no more callbacks to client
-    bool closed_by_client_ = false;
-
-    /// Set to true when inside client's async call to avoid reentrancy
-    bool defer_callbacks_ = false;
+    bool no_more_callbacks_ = false;
 
     /// Non zero reason means that stream is closed and the reason of it
     std::error_code close_reason_;
@@ -173,6 +183,9 @@ namespace libp2p::connection {
     /// adjustWindowSize() callback, triggers when receive window size
     /// becomes greater or equal then desired
     VoidResultHandlerFunc window_size_cb_;
+
+    /// Close callback
+    VoidResultHandlerFunc close_cb_;
   };
 
 }  // namespace libp2p::connection

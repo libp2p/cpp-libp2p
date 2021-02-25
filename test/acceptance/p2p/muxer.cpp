@@ -71,7 +71,6 @@ struct UpgraderSemiMock : public Upgrader {
   void upgradeToMuxed(SecSPtr conn, OnMuxedCallbackFunc cb) override {
     mux->muxConnection(std::move(conn), [cb = std::move(cb)](auto &&conn_res) {
       EXPECT_OUTCOME_TRUE(conn, conn_res)
-      conn->start();
       cb(std::move(conn));
     });
   }
@@ -86,6 +85,8 @@ struct Server : public std::enable_shared_from_this<Server> {
 
   void onConnection(const std::shared_ptr<CapableConnection> &conn) {
     this->clientsConnected++;
+
+    conn->start();
 
     conn->onStream([this](outcome::result<std::shared_ptr<Stream>> rstream) {
       EXPECT_OUTCOME_TRUE(stream, rstream)
@@ -179,6 +180,7 @@ struct Client : public std::enable_shared_from_this<Client> {
         p, server,
         [this](outcome::result<std::shared_ptr<CapableConnection>> rconn) {
           EXPECT_OUTCOME_TRUE(conn, rconn);
+          conn->start();
           this->println("connected");
           this->onConnection(conn);
         });

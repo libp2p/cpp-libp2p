@@ -101,7 +101,9 @@ namespace libp2p::connection {
     void deferCall(std::function<void()>) override;
 
     /// Stream closes (if immediately==false then all pending data will be sent)
-    void resetStream(uint32_t stream_id, bool immediately) override;
+    void resetStream(uint32_t stream_id) override;
+
+    void streamClosed(uint32_t stream_id) override;
 
     /// usage of these four methods is highly not recommended or even forbidden:
     /// use stream over this connection instead
@@ -160,8 +162,8 @@ namespace libp2p::connection {
     void onDataWritten(outcome::result<size_t> res, StreamId stream_id,
                        bool some);
 
-    /// Find stream helper
-    boost::optional<Streams::iterator> findStream(StreamId stream_id);
+    /// Erases stream
+    void eraseStream(StreamId stream_id);
 
     /// Copy of config
     const muxer::MuxedConnectionConfig config_;
