@@ -7,8 +7,10 @@
 
 #include <cassert>
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/muxer/yamux/yamux_error.hpp>
+
+#define TRACE_ENABLED 0
+#include <libp2p/common/trace.hpp>
 
 namespace libp2p::connection {
 
@@ -209,7 +211,7 @@ namespace libp2p::connection {
 
   void YamuxStream::increaseSendWindow(size_t delta) {
     send_window_size_ += delta;
-    log()->debug("stream {} send window changed by {} to {}", stream_id_,
+    TRACE("stream {} send window changed by {} to {}", stream_id_,
                  delta, send_window_size_);
     doWrite();
   }
@@ -217,7 +219,7 @@ namespace libp2p::connection {
   YamuxStream::DataFromConnectionResult YamuxStream::onDataRead(
       gsl::span<uint8_t> bytes, bool fin, bool rst) {
     auto sz = static_cast<size_t>(bytes.size());
-    log()->debug("stream {} read {} bytes", stream_id_, sz);
+    TRACE("stream {} read {} bytes", stream_id_, sz);
 
     bool overflow = false;
     bool read_completed = false;
@@ -296,7 +298,7 @@ namespace libp2p::connection {
 
   void YamuxStream::onDataWritten(size_t bytes) {
     if (!write_queue_.ack(bytes)) {
-      log()->error("write queue ack failed");
+      log()->error("write queue ack failed, stream {}", stream_id_);
       feedback_.resetStream(stream_id_);
       doClose(YamuxError::INTERNAL_ERROR, true);
     }

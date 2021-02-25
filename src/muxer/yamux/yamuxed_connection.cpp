@@ -9,7 +9,7 @@
 
 #include <libp2p/muxer/yamux/yamux_error.hpp>
 
-#define TRACE_ENABLED 1
+#define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
 
 namespace libp2p::connection {
@@ -205,7 +205,7 @@ namespace libp2p::connection {
     auto n = res.value();
     gsl::span<uint8_t> bytes_read(*raw_read_buffer_);
 
-    log()->debug("read {} bytes", n);
+    TRACE("read {} bytes", n);
 
     assert(n <= raw_read_buffer_->size());
 
@@ -532,7 +532,7 @@ namespace libp2p::connection {
 
     started_ = false;
 
-    // TODO close reason
+    // TODO (artem) close and message bus
 
     log()->debug("closing connection, reason: {}",
                  notify_streams_code.message());
