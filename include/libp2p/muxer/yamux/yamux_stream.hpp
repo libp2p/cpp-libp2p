@@ -146,6 +146,9 @@ namespace libp2p::connection {
     /// If set to true, then no more callbacks to client
     bool no_more_callbacks_ = false;
 
+    /// True after FIN sent
+    bool fin_sent_ = false;
+
     /// Non zero reason means that stream is closed and the reason of it
     std::error_code close_reason_;
 

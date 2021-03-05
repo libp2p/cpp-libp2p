@@ -460,7 +460,7 @@ namespace libp2p::connection {
     if (it != streams_.end()) {
       auto &stream = it->second;
 
-      log()->debug("FIN to stream {}", frame.stream_id);
+      log()->debug("received FIN from stream {}", frame.stream_id);
 
       // FIN flag
       stream->onDataRead(gsl::span<uint8_t>{}, true, false);
@@ -486,7 +486,7 @@ namespace libp2p::connection {
 
     auto it = streams_.find(frame.stream_id);
     if (it != streams_.end()) {
-      log()->debug("RST to stream {}", frame.stream_id);
+      log()->debug("received RST from stream {}", frame.stream_id);
 
       auto stream = std::move(it->second);
       eraseStream(frame.stream_id);
@@ -497,7 +497,7 @@ namespace libp2p::connection {
     if (isOutbound(new_stream_id_, frame.stream_id)) {
       auto it2 = pending_outbound_streams_.find(frame.stream_id);
       if (it2 != pending_outbound_streams_.end()) {
-        log()->debug("RST to pending outbound stream {}", frame.stream_id);
+        log()->debug("sending RST to pending outbound stream {}", frame.stream_id);
 
         auto cb = std::move(it2->second);
         pending_outbound_streams_.erase(it2);
@@ -589,7 +589,7 @@ namespace libp2p::connection {
   void YamuxedConnection::streamClosed(uint32_t stream_id) {
     // send FIN and reset stream only if other side has closed this way
 
-    log()->debug("FIN from stream {}", stream_id);
+    log()->debug("sending FIN to stream {}", stream_id);
 
     auto it = streams_.find(stream_id);
     if (it == streams_.end()) {

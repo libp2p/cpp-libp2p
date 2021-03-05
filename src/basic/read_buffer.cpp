@@ -135,6 +135,7 @@ namespace libp2p::basic {
       p += n;  // NOLINT
       n = it->size();
       memcpy(p, it->data(), n);
+      ++it;
     }
 
     auto ret = total_size_;

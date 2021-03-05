@@ -285,6 +285,11 @@ namespace libp2p::connection {
         // connection will remove stream
         return kRemoveStream;
       }
+      if (is_reading_) {
+        read_message_size_ = 0;
+        readCompleted();
+        doClose(YamuxError::STREAM_CLOSED_BY_PEER, false);
+      }
       return kKeepStream;
     }
 
@@ -438,7 +443,10 @@ namespace libp2p::connection {
 
     if (!is_writable_ && !close_reason_ && window_size_ > 0) {
       // closing stream for writes, sends FIN
-      feedback_.streamClosed(stream_id_);
+      if (!fin_sent_) {
+        fin_sent_ = true;
+        feedback_.streamClosed(stream_id_);
+      }
 
       if (!is_readable_) {
         doClose(YamuxError::STREAM_CLOSED_BY_HOST, false);
