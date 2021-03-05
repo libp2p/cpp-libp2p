@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 
 #ifndef LIBP2P_COMMON_TRACE_HPP
 #define LIBP2P_COMMON_TRACE_HPP
@@ -15,10 +15,10 @@ namespace libp2p::common {
    * field
    */
   template <typename... Args>
-  inline void traceToDebugLogger(spdlog::string_view_t fmt,
+  inline void traceToDebugLogger(std::string_view fmt,
                                  const Args &... args) {
     static const std::string tag("debug");
-    auto log = common::createLogger(tag);
+    auto log = log::createLogger(tag);
     log->trace(fmt, args...);
   }
 

@@ -25,6 +25,7 @@
 #include "mock/libp2p/peer/key_repository_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
 using namespace peer;
@@ -45,6 +46,8 @@ using testing::ReturnRef;
 class IdentifyTest : public testing::Test {
  public:
   void SetUp() override {
+    testutil::prepareLoggers();
+
     // create a Protobuf message, which is to be "read" or written
     for (const auto &proto : protocols_) {
       identify_pb_msg_.add_protocols(proto);

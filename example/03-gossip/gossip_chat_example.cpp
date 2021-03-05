@@ -5,8 +5,9 @@
 
 #include <iostream>
 
-#include <spdlog/fmt/fmt.h>
+#include <fmt/format.h>
 #include <boost/program_options.hpp>
+#include <soralog/injector.hpp>
 
 #include <libp2p/injector/gossip_injector.hpp>
 
@@ -35,6 +36,14 @@ namespace {
 
 int main(int argc, char *argv[]) {
   namespace utility = libp2p::protocol::example::utility;
+
+  // prepare log system
+  auto logger_injector = soralog::injector::makeInjector();
+  auto logger_system =
+      logger_injector.create<std::shared_ptr<soralog::LoggerSystem>>();
+  logger_system->configure();
+  libp2p::log::setLoggerSystem(logger_system);
+  libp2p::log::setLevelOfGroup("*", soralog::Level::INFO);
 
   auto options = parseCommandLine(argc, argv);
   if (!options) {

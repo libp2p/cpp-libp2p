@@ -11,9 +11,9 @@
 #include <queue>
 
 #include <boost/asio/streambuf.hpp>
-#include <libp2p/common/logger.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/connection/capable_connection.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
 
 namespace libp2p::connection {
@@ -251,7 +251,7 @@ namespace libp2p::connection {
     /// Streams
     std::unordered_map<StreamId, std::shared_ptr<YamuxStream>> streams_;
 
-    libp2p::common::Logger log_ = libp2p::common::createLogger("yx-conn");
+    libp2p::log::Logger log_ = libp2p::log::createLogger("yx-conn");
 
     /// YAMUX STREAM API
 

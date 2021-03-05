@@ -68,7 +68,7 @@ namespace libp2p::connection {
       auto &id = id_res.value();
       if (remote_peer_.has_value()) {
         if (remote_peer_.value() != id.peer_id) {
-          log().debug("peer ids mismatch: expected={}, got={}",
+          log()->debug("peer ids mismatch: expected={}, got={}",
                       remote_peer_.value().toBase58(), id.peer_id.toBase58());
           ec = Error::TLS_UNEXPECTED_PEER_ID;
           break;
@@ -78,7 +78,7 @@ namespace libp2p::connection {
       }
       remote_pubkey_ = std::move(id.public_key);
 
-      log().debug("handshake success for {}bound connection to {}",
+      log()->debug("handshake success for {}bound connection to {}",
                   (raw_connection_->isInitiator() ? "out" : "in"),
                   remote_peer_->toBase58());
       return cb(shared_from_this());
@@ -86,9 +86,9 @@ namespace libp2p::connection {
 
     assert(ec);
 
-    log().info("handshake error: {}", ec.message());
+    log()->info("handshake error: {}", ec.message());
     if (auto close_res = close(); !close_res) {
-      log().info("cannot close raw connection: {}",
+      log()->info("cannot close raw connection: {}",
                  close_res.error().message());
     }
     return cb(ec);
@@ -129,7 +129,7 @@ namespace libp2p::connection {
     return [cb{std::move(cb)}, conn{conn.shared_from_this()}](auto &&ec,
                                                               auto &&result) {
       if (ec) {
-        log().debug("connection async op error {}", ec.message());
+        log()->debug("connection async op error {}", ec.message());
         std::ignore = conn->close();
         return cb(std::forward<decltype(ec)>(ec));
       }
@@ -139,27 +139,27 @@ namespace libp2p::connection {
 
   void TlsConnection::read(gsl::span<uint8_t> out, size_t bytes,
                            Reader::ReadCallbackFunc f) {
-    log().trace("reading {} bytes", bytes);
+    log()->trace("reading {} bytes", bytes);
     boost::asio::async_read(socket_, makeBuffer(out, bytes),
                             closeOnError(*this, std::move(f)));
   }
 
   void TlsConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
                                Reader::ReadCallbackFunc cb) {
-    log().trace("reading some up to {} bytes", bytes);
+    log()->trace("reading some up to {} bytes", bytes);
     socket_.async_read_some(makeBuffer(out, bytes), closeOnError(*this, cb));
   }
 
   void TlsConnection::write(gsl::span<const uint8_t> in, size_t bytes,
                             Writer::WriteCallbackFunc cb) {
-    log().trace("writing {} bytes", bytes);
+    log()->trace("writing {} bytes", bytes);
     boost::asio::async_write(socket_, makeBuffer(in, bytes),
                              closeOnError(*this, cb));
   }
 
   void TlsConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
                                 Writer::WriteCallbackFunc cb) {
-    log().trace("writing some up to {} bytes", bytes);
+    log()->trace("writing some up to {} bytes", bytes);
     socket_.async_write_some(makeBuffer(in, bytes), closeOnError(*this, cb));
   }
 

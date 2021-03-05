@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <sqlite_modern_cpp.h>
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 
 namespace libp2p::storage {
 
@@ -123,7 +123,7 @@ namespace libp2p::storage {
 
     ::sqlite::database db_;
     std::string db_file_;
-    common::Logger log_;
+    log::Logger log_;
 
     std::vector<database_binder> statements_;
   };

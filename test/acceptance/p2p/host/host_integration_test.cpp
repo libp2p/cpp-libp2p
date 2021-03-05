@@ -12,6 +12,7 @@
 #include "acceptance/p2p/host/peer/test_peer.hpp"
 #include "acceptance/p2p/host/peer/tick_counter.hpp"
 #include "testutil/ma_generator.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
 
@@ -61,6 +62,9 @@ struct HostIntegrationTest
  * @then all clients interact with all servers predefined number of times
  */
 TEST_P(HostIntegrationTest, InteractAllToAllSuccess) {
+
+  testutil::prepareLoggers();
+
   const auto [peer_count, ping_times, start_port, timeout, future_timeout,
               system_timeout, secured] = GetParam();
   const auto addr_prefix = "/ip4/127.0.0.1/tcp/";

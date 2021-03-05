@@ -13,8 +13,8 @@
 
 #include <boost/core/noncopyable.hpp>
 #include <gsl/span>
-#include <libp2p/common/logger.hpp>
 #include <libp2p/common/types.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/protocol_muxer/multiselect/message_manager.hpp>
 #include <libp2p/protocol_muxer/multiselect/message_reader.hpp>
 #include <libp2p/protocol_muxer/multiselect/message_writer.hpp>
@@ -114,7 +114,7 @@ namespace libp2p::protocol_muxer {
     std::queue<size_t> free_buffers_;
 
     // TODO(warchant): use logger interface here and inject it PRE-235
-    libp2p::common::Logger log_ = libp2p::common::createLogger("multiselect");
+    libp2p::log::Logger log_ = libp2p::log::createLogger("multiselect");
   };
 }  // namespace libp2p::protocol_muxer
 

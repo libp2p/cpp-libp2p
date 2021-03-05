@@ -19,7 +19,7 @@
 #include <sys/select.h>
 #include <boost/asio.hpp>
 #include <boost/optional.hpp>
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::network::c_ares {
@@ -113,7 +113,9 @@ namespace libp2p::network::c_ares {
 
     static std::atomic_bool initialized_;
     static std::list<std::shared_ptr<RequestContext>> requests_;
-    static common::Logger log_;
+
+    /// Returns "ares" logger
+    static log::Logger log();
   };
 
 }  // namespace libp2p::network::c_ares

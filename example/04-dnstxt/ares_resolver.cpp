@@ -6,17 +6,26 @@
 #include <iostream>
 #include <memory>
 
-#include <libp2p/common/logger.hpp>
+#include <soralog/injector.hpp>
+
 #include <libp2p/injector/host_injector.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/network/cares/cares.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 int main(int argc, char *argv[]) {
-  libp2p::network::c_ares::Ares ares;
-  spdlog::set_level(spdlog::level::trace);
+  // prepare log system
+  auto logger_injector = soralog::injector::makeInjector();
+  auto logger_system =
+      logger_injector.create<std::shared_ptr<soralog::LoggerSystem>>();
+  logger_system->configure();
+  libp2p::log::setLoggerSystem(logger_system);
+  libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
 
   // create a default Host via an injector
   auto injector = libp2p::injector::makeHostInjector();
+
+  libp2p::network::c_ares::Ares ares;
 
   // create io_context - in fact, thing, which allows us to execute async
   // operations

@@ -3,15 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <boost/beast.hpp>
+#include <memory>
+#include <set>
+#include <vector>
 #include <iostream>
+
+#include <boost/beast.hpp>
+#include <soralog/injector.hpp>
+
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/injector/kademlia_injector.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
 #include <libp2p/protocol/common/sublogger.hpp>
-#include <memory>
-#include <set>
-#include <vector>
 
 class Session;
 
@@ -153,9 +156,17 @@ void handleOutgoingStream(
 }
 
 int main(int argc, char *argv[]) {
-  spdlog::set_level(spdlog::level::off);
-  auto log = libp2p::common::createLogger("kad");
-  log->set_level(spdlog::level::info);
+  // prepare log system
+  auto logger_injector = soralog::injector::makeInjector();
+  auto logger_system =
+      logger_injector.create<std::shared_ptr<soralog::LoggerSystem>>();
+  logger_system->configure();
+  libp2p::log::setLoggerSystem(logger_system);
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
+  } else {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::ERROR);
+  }
 
   try {
     if (argc < 1) {

@@ -8,11 +8,11 @@
 
 #include <libp2p/connection/secure_connection.hpp>
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/crypto/x25519_provider.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/security/noise/crypto/state.hpp>
 #include <libp2p/security/noise/handshake_message_marshaller_impl.hpp>
 #include <libp2p/security/noise/insecure_rw.hpp>
@@ -70,7 +70,7 @@ namespace libp2p::connection {
     size_t already_read_;
     size_t already_wrote_;
     common::ByteArray writing_;
-    common::Logger log_ = common::createLogger("NoiseConn");
+    log::Logger log_ = log::createLogger("NoiseConn");
   };
 }  // namespace libp2p::connection
 

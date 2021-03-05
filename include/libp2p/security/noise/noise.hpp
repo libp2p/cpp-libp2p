@@ -6,10 +6,10 @@
 #ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_NOISE_HPP
 #define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_NOISE_HPP
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/security/security_adaptor.hpp>
 
 namespace libp2p::security {
@@ -34,7 +34,7 @@ namespace libp2p::security {
                         const peer::PeerId &p, SecConnCallbackFunc cb) override;
 
    private:
-    common::Logger log_ = common::createLogger("Noise");
+    log::Logger log_ = log::createLogger("Noise");
     libp2p::crypto::KeyPair local_key_;
     std::shared_ptr<crypto::CryptoProvider> crypto_provider_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;

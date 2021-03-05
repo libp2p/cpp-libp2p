@@ -62,18 +62,22 @@ namespace libp2p::network::c_ares {
   // https://bugs.llvm.org/show_bug.cgi?id=48040
   std::atomic_bool Ares::initialized_{false};                          // NOLINT
   std::list<std::shared_ptr<Ares::RequestContext>> Ares::requests_{};  // NOLINT
-  common::Logger Ares::log_ = common::createLogger("Ares");            // NOLINT
+
+  log::Logger Ares::log() {
+    static log::Logger logger = log::createLogger("Ares");
+    return logger;
+  }
 
   Ares::Ares() {
     bool expected{false};
     bool first_init = initialized_.compare_exchange_strong(expected, true);
     if (not first_init) {
       // atomic change failed, thus it was already initialized
-      log_->debug("C-ares library got initialized more than once");
+      log()->debug("C-ares library got initialized more than once");
     } else if (auto status = ::ares_library_init(ARES_LIB_INIT_ALL);
                ARES_SUCCESS != status) {
-      log_->error("Unable to initialize c-ares library - {}",
-                  ::ares_strerror(status));
+      log()->error("Unable to initialize c-ares library - {}",
+                   ::ares_strerror(status));
       // on library initialization failure we set initialized = false
       [[maybe_unused]] bool switched_back_on_error{
           initialized_.compare_exchange_strong(expected, false)};
@@ -93,7 +97,7 @@ namespace libp2p::network::c_ares {
       const std::weak_ptr<boost::asio::io_context> &io_context,
       Ares::TxtCallback callback) {
     if (not initialized_.load()) {
-      log_->debug(
+      log()->debug(
           "Unable to execute DNS TXT request to {} due to c-ares library is "
           "not initialized",
           uri);
@@ -106,8 +110,8 @@ namespace libp2p::network::c_ares {
     options.timeout = 30'000;
     status = ares_init_options(&channel, &options, ARES_OPT_TIMEOUTMS);
     if (ARES_SUCCESS != status) {
-      log_->debug("Unable to initialize c-ares channel for request to {} - {}",
-                  uri, ::ares_strerror(status));
+      log()->debug("Unable to initialize c-ares channel for request to {} - {}",
+                   uri, ::ares_strerror(status));
       reportError(io_context, std::move(callback), Error::CHANNEL_INIT_FAILURE);
       return;
     }
@@ -125,7 +129,7 @@ namespace libp2p::network::c_ares {
       });
       worker.detach();
     } catch (const std::runtime_error &e) {
-      log_->error("Ares unable to start worker thread - {}", e.what());
+      log()->error("Ares unable to start worker thread - {}", e.what());
       request->callback(Error::THREAD_FAILED);
     }
   }
@@ -137,7 +141,7 @@ namespace libp2p::network::c_ares {
       ctx->post([callback{std::move(callback)}, error] { callback(error); });
       return;
     }
-    log_->debug("IO context has expired");
+    log()->debug("IO context has expired");
   }
 
   void Ares::txtCallback(void *arg, int status, int, unsigned char *abuf,
@@ -173,7 +177,7 @@ namespace libp2p::network::c_ares {
       ctx->post([callback{std::move(request_ptr->callback)},
                  reply{std::move(result)}] { callback(reply); });
     } else {
-      log_->debug("IO context has expired");
+      log()->debug("IO context has expired");
     }
     removeRequest(request_ptr);
   }

@@ -7,10 +7,12 @@
 #include <iostream>
 #include <memory>
 
+#include <soralog/injector.hpp>
+
 #include <libp2p/common/literals.hpp>
-#include <libp2p/common/logger.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/protocol/echo.hpp>
 
 int main(int argc, char *argv[]) {
@@ -19,12 +21,6 @@ int main(int argc, char *argv[]) {
   using libp2p::crypto::PrivateKey;
   using libp2p::crypto::PublicKey;
   using libp2p::common::operator""_unhex;
-
-  if (std::getenv("TRACE_DEBUG") != nullptr) {
-    spdlog::set_level(spdlog::level::trace);
-  } else {
-    spdlog::set_level(spdlog::level::err);
-  }
 
   if (argc != 2) {
     std::cerr << "please, provide an address of the server\n";
@@ -38,6 +34,18 @@ int main(int argc, char *argv[]) {
   // create a default Host via an injector
   auto injector = libp2p::injector::makeHostInjector();
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
+
+  // prepare log system
+  auto logger_injector = soralog::injector::makeInjector();
+  auto logger_system =
+      logger_injector.create<std::shared_ptr<soralog::LoggerSystem>>();
+  logger_system->configure();
+  libp2p::log::setLoggerSystem(logger_system);
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
+  } else {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::ERROR);
+  }
 
   // create io_context - in fact, thing, which allows us to execute async
   // operations

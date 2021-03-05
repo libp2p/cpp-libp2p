@@ -74,7 +74,7 @@ namespace libp2p::security {
           boost::asio::ssl::context_base::asn1);
     } catch (const std::exception &e) {
       ssl_context_.reset();
-      log().error("context init failed: {}", e.what());
+      log()->error("context init failed: {}", e.what());
       return TlsError::TLS_CTX_INIT_FAILED;
     }
 
@@ -87,10 +87,10 @@ namespace libp2p::security {
     bool is_client = conn->isInitiator();
 
     if (is_client) {
-      log().debug("securing outbound connection");
+      log()->debug("securing outbound connection");
       assert(remote_peer.has_value());
     } else {
-      log().debug("securing inbound connection");
+      log()->debug("securing inbound connection");
     }
 
     std::error_code ec;

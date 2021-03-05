@@ -20,6 +20,7 @@
 #include <mock/libp2p/transport/upgrader_mock.hpp>
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/outcome.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 /// tested muxers
 #include <libp2p/muxer/mplex.hpp>
@@ -283,6 +284,8 @@ struct MuxerAcceptanceTest
 };
 
 TEST_P(MuxerAcceptanceTest, ParallelEcho) {
+  testutil::prepareLoggers();
+
   // total number of parallel clients
   const int totalClients = 3;
   // total number of streams per connection

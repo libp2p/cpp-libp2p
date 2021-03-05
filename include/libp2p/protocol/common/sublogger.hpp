@@ -5,7 +5,7 @@
 
 #include <type_traits>
 
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 
 #ifndef LIBP2P_PROTOCOL_COMMON_SUBLOGGER_HPP
 #define LIBP2P_PROTOCOL_COMMON_SUBLOGGER_HPP
@@ -17,82 +17,68 @@ namespace libp2p::protocol {
   class SubLogger {
    public:
     explicit SubLogger(const std::string &tag)
-        : log_(common::createLogger(tag)) {}
+        : log_(log::createLogger(tag)) {}
 
-    explicit SubLogger(const std::string &tag, spdlog::string_view_t prefix)
-        : log_(common::createLogger(tag)) {
-      setInstanceName(prefix);
+    explicit SubLogger(const std::string &tag, std::string_view prefix)
+        : log_(log::createLogger(tag + std::string(prefix))) {
     }
 
     template <typename T>
-    explicit SubLogger(const std::string &tag, spdlog::string_view_t prefix,
+    explicit SubLogger(const std::string &tag, std::string_view prefix,
                        T instance)
-        : log_(common::createLogger(tag)) {
-      setInstanceName(prefix, instance);
-    }
-
-    void setInstanceName(spdlog::string_view_t prefix) {
-      prefix_ = fmt::format("{}: ", prefix);
-      prefix_size_ = prefix_.size();
+        : log_(log::createLogger(tag + makePrefix(prefix, instance))) {
     }
 
     template <typename T>
-    void setInstanceName(spdlog::string_view_t prefix, T instance) {
+    auto makePrefix(std::string_view prefix, T instance) {
       if constexpr (std::is_pointer_v<
-                        T> and not std::is_same_v<T, const char *>) {
-        prefix_ = fmt::format("{} {}: ", prefix, (void *)instance);  // NOLINT;
+          T> and not std::is_same_v<T, const char *>) {
+        return fmt::format("{}({:x})", prefix, (void *)instance);  // NOLINT;
       } else if constexpr (std::is_integral_v<T> and sizeof(T) > 1) {
-        prefix_ = fmt::format("{}#{}: ", prefix, instance);
+        return fmt::format("{}#{}", prefix, instance);
       } else {
-        prefix_ = fmt::format("{} {}: ", prefix, instance);
+        return fmt::format("{}.{}", prefix, instance);
       }
-      prefix_size_ = prefix_.size();
     }
 
     template <typename... Args>
-    void log(spdlog::level::level_enum lvl, spdlog::string_view_t fmt,
+    void log(soralog::Level level, std::string_view fmt,
              const Args &... args) {
-      if (log_->should_log(lvl)) {
-        prefix_.append(fmt.data(), fmt.size());
-        log_->log(lvl, prefix_, args...);
-        prefix_.resize(prefix_size_);
-      }
+      log_->template push(level, fmt, args...);
     }
 
     template <typename... Args>
-    void trace(spdlog::string_view_t fmt, const Args &... args) {
-      log(spdlog::level::trace, fmt, args...);
+    void trace(std::string_view fmt, const Args &... args) {
+      log_->trace(fmt, args...);
     }
 
     template <typename... Args>
-    void debug(spdlog::string_view_t fmt, const Args &... args) {
-      log(spdlog::level::debug, fmt, args...);
+    void debug(std::string_view fmt, const Args &... args) {
+      log_->template debug(fmt, args...);
     }
 
     template <typename... Args>
-    void info(spdlog::string_view_t fmt, const Args &... args) {
-      log(spdlog::level::info, fmt, args...);
+    void info(std::string_view fmt, const Args &... args) {
+      log_->template info(fmt, args...);
     }
 
     template <typename... Args>
-    void warn(spdlog::string_view_t fmt, const Args &... args) {
-      log(spdlog::level::warn, fmt, args...);
+    void warn(std::string_view fmt, const Args &... args) {
+      log_->template warn(fmt, args...);
     }
 
     template <typename... Args>
-    void error(spdlog::string_view_t fmt, const Args &... args) {
-      log(spdlog::level::err, fmt, args...);
+    void error(std::string_view fmt, const Args &... args) {
+      log_->template error(fmt, args...);
     }
 
     template <typename... Args>
-    void critical(spdlog::string_view_t fmt, const Args &... args) {
-      log(spdlog::level::critical, fmt, args...);
+    void critical(std::string_view fmt, const Args &... args) {
+      log_->template critical(fmt, args...);
     }
 
    private:
-    common::Logger log_;
-    std::string prefix_;
-    size_t prefix_size_ = 0;
+    log::Logger log_;
   };
 }  // namespace libp2p::protocol
 

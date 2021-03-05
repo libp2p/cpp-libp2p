@@ -6,7 +6,7 @@
 #include <libp2p/protocol/gossip/impl/local_subscriptions.hpp>
 
 #include <gtest/gtest.h>
-#include <spdlog/fmt/fmt.h>
+#include <fmt/format.h>
 #include "testutil/libp2p/peer.hpp"
 
 // debug stuff, unpack if it's needed to debug and trace
