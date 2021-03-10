@@ -9,7 +9,7 @@
 
 #include <libp2p/muxer/yamux/yamux_error.hpp>
 
-#define TRACE_ENABLED 0
+#define TRACE_ENABLED 1
 #include <libp2p/common/trace.hpp>
 
 namespace libp2p::connection {
@@ -137,33 +137,25 @@ namespace libp2p::connection {
   void YamuxedConnection::read(gsl::span<uint8_t> out, size_t bytes,
                                ReadCallbackFunc cb) {
     log()->critical("YamuxedConnection::read : invalid direct call");
-    // TODO (artem) after new tests
-    // deferReadCallback(YamuxError::FORBIDDEN_CALL, std::move(cb));
-    connection_->read(out, bytes, std::move(cb));
+    deferReadCallback(YamuxError::FORBIDDEN_CALL, std::move(cb));
   }
 
   void YamuxedConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
                                    ReadCallbackFunc cb) {
     log()->critical("YamuxedConnection::readSome : invalid direct call");
-    // TODO (artem) after new tests
-    // deferReadCallback(YamuxError::FORBIDDEN_CALL, std::move(cb));
-    connection_->readSome(out, bytes, std::move(cb));
+    deferReadCallback(YamuxError::FORBIDDEN_CALL, std::move(cb));
   }
 
   void YamuxedConnection::write(gsl::span<const uint8_t> in, size_t bytes,
                                 WriteCallbackFunc cb) {
     log()->critical("YamuxedConnection::write : invalid direct call");
-    // TODO (artem) after new tests
-    // deferWriteCallback(YamuxError::FORBIDDEN_CALL, std::move(cb));
-    connection_->write(in, bytes, std::move(cb));
+    deferWriteCallback(YamuxError::FORBIDDEN_CALL, std::move(cb));
   }
 
   void YamuxedConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
                                     WriteCallbackFunc cb) {
     log()->critical("YamuxedConnection::writeSome : invalid direct call");
-    // TODO (artem) after new tests
-    // deferWriteCallback(YamuxError::FORBIDDEN_CALL, std::move(cb));
-    connection_->writeSome(in, bytes, std::move(cb));
+    deferWriteCallback(YamuxError::FORBIDDEN_CALL, std::move(cb));
   }
 
   void YamuxedConnection::deferReadCallback(outcome::result<size_t> res,

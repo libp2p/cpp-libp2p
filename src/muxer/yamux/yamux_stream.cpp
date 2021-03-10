@@ -10,7 +10,7 @@
 #include <libp2p/muxer/yamux/yamux_error.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 
-#define TRACE_ENABLED 0
+#define TRACE_ENABLED 1
 #include <libp2p/common/trace.hpp>
 
 namespace libp2p::connection {

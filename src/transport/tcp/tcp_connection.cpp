@@ -7,7 +7,7 @@
 
 #include <libp2p/transport/tcp/tcp_util.hpp>
 
-#define TRACE_ENABLED 0
+#define TRACE_ENABLED 1
 #include <libp2p/common/trace.hpp>
 
 namespace libp2p::transport {
@@ -103,7 +103,7 @@ namespace libp2p::transport {
           TRACE("{} {}", wptr.lock()->str(), result);
           cb(result);
         } else {
-          TRACE("connection wptr expired");
+          log().debug("connection wptr expired");
         }
       };
     }
