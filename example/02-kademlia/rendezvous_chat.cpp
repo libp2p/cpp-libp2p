@@ -3,18 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <iostream>
 #include <memory>
 #include <set>
 #include <vector>
-#include <iostream>
 
 #include <boost/beast.hpp>
+#include <soralog/impl/configurator_from_yaml.hpp>
 #include <soralog/injector.hpp>
 
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/injector/kademlia_injector.hpp>
+#include <libp2p/log/configurator.hpp>
+#include <libp2p/log/sublogger.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
 
 class Session;
 
@@ -155,12 +157,80 @@ void handleOutgoingStream(
   }
 }
 
+namespace {
+  template <typename Injector>
+  std::shared_ptr<soralog::Configurator> get_logging_system_configurator(
+      Injector &injector) {
+    static boost::optional<std::shared_ptr<soralog::ConfiguratorFromYAML>>
+        instance;
+    if (instance.has_value()) {
+      return *instance;
+    }
+
+    auto libp2p_log_cfg =
+        injector.template create<std::shared_ptr<libp2p::log::Configurator>>();
+
+    instance = std::make_shared<soralog::ConfiguratorFromYAML>(
+        std::move(libp2p_log_cfg), std::string(R"(
+# ----------------
+sinks:
+  - name: console
+    type: console
+    color: true
+groups:
+  - name: main
+    sink: console
+    level: info
+    children:
+      - name: libp2p
+# ----------------
+  )"));
+
+    return *instance;
+  }
+}  // namespace
+
 int main(int argc, char *argv[]) {
+  // resulting PeerId should be
+  // 12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV
+  libp2p::crypto::KeyPair kp = {
+      // clang-format off
+      .publicKey = {{
+        .type = libp2p::crypto::Key::Type::Ed25519,
+        .data = libp2p::common::unhex("48453469c62f4885373099421a7365520b5ffb0d93726c124166be4b81d852e6").value()
+      }},
+      .privateKey = {{
+        .type = libp2p::crypto::Key::Type::Ed25519,
+        .data = libp2p::common::unhex("4a9361c525840f7086b893d584ebbe475b4ec7069951d2e897e8bceb0a3f35ce").value()
+      }},
+      // clang-format on
+  };
+
+  libp2p::protocol::kademlia::Config kademlia_config;
+  kademlia_config.randomWalk.enabled = true;
+  kademlia_config.randomWalk.interval = std::chrono::seconds(300);
+  kademlia_config.requestConcurency = 20;
+
+  auto injector = libp2p::injector::makeHostInjector(
+      // libp2p::injector::useKeyPair(kp), // Use predefined keypair
+      libp2p::injector::makeKademliaInjector(
+          libp2p::injector::useKademliaConfig(kademlia_config)));
+
   // prepare log system
-  auto logger_injector = soralog::injector::makeInjector();
+  auto logger_injector = soralog::injector::makeInjector(
+      boost::di::bind<soralog::Configurator>.to([&injector](const auto &i) {
+        return get_logging_system_configurator(injector);
+      })[boost::di::override]);
   auto logger_system =
       logger_injector.create<std::shared_ptr<soralog::LoggerSystem>>();
-  logger_system->configure();
+  auto r = logger_system->configure();
+  if (not r.message.empty()) {
+    (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
+  }
+  if (r.has_error) {
+    exit(EXIT_FAILURE);
+  }
+
   libp2p::log::setLoggerSystem(logger_system);
   if (std::getenv("TRACE_DEBUG") != nullptr) {
     libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
@@ -216,31 +286,6 @@ int main(int argc, char *argv[]) {
     }();
 
     auto ma = libp2p::multi::Multiaddress::create(argv[1]).value();  // NOLINT
-
-    // resulting PeerId should be
-    // 12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV
-    libp2p::crypto::KeyPair kp = {
-        // clang-format off
-        .publicKey = {{
-          .type = libp2p::crypto::Key::Type::Ed25519,
-          .data = libp2p::common::unhex("48453469c62f4885373099421a7365520b5ffb0d93726c124166be4b81d852e6").value()
-        }},
-        .privateKey = {{
-          .type = libp2p::crypto::Key::Type::Ed25519,
-          .data = libp2p::common::unhex("4a9361c525840f7086b893d584ebbe475b4ec7069951d2e897e8bceb0a3f35ce").value()
-        }},
-        // clang-format on
-    };
-
-    libp2p::protocol::kademlia::Config kademlia_config;
-    kademlia_config.randomWalk.enabled = true;
-    kademlia_config.randomWalk.interval = std::chrono::seconds(300);
-    kademlia_config.requestConcurency = 20;
-
-    auto injector = libp2p::injector::makeHostInjector(
-        //        libp2p::injector::useKeyPair(kp), // Use predefined keypair
-        libp2p::injector::makeKademliaInjector(
-            libp2p::injector::useKademliaConfig(kademlia_config)));
 
     auto io = injector.create<std::shared_ptr<boost::asio::io_context>>();
 

@@ -23,7 +23,7 @@ namespace libp2p::protocol::kademlia {
         scheduler_(std::move(scheduler)),
         stream_(std::move(stream)),
         operations_timeout_(operations_timeout),
-        log_("kad", "Session", ++instance_number) {
+        log_("KademliaSession", "kademlia", "Session", ++instance_number) {
     log_.debug("created");
   }
 

@@ -40,7 +40,7 @@ namespace libp2p::security::tls_details {
   }  // namespace
 
   log::Logger log() {
-    static log::Logger logger = log::createLogger("tls");
+    static log::Logger logger = log::createLogger("TLS", "tls");
     return logger;
   }
 

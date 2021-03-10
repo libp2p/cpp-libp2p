@@ -32,25 +32,46 @@ namespace {
 
   // parses command line, returns non-empty Options on success
   boost::optional<Options> parseCommandLine(int argc, char **argv);
+
+  template <typename Injector>
+  std::shared_ptr<soralog::Configurator> get_logging_system_configurator(
+      Injector &injector) {
+    static boost::optional<std::shared_ptr<soralog::ConfiguratorFromYAML>>
+        instance;
+    if (instance.has_value()) {
+      return *instance;
+    }
+
+    auto libp2p_log_cfg =
+        injector.template create<std::shared_ptr<libp2p::log::Configurator>>();
+
+    instance = std::make_shared<soralog::ConfiguratorFromYAML>(
+        std::move(libp2p_log_cfg), std::string(R"(
+# ----------------
+sinks:
+  - name: console
+    type: console
+    color: true
+groups:
+  - name: main
+    sink: console
+    level: info
+    children
+      - name: libp2p
+# ----------------
+  )"));
+
+    return *instance;
+  }
 }  // namespace
 
 int main(int argc, char *argv[]) {
   namespace utility = libp2p::protocol::example::utility;
 
-  // prepare log system
-  auto logger_injector = soralog::injector::makeInjector();
-  auto logger_system =
-      logger_injector.create<std::shared_ptr<soralog::LoggerSystem>>();
-  logger_system->configure();
-  libp2p::log::setLoggerSystem(logger_system);
-  libp2p::log::setLevelOfGroup("*", soralog::Level::INFO);
-
   auto options = parseCommandLine(argc, argv);
   if (!options) {
     return 1;
   }
-
-  utility::setupLoggers(options->log_level);
 
   // overriding default config to see local messages as well (echo mode)
   libp2p::protocol::gossip::Config config;
@@ -59,6 +80,28 @@ int main(int argc, char *argv[]) {
   // injector creates and ties dependent objects
   auto injector = libp2p::injector::makeGossipInjector(
       libp2p::injector::useGossipConfig(config));
+
+  // prepare log system
+  auto logger_injector = soralog::injector::makeInjector(
+      boost::di::bind<soralog::Configurator>.to([&injector](const auto &i) {
+        return get_logging_system_configurator(injector);
+      })[boost::di::override]);
+  auto logger_system =
+      logger_injector.create<std::shared_ptr<soralog::LoggerSystem>>();
+  auto r = logger_system->configure();
+  if (not r.message.empty()) {
+    (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
+  }
+  if (r.has_error) {
+    exit(EXIT_FAILURE);
+  }
+
+  libp2p::log::setLoggerSystem(logger_system);
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
+  }
+
+  utility::setupLoggers(options->log_level);
 
   // create asio context
   auto io = injector.create<std::shared_ptr<boost::asio::io_context>>();

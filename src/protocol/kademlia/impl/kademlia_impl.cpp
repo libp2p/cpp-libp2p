@@ -44,7 +44,7 @@ namespace libp2p::protocol::kademlia {
         random_generator_(std::move(random_generator)),
         protocol_(config_.protocolId),
         self_id_(host_->getId()),
-        log_("kad", "Kademlia") {
+        log_("Kademlia", "kademlia") {
     BOOST_ASSERT(host_ != nullptr);
     BOOST_ASSERT(storage_ != nullptr);
     BOOST_ASSERT(content_routing_table_ != nullptr);

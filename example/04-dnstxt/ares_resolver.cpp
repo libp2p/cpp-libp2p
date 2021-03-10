@@ -13,17 +13,60 @@
 #include <libp2p/network/cares/cares.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
-int main(int argc, char *argv[]) {
-  // prepare log system
-  auto logger_injector = soralog::injector::makeInjector();
-  auto logger_system =
-      logger_injector.create<std::shared_ptr<soralog::LoggerSystem>>();
-  logger_system->configure();
-  libp2p::log::setLoggerSystem(logger_system);
-  libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
+namespace {
+  template <typename Injector>
+  std::shared_ptr<soralog::Configurator> get_logging_system_configurator(
+      Injector &injector) {
+    static boost::optional<std::shared_ptr<soralog::ConfiguratorFromYAML>>
+        instance;
+    if (instance.has_value()) {
+      return *instance;
+    }
 
+    auto libp2p_log_cfg =
+        injector.template create<std::shared_ptr<libp2p::log::Configurator>>();
+
+    instance = std::make_shared<soralog::ConfiguratorFromYAML>(
+        std::move(libp2p_log_cfg), std::string(R"(
+# ----------------
+sinks:
+  - name: console
+    type: console
+    color: true
+groups:
+  - name: main
+    sink: console
+    level: info
+    children
+      - name: libp2p
+# ----------------
+  )"));
+
+    return *instance;
+  }
+}  // namespace
+
+int main(int argc, char *argv[]) {
   // create a default Host via an injector
   auto injector = libp2p::injector::makeHostInjector();
+
+  // prepare log system
+  auto logger_injector = soralog::injector::makeInjector(
+      boost::di::bind<soralog::Configurator>.to([&injector](const auto &i) {
+        return get_logging_system_configurator(injector);
+      })[boost::di::override]);
+  auto logger_system =
+      logger_injector.create<std::shared_ptr<soralog::LoggerSystem>>();
+  auto r = logger_system->configure();
+  if (not r.message.empty()) {
+    (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
+  }
+  if (r.has_error) {
+    exit(EXIT_FAILURE);
+  }
+
+  libp2p::log::setLoggerSystem(logger_system);
+  libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
 
   libp2p::network::c_ares::Ares ares;
 

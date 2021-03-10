@@ -171,7 +171,7 @@ namespace libp2p::connection {
     NewStreamHandlerFunc new_stream_handler_;
 
     bool is_active_ = false;
-    log::Logger log_ = log::createLogger("MplexedConnection");
+    log::Logger log_ = log::createLogger("MplexConn", "mplex");
 
     /// MPLEX STREAM API
     friend class MplexStream;

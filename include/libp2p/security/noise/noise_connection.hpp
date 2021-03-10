@@ -70,7 +70,7 @@ namespace libp2p::connection {
     size_t already_read_;
     size_t already_wrote_;
     common::ByteArray writing_;
-    log::Logger log_ = log::createLogger("NoiseConn");
+    log::Logger log_ = log::createLogger("NoiseConnection", "noise");
   };
 }  // namespace libp2p::connection
 

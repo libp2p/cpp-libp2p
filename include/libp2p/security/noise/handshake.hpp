@@ -80,7 +80,7 @@ namespace libp2p::security::noise {
     boost::optional<peer::PeerId> remote_peer_id_;
     boost::optional<crypto::PublicKey> remote_peer_pubkey_;
 
-    log::Logger log_ = log::createLogger("NoiseHandshake");
+    log::Logger log_ = log::createLogger("NoiseHandshake", "noise");
   };
 
 }  // namespace libp2p::security::noise

@@ -18,7 +18,7 @@ namespace libp2p::common {
   inline void traceToDebugLogger(std::string_view fmt,
                                  const Args &... args) {
     static const std::string tag("debug");
-    auto log = log::createLogger(tag);
+    auto log = log::createLogger(tag, "debug");
     log->trace(fmt, args...);
   }
 

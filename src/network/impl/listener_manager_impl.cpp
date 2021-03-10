@@ -11,7 +11,7 @@ namespace libp2p::network {
 
   namespace {
     log::Logger log() {
-      static log::Logger logger = log::createLogger("listener_mgr");
+      static log::Logger logger = log::createLogger("ListenerManager", "listener_manager");
       return logger;
     }
   }  // namespace

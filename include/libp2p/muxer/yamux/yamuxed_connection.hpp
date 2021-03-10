@@ -251,7 +251,7 @@ namespace libp2p::connection {
     /// Streams
     std::unordered_map<StreamId, std::shared_ptr<YamuxStream>> streams_;
 
-    libp2p::log::Logger log_ = libp2p::log::createLogger("yx-conn");
+    libp2p::log::Logger log_ = libp2p::log::createLogger("YamuxConn", "yamux");
 
     /// YAMUX STREAM API
 

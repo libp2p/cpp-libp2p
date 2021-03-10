@@ -34,7 +34,7 @@ namespace libp2p::security {
                         const peer::PeerId &p, SecConnCallbackFunc cb) override;
 
    private:
-    log::Logger log_ = log::createLogger("Noise");
+    log::Logger log_ = log::createLogger("Noise", "noise");
     libp2p::crypto::KeyPair local_key_;
     std::shared_ptr<crypto::CryptoProvider> crypto_provider_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;

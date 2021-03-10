@@ -27,7 +27,7 @@ namespace libp2p::protocol::kademlia {
         session_host_(std::move(session_host)),
         key_(std::move(key)),
         target_(key_),
-        log_("kad", "AddProviderExecutor", ++instance_number) {
+        log_("KademliaExecutor", "kademlia", "AddProvider", ++instance_number) {
     auto nearest_peer_ids =
         peer_routing_table->getNearestPeers(target_, config_.maxBucketSize);
 
@@ -184,10 +184,10 @@ namespace libp2p::protocol::kademlia {
     if (session->write(serialized_request_, {})) {
       ++requests_succeed_;
       log_.debug("write to {} successfuly; done {}, active {}, in queue {}",
-                addr, requests_succeed_, requests_in_progress_, queue_.size());
+                 addr, requests_succeed_, requests_in_progress_, queue_.size());
     } else {
       log_.debug("write to {} failed; done {}, active {}, in queue {}", addr,
-                requests_succeed_, requests_in_progress_, queue_.size());
+                 requests_succeed_, requests_in_progress_, queue_.size());
     }
 
     spawn();

@@ -165,7 +165,7 @@ namespace libp2p::connection {
 
     std::shared_ptr<common::ByteArray> read_buffer_;
 
-    log::Logger log_ = log::createLogger("SECCONN");
+    log::Logger log_ = log::createLogger("SecIoConnection", "secio");
   };
 }  // namespace libp2p::connection
 

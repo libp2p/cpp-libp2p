@@ -9,4 +9,6 @@ libp2p_add_library(p2p_logger
 target_link_libraries(p2p_logger
     soralog::soralog
     soralog::fallback_configurator
+    soralog::configurator_yaml
+    yaml-cpp::yaml-cpp
     )

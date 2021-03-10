@@ -105,7 +105,7 @@ namespace libp2p::connection {
 
     std::weak_ptr<MplexedConnection> connection_;
     StreamId stream_id_;
-    log::Logger log_ = log::createLogger("MplexStream");
+    log::Logger log_ = log::createLogger("MplexStream", "mplex");
 
     /// data, received for this stream, comes here
     boost::asio::streambuf read_buffer_;

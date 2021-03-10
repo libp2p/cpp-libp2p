@@ -64,7 +64,7 @@ namespace libp2p::network::c_ares {
   std::list<std::shared_ptr<Ares::RequestContext>> Ares::requests_{};  // NOLINT
 
   log::Logger Ares::log() {
-    static log::Logger logger = log::createLogger("Ares");
+    static log::Logger logger = log::createLogger("Ares", "ares");
     return logger;
   }
 
