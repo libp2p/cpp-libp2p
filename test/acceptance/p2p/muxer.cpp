@@ -12,13 +12,14 @@
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
+#include <libp2p/muxer/yamux/yamux_error.hpp>
 #include <libp2p/peer/impl/identity_manager_impl.hpp>
 #include <libp2p/security/plaintext.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include <libp2p/transport/tcp.hpp>
-#include <libp2p/muxer/yamux/yamux_error.hpp>
 #include <mock/libp2p/crypto/key_validator_mock.hpp>
 #include <mock/libp2p/transport/upgrader_mock.hpp>
+#include <utility>
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/outcome.hpp"
 
@@ -88,13 +89,14 @@ struct Server : public std::enable_shared_from_this<Server> {
 
     conn->start();
 
-    conn->onStream([this](outcome::result<std::shared_ptr<Stream>> rstream) {
-      EXPECT_OUTCOME_TRUE(stream, rstream)
-      this->println("new stream created");
-      this->streamsCreated++;
-      auto buf = std::make_shared<std::vector<uint8_t>>();
-      this->onStream(buf, stream);
-    });
+    conn->onStream(
+        [this, conn](outcome::result<std::shared_ptr<Stream>> rstream) {
+          EXPECT_OUTCOME_TRUE(stream, rstream)
+          this->println("new stream created");
+          this->streamsCreated++;
+          auto buf = std::make_shared<std::vector<uint8_t>>();
+          this->onStream(buf, stream);
+        });
   }
 
   void onStream(const std::shared_ptr<std::vector<uint8_t>> &buf,
@@ -108,7 +110,7 @@ struct Server : public std::enable_shared_from_this<Server> {
         *buf, buf->size(), [buf, stream, this](outcome::result<size_t> rread) {
           if (!rread) {
             if (rread.error() == YamuxError::CONNECTION_CLOSED_BY_PEER
-            || rread.error() == MplexStream::Error::CONNECTION_IS_DEAD) {
+                || rread.error() == MplexStream::Error::CONNECTION_IS_DEAD) {
               return;
             }
             this->println("readSome error: ", rread.error().message());
@@ -117,6 +119,9 @@ struct Server : public std::enable_shared_from_this<Server> {
           EXPECT_OUTCOME_TRUE(read, rread)
 
           this->println("readSome ", read, " bytes");
+          if (read == 0) {
+            return;
+          }
           this->streamReads++;
 
           // 01-echo back read data
@@ -151,7 +156,7 @@ struct Server : public std::enable_shared_from_this<Server> {
 
  private:
   template <typename... Args>
-  void println(Args &&... args) {
+  void println(Args &&...args) {
     if (!verbose())
       return;
     std::cout << "[server " << std::this_thread::get_id() << "]\t";
@@ -167,7 +172,7 @@ struct Client : public std::enable_shared_from_this<Client> {
   Client(std::shared_ptr<TcpTransport> transport, size_t seed,
          std::shared_ptr<boost::asio::io_context> context, size_t streams,
          size_t rounds)
-      : context_(context),
+      : context_(std::move(context)),
         streams_(streams),
         rounds_(rounds),
         generator(seed),
@@ -201,6 +206,11 @@ struct Client : public std::enable_shared_from_this<Client> {
 
   void onStream(size_t streamId, size_t round,
                 const std::shared_ptr<Stream> &stream) {
+    if ((streamWrites == rounds_ * streams_) && streamReads == streamWrites) {
+      context_->stop();
+      return;
+    }
+
     this->println(streamId, " onStream round ", round);
     if (round <= 0) {
       return;
@@ -217,19 +227,18 @@ struct Client : public std::enable_shared_from_this<Client> {
           auto readbuf = std::make_shared<std::vector<uint8_t>>();
           readbuf->resize(write);
 
-          stream->readSome(*readbuf, readbuf->size(),
-                           [round, streamId, write, buf, readbuf, stream,
-                            this](outcome::result<size_t> rread) {
-                             EXPECT_OUTCOME_TRUE(read, rread);
-                             this->println(streamId, " readSome ", read,
-                                           " bytes");
-                             this->streamReads++;
+          stream->read(*readbuf, readbuf->size(),
+                       [round, streamId, write, buf, readbuf, stream,
+                        this](outcome::result<size_t> rread) {
+                         EXPECT_OUTCOME_TRUE(read, rread);
+                         this->println(streamId, " readSome ", read, " bytes");
+                         this->streamReads++;
 
-                             ASSERT_EQ(write, read);
-                             ASSERT_EQ(*buf, *readbuf);
+                         ASSERT_EQ(write, read);
+                         ASSERT_EQ(*buf, *readbuf);
 
-                             this->onStream(streamId, round - 1, stream);
-                           });
+                         this->onStream(streamId, round - 1, stream);
+                       });
         });
   }
 
@@ -238,7 +247,7 @@ struct Client : public std::enable_shared_from_this<Client> {
 
  private:
   template <typename... Args>
-  void println(Args &&... args) {
+  void println(Args &&...args) {
     if (!verbose())
       return;
     std::cout << "[client " << std::this_thread::get_id() << "]\t";
@@ -286,16 +295,20 @@ struct MuxerAcceptanceTest
 };
 
 TEST_P(MuxerAcceptanceTest, ParallelEcho) {
+  if (verbose()) {
+    spdlog::set_level(spdlog::level::trace);
+  }
+
   // total number of parallel clients
   const int totalClients = 3;
   // total number of streams per connection
-  const int streams = 10;
+  const int streams = 20;
   // total number of rounds per stream
   const int rounds = 10;
   // number, which makes tests reproducible
   const int seed = 0;
 
-  auto context = std::make_shared<boost::asio::io_context>(1);
+  auto server_context = std::make_shared<boost::asio::io_context>(1);
   std::default_random_engine randomEngine(seed);
 
   auto serverAddr = "/ip4/127.0.0.1/tcp/40312"_multiaddr;
@@ -316,50 +329,60 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   auto msg_marshaller =
       std::make_shared<plaintext::ExchangeMessageMarshallerImpl>(
           key_marshaller);
-  auto plaintext =
-      std::make_shared<Plaintext>(msg_marshaller, idmgr, key_marshaller);
+  auto plaintext = std::make_shared<Plaintext>(msg_marshaller, idmgr,
+                                               std::move(key_marshaller));
   auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
-  auto transport = std::make_shared<TcpTransport>(context, upgrader);
+  auto transport = std::make_shared<TcpTransport>(server_context, upgrader);
   auto server = std::make_shared<Server>(transport);
   server->listen(serverAddr);
 
   std::vector<std::thread> clients;
-  clients.reserve(totalClients);
-  for (int i = 0; i < totalClients; i++) {
-    auto localSeed = randomEngine();
-    clients.emplace_back([&, localSeed]() {
-      auto context = std::make_shared<boost::asio::io_context>(1);
+  std::atomic<int> clients_running(totalClients);
 
-      KeyPair clientKeyPair = {{{Key::Type::Ed25519, {3}}},
-                               {{Key::Type::Ed25519, {4}}}};
+  server_context->post([&]() {
+    clients.reserve(totalClients);
+    for (int i = 0; i < totalClients; i++) {
+      auto localSeed = randomEngine();
+      clients.emplace_back([&, localSeed]() {
+        auto context = std::make_shared<boost::asio::io_context>(1);
 
-      auto muxer = GetParam();
-      auto key_marshaller = std::make_shared<KeyMarshallerImpl>(key_validator);
-      auto idmgr =
-          std::make_shared<IdentityManagerImpl>(clientKeyPair, key_marshaller);
-      auto msg_marshaller =
-          std::make_shared<plaintext::ExchangeMessageMarshallerImpl>(
-              key_marshaller);
-      auto plaintext =
-          std::make_shared<Plaintext>(msg_marshaller, idmgr, key_marshaller);
-      auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
-      auto transport = std::make_shared<TcpTransport>(context, upgrader);
-      auto client = std::make_shared<Client>(transport, localSeed, context,
-                                             streams, rounds);
+        KeyPair clientKeyPair = {{{Key::Type::Ed25519, {3}}},
+                                 {{Key::Type::Ed25519, {4}}}};
 
-      EXPECT_OUTCOME_TRUE(marshalled_key,
-                          key_marshaller->marshal(serverKeyPair.publicKey))
-      EXPECT_OUTCOME_TRUE(p, PeerId::fromPublicKey(marshalled_key))
-      client->connect(p, serverAddr);
+        auto muxer = GetParam();
 
-      context->run_for(2000ms);
+        auto key_marshaller =
+            std::make_shared<KeyMarshallerImpl>(key_validator);
+        auto idmgr = std::make_shared<IdentityManagerImpl>(clientKeyPair,
+                                                           key_marshaller);
+        auto msg_marshaller =
+            std::make_shared<plaintext::ExchangeMessageMarshallerImpl>(
+                key_marshaller);
+        auto plaintext = std::make_shared<Plaintext>(msg_marshaller, idmgr,
+                                                     key_marshaller);
+        auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
+        auto transport = std::make_shared<TcpTransport>(context, upgrader);
+        auto client = std::make_shared<Client>(transport, localSeed, context,
+                                               streams, rounds);
 
-      EXPECT_EQ(client->streamWrites, rounds * streams);
-      EXPECT_EQ(client->streamReads, rounds * streams);
-    });
-  }
+        EXPECT_OUTCOME_TRUE(marshalled_key,
+                            key_marshaller->marshal(serverKeyPair.publicKey))
+        EXPECT_OUTCOME_TRUE(p, PeerId::fromPublicKey(marshalled_key))
+        client->connect(p, serverAddr);
 
-  context->run_for(3000ms);
+        context->run_for(10000ms);
+
+        if (--clients_running == 0) {
+          server_context->stop();
+        }
+
+        EXPECT_EQ(client->streamWrites, rounds * streams);
+        EXPECT_EQ(client->streamReads, rounds * streams);
+      });
+    }
+  });
+
+  server_context->run_for(13000ms);
 
   for (auto &c : clients) {
     if (c.joinable()) {
@@ -369,8 +392,10 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
 
   EXPECT_EQ(server->clientsConnected, totalClients);
   EXPECT_EQ(server->streamsCreated, totalClients * streams);
-  EXPECT_EQ(server->streamReads, totalClients * streams * rounds);
-  EXPECT_EQ(server->streamWrites, totalClients * streams * rounds);
+
+  // GE instead of EQ here is due to readSome() and segmentation
+  EXPECT_GE(server->streamReads, totalClients * streams * rounds);
+  EXPECT_GE(server->streamWrites, totalClients * streams * rounds);
 }
 
 INSTANTIATE_TEST_CASE_P(
