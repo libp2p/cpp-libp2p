@@ -294,6 +294,25 @@ struct MuxerAcceptanceTest
   };
 };
 
+namespace {
+  class PermissiveKeyValidator : public libp2p::crypto::validator::KeyValidator {
+   public:
+    outcome::result<void> validate(const PrivateKey &key) const override {
+      return outcome::success();
+    }
+    outcome::result<void> validate(const PublicKey &key) const override {
+      return outcome::success();
+    }
+    outcome::result<void> validate(const KeyPair &keys) const override  {
+      return outcome::success();
+    }
+  };
+
+  auto createKeyValidator() {
+    return std::make_shared<PermissiveKeyValidator>();
+  }
+}  // namespace
+
 TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   if (verbose()) {
     spdlog::set_level(spdlog::level::trace);
@@ -316,12 +335,8 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   KeyPair serverKeyPair = {{{Key::Type::Ed25519, {1}}},
                            {{Key::Type::Ed25519, {2}}}};
 
-  auto key_validator = std::make_shared<KeyValidatorMock>();
-  auto key_marshaller = std::make_shared<KeyMarshallerImpl>(key_validator);
-  EXPECT_CALL(*key_validator, validate(::testing::An<const PrivateKey &>()))
-      .WillRepeatedly(::testing::Return(outcome::success()));
-  EXPECT_CALL(*key_validator, validate(::testing::An<const PublicKey &>()))
-      .WillRepeatedly(::testing::Return(outcome::success()));
+  auto key_marshaller =
+      std::make_shared<KeyMarshallerImpl>(createKeyValidator());
 
   auto muxer = GetParam();
   auto idmgr =
@@ -352,14 +367,14 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
         auto muxer = GetParam();
 
         auto key_marshaller =
-            std::make_shared<KeyMarshallerImpl>(key_validator);
+            std::make_shared<KeyMarshallerImpl>(createKeyValidator());
         auto idmgr = std::make_shared<IdentityManagerImpl>(clientKeyPair,
                                                            key_marshaller);
         auto msg_marshaller =
             std::make_shared<plaintext::ExchangeMessageMarshallerImpl>(
                 key_marshaller);
-        auto plaintext = std::make_shared<Plaintext>(msg_marshaller, idmgr,
-                                                     key_marshaller);
+        auto plaintext =
+            std::make_shared<Plaintext>(msg_marshaller, idmgr, key_marshaller);
         auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
         auto transport = std::make_shared<TcpTransport>(context, upgrader);
         auto client = std::make_shared<Client>(transport, localSeed, context,
