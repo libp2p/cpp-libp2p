@@ -280,7 +280,7 @@ namespace libp2p::regression {
     signals.async_wait(
         [&io](const boost::system::error_code &, int) { io->stop(); });
 
-    auto max_duration = std::chrono::seconds(30);
+    auto max_duration = std::chrono::seconds(300);
     if (std::getenv("TRACE_DEBUG") != nullptr) {
       max_duration = std::chrono::seconds(86400);
     }

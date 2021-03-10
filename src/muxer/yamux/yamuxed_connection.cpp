@@ -349,8 +349,7 @@ namespace libp2p::connection {
 
     if (frame.stream_id == 0) {
       if (frame.type == YamuxFrame::FrameType::PING) {
-        // TODO write ping
-        // write(pingResponseMsg(frame.length);
+        enqueue(pingResponseMsg(frame.length));
         return true;
       }
       log()->debug("received SYN on zero stream id");
@@ -369,7 +368,7 @@ namespace libp2p::connection {
       log()->debug(
           "maximum number of streams ({}) exceeded, ignoring inbound stream");
       // if we cannot accept another stream, reset it on the other side
-      // TODO write RST on stream ID
+      enqueue(resetStreamMsg(frame.stream_id));
       return true;
 
     } else if (!new_stream_handler_) {
