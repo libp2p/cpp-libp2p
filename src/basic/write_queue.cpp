@@ -76,9 +76,13 @@ namespace libp2p::basic {
     return window_size - sz;
   }
 
-  bool WriteQueue::ack(size_t size) {
+  WriteQueue::AckResult WriteQueue::ackDataSent(size_t size) {
+    AckResult result;
+
     if (queue_.empty() || size == 0) {
-      return false;
+      // inconsistency, must not be called if nothing to ack
+      result.data_consistent = false;
+      return result;
     }
 
     auto &item = queue_.front();
@@ -88,7 +92,9 @@ namespace libp2p::basic {
     assert(total_size == static_cast<size_t>(item.data.size()));
 
     if (size > item.unacknowledged) {
-      return false;
+      // inconsistency, more data is acked than callback was put for
+      result.data_consistent = false;
+      return result;
     }
 
     bool completed = false;
@@ -106,10 +112,16 @@ namespace libp2p::basic {
 
     if (!completed) {
       assert(total_size > item.acknowledged);
-      return true;
+      // data partially acknowledged, early to call the callback
+      result.data_consistent = true;
+      return result;
     }
 
-    auto cb = std::move(item.cb);
+    // acknowledging a portion of data was written
+    result.cb.swap(item.cb);
+    result.size_to_ack = total_size;
+    result.data_consistent = true;
+
     queue_.pop_front();
     if (queue_.empty()) {
       assert(total_unsent_size_ == 0);
@@ -117,22 +129,21 @@ namespace libp2p::basic {
     } else if (active_index_ > 0) {
       --active_index_;
     }
-    if (cb) {
-      cb(total_size);
-    }
 
-    return true;
+    return result;
   }
 
-  void WriteQueue::broadcast(const BroadcastFn &fn) {
+  std::vector<Writer::WriteCallbackFunc> WriteQueue::getAllCallbacks() {
+    std::vector<Writer::WriteCallbackFunc> v;
+    v.reserve(queue_.size());
     for (auto &item : queue_) {
       if (!item.cb) {
         continue;
       }
-      if (!fn(std::move(item.cb))) {
-        break;
-      }
+      v.emplace_back();
+      item.cb.swap(v.back());
     }
+    return v;
   }
 
   void WriteQueue::clear() {

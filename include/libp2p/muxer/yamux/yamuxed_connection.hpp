@@ -126,8 +126,15 @@ namespace libp2p::connection {
     bool processHeader(boost::optional<YamuxFrame> header);
 
     /// Processes incoming data, called from YamuxReadingState
-    bool processData(gsl::span<uint8_t> segment, StreamId stream_id, bool rst,
-                     bool fin);
+    bool processData(gsl::span<uint8_t> segment, StreamId stream_id);
+
+    /// FIN received from peer to stream (either in header or with last data
+    /// segment)
+    bool processFin(StreamId stream_id);
+
+    /// RST received from peer to stream (either in header or with last data
+    /// segment)
+    bool processRst(StreamId stream_id);
 
     /// Processes incoming GO_AWAY frame
     void processGoAway(const YamuxFrame &frame);
@@ -137,12 +144,6 @@ namespace libp2p::connection {
 
     /// Processes incoming frame with ACK flag
     bool processAck(const YamuxFrame &frame);
-
-    /// Processes incoming frame with FIN flag
-    bool processFin(const YamuxFrame &frame);
-
-    /// Processes incoming frame with RST flag
-    bool processRst(const YamuxFrame &frame);
 
     /// Processes incoming WINDOW_UPDATE message
     bool processWindowUpdate(const YamuxFrame &frame);

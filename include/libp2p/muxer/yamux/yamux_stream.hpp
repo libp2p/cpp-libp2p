@@ -96,10 +96,16 @@ namespace libp2p::connection {
       kRemoveStreamAndSendRst,
     };
 
-    /// Called from Connection. New data received and/or FIN/RST flags
-    /// Returns false on window overflow
-    DataFromConnectionResult onDataRead(gsl::span<uint8_t> bytes, bool fin,
-                                        bool rst);
+    /// Called from Connection. New data received
+    /// Returns kRemoveStreamAndSendRst on window overflow
+    DataFromConnectionResult onDataReceived(gsl::span<uint8_t> bytes);
+
+    /// Called from Connection on FIN received
+    /// Returns kRemoveStream if FIN was sent from this side
+    DataFromConnectionResult onFINReceived();
+
+    /// Called from Connection, stream was reset by peer
+    void onRSTReceived();
 
     /// Data written into the wire. Called from Connection
     void onDataWritten(size_t bytes);
@@ -109,14 +115,15 @@ namespace libp2p::connection {
 
    private:
     /// Performs close-related cleanup and notifications
-    void doClose(std::error_code ec, bool notify_read_callback);
+    void doClose(std::error_code ec, bool notify_read_side);
 
     /// Called by read*() functions
     void doRead(gsl::span<uint8_t> out, size_t bytes, ReadCallbackFunc cb,
                 bool some);
 
-    /// Called by doRead() in deferred manner and by dataRead() directly
-    void readCompleted();
+    /// Completes the read operation if any, clears read state
+    [[nodiscard]] std::pair<ReadCallbackFunc, outcome::result<size_t>>
+    readCompleted();
 
     /// Dequeues data from write queue and sends to the wire in async manner
     void doWrite();
@@ -125,8 +132,9 @@ namespace libp2p::connection {
     void doWrite(gsl::span<const uint8_t> in, size_t bytes,
                  WriteCallbackFunc cb, bool some);
 
-    /// Called after FIN was sent
-    void closeCompleted();
+    /// Clears close callback state
+    [[nodiscard]] std::pair<VoidResultHandlerFunc, outcome::result<void>>
+    closeCompleted();
 
     /// Underlying connection (secured)
     std::shared_ptr<connection::SecureConnection> connection_;
@@ -174,7 +182,7 @@ namespace libp2p::connection {
     bool reading_some_ = false;
 
     /// Read callback, it is non-zero during async data receive
-    basic::Reader::ReadCallbackFunc read_cb_;
+    ReadCallbackFunc read_cb_;
 
     /// TODO: get rid of this. client's read buffer
     gsl::span<uint8_t> external_read_buffer_;

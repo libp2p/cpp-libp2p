@@ -33,15 +33,23 @@ namespace libp2p::basic {
     /// Returns new window size
     size_t dequeue(size_t window_size, DataRef &out, bool &some);
 
+    struct AckResult {
+      // callback to be called to ack data was sent
+      Writer::WriteCallbackFunc cb;
+
+      // size to acknowledge, may differ from ack()'s size arg
+      size_t size_to_ack = 0;
+
+      // set to false if invalid arg or inconsistency
+      bool data_consistent = true;
+    };
+
     /// Calls write callback if full message was sent (or some),
-    /// returns false on inconsistency
-    bool ack(size_t size);
+    /// returns callback to ack + true if ok or false on inconsistency
+    [[nodiscard]] AckResult ackDataSent(size_t size);
 
-    /// Returns bool because of reentrancy and lifetime
-    using BroadcastFn = std::function<bool(basic::Writer::WriteCallbackFunc)>;
-
-    /// Helps iterate through callbacks, needed to broadcast error code
-    void broadcast(const BroadcastFn &fn);
+    /// Needed to broadcast error code to write callbacks
+    [[nodiscard]] std::vector<Writer::WriteCallbackFunc> getAllCallbacks();
 
     /// Deallocates memory
     void clear();

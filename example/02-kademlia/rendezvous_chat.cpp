@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
   log->set_level(spdlog::level::info);
 
   try {
-    if (argc < 1) {
+    if (argc < 2) {
       std::cerr << "Needs one argument - address" << std::endl;
       exit(EXIT_FAILURE);
     }
