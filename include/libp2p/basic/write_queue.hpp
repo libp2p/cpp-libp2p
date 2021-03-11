@@ -7,6 +7,7 @@
 #define LIBP2P_BASIC_WRITE_QUEUE_HPP
 
 #include <deque>
+#include <vector>
 
 #include <libp2p/basic/writer.hpp>
 
