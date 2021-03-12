@@ -9,10 +9,64 @@
 
 namespace libp2p::peer {
 
+  InmemAddressRepository::InmemAddressRepository(
+      std::shared_ptr<network::DnsaddrResolver> dnsaddr_resolver)
+      : dnsaddr_resolver_{std::move(dnsaddr_resolver)} {
+    BOOST_ASSERT(dnsaddr_resolver_);
+  }
+
+  void InmemAddressRepository::bootstrap(const multi::Multiaddress &ma,
+                                         std::function<BootstrapCallback> cb) {
+    if (not isNewDnsAddr(ma)) {
+      return;  // just skip silently circular references among dnsaddrs
+    }
+    dnsaddr_resolver_->load(
+        ma,
+        [self{shared_from_this()}, callback{std::move(cb)}](
+            outcome::result<std::vector<multi::Multiaddress>> result) {
+          if (result.has_error()) {
+            callback(result.error());
+            return;
+          }
+          auto &&addrs = result.value();
+          for (const auto &addr : addrs) {
+            if (addr.hasProtocol(multi::Protocol::Code::DNS_ADDR)) {
+              self->bootstrap(addr, callback);
+            } else {
+              auto peer_id_str = addr.getPeerId();
+              if (peer_id_str) {
+                auto peer_id = peer::PeerId::fromBase58(peer_id_str.get());
+                if (peer_id.has_value()) {
+                  std::vector addr_vec = {addr};
+                  if (auto added = self->addAddresses(peer_id.value(), addr_vec,
+                                                      kDefaultTtl);
+                      added.has_error()) {
+                    callback(added.error());
+                  } else {
+                    callback(outcome::success());
+                  }
+                } else {
+                  callback(peer_id.error());
+                  return;
+                }
+              }
+            }
+          }
+        });
+  }
+
+  bool InmemAddressRepository::isNewDnsAddr(const multi::Multiaddress &ma) {
+    if (resolved_dns_addrs_.end() == resolved_dns_addrs_.find(ma)) {
+      resolved_dns_addrs_.insert(ma);
+      return true;
+    }
+    return false;
+  }
+
   outcome::result<bool> InmemAddressRepository::addAddresses(
       const PeerId &p, gsl::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
-	  bool added = false;
+    bool added = false;
     auto peer_it = db_.emplace(p, std::make_shared<ttlmap>()).first;
     auto &addresses = *peer_it->second;
 
@@ -35,7 +89,7 @@ namespace libp2p::peer {
     auto &addresses = *peer_it->second;
 
     auto expires_at = Clock::now() + ttl;
-    for (auto &m : ma) {
+    for (const auto &m : ma) {
       auto [addr_it, added] = addresses.emplace(m, expires_at);
       if (added) {
         signal_added_(p, m);

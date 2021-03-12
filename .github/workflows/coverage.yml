@@ -1,0 +1,43 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  coverage:
+    name: "Codecov"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      name: checkout
+      with:
+        submodules: true
+        clean: true
+        fetch-depth: 2
+    - name: "install dependencies"
+      run: |
+        set -e
+        sudo apt-get update || true
+        sudo apt-get install -y ninja-build
+        sudo python3 -m pip install --upgrade pip
+        sudo pip3 install scikit-build
+        sudo pip3 install cmake requests gitpython gcovr pyyaml
+    - name: "cmake"
+      env:
+        CC: clang
+        CXX: clang++
+      run: cmake . -GNinja -Bbuild-coverage -DCOVERAGE=ON -DEXAMPLES=OFF
+    - name: "build report"
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+      run: cmake --build build-coverage --target ctest_coverage -- -j4
+    - name: "upload"
+      uses: codecov/codecov-action@v1.2.1
+      with:
+        files: build-coverage/ctest_coverage.xml
+        verbose: false
