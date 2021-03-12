@@ -479,8 +479,7 @@ namespace libp2p::connection {
       if (isOutbound(new_stream_id_, stream_id)) {
         auto it2 = pending_outbound_streams_.find(stream_id);
         if (it2 != pending_outbound_streams_.end()) {
-          log()->debug("received RST to pending outbound stream {}",
-                       stream_id);
+          log()->debug("received RST to pending outbound stream {}", stream_id);
 
           auto cb = std::move(it2->second);
           pending_outbound_streams_.erase(it2);
@@ -614,8 +613,11 @@ namespace libp2p::connection {
         packet.some ? &CapableConnection::writeSome : &CapableConnection::write;
     auto span = gsl::span<const uint8_t>(packet.packet);
     auto sz = packet.packet.size();
-    auto cb = [this, packet = std::move(packet)](outcome::result<size_t> res) {
-      onDataWritten(res, packet.stream_id, packet.some);
+    auto cb = [wptr{weak_from_this()},
+               packet = std::move(packet)](outcome::result<size_t> res) {
+      auto self = wptr.lock();
+      if (self)
+        self->onDataWritten(res, packet.stream_id, packet.some);
     };
 
     is_writing_ = true;
@@ -629,6 +631,9 @@ namespace libp2p::connection {
       close(res.error(), boost::none);
       return;
     }
+
+    // this instance may be killed inside further callback
+    auto wptr = weak_from_this();
 
     if (stream_id != 0) {
       // pass write ack to stream about data size written except header size
@@ -652,6 +657,11 @@ namespace libp2p::connection {
           it->second->onDataWritten(sz);
         }
       }
+    }
+
+    if (wptr.expired()) {
+      // *this* no longer exists
+      return;
     }
 
     is_writing_ = false;
