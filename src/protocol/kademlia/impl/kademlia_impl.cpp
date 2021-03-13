@@ -228,7 +228,7 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    auto update_res = peer_routing_table_->update(peer_info.id);
+    auto update_res = peer_routing_table_->update(peer_info.id, permanent);
     if (not update_res) {
       log_.debug("{} was not added to peer routing table: {}",
                  peer_info.id.toBase58(), update_res.error().message());
