@@ -33,7 +33,7 @@ namespace libp2p::protocol::kademlia {
      * Adds/moves the given @param peer to the front of its respective bucket
      * @returns true/false if it was newadded peer or not
      */
-    virtual outcome::result<bool> update(const peer::PeerId &peer) = 0;
+    virtual outcome::result<bool> update(const peer::PeerId &peer, bool is_permanent) = 0;
 
     /// Removes a peer with given @param peer from the routing table.
     /// This is to be used when we are sure a node has disconnected completely.

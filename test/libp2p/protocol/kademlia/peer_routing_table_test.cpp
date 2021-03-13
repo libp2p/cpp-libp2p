@@ -54,9 +54,8 @@ TEST_F(PeerRoutingTableTest, BusWorks) {
 
   std::unordered_set<PeerId> peerset;
 
-  auto addHandle = addCh.subscribe([&](const PeerId &pid) {
-    peerset.insert(pid);
-  });
+  auto addHandle =
+      addCh.subscribe([&](const PeerId &pid) { peerset.insert(pid); });
 
   auto removeHandle = remCh.subscribe([&](const PeerId &pid) {
     auto it = peerset.find(pid);
@@ -68,7 +67,7 @@ TEST_F(PeerRoutingTableTest, BusWorks) {
   std::generate_n(std::back_inserter(peers), 1, testutil::randomPeerId);
 
   // table does not contain peer[0]
-  EXPECT_OUTCOME_TRUE_1(table_->update(peers[0]));
+  EXPECT_OUTCOME_TRUE_1(table_->update(peers[0], false));
   ASSERT_TRUE(hasPeer(peerset, peers[0])) << "should have this peer";
 
   table_->remove(peers[0]);
@@ -88,7 +87,7 @@ TEST_F(PeerRoutingTableTest, FindMultiple) {
   std::generate_n(std::back_inserter(peers), 18, testutil::randomPeerId);
 
   for (const auto &peer : peers) {
-    ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peer));
+    ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peer, false));
   }
 
   auto found = table_->getNearestPeers(NodeId(peers[2]), 15);
@@ -101,7 +100,7 @@ TEST_F(PeerRoutingTableTest, FindMultiple) {
  * @see
  * https://sourcegraph.com/github.com/libp2p/go-libp2p-kbucket@HEAD/-/blob/table_test.go
  */
-TEST_F(PeerRoutingTableTest, EldestPreferred) {
+TEST_F(PeerRoutingTableTest, EldestPreferredIfPermanent) {
   config_->maxBucketSize = 3;
   srand(0);  // to make test deterministic
 
@@ -120,12 +119,40 @@ TEST_F(PeerRoutingTableTest, EldestPreferred) {
   for (size_t i = 0; i < peers.size(); i++) {
     if (i < config_->maxBucketSize) {
       // peers added till bucket filled are accepted
-      ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[i]));
+      ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[i], true));
     } else {
       // Remained are rejected
+      auto updateVal = table_->update(peers[i], true);
       ASSERT_OUTCOME_ERROR(
-          table_->update(peers[i]),
-          PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY);
+          updateVal, PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY);
+    }
+  }
+}
+TEST_F(PeerRoutingTableTest, EldestRecycledIfNotPermanent) {
+  config_->maxBucketSize = 3;
+  srand(0);  // to make test deterministic
+
+  std::vector<PeerId> peers;
+
+  // Generate peers for first bucket, in count more than bucket capacity
+  while (peers.size() != config_->maxBucketSize * 2) {
+    auto peer_id = testutil::randomPeerId();
+    NodeId node_id(peer_id);
+    if (node_id.commonPrefixLen(NodeId(self_id)) == 0) {
+      peers.push_back(peer_id);
+    }
+  }
+
+  // Try to add all of peer to
+  for (size_t i = 0; i < peers.size(); i++) {
+    if (i < config_->maxBucketSize) {
+      // peers added till bucket filled are accepted
+      ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[i], false));
+    } else {
+      // Remained are rejected
+
+      auto updateVal = table_->update(peers[i], false);
+      ASSERT_OUTCOME_SUCCESS_TRY(updateVal);
     }
   }
 }
@@ -144,7 +171,7 @@ TEST_F(PeerRoutingTableTest, Update) {
   // 10000 random updates among 100 existing peers
   for (int i = 0; i < 10000; i++) {
     int index = rand() % peers.size();
-    [[maybe_unused]] auto result = table_->update(peers[index]);
+    [[maybe_unused]] auto result = table_->update(peers[index], false);
   }
 
   size_t total_peers = table_->size();
@@ -163,16 +190,16 @@ TEST_F(PeerRoutingTableTest, Update) {
  * https://sourcegraph.com/github.com/libp2p/go-libp2p-kbucket@HEAD/-/blob/table_test.go#L121:1
  */
 TEST_F(PeerRoutingTableTest, Find) {
-	config_->maxBucketSize = 10;
+  config_->maxBucketSize = 10;
   srand(0);  // to make test deterministic
 
-	const auto nPeers = 5;
+  const auto nPeers = 5;
 
   std::vector<PeerId> peers;
   std::generate_n(std::back_inserter(peers), nPeers, testutil::randomPeerId);
 
   for (const auto &peer : peers) {
-    ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peer));
+    ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peer, false));
   }
   ASSERT_EQ(table_->size(), nPeers);
 

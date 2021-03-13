@@ -1,9 +1,11 @@
+#include <include/libp2p/protocol/kademlia/impl/peer_routing_table_impl.hpp>
 /**
  * Copyright Soramitsu Co., Ltd. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <libp2p/protocol/kademlia/node_id.hpp>
+#include <libp2p/protocol/kademlia/impl/peer_routing_table_impl.hpp>
 
 #include <gtest/gtest.h>
 #include <cstdlib>
@@ -18,6 +20,7 @@ using libp2p::peer::PeerId;
 using libp2p::protocol::kademlia::NodeId;
 using libp2p::protocol::kademlia::xor_distance;
 using libp2p::protocol::kademlia::XorDistanceComparator;
+using libp2p::protocol::kademlia::BucketPeerInfo;
 
 // allows to print debug output to stdout, not wanted in CI output, but useful
 // while debugging
@@ -31,20 +34,20 @@ bool is_distance_less(Hash256 a, Hash256 b) {
   return std::memcmp(a.data(), b.data(), size) < 0;
 }
 
-bool is_xor_distance_sorted(const PeerId &local, std::vector<PeerId> &peers) {
+bool is_xor_distance_sorted(const PeerId &local, std::vector<BucketPeerInfo> &peers) {
   NodeId nlocal(local);
 
   auto begin = peers.begin();
   auto end = peers.end();
   while (begin != end) {
-    NodeId nremote1(*begin);
+    NodeId nremote1((*begin).node_id);
     auto distance1 = nremote1.distance(nlocal);
 
     if (++begin == end) {
       continue;
     }
 
-    NodeId nremote2(*begin);
+    NodeId nremote2((*begin).node_id);
     auto distance2 = nremote2.distance(nlocal);
 
     if (!is_distance_less(distance1, distance2)) {
@@ -55,14 +58,14 @@ bool is_xor_distance_sorted(const PeerId &local, std::vector<PeerId> &peers) {
   return true;
 }
 
-void print(NodeId from, std::vector<PeerId> &pids) {
+void print(NodeId from, std::vector<BucketPeerInfo> &pids) {
   if (!verbose())
     return;
   std::cout << "peers: \n";
   for (auto &p : pids) {
-    std::cout << "pid: " << p.toHex()
-              << " nodeId: " << hex_upper(NodeId(p).getData())
-              << " distance: " << hex_upper(from.distance(NodeId(p))) << "\n";
+    std::cout << "pid: " << p.peer_id.toHex()
+              << " nodeId: " << hex_upper(p.node_id.getData())
+              << " distance: " << hex_upper(from.distance(p.node_id)) << "\n";
   }
 }
 
@@ -72,10 +75,10 @@ TEST(KadDistance, SortsHashes) {
   PeerId us = "1"_peerid;
   XorDistanceComparator comp(us);
 
-  std::vector<PeerId> peers;
+  std::vector<BucketPeerInfo> peers;
   std::generate_n(std::back_inserter(peers), peersTotal,
-                  []() { return testutil::randomPeerId(); });
-  peers.push_back(us);
+                  []() { return BucketPeerInfo(testutil::randomPeerId(),false); });
+  peers.emplace_back(us, false);
 
   ASSERT_EQ(peers.size(), peersTotal + 1);
   std::cout << "unsorted ";
