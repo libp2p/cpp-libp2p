@@ -100,7 +100,62 @@ TEST_F(PeerRoutingTableTest, FindMultiple) {
  * @see
  * https://sourcegraph.com/github.com/libp2p/go-libp2p-kbucket@HEAD/-/blob/table_test.go
  */
-TEST_F(PeerRoutingTableTest, EldestPreferredIfPermanent) {
+TEST_F(PeerRoutingTableTest, RecyclingTest) {
+  config_->maxBucketSize = 1;
+  srand(0);  // to make test deterministic
+  auto &addCh = bus_->getChannel<events::PeerAddedChannel>();
+  auto &remCh = bus_->getChannel<events::PeerRemovedChannel>();
+
+  std::unordered_set<PeerId> peerset;
+
+  auto addHandle =
+      addCh.subscribe([&](const PeerId &pid) { peerset.insert(pid); });
+
+  auto removeHandle = remCh.subscribe([&](const PeerId &pid) {
+    auto it = peerset.find(pid);
+    ASSERT_TRUE(it != peerset.end());
+    peerset.erase(it);
+  });
+
+  std::vector<PeerId> peers;
+
+  // Generate peers for first bucket, in count more than bucket capacity
+  for (int i = 0; i < 3; ++i) {
+    auto peer_id = testutil::randomPeerId();
+    NodeId node_id(peer_id);
+    if (node_id.commonPrefixLen(NodeId(self_id)) == 0) {
+      peers.push_back(peer_id);
+    }
+  }
+
+  ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[0], false));
+  ASSERT_TRUE(hasPeer(peerset, peers[0])) << "should have this peer";
+
+  ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[1], false));
+  ASSERT_FALSE(hasPeer(peerset, peers[0])) << "should have recycled peer";
+  ASSERT_TRUE(hasPeer(peerset, peers[1])) << "should have this peer";
+
+  ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[2], true));
+  ASSERT_FALSE(hasPeer(peerset, peers[0])) << "should have recycled peer";
+  ASSERT_FALSE(hasPeer(peerset, peers[1])) << "should have recycled peer";
+  ASSERT_TRUE(hasPeer(peerset, peers[2])) << "should have this peer";
+
+  // if bucket is full of permanent peers addition of peers into same bucket
+  // should fail
+  ASSERT_OUTCOME_ERROR(table_->update(peers[0], false),
+                       PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY);
+  ASSERT_OUTCOME_ERROR(table_->update(peers[1], true),
+                       PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY);
+
+  // re-adding an existent peer should return false regardless of is permanent
+  auto updateVal = table_->update(peers[2], true);
+  ASSERT_OUTCOME_SUCCESS_TRY(updateVal);
+  ASSERT_FALSE(updateVal.value());
+  updateVal = table_->update(peers[2], false);
+  ASSERT_OUTCOME_SUCCESS_TRY(updateVal);
+  ASSERT_FALSE(updateVal.value());
+}
+TEST_F(PeerRoutingTableTest, EldestRecycledIfNotPermanent) {
   config_->maxBucketSize = 3;
   srand(0);  // to make test deterministic
 
@@ -122,13 +177,13 @@ TEST_F(PeerRoutingTableTest, EldestPreferredIfPermanent) {
       ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[i], true));
     } else {
       // Remained are rejected
-      auto updateVal = table_->update(peers[i], true);
       ASSERT_OUTCOME_ERROR(
-          updateVal, PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY);
+          table_->update(peers[i], true),
+          PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY);
     }
   }
 }
-TEST_F(PeerRoutingTableTest, EldestRecycledIfNotPermanent) {
+TEST_F(PeerRoutingTableTest, EldestPrefferedIfPermanent) {
   config_->maxBucketSize = 3;
   srand(0);  // to make test deterministic
 
@@ -147,12 +202,12 @@ TEST_F(PeerRoutingTableTest, EldestRecycledIfNotPermanent) {
   for (size_t i = 0; i < peers.size(); i++) {
     if (i < config_->maxBucketSize) {
       // peers added till bucket filled are accepted
-      ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[i], false));
+      ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[i], true));
     } else {
       // Remained are rejected
-
-      auto updateVal = table_->update(peers[i], false);
-      ASSERT_OUTCOME_SUCCESS_TRY(updateVal);
+      ASSERT_OUTCOME_ERROR(
+          table_->update(peers[i], true),
+          PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY);
     }
   }
 }

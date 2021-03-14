@@ -27,7 +27,6 @@ namespace libp2p::protocol::kademlia {
         : peer_id(peer_id), is_replaceable(is_replaceable), node_id(peer_id) {}
   };
 
-
   struct XorDistanceComparator {
     explicit XorDistanceComparator(const peer::PeerId &from) {
       crypto::Sha256 hash;
@@ -41,7 +40,8 @@ namespace libp2p::protocol::kademlia {
 
     explicit XorDistanceComparator(const Hash256 &hash) : hfrom(hash) {}
 
-    bool operator()(const BucketPeerInfo &a, const BucketPeerInfo&b){
+    bool operator()(const BucketPeerInfo &a,
+                    const BucketPeerInfo &b) {
       NodeId from(hfrom);
       auto d1 = a.node_id.distance(from);
       auto d2 = b.node_id.distance(from);
@@ -49,7 +49,6 @@ namespace libp2p::protocol::kademlia {
 
       // return true, if distance d1 is less than d2, false otherwise
       return std::memcmp(d1.data(), d2.data(), size) < 0;
-
     }
 
     Hash256 hfrom;
@@ -73,16 +72,16 @@ namespace libp2p::protocol::kademlia {
       return peerIds;
     }
 
-//    bool contains(const BucketPeerInfo &p) const {
-//      auto it = std::find_if(begin(), end(), p);
-//      return it != end();
-//    }
+    bool contains(const peer::PeerId &p) {
+      auto it = std::find_if(
+          begin(), end(), [=](const auto &bpi) { return bpi.peer_id == p; });
+      return it != end();
+    }
 
     bool remove(const peer::PeerId &p) {
       // this shifts elements to the end
-      auto it = std::remove_if(begin(), end(), [&](const BucketPeerInfo &bpi) {
-        return p == bpi.peer_id;
-      });
+      auto it = std::remove_if(
+          begin(), end(), [&](const auto &bpi) { return bpi.peer_id == p; });
       if (it != end()) {
         erase(it);
         return true;
@@ -91,19 +90,13 @@ namespace libp2p::protocol::kademlia {
       return false;
     }
 
-    void moveToFront(const BucketPeerInfo &p) {
-      remove(p.peer_id);
-      push_front(p);
-    }
-
     Bucket split(size_t commonLenPrefix, const NodeId &target) {
       Bucket b{};
       // remove shifts all elements "to be removed" to the end, other elements
       // preserve their relative order
-      auto new_end =
-          std::remove_if(begin(), end(), [&](const BucketPeerInfo &pid) {
-            return pid.node_id.commonPrefixLen(target) > commonLenPrefix;
-          });
+      auto new_end = std::remove_if(begin(), end(), [&](const auto &bpi) {
+        return bpi.node_id.commonPrefixLen(target) > commonLenPrefix;
+      });
 
       b.assign(std::make_move_iterator(new_end),
                std::make_move_iterator(end()));
