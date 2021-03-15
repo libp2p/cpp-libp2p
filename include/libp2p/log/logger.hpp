@@ -8,14 +8,14 @@
 
 #include <soralog/level.hpp>
 #include <soralog/logger.hpp>
-#include <soralog/logger_system.hpp>
+#include <soralog/logging_system.hpp>
 
 namespace libp2p::log {
 
   using Level = soralog::Level;
   using Logger = std::shared_ptr<soralog::Logger>;
 
-  void setLoggerSystem(std::shared_ptr<soralog::LoggerSystem> logger_system);
+  void setLoggingSystem(std::shared_ptr<soralog::LoggingSystem> logging_system);
 
   [[nodiscard]] Logger createLogger(const std::string &tag);
 

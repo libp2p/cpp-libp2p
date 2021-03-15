@@ -7,7 +7,6 @@
 
 #include <fmt/format.h>
 #include <boost/program_options.hpp>
-#include <soralog/injector.hpp>
 
 #include <libp2p/injector/gossip_injector.hpp>
 
@@ -82,13 +81,9 @@ int main(int argc, char *argv[]) {
       libp2p::injector::useGossipConfig(config));
 
   // prepare log system
-  auto logger_injector = soralog::injector::makeInjector(
-      boost::di::bind<soralog::Configurator>.to([&injector](const auto &i) {
-        return get_logging_system_configurator(injector);
-      })[boost::di::override]);
-  auto logger_system =
-      logger_injector.create<std::shared_ptr<soralog::LoggerSystem>>();
-  auto r = logger_system->configure();
+  auto logging_system = std::make_shared<soralog::LoggingSystem>(
+      get_logging_system_configurator(injector));
+  auto r = logging_system->configure();
   if (not r.message.empty()) {
     (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
   }
@@ -96,7 +91,7 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  libp2p::log::setLoggerSystem(logger_system);
+  libp2p::log::setLoggingSystem(logging_system);
   if (std::getenv("TRACE_DEBUG") != nullptr) {
     libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
   }

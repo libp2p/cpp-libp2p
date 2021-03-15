@@ -4,8 +4,9 @@
  */
 
 #include <libp2p/log/logger.hpp>
+
 #include <mutex>
-#include <soralog/injector.hpp>
+#include <soralog/impl/fallback_configurator.hpp>
 
 #ifndef TESTUTIL_PREPARELOGGERS
 #define TESTUTIL_PREPARELOGGERS
@@ -16,17 +17,17 @@ namespace testutil {
 
   void prepareLoggers(soralog::Level level = soralog::Level::INFO) {
     std::call_once(initialized, [] {
-      auto injector = soralog::injector::makeInjector();
+      auto configurator = std::make_shared<soralog::FallbackConfigurator>();
 
-      auto logger_system =
-          injector.create<std::shared_ptr<soralog::LoggerSystem>>();
+      auto logging_system =
+          std::make_shared<soralog::LoggingSystem>(configurator);
 
-      auto r = logger_system->configure();
+      auto r = logging_system->configure();
       if (r.has_error) {
         throw std::runtime_error("Can't configure logger system");
       }
 
-      libp2p::log::setLoggerSystem(logger_system);
+      libp2p::log::setLoggingSystem(logging_system);
     });
 
     libp2p::log::setLevelOfGroup("*", level);
