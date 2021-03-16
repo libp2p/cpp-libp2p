@@ -66,7 +66,8 @@ namespace libp2p::protocol::kademlia {
                                         FoundProvidersHandler handler) override;
 
     /// @see PeerRouting::addPeer
-    void addPeer(const PeerInfo &peer_info, bool permanent) override;
+    void addPeer(const PeerInfo &peer_info, bool permanent,
+                 bool is_connected = false) override;
 
     /// @see PeerRouting::findPeer
     outcome::result<void> findPeer(const peer::PeerId &peer_id,

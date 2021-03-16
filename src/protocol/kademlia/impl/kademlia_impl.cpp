@@ -205,7 +205,8 @@ namespace libp2p::protocol::kademlia {
     return find_providers_executor->start();
   }
 
-  void KademliaImpl::addPeer(const PeerInfo &peer_info, bool permanent) {
+  void KademliaImpl::addPeer(const PeerInfo &peer_info, bool permanent,
+                             bool is_connected) {
     log_.debug("CALL: AddPeer ({})", peer_info.id.toBase58());
     for (auto &addr : peer_info.addresses) {
       log_.debug("         addr: {}", addr.getStringAddress());
@@ -228,7 +229,7 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    auto update_res = peer_routing_table_->update(peer_info.id, permanent);
+    auto update_res = peer_routing_table_->update(peer_info.id, permanent, is_connected);
     if (not update_res) {
       log_.debug("{} was not added to peer routing table: {}",
                  peer_info.id.toBase58(), update_res.error().message());

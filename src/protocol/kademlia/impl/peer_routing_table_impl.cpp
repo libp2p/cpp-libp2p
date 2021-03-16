@@ -92,15 +92,25 @@ namespace libp2p::protocol::kademlia {
   }
 
   outcome::result<bool> PeerRoutingTableImpl::update(const peer::PeerId &pid,
-                                                     bool is_permanent) {
+                                                     bool is_permanent,
+                                                     bool is_connected) {
     NodeId nodeId(pid);
     size_t cpl = nodeId.commonPrefixLen(local_);
 
     auto bucketId = getBucketId(buckets_, cpl);
     auto &bucket = buckets_.at(bucketId);
 
-    // Trying to find and move to front
-    if (bucket.contains(pid)) {
+    // Trying to find and move to front if its a long lived connected peer
+    if (is_connected) {
+      auto it =
+          std::find_if(bucket.begin(), bucket.end(),
+                       [&pid](const auto &bpi) { return bpi.peer_id == pid; });
+      if (it != bucket.end()) {
+        bucket.push_front(*it);
+        bucket.erase(it);
+        return false;
+      }
+    } else if (bucket.contains(pid)) {
       return false;
     }
 
@@ -126,29 +136,31 @@ namespace libp2p::protocol::kademlia {
         return true;
       }
       auto replaceablePeerIt =
-          std::find_if(resizedBucket.begin(), resizedBucket.end(),
+          std::find_if(resizedBucket.rbegin(), resizedBucket.rend(),
                        [](const auto &bpi) { return bpi.is_replaceable; });
 
-      if (replaceablePeerIt == resizedBucket.end()) {
+      if (replaceablePeerIt == resizedBucket.rend()) {
         return Error::PEER_REJECTED_NO_CAPACITY;
       }
       auto removedPeer = (*replaceablePeerIt).peer_id;
       bus_->getChannel<events::PeerRemovedChannel>().publish(removedPeer);
-      resizedBucket.erase(replaceablePeerIt);
+      std::advance(replaceablePeerIt, 1);
+      resizedBucket.erase(replaceablePeerIt.base());
       resizedBucket.emplace_front(pid, !is_permanent);
       bus_->getChannel<events::PeerAddedChannel>().publish(pid);
       return true;
     }
     auto replaceablePeerIt =
-        std::find_if(bucket.begin(), bucket.end(),
+        std::find_if(bucket.rbegin(), bucket.rend(),
                      [](const auto &bpi) { return bpi.is_replaceable; });
 
-    if (replaceablePeerIt == bucket.end()) {
+    if (replaceablePeerIt == bucket.rend()) {
       return Error::PEER_REJECTED_NO_CAPACITY;
     }
     auto removedPeer = (*replaceablePeerIt).peer_id;
     bus_->getChannel<events::PeerRemovedChannel>().publish(removedPeer);
-    bucket.erase(replaceablePeerIt);
+    std::advance(replaceablePeerIt, 1);
+    bucket.erase(replaceablePeerIt.base());
     bucket.emplace_front(pid, !is_permanent);
     bus_->getChannel<events::PeerAddedChannel>().publish(pid);
     return true;

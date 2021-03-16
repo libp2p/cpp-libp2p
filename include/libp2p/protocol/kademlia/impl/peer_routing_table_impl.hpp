@@ -40,8 +40,7 @@ namespace libp2p::protocol::kademlia {
 
     explicit XorDistanceComparator(const Hash256 &hash) : hfrom(hash) {}
 
-    bool operator()(const BucketPeerInfo &a,
-                    const BucketPeerInfo &b) {
+    bool operator()(const BucketPeerInfo &a, const BucketPeerInfo &b) {
       NodeId from(hfrom);
       auto d1 = a.node_id.distance(from);
       auto d2 = b.node_id.distance(from);
@@ -73,8 +72,8 @@ namespace libp2p::protocol::kademlia {
     }
 
     bool contains(const peer::PeerId &p) {
-      auto it = std::find_if(
-          begin(), end(), [=](const auto &bpi) { return bpi.peer_id == p; });
+      auto it = std::find_if(begin(), end(),
+                             [=](const auto &bpi) { return bpi.peer_id == p; });
       return it != end();
     }
 
@@ -122,8 +121,8 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<peer::IdentityManager> identity_manager,
         std::shared_ptr<event::Bus> bus);
 
-    outcome::result<bool> update(const peer::PeerId &pid,
-                                 bool is_permanent) override;
+    outcome::result<bool> update(const peer::PeerId &pid, bool is_permanent,
+                                 bool is_connected) override;
 
     void remove(const peer::PeerId &peer_id) override;
 
