@@ -122,7 +122,7 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<event::Bus> bus);
 
     outcome::result<bool> update(const peer::PeerId &pid, bool is_permanent,
-                                 bool is_connected) override;
+                                 bool is_connected=false) override;
 
     void remove(const peer::PeerId &peer_id) override;
 

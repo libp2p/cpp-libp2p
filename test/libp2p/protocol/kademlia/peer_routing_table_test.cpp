@@ -156,6 +156,52 @@ TEST_F(PeerRoutingTableTest, RecyclingTest) {
   ASSERT_FALSE(updateVal.value());
 }
 
+TEST_F(PeerRoutingTableTest, PreferLongLivedPeers) {
+  config_->maxBucketSize = 2;
+  srand(0);  // to make test deterministic
+  auto &addCh = bus_->getChannel<events::PeerAddedChannel>();
+  auto &remCh = bus_->getChannel<events::PeerRemovedChannel>();
+
+  std::unordered_set<PeerId> peerset;
+
+  auto addHandle =
+      addCh.subscribe([&](const PeerId &pid) { peerset.insert(pid); });
+
+  auto removeHandle = remCh.subscribe([&](const PeerId &pid) {
+    auto it = peerset.find(pid);
+    ASSERT_TRUE(it != peerset.end());
+    peerset.erase(it);
+  });
+
+  std::vector<PeerId> peers;
+
+  // Generate peers for first bucket, in count more than bucket capacity
+  while (peers.size() != 3) {
+    auto peer_id = testutil::randomPeerId();
+    NodeId node_id(peer_id);
+    if (node_id.commonPrefixLen(NodeId(self_id)) == 0) {
+      peers.push_back(peer_id);
+    }
+  }
+  // recycle FIFO; known peers but not connected dont get boost
+  ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[0], false));
+  ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[1], false));
+  ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[0], false));
+  ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[2], false));
+
+  ASSERT_FALSE(hasPeer(peerset, peers[0]));
+  ASSERT_TRUE(hasPeer(peerset, peers[1]));
+  ASSERT_TRUE(hasPeer(peerset, peers[2]));
+
+  // if connected; peer gets a boost
+  ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[1], false, true));
+  ASSERT_OUTCOME_SUCCESS_TRY(table_->update(peers[0], false));
+
+  ASSERT_TRUE(hasPeer(peerset, peers[0]));
+  ASSERT_TRUE(hasPeer(peerset, peers[1]));
+  ASSERT_FALSE(hasPeer(peerset, peers[2]));
+}
+
 TEST_F(PeerRoutingTableTest, EldestRecycledIfNotPermanent) {
   config_->maxBucketSize = 3;
   srand(0);  // to make test deterministic

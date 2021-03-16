@@ -35,7 +35,7 @@ namespace libp2p::protocol::kademlia {
      */
     virtual outcome::result<bool> update(const peer::PeerId &peer,
                                          bool is_permanent,
-                                         bool is_connected) = 0;
+                                         bool is_connected=false) = 0;
 
     /// Removes a peer with given @param peer from the routing table.
     /// This is to be used when we are sure a node has disconnected completely.
