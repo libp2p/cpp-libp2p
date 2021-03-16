@@ -1,4 +1,3 @@
-#include <include/libp2p/protocol/kademlia/impl/peer_routing_table_impl.hpp>
 /**
  * Copyright Soramitsu Co., Ltd. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
@@ -40,14 +39,14 @@ bool is_xor_distance_sorted(const PeerId &local, std::vector<BucketPeerInfo> &pe
   auto begin = peers.begin();
   auto end = peers.end();
   while (begin != end) {
-    NodeId nremote1((*begin).node_id);
+    const auto& nremote1 = (*begin).node_id;
     auto distance1 = nremote1.distance(nlocal);
 
     if (++begin == end) {
       continue;
     }
 
-    NodeId nremote2((*begin).node_id);
+    const auto& nremote2 = (*begin).node_id;
     auto distance2 = nremote2.distance(nlocal);
 
     if (!is_distance_less(distance1, distance2)) {

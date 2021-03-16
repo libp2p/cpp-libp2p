@@ -155,6 +155,7 @@ TEST_F(PeerRoutingTableTest, RecyclingTest) {
   ASSERT_OUTCOME_SUCCESS_TRY(updateVal);
   ASSERT_FALSE(updateVal.value());
 }
+
 TEST_F(PeerRoutingTableTest, EldestRecycledIfNotPermanent) {
   config_->maxBucketSize = 3;
   srand(0);  // to make test deterministic
@@ -183,6 +184,7 @@ TEST_F(PeerRoutingTableTest, EldestRecycledIfNotPermanent) {
     }
   }
 }
+
 TEST_F(PeerRoutingTableTest, EldestPrefferedIfPermanent) {
   config_->maxBucketSize = 3;
   srand(0);  // to make test deterministic
