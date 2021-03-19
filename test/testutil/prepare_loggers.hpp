@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifndef TESTUTIL_PREPARELOGGERS
+#define TESTUTIL_PREPARELOGGERS
+
+#include <libp2p/log/configurator.hpp>
 #include <libp2p/log/logger.hpp>
 
 #include <mutex>
-#include <soralog/impl/fallback_configurator.hpp>
-
-#ifndef TESTUTIL_PREPARELOGGERS
-#define TESTUTIL_PREPARELOGGERS
+#include <soralog/impl/configurator_from_yaml.hpp>
 
 namespace testutil {
 
@@ -17,14 +18,24 @@ namespace testutil {
 
   void prepareLoggers(soralog::Level level = soralog::Level::INFO) {
     std::call_once(initialized, [] {
-      auto configurator = std::make_shared<soralog::FallbackConfigurator>();
+
+      auto configurator = std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
+sinks:
+  - name: console
+    type: console
+groups:
+  - name: libp2p
+    sink: console
+    level: off
+)"));
 
       auto logging_system =
           std::make_shared<soralog::LoggingSystem>(configurator);
 
       auto r = logging_system->configure();
       if (r.has_error) {
-        throw std::runtime_error("Can't configure logger system");
+        std::cerr << r.message << std::endl;
+        exit(EXIT_FAILURE);
       }
 
       libp2p::log::setLoggingSystem(logging_system);

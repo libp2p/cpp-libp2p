@@ -14,3 +14,9 @@
 #     SHA1 1234567890abcdef1234567890abcdef12345678
 #     CMAKE_ARGS "CMAKE_VARIABLE=value"
 # )
+
+hunter_config(soralog
+    URL  https://github.com/xDimon/soralog/archive/b5a61025530a886abd6869f97d42351e98618c9e.tar.gz
+    SHA1 f6e1e60ec386d92adde8814815a62f11907a8414
+    CMAKE_ARGS TESTING=OFF EXAMPLES=OFF
+    )
