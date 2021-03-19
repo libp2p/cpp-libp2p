@@ -9,6 +9,7 @@
 #include <soralog/level.hpp>
 #include <soralog/logger.hpp>
 #include <soralog/logging_system.hpp>
+#include <soralog/macro.hpp>
 
 namespace libp2p::log {
 

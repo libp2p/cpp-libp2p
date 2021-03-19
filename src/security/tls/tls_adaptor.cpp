@@ -87,10 +87,10 @@ namespace libp2p::security {
     bool is_client = conn->isInitiator();
 
     if (is_client) {
-      log()->debug("securing outbound connection");
+      SL_DEBUG(log(), "securing outbound connection");
       assert(remote_peer.has_value());
     } else {
-      log()->debug("securing inbound connection");
+      SL_DEBUG(log(), "securing inbound connection");
     }
 
     std::error_code ec;

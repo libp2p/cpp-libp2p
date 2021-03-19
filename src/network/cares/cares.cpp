@@ -73,7 +73,7 @@ namespace libp2p::network::c_ares {
     bool first_init = initialized_.compare_exchange_strong(expected, true);
     if (not first_init) {
       // atomic change failed, thus it was already initialized
-      log()->debug("C-ares library got initialized more than once");
+      SL_DEBUG(log(), "C-ares library got initialized more than once");
     } else if (auto status = ::ares_library_init(ARES_LIB_INIT_ALL);
                ARES_SUCCESS != status) {
       log()->error("Unable to initialize c-ares library - {}",
@@ -97,7 +97,8 @@ namespace libp2p::network::c_ares {
       const std::weak_ptr<boost::asio::io_context> &io_context,
       Ares::TxtCallback callback) {
     if (not initialized_.load()) {
-      log()->debug(
+      SL_DEBUG(
+          log(),
           "Unable to execute DNS TXT request to {} due to c-ares library is "
           "not initialized",
           uri);
@@ -110,8 +111,9 @@ namespace libp2p::network::c_ares {
     options.timeout = 30'000;
     status = ares_init_options(&channel, &options, ARES_OPT_TIMEOUTMS);
     if (ARES_SUCCESS != status) {
-      log()->debug("Unable to initialize c-ares channel for request to {} - {}",
-                   uri, ::ares_strerror(status));
+      SL_DEBUG(log(),
+               "Unable to initialize c-ares channel for request to {} - {}",
+               uri, ::ares_strerror(status));
       reportError(io_context, std::move(callback), Error::CHANNEL_INIT_FAILURE);
       return;
     }
@@ -141,7 +143,7 @@ namespace libp2p::network::c_ares {
       ctx->post([callback{std::move(callback)}, error] { callback(error); });
       return;
     }
-    log()->debug("IO context has expired");
+    SL_DEBUG(log(), "IO context has expired");
   }
 
   void Ares::txtCallback(void *arg, int status, int, unsigned char *abuf,
@@ -177,7 +179,7 @@ namespace libp2p::network::c_ares {
       ctx->post([callback{std::move(request_ptr->callback)},
                  reply{std::move(result)}] { callback(reply); });
     } else {
-      log()->debug("IO context has expired");
+      SL_DEBUG(log(), "IO context has expired");
     }
     removeRequest(request_ptr);
   }

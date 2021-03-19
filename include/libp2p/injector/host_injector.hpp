@@ -50,16 +50,16 @@ groups:
           - name: echo
           - name: identify
           - name: kademlia
-            level: trace
       - name: storage
         children:
           - name: sqlite
       - name: utils
         children:
-          - name: debug
           - name: ares
           - name: tls
           - name: listener_manager
+          - name: libp2p_debug
+            level: trace
 # --------------- End of libp2p config ---------------)");
 
       return *instance;
