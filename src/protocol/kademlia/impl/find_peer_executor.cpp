@@ -30,7 +30,7 @@ namespace libp2p::protocol::kademlia {
         sought_peer_id_(std::move(sought_peer_id)),
         target_(sought_peer_id_),
         handler_(std::move(handler)),
-        log_("kad", "FindPeerExecutor", ++instance_number) {
+        log_("KademliaExecutor", "kademlia", "FindPeer", ++instance_number) {
     auto nearest_peer_ids = peer_routing_table->getNearestPeers(
         target_, config_.closerPeerCount * 2);
 
@@ -193,7 +193,7 @@ namespace libp2p::protocol::kademlia {
       --requests_in_progress_;
 
       log_.debug("write to {} failed; active {}, in queue {}", addr,
-                requests_in_progress_, queue_.size());
+                 requests_in_progress_, queue_.size());
 
       spawn();
       return;

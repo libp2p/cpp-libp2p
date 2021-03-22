@@ -11,6 +11,7 @@
 #include "mock/libp2p/muxer/muxer_adaptor_mock.hpp"
 #include "mock/libp2p/security/security_adaptor_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
 using namespace network;
@@ -26,6 +27,8 @@ using ::testing::Return;
  * @then test compiles
  */
 TEST(NetworkBuilder, DefaultBuilds) {
+  testutil::prepareLoggers();
+
   auto injector = makeNetworkInjector();
   auto nw = injector.create<std::shared_ptr<Network> >();
   ASSERT_NE(nw, nullptr);
@@ -40,6 +43,8 @@ TEST(NetworkBuilder, DefaultBuilds) {
  * @then keypair is applied, network is created
  */
 TEST(NetworkBuilder, CustomKeyPairBuilds) {
+  testutil::prepareLoggers();
+
   KeyPair keyPair{
       {{Key::Type::Ed25519, {1}}},
       {{Key::Type::Ed25519, {2}}},
@@ -63,6 +68,8 @@ TEST(NetworkBuilder, CustomKeyPairBuilds) {
  * @then correct number of instances created
  */
 TEST(NetworkBuilder, CustomAdaptorsBuilds) {
+  testutil::prepareLoggers();
+
   // clang-format off
   using namespace boost;
 

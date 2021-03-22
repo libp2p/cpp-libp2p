@@ -6,7 +6,7 @@
 #ifndef LIBP2P_ECHO_IMPL_HPP
 #define LIBP2P_ECHO_IMPL_HPP
 
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/peer/protocol.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
 #include <libp2p/protocol/echo/client_echo_session.hpp>
@@ -36,7 +36,7 @@ namespace libp2p::protocol {
 
    private:
     EchoConfig config_;
-    common::Logger log_ = common::createLogger("echo");
+    log::Logger log_ = log::createLogger("Echo", "echo");
   };
 
 }  // namespace libp2p::protocol

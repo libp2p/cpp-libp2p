@@ -11,6 +11,7 @@
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/outcome.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
 using namespace protocol;
@@ -24,6 +25,8 @@ using ::testing::ReturnRef;
 
 struct PeerRoutingTableTest : public ::testing::Test {
   void SetUp() override {
+    testutil::prepareLoggers();
+
     config_ = std::make_unique<Config>();
 
     idmgr_ = std::make_shared<IdentityManagerMock>();
@@ -54,9 +57,8 @@ TEST_F(PeerRoutingTableTest, BusWorks) {
 
   std::unordered_set<PeerId> peerset;
 
-  auto addHandle = addCh.subscribe([&](const PeerId &pid) {
-    peerset.insert(pid);
-  });
+  auto addHandle =
+      addCh.subscribe([&](const PeerId &pid) { peerset.insert(pid); });
 
   auto removeHandle = remCh.subscribe([&](const PeerId &pid) {
     auto it = peerset.find(pid);
@@ -163,10 +165,10 @@ TEST_F(PeerRoutingTableTest, Update) {
  * https://sourcegraph.com/github.com/libp2p/go-libp2p-kbucket@HEAD/-/blob/table_test.go#L121:1
  */
 TEST_F(PeerRoutingTableTest, Find) {
-	config_->maxBucketSize = 10;
+  config_->maxBucketSize = 10;
   srand(0);  // to make test deterministic
 
-	const auto nPeers = 5;
+  const auto nPeers = 5;
 
   std::vector<PeerId> peers;
   std::generate_n(std::back_inserter(peers), nPeers, testutil::randomPeerId);

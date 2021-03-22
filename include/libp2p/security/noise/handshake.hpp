@@ -6,11 +6,11 @@
 #ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_HPP
 #define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_HPP
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/crypto/x25519_provider.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
@@ -80,7 +80,7 @@ namespace libp2p::security::noise {
     boost::optional<peer::PeerId> remote_peer_id_;
     boost::optional<crypto::PublicKey> remote_peer_pubkey_;
 
-    common::Logger log_ = common::createLogger("NoiseHandshake");
+    log::Logger log_ = log::createLogger("NoiseHandshake", "noise");
   };
 
 }  // namespace libp2p::security::noise

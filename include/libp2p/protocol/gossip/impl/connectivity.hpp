@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 #include <libp2p/host/host.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
+#include <libp2p/log/sublogger.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/gossip/impl/peer_set.hpp>
 #include <libp2p/protocol/gossip/impl/stream_reader.hpp>
@@ -127,7 +127,7 @@ namespace libp2p::protocol::gossip {
     PeerSet writable_peers_on_heartbeat_;
 
     /// Logger
-    SubLogger log_;
+    log::SubLogger log_;
   };
 
 }  // namespace libp2p::protocol::gossip

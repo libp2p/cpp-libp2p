@@ -8,7 +8,7 @@
 
 #include <deque>
 
-#include <libp2p/protocol/common/sublogger.hpp>
+#include <libp2p/log/sublogger.hpp>
 #include <libp2p/protocol/gossip/impl/peer_set.hpp>
 
 namespace libp2p::protocol::gossip {
@@ -21,7 +21,7 @@ namespace libp2p::protocol::gossip {
     /// Ctor. Dependencies are passed by ref because this object is a part of
     /// RemoteSubscriptions and lives only within its scope
     TopicSubscriptions(TopicId topic, const Config &config,
-                       Connectivity &connectivity, SubLogger &log);
+                       Connectivity &connectivity, log::SubLogger &log);
 
     /// Returns true if no peers subscribed and not self-subscribed and
     /// no fanout period at the moment (empty item may be erased)
@@ -76,7 +76,7 @@ namespace libp2p::protocol::gossip {
     /// "I have" notifications for new subscribers aka seen messages cache
     std::deque<std::pair<Time, MessageId>> seen_cache_;
 
-    SubLogger &log_;
+    log::SubLogger &log_;
   };
 
 }  // namespace libp2p::protocol::gossip

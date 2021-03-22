@@ -7,9 +7,9 @@
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
-#include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/common_functions.hpp>
 #include "testutil/outcome.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using libp2p::crypto::chachapoly::ChaCha20Poly1305Impl;
 using libp2p::crypto::chachapoly::Key;
@@ -23,6 +23,10 @@ using libp2p::common::operator""_unhex;
  */
 class ChaChaPolyTest : public testing::Test {
  public:
+  void SetUp() override {
+    testutil::prepareLoggers();
+  }
+
   using Bytes = std::vector<uint8_t>;
   Key key = asArray<Key>(
       "f3dac58738ce057d3140d68d2b3e651c00ff9dbb2ca0f913be50219dd36f23c6"_unhex);

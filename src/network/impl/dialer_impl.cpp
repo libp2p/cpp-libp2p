@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/stream.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
 
 #define TRACE_ENABLED 0

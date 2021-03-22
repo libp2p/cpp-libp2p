@@ -15,7 +15,7 @@ namespace libp2p::protocol::example::utility {
   /// Creates loggers "gossip", "debug", "gossip-example"
   /// returns "gossip-example" logger
   /// log level: 'd' for debug, 'i' for info, 'w' for warning, 'e' for error
-  libp2p::common::Logger setupLoggers(char level);
+  void setupLoggers(char level);
 
   /// Helper bytes->string
   std::string toString(const std::vector<uint8_t> &buf);

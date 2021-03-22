@@ -14,6 +14,8 @@
 #define TRACE_ENABLED 1
 #include <libp2p/common/trace.hpp>
 
+#include "testutil/prepare_loggers.hpp"
+
 namespace libp2p::regression {
 
   enum WhatStream { ANY_STREAM, ACCEPTED_STREAM, CONNECTED_STREAM };
@@ -283,7 +285,7 @@ namespace libp2p::regression {
 // TEST(StreamsRegression, StreamsGetNotifiedAboutEOF) {
 template <typename... InjectorArgs>
 void testStreamsGetNotifiedAboutEOF(InjectorArgs &&... args) {
-  using namespace libp2p::regression; //NOLINT
+  using namespace libp2p::regression;  // NOLINT
 
   constexpr size_t kServerId = 0;
   constexpr size_t kClientId = 1;
@@ -359,13 +361,15 @@ void testStreamsGetNotifiedAboutEOF(InjectorArgs &&... args) {
   EXPECT_TRUE(client_read);
   EXPECT_TRUE(eof_passed);
 
-  if (server) server->stop();
-  if (client) client->stop();
+  if (server)
+    server->stop();
+  if (client)
+    client->stop();
 }
 
 template <typename... InjectorArgs>
 void testOutboundConnectionAcceptsStreams(InjectorArgs &&... args) {
-  using namespace libp2p::regression; //NOLINT
+  using namespace libp2p::regression;  // NOLINT
 
   constexpr size_t kServerId = 0;
   constexpr size_t kClientId = 1;
@@ -452,8 +456,10 @@ void testOutboundConnectionAcceptsStreams(InjectorArgs &&... args) {
   EXPECT_TRUE(client_read_from_accepted_stream);
   EXPECT_TRUE(server_read_from_connected_stream);
 
-  if (server) server->stop();
-  if (client) client->stop();
+  if (server)
+    server->stop();
+  if (client)
+    client->stop();
 }
 
 TEST(StreamsRegression, YamuxStreamsGetNotifiedAboutEOF) {
@@ -497,9 +503,9 @@ TEST(StreamsRegression, YamuxTLSStreamsGetNotifiedAboutEOF) {
 int main(int argc, char *argv[]) {
   if (std::getenv("TRACE_DEBUG") != nullptr
       || (argc > 1 && std::string("trace") == argv[1])) {
-    spdlog::set_level(spdlog::level::trace);
+    testutil::prepareLoggers(soralog::Level::TRACE);
   } else {
-    spdlog::set_level(spdlog::level::info);
+    testutil::prepareLoggers(soralog::Level::INFO);
   }
 
   ::testing::InitGoogleTest(&argc, argv);

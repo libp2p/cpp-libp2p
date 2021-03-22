@@ -9,7 +9,6 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/connection/stream.hpp>
-#include <libp2p/muxer/yamux.hpp>
 #include <libp2p/security/plaintext.hpp>
 #include <libp2p/transport/tcp.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
@@ -17,6 +16,7 @@
 #include "testutil/gmock_actions.hpp"
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/outcome.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p::connection;
 using namespace libp2p::transport;
@@ -75,6 +75,8 @@ struct ServerStream : std::enable_shared_from_this<ServerStream> {
  * @then the 'PONG' message is received by the client
  */
 TEST(YamuxAcceptanceTest, PingPong) {
+  testutil::prepareLoggers();
+
   auto ma = "/ip4/127.0.0.1/tcp/40009"_multiaddr;
   auto stream_read = false, stream_wrote = false;
   auto context = std::make_shared<boost::asio::io_context>(1);

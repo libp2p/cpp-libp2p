@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_id.hpp>
 

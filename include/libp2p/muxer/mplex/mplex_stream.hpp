@@ -11,8 +11,8 @@
 
 #include <boost/asio/streambuf.hpp>
 #include <boost/noncopyable.hpp>
-#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/stream.hpp>
+#include <libp2p/log/logger.hpp>
 
 namespace libp2p::connection {
   class MplexedConnection;
@@ -105,7 +105,7 @@ namespace libp2p::connection {
 
     std::weak_ptr<MplexedConnection> connection_;
     StreamId stream_id_;
-    common::Logger log_ = common::createLogger("MplexStream");
+    log::Logger log_ = log::createLogger("MplexStream", "mplex");
 
     /// data, received for this stream, comes here
     boost::asio::streambuf read_buffer_;

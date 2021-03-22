@@ -17,7 +17,7 @@
 
 #include <libp2p/common/types.hpp>
 #include <libp2p/host/host.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
+#include <libp2p/log/sublogger.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/peer_id_with_distance.hpp>
@@ -68,7 +68,7 @@ namespace libp2p::protocol::kademlia {
     bool started_ = false;
     bool done_ = false;
 
-    SubLogger log_;
+    log::SubLogger log_;
   };
 
 }  // namespace libp2p::protocol::kademlia

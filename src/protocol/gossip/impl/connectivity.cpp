@@ -36,10 +36,8 @@ namespace libp2p::protocol::gossip {
         host_(std::move(host)),
         msg_receiver_(std::move(msg_receiver)),
         connected_cb_(std::move(on_connected)),
-        log_("gossip") {
-    log_.setInstanceName("Connectivity",
-                         host_->getPeerInfo().id.toBase58().substr(46));
-  }
+        log_("gossip", "Connectivity",
+             host_->getPeerInfo().id.toBase58().substr(46)) {}
 
   Connectivity::~Connectivity() {
     stop();
@@ -187,10 +185,10 @@ namespace libp2p::protocol::gossip {
 
     } else {
       ctx = std::move(ctx_found.value());
-            if (!ctx->writer && !connecting_peers_.contains(ctx->peer_id)) {
-              // not connected or connecting
-              dial(ctx, true);
-            }
+      if (!ctx->writer && !connecting_peers_.contains(ctx->peer_id)) {
+        // not connected or connecting
+        dial(ctx, true);
+      }
     }
 
     // currently we prefer newer streams, but avoid duplicate ones,

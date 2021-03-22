@@ -9,7 +9,6 @@
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/multi/multiaddress.hpp>
-#include <libp2p/muxer/yamux.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 #include <libp2p/muxer/yamux/yamux_stream.hpp>
 #include <libp2p/transport/tcp.hpp>
@@ -19,6 +18,7 @@
 #include "testutil/gmock_actions.hpp"
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/outcome.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p::connection;
 using namespace libp2p::transport;
@@ -30,6 +30,8 @@ using ::testing::_;
 class YamuxIntegrationTest : public testing::Test {
  public:
   void SetUp() override {
+    testutil::prepareLoggers();
+
     context_ = std::make_shared<boost::asio::io_context>();
     transport_ = std::make_shared<TcpTransport>(context_, upgrader);
     ASSERT_TRUE(transport_) << "cannot create transport";

@@ -8,6 +8,7 @@
 
 #include <bitset>
 #include <cstring>
+#include <climits>
 #include <gsl/span>
 #include <memory>
 #include <vector>

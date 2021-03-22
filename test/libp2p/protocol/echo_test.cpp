@@ -9,6 +9,7 @@
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/outcome.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
 using namespace protocol;
@@ -42,6 +43,8 @@ ACTION_P(WriteMsgAssertEqual, msg) {
  * @then server writes back the same string
  */
 TEST(EchoTest, Server) {
+  testutil::prepareLoggers();
+
   Echo echo;
   auto stream = std::make_shared<connection::StreamMock>();
   auto msg = "hello"s;

@@ -39,9 +39,9 @@ namespace libp2p::security::tls_details {
 
   }  // namespace
 
-  spdlog::logger &log() {
-    static common::Logger logger = common::createLogger("tls");
-    return *logger;
+  log::Logger log() {
+    static log::Logger logger = log::createLogger("TLS", "tls");
+    return logger;
   }
 
   static const char *x509ErrorToStr(int error);
@@ -68,7 +68,7 @@ namespace libp2p::security::tls_details {
     X509_NAME_oneline(X509_get_subject_name(cert), subject_name.data(),
                       subject_name.size());
 
-    log().log(status ? spdlog::level::trace : spdlog::level::info,
+    log()->log(status ? log::Level::TRACE : log::Level::INFO,
               "in certificate verify callback, subject={}, error={} ({}), "
               "depth={}, status={}",
               subject_name.data(), x509ErrorToStr(error), error, depth, status);
@@ -314,7 +314,7 @@ namespace libp2p::security::tls_details {
 
       int index = X509_get_ext_by_OBJ(peer_certificate, obj, -1);
       if (index < 0) {
-        log().info("cannot find libp2p certificate extension");
+        log()->info("cannot find libp2p certificate extension");
         return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
       }
 
@@ -328,7 +328,7 @@ namespace libp2p::security::tls_details {
           gsl::span<const uint8_t>(os->data,
                                    os->data + os->length));  // NOLINT
       if (!ks_binary) {
-        log().info("cannot unmarshal libp2p certificate extension");
+        log()->info("cannot unmarshal libp2p certificate extension");
         return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
       }
 
@@ -361,13 +361,13 @@ namespace libp2p::security::tls_details {
           signature, ed25519pkey);
 
       if (!verify_res) {
-        log().info("peer {} verification failed, {}", peer_id.toBase58(),
+        log()->info("peer {} verification failed, {}", peer_id.toBase58(),
                    verify_res.error().message());
         return TlsError::TLS_PEER_VERIFY_FAILED;
       }
 
       if (!verify_res.value()) {
-        log().info("peer {} verification failed", peer_id.toBase58());
+        log()->info("peer {} verification failed", peer_id.toBase58());
         return TlsError::TLS_PEER_VERIFY_FAILED;
       }
 
@@ -379,7 +379,6 @@ namespace libp2p::security::tls_details {
   outcome::result<PubkeyAndPeerId> verifyPeerAndExtractIdentity(
       X509 *peer_certificate,
       const crypto::marshaller::KeyMarshaller &key_marshaller) {
-
     // 1. Extract fields from cert extension
     OUTCOME_TRY(bin_fields, extractExtensionFields(peer_certificate));
 
@@ -388,18 +387,18 @@ namespace libp2p::security::tls_details {
 
     auto peer_id_res = peer::PeerId::fromPublicKey(pub_key_bytes);
     if (!peer_id_res) {
-      log().info("cannot unmarshal remote peer id");
+      log()->info("cannot unmarshal remote peer id");
       return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
     }
 
     auto peer_pubkey_res = key_marshaller.unmarshalPublicKey(pub_key_bytes);
     if (!peer_pubkey_res) {
-      log().info("cannot unmarshal remote public key");
+      log()->info("cannot unmarshal remote public key");
       return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
     }
 
     if (peer_pubkey_res.value().type != crypto::Key::Type::Ed25519) {
-      log().info("remote peer's public key wrong type");
+      log()->info("remote peer's public key wrong type");
       return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
     }
 

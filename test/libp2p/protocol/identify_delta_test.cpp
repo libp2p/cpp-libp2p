@@ -16,6 +16,7 @@
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
 #include "testutil/gmock_actions.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
 using namespace peer;
@@ -35,6 +36,10 @@ using testing::ReturnRef;
 class IdentifyDeltaTest : public testing::Test {
  public:
   void SetUp() override {
+    testutil::prepareLoggers();
+
+    id_delta_ = std::make_shared<IdentifyDelta>(host_, conn_manager_, bus_);
+
     for (const auto &proto : added_protos_) {
       msg_added_protos_.mutable_delta()->add_added_protocols(proto);
       msg_added_rm_protos_.mutable_delta()->add_added_protocols(proto);
@@ -43,8 +48,7 @@ class IdentifyDeltaTest : public testing::Test {
       msg_added_rm_protos_.mutable_delta()->add_rm_protocols(proto);
     }
 
-    added_proto_len_ =
-        UVarint{msg_added_protos_.ByteSizeLong()};
+    added_proto_len_ = UVarint{msg_added_protos_.ByteSizeLong()};
     msg_added_protos_bytes_.insert(msg_added_protos_bytes_.end(),
                                    added_proto_len_.toVector().begin(),
                                    added_proto_len_.toVector().end());
@@ -54,8 +58,7 @@ class IdentifyDeltaTest : public testing::Test {
         msg_added_protos_bytes_.data() + added_proto_len_.size(),
         msg_added_protos_.ByteSizeLong());
 
-    added_rm_proto_len_ =
-        UVarint{msg_added_rm_protos_.ByteSizeLong()};
+    added_rm_proto_len_ = UVarint{msg_added_rm_protos_.ByteSizeLong()};
     msg_added_rm_protos_bytes_.insert(msg_added_rm_protos_bytes_.end(),
                                       added_rm_proto_len_.toVector().begin(),
                                       added_rm_proto_len_.toVector().end());
@@ -69,8 +72,7 @@ class IdentifyDeltaTest : public testing::Test {
   HostMock host_;
   libp2p::event::Bus bus_;
 
-  std::shared_ptr<IdentifyDelta> id_delta_ =
-      std::make_shared<IdentifyDelta>(host_, conn_manager_, bus_);
+  std::shared_ptr<IdentifyDelta> id_delta_;
 
   std::vector<peer::Protocol> added_protos_{"/ping/1.0.0", "/ping/1.5.0"};
   std::vector<peer::Protocol> removed_protos_{"/http/5.2.8"};

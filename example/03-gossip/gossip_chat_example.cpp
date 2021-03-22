@@ -5,10 +5,11 @@
 
 #include <iostream>
 
-#include <spdlog/fmt/fmt.h>
+#include <fmt/format.h>
 #include <boost/program_options.hpp>
 
 #include <libp2p/injector/gossip_injector.hpp>
+#include <libp2p/log/configurator.hpp>
 
 #include "console_async_reader.hpp"
 #include "utility.hpp"
@@ -31,6 +32,21 @@ namespace {
 
   // parses command line, returns non-empty Options on success
   boost::optional<Options> parseCommandLine(int argc, char **argv);
+
+  const std::string logger_config(R"(
+# ----------------
+sinks:
+  - name: console
+    type: console
+    color: true
+groups:
+  - name: main
+    sink: console
+    level: info
+    children
+      - name: libp2p
+# ----------------
+  )");
 }  // namespace
 
 int main(int argc, char *argv[]) {
@@ -41,7 +57,23 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  utility::setupLoggers(options->log_level);
+  // prepare log system
+  auto logging_system = std::make_shared<soralog::LoggingSystem>(
+      std::make_shared<libp2p::log::Configurator>(logger_config));
+  auto r = logging_system->configure();
+  if (not r.message.empty()) {
+    (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
+  }
+  if (r.has_error) {
+    exit(EXIT_FAILURE);
+  }
+
+  libp2p::log::setLoggingSystem(logging_system);
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
+  } else {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::ERROR);
+  }
 
   // overriding default config to see local messages as well (echo mode)
   libp2p::protocol::gossip::Config config;
@@ -50,6 +82,8 @@ int main(int argc, char *argv[]) {
   // injector creates and ties dependent objects
   auto injector = libp2p::injector::makeGossipInjector(
       libp2p::injector::useGossipConfig(config));
+
+  utility::setupLoggers(options->log_level);
 
   // create asio context
   auto io = injector.create<std::shared_ptr<boost::asio::io_context>>();
