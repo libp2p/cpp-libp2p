@@ -156,7 +156,7 @@ void handleOutgoingStream(
 }
 
 namespace {
-  std::string logger_config(R"(
+  const std::string logger_config(R"(
 # ----------------
 sinks:
   - name: console

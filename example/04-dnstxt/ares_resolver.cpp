@@ -13,7 +13,7 @@
 #include <libp2p/outcome/outcome.hpp>
 
 namespace {
-  std::string logger_config(R"(
+  const std::string logger_config(R"(
 # ----------------
 sinks:
   - name: console

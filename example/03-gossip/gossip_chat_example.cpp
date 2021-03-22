@@ -33,7 +33,7 @@ namespace {
   // parses command line, returns non-empty Options on success
   boost::optional<Options> parseCommandLine(int argc, char **argv);
 
-  std::string logger_config(R"(
+  const std::string logger_config(R"(
 # ----------------
 sinks:
   - name: console

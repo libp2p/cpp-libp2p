@@ -15,7 +15,7 @@
 #include <libp2p/protocol/echo.hpp>
 
 namespace {
-  std::string logger_config(R"(
+  const std::string logger_config(R"(
 # ----------------
 sinks:
   - name: console
