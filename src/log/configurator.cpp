@@ -8,7 +8,7 @@
 namespace libp2p::log {
 
   namespace {
-    std::string embedded_config(R"(
+    const std::string embedded_config(R"(
 # This is libp2p configuration part of logging system
 # ------------- Begin of libp2p config --------------
 groups:
