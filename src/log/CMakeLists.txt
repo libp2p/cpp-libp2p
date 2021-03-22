@@ -5,6 +5,7 @@
 
 libp2p_add_library(p2p_logger
     logger.cpp
+    configurator.cpp
     )
 target_link_libraries(p2p_logger
     soralog::soralog

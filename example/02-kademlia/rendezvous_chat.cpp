@@ -9,7 +9,6 @@
 #include <vector>
 
 #include <boost/beast.hpp>
-#include <soralog/impl/configurator_from_yaml.hpp>
 
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/injector/kademlia_injector.hpp>
@@ -157,20 +156,7 @@ void handleOutgoingStream(
 }
 
 namespace {
-  template <typename Injector>
-  std::shared_ptr<soralog::Configurator> get_logging_system_configurator(
-      Injector &injector) {
-    static boost::optional<std::shared_ptr<soralog::ConfiguratorFromYAML>>
-        instance;
-    if (instance.has_value()) {
-      return *instance;
-    }
-
-    auto libp2p_log_cfg =
-        injector.template create<std::shared_ptr<libp2p::log::Configurator>>();
-
-    instance = std::make_shared<soralog::ConfiguratorFromYAML>(
-        std::move(libp2p_log_cfg), std::string(R"(
+  std::string logger_config(R"(
 # ----------------
 sinks:
   - name: console
@@ -183,13 +169,28 @@ groups:
     children:
       - name: libp2p
 # ----------------
-  )"));
-
-    return *instance;
-  }
+  )");
 }  // namespace
 
 int main(int argc, char *argv[]) {
+  // prepare log system
+  auto logging_system = std::make_shared<soralog::LoggingSystem>(
+      std::make_shared<libp2p::log::Configurator>(logger_config));
+  auto r = logging_system->configure();
+  if (not r.message.empty()) {
+    (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
+  }
+  if (r.has_error) {
+    exit(EXIT_FAILURE);
+  }
+
+  libp2p::log::setLoggingSystem(logging_system);
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
+  } else {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::ERROR);
+  }
+
   // resulting PeerId should be
   // 12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV
   libp2p::crypto::KeyPair kp = {
@@ -214,24 +215,6 @@ int main(int argc, char *argv[]) {
       // libp2p::injector::useKeyPair(kp), // Use predefined keypair
       libp2p::injector::makeKademliaInjector(
           libp2p::injector::useKademliaConfig(kademlia_config)));
-
-  // prepare log system
-  auto logging_system = std::make_shared<soralog::LoggingSystem>(
-      get_logging_system_configurator(injector));
-  auto r = logging_system->configure();
-  if (not r.message.empty()) {
-    (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
-  }
-  if (r.has_error) {
-    exit(EXIT_FAILURE);
-  }
-
-  libp2p::log::setLoggingSystem(logging_system);
-  if (std::getenv("TRACE_DEBUG") != nullptr) {
-    libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
-  } else {
-    libp2p::log::setLevelOfGroup("*", soralog::Level::ERROR);
-  }
 
   try {
     if (argc < 1) {

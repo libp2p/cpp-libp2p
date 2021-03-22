@@ -10,24 +10,12 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
+#include <libp2p/log/configurator.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/protocol/echo.hpp>
 
 namespace {
-  template <typename Injector>
-  std::shared_ptr<soralog::Configurator> get_logging_system_configurator(
-      Injector &injector) {
-    static boost::optional<std::shared_ptr<soralog::ConfiguratorFromYAML>>
-        instance;
-    if (instance.has_value()) {
-      return *instance;
-    }
-
-    auto libp2p_log_cfg =
-        injector.template create<std::shared_ptr<libp2p::log::Configurator>>();
-
-    instance = std::make_shared<soralog::ConfiguratorFromYAML>(
-        std::move(libp2p_log_cfg), std::string(R"(
+  std::string logger_config(R"(
 # ----------------
 sinks:
   - name: console
@@ -40,10 +28,7 @@ groups:
     children
       - name: libp2p
 # ----------------
-  )"));
-
-    return *instance;
-  }
+  )");
 }  // namespace
 
 int main(int argc, char *argv[]) {
@@ -58,16 +43,9 @@ int main(int argc, char *argv[]) {
     std::exit(EXIT_FAILURE);
   }
 
-  // create Echo protocol object - it implement the logic of both server and
-  // client, but in this example it's used as a client-only
-  libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{1}};
-
-  // create a default Host via an injector
-  auto injector = libp2p::injector::makeHostInjector();
-
   // prepare log system
   auto logging_system = std::make_shared<soralog::LoggingSystem>(
-      get_logging_system_configurator(injector));
+      std::make_shared<libp2p::log::Configurator>(logger_config));
   auto r = logging_system->configure();
   if (not r.message.empty()) {
     (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
@@ -82,6 +60,13 @@ int main(int argc, char *argv[]) {
   } else {
     libp2p::log::setLevelOfGroup("*", soralog::Level::ERROR);
   }
+
+  // create Echo protocol object - it implement the logic of both server and
+  // client, but in this example it's used as a client-only
+  libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{1}};
+
+  // create a default Host via an injector
+  auto injector = libp2p::injector::makeHostInjector();
 
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
 

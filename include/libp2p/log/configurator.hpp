@@ -12,8 +12,9 @@ namespace libp2p::log {
 
   class Configurator : public soralog::ConfiguratorFromYAML {
    public:
-    explicit Configurator(std::string config)
-        : ConfiguratorFromYAML(std::move(config)) {}
+    Configurator();
+
+    explicit Configurator(std::string config);
   };
 
 }  // namespace libp2p::log
