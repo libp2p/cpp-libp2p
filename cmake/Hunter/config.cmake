@@ -15,8 +15,8 @@
 #     CMAKE_ARGS "CMAKE_VARIABLE=value"
 # )
 
-hunter_config(soralog
-    URL  https://github.com/soramitsu/soralog/archive/bbf24c5f53ef19ec8cbf86d2f334c2724148b11e.tar.gz
-    SHA1 caa230cb62c7946840f8b1c1c4675f226ed483fb
-    CMAKE_ARGS TESTING=OFF EXAMPLES=OFF
-    )
+#hunter_config(soralog
+#    URL  https://github.com/soramitsu/soralog/archive/v0.0.2.tar.gz
+#    SHA1 8c215833d10e62afe080ba990cc8f6410cd23c2f
+#    CMAKE_ARGS TESTING=OFF EXAMPLES=OFF
+#    )
