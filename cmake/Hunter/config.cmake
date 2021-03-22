@@ -16,7 +16,7 @@
 # )
 
 hunter_config(soralog
-    URL  https://github.com/soramitsu/soralog/archive/df6f92d7104006995524ad18cbcca29f48c055ba.tar.gz
-    SHA1 cced7c030fd4629acf3c4f53ee5add1e401335e2
+    URL  https://github.com/soramitsu/soralog/archive/bbf24c5f53ef19ec8cbf86d2f334c2724148b11e.tar.gz
+    SHA1 caa230cb62c7946840f8b1c1c4675f226ed483fb
     CMAKE_ARGS TESTING=OFF EXAMPLES=OFF
     )
