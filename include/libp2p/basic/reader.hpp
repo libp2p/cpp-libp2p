@@ -53,13 +53,11 @@ namespace libp2p::basic {
     /**
      * @brief Defers reporting result or error to callback to avoid reentrancy
      * (i.e. callback will not be called before initiator function returns)
-     * @param ec error code
+     * @param res read result
      * @param cb callback
-     *
-     * @note if (!ec) then this function does nothing
      */
     virtual void deferReadCallback(outcome::result<size_t> res,
-                                ReadCallbackFunc cb) = 0;
+                                   ReadCallbackFunc cb) = 0;
   };
 
 }  // namespace libp2p::basic

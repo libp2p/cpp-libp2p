@@ -55,11 +55,13 @@ namespace libp2p::protocol {
       return stop();
     }
 
-    if (rread.value() < 120) {
-      log_->info("read message: {}",
+    static constexpr size_t kMsgSizeThreshold = 120;
+
+    if (rread.value() < kMsgSizeThreshold) {
+      log_->debug("read message: {}",
                  std::string{buf_.begin(), buf_.begin() + rread.value()});
     } else {
-      log_->info("read {} bytes", rread.value());
+      log_->debug("read {} bytes", rread.value());
     }
     this->doWrite(rread.value());
     doRead();

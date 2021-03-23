@@ -142,7 +142,6 @@ namespace libp2p::transport {
 
     friend class security::TlsAdaptor;
 
-    // TODO (artem) make RawConnection::id()->string or so
     std::string debug_str_;
   };
 }  // namespace libp2p::transport

@@ -35,7 +35,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, YamuxError, e) {
     case E::STREAM_RESET_BY_PEER:
       return "Yamux: stream reset by peer";
     case E::INVALID_WINDOW_SIZE:
-      return "Yamux: invalid windoe size";
+      return "Yamux: invalid window size";
     case E::RECEIVE_WINDOW_OVERFLOW:
       return "Yamux: receive window overflow";
     case E::CONNECTION_CLOSED_BY_HOST:

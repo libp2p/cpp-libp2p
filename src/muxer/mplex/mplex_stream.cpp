@@ -175,7 +175,7 @@ namespace libp2p::connection {
   void MplexStream::deferReadCallback(outcome::result<size_t> res,
                                       ReadCallbackFunc cb) {
     if (connection_.expired()) {
-      // TODO(107)
+      // TODO(107) Reentrancy here, defer callback
       return cb(Error::CONNECTION_IS_DEAD);
     }
     connection_.lock()->deferReadCallback(res, std::move(cb));
@@ -184,7 +184,7 @@ namespace libp2p::connection {
   void MplexStream::deferWriteCallback(std::error_code ec,
                                        WriteCallbackFunc cb) {
     if (connection_.expired()) {
-      // TODO(107)
+      // TODO(107) Reentrancy here, defer callback
       return cb(Error::CONNECTION_IS_DEAD);
     }
     connection_.lock()->deferWriteCallback(ec, std::move(cb));

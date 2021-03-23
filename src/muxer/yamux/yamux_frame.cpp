@@ -83,7 +83,7 @@ namespace libp2p::connection {
 
   YamuxFrame::ByteArray dataMsg(YamuxFrame::StreamId stream_id,
                                 uint32_t data_length, bool reserve_space) {
-    TRACE("yamux dataMsg, stream_id={}, size={}", stream_id, data.size());
+    TRACE("yamux dataMsg, stream_id={}, size={}", stream_id, data_length);
     return YamuxFrame::frameBytes(
         YamuxFrame::kDefaultVersion, YamuxFrame::FrameType::DATA,
         YamuxFrame::Flag::NONE, stream_id, data_length, reserve_space);

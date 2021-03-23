@@ -158,13 +158,15 @@ namespace libp2p::protocol::gossip {
     auto peer_res = stream->remotePeerId();
     if (!peer_res) {
       log_.info("ignoring dead stream: {}", peer_res.error().message());
-    } else {
-      log_.debug("new {}bound stream, address={}, peer_id={}",
+      return;
+    }
+
+    auto &peer_id = peer_res.value();
+
+    log_.debug("new {}bound stream, address={}, peer_id={}",
                  is_outbound ? "out" : "in",
                  stream->remoteMultiaddr().value().getStringAddress(),
-                 peer_res.value().toBase58());
-    }
-    auto &peer_id = peer_res.value();
+                 peer_id.toBase58());
 
     PeerContextPtr ctx;
 

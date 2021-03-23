@@ -89,13 +89,14 @@ namespace libp2p::protocol_muxer {
      */
     void read(size_t n,
               std::function<void(const outcome::result<void> &)> handler) {
-      //      if (n == 0) {
-      //        return;
-      //      }
+      if (n == 0) {
+        log().error("read with zero n");
+        return handler(MultiselectError::INTERNAL_ERROR);
+      }
 
       // if there are already enough bytes in our buffer, return them
       if (read_buffer->size() >= n) {
-        // TODO(107): Reentrancy
+        // TODO(107): Reentrancy to be avoided
         return handler(outcome::success());
       }
 

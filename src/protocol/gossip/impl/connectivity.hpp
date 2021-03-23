@@ -92,7 +92,7 @@ namespace libp2p::protocol::gossip {
     /// Unbans peer
     void unban(BannedPeers::iterator it);
 
-    /// Flushes outging messages into wire for a given peer, if connected
+    /// Flushes outgoing messages into wire for a given peer, if connected
     void flush(const PeerContextPtr &ctx) const;
 
     const Config config_;

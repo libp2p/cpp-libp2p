@@ -72,7 +72,7 @@ namespace libp2p::connection {
 
   void YamuxedConnection::start() {
     if (started_) {
-      log()->critical("already started (double start)");
+      log()->error("already started (double start)");
       return;
     }
     started_ = true;
@@ -81,7 +81,7 @@ namespace libp2p::connection {
 
   void YamuxedConnection::stop() {
     if (!started_) {
-      log()->critical("already stopped (double stop)");
+      log()->error("already stopped (double stop)");
       return;
     }
     started_ = false;
@@ -545,8 +545,6 @@ namespace libp2p::connection {
   void YamuxedConnection::writeStreamData(uint32_t stream_id,
                                           gsl::span<const uint8_t> data,
                                           bool some) {
-    // TODO(artem): reform in buffers (shared + vector writes)
-
     if (some) {
       // header must be written not partially, even some == true
       enqueue(dataMsg(stream_id, data.size(), false));
@@ -554,6 +552,8 @@ namespace libp2p::connection {
     } else {
       // if !some then we can write a whole packet
       auto packet = dataMsg(stream_id, data.size(), true);
+
+      // will add support for vector writes some time
       packet.insert(packet.end(), data.begin(), data.end());
       enqueue(std::move(packet), stream_id);
     }

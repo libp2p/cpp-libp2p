@@ -90,13 +90,13 @@ namespace libp2p::protocol::gossip {
         if (pr.has_backoff()) {
           backoff_time = pr.backoff();
         }
-        log()->debug("prune backoff={}, {} peers", backoff_time, pr.peers_size());
+        log()->debug("prune backoff={}, {} peers", backoff_time,
+                     pr.peers_size());
         for (const auto &peer : pr.peers()) {
           // TODO(artem): meshsub 1.1.0 + signed peer records NYI
 
           log()->debug("peer id size={}, signed peer record size={}",
                        peer.peerid().size(), peer.signedpeerrecord().size());
-          // auto res = peer::PeerId::fromBytes(peer.peerid())
         }
         receiver.onPrune(from, pr.topicid(), backoff_time);
       }

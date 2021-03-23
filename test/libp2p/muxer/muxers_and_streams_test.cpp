@@ -216,7 +216,6 @@ namespace libp2p::regression {
       } else {
         stats_.put(Stats::ACCEPTED);
         accepted_stream_ = std::move(rstream.value());
-        //accepted_stream_->adjustWindowSize(4*1024*1024, [](auto){});
       }
       behavior_(*this);
     }
@@ -231,7 +230,6 @@ namespace libp2p::regression {
         TRACE("({}): connected", stats_.node_id);
         stats_.put(Stats::CONNECTED);
         connected_stream_ = std::move(rstream.value());
-        //connected_stream_->adjustWindowSize(4*1024*1024, [](auto){});
       }
       behavior_(*this);
     }
@@ -290,7 +288,6 @@ namespace libp2p::regression {
 
 }  // namespace libp2p::regression
 
-// TEST(StreamsRegression, StreamsGetNotifiedAboutEOF) {
 template <typename... InjectorArgs>
 void testStreamsGetNotifiedAboutEOF(bool jumbo_msg, InjectorArgs &&...args) {
   using namespace libp2p::regression;  // NOLINT

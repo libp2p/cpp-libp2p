@@ -111,10 +111,9 @@ namespace libp2p::connection {
   /**
    * Create a message with some data inside
    * @param stream_id to be put into the message
-   * @param data to be put into the message
+   * @param data_length length field
+   * @param reserve_space whether to allocate space for message
    * @return bytes of the message
-   *
-   * TODO(artem): reform in buffers (shared + vector writes)
    */
   common::ByteArray dataMsg(YamuxFrame::StreamId stream_id,
                             uint32_t data_length, bool reserve_space = true);
