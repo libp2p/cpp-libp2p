@@ -19,10 +19,43 @@
 
 namespace libp2p::protocol::kademlia {
 
+  struct BucketPeerInfo {
+    peer::PeerId peer_id;
+    bool is_replaceable;
+    NodeId node_id;
+    BucketPeerInfo(const peer::PeerId &peer_id, bool is_replaceable)
+        : peer_id(peer_id), is_replaceable(is_replaceable), node_id(peer_id) {}
+  };
+
+  struct XorDistanceComparator {
+    explicit XorDistanceComparator(const peer::PeerId &from) {
+      crypto::Sha256 hash;
+      hash.write(from.toVector()).value();
+      memcpy(hfrom.data(), hash.digest().value().data(),
+             std::min<size_t>(hash.digestSize(), hfrom.size()));
+    }
+
+    explicit XorDistanceComparator(const NodeId &from)
+        : hfrom(from.getData()) {}
+
+    explicit XorDistanceComparator(const Hash256 &hash) : hfrom(hash) {}
+
+    bool operator()(const BucketPeerInfo &a, const BucketPeerInfo &b) {
+      NodeId from(hfrom);
+      auto d1 = a.node_id.distance(from);
+      auto d2 = b.node_id.distance(from);
+      constexpr auto size = Hash256().size();
+
+      // return true, if distance d1 is less than d2, false otherwise
+      return std::memcmp(d1.data(), d2.data(), size) < 0;
+    }
+
+    Hash256 hfrom;
+  };
   /**
    * Single bucket which holds peers.
    */
-  class Bucket : public std::deque<peer::PeerId> {
+  class Bucket : public std::deque<BucketPeerInfo> {
    public:
     void truncate(size_t limit) {
       if (size() > limit) {
@@ -30,18 +63,24 @@ namespace libp2p::protocol::kademlia {
       }
     }
 
-    std::vector<peer::PeerId> toVector() const {
-      return {begin(), end()};
+    std::vector<peer::PeerId> peerIds() const {
+      std::vector<peer::PeerId> peerIds;
+      peerIds.reserve(size());
+      std::transform(begin(), end(), std::back_inserter(peerIds),
+                     [](const auto &bpi) { return bpi.peer_id; });
+      return peerIds;
     }
 
-    bool contains(const peer::PeerId &p) const {
-      auto it = std::find(begin(), end(), p);
+    bool contains(const peer::PeerId &p) {
+      auto it = std::find_if(begin(), end(),
+                             [=](const auto &bpi) { return bpi.peer_id == p; });
       return it != end();
     }
 
     bool remove(const peer::PeerId &p) {
       // this shifts elements to the end
-      auto it = std::remove(begin(), end(), p);
+      auto it = std::remove_if(
+          begin(), end(), [&](const auto &bpi) { return bpi.peer_id == p; });
       if (it != end()) {
         erase(it);
         return true;
@@ -50,20 +89,13 @@ namespace libp2p::protocol::kademlia {
       return false;
     }
 
-    void moveToFront(const peer::PeerId &p) {
-      remove(p);
-      push_front(p);
-    }
-
     Bucket split(size_t commonLenPrefix, const NodeId &target) {
       Bucket b{};
       // remove shifts all elements "to be removed" to the end, other elements
       // preserve their relative order
-      auto new_end =
-          std::remove_if(begin(), end(), [&](const peer::PeerId &pid) {
-            NodeId nodeId(pid);
-            return nodeId.commonPrefixLen(target) > commonLenPrefix;
-          });
+      auto new_end = std::remove_if(begin(), end(), [&](const auto &bpi) {
+        return bpi.node_id.commonPrefixLen(target) > commonLenPrefix;
+      });
 
       b.assign(std::make_move_iterator(new_end),
                std::make_move_iterator(end()));
@@ -89,7 +121,8 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<peer::IdentityManager> identity_manager,
         std::shared_ptr<event::Bus> bus);
 
-    outcome::result<bool> update(const peer::PeerId &pid) override;
+    outcome::result<bool> update(const peer::PeerId &pid, bool is_permanent,
+                                 bool is_connected=false) override;
 
     void remove(const peer::PeerId &peer_id) override;
 

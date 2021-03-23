@@ -19,7 +19,8 @@ namespace libp2p::protocol::kademlia {
    public:
     virtual ~PeerRouting() = default;
 
-    virtual void addPeer(const PeerInfo &peer_info, bool permanent) = 0;
+    virtual void addPeer(const PeerInfo &peer_info, bool permanent,
+                         bool is_connected = false) = 0;
 
     /// Searches for a peer with given @param ID, @returns PeerInfo
     /// with relevant addresses.
