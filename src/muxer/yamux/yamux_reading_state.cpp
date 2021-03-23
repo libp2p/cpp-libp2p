@@ -7,13 +7,13 @@
 
 #include <cassert>
 
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 
 namespace libp2p::connection {
 
   namespace {
     auto log() {
-      static auto logger = common::createLogger("yx-conn");
+      static auto logger = log::createLogger("YamuxConn", "Yamux");
       return logger.get();
     }
 

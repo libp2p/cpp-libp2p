@@ -12,7 +12,7 @@
 #include <boost/asio/streambuf.hpp>
 #include <gsl/span>
 #include <libp2p/basic/readwriter.hpp>
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/protocol_muxer/multiselect/multiselect_error.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
@@ -21,7 +21,7 @@ namespace libp2p::protocol_muxer {
 
   namespace {
     auto &log() {
-      static auto logger = common::createLogger("multiselect-conn-state");
+      static auto logger = log::createLogger("multiselect-conn-state");
       return *logger;
     }
   }  // namespace

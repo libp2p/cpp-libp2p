@@ -10,12 +10,12 @@ namespace libp2p::storage {
   SQLite::SQLite(const std::string &db_file)
       : db_(db_file),
         db_file_(db_file),
-        log_(common::createLogger(kLoggerTag)) {}
+        log_(log::createLogger(kLoggerTag, "sqlite")) {}
 
   SQLite::SQLite(const std::string &db_file, const std::string &logger_tag)
       : db_(db_file),
         db_file_(db_file),
-        log_(common::createLogger(logger_tag)) {}
+        log_(log::createLogger(logger_tag, "sqlite")) {}
 
   SQLite::~SQLite() {
     // without the following, all the prepared statements

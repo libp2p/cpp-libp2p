@@ -15,8 +15,8 @@
 #include <libp2p/crypto/random_generator.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
+#include <libp2p/log/sublogger.hpp>
 #include <libp2p/outcome/outcome.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
@@ -66,7 +66,8 @@ namespace libp2p::protocol::kademlia {
                                         FoundProvidersHandler handler) override;
 
     /// @see PeerRouting::addPeer
-    void addPeer(const PeerInfo &peer_info, bool permanent) override;
+    void addPeer(const PeerInfo &peer_info, bool permanent,
+                 bool is_connected = false) override;
 
     /// @see PeerRouting::findPeer
     outcome::result<void> findPeer(const peer::PeerId &peer_id,
@@ -162,7 +163,7 @@ namespace libp2p::protocol::kademlia {
       scheduler::Handle handle{};
     } random_walking_;
 
-    SubLogger log_;
+    log::SubLogger log_;
   };
 
 }  // namespace libp2p::protocol::kademlia

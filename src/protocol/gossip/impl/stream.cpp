@@ -234,7 +234,7 @@ namespace libp2p::protocol::gossip {
     endWrite();
     closed_ = true;
     stream_->close([self{shared_from_this()}](outcome::result<void>) {
-      common::createLogger("gossip")->debug(
+      log::createLogger("gossip")->debug(
           "stream {} closed for peer {}", self->stream_id_, self->peer_->str);
     });
   }

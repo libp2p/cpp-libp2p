@@ -28,7 +28,8 @@ namespace libp2p::protocol::kademlia {
         content_id_(std::move(content_id)),
         handler_(std::move(handler)),
         target_(content_id_),
-        log_("kad", "FindProvidersExecutor", ++instance_number) {
+        log_("KademliaExecutor", "kademlia", "FindProviders",
+             ++instance_number) {
     BOOST_ASSERT(host_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
     BOOST_ASSERT(session_host_ != nullptr);

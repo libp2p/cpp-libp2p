@@ -10,16 +10,23 @@
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 
+#include "testutil/prepare_loggers.hpp"
+
 /// Fixture for in-memory SQLite tests
 struct SQLite : public ::testing::Test {
-  SQLite() : sql(":memory:") {}
-  libp2p::storage::SQLite sql;
+  void SetUp() override {
+    testutil::prepareLoggers();
+
+    sql = std::make_shared<libp2p::storage::SQLite>(":memory:");
+  }
+
+  std::shared_ptr<libp2p::storage::SQLite> sql;
 };
 
 /// Operators << and >> provide raw access to SQLite
 TEST_F(SQLite, RawOperators) {
   int result = 0;
-  sql << "SELECT 1+1" >> result;
+  *sql << "SELECT 1+1" >> result;
   ASSERT_EQ(result, 2);
 }
 
@@ -31,20 +38,20 @@ TEST_F(SQLite, RawOperators) {
  * once
  */
 TEST_F(SQLite, MultipleUseOfPreparedStatement) {
-  sql << "create table countable(num integer, char text);";
+  *sql << "create table countable(num integer, char text);";
   auto handle =
-      sql.createStatement("insert into countable(num, char) values(?, ?)");
+      sql->createStatement("insert into countable(num, char) values(?, ?)");
   const char chars[] = {"abcdef"};
   for (size_t i = 0; i < sizeof(chars); ++i) {
-    sql.execCommand(handle, i, chars[i]);
+    sql->execCommand(handle, i, chars[i]);
   }
 
-  auto query = sql.createStatement("select sum(num) from countable");
+  auto query = sql->createStatement("select sum(num) from countable");
   auto checker = [](int sum) {
     ASSERT_EQ(sum, 21);  // 21 is sum of numbers from 1 to 6
   };
-  sql.execQuery(query, checker);
-  sql.execQuery(query, checker);
+  sql->execQuery(query, checker);
+  sql->execQuery(query, checker);
 }
 
 /// Fixture for tests which require a file being saved on disk

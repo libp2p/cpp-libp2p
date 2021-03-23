@@ -14,6 +14,8 @@
 #define TRACE_ENABLED 1
 #include <libp2p/common/trace.hpp>
 
+#include "testutil/prepare_loggers.hpp"
+
 namespace libp2p::regression {
 
   enum WhatStream { ANY_STREAM, ACCEPTED_STREAM, CONNECTED_STREAM };
@@ -544,9 +546,9 @@ TEST(StreamsRegression, YamuxNoiseStreamsGetNotifiedAboutEOFJumboMsg) {
 int main(int argc, char *argv[]) {
   if (std::getenv("TRACE_DEBUG") != nullptr
       || (argc > 1 && std::string("trace") == argv[1])) {
-    spdlog::set_level(spdlog::level::trace);
+    testutil::prepareLoggers(soralog::Level::TRACE);
   } else {
-    spdlog::set_level(spdlog::level::info);
+    testutil::prepareLoggers(soralog::Level::INFO);
   }
 
   ::testing::InitGoogleTest(&argc, argv);

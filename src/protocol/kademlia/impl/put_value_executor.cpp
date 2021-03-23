@@ -28,7 +28,7 @@ namespace libp2p::protocol::kademlia {
         key_(std::move(key)),
         value_(std::move(value)),
         addressees_(std::move(addressees)),
-        log_("kad", "PutValueExecutor", ++instance_number) {
+        log_("KademliaExecutor", "kademlia", "PutValue", ++instance_number) {
     log_.debug("created");
   }
 
@@ -138,12 +138,12 @@ namespace libp2p::protocol::kademlia {
     if (session->write(serialized_request_, {})) {
       ++requests_succeed_;
       log_.debug("write to {} successfuly; done {}, active {}, in queue {}",
-                addr, requests_succeed_, requests_in_progress_,
-                addressees_.size() - addressees_idx_);
+                 addr, requests_succeed_, requests_in_progress_,
+                 addressees_.size() - addressees_idx_);
     } else {
       log_.debug("write to {} failed; done {}, active {}, in queue {}", addr,
-                requests_succeed_, requests_in_progress_,
-                addressees_.size() - addressees_idx_);
+                 requests_succeed_, requests_in_progress_,
+                 addressees_.size() - addressees_idx_);
     }
 
     spawn();

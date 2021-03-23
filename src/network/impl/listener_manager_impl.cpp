@@ -5,14 +5,14 @@
 
 #include <libp2p/network/impl/listener_manager_impl.hpp>
 
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 
 namespace libp2p::network {
 
   namespace {
-    spdlog::logger &log() {
-      static common::Logger logger = common::createLogger("listener_mgr");
-      return *logger;
+    log::Logger log() {
+      static log::Logger logger = log::createLogger("ListenerManager", "listener_manager");
+      return logger;
     }
   }  // namespace
 
@@ -176,7 +176,7 @@ namespace libp2p::network {
   void ListenerManagerImpl::onConnection(
       outcome::result<std::shared_ptr<connection::CapableConnection>> rconn) {
     if (!rconn) {
-      log().warn("can not accept valid connection, {}",
+      log()->warn("can not accept valid connection, {}",
                  rconn.error().message());
       return;  // ignore
     }
@@ -184,7 +184,7 @@ namespace libp2p::network {
 
     auto rid = conn->remotePeer();
     if (!rid) {
-      log().warn("can not get remote peer id, {}", rid.error().message());
+      log()->warn("can not get remote peer id, {}", rid.error().message());
       return;  // ignore
     }
     auto &&id = rid.value();
@@ -193,7 +193,7 @@ namespace libp2p::network {
     conn->onStream(
         [this](outcome::result<std::shared_ptr<connection::Stream>> rstream) {
           if (!rstream) {
-            log().warn("can not accept stream, {}", rstream.error().message());
+            log()->warn("can not accept stream, {}", rstream.error().message());
             return;  // ignore
           }
           auto &&stream = rstream.value();
@@ -204,7 +204,7 @@ namespace libp2p::network {
               false /* not initiator */,
               [this, stream](outcome::result<peer::Protocol> rproto) {
                 if (!rproto) {
-                  log().warn("can not negotiate protocols, {}",
+                  log()->warn("can not negotiate protocols, {}",
                              rproto.error().message());
                   return;  // ignore
                 }
@@ -212,7 +212,7 @@ namespace libp2p::network {
 
                 auto rhandle = this->router_->handle(proto, stream);
                 if (!rhandle) {
-                  log().warn("no protocol handler found, {}",
+                  log()->warn("no protocol handler found, {}",
                              rhandle.error().message());
                   return;  // this is not an error
                 }

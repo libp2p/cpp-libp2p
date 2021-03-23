@@ -44,10 +44,7 @@ namespace libp2p::protocol::gossip {
             }
         )),
         msg_seq_(scheduler_->now()),
-        log_("gossip")
-  {
-    log_.setInstanceName("Gossip", local_peer_id_.toBase58().substr(46));
-  }
+        log_("gossip", "Gossip", local_peer_id_.toBase58().substr(46)) {}
   // clang-format on
 
   void GossipCore::addBootstrapPeer(

@@ -6,17 +6,52 @@
 #include <iostream>
 #include <memory>
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/injector/host_injector.hpp>
+#include <libp2p/log/configurator.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/network/cares/cares.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
+namespace {
+  const std::string logger_config(R"(
+# ----------------
+sinks:
+  - name: console
+    type: console
+    color: true
+groups:
+  - name: main
+    sink: console
+    level: info
+    children:
+      - name: libp2p
+# ----------------
+  )");
+}  // namespace
+
 int main(int argc, char *argv[]) {
-  libp2p::network::c_ares::Ares ares;
-  spdlog::set_level(spdlog::level::trace);
+  // prepare log system
+  auto logging_system = std::make_shared<soralog::LoggingSystem>(
+      std::make_shared<libp2p::log::Configurator>(logger_config));
+  auto r = logging_system->configure();
+  if (not r.message.empty()) {
+    (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
+  }
+  if (r.has_error) {
+    exit(EXIT_FAILURE);
+  }
+
+  libp2p::log::setLoggingSystem(logging_system);
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
+  } else {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::ERROR);
+  }
 
   // create a default Host via an injector
   auto injector = libp2p::injector::makeHostInjector();
+
+  libp2p::network::c_ares::Ares ares;
 
   // create io_context - in fact, thing, which allows us to execute async
   // operations

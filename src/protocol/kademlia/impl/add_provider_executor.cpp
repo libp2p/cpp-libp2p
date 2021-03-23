@@ -27,7 +27,7 @@ namespace libp2p::protocol::kademlia {
         session_host_(std::move(session_host)),
         key_(std::move(key)),
         target_(key_),
-        log_("kad", "AddProviderExecutor", ++instance_number) {
+        log_("KademliaExecutor", "kademlia", "AddProvider", ++instance_number) {
     auto nearest_peer_ids =
         peer_routing_table->getNearestPeers(target_, config_.maxBucketSize);
 

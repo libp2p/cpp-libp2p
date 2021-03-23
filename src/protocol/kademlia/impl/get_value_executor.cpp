@@ -41,7 +41,7 @@ namespace libp2p::protocol::kademlia {
         key_(std::move(key)),
         handler_(std::move(handler)),
         target_(key_),
-        log_("kad", "GetValueExecutor", ++instance_number) {
+        log_("KademliaExecutor", "kademlia", "GetValue", ++instance_number) {
     BOOST_ASSERT(host_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
     BOOST_ASSERT(session_host_ != nullptr);

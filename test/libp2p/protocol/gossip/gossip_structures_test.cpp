@@ -12,7 +12,7 @@
 // debug stuff, unpack if it's needed to debug and trace
 #define VERBOSE 0
 #if VERBOSE
-#include <spdlog/fmt/fmt.h>
+#include <fmt/format.h>
 #define TR(var) fmt::print("{}: {}={}\n", __LINE__, #var, var)
 #endif
 

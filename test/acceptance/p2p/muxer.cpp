@@ -22,6 +22,7 @@
 #include <utility>
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/outcome.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 /// tested muxers
 #include <libp2p/muxer/mplex.hpp>
@@ -314,9 +315,7 @@ namespace {
 }  // namespace
 
 TEST_P(MuxerAcceptanceTest, ParallelEcho) {
-  if (verbose()) {
-    spdlog::set_level(spdlog::level::trace);
-  }
+  testutil::prepareLoggers();
 
   // total number of parallel clients
   const int totalClients = 3;

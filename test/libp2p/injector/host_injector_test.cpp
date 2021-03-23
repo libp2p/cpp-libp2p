@@ -9,6 +9,7 @@
 #include "mock/libp2p/muxer/muxer_adaptor_mock.hpp"
 #include "mock/libp2p/security/security_adaptor_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
 using namespace injector;
@@ -21,6 +22,8 @@ using ::testing::NiceMock;
  * @then valid instance is created
  */
 TEST(HostInjector, Default) {
+  testutil::prepareLoggers();
+
   auto injector = makeHostInjector();
 
   auto unique = injector.create<std::unique_ptr<Host>>();
@@ -36,6 +39,8 @@ TEST(HostInjector, Default) {
  * @then Host has 2 adaptors of each type
  */
 TEST(HostInjector, CustomAdaptors) {
+  testutil::prepareLoggers();
+
   // hack for nice mocks.
   struct SecMock : public NiceMock<security::SecurityAdaptorMock> {};
   struct MuxMock : public NiceMock<muxer::MuxerAdaptorMock> {};

@@ -10,8 +10,8 @@
 #include <unordered_map>
 #include <utility>
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/capable_connection.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/muxer/mplex/mplex_stream.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
 
@@ -175,7 +175,7 @@ namespace libp2p::connection {
     NewStreamHandlerFunc new_stream_handler_;
 
     bool is_active_ = false;
-    common::Logger log_ = common::createLogger("MplexedConnection");
+    log::Logger log_ = log::createLogger("MplexConn", "mplex");
 
     /// MPLEX STREAM API
     friend class MplexStream;

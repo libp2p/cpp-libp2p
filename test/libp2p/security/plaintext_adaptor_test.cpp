@@ -6,8 +6,6 @@
 #include "libp2p/security/plaintext/plaintext.hpp"
 
 #include <gtest/gtest.h>
-#include <boost/di.hpp>
-#include <boost/di/extension/providers/mocks_provider.hpp>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <testutil/gmock_actions.hpp>
@@ -16,6 +14,7 @@
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
 #include "mock/libp2p/security/exchange_message_marshaller_mock.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
 using namespace connection;
@@ -33,19 +32,19 @@ using testing::ReturnRef;
 
 class PlaintextAdaptorTest : public testing::Test {
  public:
-  std::shared_ptr<NiceMock<IdentityManagerMock>> idmgr =
-      std::make_shared<NiceMock<IdentityManagerMock>>();
-
-  std::shared_ptr<plaintext::ExchangeMessageMarshallerMock> marshaller =
-      std::make_shared<plaintext::ExchangeMessageMarshallerMock>();
-
-  std::shared_ptr<KeyMarshallerMock> key_marshaller =
-      std::make_shared<KeyMarshallerMock>();
-
-  std::shared_ptr<Plaintext> adaptor =
-      std::make_shared<Plaintext>(marshaller, idmgr, key_marshaller);
+  std::shared_ptr<NiceMock<IdentityManagerMock>> idmgr;
+  std::shared_ptr<plaintext::ExchangeMessageMarshallerMock> marshaller;
+  std::shared_ptr<KeyMarshallerMock> key_marshaller;
+  std::shared_ptr<Plaintext> adaptor;
 
   void SetUp() override {
+    testutil::prepareLoggers();
+
+    idmgr = std::make_shared<NiceMock<IdentityManagerMock>>();
+    marshaller = std::make_shared<plaintext::ExchangeMessageMarshallerMock>();
+    key_marshaller = std::make_shared<KeyMarshallerMock>();
+    adaptor = std::make_shared<Plaintext>(marshaller, idmgr, key_marshaller);
+
     ON_CALL(*conn, read(_, _, _)).WillByDefault(Arg2CallbackWithArg(5));
     ON_CALL(*conn, write(_, _, _)).WillByDefault(Arg2CallbackWithArg(5));
 

@@ -6,12 +6,12 @@
 #ifndef LIBP2P_SECIO_ADAPTOR_HPP
 #define LIBP2P_SECIO_ADAPTOR_HPP
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/crypto/aes_ctr.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/hmac_provider.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/crypto/random_generator.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/security/secio/exchange_message_marshaller.hpp>
 #include <libp2p/security/secio/propose_message_marshaller.hpp>
@@ -93,7 +93,7 @@ namespace libp2p::security {
     //
     secio::ProposeMessage propose_message_;
     mutable common::ByteArray remote_peer_rand_;
-    common::Logger log_ = common::createLogger("SECIO");
+    log::Logger log_ = log::createLogger("SecIO", "secio");
   };
 }  // namespace libp2p::security
 

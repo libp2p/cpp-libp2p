@@ -18,6 +18,7 @@
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/ma_generator.hpp"
 #include "testutil/outcome.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using libp2p::basic::ReadWriteCloser;
 using libp2p::connection::CapableConnBasedOnRawConnMock;
@@ -41,9 +42,12 @@ using ::testing::_;
 class MultiselectTest : public ::testing::Test {
  public:
   void SetUp() override {
+    testutil::prepareLoggers();
+
     context_ = std::make_shared<boost::asio::io_context>();
     upgrader = std::make_shared<UpgraderMock>();
     transport_ = std::make_shared<TcpTransport>(context_, upgrader);
+    multiselect_ = std::make_shared<Multiselect>();
 
     ASSERT_TRUE(transport_) << "cannot create transport";
 
@@ -88,7 +92,7 @@ class MultiselectTest : public ::testing::Test {
   std::vector<Protocol> protocols_{kDefaultEncryptionProtocol1,
                                    kDefaultEncryptionProtocol2};
 
-  std::shared_ptr<Multiselect> multiselect_ = std::make_shared<Multiselect>();
+  std::shared_ptr<Multiselect> multiselect_;
 
   void launchContext() {
     using std::chrono_literals::operator""ms;

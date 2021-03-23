@@ -11,10 +11,10 @@
 #include <string>
 
 #include <gsl/span>
-#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/host/host.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -138,7 +138,7 @@ namespace libp2p::protocol {
     ObservedAddresses observed_addresses_;
     boost::signals2::signal<IdentifyCallback> signal_identify_received_;
 
-    common::Logger log_ = common::createLogger("IdentifyMsgProcessor");
+    log::Logger log_ = log::createLogger("IdentifyMsgProcessor", "identify");
   };
 }  // namespace libp2p::protocol
 

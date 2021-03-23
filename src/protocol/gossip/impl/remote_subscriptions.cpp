@@ -14,7 +14,8 @@ namespace libp2p::protocol::gossip {
 
   RemoteSubscriptions::RemoteSubscriptions(const Config &config,
                                            Connectivity &connectivity,
-                                           Scheduler &scheduler, SubLogger &log)
+                                           Scheduler &scheduler,
+                                           log::SubLogger &log)
       : config_(config),
         connectivity_(connectivity),
         scheduler_(scheduler),

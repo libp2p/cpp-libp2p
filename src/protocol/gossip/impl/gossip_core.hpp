@@ -11,8 +11,8 @@
 #include <map>
 
 #include <libp2p/host/host.hpp>
+#include <libp2p/log/sublogger.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
 
 #include "message_cache.hpp"
 #include "message_receiver.hpp"
@@ -126,7 +126,7 @@ namespace libp2p::protocol::gossip {
     Scheduler::Handle heartbeat_timer_;
 
     /// Logger
-    SubLogger log_;
+    log::SubLogger log_;
   };
 
 }  // namespace libp2p::protocol::gossip

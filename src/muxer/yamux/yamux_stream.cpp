@@ -17,7 +17,7 @@ namespace libp2p::connection {
 
   namespace {
     auto log() {
-      static auto logger = common::createLogger("yx-stream");
+      static auto logger = log::createLogger("yx-stream", "Yamux");
       return logger.get();
     }
   }  // namespace

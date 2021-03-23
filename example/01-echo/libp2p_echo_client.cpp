@@ -8,10 +8,28 @@
 #include <memory>
 
 #include <libp2p/common/literals.hpp>
-#include <libp2p/common/logger.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
+#include <libp2p/log/configurator.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/protocol/echo.hpp>
+
+namespace {
+  const std::string logger_config(R"(
+# ----------------
+sinks:
+  - name: console
+    type: console
+    color: true
+groups:
+  - name: main
+    sink: console
+    level: info
+    children:
+      - name: libp2p
+# ----------------
+  )");
+}  // namespace
 
 int main(int argc, char *argv[]) {
   using libp2p::crypto::Key;
@@ -39,16 +57,27 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (std::getenv("TRACE_DEBUG") != nullptr) {
-    spdlog::set_level(spdlog::level::trace);
-    run_duration = std::chrono::seconds(86400);
-  } else {
-    spdlog::set_level(spdlog::level::err);
-  }
-
   if (argc < 2) {
     std::cerr << "please, provide an address of the server\n";
     std::exit(EXIT_FAILURE);
+  }
+
+  // prepare log system
+  auto logging_system = std::make_shared<soralog::LoggingSystem>(
+      std::make_shared<libp2p::log::Configurator>(logger_config));
+  auto r = logging_system->configure();
+  if (not r.message.empty()) {
+    (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
+  }
+  if (r.has_error) {
+    exit(EXIT_FAILURE);
+  }
+
+  libp2p::log::setLoggingSystem(logging_system);
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
+  } else {
+    libp2p::log::setLevelOfGroup("*", soralog::Level::ERROR);
   }
 
   // create Echo protocol object - it implement the logic of both server and
@@ -57,6 +86,7 @@ int main(int argc, char *argv[]) {
 
   // create a default Host via an injector
   auto injector = libp2p::injector::makeHostInjector();
+
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
 
   // create io_context - in fact, thing, which allows us to execute async

@@ -11,10 +11,10 @@
 #include <mutex>
 #include <queue>
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/secure_connection.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
+#include <libp2p/log/logger.hpp>
 
 namespace libp2p::crypto {
   namespace aes {
@@ -170,7 +170,7 @@ namespace libp2p::connection {
 
     std::shared_ptr<common::ByteArray> read_buffer_;
 
-    common::Logger log_ = common::createLogger("SECCONN");
+    log::Logger log_ = log::createLogger("SecIoConnection", "secio");
   };
 }  // namespace libp2p::connection
 

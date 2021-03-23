@@ -7,7 +7,7 @@
 
 #include <boost/assert.hpp>
 
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 
 namespace libp2p::protocol {
 
@@ -73,7 +73,7 @@ namespace libp2p::protocol {
         then(ec_);
       } else {
         if (recv_buf_ != buf_) {
-          common::createLogger("Echo")->error(
+          log::createLogger("Echo")->error(
               "ClientEchoSession: send and receive buffers mismatch");
         }
         auto begin = recv_buf_.begin();

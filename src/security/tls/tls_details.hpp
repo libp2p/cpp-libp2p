@@ -6,14 +6,14 @@
 #ifndef LIBP2P_SECURITY_TLS_DETAILS_HPP
 #define LIBP2P_SECURITY_TLS_DETAILS_HPP
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/peer/peer_id.hpp>
 
 namespace libp2p::security::tls_details {
 
   /// Returns "tls" logger
-  spdlog::logger &log();
+  log::Logger log();
 
   /// Peer certificate verify helper. Allows self-signed certificates to pass
   /// \param status preverified status

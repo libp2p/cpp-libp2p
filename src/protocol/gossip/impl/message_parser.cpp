@@ -5,7 +5,7 @@
 
 #include "message_parser.hpp"
 
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 
 #include "message_receiver.hpp"
 
@@ -15,7 +15,7 @@ namespace libp2p::protocol::gossip {
 
   namespace {
     auto log() {
-      static common::Logger logger = common::createLogger("gossip");
+      static auto logger = log::createLogger("gossip");
       return logger.get();
     }
   }  // namespace

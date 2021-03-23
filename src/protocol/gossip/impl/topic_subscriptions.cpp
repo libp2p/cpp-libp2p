@@ -30,7 +30,7 @@ namespace libp2p::protocol::gossip {
 
   TopicSubscriptions::TopicSubscriptions(TopicId topic, const Config &config,
                                          Connectivity &connectivity,
-                                         SubLogger &log)
+                                         log::SubLogger &log)
       : topic_(std::move(topic)),
         config_(config),
         connectivity_(connectivity),
