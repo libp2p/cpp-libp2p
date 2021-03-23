@@ -284,6 +284,9 @@ namespace libp2p::protocol::gossip {
     constexpr Time kBanInterval = 60000;
 
     assert(ctx);
+    if (ctx->banned_until != 0) {
+      return;
+    }
 
     log_.info("banning peer {}, subscribed to {}", ctx->str,
               fmt::join(ctx->subscribed_to, ", "));
@@ -310,10 +313,20 @@ namespace libp2p::protocol::gossip {
 
     assert(ts > 0);
 
-    log_.info("unbanning peer {}", ctx->str);
+    auto it = banned_peers_expiration_.find({ts, ctx});
+    if (it == banned_peers_expiration_.end()) {
+      log_.warn("cannot find banned peer {}", ctx->str);
+      return;
+    }
 
-    banned_peers_expiration_.erase({ts, ctx});
+    unban(it);
+  }
+
+  void Connectivity::unban(BannedPeers::iterator it) {
+    const auto& ctx = it->second;
     ctx->banned_until = 0;
+    log_.info("unbanning peer {}", ctx->str);
+    banned_peers_expiration_.erase(it);
   }
 
   void Connectivity::onStreamEvent(const PeerContextPtr &from,
@@ -364,8 +377,8 @@ namespace libp2p::protocol::gossip {
       if (it->first > ts) {
         break;
       }
-      unban(it->second);
       connectable_peers_.insert(it->second);
+      unban(it);
     }
 
     // connect if needed

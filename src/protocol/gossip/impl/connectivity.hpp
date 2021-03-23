@@ -7,6 +7,7 @@
 #define LIBP2P_PROTOCOL_GOSSIP_CONNECTIVITY_HPP
 
 #include <unordered_map>
+#include <map>
 
 #include <libp2p/host/host.hpp>
 #include <libp2p/protocol/common/scheduler.hpp>
@@ -63,6 +64,8 @@ namespace libp2p::protocol::gossip {
     const PeerSet &getConnectedPeers() const;
 
    private:
+    using BannedPeers = std::set<std::pair<Time, PeerContextPtr>>;
+
     /// BaseProtocol override
     peer::Protocol getProtocolId() const override;
 
@@ -86,6 +89,9 @@ namespace libp2p::protocol::gossip {
     /// Unbans peer
     void unban(const PeerContextPtr &peer);
 
+    /// Unbans peer
+    void unban(BannedPeers::iterator it);
+
     /// Flushes outging messages into wire for a given peer, if connected
     void flush(const PeerContextPtr &ctx) const;
 
@@ -105,7 +111,7 @@ namespace libp2p::protocol::gossip {
 
     /// Peers temporary banned due to connectivity problems,
     /// will become connectable after certain interval
-    std::set<std::pair<Time, PeerContextPtr>> banned_peers_expiration_;
+    BannedPeers banned_peers_expiration_;
 
     /// Writable peers
     PeerSet connected_peers_;
