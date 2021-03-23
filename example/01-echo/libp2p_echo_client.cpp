@@ -25,7 +25,7 @@ groups:
   - name: main
     sink: console
     level: info
-    children
+    children:
       - name: libp2p
 # ----------------
   )");
