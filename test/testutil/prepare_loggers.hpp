@@ -27,6 +27,8 @@ groups:
   - name: libp2p
     sink: console
     level: off
+  - name: libp2p_debug
+    level: trace
 )"));
 
       auto logging_system =

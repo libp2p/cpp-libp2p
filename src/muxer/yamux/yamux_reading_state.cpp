@@ -13,7 +13,7 @@ namespace libp2p::connection {
 
   namespace {
     auto log() {
-      static auto logger = log::createLogger("YamuxConn", "Yamux");
+      static auto logger = log::createLogger("YamuxConn");
       return logger.get();
     }
 

@@ -13,12 +13,12 @@
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/transport/tcp.hpp>
-#include <libp2p/log/logger.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/transport/upgrader_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/outcome.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p::transport;
 using namespace libp2p::multi;
@@ -335,9 +335,9 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
 
 int main(int argc, char *argv[]) {
   if (std::getenv("TRACE_DEBUG") != nullptr) {
-    libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
+    testutil::prepareLoggers(soralog::Level::TRACE);
   } else {
-    libp2p::log::setLevelOfGroup("*", soralog::Level::ERROR);
+    testutil::prepareLoggers(soralog::Level::ERROR);
   }
 
   ::testing::InitGoogleTest(&argc, argv);

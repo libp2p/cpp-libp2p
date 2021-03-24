@@ -544,11 +544,10 @@ TEST(StreamsRegression, YamuxNoiseStreamsGetNotifiedAboutEOFJumboMsg) {
 }
 
 int main(int argc, char *argv[]) {
-  if (std::getenv("TRACE_DEBUG") != nullptr
-      || (argc > 1 && std::string("trace") == argv[1])) {
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
     testutil::prepareLoggers(soralog::Level::TRACE);
   } else {
-    testutil::prepareLoggers(soralog::Level::INFO);
+    testutil::prepareLoggers(soralog::Level::ERROR);
   }
 
   ::testing::InitGoogleTest(&argc, argv);

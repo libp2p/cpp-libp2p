@@ -76,7 +76,7 @@ namespace libp2p::connection {
     size_t already_wrote_;
     size_t plaintext_len_to_write_;
     common::ByteArray writing_;
-    log::Logger log_ = log::createLogger("NoiseConnection", "noise");
+    log::Logger log_ = log::createLogger("NoiseConnection");
   };
 }  // namespace libp2p::connection
 

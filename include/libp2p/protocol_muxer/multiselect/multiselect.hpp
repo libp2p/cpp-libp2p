@@ -114,7 +114,7 @@ namespace libp2p::protocol_muxer {
     std::queue<size_t> free_buffers_;
 
     // TODO(warchant): use logger interface here and inject it PRE-235
-    libp2p::log::Logger log_ = libp2p::log::createLogger("multiselect", "muxer");
+    libp2p::log::Logger log_ = libp2p::log::createLogger("multiselect");
   };
 }  // namespace libp2p::protocol_muxer
 
