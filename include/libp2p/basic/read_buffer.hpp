@@ -78,7 +78,7 @@ namespace libp2p::basic {
   /// data up to expected size
   class FixedBufferCollector {
    public:
-    using BytesRef = gsl::span<uint8_t>;
+    using BytesRef = gsl::span<const uint8_t>;
     using Buffer = std::vector<uint8_t>;
 
     static constexpr size_t kDefaultMemoryThreshold = 65536;

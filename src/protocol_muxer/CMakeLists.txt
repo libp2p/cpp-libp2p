@@ -3,4 +3,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_subdirectory(multiselect)
+libp2p_add_library(p2p_multiselect
+    multiselect.cpp
+    multiselect/parser.cpp
+    )
+target_link_libraries(p2p_multiselect
+    p2p_read_buffer
+    p2p_varint_prefix_reader
+    p2p_logger
+    )
+
+
+#add_library(p2p_protocol_muxer_error)

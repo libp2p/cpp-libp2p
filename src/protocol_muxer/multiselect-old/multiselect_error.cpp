@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol_muxer/multiselect.hpp>
+#include <libp2p/protocol_muxer/multiselect/multiselect_error.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol_muxer, MultiselectError, e) {
   using Errors = libp2p::protocol_muxer::MultiselectError;
