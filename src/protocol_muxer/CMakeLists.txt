@@ -6,6 +6,7 @@
 libp2p_add_library(p2p_multiselect
     protocol_muxer_error.cpp
     multiselect.cpp
+    multiselect/multiselect_instance.cpp
     multiselect/parser.cpp
     multiselect/simple_stream_negotiate.cpp
     )

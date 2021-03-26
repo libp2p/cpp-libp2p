@@ -6,7 +6,7 @@
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
-#include <libp2p/protocol_muxer/simple_stream_negotiate.hpp>
+#include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
 
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>

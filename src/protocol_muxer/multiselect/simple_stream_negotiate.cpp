@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol_muxer/simple_stream_negotiate.hpp>
+#include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
 
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
