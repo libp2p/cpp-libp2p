@@ -5,15 +5,22 @@
 
 #include <libp2p/protocol_muxer/multiselect.hpp>
 #include <libp2p/protocol_muxer/multiselect/parser.hpp>
+#include <libp2p/protocol_muxer/multiselect/serializing.hpp>
+
 
 #include <gtest/gtest.h>
 
 
 
 #include "testutil/prepare_loggers.hpp"
-
+/**
+ * @given static vector
+ * @when resizing it over static capacity
+ * @then bad_alloc is thrown
+ */
 TEST(Multiselect, TmpBufThrows) {
-  using namespace libp2p::protocol_muxer::mutiselect::detail;
+  using libp2p::protocol_muxer::multiselect::detail::TmpMsgBuf;
+  using libp2p::protocol_muxer::multiselect::kMaxMessageSize;
   TmpMsgBuf buf;
   buf.resize(kMaxMessageSize / 2);
   EXPECT_THROW(buf.resize(buf.capacity() + 1), std::bad_alloc);

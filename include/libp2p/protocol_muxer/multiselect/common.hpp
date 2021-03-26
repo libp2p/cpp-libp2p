@@ -46,7 +46,7 @@ namespace libp2p::protocol_muxer::multiselect {
   };
 
   /// Vector that holds most of protocol messages w/o dynamic alloc
-  using MsgBuf = boost::container::small_vector<uint8_t, 256>;
+  using MsgBuf = boost::container::small_vector<uint8_t, 80>;
 
 }  // namespace libp2p::protocol_muxer::multiselect
 

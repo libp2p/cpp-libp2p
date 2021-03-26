@@ -202,19 +202,27 @@ namespace libp2p::network {
           this->multiselect_->selectOneOf(
               this->router_->getSupportedProtocols(), stream,
               false /* not initiator */,
+              false /* don't need to negotiate multistream itself */,
               [this, stream](outcome::result<peer::Protocol> rproto) {
+                bool success = true;
+
                 if (!rproto) {
                   log()->warn("can not negotiate protocols, {}",
                              rproto.error().message());
-                  return;  // ignore
-                }
-                auto &&proto = rproto.value();
+                  success = false;
+                } else {
+                  auto &&proto = rproto.value();
 
-                auto rhandle = this->router_->handle(proto, stream);
-                if (!rhandle) {
-                  log()->warn("no protocol handler found, {}",
-                             rhandle.error().message());
-                  return;  // this is not an error
+                  auto rhandle = this->router_->handle(proto, stream);
+                  if (!rhandle) {
+                    log()->warn("no protocol handler found, {}",
+                                rhandle.error().message());
+                    success = false;
+                  }
+                }
+
+                if (!success) {
+                  stream->reset();
                 }
               });
         });

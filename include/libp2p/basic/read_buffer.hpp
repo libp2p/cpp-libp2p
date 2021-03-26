@@ -78,7 +78,8 @@ namespace libp2p::basic {
   /// data up to expected size
   class FixedBufferCollector {
    public:
-    using BytesRef = gsl::span<const uint8_t>;
+    using CBytesRef = gsl::span<const uint8_t>;
+    using BytesRef = gsl::span<uint8_t>;
     using Buffer = std::vector<uint8_t>;
 
     static constexpr size_t kDefaultMemoryThreshold = 65536;
@@ -95,6 +96,7 @@ namespace libp2p::basic {
     /// returns data if filled up to expected size or empty option if not,
     /// modifies data (cuts head)
     /// Data returned is valid until next expect() call && data is live
+    boost::optional<CBytesRef> add(CBytesRef &data);
     boost::optional<BytesRef> add(BytesRef &data);
 
     /// Resets to initial state

@@ -244,8 +244,9 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
   EXPECT_CALL(*connection, newStream(_)).WillOnce(Arg0CallbackWithArg(stream));
 
   outcome::result<peer::Protocol> r = std::errc::io_error;
-  EXPECT_CALL(*proto_muxer, selectOneOf(Contains(Eq(protocol)), _, true, _))
-      .WillOnce(Arg3CallbackWithArg(r));
+  EXPECT_CALL(*proto_muxer,
+              selectOneOf(Contains(Eq(protocol)), _, true, false, _))
+      .WillOnce(Arg4CallbackWithArg(r));
 
   bool executed = false;
   dialer->newStream(pinfo, protocol, [&](auto &&rstream) {
@@ -269,8 +270,9 @@ TEST_F(DialerTest, NewStreamSuccess) {
   // newStream returns valid stream
   EXPECT_CALL(*connection, newStream(_)).WillOnce(Arg0CallbackWithArg(stream));
 
-  EXPECT_CALL(*proto_muxer, selectOneOf(Contains(Eq(protocol)), _, true, _))
-      .WillOnce(Arg3CallbackWithArg(protocol));
+  EXPECT_CALL(*proto_muxer,
+              selectOneOf(Contains(Eq(protocol)), _, true, false, _))
+      .WillOnce(Arg4CallbackWithArg(protocol));
 
   bool executed = false;
   dialer->newStream(pinfo, protocol, [&](auto &&rstream) {

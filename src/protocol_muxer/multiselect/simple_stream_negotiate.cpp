@@ -11,44 +11,52 @@
 namespace libp2p::protocol_muxer::multiselect {
 
   namespace {
-    using Callback = std::function<void(outcome::result<void>)>;
+    using StreamPtr = std::shared_ptr<connection::Stream>;
+    using Callback = std::function<void(outcome::result<StreamPtr>)>;
 
     struct Buffers {
       MsgBuf written;
       MsgBuf read;
     };
 
-    void completed(const Callback &cb, const Buffers &buffers) {
+    void failed(const StreamPtr &stream, const Callback &cb,
+                std::error_code ec) {
+      stream->reset();
+      cb(ec);
+    }
+
+    void completed(StreamPtr stream, const Callback &cb,
+                   const Buffers &buffers) {
       // In this case we expect the exact echo in reply
-      return (buffers.read == buffers.written)
-          ? cb(outcome::success())
-          : cb(ProtocolMuxer::Error::NEGOTIATION_FAILED);
-    }
-
-    void onLastBytesRead(const Callback &cb, const Buffers &buffers,
-                         outcome::result<size_t> res) {
-      if (!res) {
-        return cb(res.error());
+      if (buffers.read == buffers.written) {
+        return cb(std::move(stream));
       }
-      completed(cb, buffers);
+      failed(stream, cb, ProtocolMuxer::Error::NEGOTIATION_FAILED);
     }
 
-    void onFirstBytesRead(const std::shared_ptr<basic::ReadWriter> &stream,
-                          std::function<void(outcome::result<void>)> cb,
+    void onLastBytesRead(StreamPtr stream, const Callback &cb,
+                         const Buffers &buffers, outcome::result<size_t> res) {
+      if (!res) {
+        return failed(stream, cb, res.error());
+      }
+      completed(std::move(stream), cb, buffers);
+    }
+
+    void onFirstBytesRead(StreamPtr stream, Callback cb,
                           std::shared_ptr<Buffers> buffers,
                           outcome::result<size_t> res) {
       if (!res) {
-        return cb(res.error());
+        return failed(stream, cb, res.error());
       }
 
       if (res.value() != kMaxVarintSize) {
-        return cb(ProtocolMuxer::Error::INTERNAL_ERROR);
+        return failed(stream, cb, ProtocolMuxer::Error::INTERNAL_ERROR);
       }
 
       auto total_sz = buffers->written.size();
       if (total_sz == kMaxVarintSize) {
         // protocol_id consists of 1 byte, not standard but possible
-        return completed(cb, *buffers);
+        return completed(std::move(stream), cb, *buffers);
       }
 
       assert(total_sz > kMaxVarintSize);
@@ -58,23 +66,23 @@ namespace libp2p::protocol_muxer::multiselect {
       gsl::span<uint8_t> span(buffers->read);
       span = span.subspan(kMaxVarintSize, remaining_bytes);
 
-      stream->read(span, span.size(),
-                   [stream = stream, cb = std::move(cb),
-                    buffers = std::move(buffers)](outcome::result<size_t> res) {
-                     onLastBytesRead(cb, *buffers, res);
-                   });
+      stream->read(
+          span, span.size(),
+          [stream = stream, cb = std::move(cb),
+           buffers = std::move(buffers)](outcome::result<size_t> res) mutable {
+            onLastBytesRead(std::move(stream), cb, *buffers, res);
+          });
     }
 
-    void onPacketWritten(const std::shared_ptr<basic::ReadWriter> &stream,
-                         std::function<void(outcome::result<void>)> cb,
+    void onPacketWritten(StreamPtr stream, Callback cb,
                          std::shared_ptr<Buffers> buffers,
                          outcome::result<size_t> res) {
       if (!res) {
-        return cb(res.error());
+        return failed(stream, cb, res.error());
       }
 
       if (res.value() != buffers->written.size()) {
-        return cb(ProtocolMuxer::Error::INTERNAL_ERROR);
+        return failed(stream, cb, ProtocolMuxer::Error::INTERNAL_ERROR);
       }
 
       gsl::span<uint8_t> span(buffers->read);
@@ -89,10 +97,8 @@ namespace libp2p::protocol_muxer::multiselect {
     }
   }  // namespace
 
-  void simpleStreamNegotiateImpl(
-      const std::shared_ptr<basic::ReadWriter> &stream,
-      const peer::Protocol &protocol_id,
-      std::function<void(outcome::result<void>)> cb) {
+  void simpleStreamNegotiate(const StreamPtr &stream,
+                             const peer::Protocol &protocol_id, Callback cb) {
     auto buffers = std::make_shared<Buffers>();
     buffers->written = detail::createMessage(protocol_id);
     buffers->read.resize(buffers->written.size());
@@ -105,7 +111,7 @@ namespace libp2p::protocol_muxer::multiselect {
         span, span.size(),
         [stream = stream, cb = std::move(cb),
          buffers = std::move(buffers)](outcome::result<size_t> res) mutable {
-          onPacketWritten(stream, std::move(cb), std::move(buffers), res);
+          onPacketWritten(std::move(stream), std::move(cb), std::move(buffers), res);
         });
   }
 

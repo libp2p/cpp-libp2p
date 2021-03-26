@@ -3,11 +3,48 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <cctype>
+
 #include <libp2p/protocol_muxer/multiselect.hpp>
 
+#include <libp2p/common/hexutil.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 
 namespace libp2p::protocol_muxer::multiselect {
+
+  namespace {
+    gsl::span<const uint8_t> sv2span(const std::string_view &str) {
+      return gsl::span<const uint8_t>((const uint8_t *)str.data(),  // NOLINT
+                                      (ssize_t)str.size());         // NOLINT
+    }
+
+    std::string dumpBin(const std::string_view &str) {
+      std::string ret;
+      ret.reserve(str.size() + 2);
+      bool non_printable_detected = false;
+      for (auto c : str) {
+        if (std::isprint(c) != 0) {
+          ret.push_back(c);
+        } else {
+          ret.push_back('?');
+          non_printable_detected = true;
+        }
+      }
+      if (non_printable_detected) {
+        ret.reserve(ret.size() * 3);
+        ret += " (";
+        ret += common::hex_lower(sv2span(str));
+        ret += ')';
+      }
+      return ret;
+    }
+
+    const log::Logger &log() {
+      static log::Logger logger = log::createLogger("multiselect");
+      return logger;
+    }
+  }  // namespace
 
   void Multiselect::selectOneOf(gsl::span<const peer::Protocol> protocols,
                                 std::shared_ptr<basic::ReadWriter> connection,
@@ -19,11 +56,9 @@ namespace libp2p::protocol_muxer::multiselect {
 
     ++current_round_;
 
-    if (protocols.empty()) {
-      // ~~~log and defer
-
-      return;
-    }
+    //    if (protocols.size() == 1 && is_initiator && !negotiate_multiselect) {
+    //       ~~~ use simple negotiator instead
+    //    }
 
     protocols_.assign(protocols.begin(), protocols.end());
     connection_ = std::move(connection);
@@ -31,59 +66,96 @@ namespace libp2p::protocol_muxer::multiselect {
     callback_ = std::move(cb);
 
     multistream_negotiated_ = false;
-    proposal_was_sent_ = false;
+    wait_for_protocol_reply_ = false;
     closed_ = false;
     current_protocol_ = 0;
-    protocol_reply_was_sent_.reset();
+    wait_for_reply_sent_.reset();
     parser_.reset();
     ls_response_.reset();
     read_buffer_ = std::make_shared<std::array<uint8_t, kMaxMessageSize>>();
     write_queue_.clear();
+    is_writing_ = false;
 
-    if (is_initiator_) {
-      sendProposal(true);
+    if (negotiate_multiselect) {
+      sendOpening();
+    } else if (is_initiator_) {
+      std::ignore = sendProposal();
     }
 
     receive();
   }
 
-  void Multiselect::sendProposal(bool defer_cb) {
+  void Multiselect::sendOpening() {
+    send(detail::createMessage(kProtocolId));
+  }
+
+  bool Multiselect::sendProposal() {
     if (current_protocol_ >= protocols_.size()) {
-      // nothing to propose
-      // TODO defer cb
-      return;
+      // nothing more to propose
+      return false;
     }
-    MsgBuf msg;
-    if (!multistream_negotiated_) {
-      std::array<std::string_view, 2> a(
-          {kProtocolId, protocols_[current_protocol_]});
-      msg = detail::createMessage(a, true);  // TODO nested or not ???
-    } else {
-      msg = detail::createMessage(protocols_[current_protocol_]);
-    }
+
+    //    MsgBuf msg;
+    //    if (!multistream_negotiated_) {
+    //      std::array<std::string_view, 2> a(
+    //          {kProtocolId, protocols_[current_protocol_]});
+    //      msg = detail::createMessage(a, true);  // TODO nested or not ???
+    //    } else {
+    //      msg = detail::createMessage(protocols_[current_protocol_]);
+    //    }
+    //    send(std::move(msg));
+
+    send(detail::createMessage(protocols_[current_protocol_]));
 
     ++current_protocol_;
-    proposal_was_sent_ = true;
+    wait_for_protocol_reply_ = true;
+    return true;
+  }
 
-    send(std::move(msg));
+  void Multiselect::sendLS() {
+    if (!ls_response_) {
+      ls_response_ =
+          std::make_shared<MsgBuf>(detail::createMessage(protocols_, true));
+    }
+    send(ls_response_.value());
+  }
+
+  void Multiselect::sendNA() {
+    if (!na_response_) {
+      na_response_ =
+          std::make_shared<MsgBuf>(detail::createMessage(kNA));
+    }
+    send(na_response_.value());
   }
 
   void Multiselect::send(MsgBuf msg) {
-    auto packet = std::make_shared<MsgBuf>(std::move(msg));
+    send(std::make_shared<MsgBuf>(std::move(msg)));
+  }
+
+  void Multiselect::send(Packet packet) {
+    if (is_writing_) {
+      write_queue_.push_back(std::move(packet));
+      return;
+    }
+
     auto span = gsl::span<const uint8_t>(*packet);
     connection_->write(
         span, span.size(),
         [wptr = weak_from_this(), round = current_round_,
-         packet = std::move(packet)](outcome::result<size_t> res) {
+            packet = std::move(packet)](outcome::result<size_t> res) {
           auto self = wptr.lock();
           // TODO logs and traces
           if (self && self->current_round_ == round) {
             self->onDataWritten(res);
           }
         });
+
+    is_writing_ = true;
   }
 
   void Multiselect::onDataWritten(outcome::result<size_t> res) {
+    is_writing_ = false;
+
     if (!res) {
       return close(res.error());
     }
@@ -94,15 +166,16 @@ namespace libp2p::protocol_muxer::multiselect {
         return;
       }
 
-      if (protocol_reply_was_sent_.has_value()) {
+      if (wait_for_reply_sent_.has_value()) {
         // reply was sent successfully, closing with success
-        return close(protocols_[protocol_reply_was_sent_.value()]);
+        return close(protocols_[wait_for_reply_sent_.value()]);
       }
     }
   }
 
   void Multiselect::close(outcome::result<std::string> result) {
     closed_ = true;
+    write_queue_.clear();
     ProtocolHandlerFunc callback;
     callback.swap(callback_);
     callback(std::move(result));
@@ -158,7 +231,7 @@ namespace libp2p::protocol_muxer::multiselect {
       case Parser::kUnderflow:
         break;
       case Parser::kReady:
-        got_result = onMessagesRead();
+        got_result = processMessages();
         break;
       default:
         // ~~~log
@@ -170,23 +243,102 @@ namespace libp2p::protocol_muxer::multiselect {
       return close(got_result.value());
     }
 
-    receive();
+    if (!wait_for_reply_sent_) {
+      receive();
+    }
   }
 
-  boost::optional<outcome::result<std::string>> Multiselect::onMessagesRead() {
-    /*
+  Multiselect::MaybeResult Multiselect::processMessages() {
+    MaybeResult result;
 
-     if (!multistream_negotiated_) expect right protocol in 1st message
+    for (const auto &msg : parser_.messages()) {
+      switch (msg.type) {
+        case Message::kProtocolName:
+          result = handleProposal(msg.content);
+          break;
+        case Message::kRightProtocolVersion:
+          multistream_negotiated_ = true;
+          break;
+        case Message::kNAMessage:
+          result = handleNA();
+          break;
+        case Message::kLSMessage:
+          sendLS();
+          break;
+        case Message::kWrongProtocolVersion: {
+          SL_DEBUG(log(), "Received unsupported protocol version: {}",
+                   dumpBin(msg.content));
+          result = ProtocolMuxer::Error::PROTOCOL_VIOLATION;
+        } break;
+        default: {
+          SL_DEBUG(log(), "Received invalid message: {}", dumpBin(msg.content));
+          result = ProtocolMuxer::Error::PROTOCOL_VIOLATION;
+        } break;
+      }
 
-     if (ls) send ls
+      if (result) {
+        break;
+      }
+    }
 
-     if (na) propose further
+    parser_.reset();
+    return result;
+  }
 
-     if (protocol) than it depends of is_initiator
+  Multiselect::MaybeResult Multiselect::handleProposal(
+      const std::string_view &protocol) {
+    if (is_initiator_) {
+      if (wait_for_protocol_reply_) {
+        assert(current_protocol_ < protocols_.size());
 
-     */
+        if (protocols_[current_protocol_] == protocol) {
+          // successful client side negotiation
+          return MaybeResult(std::string(protocol));
+        }
+      }
+
+      SL_DEBUG(log(), "Unexpected message received by client: {}",
+               dumpBin(protocol));
+      return MaybeResult(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
+    }
+
+    // server side
+
+    size_t idx = 0;
+    for (const auto &p : protocols_) {
+      if (p == protocol) {
+        // successful server side negotiation
+        wait_for_reply_sent_ = idx;
+        write_queue_.clear();
+        send(detail::createMessage(protocol));
+        break;
+      }
+      ++idx;
+    }
+
+    if (!wait_for_reply_sent_) {
+      sendNA();
+    }
 
     return boost::none;
+  }
+
+  Multiselect::MaybeResult Multiselect::handleNA() {
+    if (is_initiator_) {
+      if (sendProposal()) {
+        // will try the next protocol
+        return boost::none;
+      }
+
+      SL_DEBUG(log(), "Failed to negotiate protocols: {}",
+               fmt::join(protocols_.begin(), protocols_.end(), ", "));
+      return MaybeResult(ProtocolMuxer::Error::NEGOTIATION_FAILED);
+    }
+
+    // server side
+
+    SL_DEBUG(log(), "Unexpected NA received by server");
+    return MaybeResult(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
   }
 
 }  // namespace libp2p::protocol_muxer::multiselect

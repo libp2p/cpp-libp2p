@@ -282,7 +282,7 @@ namespace libp2p::injector {
         di::bind<network::Network>().template to<network::NetworkImpl>(),
         di::bind<network::TransportManager>().template to<network::TransportManagerImpl>(),
         di::bind<transport::Upgrader>().template to<transport::UpgraderImpl>(),
-        di::bind<protocol_muxer::ProtocolMuxer>().template to<protocol_muxer::Multiselect>(),
+        di::bind<protocol_muxer::ProtocolMuxer>().template to<protocol_muxer::multiselect::Multiselect>(),
 
         // default adaptors
         di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext, security::Secio, security::Noise, security::TlsAdaptor>(),  // NOLINT

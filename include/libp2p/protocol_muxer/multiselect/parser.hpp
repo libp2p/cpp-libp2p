@@ -66,7 +66,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     void processReceivedMessages();
 
     /// Ctor for nested messages parsing, called from inside only
-    explicit Parser(size_t depth);
+    explicit Parser(size_t depth) : recursion_depth_(depth) {}
 
     /// Messages parsed
     Messages messages_;
