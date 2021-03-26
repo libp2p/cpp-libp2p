@@ -6,6 +6,7 @@
 libp2p_add_library(p2p_multiselect
     multiselect.cpp
     multiselect/parser.cpp
+    multiselect/simple_stream_negotiate.cpp
     )
 target_link_libraries(p2p_multiselect
     p2p_read_buffer
