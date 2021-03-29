@@ -8,44 +8,13 @@
 #include <cctype>
 
 #include <libp2p/common/hexutil.hpp>
-#include <libp2p/log/logger.hpp>
+#include <libp2p/common/trace.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
 
 namespace libp2p::protocol_muxer::multiselect {
 
   namespace {
-    gsl::span<const uint8_t> sv2span(const std::string_view &str) {
-      return gsl::span<const uint8_t>((const uint8_t *)str.data(),  // NOLINT
-                                      (ssize_t)str.size());         // NOLINT
-    }
-
-    gsl::span<const uint8_t> sv2span(const gsl::span<const uint8_t> &s) {
-      return s;
-    }
-
-    template <class Bytes>
-    std::string dumpBin(const Bytes &str) {
-      std::string ret;
-      ret.reserve(str.size() + 2);
-      bool non_printable_detected = false;
-      for (auto c : str) {
-        if (std::isprint(c) != 0) {
-          ret.push_back((char)c);
-        } else {
-          ret.push_back('?');
-          non_printable_detected = true;
-        }
-      }
-      if (non_printable_detected) {
-        ret.reserve(ret.size() * 3);
-        ret += " (";
-        ret += common::hex_lower(sv2span(str));
-        ret += ')';
-      }
-      return ret;
-    }
-
     const log::Logger &log() {
       static log::Logger logger = log::createLogger("multiselect");
       return logger;
@@ -174,7 +143,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
     auto span = gsl::span<const uint8_t>(*packet);
 
-    SL_TRACE(log(), "sending {}", dumpBin(span));
+    SL_TRACE(log(), "sending {}", common::dumpBin(span));
 
     connection_->write(
         span, span.size(),
@@ -250,7 +219,6 @@ namespace libp2p::protocol_muxer::multiselect {
   }
 
   void MultiselectInstance::onDataRead(outcome::result<size_t> res) {
-
     if (!res) {
       return close(res.error());
     }
@@ -264,7 +232,7 @@ namespace libp2p::protocol_muxer::multiselect {
     gsl::span<const uint8_t> span(*read_buffer_);
     span = span.first(bytes_read);
 
-    SL_TRACE(log(), "received {}", dumpBin(span));
+    SL_TRACE(log(), "received {}", common::dumpBin(span));
 
     boost::optional<outcome::result<std::string>> got_result;
 
@@ -309,11 +277,12 @@ namespace libp2p::protocol_muxer::multiselect {
           break;
         case Message::kWrongProtocolVersion: {
           SL_DEBUG(log(), "Received unsupported protocol version: {}",
-                   dumpBin(msg.content));
+                   common::dumpBin(msg.content));
           result = ProtocolMuxer::Error::PROTOCOL_VIOLATION;
         } break;
         default: {
-          SL_DEBUG(log(), "Received invalid message: {}", dumpBin(msg.content));
+          SL_DEBUG(log(), "Received invalid message: {}",
+                   common::dumpBin(msg.content));
           result = ProtocolMuxer::Error::PROTOCOL_VIOLATION;
         } break;
       }
@@ -340,7 +309,7 @@ namespace libp2p::protocol_muxer::multiselect {
       }
 
       SL_DEBUG(log(), "Unexpected message received by client: {}",
-               dumpBin(protocol));
+               common::dumpBin(protocol));
       return MaybeResult(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
     }
 

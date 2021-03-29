@@ -7,10 +7,17 @@
 
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
+#include <libp2p/log/logger.hpp>
+#include <libp2p/common/hexutil.hpp>
 
 namespace libp2p::protocol_muxer::multiselect {
 
   namespace {
+    const log::Logger &log() {
+      static log::Logger logger = log::createLogger("multiselect-simple");
+      return logger;
+    }
+
     using StreamPtr = std::shared_ptr<connection::Stream>;
     using Callback = std::function<void(outcome::result<StreamPtr>)>;
 
@@ -39,6 +46,9 @@ namespace libp2p::protocol_muxer::multiselect {
       if (!res) {
         return failed(stream, cb, res.error());
       }
+
+      SL_TRACE(log(), "received {}", common::dumpBin(gsl::span<const uint8_t>(buffers.read)));
+
       completed(std::move(stream), cb, buffers);
     }
 
@@ -60,6 +70,8 @@ namespace libp2p::protocol_muxer::multiselect {
       }
 
       assert(total_sz > kMaxVarintSize);
+
+      SL_TRACE(log(), "read {}", common::dumpBin(gsl::span<uint8_t>(buffers->read)));
 
       size_t remaining_bytes = total_sz - kMaxVarintSize;
 
@@ -114,6 +126,8 @@ namespace libp2p::protocol_muxer::multiselect {
     assert(buffers->written.size() >= kMaxVarintSize);
 
     gsl::span<const uint8_t> span(buffers->written);
+
+    SL_TRACE(log(), "sending {}", common::dumpBin(span));
 
     stream->write(
         span, span.size(),
