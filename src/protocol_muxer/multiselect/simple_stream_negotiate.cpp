@@ -99,8 +99,14 @@ namespace libp2p::protocol_muxer::multiselect {
 
   void simpleStreamNegotiate(const StreamPtr &stream,
                              const peer::Protocol &protocol_id, Callback cb) {
+    auto res = detail::createMessage(protocol_id);
+    if (!res) {
+      return stream->deferWriteCallback(
+          res.error(), [cb = std::move(cb)](auto res) { cb(res.error()); });
+    }
+
     auto buffers = std::make_shared<Buffers>();
-    buffers->written = detail::createMessage(protocol_id);
+    buffers->written = std::move(res.value());
     buffers->read.resize(buffers->written.size());
 
     assert(buffers->written.size() >= kMaxVarintSize);
@@ -111,7 +117,8 @@ namespace libp2p::protocol_muxer::multiselect {
         span, span.size(),
         [stream = stream, cb = std::move(cb),
          buffers = std::move(buffers)](outcome::result<size_t> res) mutable {
-          onPacketWritten(std::move(stream), std::move(cb), std::move(buffers), res);
+          onPacketWritten(std::move(stream), std::move(cb), std::move(buffers),
+                          res);
         });
   }
 

@@ -249,7 +249,7 @@ namespace libp2p::basic {
 
   boost::optional<FixedBufferCollector::BytesRef>
   FixedBufferCollector::add(BytesRef &data) {
-    auto span = CBytesRef(data);
+    auto &span = (CBytesRef&)(data); //NOLINT
     auto ret = add(span);
     if (ret.has_value()) {
       auto& v = ret.value();

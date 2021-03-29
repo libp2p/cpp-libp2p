@@ -8,14 +8,16 @@
 
 #include <boost/container/static_vector.hpp>
 
+#include <libp2p/protocol_muxer/protocol_muxer.hpp>
+
 #include "common.hpp"
 
 namespace libp2p::protocol_muxer::multiselect::detail {
 
   /// Static vector for temp msg crafting
   using TmpMsgBuf =
-  boost::container::static_vector<uint8_t,
-      kMaxMessageSize + kMaxVarintSize>;
+      boost::container::static_vector<uint8_t,
+                                      kMaxMessageSize + kMaxVarintSize>;
 
   /// Appends varint prefix to buffer
   template <typename Buffer>
@@ -32,67 +34,71 @@ namespace libp2p::protocol_muxer::multiselect::detail {
 
   /// Appends protocol message to buffer
   template <typename Buffer, typename String>
-  inline bool appendProtocol(Buffer &buffer, const String &protocol) {
+  inline outcome::result<void> appendProtocol(Buffer &buffer,
+                                              const String &protocol) {
     auto msg_size = protocol.size() + 1;
-    if (msg_size > kMaxMessageSize) {
-      return false;
+    if (msg_size > kMaxMessageSize - kMaxVarintSize) {
+      return ProtocolMuxer::Error::INTERNAL_ERROR;
     }
     appendVarint(buffer, msg_size);
     buffer.insert(buffer.end(), protocol.begin(), protocol.end());
     buffer.push_back(kNewLine);
-    return (buffer.size() <= kMaxMessageSize);
+    if (buffer.size() <= kMaxMessageSize) {
+      return outcome::success();
+    }
+    return ProtocolMuxer::Error::INTERNAL_ERROR;
   }
 
   /// Creates simple protocol message (one string)
   template <typename String>
-  inline MsgBuf createMessage(const String &protocol) {
+  inline outcome::result<MsgBuf> createMessage(const String &protocol) {
     MsgBuf ret;
     ret.reserve(protocol.size() + 1 + kMaxVarintSize);
-    if (!appendProtocol(ret, protocol)) {
-      ret.clear();
-    }
+    OUTCOME_TRY(appendProtocol(ret, protocol));
     return ret;
   }
 
-  /// Creates complex protocol message (multiple strings)
-  template <class Container>
-  inline MsgBuf createMessage(const Container &protocols, bool nested) {
-    MsgBuf ret_buf;
-    TmpMsgBuf tmp_buf;
-    bool overflow = false;
-
+  /// Appends varint-delimited protocol list to buffer
+  template <typename Buffer, typename Container>
+  inline outcome::result<void> appendProtocolList(Buffer &buffer,
+                                                  const Container &protocols,
+                                                  bool append_final_new_line) {
     try {
-      if (nested) {
-        for (const auto &p : protocols) {
-          if (!appendProtocol(tmp_buf, p)) {
-            overflow = true;
-            break;
-          }
-        }
-        if (!overflow) {
-          tmp_buf.push_back(kNewLine);
-        }
-      } else {
-        for (const auto &p : protocols) {
-          tmp_buf.insert(tmp_buf.end(), p.begin(), p.end());
-          tmp_buf.push_back(kNewLine);
-        }
+      for (const auto &p : protocols) {
+        OUTCOME_TRY(appendProtocol(buffer, p));
+      }
+
+      if (append_final_new_line) {
+        buffer.push_back(kNewLine);
       }
 
     } catch (const std::bad_alloc &e) {
       // static tmp buffer throws this on oversize
-      overflow = true;
+      return ProtocolMuxer::Error::INTERNAL_ERROR;
     }
 
-    if (!overflow) {
+    return outcome::success();
+  }
+
+  /// Creates complex protocol message (multiple strings)
+  template <class Container>
+  inline outcome::result<MsgBuf> createMessage(const Container &protocols,
+                                               bool nested) {
+    MsgBuf ret_buf;
+
+    if (nested) {
+      TmpMsgBuf tmp_buf;
+      OUTCOME_TRY(appendProtocolList(tmp_buf, protocols, true));
       ret_buf.reserve(tmp_buf.size() + kMaxVarintSize);
       appendVarint(ret_buf, tmp_buf.size());
       ret_buf.insert(ret_buf.end(), tmp_buf.begin(), tmp_buf.end());
+    } else {
+      OUTCOME_TRY(appendProtocolList(ret_buf, protocols, false));
     }
 
     return ret_buf;
   }
 
-}  // namespace libp2p::protocol_muxer::mutiselect::detail
+}  // namespace libp2p::protocol_muxer::multiselect::detail
 
 #endif  // LIBP2P_MULTISELECT_SERIALIZING_HPP

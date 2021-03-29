@@ -27,21 +27,36 @@ namespace libp2p::protocol_muxer::multiselect::detail {
   }
 
   Parser::State Parser::consume(gsl::span<const uint8_t> &data) {
+    static constexpr size_t kMaybeAverageMessageLength = 17;
+
     if (state_ == kReady) {
       return kError;
     }
 
-    while (!data.empty() && state_ == kUnderflow) {
-      switch (varint_reader_.state()) {
-        case VarintPrefixReader::kReady:
-          consumeData(data);
-          break;
-        case VarintPrefixReader::kUnderflow:
-          varint_reader_.consume(data);
-          break;
-        default:
+    while (!data.empty()) {
+      if (state_ != kUnderflow) {
+        break;
+      }
+
+      if (expected_msg_size_ == 0) {
+        auto s = varint_reader_.consume(data);
+        if (s == VarintPrefixReader::kUnderflow) {
+          continue;
+        }
+        if (s != VarintPrefixReader::kReady) {
           state_ = kOverflow;
           break;
+        }
+        expected_msg_size_ = varint_reader_.value();
+        if (expected_msg_size_ == 0) {
+          // zero varint received, not acceptable, but not fatal
+          reset();
+        } else {
+          messages_.reserve(expected_msg_size_ / kMaybeAverageMessageLength);
+          msg_buffer_.expect(expected_msg_size_);
+        }
+      } else {
+        consumeData(data);
       }
     }
 
@@ -49,28 +64,8 @@ namespace libp2p::protocol_muxer::multiselect::detail {
   }
 
   void Parser::consumeData(gsl::span<const uint8_t> &data) {
-    static constexpr size_t kMaybeAverageMessageLength = 7;
-
     assert(varint_reader_.state() == VarintPrefixReader::kReady);
-
-    if (expected_msg_size_ == 0) {
-      expected_msg_size_ = varint_reader_.value();
-
-      if (expected_msg_size_ > kMaxMessageSize) {
-        state_ = kOverflow;
-        return;
-      }
-
-      if (expected_msg_size_ == 0) {
-        // zero varint received
-        reset();
-        return;
-      }
-
-      messages_.reserve(expected_msg_size_ / kMaybeAverageMessageLength);
-
-      msg_buffer_.expect(expected_msg_size_);
-    }
+    assert(expected_msg_size_ > 0);
 
     auto maybe_msg_ready = msg_buffer_.add(data);
     if (maybe_msg_ready) {

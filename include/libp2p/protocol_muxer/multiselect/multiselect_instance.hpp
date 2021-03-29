@@ -45,7 +45,7 @@ namespace libp2p::protocol_muxer::multiselect {
     /// Sends NA reply message
     void sendNA();
 
-    void send(MsgBuf msg);
+    void send(outcome::result<MsgBuf> msg);
 
     void send(Packet packet);
 
