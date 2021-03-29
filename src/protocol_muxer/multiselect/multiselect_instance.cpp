@@ -250,8 +250,9 @@ namespace libp2p::protocol_muxer::multiselect {
   }
 
   void MultiselectInstance::onDataRead(outcome::result<size_t> res) {
+
     if (!res) {
-      close(res.error());
+      return close(res.error());
     }
 
     size_t bytes_read = res.value();

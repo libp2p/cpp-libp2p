@@ -99,7 +99,9 @@ namespace libp2p::protocol_muxer::multiselect {
 
   void simpleStreamNegotiate(const StreamPtr &stream,
                              const peer::Protocol &protocol_id, Callback cb) {
-    auto res = detail::createMessage(protocol_id);
+    std::array<std::string_view, 2> a(
+        {kProtocolId, protocol_id});
+    auto res = detail::createMessage(a, false);
     if (!res) {
       return stream->deferWriteCallback(
           res.error(), [cb = std::move(cb)](auto res) { cb(res.error()); });

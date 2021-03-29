@@ -198,11 +198,18 @@ namespace libp2p::network {
           }
           auto &&stream = rstream.value();
 
+          auto protocols = this->router_->getSupportedProtocols();
+          if (protocols.empty()) {
+            log()->warn("no protocols are served, resetting inbound stream");
+            stream->reset();
+            return;
+          }
+
           // negotiate protocols
           this->multiselect_->selectOneOf(
               this->router_->getSupportedProtocols(), stream,
               false /* not initiator */,
-              false /* don't need to negotiate multistream itself */,
+              true /* need to negotiate multistream itself - SPEC ???*/,
               [this, stream](outcome::result<peer::Protocol> rproto) {
                 bool success = true;
 
