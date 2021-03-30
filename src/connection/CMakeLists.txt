@@ -10,3 +10,5 @@ target_link_libraries(p2p_loopback_stream
     p2p_logger
     p2p_peer_id
     )
+
+libp2p_install(p2p_loopback_stream)
