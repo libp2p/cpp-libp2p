@@ -6,7 +6,6 @@
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
-#include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
 
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
@@ -130,33 +129,11 @@ namespace libp2p::network {
                 if (!rstream) {
                   return cb(rstream.error());
                 }
-                auto &&stream = rstream.value();
 
-                TRACE("dialer: before multiselect");
-
-                // 3. negotiate a protocol over that stream
-                //std::vector<peer::Protocol> protocols{protocol};
-
-                protocol_muxer::multiselect::simpleStreamNegotiate(
-                    stream,
+                this->multiselect_->simpleStreamNegotiate(
+                    rstream.value(),
                     protocol,
                     std::move(cb));
-
-//                std::vector<peer::Protocol> protocols{protocol};
-//                this->multiselect_->selectOneOf(
-//                    protocols, stream, true /* initiator */,
-//                    [cb{std::move(cb)},
-//                        stream](outcome::result<peer::Protocol> rproto) mutable {
-//                      if (!rproto) {
-//                        return cb(rproto.error());
-//                      }
-//
-//                      TRACE("dialer: inside multiselect callback");
-//
-//                      // 4. return stream back to the user
-//                      cb(std::move(stream));
-//                    });
-
               });
         },
         timeout);

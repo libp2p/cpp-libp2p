@@ -13,7 +13,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
   /// Implements simple (Yes/No) negotiation of a single protocol on a fresh
   /// outbound stream
-  void simpleStreamNegotiate(
+  void simpleStreamNegotiateImpl(
       const std::shared_ptr<connection::Stream> &stream,
       const peer::Protocol &protocol_id,
       std::function<void(outcome::result<std::shared_ptr<connection::Stream>>)>

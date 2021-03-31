@@ -5,10 +5,10 @@
 
 #include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
 
+#include <libp2p/common/hexutil.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
-#include <libp2p/log/logger.hpp>
-#include <libp2p/common/hexutil.hpp>
 
 namespace libp2p::protocol_muxer::multiselect {
 
@@ -47,7 +47,8 @@ namespace libp2p::protocol_muxer::multiselect {
         return failed(stream, cb, res.error());
       }
 
-      SL_TRACE(log(), "received {}", common::dumpBin(gsl::span<const uint8_t>(buffers.read)));
+      SL_TRACE(log(), "received {}",
+               common::dumpBin(gsl::span<const uint8_t>(buffers.read)));
 
       completed(std::move(stream), cb, buffers);
     }
@@ -71,7 +72,8 @@ namespace libp2p::protocol_muxer::multiselect {
 
       assert(total_sz > kMaxVarintSize);
 
-      SL_TRACE(log(), "read {}", common::dumpBin(gsl::span<uint8_t>(buffers->read)));
+      SL_TRACE(log(), "read {}",
+               common::dumpBin(gsl::span<uint8_t>(buffers->read)));
 
       size_t remaining_bytes = total_sz - kMaxVarintSize;
 
@@ -109,10 +111,10 @@ namespace libp2p::protocol_muxer::multiselect {
     }
   }  // namespace
 
-  void simpleStreamNegotiate(const StreamPtr &stream,
-                             const peer::Protocol &protocol_id, Callback cb) {
-    std::array<std::string_view, 2> a(
-        {kProtocolId, protocol_id});
+  void simpleStreamNegotiateImpl(const StreamPtr &stream,
+                                 const peer::Protocol &protocol_id,
+                                 Callback cb) {
+    std::array<std::string_view, 2> a({kProtocolId, protocol_id});
     auto res = detail::createMessage(a, false);
     if (!res) {
       return stream->deferWriteCallback(

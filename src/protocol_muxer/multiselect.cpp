@@ -3,16 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol_muxer/multiselect/multiselect_instance.hpp>
 #include <libp2p/log/logger.hpp>
+#include <libp2p/protocol_muxer/multiselect/multiselect_instance.hpp>
+#include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
 
 namespace libp2p::protocol_muxer::multiselect {
 
   namespace {
+#ifndef NDEBUG
     const log::Logger &log() {
       static log::Logger logger = log::createLogger("multiselect");
       return logger;
     }
+#endif
 
     constexpr size_t kMaxCacheSize = 8;
   }  // namespace
@@ -23,6 +26,22 @@ namespace libp2p::protocol_muxer::multiselect {
                                 ProtocolHandlerFunc cb) {
     getInstance()->selectOneOf(protocols, std::move(connection), is_initiator,
                                negotiate_multiselect, std::move(cb));
+  }
+
+  void Multiselect::simpleStreamNegotiate(
+      const std::shared_ptr<connection::Stream> &stream,
+      const peer::Protocol &protocol_id,
+      std::function<void(outcome::result<std::shared_ptr<connection::Stream>>)>
+          cb) {
+    assert(stream);
+    assert(stream->isInitiator());
+    assert(!protocol_id.empty());
+    assert(cb);
+
+    SL_TRACE(log(), "negotiating outbound stream for protocol {}", protocol_id);
+
+    // This goes without using instances
+    simpleStreamNegotiateImpl(stream, protocol_id, std::move(cb));
   }
 
   void Multiselect::instanceClosed(Instance instance,

@@ -27,6 +27,14 @@ namespace libp2p::protocol_muxer::multiselect {
                      bool is_initiator, bool negotiate_multiselect,
                      ProtocolHandlerFunc cb) override;
 
+    /// Simple single stream negotiate procedure
+    void simpleStreamNegotiate(
+        const std::shared_ptr<connection::Stream> &stream,
+        const peer::Protocol &protocol_id,
+        std::function<
+            void(outcome::result<std::shared_ptr<connection::Stream>>)>
+            cb) override;
+
     /// Called from instance on close
     void instanceClosed(Instance instance, const ProtocolHandlerFunc &cb,
                         outcome::result<peer::Protocol> result);

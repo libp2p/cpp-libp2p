@@ -9,8 +9,7 @@
 #include <memory>
 
 #include <gsl/span>
-#include <libp2p/basic/readwriter.hpp>
-#include <libp2p/outcome/outcome.hpp>
+#include <libp2p/connection/stream.hpp>
 #include <libp2p/peer/protocol.hpp>
 
 namespace libp2p::protocol_muxer {
@@ -49,6 +48,20 @@ namespace libp2p::protocol_muxer {
                              std::shared_ptr<basic::ReadWriter> connection,
                              bool is_initiator, bool negotiate_multistream,
                              ProtocolHandlerFunc cb) = 0;
+
+    /**
+     * Simple (Yes/No) negotiation of a single protocol on a fresh outbound
+     * stream
+     * @param stream Stream, just connected
+     * @param protocol_id Protocol to negotiate
+     * @param callback Stream result external callback
+     */
+    virtual void simpleStreamNegotiate(
+        const std::shared_ptr<connection::Stream> &stream,
+        const peer::Protocol &protocol_id,
+        std::function<
+            void(outcome::result<std::shared_ptr<connection::Stream>>)>
+            cb) = 0;
 
     virtual ~ProtocolMuxer() = default;
   };

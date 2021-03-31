@@ -19,6 +19,13 @@ namespace libp2p::protocol_muxer {
                       std::shared_ptr<basic::ReadWriter> connection,
                       bool is_initiator, bool negotiate_multiselect,
                       ProtocolHandlerFunc cb));
+
+    MOCK_METHOD3(
+        simpleStreamNegotiate,
+        void(const std::shared_ptr<connection::Stream> &,
+             const peer::Protocol &,
+             std::function<
+                 void(outcome::result<std::shared_ptr<connection::Stream>>)>));
   };
 }  // namespace libp2p::protocol_muxer
 
