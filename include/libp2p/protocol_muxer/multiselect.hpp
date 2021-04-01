@@ -15,6 +15,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
   class MultiselectInstance;
 
+  /// Multiselect protocol implementation of ProtocolMuxer
   class Multiselect : public protocol_muxer::ProtocolMuxer {
    public:
     using Instance = std::shared_ptr<MultiselectInstance>;

@@ -54,7 +54,7 @@ namespace libp2p::protocol_muxer {
      * stream
      * @param stream Stream, just connected
      * @param protocol_id Protocol to negotiate
-     * @param callback Stream result external callback
+     * @param cb Stream result external callback
      */
     virtual void simpleStreamNegotiate(
         const std::shared_ptr<connection::Stream> &stream,

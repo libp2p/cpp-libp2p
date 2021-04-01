@@ -97,35 +97,3 @@ TEST(Multiselect, SingleValidMessagesPartialRead) {
   test(1, 2);
   test(2, 1);
 }
-
-// TEST(Multiselect, NestedValidMessages) {
-//  using namespace libp2p::protocol_muxer::multiselect;
-//
-//  std::vector<std::vector<Message>> messages({
-//                                    {Message::kRightProtocolVersion,
-//                                    "/multistream/1.0.0"},
-//                                    {Message::kRightProtocolVersion,
-//                                    "/multistream/1.0.1"},
-//                                    {Message::kRightProtocolVersion,
-//                                    "/multistream-select/0.4.0"},
-//                                    {Message::kWrongProtocolVersion,
-//                                    "/multistream/2.0.0"},
-//                                    {Message::kProtocolName, "/echo/1.0.0"},
-//                                    {Message::kNAMessage, "na"},
-//                                    {Message::kLSMessage, "ls"},
-//                                });
-//
-//  ReadingState reader;
-//  for (const auto &m : messages) {
-//    std::vector<uint8_t> buf = createMessage(m.content);
-//    EXPECT_GT(buf.size(), m.content.size());
-//    gsl::span<const uint8_t> span(buf);
-//    auto s = reader.consume(span);
-//    EXPECT_EQ(s, ReadingState::kReady);
-//    EXPECT_EQ(reader.messages_.size(), 1);
-//    const auto &received = reader.messages_.front();
-//    EXPECT_EQ(received.content, m.content);
-//    EXPECT_EQ(received.type, m.type);
-//    reader.reset();
-//  }
-//}

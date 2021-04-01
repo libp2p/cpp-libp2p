@@ -32,10 +32,6 @@ namespace libp2p::protocol_muxer::multiselect {
     assert(connection);
     assert(cb);
 
-    //    if (protocols.size() == 1 && is_initiator && !negotiate_multiselect) {
-    //       ~~~ use simple negotiator instead
-    //    }
-
     protocols_.assign(protocols.begin(), protocols.end());
 
     connection_ = std::move(connection);
@@ -84,6 +80,7 @@ namespace libp2p::protocol_muxer::multiselect {
   bool MultiselectInstance::sendProposal() {
     if (current_protocol_ >= protocols_.size()) {
       // nothing more to propose
+      SL_DEBUG(log(), "none of proposed protocols were accepted by peer");
       return false;
     }
 
@@ -126,7 +123,6 @@ namespace libp2p::protocol_muxer::multiselect {
           [wptr = weak_from_this(),
            round = current_round_](outcome::result<size_t> res) {
             auto self = wptr.lock();
-            // TODO logs and traces
             if (self && self->current_round_ == round) {
               self->onDataWritten(res);
             }
@@ -150,7 +146,6 @@ namespace libp2p::protocol_muxer::multiselect {
         [wptr = weak_from_this(), round = current_round_,
          packet = std::move(packet)](outcome::result<size_t> res) {
           auto self = wptr.lock();
-          // TODO logs and traces
           if (self && self->current_round_ == round) {
             self->onDataWritten(res);
           }
@@ -191,7 +186,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
   void MultiselectInstance::receive() {
     if (closed_ || parser_.state() != Parser::kUnderflow) {
-      // TODO warning if not underflow, it was not reset
+      log()->error("receive(): invalid state");
       return;
     }
 
@@ -200,7 +195,8 @@ namespace libp2p::protocol_muxer::multiselect {
     assert(bytes_needed > 0);
 
     if (bytes_needed > kMaxMessageSize) {
-      // ~~~log
+      SL_TRACE(log(), "rejecting incoming traffic, too large message ({})",
+               bytes_needed);
       return close(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
     }
 
@@ -211,7 +207,6 @@ namespace libp2p::protocol_muxer::multiselect {
                       [wptr = weak_from_this(), round = current_round_,
                        packet = read_buffer_](outcome::result<size_t> res) {
                         auto self = wptr.lock();
-                        // TODO logs and traces
                         if (self && self->current_round_ == round) {
                           self->onDataRead(res);
                         }
@@ -225,7 +220,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
     size_t bytes_read = res.value();
     if (bytes_read > read_buffer_->size()) {
-      // ~~~log
+      log()->error("onDataRead(): invalid state");
       return close(ProtocolMuxer::Error::INTERNAL_ERROR);
     }
 
@@ -244,7 +239,7 @@ namespace libp2p::protocol_muxer::multiselect {
         got_result = processMessages();
         break;
       default:
-        // ~~~log
+        SL_TRACE(log(), "peer error: parser overflow");
         got_result = ProtocolMuxer::Error::PROTOCOL_VIOLATION;
         break;
     }
@@ -328,6 +323,7 @@ namespace libp2p::protocol_muxer::multiselect {
     }
 
     if (!wait_for_reply_sent_) {
+      SL_DEBUG(log(), "unknown protocol {} proposed by client", protocol);
       sendNA();
     }
 
@@ -336,6 +332,11 @@ namespace libp2p::protocol_muxer::multiselect {
 
   MultiselectInstance::MaybeResult MultiselectInstance::handleNA() {
     if (is_initiator_) {
+      if (current_protocol_ < protocols_.size()) {
+        SL_DEBUG(log(), "protocol {} was not accepted by peer",
+                 protocols_[current_protocol_]);
+      }
+
       ++current_protocol_;
 
       if (sendProposal()) {
