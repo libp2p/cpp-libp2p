@@ -235,7 +235,7 @@ TEST_F(DialerTest, NewStreamFailed) {
  * @when newStream is executed
  * @then get negotiation failure
  */
-TEST_F(DialerTest, NewStreamNegotiationFailed) {
+TEST_F(DialerTest, DISABLED_NewStreamNegotiationFailed) {
   // connection exist to peer
   EXPECT_CALL(*cmgr, getBestConnectionForPeer(pid))
       .WillOnce(Return(connection));
@@ -262,7 +262,7 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
  * @when newStream is executed
  * @then get new stream
  */
-TEST_F(DialerTest, NewStreamSuccess) {
+TEST_F(DialerTest, DISABLED_NewStreamSuccess) {
   // connection exist to peer
   EXPECT_CALL(*cmgr, getBestConnectionForPeer(pid))
       .WillOnce(Return(connection));

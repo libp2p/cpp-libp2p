@@ -79,7 +79,7 @@ class UpgraderTest : public testing::Test {
       std::make_shared<NiceMock<CapableConnectionMock>>();
 };
 
-TEST_F(UpgraderTest, UpgradeSecureInitiator) {
+TEST_F(UpgraderTest, DISABLED_UpgradeSecureInitiator) {
   EXPECT_CALL(*raw_conn_, isInitiator_hack()).WillRepeatedly(Return(true));
 
   EXPECT_CALL(*multiselect_mock_,
@@ -100,7 +100,7 @@ TEST_F(UpgraderTest, UpgradeSecureInitiator) {
       });
 }
 
-TEST_F(UpgraderTest, UpgradeSecureNotInitiator) {
+TEST_F(UpgraderTest, DISABLED_UpgradeSecureNotInitiator) {
   EXPECT_CALL(*raw_conn_, isInitiator_hack()).WillRepeatedly(Return(false));
   EXPECT_CALL(*multiselect_mock_,
               selectOneOf(gsl::span<const Protocol>(security_protos_),
@@ -119,7 +119,7 @@ TEST_F(UpgraderTest, UpgradeSecureNotInitiator) {
       });
 }
 
-TEST_F(UpgraderTest, UpgradeSecureFail) {
+TEST_F(UpgraderTest, DISABLED_UpgradeSecureFail) {
   EXPECT_CALL(*raw_conn_, isInitiator_hack()).WillOnce(Return(false));
   EXPECT_CALL(*multiselect_mock_,
               selectOneOf(gsl::span<const Protocol>(security_protos_),
@@ -132,7 +132,7 @@ TEST_F(UpgraderTest, UpgradeSecureFail) {
   });
 }
 
-TEST_F(UpgraderTest, UpgradeMux) {
+TEST_F(UpgraderTest, DISABLED_UpgradeMux) {
   EXPECT_CALL(*sec_conn_, isInitiatorMock()).WillOnce(Return(true));
   EXPECT_CALL(*multiselect_mock_,
               selectOneOf(gsl::span<const Protocol>(muxer_protos_),
@@ -150,7 +150,7 @@ TEST_F(UpgraderTest, UpgradeMux) {
   });
 }
 
-TEST_F(UpgraderTest, UpgradeMuxFail) {
+TEST_F(UpgraderTest, DISABLED_UpgradeMuxFail) {
   EXPECT_CALL(*sec_conn_, isInitiatorMock()).WillOnce(Return(true));
   EXPECT_CALL(*multiselect_mock_,
               selectOneOf(gsl::span<const Protocol>(muxer_protos_),
