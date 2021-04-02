@@ -23,6 +23,9 @@ namespace testutil {
 sinks:
   - name: console
     type: console
+    capacity: 4
+    buffer: 16384
+    latency: 0
 groups:
   - name: libp2p
     sink: console
