@@ -69,6 +69,8 @@ namespace libp2p::connection {
 
   void MplexStream::read(gsl::span<uint8_t> out, size_t bytes,
                          ReadCallbackFunc cb, bool some) {
+    // TODO(107): Reentrancy
+
     if (is_reset_) {
       return cb(Error::IS_RESET);
     }
@@ -126,6 +128,8 @@ namespace libp2p::connection {
 
   void MplexStream::write(gsl::span<const uint8_t> in, size_t bytes,
                           WriteCallbackFunc cb) {
+    // TODO(107): Reentrancy
+
     if (is_reset_) {
       return cb(Error::IS_RESET);
     }
@@ -166,6 +170,24 @@ namespace libp2p::connection {
             self->write(in, bytes, cb);
           }
         });
+  }
+
+  void MplexStream::deferReadCallback(outcome::result<size_t> res,
+                                      ReadCallbackFunc cb) {
+    if (connection_.expired()) {
+      // TODO(107) Reentrancy here, defer callback
+      return cb(Error::CONNECTION_IS_DEAD);
+    }
+    connection_.lock()->deferReadCallback(res, std::move(cb));
+  }
+
+  void MplexStream::deferWriteCallback(std::error_code ec,
+                                       WriteCallbackFunc cb) {
+    if (connection_.expired()) {
+      // TODO(107) Reentrancy here, defer callback
+      return cb(Error::CONNECTION_IS_DEAD);
+    }
+    connection_.lock()->deferWriteCallback(ec, std::move(cb));
   }
 
   void MplexStream::writeSome(gsl::span<const uint8_t> in, size_t bytes,

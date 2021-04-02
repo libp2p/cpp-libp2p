@@ -8,5 +8,5 @@ addtest(libp2p_sqlite_test
     )
 target_link_libraries(libp2p_sqlite_test
     Boost::filesystem
-    libp2p_sqlite
+    p2p_sqlite
     )

@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/remote_subscriptions.hpp>
+#include "remote_subscriptions.hpp"
 
 #include <algorithm>
 
-#include <libp2p/protocol/gossip/impl/connectivity.hpp>
-#include <libp2p/protocol/gossip/impl/message_builder.hpp>
+#include "connectivity.hpp"
+#include "message_builder.hpp"
 
 namespace libp2p::protocol::gossip {
 
@@ -38,24 +38,33 @@ namespace libp2p::protocol::gossip {
   }
 
   void RemoteSubscriptions::onPeerSubscribed(const PeerContextPtr &peer,
-                                             bool subscribed,
                                              const TopicId &topic) {
-    if (subscribed) {
-      if (!peer->subscribed_to.insert(topic).second) {
-        // request from wire, already subscribed, ignoring double subscription
-        log_.debug("peer {} already subscribed to {}", peer->str, topic);
-        return;
-      }
-      log_.debug("peer {} subscribing to {}", peer->str, topic);
-    } else {
-      if (peer->subscribed_to.erase(topic) == 0) {
-        // was not subscribed actually, ignore
-        log_.debug("peer {} was not subscribed to {}", peer->str, topic);
-        return;
-      }
-      log_.debug("peer {} unsubscribing from {}", peer->str, topic);
+    if (!peer->subscribed_to.insert(topic).second) {
+      // request from wire, already subscribed, ignoring double subscription
+      log_.debug("peer {} already subscribed to {}", peer->str, topic);
+      return;
     }
-    auto res = getItem(topic, subscribed);
+    log_.debug("peer {} subscribing to {}", peer->str, topic);
+
+    auto res = getItem(topic, true);
+    if (!res) {
+      // not error in this case, this is request from wire...
+      log_.debug("entry doesnt exist for {}", topic);
+      return;
+    }
+    TopicSubscriptions &subs = res.value();
+    subs.onPeerSubscribed(peer);
+  }
+
+  void RemoteSubscriptions::onPeerUnsubscribed(const PeerContextPtr &peer,
+                                               TopicId topic) {
+    if (peer->subscribed_to.erase(topic) == 0) {
+      // was not subscribed actually, ignore
+      log_.debug("peer {} was not subscribed to {}", peer->str, topic);
+      return;
+    }
+    log_.debug("peer {} unsubscribing from {}", peer->str, topic);
+    auto res = getItem(topic, false);
     if (!res) {
       // not error in this case, this is request from wire...
       log_.debug("entry doesnt exist for {}", topic);
@@ -63,19 +72,15 @@ namespace libp2p::protocol::gossip {
     }
     TopicSubscriptions &subs = res.value();
 
-    if (subscribed) {
-      subs.onPeerSubscribed(peer);
-    } else {
-      subs.onPeerUnsubscribed(peer);
-      if (subs.empty()) {
-        table_.erase(topic);
-      }
+    subs.onPeerUnsubscribed(peer);
+    if (subs.empty()) {
+      table_.erase(topic);
     }
   }
 
   void RemoteSubscriptions::onPeerDisconnected(const PeerContextPtr &peer) {
     while (!peer->subscribed_to.empty()) {
-      onPeerSubscribed(peer, false, *peer->subscribed_to.begin());
+      onPeerUnsubscribed(peer, *peer->subscribed_to.begin());
     }
   }
 
@@ -97,7 +102,7 @@ namespace libp2p::protocol::gossip {
     auto res = getItem(topic, false);
     if (!res) {
       // we don't have this topic anymore
-      peer->message_to_send->addPrune(topic);
+      peer->message_builder->addPrune(topic);
       connectivity_.peerIsWritable(peer, true);
       return;
     }
@@ -105,12 +110,13 @@ namespace libp2p::protocol::gossip {
   }
 
   void RemoteSubscriptions::onPrune(const PeerContextPtr &peer,
-                                    const TopicId &topic) {
+                                    const TopicId &topic,
+                                    uint64_t backoff_time) {
     auto res = getItem(topic, false);
     if (!res) {
       return;
     }
-    res.value().onPrune(peer);
+    res.value().onPrune(peer, scheduler_.now() + backoff_time * 1000);
   }
 
   void RemoteSubscriptions::onNewMessage(

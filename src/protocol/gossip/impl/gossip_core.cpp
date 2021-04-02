@@ -3,21 +3,34 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/gossip_core.hpp>
+#include "gossip_core.hpp"
 
 #include <cassert>
 
-#include <libp2p/protocol/gossip/impl/connectivity.hpp>
-#include <libp2p/protocol/gossip/impl/local_subscriptions.hpp>
-#include <libp2p/protocol/gossip/impl/message_builder.hpp>
-#include <libp2p/protocol/gossip/impl/remote_subscriptions.hpp>
+#include <libp2p/common/hexutil.hpp>
+
+#include "connectivity.hpp"
+#include "local_subscriptions.hpp"
+#include "message_builder.hpp"
+#include "remote_subscriptions.hpp"
 
 namespace libp2p::protocol::gossip {
+
+  std::shared_ptr<Gossip> create(std::shared_ptr<Scheduler> scheduler,
+                                 std::shared_ptr<Host> host,
+                                 Config config) {
+    return std::make_shared<GossipCore>(std::move(config), std::move(scheduler),
+                                        std::move(host));
+  }
 
   // clang-format off
   GossipCore::GossipCore(Config config, std::shared_ptr<Scheduler> scheduler,
                          std::shared_ptr<Host> host)
       : config_(std::move(config)),
+        create_message_id_([](const ByteArray &from, const ByteArray &seq,
+                              const ByteArray &data){
+          return createMessageId(from, seq, data);
+        }),
         scheduler_(std::move(scheduler)),
         host_(std::move(host)),
         local_peer_id_(host_->getPeerInfo().id),
@@ -42,8 +55,21 @@ namespace libp2p::protocol::gossip {
     }
   }
 
+  outcome::result<void> GossipCore::addBootstrapPeer(
+      const std::string &address) {
+    OUTCOME_TRY(ma, libp2p::multi::Multiaddress::create(address));
+    auto peer_id_str = ma.getPeerId();
+    if (!peer_id_str) {
+      return multi::Multiaddress::Error::INVALID_INPUT;
+    }
+    OUTCOME_TRY(peer_id, peer::PeerId::fromBase58(*peer_id_str));
+    addBootstrapPeer(std::move(peer_id), {std::move(ma)});
+    return outcome::success();
+  }
+
   void GossipCore::start() {
     if (started_) {
+      log_.warn("already started");
       return;
     }
 
@@ -106,6 +132,17 @@ namespace libp2p::protocol::gossip {
     local_subscriptions_->forwardEndOfSubscription();
   }
 
+  void GossipCore::setValidator(const TopicId &topic, Validator validator) {
+    assert(validator);
+    auto sub = subscribe({topic}, [](SubscriptionData) {});
+    validators_[topic] = {std::move(validator), std::move(sub)};
+  }
+
+  void GossipCore::setMessageIdFn(MessageIdFn fn) {
+    assert(fn);
+    create_message_id_ = std::move(fn);
+  }
+
   Subscription GossipCore::subscribe(TopicSet topics,
                                      SubscriptionCallback callback) {
     assert(callback);
@@ -125,9 +162,7 @@ namespace libp2p::protocol::gossip {
 
     msg->topic_ids.assign(topics.begin(), topics.end());
 
-    // TODO(artem): validate msg
-
-    MessageId msg_id = createMessageId(*msg);
+    MessageId msg_id = create_message_id_(msg->from, msg->seq_no, msg->data);
 
     bool inserted = msg_cache_.insert(msg, msg_id);
     assert(inserted);
@@ -147,7 +182,11 @@ namespace libp2p::protocol::gossip {
 
     log_.debug("peer {} {}subscribed, topic {}", peer->str,
                (subscribe ? "" : "un"), topic);
-    remote_subscriptions_->onPeerSubscribed(peer, subscribe, topic);
+    if (subscribe) {
+      remote_subscriptions_->onPeerSubscribed(peer, topic);
+    } else {
+      remote_subscriptions_->onPeerUnsubscribed(peer, topic);
+    }
   }
 
   void GossipCore::onIHave(const PeerContextPtr &from, const TopicId &topic,
@@ -158,18 +197,21 @@ namespace libp2p::protocol::gossip {
 
     if (remote_subscriptions_->hasTopic(topic)
         && !msg_cache_.contains(msg_id)) {
-      from->message_to_send->addIWant(msg_id);
+      log_.debug("requesting msg id {}", common::hex_lower(msg_id));
+
+      from->message_builder->addIWant(msg_id);
       connectivity_->peerIsWritable(from, false);
     }
   }
 
   void GossipCore::onIWant(const PeerContextPtr &from,
                            const MessageId &msg_id) {
-    log_.debug("peer {} wants message", from->str);
+    log_.debug("peer {} wants message {}", from->str,
+               common::hex_lower(msg_id));
 
     auto msg_found = msg_cache_.getMessage(msg_id);
     if (msg_found) {
-      from->message_to_send->addMessage(*msg_found.value(), msg_id);
+      from->message_builder->addMessage(*msg_found.value(), msg_id);
       connectivity_->peerIsWritable(from, true);
     } else {
       log_.warn("wanted message not in cache");
@@ -184,12 +226,13 @@ namespace libp2p::protocol::gossip {
     remote_subscriptions_->onGraft(from, topic);
   }
 
-  void GossipCore::onPrune(const PeerContextPtr &from, const TopicId &topic) {
+  void GossipCore::onPrune(const PeerContextPtr &from, const TopicId &topic,
+                           uint64_t backoff_time) {
     assert(started_);
 
     log_.debug("prune from peer {} for topic {}", from->str, topic);
 
-    remote_subscriptions_->onPrune(from, topic);
+    remote_subscriptions_->onPrune(from, topic, backoff_time);
   }
 
   void GossipCore::onTopicMessage(const PeerContextPtr &from,
@@ -203,16 +246,40 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    // TODO(artem): validate
+    MessageId msg_id = create_message_id_(msg->from, msg->seq_no, msg->data);
+    log_.debug("message arrived, msg id={}", common::hex_lower(msg_id));
 
-    MessageId msg_id = createMessageId(*msg);
-    if (!msg_cache_.insert(msg, msg_id)) {
+    if (msg_cache_.contains(msg_id)) {
       // already there, ignore
-      log_.debug("ignoring message from peer {}, already in cache", from->str);
+      log_.debug("ignoring message, already in cache");
       return;
     }
 
-    log_.debug("forwarding message from peer {}", from->str);
+    // validate message. If no validator is set then we
+    // suppose that the message is valid (we might not know topic details)
+    bool valid = true;
+
+    if (!validators_.empty()) {
+      for (const auto &topic : msg->topic_ids) {
+        auto it = validators_.find(topic);
+        if (it != validators_.end()) {
+          valid = it->second.validator(msg->from, msg->data);
+          break;
+        }
+      }
+    }
+
+    if (!valid) {
+      log_.debug("message validation failed");
+      return;
+    }
+
+    if (!msg_cache_.insert(msg, msg_id)) {
+      log_.error("message cache error");
+      return;
+    }
+
+    log_.debug("forwarding message");
 
     local_subscriptions_->forwardMessage(msg);
     remote_subscriptions_->onNewMessage(from, msg, msg_id);
@@ -250,8 +317,8 @@ namespace libp2p::protocol::gossip {
       log_.debug("peer {} connected", ctx->str);
       // notify the new peer about all topics we subscribed to
       if (!local_subscriptions_->subscribedTo().empty()) {
-        for (auto &local_sub : local_subscriptions_->subscribedTo()) {
-          ctx->message_to_send->addSubscription(true, local_sub.first);
+        for (const auto &local_sub : local_subscriptions_->subscribedTo()) {
+          ctx->message_builder->addSubscription(true, local_sub.first);
         }
         connectivity_->peerIsWritable(ctx, true);
         connectivity_->flush();

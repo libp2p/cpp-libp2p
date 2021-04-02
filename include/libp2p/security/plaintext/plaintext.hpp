@@ -81,7 +81,7 @@ namespace libp2p::security {
     std::shared_ptr<plaintext::ExchangeMessageMarshaller> marshaller_;
     std::shared_ptr<peer::IdentityManager> idmgr_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
-    log::Logger log_ = log::createLogger("Plaintext", "plaintext");
+    log::Logger log_ = log::createLogger("Plaintext");
   };
 }  // namespace libp2p::security
 

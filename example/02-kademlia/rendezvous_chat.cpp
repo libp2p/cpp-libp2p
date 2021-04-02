@@ -217,7 +217,7 @@ int main(int argc, char *argv[]) {
           libp2p::injector::useKademliaConfig(kademlia_config)));
 
   try {
-    if (argc < 1) {
+    if (argc < 2) {
       std::cerr << "Needs one argument - address" << std::endl;
       exit(EXIT_FAILURE);
     }

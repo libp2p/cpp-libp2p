@@ -45,6 +45,7 @@ namespace libp2p::basic {
   void MessageReadWriterBigEndian::write(gsl::span<const uint8_t> buffer,
                                          Writer::WriteCallbackFunc cb) {
     if (buffer.empty()) {
+      // TODO(107): Reentrancy
       return cb(MessageReadWriterError::BUFFER_IS_EMPTY);
     }
 

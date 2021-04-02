@@ -76,6 +76,16 @@ namespace libp2p::connection {
     return raw_connection_->writeSome(in, bytes, std::move(f));
   }
 
+  void PlaintextConnection::deferReadCallback(outcome::result<size_t> res,
+                                         ReadCallbackFunc cb) {
+    raw_connection_->deferReadCallback(res, std::move(cb));
+  }
+
+  void PlaintextConnection::deferWriteCallback(std::error_code ec,
+                                          WriteCallbackFunc cb) {
+    raw_connection_->deferWriteCallback(ec, std::move(cb));
+  }
+
   bool PlaintextConnection::isClosed() const {
     return raw_connection_->isClosed();
   }

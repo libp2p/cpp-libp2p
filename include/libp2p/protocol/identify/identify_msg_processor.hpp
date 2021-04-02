@@ -138,7 +138,7 @@ namespace libp2p::protocol {
     ObservedAddresses observed_addresses_;
     boost::signals2::signal<IdentifyCallback> signal_identify_received_;
 
-    log::Logger log_ = log::createLogger("IdentifyMsgProcessor", "identify");
+    log::Logger log_ = log::createLogger("IdentifyMsgProcessor");
   };
 }  // namespace libp2p::protocol
 

@@ -44,7 +44,7 @@ namespace libp2p::security::noise {
 
   outcome::result<Key32> bytesToKey32(gsl::span<const uint8_t> key) {
     Key32 result;
-    if (key.size() != result.size()) {
+    if (static_cast<size_t>(key.size()) != result.size()) {
       return Error::WRONG_KEY32_SIZE;
     }
     std::copy_n(key.begin(), result.size(), result.begin());

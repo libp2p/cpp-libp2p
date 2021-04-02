@@ -3,13 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/message_parser.hpp>
+#include "message_parser.hpp"
 
-#include <libp2p/protocol/gossip/impl/message_receiver.hpp>
+#include <libp2p/log/logger.hpp>
+
+#include "message_receiver.hpp"
 
 #include <generated/protocol/gossip/protobuf/rpc.pb.h>
 
 namespace libp2p::protocol::gossip {
+
+  namespace {
+    auto log() {
+      static auto logger = log::createLogger("gossip");
+      return logger.get();
+    }
+  }  // namespace
 
   // need to define default ctor/dtor here in translation unit due to unique_ptr
   // to type which is incomplete in header
@@ -31,7 +40,7 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    for (auto &s : pb_msg_->subscriptions()) {
+    for (const auto &s : pb_msg_->subscriptions()) {
       if (!s.has_subscribe() || !s.has_topicid()) {
         continue;
       }
@@ -39,14 +48,14 @@ namespace libp2p::protocol::gossip {
     }
 
     if (pb_msg_->has_control()) {
-      auto &c = pb_msg_->control();
+      const auto &c = pb_msg_->control();
 
-      for (auto &h : c.ihave()) {
+      for (const auto &h : c.ihave()) {
         if (!h.has_topicid() || h.messageids_size() == 0) {
           continue;
         }
         const TopicId &topic = h.topicid();
-        for (auto &msg_id : h.messageids()) {
+        for (const auto &msg_id : h.messageids()) {
           if (msg_id.empty()) {
             continue;
           }
@@ -54,11 +63,11 @@ namespace libp2p::protocol::gossip {
         }
       }
 
-      for (auto &w : c.iwant()) {
+      for (const auto &w : c.iwant()) {
         if (w.messageids_size() == 0) {
           continue;
         }
-        for (auto &msg_id : w.messageids()) {
+        for (const auto &msg_id : w.messageids()) {
           if (msg_id.empty()) {
             continue;
           }
@@ -66,29 +75,41 @@ namespace libp2p::protocol::gossip {
         }
       }
 
-      for (auto &gr : c.graft()) {
+      for (const auto &gr : c.graft()) {
         if (!gr.has_topicid()) {
           continue;
         }
         receiver.onGraft(from, gr.topicid());
       }
 
-      for (auto &pr : c.prune()) {
+      for (const auto &pr : c.prune()) {
         if (!pr.has_topicid()) {
           continue;
         }
-        receiver.onPrune(from, pr.topicid());
+        uint64_t backoff_time = 60;
+        if (pr.has_backoff()) {
+          backoff_time = pr.backoff();
+        }
+        log()->debug("prune backoff={}, {} peers", backoff_time,
+                     pr.peers_size());
+        for (const auto &peer : pr.peers()) {
+          // TODO(artem): meshsub 1.1.0 + signed peer records NYI
+
+          log()->debug("peer id size={}, signed peer record size={}",
+                       peer.peerid().size(), peer.signedpeerrecord().size());
+        }
+        receiver.onPrune(from, pr.topicid(), backoff_time);
       }
     }
 
-    for (auto &m : pb_msg_->publish()) {
+    for (const auto &m : pb_msg_->publish()) {
       if (!m.has_from() || !m.has_data() || !m.has_seqno()
           || m.topicids_size() == 0) {
         continue;
       }
       auto message = std::make_shared<TopicMessage>(
           fromString(m.from()), fromString(m.seqno()), fromString(m.data()));
-      for (auto &tid : m.topicids()) {
+      for (const auto &tid : m.topicids()) {
         message->topic_ids.push_back(tid);
       }
       if (m.has_signature()) {

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/local_subscriptions.hpp>
+#include "src/protocol/gossip/impl/local_subscriptions.hpp"
 
 #include <gtest/gtest.h>
 #include <fmt/format.h>

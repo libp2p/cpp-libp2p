@@ -12,7 +12,7 @@
 
 #define TRACE(FMT, ...)                                            \
   do {                                                             \
-    auto log = libp2p::log::createLogger("debug", "libp2p_debug"); \
+    auto log = libp2p::log::createLogger("debug"); \
     SL_TRACE(log, (FMT), ##__VA_ARGS__);                           \
   } while (false)
 #else

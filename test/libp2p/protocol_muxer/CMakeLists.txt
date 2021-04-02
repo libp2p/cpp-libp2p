@@ -3,13 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-addtest(message_manager_test
-    message_manager_test.cpp
-    )
-target_link_libraries(message_manager_test
-    p2p_multiselect
-    )
-
 addtest(multiselect_test
     multiselect_test.cpp
     )

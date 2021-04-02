@@ -13,3 +13,11 @@ target_link_libraries(message_read_writer_test
     p2p_uvarint
     Boost::boost
     )
+
+addtest(varint_prefix_reader_test
+    varint_prefix_reader_test.cpp
+    )
+target_link_libraries(varint_prefix_reader_test
+    p2p_varint_prefix_reader
+    p2p_uvarint
+    )

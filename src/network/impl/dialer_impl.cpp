@@ -14,6 +14,8 @@ namespace libp2p::network {
 
   void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb,
                         std::chrono::milliseconds timeout) {
+    // TODO(107): Reentrancy
+
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
 
@@ -97,6 +99,8 @@ namespace libp2p::network {
     }
 
     if (not dialled) {
+      // TODO(107): Reentrancy
+
       // we did not find supported transport
       cb(std::errc::address_family_not_supported);
     }
@@ -117,10 +121,6 @@ namespace libp2p::network {
           }
           auto &&conn = rconn.value();
 
-          if (!conn->isInitiator()) {
-            TRACE("dialer: opening outbound stream inside inbound connection");
-          }
-
           // 2. open new stream on that connection
           conn->newStream(
               [this, cb{std::move(cb)},
@@ -129,25 +129,11 @@ namespace libp2p::network {
                 if (!rstream) {
                   return cb(rstream.error());
                 }
-                auto &&stream = rstream.value();
 
-                TRACE("dialer: before multiselect");
-
-                // 3. negotiate a protocol over that stream
-                std::vector<peer::Protocol> protocols{protocol};
-                this->multiselect_->selectOneOf(
-                    protocols, stream, true /* initiator */,
-                    [cb{std::move(cb)},
-                     stream](outcome::result<peer::Protocol> rproto) mutable {
-                      if (!rproto) {
-                        return cb(rproto.error());
-                      }
-
-                      TRACE("dialer: inside multiselect callback");
-
-                      // 4. return stream back to the user
-                      cb(std::move(stream));
-                    });
+                this->multiselect_->simpleStreamNegotiate(
+                    rstream.value(),
+                    protocol,
+                    std::move(cb));
               });
         },
         timeout);

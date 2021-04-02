@@ -93,7 +93,7 @@ namespace libp2p::security {
     //
     secio::ProposeMessage propose_message_;
     mutable common::ByteArray remote_peer_rand_;
-    log::Logger log_ = log::createLogger("SecIO", "secio");
+    log::Logger log_ = log::createLogger("SecIO");
   };
 }  // namespace libp2p::security
 
