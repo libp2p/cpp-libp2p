@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "testutil/clock/impl/clock_impl.hpp"
+#include "testutil/async/impl/clock_impl.hpp"
 
 namespace libp2p::clock {
 
@@ -15,4 +15,4 @@ namespace libp2p::clock {
   template class ClockImpl<std::chrono::steady_clock>;
   template class ClockImpl<std::chrono::system_clock>;
 
-}  // namespace libp2p::clock
+}  // namespace libp2p::async

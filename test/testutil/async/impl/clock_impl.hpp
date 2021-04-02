@@ -6,7 +6,7 @@
 #ifndef LIBP2P_CLOCK_IMPL_CLOCK_IMPL_HPP
 #define LIBP2P_CLOCK_IMPL_CLOCK_IMPL_HPP
 
-#include "testutil/clock/clock.hpp"
+#include "testutil/async/clock.hpp"
 
 namespace libp2p::clock {
 
@@ -20,6 +20,6 @@ namespace libp2p::clock {
   using SteadyClockImpl = ClockImpl<std::chrono::steady_clock>;
   using SystemClockImpl = ClockImpl<std::chrono::system_clock>;
 
-}  // namespace libp2p::clock
+}  // namespace libp2p::async
 
 #endif  // LIBP2P_CLOCK_IMPL_CLOCK_IMPL_HPP

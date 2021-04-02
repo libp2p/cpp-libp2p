@@ -11,8 +11,8 @@
 namespace libp2p::clock {
 
   /**
-   * An interface for a clock
-   * @tparam clock type is an underlying clock type, such as std::steady_clock
+   * An interface for a async
+   * @tparam clock type is an underlying async type, such as std::steady_clock
    */
   template <typename ClockType>
   class Clock {
@@ -46,6 +46,6 @@ namespace libp2p::clock {
    */
   using SystemClock = Clock<std::chrono::system_clock>;
 
-}  // namespace libp2p::clock
+}  // namespace libp2p::async
 
 #endif  // LIBP2P_CLOCK_HPP

@@ -21,3 +21,11 @@ target_link_libraries(varint_prefix_reader_test
     p2p_varint_prefix_reader
     p2p_uvarint
     )
+
+addtest(scheduler_test
+    scheduler_test.cpp
+    )
+target_link_libraries(scheduler_test
+    p2p_async_testutil
+    p2p_asio_scheduler_backend
+    )
