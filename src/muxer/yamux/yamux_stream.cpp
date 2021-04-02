@@ -10,7 +10,9 @@
 #include <libp2p/muxer/yamux/yamux_error.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 
-#define TRACE_ENABLED 1
+#include <libp2p/common/hexutil.hpp>
+
+#define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
 
 namespace libp2p::connection {
@@ -214,6 +216,9 @@ namespace libp2p::connection {
     }
 
     TRACE("stream {} read {} bytes", stream_id_, sz);
+    if (sz < 80) {
+      TRACE("{}", common::dumpBin(bytes));
+    }
 
     bool overflow = false;
     bool read_completed = false;
@@ -450,6 +455,8 @@ namespace libp2p::connection {
 
     if (bytes_available_now > 0) {
       internal_read_buffer_.consume(external_read_buffer_);
+      external_read_buffer_ =
+          external_read_buffer_.subspan(bytes_available_now);
     }
   }
 

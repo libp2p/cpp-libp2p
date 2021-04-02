@@ -207,8 +207,8 @@ namespace libp2p::basic {
     }
   }
 
-  boost::optional<FixedBufferCollector::BytesRef>
-  FixedBufferCollector::add(BytesRef &data) {
+  boost::optional<FixedBufferCollector::CBytesRef>
+  FixedBufferCollector::add(CBytesRef &data) {
     assert(expected_size_ >= buffer_.size());
 
     auto appending = static_cast<size_t>(data.size());
@@ -217,7 +217,7 @@ namespace libp2p::basic {
     if (buffered == 0) {
       if (appending >= expected_size_) {
         // dont buffer, just split
-        BytesRef ret = data.subspan(0, expected_size_);
+        CBytesRef ret = data.subspan(0, expected_size_);
         data = data.subspan(expected_size_);
         expected_size_ = 0;
         return ret;
@@ -241,9 +241,20 @@ namespace libp2p::basic {
     data = data.subspan(appending);
 
     if (filled) {
-      return BytesRef(buffer_);
+      return CBytesRef(buffer_);
     }
 
+    return boost::none;
+  }
+
+  boost::optional<FixedBufferCollector::BytesRef>
+  FixedBufferCollector::add(BytesRef &data) {
+    auto &span = (CBytesRef&)(data); //NOLINT
+    auto ret = add(span);
+    if (ret.has_value()) {
+      auto& v = ret.value();
+      return BytesRef((uint8_t*)v.data(), v.size()); // NOLINT
+    }
     return boost::none;
   }
 

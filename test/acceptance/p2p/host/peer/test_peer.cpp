@@ -116,7 +116,8 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto idmgr =
       std::make_shared<peer::IdentityManagerImpl>(keyPair, key_marshaller);
 
-  auto multiselect = std::make_shared<protocol_muxer::Multiselect>();
+  auto multiselect =
+      std::make_shared<protocol_muxer::multiselect::Multiselect>();
 
   auto router = std::make_shared<network::RouterImpl>();
 
