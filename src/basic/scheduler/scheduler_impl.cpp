@@ -14,7 +14,7 @@ namespace libp2p::basic {
       : backend_(std::move(backend)),
         config_(config),
         deferred_callbacks_(*backend_),
-        timed_callbacks_(*backend_, config_.max_timer_delay.count()) {}
+        timed_callbacks_(*backend_, config_.max_timer_threshold.count()) {}
 
   std::chrono::milliseconds SchedulerImpl::now() noexcept {
     return backend_->now();
@@ -26,7 +26,6 @@ namespace libp2p::basic {
     assert(cb);
 
     if (!cb) {
-      // TODO log
       return Handle{};
     }
 
@@ -306,8 +305,8 @@ namespace libp2p::basic {
   }
 
   SchedulerImpl::TimedCallbacks::TimedCallbacks(SchedulerBackend &backend,
-                                                int64_t timer_delay)
-      : backend_(backend), timer_delay_(timer_delay) {}
+                                                int64_t timer_threshold)
+      : backend_(backend), timer_threshold_(timer_threshold) {}
 
   void SchedulerImpl::TimedCallbacks::push(
       int64_t abs_time, uint64_t seq, Callback cb,
@@ -363,8 +362,20 @@ namespace libp2p::basic {
       auto it = items_.begin();
       if (it->second) {
         next_time = it->first.first;
+
+        if (++it != items_.end()) {
+          // we dont need high resolution timer, delay is needed to avoid
+          // switching timer too often
+          auto time_with_threshold = next_time + timer_threshold_;
+
+          if (it->second && it->first.first <= time_with_threshold) {
+            next_time = time_with_threshold;
+          }
+        }
         break;
       }
+
+      // cleanup canceled items in lazy manner
       items_.erase(it);
     }
 
@@ -372,11 +383,7 @@ namespace libp2p::basic {
       return;
     }
 
-    // we dont need high resolution timer, delay is needed to avoid
-    // switching timer too often
-    next_time += timer_delay_;
-
-    if (current_timer_ != 0 && current_timer_ < next_time) {
+    if (current_timer_ != 0 && current_timer_ <= next_time) {
       return;
     }
 

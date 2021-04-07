@@ -67,14 +67,14 @@ namespace libp2p::basic {
                     public std::enable_shared_from_this<Scheduler> {
    public:
     struct Config {
-      static constexpr std::chrono::milliseconds kMaxTimerDelay =
+      static constexpr std::chrono::milliseconds kMaxTimerThreshold =
           std::chrono::milliseconds(10);
 
       /**
-       * This delay is needed to avoid too often timer switches.
+       * This threshold is needed to avoid too often timer switches.
        * Performance concerns
        */
-      std::chrono::milliseconds max_timer_delay = kMaxTimerDelay;
+      std::chrono::milliseconds max_timer_threshold = kMaxTimerThreshold;
     };
 
     enum class Error {

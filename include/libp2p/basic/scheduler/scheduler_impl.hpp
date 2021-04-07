@@ -176,7 +176,7 @@ namespace libp2p::basic {
     class TimedCallbacks {
      public:
       /// Ctor
-      TimedCallbacks(SchedulerBackend &backend, int64_t timer_delay);
+      TimedCallbacks(SchedulerBackend &backend, int64_t timer_threshold);
 
       /// Adds item and reschedules timer if needed
       void push(int64_t abs_time, uint64_t seq, Callback cb,
@@ -203,7 +203,7 @@ namespace libp2p::basic {
 
       /// Timer threshold in ticks, helps to avoid often timer switches
       /// up to reasonable resolution
-      int64_t timer_delay_;
+      int64_t timer_threshold_;
 
       /// Items sorted
       std::map<Ticket, Callback> items_;
