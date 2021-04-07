@@ -6,6 +6,8 @@
 #ifndef LIBP2P_MANUAL_SCHEDULER_BACKEND_HPP
 #define LIBP2P_MANUAL_SCHEDULER_BACKEND_HPP
 
+#include <vector>
+
 #include <libp2p/basic/scheduler.hpp>
 
 namespace libp2p::basic {
