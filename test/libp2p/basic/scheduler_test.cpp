@@ -27,6 +27,7 @@ namespace {
   }
 }  // namespace
 
+// Contract checker, left here intentionally, though unused at the moment
 void shouldNotCompile() {
   using namespace libp2p::basic;
 
@@ -34,10 +35,11 @@ void shouldNotCompile() {
   auto scheduler =
       std::make_shared<SchedulerImpl>(backend, Scheduler::Config{});
 
-  // TODO(artem): make uncopyable lambda or any std::function arg
-  // proxy fn ???
+  // Need to make wrapper to avoid lvalues also in std::function args
 
   auto fn = std::function([]() { log().debug("deferred w/o handle called"); });
+
+  // N.B. this comment left intentionally, must not compile (lvalue)
   // scheduler->schedule(fn);
 }
 
