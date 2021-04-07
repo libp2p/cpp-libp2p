@@ -10,3 +10,7 @@ add_library(p2p_clock
 add_library(p2p_async_testutil
     manual_scheduler_backend.cpp
     )
+
+target_link_libraries(p2p_async_testutil
+    p2p_basic_scheduler
+    )
