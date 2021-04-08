@@ -6,8 +6,7 @@
 #ifndef LIBP2P_CONNECTION_LOOPBACKSTREAM
 #define LIBP2P_CONNECTION_LOOPBACKSTREAM
 
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/streambuf.hpp>
+#include <boost/asio.hpp>
 #include <libp2p/connection/stream.hpp>
 
 #include <libp2p/log/logger.hpp>
@@ -27,7 +26,8 @@ namespace libp2p::connection {
       INTERNAL_ERROR
     };
 
-    explicit LoopbackStream(libp2p::peer::PeerInfo own_peer_info);
+    LoopbackStream(libp2p::peer::PeerInfo own_peer_info,
+                   std::shared_ptr<boost::asio::io_context> io_context);
 
     bool isClosedForRead() const override;
     bool isClosedForWrite() const override;
@@ -61,11 +61,17 @@ namespace libp2p::connection {
     void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
+    void deferReadCallback(outcome::result<size_t> res,
+                           ReadCallbackFunc cb) override;
+
+    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
+
    private:
     void read(gsl::span<uint8_t> out, size_t bytes, ReadCallbackFunc cb,
               bool some);
 
     libp2p::peer::PeerInfo own_peer_info_;
+    std::shared_ptr<boost::asio::io_context> io_context_;
 
     log::Logger log_ = log::createLogger("LoopbackStream", "network");
 
