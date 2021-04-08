@@ -33,7 +33,7 @@ namespace libp2p::protocol {
     std::shared_ptr<connection::Stream> stream_;
     std::vector<uint8_t> buf_;
     EchoConfig config_;
-    log::Logger log_ = log::createLogger("ServerEchoSession", "echo");
+    log::Logger log_ = log::createLogger("ServerEchoSession");
 
     bool repeat_infinitely_;
 

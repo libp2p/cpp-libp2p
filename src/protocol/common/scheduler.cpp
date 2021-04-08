@@ -9,32 +9,43 @@
 
 namespace libp2p::protocol {
 
-  scheduler::Handle::~Handle() {
-    cancel();
-  }
+  namespace scheduler {
 
-  void scheduler::Handle::detach() {
-    cancellation_.reset();
-  }
-
-  void scheduler::Handle::cancel() {
-    auto sch = cancellation_.lock();
-    if (sch) {
-      sch->cancel(ticket_);
+    Handle::~Handle() {
+      cancel();
     }
-    detach();
-  }
 
-  void scheduler::Handle::reschedule(scheduler::Ticks delay) {
-    auto sch = cancellation_.lock();
-    if (sch) {
-      ticket_ = sch->reschedule(ticket_, delay);
+    Handle &Handle::operator=(
+        Handle &&r) noexcept {
+      cancel();
+      ticket_ = std::move(r.ticket_);
+      cancellation_ = std::move(r.cancellation_);
+      return *this;
     }
-  }
 
-  scheduler::Handle::Handle(Ticket ticket,
-                            std::weak_ptr<Cancellation> cancellation)
-      : ticket_(std::move(ticket)), cancellation_(std::move(cancellation)) {}
+    void Handle::detach() {
+      cancellation_.reset();
+    }
+
+    void Handle::cancel() {
+      auto sch = cancellation_.lock();
+      if (sch) {
+        sch->cancel(ticket_);
+      }
+      detach();
+    }
+
+    void Handle::reschedule(Ticks delay) {
+      auto sch = cancellation_.lock();
+      if (sch) {
+        ticket_ = sch->reschedule(ticket_, delay);
+      }
+    }
+
+    Handle::Handle(Ticket ticket,
+                              std::weak_ptr<Cancellation> cancellation)
+        : ticket_(std::move(ticket)), cancellation_(std::move(cancellation)) {}
+  }  // namespace scheduler
 
   Scheduler::Scheduler() : counter_(0) {}
 

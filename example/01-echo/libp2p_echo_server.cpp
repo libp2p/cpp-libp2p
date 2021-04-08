@@ -11,6 +11,7 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
+#include <libp2p/muxer/muxed_connection_config.hpp>
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/protocol/echo.hpp>
@@ -115,7 +116,11 @@ int main(int argc, char **argv) {
       insecure_mode ? initInsecureServer(keypair) : initSecureServer(keypair);
 
   // set a handler for Echo protocol
-  libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{1}};
+  libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{
+      .max_server_repeats =
+          libp2p::protocol::EchoConfig::kInfiniteNumberOfRepeats,
+      .max_recv_size =
+          libp2p::muxer::MuxedConnectionConfig::kDefaultMaxWindowSize}};
   server.host->setProtocolHandler(
       echo.getProtocolId(),
       [&echo](std::shared_ptr<libp2p::connection::Stream> received_stream) {

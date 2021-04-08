@@ -10,6 +10,13 @@ target_link_libraries(p2p_varint_reader
     p2p_uvarint
     )
 
+libp2p_add_library(p2p_varint_prefix_reader
+    varint_prefix_reader.cpp
+    )
+target_link_libraries(p2p_varint_prefix_reader
+    p2p_logger
+    )
+
 libp2p_add_library(p2p_message_read_writer_error
     message_read_writer_error.cpp
     )
@@ -31,4 +38,18 @@ libp2p_add_library(p2p_protobuf_message_read_writer
     )
 target_link_libraries(p2p_protobuf_message_read_writer
     p2p_message_read_writer
+    )
+
+libp2p_add_library(p2p_read_buffer
+    read_buffer.cpp
+    )
+target_link_libraries(p2p_read_buffer
+    p2p_logger
+    )
+
+libp2p_add_library(p2p_write_queue
+    write_queue.cpp
+    )
+target_link_libraries(p2p_write_queue
+    p2p_logger
     )

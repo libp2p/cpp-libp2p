@@ -174,7 +174,7 @@ namespace libp2p::injector {
    * @endcode
    */
   template <typename C>
-  auto useConfig(C &&c) {
+  inline auto useConfig(C &&c) {
     return boost::di::bind<std::decay<C>>().template to(
         std::forward<C>(c))[boost::di::override];
   }
@@ -195,7 +195,7 @@ namespace libp2p::injector {
    * @endcode
    */
   template <typename... SecImpl>
-  auto useSecurityAdaptors() {
+  inline auto useSecurityAdaptors() {
     return boost::di::bind<security::SecurityAdaptor *[]>()  // NOLINT
         .template to<SecImpl...>()[boost::di::override];
   }
@@ -208,7 +208,7 @@ namespace libp2p::injector {
    * @return injector binding
    */
   template <typename... MuxerImpl>
-  auto useMuxerAdaptors() {
+  inline auto useMuxerAdaptors() {
     return boost::di::bind<muxer::MuxerAdaptor *[]>()  // NOLINT
         .template to<MuxerImpl...>()[boost::di::override];
   }
@@ -221,7 +221,7 @@ namespace libp2p::injector {
    * @return injector binding
    */
   template <typename... TransportImpl>
-  auto useTransportAdaptors() {
+  inline auto useTransportAdaptors() {
     return boost::di::bind<transport::TransportAdaptor *[]>()  // NOLINT
         .template to<TransportImpl...>()[boost::di::override];
   }
@@ -233,7 +233,7 @@ namespace libp2p::injector {
    * @return complete network injector
    */
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
-  auto makeNetworkInjector(Ts &&... args) {
+  inline auto makeNetworkInjector(Ts &&... args) {
     using namespace boost;  // NOLINT
 
     auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();
@@ -282,7 +282,7 @@ namespace libp2p::injector {
         di::bind<network::Network>().template to<network::NetworkImpl>(),
         di::bind<network::TransportManager>().template to<network::TransportManagerImpl>(),
         di::bind<transport::Upgrader>().template to<transport::UpgraderImpl>(),
-        di::bind<protocol_muxer::ProtocolMuxer>().template to<protocol_muxer::Multiselect>(),
+        di::bind<protocol_muxer::ProtocolMuxer>().template to<protocol_muxer::multiselect::Multiselect>(),
 
         // default adaptors
         di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext, security::Secio, security::Noise, security::TlsAdaptor>(),  // NOLINT

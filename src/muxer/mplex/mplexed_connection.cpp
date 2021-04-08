@@ -49,6 +49,8 @@ namespace libp2p::connection {
   }
 
   void MplexedConnection::newStream(StreamHandlerFunc cb) {
+    // TODO(107): Reentrancy
+
     if (!is_active_) {
       return cb(Error::CONNECTION_INACTIVE);
     }
@@ -133,6 +135,16 @@ namespace libp2p::connection {
   void MplexedConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
                                     WriteCallbackFunc cb) {
     connection_->writeSome(in, bytes, std::move(cb));
+  }
+
+  void MplexedConnection::deferReadCallback(outcome::result<size_t> res,
+                                         ReadCallbackFunc cb) {
+    connection_->deferReadCallback(res, std::move(cb));
+  }
+
+  void MplexedConnection::deferWriteCallback(std::error_code ec,
+                                          WriteCallbackFunc cb) {
+    connection_->deferWriteCallback(ec, std::move(cb));
   }
 
   void MplexedConnection::write(WriteData data) {

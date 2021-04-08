@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/message_cache.hpp>
+#include "message_cache.hpp"
 
 #include <cassert>
 
@@ -12,6 +12,7 @@
 #include <boost/multi_index_container.hpp>
 
 #include <libp2p/common/hexutil.hpp>
+
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
 

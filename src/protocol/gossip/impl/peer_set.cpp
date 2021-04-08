@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/peer_set.hpp>
+#include "peer_set.hpp"
 
 #include <algorithm>
 #include <random>

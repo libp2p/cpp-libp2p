@@ -68,7 +68,7 @@ namespace libp2p::transport {
   void UpgraderImpl::upgradeToSecureInbound(RawSPtr conn,
                                             OnSecuredCallbackFunc cb) {
     protocol_muxer_->selectOneOf(
-        security_protocols_, conn, conn->isInitiator(),
+        security_protocols_, conn, conn->isInitiator(), true,
         [self{shared_from_this()}, cb = std::move(cb),
          conn](outcome::result<peer::Protocol> proto_res) mutable {
           if (!proto_res) {
@@ -93,7 +93,7 @@ namespace libp2p::transport {
                                              const peer::PeerId &remoteId,
                                              OnSecuredCallbackFunc cb) {
     protocol_muxer_->selectOneOf(
-        security_protocols_, conn, conn->isInitiator(),
+        security_protocols_, conn, conn->isInitiator(), true,
         [self{shared_from_this()}, cb = std::move(cb), conn,
          remoteId](outcome::result<peer::Protocol> proto_res) mutable {
           if (!proto_res) {
@@ -117,7 +117,7 @@ namespace libp2p::transport {
 
   void UpgraderImpl::upgradeToMuxed(SecSPtr conn, OnMuxedCallbackFunc cb) {
     return protocol_muxer_->selectOneOf(
-        muxer_protocols_, conn, conn->isInitiator(),
+        muxer_protocols_, conn, conn->isInitiator(), true,
         [self{shared_from_this()}, cb = std::move(cb),
          conn](outcome::result<peer::Protocol> proto_res) mutable {
           if (!proto_res) {

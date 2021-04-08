@@ -66,6 +66,7 @@ class IdentifyTest : public testing::Test {
 
     pb_msg_len_varint_ =
         std::make_shared<UVarint>(identify_pb_msg_.ByteSizeLong());
+
     identify_pb_msg_bytes_.insert(
         identify_pb_msg_bytes_.end(),
         std::make_move_iterator(pb_msg_len_varint_->toVector().begin()),

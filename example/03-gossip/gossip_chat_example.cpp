@@ -8,7 +8,8 @@
 #include <fmt/format.h>
 #include <boost/program_options.hpp>
 
-#include <libp2p/injector/gossip_injector.hpp>
+#include <libp2p/injector/host_injector.hpp>
+#include <libp2p/protocol/gossip/gossip.hpp>
 #include <libp2p/log/configurator.hpp>
 
 #include "console_async_reader.hpp"
@@ -80,8 +81,7 @@ int main(int argc, char *argv[]) {
   config.echo_forward_mode = true;
 
   // injector creates and ties dependent objects
-  auto injector = libp2p::injector::makeGossipInjector(
-      libp2p::injector::useGossipConfig(config));
+  auto injector = libp2p::injector::makeHostInjector();
 
   utility::setupLoggers(options->log_level);
 
@@ -107,8 +107,9 @@ int main(int argc, char *argv[]) {
   std::cerr << "I am " << local_address_str << "\n";
 
   // create gossip node
-  auto gossip =
-      injector.create<std::shared_ptr<libp2p::protocol::gossip::Gossip>>();
+  auto gossip = libp2p::protocol::gossip::create(
+      injector.create<std::shared_ptr<libp2p::protocol::Scheduler>>(), host,
+      std::move(config));
 
   using Message = libp2p::protocol::gossip::Gossip::Message;
 

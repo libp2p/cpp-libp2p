@@ -91,11 +91,16 @@ namespace libp2p::transport {
     void readSome(gsl::span<uint8_t> out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
+    void deferReadCallback(outcome::result<size_t> res,
+                        ReadCallbackFunc cb) override;
+
     void write(gsl::span<const uint8_t> in, size_t bytes,
                WriteCallbackFunc cb) override;
 
     void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
+
+    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 
@@ -107,7 +112,18 @@ namespace libp2p::transport {
 
     bool isClosed() const override;
 
+    /// Called from network part with close errors
+    /// or from close() if is closing by the host
+    void close(std::error_code reason);
+
+    // TODO (artem) make RawConnection::id()->string or str() or whatever
+    const std::string &str() const {
+      return debug_str_;
+    }
+
    private:
+    outcome::result<void> saveMultiaddresses();
+
     boost::asio::io_context &context_;
     Tcp::socket socket_;
     bool initiator_ = false;
@@ -115,10 +131,18 @@ namespace libp2p::transport {
     std::atomic_bool connection_phase_done_;
     boost::asio::deadline_timer deadline_timer_;
 
-    boost::system::error_code handle_errcode(
-        const boost::system::error_code &e) noexcept;
+    /// If true then no more callbacks will be issued
+    bool closed_by_host_ = false;
+
+    /// Close reason, is set on close to respond to further calls
+    std::error_code close_reason_;
+
+    boost::optional<multi::Multiaddress> remote_multiaddress_;
+    boost::optional<multi::Multiaddress> local_multiaddress_;
 
     friend class security::TlsAdaptor;
+
+    std::string debug_str_;
   };
 }  // namespace libp2p::transport
 

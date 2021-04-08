@@ -25,6 +25,7 @@ namespace libp2p::basic {
       uint8_t current_length,
       std::shared_ptr<std::vector<uint8_t>> varint_buf) {
     if (current_length > kMaximumVarintLength) {
+      // TODO(107): Reentrancy here, defer callback
       return cb(boost::none);
     }
 

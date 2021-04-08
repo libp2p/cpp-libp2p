@@ -49,10 +49,12 @@ namespace libp2p::protocol {
       Handle() = default;
       Handle(Handle &&) = default;
       Handle(const Handle &) = delete;
-      Handle &operator=(Handle &&) = default;
       Handle &operator=(const Handle &) = delete;
 
       ~Handle();
+
+      /// Cancels this handle and takes ownership of r
+      Handle &operator=(Handle &&r) noexcept;
 
       /// Detaches handle from feedback interface, won't cancel on out-of-scope
       void detach();

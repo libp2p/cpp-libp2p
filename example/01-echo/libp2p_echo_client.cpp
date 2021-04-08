@@ -38,7 +38,26 @@ int main(int argc, char *argv[]) {
   using libp2p::crypto::PublicKey;
   using libp2p::common::operator""_unhex;
 
-  if (argc != 2) {
+  auto run_duration = std::chrono::seconds(5);
+
+  std::string message("Hello from C++");
+
+  if (argc > 2) {
+    auto n = atoi(argv[2]);         // NOLINT
+    if (n > (int)message.size()) {  // NOLINT
+      std::string jumbo_message;
+      auto sz = static_cast<size_t>(n);
+      jumbo_message.reserve(sz + message.size());
+      for (size_t i = 0, count = sz / message.size(); i < count; ++i) {
+        jumbo_message.append(message);
+      }
+      jumbo_message.resize(sz);
+      message.swap(jumbo_message);
+      run_duration = std::chrono::seconds(150);
+    }
+  }
+
+  if (argc < 2) {
     std::cerr << "please, provide an address of the server\n";
     std::exit(EXIT_FAILURE);
   }
@@ -73,7 +92,7 @@ int main(int argc, char *argv[]) {
   // create io_context - in fact, thing, which allows us to execute async
   // operations
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
-  context->post([host{std::move(host)}, &echo, argv] {  // NOLINT
+  context->post([host{std::move(host)}, &echo, &message, argv] {  // NOLINT
     auto server_ma_res =
         libp2p::multi::Multiaddress::create(argv[1]);  // NOLINT
     if (!server_ma_res) {
@@ -103,26 +122,35 @@ int main(int argc, char *argv[]) {
 
     // create Host object and open a stream through it
     host->newStream(
-        peer_info, echo.getProtocolId(), [&echo](auto &&stream_res) {
+        peer_info, echo.getProtocolId(), [&echo, &message](auto &&stream_res) {
           if (!stream_res) {
             std::cerr << "Cannot connect to server: "
                       << stream_res.error().message() << std::endl;
             std::exit(EXIT_FAILURE);
           }
+
           auto stream_p = std::move(stream_res.value());
 
           auto echo_client = echo.createClient(stream_p);
-          std::cout << "SENDING 'Hello from C++!'\n";
+
+          if (message.size() < 120) {
+            std::cout << "SENDING " << message << "\n";
+          } else {
+            std::cout << "SENDING " << message.size() << " bytes" << std::endl;
+          }
           echo_client->sendAnd(
-              "Hello from C++!\n",
-              [stream = std::move(stream_p)](auto &&response_result) {
-                std::cout << "RESPONSE " << response_result.value()
-                          << std::endl;
+              message, [stream = std::move(stream_p)](auto &&response_result) {
+                auto &resp = response_result.value();
+                if (resp.size() < 120) {
+                  std::cout << "RESPONSE " << resp << std::endl;
+                } else {
+                  std::cout << "RESPONSE size=" << resp.size() << std::endl;
+                }
                 stream->close([](auto &&) { std::exit(EXIT_SUCCESS); });
               });
         });
   });
 
   // run the IO context
-  context->run_for(std::chrono::seconds(5));
+  context->run_for(run_duration);
 }

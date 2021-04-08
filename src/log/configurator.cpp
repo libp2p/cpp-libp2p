@@ -39,7 +39,6 @@ groups:
           - name: tls
           - name: listener_manager
           - name: libp2p_debug
-            level: trace
 # --------------- End of libp2p config ---------------)");
   }
 

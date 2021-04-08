@@ -85,7 +85,7 @@ namespace libp2p::protocol {
     event::Handle new_protos_sub_;
     event::Handle rm_protos_sub_;
 
-    libp2p::log::Logger log_ = libp2p::log::createLogger("IdentifyDelta", "identify");
+    libp2p::log::Logger log_ = libp2p::log::createLogger("IdentifyDelta");
   };
 }  // namespace libp2p::protocol
 

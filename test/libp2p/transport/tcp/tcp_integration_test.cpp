@@ -18,6 +18,7 @@
 #include "testutil/gmock_actions.hpp"
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/outcome.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p::transport;
 using namespace libp2p::multi;
@@ -113,7 +114,7 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
   size_t counter = 0;  // number of answers
   auto ma = "/ip4/127.0.0.1/tcp/40003"_multiaddr;
 
-  auto context = std::make_shared<boost::asio::io_context>(1);
+  auto context = std::make_shared<boost::asio::io_context>();
   auto upgrader = makeUpgrader();
   auto transport = std::make_shared<TcpTransport>(context, std::move(upgrader));
   using libp2p::connection::RawConnection;
@@ -122,15 +123,20 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
     EXPECT_FALSE(conn->isInitiator());
 
     auto buf = std::make_shared<std::vector<uint8_t>>(kSize, 0);
-    conn->readSome(*buf, buf->size(), [&counter, conn, buf](auto &&res) {
-      ASSERT_TRUE(res) << res.error().message();
+    conn->readSome(*buf, buf->size(),
+                   [&counter, conn, buf, context](auto &&res) {
+                     ASSERT_TRUE(res) << res.error().message();
 
-      conn->write(*buf, buf->size(), [&counter, buf](auto &&res) {
-        ASSERT_TRUE(res) << res.error().message();
-        EXPECT_EQ(res.value(), buf->size());
-        counter++;
-      });
-    });
+                     conn->write(*buf, buf->size(),
+                                 [&counter, conn, buf, context](auto &&res) {
+                                   ASSERT_TRUE(res) << res.error().message();
+                                   EXPECT_EQ(res.value(), buf->size());
+                                   counter++;
+                                   if (counter >= kClients){
+                                     context->stop();
+                                   }
+                                 });
+                   });
   });
 
   ASSERT_TRUE(listener);
@@ -139,11 +145,11 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
   std::vector<std::thread> clients(kClients);
   std::generate(clients.begin(), clients.end(), [&]() {
     return std::thread([&]() {
-      auto context = std::make_shared<boost::asio::io_context>(1);
+      auto context = std::make_shared<boost::asio::io_context>();
       auto upgrader = makeUpgrader();
       auto transport =
           std::make_shared<TcpTransport>(context, std::move(upgrader));
-      transport->dial(testutil::randomPeerId(), ma, [](auto &&rconn) {
+      transport->dial(testutil::randomPeerId(), ma, [context](auto &&rconn) {
         auto conn = expectConnectionValid(rconn);
 
         auto readback = std::make_shared<ByteArray>(kSize, 0);
@@ -154,19 +160,21 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
 
         EXPECT_TRUE(conn->isInitiator());
 
-        conn->write(*buf, buf->size(), [conn, readback, buf](auto &&res) {
-          ASSERT_TRUE(res) << res.error().message();
-          ASSERT_EQ(res.value(), buf->size());
-          conn->read(*readback, readback->size(),
-                     [conn, readback, buf](auto &&res) {
-                       ASSERT_TRUE(res) << res.error().message();
-                       ASSERT_EQ(res.value(), readback->size());
-                       ASSERT_EQ(*buf, *readback);
-                     });
-        });
+        conn->write(*buf, buf->size(),
+                    [conn, readback, buf, context](auto &&res) {
+                      ASSERT_TRUE(res) << res.error().message();
+                      ASSERT_EQ(res.value(), buf->size());
+                      conn->read(*readback, readback->size(),
+                                 [conn, readback, buf, context](auto &&res) {
+                                   context->stop();
+                                   ASSERT_TRUE(res) << res.error().message();
+                                   ASSERT_EQ(res.value(), readback->size());
+                                   ASSERT_EQ(*buf, *readback);
+                                 });
+                    });
       });
 
-      context->run_for(100ms);
+      context->run_for(400ms);
     });
   });
 
@@ -284,7 +292,7 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
     conn->readSome(*buf, kSize, [kSize, &counter, conn, buf](auto &&res) {
       ASSERT_TRUE(res) << res.error().message();
 
-      conn->write(*buf, kSize, [&counter, buf](auto &&res) {
+      conn->write(*buf, kSize, [&counter, buf, conn](auto &&res) {
         ASSERT_TRUE(res) << res.error().message();
         EXPECT_EQ(res.value(), buf->size());
         counter++;
@@ -323,4 +331,15 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
   context->run_for(100ms);
 
   ASSERT_EQ(counter, 1);
+}
+
+int main(int argc, char *argv[]) {
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
+    testutil::prepareLoggers(soralog::Level::TRACE);
+  } else {
+    testutil::prepareLoggers(soralog::Level::ERROR);
+  }
+
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

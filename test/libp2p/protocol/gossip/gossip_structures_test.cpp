@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/message_cache.hpp>
-#include <libp2p/protocol/gossip/impl/peer_set.hpp>
+#include "src/protocol/gossip/impl/message_cache.hpp"
+#include "src/protocol/gossip/impl/peer_set.hpp"
 
 #include <gtest/gtest.h>
 #include "testutil/libp2p/peer.hpp"
@@ -39,7 +39,7 @@ TEST(Gossip, TopicMessageHasValidFields) {
             g::ByteArray({0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99}));
 
   // id is created from proper fields
-  g::MessageId id = g::createMessageId(*msg);
+  g::MessageId id = g::createMessageId(msg->from, msg->seq_no, msg->data);
   ASSERT_EQ(id.size(), 42);
 }
 
@@ -177,7 +177,7 @@ TEST(Gossip, MessageCache) {
   auto insertMessage = [&](const g::TopicId &topic) {
     auto msg = std::make_shared<g::TopicMessage>(testutil::randomPeerId(),
                                                  seq++, fake_body);
-    auto msg_id = g::createMessageId(*msg);
+    auto msg_id = g::createMessageId(msg->from, msg->seq_no, msg->data);
     msg->topic_ids.push_back(topic);
     ASSERT_TRUE(cache.insert(msg, msg_id));
     inserted_messages.emplace_back(current_time, std::move(msg_id));

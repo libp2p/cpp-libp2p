@@ -21,6 +21,8 @@ namespace libp2p::transport {
                           TransportAdaptor::HandlerFunc handler,
                           std::chrono::milliseconds timeout) {
     if (!canDial(address)) {
+      //TODO(107): Reentrancy
+
       return handler(std::errc::address_family_not_supported);
     }
 
