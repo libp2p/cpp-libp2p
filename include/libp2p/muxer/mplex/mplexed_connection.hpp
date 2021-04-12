@@ -22,11 +22,11 @@ namespace libp2p::connection {
       : public CapableConnection,
         public std::enable_shared_from_this<MplexedConnection> {
    public:
-    enum class Error {
-      BAD_FRAME_FORMAT = 1,
-      TOO_MANY_STREAMS,
-      CONNECTION_INACTIVE
-    };
+//    enum class Error {
+////      BAD_FRAME_FORMAT = 1,
+////      TOO_MANY_STREAMS,
+////      CONNECTION_INACTIVE
+//    };
 
     /**
      * Create a new instance of MplexedConnection
@@ -212,6 +212,6 @@ namespace libp2p::connection {
   };
 }  // namespace libp2p::connection
 
-OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, MplexedConnection::Error)
+//OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, MplexedConnection::Error)
 
 #endif  // LIBP2P_MPLEXED_CONNECTION_HPP

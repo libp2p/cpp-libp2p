@@ -50,18 +50,18 @@ namespace libp2p::connection {
 
     ~MplexStream() override = default;
 
-    enum class Error {
-      CONNECTION_IS_DEAD = 1,
-      BAD_WINDOW_SIZE,
-      INVALID_ARGUMENT,
-      IS_READING,
-      IS_CLOSED_FOR_READS,
-      IS_WRITING,
-      IS_CLOSED_FOR_WRITES,
-      IS_RESET,
-      RECEIVE_OVERFLOW,
-      INTERNAL_ERROR
-    };
+//    enum class Error {
+////      CONNECTION_IS_DEAD = 1,
+////      BAD_WINDOW_SIZE,
+////      INVALID_ARGUMENT,
+////      IS_READING,
+////      IS_CLOSED_FOR_READS,
+////      IS_WRITING,
+////      IS_CLOSED_FOR_WRITES,
+////      IS_RESET,
+////      RECEIVE_OVERFLOW,
+////      INTERNAL_ERROR
+//    };
 
     void read(gsl::span<uint8_t> out, size_t bytes,
               ReadCallbackFunc cb) override;
@@ -162,6 +162,6 @@ namespace std {
   };
 }  // namespace std
 
-OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, MplexStream::Error)
+//OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, MplexStream::Error)
 
 #endif  // LIBP2P_MPLEX_STREAM_HPP
