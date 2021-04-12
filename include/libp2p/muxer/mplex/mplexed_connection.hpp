@@ -22,12 +22,6 @@ namespace libp2p::connection {
       : public CapableConnection,
         public std::enable_shared_from_this<MplexedConnection> {
    public:
-//    enum class Error {
-////      BAD_FRAME_FORMAT = 1,
-////      TOO_MANY_STREAMS,
-////      CONNECTION_INACTIVE
-//    };
-
     /**
      * Create a new instance of MplexedConnection
      * @param connection to be multiplexed
@@ -211,7 +205,5 @@ namespace libp2p::connection {
     void streamReset(MplexStream::StreamId stream_id);
   };
 }  // namespace libp2p::connection
-
-//OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, MplexedConnection::Error)
 
 #endif  // LIBP2P_MPLEXED_CONNECTION_HPP

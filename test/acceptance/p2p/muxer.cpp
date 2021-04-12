@@ -12,7 +12,6 @@
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
-#include <libp2p/muxer/yamux/yamux_error.hpp>
 #include <libp2p/peer/impl/identity_manager_impl.hpp>
 #include <libp2p/security/plaintext.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>

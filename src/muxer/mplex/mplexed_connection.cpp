@@ -8,20 +8,6 @@
 #include <boost/assert.hpp>
 #include <libp2p/muxer/mplex/mplex_frame.hpp>
 
-//OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, MplexedConnection::Error, e) {
-//  using E = libp2p::connection::MplexedConnection::Error;
-////  switch (e) {
-////    case E::BAD_FRAME_FORMAT:
-////      return "the other side has sent something, which is not a valid Mplex "
-////             "frame";
-////    case E::TOO_MANY_STREAMS:
-////      return "number of streams exceeds the maximum";
-////    case E::CONNECTION_INACTIVE:
-////      return "connection is not active";
-////  }
-//  return "unknown MplexError";
-//}
-
 namespace libp2p::connection {
   using StreamId = MplexStream::StreamId;
 

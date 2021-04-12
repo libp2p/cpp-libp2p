@@ -7,10 +7,8 @@
 
 #include <cassert>
 
-#include <libp2p/muxer/yamux/yamux_error.hpp>
-#include <libp2p/muxer/yamux/yamux_frame.hpp>
-
 #include <libp2p/common/hexutil.hpp>
+#include <libp2p/muxer/yamux/yamux_frame.hpp>
 
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
@@ -442,8 +440,7 @@ namespace libp2p::connection {
 
     if (!is_readable_) {
       // half closed
-      return deferReadCallback(Error::STREAM_NOT_READABLE,
-                               std::move(read_cb_));
+      return deferReadCallback(Error::STREAM_NOT_READABLE, std::move(read_cb_));
     }
 
     is_reading_ = true;
@@ -534,8 +531,7 @@ namespace libp2p::connection {
     }
 
     if (!write_queue_.canEnqueue(bytes)) {
-      return deferWriteCallback(Error::STREAM_WRITE_OVERFLOW,
-                                std::move(cb));
+      return deferWriteCallback(Error::STREAM_WRITE_OVERFLOW, std::move(cb));
     }
 
     write_queue_.enqueue(in.first(bytes), some, std::move(cb));

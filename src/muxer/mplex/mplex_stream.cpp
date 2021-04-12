@@ -10,33 +10,6 @@
 #include <boost/container_hash/hash.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
-//OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, MplexStream::Error, e) {
-//  using E = libp2p::connection::MplexStream::Error;
-////  switch (e) {
-////    case E::CONNECTION_IS_DEAD:
-////      return "underlying connection is closed or deleted";
-////    case E::BAD_WINDOW_SIZE:
-////      return "bad windows size was passed for adjusting";
-////    case E::INVALID_ARGUMENT:
-////      return "invalid argument was passed";
-////    case E::IS_READING:
-////      return "read was called before the last read completed";
-////    case E::IS_CLOSED_FOR_READS:
-////      return "this stream is closed for reads";
-////    case E::IS_WRITING:
-////      return "write was called before the last write completed";
-////    case E::IS_CLOSED_FOR_WRITES:
-////      return "this stream is closed for writes";
-////    case E::IS_RESET:
-////      return "this stream was reset";
-////    case E::RECEIVE_OVERFLOW:
-////      return "stream received more data than it is allowed by the window size";
-////    case E::INTERNAL_ERROR:
-////      return "internal error happened";
-////  }
-//  return "unknown error";
-//}
-
 #define TRY_GET_CONNECTION(conn_var_name) \
   if (connection_.expired()) {            \
     return Error::STREAM_RESET_BY_HOST;   \
