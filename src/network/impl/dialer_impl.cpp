@@ -144,12 +144,12 @@ namespace libp2p::network {
 
     auto conn = cmgr_->getBestConnectionForPeer(peer_id);
     if (!conn) {
-      cb(std::errc::not_connected);
+      return cb(std::errc::not_connected);
     }
 
     auto result = conn->newStream();
     if (!result) {
-      cb(result);
+      return cb(result);
     }
 
     multiselect_->simpleStreamNegotiate(result.value(), protocol,
