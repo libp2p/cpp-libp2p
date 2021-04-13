@@ -103,6 +103,7 @@ namespace libp2p::connection {
     auto stream_id = new_stream_id_;
     new_stream_id_ += 2;
     enqueue(newStreamMsg(stream_id));
+    enqueue(windowUpdateMsg(stream_id, YamuxFrame::kInitialWindowSize));
     pending_outbound_streams_[stream_id] = std::move(cb);
   }
 
