@@ -48,6 +48,8 @@ namespace libp2p::connection {
 
     void stop() override;
 
+    outcome::result<std::shared_ptr<Stream>> newStream() override;
+
     void newStream(StreamHandlerFunc cb) override;
 
     void onStream(NewStreamHandlerFunc cb) override;

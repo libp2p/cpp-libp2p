@@ -48,6 +48,25 @@ namespace libp2p::connection {
     log_->info("stopping an mplex connection");
   }
 
+  outcome::result<std::shared_ptr<Stream>> MplexedConnection::newStream() {
+    if (!is_active_) {
+      return Error::CONNECTION_INACTIVE;
+    }
+    if (streams_.size() >= config_.maximum_streams) {
+      return Error::TOO_MANY_STREAMS;
+    }
+
+    StreamId new_stream_id{last_issued_stream_number_++, true};
+    auto new_stream_frame =
+        createFrameBytes(MplexFrame::Flag::NEW_STREAM, new_stream_id.number);
+    write({std::move(new_stream_frame), [](auto &&) {}});
+
+    auto new_stream =
+        std::make_shared<MplexStream>(shared_from_this(), new_stream_id);
+    streams_[new_stream_id] = new_stream;
+    return new_stream;
+  }
+
   void MplexedConnection::newStream(StreamHandlerFunc cb) {
     // TODO(107): Reentrancy
 
@@ -138,12 +157,12 @@ namespace libp2p::connection {
   }
 
   void MplexedConnection::deferReadCallback(outcome::result<size_t> res,
-                                         ReadCallbackFunc cb) {
+                                            ReadCallbackFunc cb) {
     connection_->deferReadCallback(res, std::move(cb));
   }
 
   void MplexedConnection::deferWriteCallback(std::error_code ec,
-                                          WriteCallbackFunc cb) {
+                                             WriteCallbackFunc cb) {
     connection_->deferWriteCallback(ec, std::move(cb));
   }
 

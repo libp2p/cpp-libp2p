@@ -16,6 +16,8 @@ namespace libp2p::connection {
    public:
     ~CapableConnectionMock() override = default;
 
+    MOCK_METHOD0(newStream, outcome::result<std::shared_ptr<Stream>>());
+
     MOCK_METHOD1(newStream, void(StreamHandlerFunc));
 
     MOCK_METHOD1(onStream, void(NewStreamHandlerFunc));
@@ -59,6 +61,7 @@ namespace libp2p::connection {
 
     ~CapableConnBasedOnRawConnMock() override = default;
 
+    MOCK_METHOD0(newStream, outcome::result<std::shared_ptr<Stream>>());
     MOCK_METHOD1(newStream, void(StreamHandlerFunc));
 
     MOCK_METHOD1(onStream, void(NewStreamHandlerFunc));
