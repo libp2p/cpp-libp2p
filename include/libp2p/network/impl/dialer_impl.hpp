@@ -33,6 +33,9 @@ namespace libp2p::network {
                    StreamResultFunc cb,
                    std::chrono::milliseconds timeout) override;
 
+    void newStream(const peer::PeerId &peer_id, const peer::Protocol &protocol,
+                   StreamResultFunc cb) override;
+
    private:
     std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect_;
     std::shared_ptr<TransportManager> tmgr_;

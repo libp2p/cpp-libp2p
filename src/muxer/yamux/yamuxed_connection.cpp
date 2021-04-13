@@ -87,6 +87,29 @@ namespace libp2p::connection {
     started_ = false;
   }
 
+  outcome::result<std::shared_ptr<Stream>> YamuxedConnection::newStream() {
+    if (!started_) {
+      return YamuxError::CONNECTION_STOPPED;
+    }
+
+    if (streams_.size() >= config_.maximum_streams) {
+      return YamuxError::TOO_MANY_STREAMS;
+    }
+
+    auto stream_id = new_stream_id_;
+    new_stream_id_ += 2;
+    enqueue(newStreamMsg(stream_id));
+
+    // Now we self-acked the new stream
+
+    auto stream = std::make_shared<YamuxStream>(
+        shared_from_this(), *this, stream_id, config_.maximum_window_size,
+        basic::WriteQueue::kDefaultSizeLimit);
+
+    streams_[stream_id] = stream;
+    return stream;
+  }
+
   void YamuxedConnection::newStream(StreamHandlerFunc cb) {
     if (!started_) {
       return connection_->deferWriteCallback(
@@ -103,7 +126,6 @@ namespace libp2p::connection {
     auto stream_id = new_stream_id_;
     new_stream_id_ += 2;
     enqueue(newStreamMsg(stream_id));
-    enqueue(windowUpdateMsg(stream_id, YamuxFrame::kInitialWindowSize));
     pending_outbound_streams_[stream_id] = std::move(cb);
   }
 
@@ -411,13 +433,16 @@ namespace libp2p::connection {
         return true;
       }
 
-    } else if (streams_.count(frame.stream_id) != 0) {
-      log()->debug("received ACK on existing stream id");
-      ok = false;
     } else {
       auto it = pending_outbound_streams_.find(frame.stream_id);
       if (it == pending_outbound_streams_.end()) {
-        log()->debug("received ACK on unknown stream id");
+        if (streams_.count(frame.stream_id) != 0) {
+          // Stream was opened in optimistic manner
+          log()->debug("ignoring received ACK on existing stream id {}",
+                       frame.stream_id);
+          return true;
+        }
+        log()->debug("received ACK on unknown stream id {}", frame.stream_id);
         ok = false;
       }
       stream_handler = std::move(it->second);

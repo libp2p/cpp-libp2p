@@ -131,12 +131,29 @@ namespace libp2p::network {
                 }
 
                 this->multiselect_->simpleStreamNegotiate(
-                    rstream.value(),
-                    protocol,
-                    std::move(cb));
+                    rstream.value(), protocol, std::move(cb));
               });
         },
         timeout);
+  }
+
+  void DialerImpl::newStream(const peer::PeerId &peer_id,
+                             const peer::Protocol &protocol,
+                             StreamResultFunc cb) {
+    // REENTRANT, fix
+
+    auto conn = cmgr_->getBestConnectionForPeer(peer_id);
+    if (!conn) {
+      cb(std::errc::not_connected);
+    }
+
+    auto result = conn->newStream();
+    if (!result) {
+      cb(result);
+    }
+
+    multiselect_->simpleStreamNegotiate(result.value(), protocol,
+                                        std::move(cb));
   }
 
   DialerImpl::DialerImpl(
