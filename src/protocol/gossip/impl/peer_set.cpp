@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <random>
+#include <chrono>
 
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/algorithm/for_each.hpp>
@@ -60,8 +61,10 @@ namespace libp2p::protocol::gossip {
     std::vector<PeerContextPtr> ret;
     if (n > 0 && !empty()) {
       ret.reserve(n > size() ? size() : n);
+      std::mt19937 gen;
+      gen.seed(std::chrono::system_clock::now().time_since_epoch().count());
       std::sample(peers_.begin(), peers_.end(), std::back_inserter(ret), n,
-                  std::mt19937{std::random_device{}()});
+                  gen);
     }
     return ret;
   }
