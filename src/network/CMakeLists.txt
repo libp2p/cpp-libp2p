@@ -29,4 +29,6 @@ target_link_libraries(p2p_default_network
     p2p_crypto_provider
     p2p_key_validator
     p2p_key_marshaller
+    p2p_basic_scheduler
+    p2p_asio_scheduler_backend
     )

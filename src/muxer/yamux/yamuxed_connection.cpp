@@ -37,9 +37,11 @@ namespace libp2p::connection {
 
   YamuxedConnection::YamuxedConnection(
       std::shared_ptr<SecureConnection> connection,
+      std::shared_ptr<basic::Scheduler> scheduler,
       muxer::MuxedConnectionConfig config)
       : config_(config),
         connection_(std::move(connection)),
+        scheduler_(std::move(scheduler)),
         raw_read_buffer_(std::make_shared<Buffer>()),
         reading_state_(
             [this](boost::optional<YamuxFrame> header) {
@@ -61,6 +63,7 @@ namespace libp2p::connection {
               return true;
             }) {
     assert(connection_);
+    assert(scheduler_);
     assert(config_.maximum_streams > 0);
     assert(config_.maximum_window_size >= YamuxFrame::kInitialWindowSize);
 
@@ -74,6 +77,22 @@ namespace libp2p::connection {
       return;
     }
     started_ = true;
+
+    if (config_.ping_interval != std::chrono::milliseconds::zero()) {
+      ping_handle_ = scheduler_->scheduleWithHandle(
+          [this, ping_counter = 0u]() mutable {
+            if (started_) {
+              // dont send pings if something is being written
+              if (!is_writing_) {
+                enqueue(pingOutMsg(++ping_counter));
+                log()->debug("written ping message #{}", ping_counter);
+              }
+              std::ignore = ping_handle_.reschedule(config_.ping_interval);
+            }
+          },
+          config_.ping_interval);
+    }
+
     continueReading();
   }
 

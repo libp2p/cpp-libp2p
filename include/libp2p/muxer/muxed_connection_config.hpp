@@ -6,6 +6,7 @@
 #ifndef LIBP2P_MUXED_CONNECTION_CONFIG_HPP
 #define LIBP2P_MUXED_CONNECTION_CONFIG_HPP
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 
@@ -21,6 +22,11 @@ namespace libp2p::muxer {
     /// how much streams can be supported by Yamux at one time
     static constexpr size_t kDefaultMaxStreamsNumber = 1000;
     size_t maximum_streams = kDefaultMaxStreamsNumber;
+
+    /// Ping interval for muxers with internal ping feature
+    static constexpr std::chrono::milliseconds kDefaultPingInterval =
+        std::chrono::milliseconds(5000);
+    std::chrono::milliseconds ping_interval = kDefaultPingInterval;
   };
 }  // namespace libp2p::muxer
 
