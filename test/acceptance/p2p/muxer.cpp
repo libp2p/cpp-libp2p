@@ -8,6 +8,8 @@
 #include <random>
 
 #include <gtest/gtest.h>
+#include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
+#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
@@ -281,22 +283,22 @@ struct Client : public std::enable_shared_from_this<Client> {
   std::shared_ptr<TransportAdaptor> transport_;
 };
 
-struct MuxerAcceptanceTest
-    : public ::testing::TestWithParam<std::shared_ptr<MuxerAdaptor>> {
+enum class MuxerType { mplex, yamux };
+
+struct MuxerAcceptanceTest : public ::testing::TestWithParam<MuxerType> {
   struct PrintToStringParamName {
     template <class ParamType>
     std::string operator()(
         const testing::TestParamInfo<ParamType> &info) const {
-      auto m = static_cast<std::shared_ptr<MuxerAdaptor>>(info.param);
-      auto p = m->getProtocolId();
-
-      return p.substr(1, p.find('/', 1) - 1);
+      return static_cast<MuxerType>(info.param) == MuxerType::mplex ? "mplex"
+                                                                    : "yamux";
     }
   };
 };
 
 namespace {
-  class PermissiveKeyValidator : public libp2p::crypto::validator::KeyValidator {
+  class PermissiveKeyValidator
+      : public libp2p::crypto::validator::KeyValidator {
    public:
     outcome::result<void> validate(const PrivateKey &key) const override {
       return outcome::success();
@@ -304,13 +306,27 @@ namespace {
     outcome::result<void> validate(const PublicKey &key) const override {
       return outcome::success();
     }
-    outcome::result<void> validate(const KeyPair &keys) const override  {
+    outcome::result<void> validate(const KeyPair &keys) const override {
       return outcome::success();
     }
   };
 
   auto createKeyValidator() {
     return std::make_shared<PermissiveKeyValidator>();
+  }
+
+  std::shared_ptr<libp2p::muxer::MuxerAdaptor> createMuxer(
+      MuxerType type, const std::shared_ptr<basic::Scheduler> &scheduler) {
+    switch (type) {
+      case MuxerType::mplex:
+        return std::make_shared<Mplex>(muxer::MuxedConnectionConfig{});
+      case MuxerType::yamux:
+        return std::make_shared<Yamux>(
+            muxer::MuxedConnectionConfig{1048576, 1000}, scheduler);
+      default:
+        break;
+    }
+    return nullptr;
   }
 }  // namespace
 
@@ -337,7 +353,15 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   auto key_marshaller =
       std::make_shared<KeyMarshallerImpl>(createKeyValidator());
 
-  auto muxer = GetParam();
+  auto muxer = createMuxer(
+      GetParam(),
+      std::make_shared<basic::SchedulerImpl>(
+          std::make_shared<basic::AsioSchedulerBackend>(server_context),
+          basic::Scheduler::Config{}));
+  if (!muxer) {
+    FAIL() << "no muxer of given type";
+  }
+
   auto idmgr =
       std::make_shared<IdentityManagerImpl>(serverKeyPair, key_marshaller);
   auto msg_marshaller =
@@ -363,7 +387,12 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
         KeyPair clientKeyPair = {{{Key::Type::Ed25519, {3}}},
                                  {{Key::Type::Ed25519, {4}}}};
 
-        auto muxer = GetParam();
+        auto muxer = createMuxer(
+            GetParam(),
+            std::make_shared<basic::SchedulerImpl>(
+                std::make_shared<basic::AsioSchedulerBackend>(context),
+                basic::Scheduler::Config{}));
+        assert(muxer);
 
         auto key_marshaller =
             std::make_shared<KeyMarshallerImpl>(createKeyValidator());
@@ -412,10 +441,6 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   EXPECT_GE(server->streamWrites, totalClients * streams * rounds);
 }
 
-INSTANTIATE_TEST_CASE_P(
-    AllMuxers, MuxerAcceptanceTest,
-    ::testing::Values(
-        // list here all muxers
-        std::make_shared<Yamux>(muxer::MuxedConnectionConfig{1048576, 1000}),
-        std::make_shared<Mplex>(muxer::MuxedConnectionConfig{})),
-    MuxerAcceptanceTest::PrintToStringParamName());
+INSTANTIATE_TEST_CASE_P(AllMuxers, MuxerAcceptanceTest,
+                        ::testing::Values(MuxerType::mplex, MuxerType::yamux),
+                        MuxerAcceptanceTest::PrintToStringParamName());

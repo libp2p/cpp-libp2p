@@ -17,8 +17,7 @@
 namespace libp2p::protocol::gossip {
 
   std::shared_ptr<Gossip> create(std::shared_ptr<Scheduler> scheduler,
-                                 std::shared_ptr<Host> host,
-                                 Config config) {
+                                 std::shared_ptr<Host> host, Config config) {
     return std::make_shared<GossipCore>(std::move(config), std::move(scheduler),
                                         std::move(host));
   }
@@ -164,7 +163,7 @@ namespace libp2p::protocol::gossip {
 
     MessageId msg_id = create_message_id_(msg->from, msg->seq_no, msg->data);
 
-    bool inserted = msg_cache_.insert(msg, msg_id);
+    [[maybe_unused]] bool inserted = msg_cache_.insert(msg, msg_id);
     assert(inserted);
 
     remote_subscriptions_->onNewMessage(boost::none, msg, msg_id);

@@ -6,6 +6,8 @@
 #include "acceptance/p2p/host/peer/test_peer.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
+#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
@@ -40,6 +42,9 @@ Peer::Peer(Peer::Duration timeout, bool secure)
       crypto_provider_{std::make_shared<crypto::CryptoProviderImpl>(
           random_provider_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
           secp256k1_provider_, hmac_provider_)},
+      scheduler_{std::make_shared<basic::SchedulerImpl>(
+          std::make_shared<basic::AsioSchedulerBackend>(context_),
+          basic::Scheduler::Config{})},
       secure_{secure} {
   EXPECT_OUTCOME_TRUE_MSG(
       keys, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
@@ -140,7 +145,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   }
 
   std::vector<std::shared_ptr<muxer::MuxerAdaptor>> muxer_adaptors = {
-      std::make_shared<muxer::Yamux>(muxed_config_)};
+      std::make_shared<muxer::Yamux>(muxed_config_, scheduler_)};
 
   auto upgrader = std::make_shared<transport::UpgraderImpl>(
       multiselect, std::move(security_adaptors), std::move(muxer_adaptors));

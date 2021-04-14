@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include <libp2p/basic/read_buffer.hpp>
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
 #include <libp2p/muxer/yamux/yamux_reading_state.hpp>
@@ -42,6 +43,7 @@ namespace libp2p::connection {
      * @param logger to output messages
      */
     explicit YamuxedConnection(std::shared_ptr<SecureConnection> connection,
+                               std::shared_ptr<basic::Scheduler> scheduler,
                                muxer::MuxedConnectionConfig config = {});
 
     void start() override;
@@ -172,6 +174,9 @@ namespace libp2p::connection {
     /// Underlying connection
     std::shared_ptr<SecureConnection> connection_;
 
+    /// Scheduler
+    std::shared_ptr<basic::Scheduler> scheduler_;
+
     /// True if started
     bool started_ = false;
 
@@ -202,6 +207,9 @@ namespace libp2p::connection {
 
     /// Pending outbound streams
     PendingOutboundStreams pending_outbound_streams_;
+
+    /// Timer handle for pings
+    basic::Scheduler::Handle ping_handle_;
   };
 
 }  // namespace libp2p::connection
