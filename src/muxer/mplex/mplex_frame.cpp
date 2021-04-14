@@ -60,7 +60,7 @@ namespace libp2p::connection {
         flag = Flag::RESET_INITIATOR;
         break;
       default:
-        return MplexedConnection::Error::BAD_FRAME_FORMAT;
+        return RawConnection::Error::CONNECTION_PROTOCOL_ERROR;
     }
 
     return MplexFrame{flag,
@@ -74,7 +74,7 @@ namespace libp2p::connection {
     basic::VarintReader::readVarint(
         reader, [reader, cb{std::move(cb)}](auto &&varint_opt) mutable {
           if (!varint_opt) {
-            return cb(MplexedConnection::Error::BAD_FRAME_FORMAT);
+            return cb(RawConnection::Error::CONNECTION_PROTOCOL_ERROR);
           }
 
           // read second varint
@@ -83,7 +83,7 @@ namespace libp2p::connection {
               [reader, cb{std::move(cb)},
                id_flag = varint_opt->toUInt64()](auto &&varint_opt) mutable {
                 if (!varint_opt) {
-                  return cb(MplexedConnection::Error::BAD_FRAME_FORMAT);
+                  return cb(RawConnection::Error::CONNECTION_PROTOCOL_ERROR);
                 }
 
                 auto length = varint_opt->toUInt64();

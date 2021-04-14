@@ -18,14 +18,6 @@ namespace libp2p::connection {
   class LoopbackStream : public libp2p::connection::Stream,
                          public std::enable_shared_from_this<LoopbackStream> {
    public:
-    enum class Error {
-      INVALID_ARGUMENT = 1,
-      IS_CLOSED_FOR_READS,
-      IS_CLOSED_FOR_WRITES,
-      IS_RESET,
-      INTERNAL_ERROR
-    };
-
     LoopbackStream(libp2p::peer::PeerInfo own_peer_info,
                    std::shared_ptr<boost::asio::io_context> io_context);
 
@@ -93,7 +85,5 @@ namespace libp2p::connection {
   };
 
 }  // namespace libp2p::connection
-
-OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, LoopbackStream::Error);
 
 #endif  // LIBP2P_CONNECTION_LOOPBACKSTREAM

@@ -8,7 +8,7 @@
 
 namespace libp2p::connection {
 
-  using Error = security::TlsError;
+  using TlsError = security::TlsError;
   using security::tls_details::log;
 
   namespace {
@@ -56,7 +56,7 @@ namespace libp2p::connection {
     while (!ec) {
       X509 *cert = SSL_get_peer_certificate(socket_.native_handle());
       if (cert == nullptr) {
-        ec = Error::TLS_NO_CERTIFICATE;
+        ec = TlsError::TLS_NO_CERTIFICATE;
         break;
       }
       auto id_res = security::tls_details::verifyPeerAndExtractIdentity(
@@ -70,7 +70,7 @@ namespace libp2p::connection {
         if (remote_peer_.value() != id.peer_id) {
           SL_DEBUG(log(), "peer ids mismatch: expected={}, got={}",
                       remote_peer_.value().toBase58(), id.peer_id.toBase58());
-          ec = Error::TLS_UNEXPECTED_PEER_ID;
+          ec = TlsError::TLS_UNEXPECTED_PEER_ID;
           break;
         }
       } else {
@@ -100,14 +100,14 @@ namespace libp2p::connection {
 
   outcome::result<peer::PeerId> TlsConnection::remotePeer() const {
     if (!remote_peer_) {
-      return Error::TLS_REMOTE_PEER_NOT_AVAILABLE;
+      return TlsError::TLS_REMOTE_PEER_NOT_AVAILABLE;
     }
     return remote_peer_.value();
   }
 
   outcome::result<crypto::PublicKey> TlsConnection::remotePublicKey() const {
     if (!remote_pubkey_) {
-      return Error::TLS_REMOTE_PUBKEY_NOT_AVAILABLE;
+      return TlsError::TLS_REMOTE_PUBKEY_NOT_AVAILABLE;
     }
     return remote_pubkey_.value();
   }

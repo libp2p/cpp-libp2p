@@ -12,7 +12,6 @@
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
-#include <libp2p/muxer/yamux/yamux_error.hpp>
 #include <libp2p/peer/impl/identity_manager_impl.hpp>
 #include <libp2p/security/plaintext.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
@@ -110,8 +109,8 @@ struct Server : public std::enable_shared_from_this<Server> {
     stream->readSome(
         *buf, buf->size(), [buf, stream, this](outcome::result<size_t> rread) {
           if (!rread) {
-            if (rread.error() == YamuxError::CONNECTION_CLOSED_BY_PEER
-                || rread.error() == MplexStream::Error::CONNECTION_IS_DEAD) {
+            if (rread.error() == RawConnection::Error::CONNECTION_CLOSED_BY_PEER
+                || rread.error() == Stream::Error::STREAM_CLOSED_BY_PEER) {
               return;
             }
             this->println("readSome error: ", rread.error().message());
