@@ -110,7 +110,7 @@ struct Server : public std::enable_shared_from_this<Server> {
         *buf, buf->size(), [buf, stream, this](outcome::result<size_t> rread) {
           if (!rread) {
             if (rread.error() == RawConnection::Error::CONNECTION_CLOSED_BY_PEER
-                || rread.error() == Stream::Error::STREAM_CLOSED_BY_PEER) {
+                || rread.error() == Stream::Error::STREAM_RESET_BY_HOST) {
               return;
             }
             this->println("readSome error: ", rread.error().message());
