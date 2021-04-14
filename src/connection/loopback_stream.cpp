@@ -5,23 +5,6 @@
 
 #include <libp2p/connection/loopback_stream.hpp>
 
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, LoopbackStream::Error, e) {
-  using E = libp2p::connection::LoopbackStream::Error;
-  switch (e) {
-    case E::INVALID_ARGUMENT:
-      return "invalid argument was passed";
-    case E::IS_CLOSED_FOR_READS:
-      return "this stream is closed for reads";
-    case E::IS_CLOSED_FOR_WRITES:
-      return "this stream is closed for writes";
-    case E::IS_RESET:
-      return "this stream was reset";
-    case E::INTERNAL_ERROR:
-      return "internal error happened";
-  }
-  return "unknown error";
-}
-
 namespace libp2p::connection {
 
   namespace {
@@ -102,19 +85,19 @@ namespace libp2p::connection {
   void LoopbackStream::write(gsl::span<const uint8_t> in, size_t bytes,
                              libp2p::basic::Writer::WriteCallbackFunc cb) {
     if (is_reset_) {
-      return deferWriteCallback(Error::IS_RESET, std::move(cb));
+      return deferWriteCallback(Error::STREAM_RESET_BY_HOST, std::move(cb));
     }
     if (!is_writable_) {
-      return deferWriteCallback(Error::IS_CLOSED_FOR_WRITES, std::move(cb));
+      return deferWriteCallback(Error::STREAM_NOT_WRITABLE, std::move(cb));
     }
     if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
-      return deferWriteCallback(Error::INVALID_ARGUMENT, std::move(cb));
+      return deferWriteCallback(Error::STREAM_INVALID_ARGUMENT, std::move(cb));
     }
 
     if (boost::asio::buffer_copy(buffer_.prepare(bytes),
                                  boost::asio::const_buffer(in.data(), bytes))
         != bytes) {
-      return deferWriteCallback(Error::INTERNAL_ERROR, std::move(cb));
+      return deferWriteCallback(Error::STREAM_INTERNAL_ERROR, std::move(cb));
     }
 
     buffer_.commit(bytes);
@@ -139,13 +122,13 @@ namespace libp2p::connection {
                             libp2p::basic::Reader::ReadCallbackFunc cb,
                             bool some) {
     if (is_reset_) {
-      return deferReadCallback(Error::IS_RESET, std::move(cb));
+      return deferReadCallback(Error::STREAM_RESET_BY_HOST, std::move(cb));
     }
     if (!is_readable_) {
-      return deferReadCallback(Error::IS_CLOSED_FOR_READS, std::move(cb));
+      return deferReadCallback(Error::STREAM_NOT_READABLE, std::move(cb));
     }
     if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
-      return cb(Error::INVALID_ARGUMENT);
+      return cb(Error::STREAM_INVALID_ARGUMENT);
     }
 
     // this lambda checks, if there's enough data in our read buffer, and gives
@@ -164,7 +147,8 @@ namespace libp2p::connection {
         if (boost::asio::buffer_copy(boost::asio::buffer(out.data(), to_read),
                                      self->buffer_.data(), to_read)
             != to_read) {
-          return self->deferReadCallback(Error::INTERNAL_ERROR, std::move(cb));
+          return self->deferReadCallback(Error::STREAM_INTERNAL_ERROR,
+                                         std::move(cb));
         }
 
         self->buffer_.consume(to_read);
