@@ -24,6 +24,9 @@ namespace libp2p::network {
     MOCK_METHOD4(newStream,
                  void(const peer::PeerInfo &, const peer::Protocol &,
                       StreamResultFunc, std::chrono::milliseconds));
+    MOCK_METHOD3(newStream,
+                 void(const peer::PeerId &, const peer::Protocol &,
+                     StreamResultFunc));
   };
 
 }  // namespace libp2p::network

@@ -177,6 +177,17 @@ namespace libp2p {
     }
 
     /**
+     * @brief Open new stream to the peer {@param peer} with protocol
+     * {@param protocol} in optimistic way. Assuming that connection exists.
+     * @param peer stream will be opened to this peer
+     * @param protocol "speak" using this protocol
+     * @param handler callback, will be executed on success or fail
+     */
+    virtual void newStream(
+        const peer::PeerId &peer_id, const peer::Protocol &protocol,
+        const StreamResultHandler &handler) = 0;
+
+    /**
      * @brief Create listener on given multiaddress.
      * @param ma address
      * @return may return error

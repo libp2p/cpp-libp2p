@@ -119,6 +119,12 @@ namespace libp2p::host {
     network_->getDialer().newStream(p, protocol, handler, timeout);
   }
 
+  void BasicHost::newStream(const peer::PeerId &peer_id,
+                            const peer::Protocol &protocol,
+                            const StreamResultHandler &handler) {
+    network_->getDialer().newStream(peer_id, protocol, handler);
+  }
+
   outcome::result<void> BasicHost::listen(const multi::Multiaddress &ma) {
     return network_->getListener().listen(ma);
   }
