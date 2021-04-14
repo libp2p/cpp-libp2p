@@ -61,6 +61,9 @@ namespace libp2p::host {
                    const StreamResultHandler &handler,
                    std::chrono::milliseconds timeout) override;
 
+    void newStream(const peer::PeerId &peer_id, const peer::Protocol &protocol,
+                   const StreamResultHandler &handler) override;
+
     outcome::result<void> listen(const multi::Multiaddress &ma) override;
 
     outcome::result<void> closeListener(const multi::Multiaddress &ma) override;

@@ -42,6 +42,12 @@ namespace libp2p::connection {
     virtual void stop() = 0;
 
     /**
+     * @brief Opens new stream in a synchronous (optimistic) manner
+     * @return Stream or error
+     */
+    virtual outcome::result<std::shared_ptr<Stream>> newStream() = 0;
+
+    /**
      * @brief Opens new stream using this connection
      * @param cb - callback to be called, when a new stream is established or
      * error appears
