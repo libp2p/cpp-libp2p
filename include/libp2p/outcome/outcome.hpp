@@ -6,7 +6,7 @@
 #ifndef LIBP2P_OUTCOME_HPP
 #define LIBP2P_OUTCOME_HPP
 
-#include <boost/outcome/std_result.hpp>
+#include <boost/outcome/result.hpp>
 #include <boost/outcome/success_failure.hpp>
 #include <boost/outcome/try.hpp>
 

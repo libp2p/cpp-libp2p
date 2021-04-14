@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CLOCK_HPP
-#define LIBP2P_CLOCK_HPP
+#ifndef LIBP2P_TETSUTIL_ASYNC_CLOCK_HPP
+#define LIBP2P_TETSUTIL_ASYNC_CLOCK_HPP
 
 #include <chrono>
 
@@ -12,7 +12,7 @@ namespace libp2p::clock {
 
   /**
    * An interface for a clock
-   * @tparam clock type is an underlying clock type, such as std::steady_clock
+   * @tparam clock type is an underlying async type, such as std::steady_clock
    */
   template <typename ClockType>
   class Clock {
@@ -48,4 +48,4 @@ namespace libp2p::clock {
 
 }  // namespace libp2p::clock
 
-#endif  // LIBP2P_CLOCK_HPP
+#endif  // LIBP2P_TETSUTIL_ASYNC_CLOCK_HPP

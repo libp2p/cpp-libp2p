@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CLOCK_IMPL_CLOCK_IMPL_HPP
-#define LIBP2P_CLOCK_IMPL_CLOCK_IMPL_HPP
+#ifndef LIBP2P_TESTUTIL_ASYNC_CLOCK_IMPL_HPP
+#define LIBP2P_TESTUTIL_ASYNC_CLOCK_IMPL_HPP
 
-#include "testutil/clock/clock.hpp"
+#include "testutil/async/clock.hpp"
 
 namespace libp2p::clock {
 
@@ -22,4 +22,4 @@ namespace libp2p::clock {
 
 }  // namespace libp2p::clock
 
-#endif  // LIBP2P_CLOCK_IMPL_CLOCK_IMPL_HPP
+#endif  // LIBP2P_TESTUTIL_ASYNC_CLOCK_IMPL_HPP

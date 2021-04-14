@@ -12,7 +12,7 @@
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/network/cares/cares.hpp>
 #include <libp2p/protocol/echo.hpp>
-#include <testutil/clock/impl/clock_impl.hpp>
+#include <testutil/async/impl/clock_impl.hpp>
 #include <testutil/outcome.hpp>
 
 struct TickCounter;

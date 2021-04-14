@@ -53,3 +53,18 @@ libp2p_add_library(p2p_write_queue
 target_link_libraries(p2p_write_queue
     p2p_logger
     )
+
+libp2p_add_library(p2p_basic_scheduler
+    scheduler.cpp
+    scheduler/scheduler_impl.cpp
+    )
+target_link_libraries(p2p_basic_scheduler
+    p2p_logger
+    )
+
+libp2p_add_library(p2p_asio_scheduler_backend
+    scheduler/asio_scheduler_backend.cpp
+    )
+target_link_libraries(p2p_asio_scheduler_backend
+    p2p_basic_scheduler
+    )
