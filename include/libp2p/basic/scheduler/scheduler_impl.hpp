@@ -6,8 +6,8 @@
 #ifndef LIBP2P_BASIC_SCHEDULER_IMPL_HPP
 #define LIBP2P_BASIC_SCHEDULER_IMPL_HPP
 
-#include <unordered_map>
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/optional.hpp>
@@ -25,6 +25,7 @@ namespace libp2p::basic {
     /// Ctor, backend is injected
     SchedulerImpl(std::shared_ptr<SchedulerBackend> backend,
                   Scheduler::Config config);
+
    private:
     using Ticket = Scheduler::Handle::Ticket;
 
@@ -44,7 +45,7 @@ namespace libp2p::basic {
         std::chrono::milliseconds delay_from_now) noexcept override;
 
     /// Timer callback, called from SchedulerBackend
-    void pulse(int64_t current_clock) noexcept override;
+    void pulse(std::chrono::milliseconds current_clock) noexcept override;
 
     struct Item {
       uint64_t seq = 0;
@@ -176,23 +177,25 @@ namespace libp2p::basic {
     class TimedCallbacks {
      public:
       /// Ctor
-      TimedCallbacks(SchedulerBackend &backend, int64_t timer_threshold);
+      TimedCallbacks(SchedulerBackend &backend,
+                     std::chrono::milliseconds timer_threshold);
 
       /// Adds item and reschedules timer if needed
-      void push(int64_t abs_time, uint64_t seq, Callback cb,
+      void push(std::chrono::milliseconds abs_time, uint64_t seq, Callback cb,
                 std::weak_ptr<SchedulerBackendFeedback> sch);
 
       /// Timer callback, owner arg helps control lifetime
-      void onTimer(int64_t clock, std::shared_ptr<Scheduler> owner);
+      void onTimer(std::chrono::milliseconds clock,
+                   std::shared_ptr<Scheduler> owner);
 
       /// Cancels an item and reschedules timer if needed
       void cancel(const Ticket &ticket,
                   std::weak_ptr<SchedulerBackendFeedback> sch);
 
       /// Rechedules timed ticket, may return errors, see Scheduler API
-      outcome::result<Ticket> rescheduleTicket(const Ticket &ticket,
-                                               int64_t abs_time,
-                                               uint64_t new_seq);
+      outcome::result<Ticket> rescheduleTicket(
+          const Ticket &ticket, std::chrono::milliseconds abs_time,
+          uint64_t new_seq);
 
      private:
       /// Reschedules timer
@@ -203,13 +206,13 @@ namespace libp2p::basic {
 
       /// Timer threshold in ticks, helps to avoid often timer switches
       /// up to reasonable resolution
-      int64_t timer_threshold_;
+      std::chrono::milliseconds timer_threshold_;
 
       /// Items sorted
       std::map<Ticket, Callback> items_;
 
       /// Non-zero expiration if timer is set
-      int64_t current_timer_ = 0;
+      std::chrono::milliseconds current_timer_ = kZeroTime;
 
       /// Seq number being processed at the moment
       uint64_t seq_in_process_ = 0;

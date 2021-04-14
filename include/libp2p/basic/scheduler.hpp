@@ -14,6 +14,9 @@
 
 namespace libp2p::basic {
 
+  constexpr std::chrono::milliseconds kZeroTime =
+      std::chrono::milliseconds::zero();
+
   /**
    * Feedback from scheduler backend to Scheduler implementation.
    */
@@ -28,7 +31,7 @@ namespace libp2p::basic {
      * epoch;
      * For callbacks deferred to next IO loop cycle: zero
      */
-    virtual void pulse(int64_t current_clock) noexcept = 0;
+    virtual void pulse(std::chrono::milliseconds current_clock) noexcept = 0;
   };
 
   /**
@@ -98,7 +101,7 @@ namespace libp2p::basic {
        * { async-time, seq-number } structure for proper ordering and uniqueness
        * within Scheduler
        */
-      using Ticket = std::pair<int64_t, uint64_t>;
+      using Ticket = std::pair<std::chrono::milliseconds, uint64_t>;
 
       Handle(const Handle &) = delete;
       Handle &operator=(const Handle &) = delete;
@@ -149,8 +152,7 @@ namespace libp2p::basic {
      * @param cb callback
      */
     void schedule(Callback &&cb) noexcept {
-      std::ignore = scheduleImpl(std::forward<Callback>(cb),
-                                 std::chrono::milliseconds::zero(), false);
+      std::ignore = scheduleImpl(std::move(cb), kZeroTime, false);
     }
 
     /**
@@ -160,8 +162,7 @@ namespace libp2p::basic {
      */
     void schedule(Callback &&cb,
                   std::chrono::milliseconds delay_from_now) noexcept {
-      std::ignore =
-          scheduleImpl(std::forward<Callback>(cb), delay_from_now, false);
+      std::ignore = scheduleImpl(std::move(cb), delay_from_now, false);
     }
 
     /**
@@ -171,8 +172,7 @@ namespace libp2p::basic {
      * lifetime
      */
     [[nodiscard]] Handle scheduleWithHandle(Callback &&cb) noexcept {
-      return scheduleImpl(std::forward<Callback>(cb),
-                          std::chrono::milliseconds::zero(), true);
+      return scheduleImpl(std::move(cb), kZeroTime, true);
     }
 
     /**
@@ -184,7 +184,7 @@ namespace libp2p::basic {
      */
     [[nodiscard]] Handle scheduleWithHandle(
         Callback &&cb, std::chrono::milliseconds delay_from_now) noexcept {
-      return scheduleImpl(std::forward<Callback>(cb), delay_from_now, true);
+      return scheduleImpl(std::move(cb), delay_from_now, true);
     }
 
     /**

@@ -14,7 +14,7 @@ namespace libp2p::basic {
       : backend_(std::move(backend)),
         config_(config),
         deferred_callbacks_(*backend_),
-        timed_callbacks_(*backend_, config_.max_timer_threshold.count()) {}
+        timed_callbacks_(*backend_, config_.max_timer_threshold) {}
 
   std::chrono::milliseconds SchedulerImpl::now() noexcept {
     return backend_->now();
@@ -29,17 +29,16 @@ namespace libp2p::basic {
       return Handle{};
     }
 
-    int64_t expire_time = delay_from_now.count();
+    std::chrono::milliseconds expire_time = delay_from_now;
     auto seq = ++seq_number_;
 
-    if (expire_time <= 0) {
-      expire_time = 0;
-      deferred_callbacks_.push(seq, std::forward<Callback>(cb), make_handle,
+    if (expire_time.count() <= 0) {
+      expire_time = kZeroTime;
+      deferred_callbacks_.push(seq, std::move(cb), make_handle,
                                weak_from_this());
     } else {
-      expire_time += now().count();
-      timed_callbacks_.push(expire_time, seq, std::forward<Callback>(cb),
-                            weak_from_this());
+      expire_time += now();
+      timed_callbacks_.push(expire_time, seq, std::move(cb), weak_from_this());
     }
 
     if (make_handle) {
@@ -49,7 +48,7 @@ namespace libp2p::basic {
   }
 
   void SchedulerImpl::cancel(Handle::Ticket ticket) noexcept {
-    if (ticket.first != 0) {
+    if (ticket.first != kZeroTime) {
       timed_callbacks_.cancel(ticket, weak_from_this());
     } else {
       deferred_callbacks_.cancel(ticket.second);
@@ -63,9 +62,9 @@ namespace libp2p::basic {
       return Error::kInvalidArgument;
     }
 
-    int64_t abs_time = (now() + delay_from_now).count();
+    std::chrono::milliseconds abs_time = now() + delay_from_now;
 
-    if (ticket.first != 0) {
+    if (ticket.first != kZeroTime) {
       // timed ticket being rescheduled
       return timed_callbacks_.rescheduleTicket(ticket, abs_time, ++seq_number_);
     }
@@ -80,8 +79,8 @@ namespace libp2p::basic {
     return Ticket(abs_time, seq_number_);
   }
 
-  void SchedulerImpl::pulse(int64_t current_clock) noexcept {
-    if (current_clock == 0) {
+  void SchedulerImpl::pulse(std::chrono::milliseconds current_clock) noexcept {
+    if (current_clock == kZeroTime) {
       deferred_callbacks_.onTimer(shared_from_this());
     } else {
       timed_callbacks_.onTimer(current_clock, shared_from_this());
@@ -304,21 +303,21 @@ namespace libp2p::basic {
     backend_.setTimer(std::chrono::milliseconds::zero(), std::move(sch));
   }
 
-  SchedulerImpl::TimedCallbacks::TimedCallbacks(SchedulerBackend &backend,
-                                                int64_t timer_threshold)
+  SchedulerImpl::TimedCallbacks::TimedCallbacks(
+      SchedulerBackend &backend, std::chrono::milliseconds timer_threshold)
       : backend_(backend), timer_threshold_(timer_threshold) {}
 
   void SchedulerImpl::TimedCallbacks::push(
-      int64_t abs_time, uint64_t seq, Callback cb,
+      std::chrono::milliseconds abs_time, uint64_t seq, Callback cb,
       std::weak_ptr<SchedulerBackendFeedback> sch) {
     items_.emplace(Ticket{abs_time, seq}, std::move(cb));
     rescheduleTimer(std::move(sch));
   }
 
   void SchedulerImpl::TimedCallbacks::onTimer(
-      int64_t clock, std::shared_ptr<Scheduler> owner) {
+      std::chrono::milliseconds clock, std::shared_ptr<Scheduler> owner) {
     [this, clock, owner = std::move(owner)]() {
-      current_timer_ = 0;
+      current_timer_ = kZeroTime;
 
       while (!items_.empty() && !owner.unique()) {
         auto it = items_.begin();
@@ -357,7 +356,7 @@ namespace libp2p::basic {
 
   void SchedulerImpl::TimedCallbacks::rescheduleTimer(
       std::weak_ptr<SchedulerBackendFeedback> sch) {
-    int64_t next_time = 0;
+    std::chrono::milliseconds next_time = kZeroTime;
     while (!items_.empty()) {
       auto it = items_.begin();
       if (it->second) {
@@ -379,11 +378,11 @@ namespace libp2p::basic {
       items_.erase(it);
     }
 
-    if (next_time == 0) {
+    if (next_time == kZeroTime) {
       return;
     }
 
-    if (current_timer_ != 0 && current_timer_ <= next_time) {
+    if (current_timer_ != kZeroTime && current_timer_ <= next_time) {
       return;
     }
 
@@ -404,9 +403,9 @@ namespace libp2p::basic {
   }
 
   outcome::result<SchedulerImpl::Ticket>
-  SchedulerImpl::TimedCallbacks::rescheduleTicket(const Ticket &ticket,
-                                                  int64_t abs_time,
-                                                  uint64_t new_seq) {
+  SchedulerImpl::TimedCallbacks::rescheduleTicket(
+      const Ticket &ticket, std::chrono::milliseconds abs_time,
+      uint64_t new_seq) {
     auto seq = ticket.second;
 
     if (abs_time <= ticket.first || seq == 0 || new_seq <= seq) {

@@ -14,7 +14,7 @@ namespace libp2p::basic {
       deferred_callbacks_.emplace_back([scheduler = std::move(scheduler)]() {
         auto sch = scheduler.lock();
         if (sch) {
-          sch->pulse(0);
+          sch->pulse(kZeroTime);
         }
       });
       return;
@@ -27,7 +27,7 @@ namespace libp2p::basic {
     timer_callback_ = [this, scheduler = std::move(scheduler)]() {
       auto sch = scheduler.lock();
       if (sch) {
-        sch->pulse(now().count());
+        sch->pulse(now());
       }
     };
   }

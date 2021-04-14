@@ -5,8 +5,8 @@
 
 #include <gtest/gtest.h>
 
-#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
+#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 
 #include "testutil/async/manual_scheduler_backend.hpp"
 #include "testutil/outcome.hpp"
@@ -70,7 +70,8 @@ TEST(Scheduler, BasicThings) {
           log().debug(
               "timed w/handle called first time (98), rescheduling +70");
           first_time = false;
-          EXPECT_OUTCOME_SUCCESS(h3.reschedule(std::chrono::milliseconds(70)));
+          EXPECT_OUTCOME_SUCCESS(_,
+                                 h3.reschedule(std::chrono::milliseconds(70)));
         } else {
           log().debug("timed w/handle called second time, rescheduled");
         }
@@ -82,7 +83,7 @@ TEST(Scheduler, BasicThings) {
     if (first_time) {
       log().debug("deferred w/handle called first time, rescheduling +120");
       first_time = false;
-      EXPECT_OUTCOME_SUCCESS(h4.reschedule(std::chrono::milliseconds(120)));
+      EXPECT_OUTCOME_SUCCESS(_, h4.reschedule(std::chrono::milliseconds(120)));
     } else {
       log().debug("deferred->timed w/handle called second time, rescheduled");
     }
@@ -128,7 +129,8 @@ TEST(Scheduler, ManualScheduler) {
           log().debug(
               "timed w/handle called first time (98), rescheduling +70");
           first_time = false;
-          EXPECT_OUTCOME_SUCCESS(h3.reschedule(std::chrono::milliseconds(70)));
+          EXPECT_OUTCOME_SUCCESS(_,
+                                 h3.reschedule(std::chrono::milliseconds(70)));
         } else {
           log().debug("timed w/handle called second time, rescheduled");
         }
@@ -140,7 +142,7 @@ TEST(Scheduler, ManualScheduler) {
     if (first_time) {
       log().debug("deferred w/handle called first time, rescheduling +120");
       first_time = false;
-      EXPECT_OUTCOME_SUCCESS(h4.reschedule(std::chrono::milliseconds(120)));
+      EXPECT_OUTCOME_SUCCESS(_, h4.reschedule(std::chrono::milliseconds(120)));
     } else {
       log().debug("deferred->timed w/handle called second time, rescheduled");
     }

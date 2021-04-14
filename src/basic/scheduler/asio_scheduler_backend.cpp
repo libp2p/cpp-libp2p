@@ -19,11 +19,11 @@ namespace libp2p::basic {
   void AsioSchedulerBackend::setTimer(
       std::chrono::milliseconds abs_time,
       std::weak_ptr<SchedulerBackendFeedback> scheduler) {
-    if (abs_time == std::chrono::milliseconds::zero()) {
+    if (abs_time == kZeroTime) {
       io_context_->post([scheduler = std::move(scheduler)]() {
         auto sch = scheduler.lock();
         if (sch) {
-          sch->pulse(0);
+          sch->pulse(kZeroTime);
         }
       });
       return;
@@ -32,8 +32,7 @@ namespace libp2p::basic {
     assert(abs_time.count() > 0);
 
     boost::system::error_code ec;
-    timer_.expires_at(
-        std::chrono::time_point<std::chrono::steady_clock>(abs_time), ec);
+    timer_.expires_at(decltype(timer_)::clock_type::time_point(abs_time), ec);
 
     if (ec) {
       // this should never happen
@@ -47,7 +46,7 @@ namespace libp2p::basic {
       if (!error) {
         auto sch = scheduler.lock();
         if (sch) {
-          sch->pulse(nowImpl().count());
+          sch->pulse(nowImpl());
         }
       }
     });
@@ -55,7 +54,7 @@ namespace libp2p::basic {
 
   std::chrono::milliseconds AsioSchedulerBackend::nowImpl() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now().time_since_epoch());
+        decltype(timer_)::clock_type::now().time_since_epoch());
   }
 
 }  // namespace libp2p::basic
