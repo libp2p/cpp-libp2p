@@ -5,6 +5,7 @@
 
 #include <libp2p/transport/tcp/tcp_listener.hpp>
 
+#include <libp2p/log/logger.hpp>
 #include <libp2p/transport/impl/upgrader_session.hpp>
 
 namespace libp2p::transport {
@@ -43,6 +44,9 @@ namespace libp2p::transport {
 
       return outcome::success();
     } catch (const boost::system::system_error &e) {
+      log::createLogger("Listener")
+          ->error("Cannot listen to {}: {}", address.getStringAddress(),
+                  e.code().message());
       return e.code();
     }
   }
@@ -52,11 +56,11 @@ namespace libp2p::transport {
   }
 
   outcome::result<multi::Multiaddress> TcpListener::getListenMultiaddr() const {
-  	boost::system::error_code ec;
-	  auto endpoint = acceptor_.local_endpoint(ec);
-	  if (ec) {
-	  	return ec;
-	  }
+    boost::system::error_code ec;
+    auto endpoint = acceptor_.local_endpoint(ec);
+    if (ec) {
+      return ec;
+    }
     return detail::makeAddress(endpoint);
   }
 
