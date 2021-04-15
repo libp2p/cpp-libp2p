@@ -21,7 +21,7 @@ TEST(AsioScheduler, Construct) {
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
   std::shared_ptr<Scheduler> scheduler =
       std::make_shared<libp2p::protocol::AsioScheduler>(
-          *context, libp2p::protocol::SchedulerConfig{});
+          context, libp2p::protocol::SchedulerConfig{});
   scheduler.reset();
   context->run();
 }
