@@ -27,6 +27,11 @@ namespace libp2p::muxer {
     static constexpr std::chrono::milliseconds kDefaultPingInterval =
         std::chrono::milliseconds(5000);
     std::chrono::milliseconds ping_interval = kDefaultPingInterval;
+
+    /// No streams interval after which connection closes itself
+    static constexpr std::chrono::milliseconds kDefaultNoStremsInterval =
+        std::chrono::milliseconds(120000);
+    std::chrono::milliseconds no_streams_interval = kDefaultNoStremsInterval;
   };
 }  // namespace libp2p::muxer
 

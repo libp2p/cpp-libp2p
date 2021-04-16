@@ -118,13 +118,7 @@ namespace libp2p::connection {
     enqueue(newStreamMsg(stream_id));
 
     // Now we self-acked the new stream
-
-    auto stream = std::make_shared<YamuxStream>(
-        shared_from_this(), *this, stream_id, config_.maximum_window_size,
-        basic::WriteQueue::kDefaultSizeLimit);
-
-    streams_[stream_id] = stream;
-    return stream;
+    return createStream(stream_id);
   }
 
   void YamuxedConnection::newStream(StreamHandlerFunc cb) {
@@ -136,14 +130,16 @@ namespace libp2p::connection {
 
     if (streams_.size() >= config_.maximum_streams) {
       return connection_->deferWriteCallback(
-          Error::CONNECTION_TOO_MANY_STREAMS,
-          [cb = std::move(cb)](auto) { cb(Error::CONNECTION_TOO_MANY_STREAMS); });
+          Error::CONNECTION_TOO_MANY_STREAMS, [cb = std::move(cb)](auto) {
+            cb(Error::CONNECTION_TOO_MANY_STREAMS);
+          });
     }
 
     auto stream_id = new_stream_id_;
     new_stream_id_ += 2;
     enqueue(newStreamMsg(stream_id));
     pending_outbound_streams_[stream_id] = std::move(cb);
+    inactivity_handle_.cancel();
   }
 
   void YamuxedConnection::onStream(NewStreamHandlerFunc cb) {
@@ -176,8 +172,7 @@ namespace libp2p::connection {
   }
 
   outcome::result<void> YamuxedConnection::close() {
-    close(Error::CONNECTION_CLOSED_BY_HOST,
-          YamuxFrame::GoAwayError::NORMAL);
+    close(Error::CONNECTION_CLOSED_BY_HOST, YamuxFrame::GoAwayError::NORMAL);
     return outcome::success();
   }
 
@@ -422,11 +417,7 @@ namespace libp2p::connection {
     }
 
     log()->debug("creating inbound stream {}", frame.stream_id);
-
-    // create new stream
-    streams_[frame.stream_id] = std::make_shared<YamuxStream>(
-        shared_from_this(), *this, frame.stream_id, config_.maximum_window_size,
-        basic::WriteQueue::kDefaultSizeLimit);
+    std::ignore = createStream(frame.stream_id);
 
     enqueue(ackStreamMsg(frame.stream_id));
 
@@ -463,7 +454,7 @@ namespace libp2p::connection {
         ok = false;
       }
       stream_handler = std::move(it->second);
-      pending_outbound_streams_.erase(it);
+      erasePendingOutboundStream(it);
     }
 
     if (!ok) {
@@ -476,9 +467,7 @@ namespace libp2p::connection {
 
     log()->debug("creating outbound stream {}", frame.stream_id);
 
-    streams_[frame.stream_id] = std::make_shared<YamuxStream>(
-        shared_from_this(), *this, frame.stream_id, config_.maximum_window_size,
-        basic::WriteQueue::kDefaultSizeLimit);
+    std::ignore = createStream(frame.stream_id);
 
     // handler will be called after all inbound bytes processed
     fresh_streams_.emplace_back(frame.stream_id, std::move(stream_handler));
@@ -497,7 +486,7 @@ namespace libp2p::connection {
         if (it2 != pending_outbound_streams_.end()) {
           log()->debug("received FIN to pending outbound stream {}", stream_id);
           auto cb = std::move(it2->second);
-          pending_outbound_streams_.erase(it2);
+          erasePendingOutboundStream(it2);
           cb(Stream::Error::STREAM_RESET_BY_PEER);
           return true;
         }
@@ -525,7 +514,7 @@ namespace libp2p::connection {
           log()->debug("received RST to pending outbound stream {}", stream_id);
 
           auto cb = std::move(it2->second);
-          pending_outbound_streams_.erase(it2);
+          erasePendingOutboundStream(it2);
           cb(Stream::Error::STREAM_RESET_BY_PEER);
           return true;
         }
@@ -566,6 +555,12 @@ namespace libp2p::connection {
     log()->debug("closing connection, reason: {}",
                  notify_streams_code.message());
 
+    write_queue_.clear();
+
+    if (reply_to_peer_code.has_value() && !connection_->isClosed()) {
+      enqueue(goAwayMsg(reply_to_peer_code.value()));
+    }
+
     Streams streams;
     streams.swap(streams_);
 
@@ -578,10 +573,6 @@ namespace libp2p::connection {
 
     for (auto [_, cb] : pending_streams) {
       cb(notify_streams_code);
-    }
-
-    if (reply_to_peer_code.has_value()) {
-      enqueue(goAwayMsg(reply_to_peer_code.value()));
     }
   }
 
@@ -716,9 +707,44 @@ namespace libp2p::connection {
     }
   }
 
+  std::shared_ptr<Stream> YamuxedConnection::createStream(StreamId stream_id) {
+    auto stream = std::make_shared<YamuxStream>(
+        shared_from_this(), *this, stream_id, config_.maximum_window_size,
+        basic::WriteQueue::kDefaultSizeLimit);
+    streams_[stream_id] = stream;
+    inactivity_handle_.cancel();
+    return stream;
+  }
+
   void YamuxedConnection::eraseStream(StreamId stream_id) {
     log()->debug("erasing stream {}", stream_id);
     streams_.erase(stream_id);
+    adjustExpireTimer();
+  }
+
+  void YamuxedConnection::erasePendingOutboundStream(
+      PendingOutboundStreams::iterator it) {
+    log()->trace("erasing pending outbound stream {}", it->first);
+    pending_outbound_streams_.erase(it);
+    adjustExpireTimer();
+  }
+
+  void YamuxedConnection::adjustExpireTimer() {
+    if (config_.no_streams_interval > basic::kZeroTime && streams_.empty()
+        && pending_outbound_streams_.empty()) {
+      log()->debug("scheduling expire timer to {} msec",
+                   config_.no_streams_interval.count());
+      inactivity_handle_ = scheduler_->scheduleWithHandle(
+          [this] { onExpireTimer(); },
+          scheduler_->now() + config_.no_streams_interval);
+    }
+  }
+
+  void YamuxedConnection::onExpireTimer() {
+    if (streams_.empty() && pending_outbound_streams_.empty()) {
+      log()->debug("closing expired connection");
+      close(Error::CONNECTION_NOT_ACTIVE, YamuxFrame::GoAwayError::NORMAL);
+    }
   }
 
 }  // namespace libp2p::connection

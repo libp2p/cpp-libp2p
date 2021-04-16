@@ -167,8 +167,21 @@ namespace libp2p::connection {
     void onDataWritten(outcome::result<size_t> res, StreamId stream_id,
                        bool some);
 
+    /// Creates new yamux stream
+    std::shared_ptr<Stream> createStream(StreamId stream_id);
+
     /// Erases stream
     void eraseStream(StreamId stream_id);
+
+    /// Erases stream
+    void erasePendingOutboundStream(PendingOutboundStreams::iterator it);
+
+    /// Sets expire timer if last stream was just closed. Called from erase*()
+    /// functions
+    void adjustExpireTimer();
+
+    /// Expire timer callback
+    void onExpireTimer();
 
     /// Copy of config
     const muxer::MuxedConnectionConfig config_;
@@ -212,6 +225,9 @@ namespace libp2p::connection {
 
     /// Timer handle for pings
     basic::Scheduler::Handle ping_handle_;
+
+    /// Timer handle for auto closing if inactive
+    basic::Scheduler::Handle inactivity_handle_;
   };
 
 }  // namespace libp2p::connection
