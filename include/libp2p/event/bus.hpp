@@ -36,6 +36,7 @@ namespace libp2p::event {
           *first;
         } catch (...) {
           // drop
+          // TODO(artem): log
         }
         ++first;
       }
@@ -48,8 +49,7 @@ namespace libp2p::event {
    */
   class Handle {
    public:
-    ~Handle() {  // NOLINT(bugprone-exception-escape) - no way we can call it
-      // with noexcept guarantee, but we need
+    ~Handle() {
       unsubscribe();
     }
 
@@ -57,26 +57,39 @@ namespace libp2p::event {
      * Explicitly unsubscribe from channel before the lifetime
      * of this object expires
      */
-    void unsubscribe() {
+    void unsubscribe() noexcept {
       if (handle_.connected()) {
-        handle_.disconnect();
+        try {
+          handle_.disconnect();
+        } catch (...) {
+          // TODO(artem): log
+        }
       }
     }
 
     // This handle can be constructed and moved
     Handle() = default;
 
-    // no way they can be noexcept because of none-noexcept
+    /// Cancels existing connection
+    Handle &operator=(Handle &&rhs) noexcept {
+      unsubscribe();
+      handle_ = std::move(rhs.handle_);
+
+      assert(!rhs.handle_.connected()); // move was correct?
+
+      return *this;
+    }
+
+      // no way they can be noexcept because of none-noexcept
     // boost::signal2::connection move ctor
     Handle(Handle &&) = default;                // NOLINT
-    Handle &operator=(Handle &&rhs) = default;  // NOLINT
 
     // dont allow copying since this protects the resource
     Handle(const Handle &) = delete;
     Handle &operator=(const Handle &) = delete;
 
    private:
-    using handle_type = boost::signals2::connection;
+    using handle_type = boost::signals2::scoped_connection;
     handle_type handle_;
 
     /**
