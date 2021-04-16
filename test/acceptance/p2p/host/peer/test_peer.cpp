@@ -105,6 +105,7 @@ void Peer::wait() {
   if (thread_.joinable()) {
     thread_.join();
   }
+  host_->stop();
 }
 
 Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
