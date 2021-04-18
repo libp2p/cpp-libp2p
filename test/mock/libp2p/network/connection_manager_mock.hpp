@@ -21,7 +21,6 @@ namespace libp2p::network {
                        std::vector<ConnectionSPtr>(const peer::PeerId &p));
     MOCK_CONST_METHOD1(getBestConnectionForPeer,
                        ConnectionSPtr(const peer::PeerId &p));
-    MOCK_CONST_METHOD1(connectedness, Connectedness(const peer::PeerInfo &p));
 
     MOCK_METHOD2(addConnectionToPeer,
                  void(const peer::PeerId &p, ConnectionSPtr c));

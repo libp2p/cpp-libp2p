@@ -11,7 +11,6 @@
 #include "libp2p/peer/errors.hpp"
 #include "libp2p/peer/peer_id.hpp"
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
-#include "mock/libp2p/network/transport_manager_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
 
@@ -25,7 +24,6 @@ using namespace common;
 using testing::_;
 using testing::NiceMock;
 using testing::Return;
-using C = ConnectionManager::Connectedness;
 
 struct ConnectionManagerTest : public ::testing::Test {
   void SetUp() override {
@@ -33,20 +31,19 @@ struct ConnectionManagerTest : public ::testing::Test {
 
     bus = std::make_shared<libp2p::event::Bus>();
 
-    tmgr = std::make_shared<TransportManagerMock>();
+    cmgr = std::make_shared<ConnectionManagerImpl>(bus);
 
-    cmgr = std::make_shared<ConnectionManagerImpl>(bus, tmgr);
-
-    conn = std::make_shared<CapableConnectionMock>();
+    conn11 = std::make_shared<CapableConnectionMock>();
+    conn12 = std::make_shared<CapableConnectionMock>();
+    conn2 = std::make_shared<CapableConnectionMock>();
 
     // given 3 peers. p1 has 2 conns, p2 has 1, p3 has 0
-    cmgr->addConnectionToPeer(p1, conn);
-    cmgr->addConnectionToPeer(p1, conn);
-    cmgr->addConnectionToPeer(p2, conn);
+    cmgr->addConnectionToPeer(p1, conn11);
+    cmgr->addConnectionToPeer(p1, conn12);
+    cmgr->addConnectionToPeer(p2, conn2);
   }
 
   std::shared_ptr<libp2p::event::Bus> bus;
-  std::shared_ptr<TransportManagerMock> tmgr;
   std::shared_ptr<TransportMock> t;
 
   std::shared_ptr<ConnectionManager> cmgr;
@@ -55,7 +52,9 @@ struct ConnectionManagerTest : public ::testing::Test {
   peer::PeerId p2 = testutil::randomPeerId();
   peer::PeerId p3 = testutil::randomPeerId();
 
-  std::shared_ptr<CapableConnectionMock> conn;
+  std::shared_ptr<CapableConnectionMock> conn11;
+  std::shared_ptr<CapableConnectionMock> conn12;
+  std::shared_ptr<CapableConnectionMock> conn2;
 };
 
 /**
@@ -90,6 +89,8 @@ TEST_F(ConnectionManagerTest, GetConnToPeer) {
  * @then get valid connection
  */
 TEST_F(ConnectionManagerTest, GetBestConn) {
+  EXPECT_CALL(*conn11, isClosed()).WillRepeatedly(Return(false));
+  EXPECT_CALL(*conn12, isClosed()).WillRepeatedly(Return(false));
   auto c = cmgr->getBestConnectionForPeer(p1);
   ASSERT_NE(c, nullptr);
 }
@@ -102,66 +103,10 @@ TEST_F(ConnectionManagerTest, GetBestConn) {
 TEST_F(ConnectionManagerTest, ConnectednessWhenConnected) {
   auto conns = cmgr->getConnectionsToPeer(p1);
 
-  // even though there are 2 connections, we were able to find first open
-  // connection, so isClosed called once
-  EXPECT_CALL(*conn, isClosed()).WillOnce(Return(false));
-
   ASSERT_EQ(conns.size(), 2);
 
   ASSERT_NE(conns[0], nullptr);
   ASSERT_NE(conns[1], nullptr);
-
-  ASSERT_EQ(cmgr->connectedness({p1, {}}), C::CONNECTED);
-}
-
-/**
- * @given peer with single nullptr connection
- * @when get connectedness
- * @then get NOT_CONNECTED
- */
-TEST_F(ConnectionManagerTest, ConnectednessWhenNotConnected) {
-  // simulate situation when connection was removed, but nullptr was left behind
-  cmgr->addConnectionToPeer(p3, nullptr);
-
-  // no valid connections
-  ASSERT_EQ(cmgr->connectedness({p3, {}}), C::NOT_CONNECTED);
-}
-
-/**
- * @given peer without valid connections, but with valid address and transport
- * capable of dialing to this address
- * @when get connectedness to this peer
- * @then get CAN_CONNECT
- */
-TEST_F(ConnectionManagerTest, ConnectednessWhenCanConnect) {
-  auto ma = "/ip4/192.168.1.2/tcp/8080"_multiaddr;
-
-  EXPECT_CALL(*tmgr, findBest(_)).WillOnce(Return(t));
-
-  ASSERT_EQ(cmgr->connectedness({p3, {ma}}), C::CAN_CONNECT);
-}
-
-/**
- * @given peer has no connections and has no addresses
- * @when get connectedness
- * @then get CAN_NOT_CONNECT
- */
-TEST_F(ConnectionManagerTest, ConnectednessWhenCanNotConnect_NoAddresses) {
-  ASSERT_EQ(cmgr->connectedness({p3, {}}), C::CAN_NOT_CONNECT);
-}
-
-/**
- * @given peer has no connections, has address but has no transports that can
- * dial to that address
- * @when get connectedness
- * @then get CAN_NOT_CONNECT
- */
-TEST_F(ConnectionManagerTest, ConnectednessWhenCanNotConnect) {
-  auto ma = "/ip4/192.168.1.2/tcp/8080"_multiaddr;
-
-  EXPECT_CALL(*tmgr, findBest(_)).WillOnce(Return(nullptr));
-
-  ASSERT_EQ(cmgr->connectedness({p3, {ma}}), C::CAN_NOT_CONNECT);
 }
 
 /**
@@ -176,7 +121,9 @@ TEST_F(ConnectionManagerTest, GarbageCollection) {
   ASSERT_EQ(cmgr->getConnectionsToPeer(p2).size(), 1);
   ASSERT_EQ(cmgr->getConnectionsToPeer(p3).size(), 1);
 
-  EXPECT_CALL(*conn, isClosed()).Times(3).WillRepeatedly(Return(true));
+  EXPECT_CALL(*conn11, isClosed()).WillOnce(Return(true));
+  EXPECT_CALL(*conn12, isClosed()).WillOnce(Return(true));
+  EXPECT_CALL(*conn2, isClosed()).WillOnce(Return(true));
 
   cmgr->collectGarbage();
 

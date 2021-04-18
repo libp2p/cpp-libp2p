@@ -6,7 +6,7 @@
 #ifndef LIBP2P_PROTOCOL_KADEMLIA_MESSAGE
 #define LIBP2P_PROTOCOL_KADEMLIA_MESSAGE
 
-#include <libp2p/network/connection_manager.hpp>
+#include <libp2p/host/host.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 
 namespace libp2p::protocol::kademlia {
@@ -35,7 +35,7 @@ namespace libp2p::protocol::kademlia {
       std::string time_received;
     };
 
-    using Connectedness = network::ConnectionManager::Connectedness;
+    using Connectedness = Host::Connectedness;
 
     struct Peer {
       PeerInfo info;

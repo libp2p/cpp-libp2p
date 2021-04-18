@@ -176,9 +176,7 @@ namespace libp2p::protocol::kademlia {
           }
 
           // Check if connectable
-          auto connectedness =
-              host_->getNetwork().getConnectionManager().connectedness(
-                  peer_info);
+          auto connectedness = host_->connectedness(peer_info);
           if (connectedness == Message::Connectedness::CAN_NOT_CONNECT) {
             continue;
           }
@@ -229,7 +227,8 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    auto update_res = peer_routing_table_->update(peer_info.id, permanent, is_connected);
+    auto update_res =
+        peer_routing_table_->update(peer_info.id, permanent, is_connected);
     if (not update_res) {
       log_.debug("{} was not added to peer routing table: {}",
                  peer_info.id.toBase58(), update_res.error().message());
@@ -344,8 +343,7 @@ namespace libp2p::protocol::kademlia {
         if (info.addresses.empty()) {
           continue;
         }
-        auto connectedness =
-            host_->getNetwork().getConnectionManager().connectedness(info);
+        auto connectedness = host_->connectedness(info);
         peers.push_back({std::move(info), connectedness});
         if (peers.size() >= config_.closerPeerCount) {
           break;
@@ -427,8 +425,7 @@ namespace libp2p::protocol::kademlia {
         if (info.addresses.empty()) {
           continue;
         }
-        auto connectedness =
-            host_->getNetwork().getConnectionManager().connectedness(info);
+        auto connectedness = host_->connectedness(info);
         peers.push_back({std::move(info), connectedness});
         if (peers.size() >= config_.closerPeerCount) {
           break;
@@ -452,8 +449,7 @@ namespace libp2p::protocol::kademlia {
         if (info.addresses.empty()) {
           continue;
         }
-        auto connectedness =
-            host_->getNetwork().getConnectionManager().connectedness(info);
+        auto connectedness = host_->connectedness(info);
         peers.push_back({std::move(info), connectedness});
         if (peers.size() >= config_.closerPeerCount) {
           break;
@@ -511,8 +507,7 @@ namespace libp2p::protocol::kademlia {
       if (info.addresses.empty()) {
         continue;
       }
-      auto connectedness =
-          host_->getNetwork().getConnectionManager().connectedness(info);
+      auto connectedness = host_->connectedness(info);
       peers.push_back({std::move(info), connectedness});
       if (peers.size() >= config_.closerPeerCount) {
         break;

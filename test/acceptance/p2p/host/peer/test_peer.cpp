@@ -159,7 +159,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
 
   auto bus = std::make_shared<libp2p::event::Bus>();
 
-  auto cmgr = std::make_shared<network::ConnectionManagerImpl>(bus, tmgr);
+  auto cmgr = std::make_shared<network::ConnectionManagerImpl>(bus);
 
   auto listener = std::make_shared<network::ListenerManagerImpl>(
       multiselect, std::move(router), tmgr, cmgr);
@@ -183,6 +183,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto peer_repo = std::make_unique<peer::PeerRepositoryImpl>(
       std::move(addr_repo), std::move(key_repo), std::move(protocol_repo));
 
-  return std::make_shared<host::BasicHost>(
-      idmgr, std::move(network), std::move(peer_repo), std::move(bus));
+  return std::make_shared<host::BasicHost>(idmgr, std::move(network),
+                                           std::move(peer_repo), std::move(bus),
+                                           std::move(tmgr));
 }

@@ -35,14 +35,6 @@ namespace libp2p::network {
     using Connection = connection::CapableConnection;
     using ConnectionSPtr = std::shared_ptr<Connection>;
 
-    enum class Connectedness {
-      NOT_CONNECTED,  ///< we don't know peer's addresses, and are not connected
-      CONNECTED,      ///< we have at least one connection to this peer
-      CAN_CONNECT,    ///< we know peer's addr, and we can dial
-      CAN_NOT_CONNECT  ///< we know peer's addr, but can not dial (no
-                       ///< transports)
-    };
-
     ~ConnectionManager() override = default;
 
     // get list of all connections (including inbound and outbound)
@@ -55,9 +47,6 @@ namespace libp2p::network {
     // get best connection to a given peer
     virtual ConnectionSPtr getBestConnectionForPeer(
         const peer::PeerId &p) const = 0;
-
-    // get connectedness information for given peer p
-    virtual Connectedness connectedness(const peer::PeerInfo &p) const = 0;
 
     // add connection to a given peer
     virtual void addConnectionToPeer(const peer::PeerId &p,

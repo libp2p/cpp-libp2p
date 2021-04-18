@@ -17,9 +17,7 @@ namespace libp2p::network {
 
   class ConnectionManagerImpl : public ConnectionManager {
    public:
-    explicit ConnectionManagerImpl(
-        std::shared_ptr<libp2p::event::Bus> bus,
-        std::shared_ptr<network::TransportManager> tmgr);
+    explicit ConnectionManagerImpl(std::shared_ptr<libp2p::event::Bus> bus);
 
     std::vector<ConnectionSPtr> getConnections() const override;
 
@@ -28,8 +26,6 @@ namespace libp2p::network {
 
     ConnectionSPtr getBestConnectionForPeer(
         const peer::PeerId &p) const override;
-
-    Connectedness connectedness(const peer::PeerInfo &p) const override;
 
     void addConnectionToPeer(const peer::PeerId &p, ConnectionSPtr c) override;
 
@@ -42,8 +38,6 @@ namespace libp2p::network {
         const std::shared_ptr<connection::CapableConnection> &conn) override;
 
    private:
-    std::shared_ptr<network::TransportManager> transport_manager_;
-
     std::unordered_map<peer::PeerId, std::unordered_set<ConnectionSPtr>>
         connections_;
 

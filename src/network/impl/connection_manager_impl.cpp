@@ -36,40 +36,6 @@ namespace libp2p::network {
     return nullptr;
   }
 
-  ConnectionManager::Connectedness ConnectionManagerImpl::connectedness(
-      const peer::PeerInfo &p) const {
-    auto it = connections_.find(p.id);
-    if (it != connections_.end()) {
-      // if all connections are nullptr or closed
-      if (it->second.empty()
-          || std::all_of(it->second.begin(), it->second.end(), [](auto &&conn) {
-               return conn == nullptr || conn->isClosed();
-             })) {
-        return Connectedness::NOT_CONNECTED;
-      }
-
-      // valid connections have been found
-      return Connectedness::CONNECTED;
-    }
-    // no valid connections found
-
-    // if no connectios to this peer
-    if (p.addresses.empty()) {
-      return Connectedness::CAN_NOT_CONNECT;
-    }
-
-    // for each address, try to find transport to dial
-    for (auto &&ma : p.addresses) {
-      if (auto tr = transport_manager_->findBest(ma); tr != nullptr) {
-        // we can dial to the peer
-        return Connectedness::CAN_CONNECT;
-      }
-    }
-
-    // we did not find available transports to dial
-    return Connectedness::CAN_NOT_CONNECT;
-  }
-
   void ConnectionManagerImpl::addConnectionToPeer(
       const peer::PeerId &p, ConnectionManager::ConnectionSPtr c) {
     auto it = connections_.find(p);
@@ -94,11 +60,8 @@ namespace libp2p::network {
   }
 
   ConnectionManagerImpl::ConnectionManagerImpl(
-      std::shared_ptr<libp2p::event::Bus> bus,
-      std::shared_ptr<TransportManager> tmgr)
-      : transport_manager_(std::move(tmgr)), bus_(std::move(bus)) {
-    BOOST_ASSERT(transport_manager_ != nullptr);
-  }
+      std::shared_ptr<libp2p::event::Bus> bus)
+      : bus_(std::move(bus)) {}
 
   void ConnectionManagerImpl::collectGarbage() {
     for (auto it = connections_.begin(); it != connections_.end();) {

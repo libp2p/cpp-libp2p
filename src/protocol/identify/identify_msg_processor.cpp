@@ -348,7 +348,7 @@ namespace libp2p::protocol {
     auto update_res = addr_repo.updateAddresses(peer_id, peer::ttl::kTransient);
     if (!update_res) {
       SL_DEBUG(log_, "cannot update listen addresses of the peer {}: {}",
-                  peer_id.toBase58(), update_res.error().message());
+               peer_id.toBase58(), update_res.error().message());
     }
 
     // memorize the addresses
@@ -359,8 +359,7 @@ namespace libp2p::protocol {
 
     bool permanent_ttl =
         (addresses
-         && (conn_manager_.connectedness({peer_id, addresses.value()})
-             == network::ConnectionManager::Connectedness::CONNECTED));
+         && (conn_manager_.getBestConnectionForPeer(peer_id) != nullptr));
 
     auto upsert_res = addr_repo.upsertAddresses(
         peer_id, listen_addresses,
