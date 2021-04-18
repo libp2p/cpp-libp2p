@@ -321,7 +321,7 @@ namespace {
         return std::make_shared<Mplex>(muxer::MuxedConnectionConfig{});
       case MuxerType::yamux:
         return std::make_shared<Yamux>(
-            muxer::MuxedConnectionConfig{1048576, 1000}, scheduler);
+            muxer::MuxedConnectionConfig{1048576, 1000}, scheduler, nullptr);
       default:
         break;
     }

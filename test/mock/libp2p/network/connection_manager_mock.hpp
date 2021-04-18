@@ -29,6 +29,10 @@ namespace libp2p::network {
     MOCK_METHOD1(closeConnectionsToPeer, void(const peer::PeerId &p));
 
     MOCK_METHOD0(collectGarbage, void());
+
+    MOCK_METHOD2(onConnectionClosed, void(
+        const peer::PeerId &peer_id,
+        const std::shared_ptr<connection::CapableConnection> &conn));
   };
 
 }  // namespace libp2p::network

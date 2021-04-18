@@ -44,6 +44,7 @@ namespace libp2p::connection {
      */
     explicit YamuxedConnection(std::shared_ptr<SecureConnection> connection,
                                std::shared_ptr<basic::Scheduler> scheduler,
+                               ConnectionClosedCallback closed_callback,
                                muxer::MuxedConnectionConfig config = {});
 
     void start() override;
@@ -228,6 +229,12 @@ namespace libp2p::connection {
 
     /// Timer handle for auto closing if inactive
     basic::Scheduler::Handle inactivity_handle_;
+
+    /// Called on connection close
+    ConnectionClosedCallback closed_callback_;
+
+    /// Remote peer saved here
+    peer::PeerId remote_peer_;
   };
 
 }  // namespace libp2p::connection

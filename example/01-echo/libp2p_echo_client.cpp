@@ -8,7 +8,6 @@
 #include <memory>
 
 #include <libp2p/common/literals.hpp>
-#include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/log/logger.hpp>

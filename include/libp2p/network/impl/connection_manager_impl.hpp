@@ -6,10 +6,12 @@
 #ifndef LIBP2P_CONNECTION_MANAGER_IMPL_HPP
 #define LIBP2P_CONNECTION_MANAGER_IMPL_HPP
 
+#include <unordered_set>
+
+#include <libp2p/event/bus.hpp>
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/network/transport_manager.hpp>
 #include <libp2p/peer/peer_id.hpp>
-#include <libp2p/event/bus.hpp>
 
 namespace libp2p::network {
 
@@ -35,12 +37,21 @@ namespace libp2p::network {
 
     void closeConnectionsToPeer(const peer::PeerId &p) override;
 
+    void onConnectionClosed(
+        const peer::PeerId &peer_id,
+        const std::shared_ptr<connection::CapableConnection> &conn) override;
+
    private:
     std::shared_ptr<network::TransportManager> transport_manager_;
 
-    std::unordered_map<peer::PeerId, std::vector<ConnectionSPtr>> connections_;
+    std::unordered_map<peer::PeerId, std::unordered_set<ConnectionSPtr>>
+        connections_;
 
     std::shared_ptr<libp2p::event::Bus> bus_;
+
+    /// Reentrancy resolver between closeConnectionsToPeer and
+    /// onConnectionClosed
+    boost::optional<peer::PeerId> closing_connections_to_peer_;
   };
 
 }  // namespace libp2p::network

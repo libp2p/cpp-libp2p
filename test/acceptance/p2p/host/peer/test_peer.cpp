@@ -146,7 +146,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   }
 
   std::vector<std::shared_ptr<muxer::MuxerAdaptor>> muxer_adaptors = {
-      std::make_shared<muxer::Yamux>(muxed_config_, scheduler_)};
+      std::make_shared<muxer::Yamux>(muxed_config_, scheduler_, nullptr)};
 
   auto upgrader = std::make_shared<transport::UpgraderImpl>(
       multiselect, std::move(security_adaptors), std::move(muxer_adaptors));

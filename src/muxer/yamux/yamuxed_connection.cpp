@@ -38,6 +38,7 @@ namespace libp2p::connection {
   YamuxedConnection::YamuxedConnection(
       std::shared_ptr<SecureConnection> connection,
       std::shared_ptr<basic::Scheduler> scheduler,
+      ConnectionClosedCallback closed_callback,
       muxer::MuxedConnectionConfig config)
       : config_(config),
         connection_(std::move(connection)),
@@ -61,7 +62,11 @@ namespace libp2p::connection {
                 return processFin(stream_id);
               }
               return true;
-            }) {
+            }),
+        closed_callback_(std::move(closed_callback)),
+
+        // yes, sort of assert
+        remote_peer_(std::move(connection->remotePeer().value())) {
     assert(connection_);
     assert(scheduler_);
     assert(config_.maximum_streams > 0);
@@ -151,7 +156,7 @@ namespace libp2p::connection {
   }
 
   outcome::result<peer::PeerId> YamuxedConnection::remotePeer() const {
-    return connection_->remotePeer();
+    return remote_peer_;
   }
 
   outcome::result<crypto::PublicKey> YamuxedConnection::remotePublicKey()
@@ -550,8 +555,6 @@ namespace libp2p::connection {
 
     started_ = false;
 
-    // TODO (artem) close and message bus
-
     log()->debug("closing connection, reason: {}",
                  notify_streams_code.message());
 
@@ -573,6 +576,10 @@ namespace libp2p::connection {
 
     for (auto [_, cb] : pending_streams) {
       cb(notify_streams_code);
+    }
+
+    if (closed_callback_) {
+      closed_callback_(remote_peer_, shared_from_this());
     }
   }
 

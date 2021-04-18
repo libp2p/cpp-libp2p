@@ -23,6 +23,10 @@ namespace libp2p::connection {
 
     using NewStreamHandlerFunc = std::function<void(std::shared_ptr<Stream>)>;
 
+    using ConnectionClosedCallback = std::function<void(
+        const peer::PeerId &,
+        const std::shared_ptr<connection::CapableConnection> &)>;
+
     ~CapableConnection() override = default;
 
     /**

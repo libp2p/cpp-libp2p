@@ -20,10 +20,12 @@ namespace libp2p::network {
     struct OnNewConnection {};
     using OnNewConnectionChannel = libp2p::event::channel_decl<
         OnNewConnection, std::weak_ptr<connection::CapableConnection>>;
-  }  // namespace event
 
-  // TODO(warchant): when connection is closed ('onDisconnected' event fired),
-  // manager should remove it from storage PRE-212
+    /// fired when all connections to peer closed
+    struct PeerDisconnected {};
+    using OnPeerDisconnectedChannel =
+        libp2p::event::channel_decl<PeerDisconnected, const peer::PeerId &>;
+  }  // namespace event
 
   /**
    * @brief Connection Manager stores all known connections, and is capable of
@@ -63,6 +65,12 @@ namespace libp2p::network {
 
     // closes all connections (outbound and inbound) to given peer
     virtual void closeConnectionsToPeer(const peer::PeerId &p) = 0;
+
+    // called from connections when they are closed
+    // TODO(artem) connection IDs instead of indexing by sptr
+    virtual void onConnectionClosed(
+        const peer::PeerId &peer_id,
+        const std::shared_ptr<connection::CapableConnection> &conn) = 0;
   };
 
 }  // namespace libp2p::network
