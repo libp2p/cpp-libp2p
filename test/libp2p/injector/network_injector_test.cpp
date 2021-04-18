@@ -85,7 +85,7 @@ TEST(NetworkBuilder, DefaultBuilds) {
  * @when make default injector with this keypair
  * @then keypair is applied, network is created
  */
- TEST(NetworkBuilder, CustomKeyPairBuilds) {
+TEST(NetworkBuilder, CustomKeyPairBuilds) {
   testutil::prepareLoggers();
 
   KeyPair keyPair{
@@ -95,10 +95,10 @@ TEST(NetworkBuilder, DefaultBuilds) {
 
   auto injector = makeNetworkInjector(useKeyPair(keyPair));
 
-  auto nw = injector.create<std::shared_ptr<Network> >();
+  auto nw = injector.create<std::shared_ptr<Network>>();
   ASSERT_NE(nw, nullptr);
 
-  auto idmgr = injector.create<std::shared_ptr<peer::IdentityManager> >();
+  auto idmgr = injector.create<std::shared_ptr<peer::IdentityManager>>();
   ASSERT_NE(idmgr, nullptr);
   std::cout << "peer id " << idmgr->getId().toBase58() << std::endl;
 
@@ -110,7 +110,7 @@ TEST(NetworkBuilder, DefaultBuilds) {
  * @when create network
  * @then correct number of instances created
  */
- TEST(NetworkBuilder, CustomAdaptorsBuilds) {
+TEST(NetworkBuilder, CustomAdaptorsBuilds) {
   testutil::prepareLoggers();
 
   // clang-format off
