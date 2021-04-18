@@ -87,7 +87,9 @@ namespace libp2p::network {
 
   // starts listening on all provided multiaddresses
   void ListenerManagerImpl::start() {
-    BOOST_ASSERT(!started);
+    if (started) {
+      return;
+    }
 
     auto begin = listeners_.begin();
     auto end = listeners_.end();
@@ -106,7 +108,9 @@ namespace libp2p::network {
 
   // stops listening on all multiaddresses
   void ListenerManagerImpl::stop() {
-    BOOST_ASSERT(started);
+    if (!started) {
+      return;
+    }
 
     auto begin = listeners_.begin();
     auto end = listeners_.end();

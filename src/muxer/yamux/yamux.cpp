@@ -5,6 +5,7 @@
 
 #include <libp2p/muxer/yamux/yamux.hpp>
 
+#include <libp2p/log/logger.hpp>
 #include <libp2p/muxer/yamux/yamuxed_connection.hpp>
 
 namespace libp2p::muxer {
@@ -32,6 +33,15 @@ namespace libp2p::muxer {
 
   void Yamux::muxConnection(std::shared_ptr<connection::SecureConnection> conn,
                             CapConnCallbackFunc cb) const {
+    if (conn == nullptr || conn->isClosed()) {
+      log::createLogger("Yamux")->error("dead connection passed to muxer");
+      return cb(std::errc::not_connected);
+    }
+    if (auto res = conn->remotePeer(); res.has_error()) {
+      log::createLogger("Yamux")->error(
+          "inactive connection passed to muxer: {}", res.error().message());
+      return cb(res.error());
+    }
     cb(std::make_shared<connection::YamuxedConnection>(
         std::move(conn), scheduler_, close_cb_, config_));
   }

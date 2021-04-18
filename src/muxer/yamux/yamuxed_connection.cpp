@@ -66,8 +66,7 @@ namespace libp2p::connection {
         closed_callback_(std::move(closed_callback)),
 
         // yes, sort of assert
-        remote_peer_(std::move(connection->remotePeer().value())) {
-    assert(connection_);
+        remote_peer_(std::move(connection_->remotePeer().value())) {
     assert(scheduler_);
     assert(config_.maximum_streams > 0);
     assert(config_.maximum_window_size >= YamuxFrame::kInitialWindowSize);

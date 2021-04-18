@@ -55,6 +55,8 @@ class Peer {
    */
   explicit Peer(Duration timeout, bool secure);
 
+  ~Peer() { wait(); }
+
   /**
    * @brief schedules server start
    * @param address address to listen
