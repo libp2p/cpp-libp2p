@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include <libp2p/basic/read_buffer.hpp>
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
 #include <libp2p/muxer/yamux/yamux_reading_state.hpp>
@@ -42,6 +43,8 @@ namespace libp2p::connection {
      * @param logger to output messages
      */
     explicit YamuxedConnection(std::shared_ptr<SecureConnection> connection,
+                               std::shared_ptr<basic::Scheduler> scheduler,
+                               ConnectionClosedCallback closed_callback,
                                muxer::MuxedConnectionConfig config = {});
 
     void start() override;
@@ -165,14 +168,30 @@ namespace libp2p::connection {
     void onDataWritten(outcome::result<size_t> res, StreamId stream_id,
                        bool some);
 
-    /// Erases stream
+    /// Creates new yamux stream
+    std::shared_ptr<Stream> createStream(StreamId stream_id);
+
+    /// Erases stream by id, may affect incactivity timer
     void eraseStream(StreamId stream_id);
+
+    /// Erases entry from pending streams, may affect incactivity timer
+    void erasePendingOutboundStream(PendingOutboundStreams::iterator it);
+
+    /// Sets expire timer if last stream was just closed. Called from erase*()
+    /// functions
+    void adjustExpireTimer();
+
+    /// Expire timer callback
+    void onExpireTimer();
 
     /// Copy of config
     const muxer::MuxedConnectionConfig config_;
 
     /// Underlying connection
     std::shared_ptr<SecureConnection> connection_;
+
+    /// Scheduler
+    std::shared_ptr<basic::Scheduler> scheduler_;
 
     /// True if started
     bool started_ = false;
@@ -204,6 +223,18 @@ namespace libp2p::connection {
 
     /// Pending outbound streams
     PendingOutboundStreams pending_outbound_streams_;
+
+    /// Timer handle for pings
+    basic::Scheduler::Handle ping_handle_;
+
+    /// Timer handle for auto closing if inactive
+    basic::Scheduler::Handle inactivity_handle_;
+
+    /// Called on connection close
+    ConnectionClosedCallback closed_callback_;
+
+    /// Remote peer saved here
+    peer::PeerId remote_peer_;
   };
 
 }  // namespace libp2p::connection

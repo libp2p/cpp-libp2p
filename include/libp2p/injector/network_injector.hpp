@@ -21,6 +21,8 @@
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
 #include <libp2p/muxer/mplex.hpp>
 #include <libp2p/muxer/yamux.hpp>
+#include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
+#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/network/impl/connection_manager_impl.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
 #include <libp2p/network/impl/dnsaddr_resolver_impl.hpp>
@@ -273,6 +275,10 @@ namespace libp2p::injector {
         di::bind<security::secio::ProposeMessageMarshaller>().template to<security::secio::ProposeMessageMarshallerImpl>(),
         di::bind<security::secio::ExchangeMessageMarshaller>().template to<security::secio::ExchangeMessageMarshallerImpl>(),
 
+        di::bind<basic::Scheduler::Config>.template to(basic::Scheduler::Config{}),
+        di::bind<basic::SchedulerBackend>().template to<basic::AsioSchedulerBackend>(),
+        di::bind<basic::Scheduler>().template to<basic::SchedulerImpl>(),
+
         // internal
         di::bind<network::DnsaddrResolver>().template to <network::DnsaddrResolverImpl>(),
         di::bind<network::Router>().template to<network::RouterImpl>(),
@@ -285,6 +291,7 @@ namespace libp2p::injector {
         di::bind<protocol_muxer::ProtocolMuxer>().template to<protocol_muxer::multiselect::Multiselect>(),
 
         // default adaptors
+        di::bind<muxer::MuxedConnectionConfig>.template to(muxer::MuxedConnectionConfig{}),
         di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext, security::Secio, security::Noise, security::TlsAdaptor>(),  // NOLINT
         di::bind<muxer::MuxerAdaptor *[]>().template to<muxer::Yamux, muxer::Mplex>(),  // NOLINT
         di::bind<transport::TransportAdaptor *[]>().template to<transport::TcpTransport>(),  // NOLINT

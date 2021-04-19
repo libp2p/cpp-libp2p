@@ -98,8 +98,7 @@ namespace libp2p::protocol::kademlia {
     std::vector<PeerInfo> result;
     for (auto &&peer_id : std::move(providers_)) {
       auto peer_info = host_->getPeerRepository().getPeerInfo(peer_id);
-      auto connectedness =
-          host_->getNetwork().getConnectionManager().connectedness(peer_info);
+      auto connectedness = host_->connectedness(peer_info);
       if (connectedness != Message::Connectedness::CAN_NOT_CONNECT) {
         result.emplace_back(std::move(peer_info));
       }
@@ -133,8 +132,7 @@ namespace libp2p::protocol::kademlia {
       }
 
       // Check if connectable
-      auto connectedness =
-          host_->getNetwork().getConnectionManager().connectedness(peer_info);
+      auto connectedness = host_->connectedness(peer_info);
       if (connectedness == Message::Connectedness::CAN_NOT_CONNECT) {
         continue;
       }

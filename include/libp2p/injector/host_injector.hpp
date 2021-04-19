@@ -26,10 +26,6 @@ namespace libp2p::injector {
     return di::make_injector<InjectorConfig>(
         makeNetworkInjector<InjectorConfig>(),
 
-        di::bind<Host>.template to<host::BasicHost>(),
-
-        di::bind<muxer::MuxedConnectionConfig>.to(muxer::MuxedConnectionConfig()),
-
         // repositories
         di::bind<peer::PeerRepository>.template to<peer::PeerRepositoryImpl>(),
         di::bind<peer::AddressRepository>.template to<peer::InmemAddressRepository>(),
@@ -38,6 +34,8 @@ namespace libp2p::injector {
 
         di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
         di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
+
+        di::bind<Host>.template to<host::BasicHost>(),
 
         // user-defined overrides...
         std::forward<decltype(args)>(args)...

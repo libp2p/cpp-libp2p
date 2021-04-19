@@ -6,18 +6,18 @@
 #ifndef LIBP2P_CONNECTION_MANAGER_IMPL_HPP
 #define LIBP2P_CONNECTION_MANAGER_IMPL_HPP
 
+#include <unordered_set>
+
+#include <libp2p/event/bus.hpp>
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/network/transport_manager.hpp>
 #include <libp2p/peer/peer_id.hpp>
-#include <libp2p/event/bus.hpp>
 
 namespace libp2p::network {
 
   class ConnectionManagerImpl : public ConnectionManager {
    public:
-    explicit ConnectionManagerImpl(
-        std::shared_ptr<libp2p::event::Bus> bus,
-        std::shared_ptr<network::TransportManager> tmgr);
+    explicit ConnectionManagerImpl(std::shared_ptr<libp2p::event::Bus> bus);
 
     std::vector<ConnectionSPtr> getConnections() const override;
 
@@ -27,20 +27,25 @@ namespace libp2p::network {
     ConnectionSPtr getBestConnectionForPeer(
         const peer::PeerId &p) const override;
 
-    Connectedness connectedness(const peer::PeerInfo &p) const override;
-
     void addConnectionToPeer(const peer::PeerId &p, ConnectionSPtr c) override;
 
     void collectGarbage() override;
 
     void closeConnectionsToPeer(const peer::PeerId &p) override;
 
-   private:
-    std::shared_ptr<network::TransportManager> transport_manager_;
+    void onConnectionClosed(
+        const peer::PeerId &peer_id,
+        const std::shared_ptr<connection::CapableConnection> &conn) override;
 
-    std::unordered_map<peer::PeerId, std::vector<ConnectionSPtr>> connections_;
+   private:
+    std::unordered_map<peer::PeerId, std::unordered_set<ConnectionSPtr>>
+        connections_;
 
     std::shared_ptr<libp2p::event::Bus> bus_;
+
+    /// Reentrancy resolver between closeConnectionsToPeer and
+    /// onConnectionClosed
+    boost::optional<peer::PeerId> closing_connections_to_peer_;
   };
 
 }  // namespace libp2p::network

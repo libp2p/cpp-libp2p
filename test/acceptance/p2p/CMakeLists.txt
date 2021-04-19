@@ -18,4 +18,6 @@ target_link_libraries(all_muxers_acceptance_test
     p2p_key_marshaller
     p2p_identity_manager
     p2p_literals
+    p2p_asio_scheduler_backend
+    p2p_basic_scheduler
     )

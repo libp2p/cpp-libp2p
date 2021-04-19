@@ -59,7 +59,6 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, Stream::Error, e) {
       return "Stream: write buffers overflow";
     case E::STREAM_RECEIVE_OVERFLOW:
       return "Stream: read window overflow";
-
     default:
       break;
   }

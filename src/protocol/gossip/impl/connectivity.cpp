@@ -224,7 +224,7 @@ namespace libp2p::protocol::gossip {
 
   void Connectivity::dial(const PeerContextPtr &ctx,
                           bool connection_must_exist) {
-    using C = network::ConnectionManager::Connectedness;
+    using C = Host::Connectedness;
 
     if (ctx->is_connecting || ctx->outbound_stream) {
       return;
@@ -243,7 +243,7 @@ namespace libp2p::protocol::gossip {
     }
 
     auto can_connect =
-        host_->getNetwork().getConnectionManager().connectedness(pi);
+        host_->connectedness(pi);
 
     if (can_connect != C::CONNECTED && can_connect != C::CAN_CONNECT) {
       if (connection_must_exist) {

@@ -27,6 +27,7 @@ namespace libp2p {
                        std::vector<multi::Multiaddress>());
     MOCK_CONST_METHOD0(getObservedAddresses,
                        std::vector<multi::Multiaddress>());
+    MOCK_CONST_METHOD1(connectedness, Connectedness(const peer::PeerInfo &p));
     MOCK_METHOD2(setProtocolHandler,
                  void(const peer::Protocol &,
                       const std::function<connection::Stream::Handler> &));

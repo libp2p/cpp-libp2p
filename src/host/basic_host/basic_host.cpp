@@ -11,18 +11,22 @@
 
 namespace libp2p::host {
 
-  BasicHost::BasicHost(std::shared_ptr<peer::IdentityManager> idmgr,
-                       std::unique_ptr<network::Network> network,
-                       std::unique_ptr<peer::PeerRepository> repo,
-                       std::shared_ptr<event::Bus> bus)
+  BasicHost::BasicHost(
+      std::shared_ptr<peer::IdentityManager> idmgr,
+      std::unique_ptr<network::Network> network,
+      std::unique_ptr<peer::PeerRepository> repo,
+      std::shared_ptr<event::Bus> bus,
+      std::shared_ptr<network::TransportManager> transport_manager)
       : idmgr_(std::move(idmgr)),
         network_(std::move(network)),
         repo_(std::move(repo)),
-        bus_(std::move(bus)) {
+        bus_(std::move(bus)),
+        transport_manager_(std::move(transport_manager)) {
     BOOST_ASSERT(idmgr_ != nullptr);
     BOOST_ASSERT(network_ != nullptr);
     BOOST_ASSERT(repo_ != nullptr);
     BOOST_ASSERT(bus_ != nullptr);
+    BOOST_ASSERT(transport_manager_ != nullptr);
   }
 
   std::string_view BasicHost::getLibp2pVersion() const {
@@ -96,6 +100,34 @@ namespace libp2p::host {
 
     // we don't know our addresses
     return {};
+  }
+
+  Host::Connectedness BasicHost::connectedness(const peer::PeerInfo &p) const {
+    auto conn = network_->getConnectionManager().getBestConnectionForPeer(p.id);
+    if (conn != nullptr) {
+      return Connectedness::CONNECTED;
+    }
+
+    // for each address, try to find transport to dial
+    for (auto &&ma : p.addresses) {
+      if (auto tr = transport_manager_->findBest(ma); tr != nullptr) {
+        // we can dial to the peer
+        return Connectedness::CAN_CONNECT;
+      }
+    }
+
+    auto res = repo_->getAddressRepository().getAddresses(p.id);
+    if (res.has_value()) {
+      for (auto &&ma : res.value()) {
+        if (auto tr = transport_manager_->findBest(ma); tr != nullptr) {
+          // we can dial to the peer
+          return Connectedness::CAN_CONNECT;
+        }
+      }
+    }
+
+    // we did not find available transports to dial
+    return Connectedness::CAN_NOT_CONNECT;
   }
 
   void BasicHost::setProtocolHandler(

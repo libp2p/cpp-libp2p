@@ -14,6 +14,8 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/signals2.hpp>
 
+#include <libp2p/log/logger.hpp>
+
 /**
  * Most of the implementation here is taken from
  * https://github.com/EOSIO/appbase
@@ -34,8 +36,14 @@ namespace libp2p::event {
       while (first != last) {
         try {
           *first;
+        } catch (const std::exception &e) {
+          // drop
+          log::createLogger("Bus")->error(
+              "Exception in signal handler, ignored, what={}", e.what());
         } catch (...) {
           // drop
+          log::createLogger("Bus")->error(
+              "Exception in signal handler, ignored");
         }
         ++first;
       }
@@ -48,8 +56,7 @@ namespace libp2p::event {
    */
   class Handle {
    public:
-    ~Handle() {  // NOLINT(bugprone-exception-escape) - no way we can call it
-      // with noexcept guarantee, but we need
+    ~Handle() {
       unsubscribe();
     }
 
@@ -57,26 +64,39 @@ namespace libp2p::event {
      * Explicitly unsubscribe from channel before the lifetime
      * of this object expires
      */
-    void unsubscribe() {
+    void unsubscribe() noexcept {
       if (handle_.connected()) {
-        handle_.disconnect();
+        try {
+          handle_.disconnect();
+        } catch (...) {
+          log::createLogger("Bus")->error("disconnect handle caused exception");
+        }
       }
     }
 
     // This handle can be constructed and moved
     Handle() = default;
 
+    /// Cancels existing connection
+    Handle &operator=(Handle &&rhs) noexcept {
+      unsubscribe();
+      handle_ = std::move(rhs.handle_);
+
+      assert(!rhs.handle_.connected());  // move was correct?
+
+      return *this;
+    }
+
     // no way they can be noexcept because of none-noexcept
     // boost::signal2::connection move ctor
-    Handle(Handle &&) = default;                // NOLINT
-    Handle &operator=(Handle &&rhs) = default;  // NOLINT
+    Handle(Handle &&) = default;  // NOLINT
 
     // dont allow copying since this protects the resource
     Handle(const Handle &) = delete;
     Handle &operator=(const Handle &) = delete;
 
    private:
-    using handle_type = boost::signals2::connection;
+    using handle_type = boost::signals2::scoped_connection;
     handle_type handle_;
 
     /**

@@ -6,6 +6,8 @@
 #include "acceptance/p2p/host/peer/test_peer.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
+#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
@@ -40,6 +42,9 @@ Peer::Peer(Peer::Duration timeout, bool secure)
       crypto_provider_{std::make_shared<crypto::CryptoProviderImpl>(
           random_provider_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
           secp256k1_provider_, hmac_provider_)},
+      scheduler_{std::make_shared<basic::SchedulerImpl>(
+          std::make_shared<basic::AsioSchedulerBackend>(context_),
+          basic::Scheduler::Config{})},
       secure_{secure} {
   EXPECT_OUTCOME_TRUE_MSG(
       keys, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
@@ -100,6 +105,7 @@ void Peer::wait() {
   if (thread_.joinable()) {
     thread_.join();
   }
+  host_->stop();
 }
 
 Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
@@ -140,7 +146,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   }
 
   std::vector<std::shared_ptr<muxer::MuxerAdaptor>> muxer_adaptors = {
-      std::make_shared<muxer::Yamux>(muxed_config_)};
+      std::make_shared<muxer::Yamux>(muxed_config_, scheduler_, nullptr)};
 
   auto upgrader = std::make_shared<transport::UpgraderImpl>(
       multiselect, std::move(security_adaptors), std::move(muxer_adaptors));
@@ -153,7 +159,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
 
   auto bus = std::make_shared<libp2p::event::Bus>();
 
-  auto cmgr = std::make_shared<network::ConnectionManagerImpl>(bus, tmgr);
+  auto cmgr = std::make_shared<network::ConnectionManagerImpl>(bus);
 
   auto listener = std::make_shared<network::ListenerManagerImpl>(
       multiselect, std::move(router), tmgr, cmgr);
@@ -177,6 +183,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto peer_repo = std::make_unique<peer::PeerRepositoryImpl>(
       std::move(addr_repo), std::move(key_repo), std::move(protocol_repo));
 
-  return std::make_shared<host::BasicHost>(
-      idmgr, std::move(network), std::move(peer_repo), std::move(bus));
+  return std::make_shared<host::BasicHost>(idmgr, std::move(network),
+                                           std::move(peer_repo), std::move(bus),
+                                           std::move(tmgr));
 }

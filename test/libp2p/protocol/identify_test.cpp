@@ -281,8 +281,8 @@ TEST_F(IdentifyTest, Receive) {
 
   peer::PeerInfo pinfo = {kRemotePeerId, {remote_multiaddr_}};
 
-  EXPECT_CALL(conn_manager_, connectedness(pinfo))
-      .WillOnce(Return(network::ConnectionManager::Connectedness::CONNECTED));
+  EXPECT_CALL(conn_manager_, getBestConnectionForPeer(kRemotePeerId))
+      .WillOnce(Return(connection_));
   EXPECT_CALL(
       addr_repo_,
       upsertAddresses(kRemotePeerId,

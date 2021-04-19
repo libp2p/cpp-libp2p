@@ -52,7 +52,7 @@ namespace libp2p::connection {
   void YamuxStream::deferReadCallback(outcome::result<size_t> res,
                                       ReadCallbackFunc cb) {
     if (no_more_callbacks_) {
-      log()->debug("{} closed by client, ignoring callback");
+      log()->debug("{} closed by client, ignoring callback", stream_id_);
       return;
     }
     feedback_.deferCall([wptr = weak_from_this(), res, cb = std::move(cb)]() {
@@ -76,7 +76,7 @@ namespace libp2p::connection {
   void YamuxStream::deferWriteCallback(std::error_code ec,
                                        WriteCallbackFunc cb) {
     if (no_more_callbacks_) {
-      log()->debug("{} closed by client, ignoring callback");
+      log()->debug("{} closed by client, ignoring callback", stream_id_);
       return;
     }
     feedback_.deferCall([wptr = weak_from_this(), ec, cb = std::move(cb)]() {
@@ -166,7 +166,11 @@ namespace libp2p::connection {
 
     if (cb) {
       feedback_.deferCall([wptr = weak_from_this(), cb = std::move(cb), ec]() {
-        if (wptr.expired() || wptr.lock()->no_more_callbacks_) {
+        auto self = wptr.lock();
+        if (!self) {
+          return;
+        }
+        if (self->no_more_callbacks_) {
           return;
         }
         if (!ec) {
@@ -225,7 +229,8 @@ namespace libp2p::connection {
 
     // First transfer bytes to client if available
     if (is_reading_) {
-      auto bytes_needed = static_cast<size_t>(external_read_buffer_.size());
+      [[maybe_unused]] auto bytes_needed =
+          static_cast<size_t>(external_read_buffer_.size());
 
       assert(bytes_needed > 0);
       assert(internal_read_buffer_.empty());

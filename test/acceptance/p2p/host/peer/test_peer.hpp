@@ -12,6 +12,7 @@
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/network/cares/cares.hpp>
 #include <libp2p/protocol/echo.hpp>
+#include <libp2p/basic/scheduler.hpp>
 #include <testutil/async/impl/clock_impl.hpp>
 #include <testutil/outcome.hpp>
 
@@ -42,6 +43,7 @@ class Peer {
   using CryptoProvider = libp2p::crypto::CryptoProvider;
 
   using Context = boost::asio::io_context;
+  using Scheduler = libp2p::basic::Scheduler;
 
  public:
   using Duration = libp2p::clock::SteadyClockImpl::Duration;
@@ -52,6 +54,8 @@ class Peer {
    * @param secure - use SECIO when true, otherwise - Plaintext
    */
   explicit Peer(Duration timeout, bool secure);
+
+  ~Peer() { wait(); }
 
   /**
    * @brief schedules server start
@@ -92,6 +96,7 @@ class Peer {
   sptr<Secp256k1Provider> secp256k1_provider_;  ///< secp256k1 provider
   sptr<HmacProvider> hmac_provider_;            ///< hmac provider
   sptr<CryptoProvider> crypto_provider_;        ///< crypto provider
+  sptr<Scheduler> scheduler_;                   ///< scheduler
   const bool secure_;                           ///< use SECIO or not
 };
 

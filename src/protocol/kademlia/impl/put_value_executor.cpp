@@ -64,8 +64,7 @@ namespace libp2p::protocol::kademlia {
            and requests_in_progress_ < config_.requestConcurency) {
       auto &peer_id = addressees_[addressees_idx_++];
       auto peer_info = host_->getPeerRepository().getPeerInfo(peer_id);
-      auto connectedness =
-          host_->getNetwork().getConnectionManager().connectedness(peer_info);
+      auto connectedness = host_->connectedness(peer_info);
       if (connectedness == Message::Connectedness::CAN_NOT_CONNECT) {
         continue;
       }

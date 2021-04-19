@@ -123,8 +123,7 @@ namespace libp2p::protocol::kademlia {
       }
 
       // Check if connectable
-      auto connectedness =
-          host_->getNetwork().getConnectionManager().connectedness(peer_info);
+      auto connectedness = host_->connectedness(peer_info);
       if (connectedness == Message::Connectedness::CAN_NOT_CONNECT) {
         continue;
       }

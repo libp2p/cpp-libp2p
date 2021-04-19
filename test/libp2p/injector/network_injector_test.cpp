@@ -30,10 +30,53 @@ TEST(NetworkBuilder, DefaultBuilds) {
   testutil::prepareLoggers();
 
   auto injector = makeNetworkInjector();
-  auto nw = injector.create<std::shared_ptr<Network> >();
+
+  auto io = injector.create<std::shared_ptr<boost::asio::io_context>>();
+  ASSERT_NE(io, nullptr);
+
+  auto proto_muxer =
+      injector.create<std::shared_ptr<protocol_muxer::ProtocolMuxer>>();
+  ASSERT_NE(proto_muxer, nullptr);
+
+  auto sec_adaptors =
+      injector
+          .create<std::vector<std::shared_ptr<security::SecurityAdaptor>>>();
+  ASSERT_NE(sec_adaptors.size(), 0);
+
+  auto sch = injector.create<std::shared_ptr<basic::Scheduler>>();
+  ASSERT_NE(sch, nullptr);
+
+  auto tm = injector.create<std::shared_ptr<network::TransportManager>>();
+  ASSERT_NE(tm, nullptr);
+
+  auto cm = injector.create<std::shared_ptr<network::ConnectionManager>>();
+  ASSERT_NE(cm, nullptr);
+
+  auto yamux = injector.create<std::shared_ptr<muxer::Yamux>>();
+  ASSERT_NE(yamux, nullptr);
+
+  auto mux_adaptors =
+      injector.create<std::vector<std::shared_ptr<muxer::MuxerAdaptor>>>();
+  ASSERT_NE(mux_adaptors.size(), 0);
+
+  auto upg = injector.create<std::shared_ptr<transport::Upgrader>>();
+  ASSERT_NE(upg, nullptr);
+
+  auto tcp = injector.create<std::shared_ptr<transport::TcpTransport>>();
+  ASSERT_NE(tcp, nullptr);
+
+  auto transports =
+      injector
+          .create<std::vector<std::shared_ptr<transport::TransportAdaptor>>>();
+  ASSERT_NE(transports.size(), 0);
+
+  auto bus = injector.create<std::shared_ptr<libp2p::event::Bus>>();
+  ASSERT_NE(bus, nullptr);
+
+  auto nw = injector.create<std::shared_ptr<Network>>();
   ASSERT_NE(nw, nullptr);
 
-  auto idmgr = injector.create<std::shared_ptr<peer::IdentityManager> >();
+  auto idmgr = injector.create<std::shared_ptr<peer::IdentityManager>>();
   std::cout << "peer id " << idmgr->getId().toBase58() << "\n";
 }
 
@@ -52,10 +95,10 @@ TEST(NetworkBuilder, CustomKeyPairBuilds) {
 
   auto injector = makeNetworkInjector(useKeyPair(keyPair));
 
-  auto nw = injector.create<std::shared_ptr<Network> >();
+  auto nw = injector.create<std::shared_ptr<Network>>();
   ASSERT_NE(nw, nullptr);
 
-  auto idmgr = injector.create<std::shared_ptr<peer::IdentityManager> >();
+  auto idmgr = injector.create<std::shared_ptr<peer::IdentityManager>>();
   ASSERT_NE(idmgr, nullptr);
   std::cout << "peer id " << idmgr->getId().toBase58() << std::endl;
 
@@ -102,13 +145,15 @@ TEST(NetworkBuilder, CustomAdaptorsBuilds) {
 
       auto set =
           injector
-              .create<std::set<std::shared_ptr<security::SecurityAdaptor> > >();
+              .create<std::set<std::shared_ptr<security::SecurityAdaptor> >
+              >();
       EXPECT_EQ(set.size(), 2) << "number of unique instances is incorrect";
     }
 
     {
       auto vec =
-          injector.create<std::vector<std::shared_ptr<muxer::MuxerAdaptor> > >();
+          injector.create<std::vector<std::shared_ptr<muxer::MuxerAdaptor> >
+          >();
       EXPECT_EQ(vec.size(), 2);
 
       auto set =
@@ -123,7 +168,8 @@ TEST(NetworkBuilder, CustomAdaptorsBuilds) {
 
       auto set =
           injector
-              .create<std::set<std::shared_ptr<transport::TransportAdaptor> > >();
+              .create<std::set<std::shared_ptr<transport::TransportAdaptor> >
+              >();
       EXPECT_EQ(set.size(), 2) << "number of unique instances is incorrect";
     }
   }
