@@ -13,6 +13,7 @@
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
 using namespace network;
@@ -116,10 +117,12 @@ TEST_F(ConnectionManagerTest, ConnectednessWhenConnected) {
  * @then all invalid connections are cleaned up
  */
 TEST_F(ConnectionManagerTest, GarbageCollection) {
+  // should ignore nullptr!
   cmgr->addConnectionToPeer(p3, nullptr);
+
   ASSERT_EQ(cmgr->getConnectionsToPeer(p1).size(), 2);
   ASSERT_EQ(cmgr->getConnectionsToPeer(p2).size(), 1);
-  ASSERT_EQ(cmgr->getConnectionsToPeer(p3).size(), 1);
+  ASSERT_EQ(cmgr->getConnectionsToPeer(p3).size(), 0);
 
   EXPECT_CALL(*conn11, isClosed()).WillOnce(Return(true));
   EXPECT_CALL(*conn12, isClosed()).WillOnce(Return(true));
@@ -132,4 +135,15 @@ TEST_F(ConnectionManagerTest, GarbageCollection) {
   ASSERT_EQ(cmgr->getConnectionsToPeer(p1).size(), 0);
   ASSERT_EQ(cmgr->getConnectionsToPeer(p2).size(), 0);
   ASSERT_EQ(cmgr->getConnectionsToPeer(p3).size(), 0);
+}
+
+int main(int argc, char *argv[]) {
+  if (std::getenv("TRACE_DEBUG") != nullptr) {
+    testutil::prepareLoggers(soralog::Level::TRACE);
+  } else {
+    testutil::prepareLoggers(soralog::Level::ERROR);
+  }
+
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

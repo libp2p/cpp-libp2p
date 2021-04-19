@@ -14,6 +14,8 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/signals2.hpp>
 
+#include <libp2p/log/logger.hpp>
+
 /**
  * Most of the implementation here is taken from
  * https://github.com/EOSIO/appbase
@@ -34,9 +36,14 @@ namespace libp2p::event {
       while (first != last) {
         try {
           *first;
+        } catch (const std::exception &e) {
+          // drop
+          log::createLogger("Bus")->error(
+              "Exception in signal handler, ignored, what={}", e.what());
         } catch (...) {
           // drop
-          // TODO(artem): log
+          log::createLogger("Bus")->error(
+              "Exception in signal handler, ignored");
         }
         ++first;
       }
@@ -62,7 +69,7 @@ namespace libp2p::event {
         try {
           handle_.disconnect();
         } catch (...) {
-          // TODO(artem): log
+          log::createLogger("Bus")->error("disconnect handle caused exception");
         }
       }
     }
@@ -75,14 +82,14 @@ namespace libp2p::event {
       unsubscribe();
       handle_ = std::move(rhs.handle_);
 
-      assert(!rhs.handle_.connected()); // move was correct?
+      assert(!rhs.handle_.connected());  // move was correct?
 
       return *this;
     }
 
-      // no way they can be noexcept because of none-noexcept
+    // no way they can be noexcept because of none-noexcept
     // boost::signal2::connection move ctor
-    Handle(Handle &&) = default;                // NOLINT
+    Handle(Handle &&) = default;  // NOLINT
 
     // dont allow copying since this protects the resource
     Handle(const Handle &) = delete;

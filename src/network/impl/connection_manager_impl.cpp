@@ -9,6 +9,13 @@
 
 namespace libp2p::network {
 
+  namespace {
+    auto log() {
+      static auto logger = libp2p::log::createLogger("ConnectionManager");
+      return logger.get();
+    }
+  }
+
   std::vector<ConnectionManager::ConnectionSPtr>
   ConnectionManagerImpl::getConnectionsToPeer(const peer::PeerId &p) const {
     auto it = connections_.find(p);
@@ -38,6 +45,11 @@ namespace libp2p::network {
 
   void ConnectionManagerImpl::addConnectionToPeer(
       const peer::PeerId &p, ConnectionManager::ConnectionSPtr c) {
+    if (c == nullptr) {
+      log()->error("inconsistency: not adding nullptr to active connections");
+      return;
+    }
+
     auto it = connections_.find(p);
     if (it == connections_.end()) {
       connections_.insert({p, {c}});
@@ -68,8 +80,7 @@ namespace libp2p::network {
       auto &cs = it->second;
       for (auto it2 = cs.begin(); it2 != cs.end();) {
         const auto &conn = *it2;
-        if (conn == nullptr || conn->isClosed()) {
-          // TODO(artem): shold never get here
+        if (conn->isClosed()) {
           it2 = cs.erase(it2);
         } else {
           ++it2;
@@ -95,7 +106,7 @@ namespace libp2p::network {
     connections_.erase(it);
 
     if (connections.empty()) {
-      // TODO(artem) log inconsistency
+      log()->error("inconsistency: iterator and no peers");
       return;
     }
 
@@ -127,13 +138,13 @@ namespace libp2p::network {
     }
     auto it = connections_.find(peer_id);
     if (it == connections_.end()) {
-      // TODO(artem): log inconsistency: our callback and not our connection
+      log()->error("inconsistency in onConnectionClosed, peer not found");
       return;
     }
 
     [[maybe_unused]] auto erased = it->second.erase(conn);
     if (erased == 0) {
-      // TODO(artem): log inconsistency: our callback and not our connection
+      log()->error("inconsistency in onConnectionClosed, connection not found");
     }
 
     if (it->second.empty()) {

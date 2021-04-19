@@ -178,8 +178,7 @@ TEST(NetworkBuilder, CustomAdaptorsBuilds) {
   auto network = injector.create<std::shared_ptr<Network> >();
   ASSERT_NE(network, nullptr);
 
-  // upgrader is not created above, because it is not required for any
-  // transport
+  // upgrader is not created above, because it is not required for any transport
   // so try to create upgrader to trigger expectations
   auto upgrader = injector.create<std::shared_ptr<transport::Upgrader> >();
   ASSERT_NE(upgrader, nullptr);

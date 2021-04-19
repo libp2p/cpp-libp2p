@@ -171,10 +171,10 @@ namespace libp2p::connection {
     /// Creates new yamux stream
     std::shared_ptr<Stream> createStream(StreamId stream_id);
 
-    /// Erases stream
+    /// Erases stream by id, may affect incactivity timer
     void eraseStream(StreamId stream_id);
 
-    /// Erases stream
+    /// Erases entry from pending streams, may affect incactivity timer
     void erasePendingOutboundStream(PendingOutboundStreams::iterator it);
 
     /// Sets expire timer if last stream was just closed. Called from erase*()
