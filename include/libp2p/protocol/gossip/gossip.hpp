@@ -49,14 +49,25 @@ namespace libp2p::protocol::gossip {
     bool echo_forward_mode = false;
 
     /// Read or write timeout per whole network operation
-    std::chrono::milliseconds rw_timeout_msec {10000};
+    std::chrono::milliseconds rw_timeout_msec{10000};
 
     /// Lifetime of a message in message cache
-    std::chrono::milliseconds message_cache_lifetime_msec { 120000 };
+    std::chrono::milliseconds message_cache_lifetime_msec{120000};
 
-    std::chrono::milliseconds seen_cache_lifetime_msec { 60000 };
+    /// Topic's message seen cache lifetime
+    std::chrono::milliseconds seen_cache_lifetime_msec{60000};
 
-    std::chrono::milliseconds heartbeat_interval_msec { 1000 };
+    /// Heartbeat interval
+    std::chrono::milliseconds heartbeat_interval_msec{1000};
+
+    /// Ban interval between dial attempts to peer
+    std::chrono::milliseconds ban_interval_msec{60000};
+
+    /// Max number of dial attempts before peer is forgotten
+    unsigned max_dial_attempts = 10;
+
+    /// Expiration of gossip peers' addresses in address repository
+    std::chrono::milliseconds address_expiration_msec{3600000};
 
     /// Max RPC message size
     size_t max_message_size = 1 << 24;
@@ -78,7 +89,8 @@ namespace libp2p::protocol::gossip {
 
     /// Adds bootstrap peer to the set of connectable peers
     virtual void addBootstrapPeer(
-        peer::PeerId id, boost::optional<multi::Multiaddress> address) = 0;
+        const peer::PeerId &id,
+        boost::optional<multi::Multiaddress> address) = 0;
 
     /// Adds bootstrap peer address in string form
     virtual outcome::result<void> addBootstrapPeer(

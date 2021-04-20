@@ -42,7 +42,8 @@ namespace libp2p::protocol::gossip {
    private:
     // Gossip overrides
     void addBootstrapPeer(
-        peer::PeerId id, boost::optional<multi::Multiaddress> address) override;
+        const peer::PeerId &id,
+        boost::optional<multi::Multiaddress> address) override;
     outcome::result<void> addBootstrapPeer(const std::string &address) override;
     void start() override;
     void stop() override;

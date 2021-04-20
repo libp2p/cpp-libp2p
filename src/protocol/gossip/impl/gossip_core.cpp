@@ -48,11 +48,11 @@ namespace libp2p::protocol::gossip {
   // clang-format on
 
   void GossipCore::addBootstrapPeer(
-      peer::PeerId id, boost::optional<multi::Multiaddress> address) {
-    bootstrap_peers_[id] = address;
+      const peer::PeerId &id, boost::optional<multi::Multiaddress> address) {
     if (started_) {
-      connectivity_->addBootstrapPeer(std::move(id), std::move(address));
+      connectivity_->addBootstrapPeer(id, address);
     }
+    bootstrap_peers_[id] = std::move(address);
   }
 
   outcome::result<void> GossipCore::addBootstrapPeer(
@@ -63,7 +63,7 @@ namespace libp2p::protocol::gossip {
       return multi::Multiaddress::Error::INVALID_INPUT;
     }
     OUTCOME_TRY(peer_id, peer::PeerId::fromBase58(*peer_id_str));
-    addBootstrapPeer(std::move(peer_id), {std::move(ma)});
+    addBootstrapPeer(peer_id, {std::move(ma)});
     return outcome::success();
   }
 

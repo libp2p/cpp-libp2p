@@ -89,24 +89,24 @@ namespace libp2p::protocol::gossip {
   }
 
   void Connectivity::addBootstrapPeer(
-      peer::PeerId id, boost::optional<multi::Multiaddress> address) {
+      const peer::PeerId &id,
+      const boost::optional<multi::Multiaddress> &address) {
     if (id == host_->getId()) {
       return;
     }
 
-    auto ctx_found = all_peers_.find(id);
+    if (address.has_value()) {
+      gsl::span<const multi::Multiaddress> span(&address.value(), 1);
+      std::ignore =
+          host_->getPeerRepository().getAddressRepository().upsertAddresses(
+              id, span, config_.address_expiration_msec);
+    }
 
-    PeerContextPtr ctx;
-    if (ctx_found) {
-      // peer is known, just update address
-      ctx = ctx_found.value();
-    } else {
-      ctx = std::make_shared<PeerContext>(std::move(id));
+    if (!all_peers_.contains(id)) {
+      auto ctx = std::make_shared<PeerContext>(id);
       all_peers_.insert(ctx);
       connectable_peers_.insert(ctx);
     }
-
-    ctx->dial_to = std::move(address);
   }
 
   void Connectivity::flush(const PeerContextPtr &ctx) const {
@@ -137,13 +137,14 @@ namespace libp2p::protocol::gossip {
   }
 
   void Connectivity::handle(StreamResult rstream) {
-    if (!started_) {
-      return;
-    }
-
     if (!rstream) {
       log_.info("incoming connection failed, error={}",
                 rstream.error().message());
+      return;
+    }
+
+    if (!started_) {
+      rstream.value()->reset();
       return;
     }
 
@@ -216,21 +217,18 @@ namespace libp2p::protocol::gossip {
 
     if (!ctx->outbound_stream) {
       // make stream for writing
-      dial(ctx, true);
+      dialOverExistingConnection(ctx);
     } else {
       flush(ctx);
     }
   }
 
-  void Connectivity::dial(const PeerContextPtr &ctx,
-                          bool connection_must_exist) {
-    using C = Host::Connectedness;
-
+  void Connectivity::dial(const PeerContextPtr &ctx) {
     if (ctx->is_connecting || ctx->outbound_stream) {
       return;
     }
 
-    if (ctx->banned_until != Time::zero() && connection_must_exist) {
+    if (ctx->banned_until != Time::zero()) {
       // unban outbound connection only if inbound one exists
       unban(ctx);
     } else {
@@ -238,21 +236,13 @@ namespace libp2p::protocol::gossip {
     }
 
     peer::PeerInfo pi = host_->getPeerRepository().getPeerInfo(ctx->peer_id);
-    if (ctx->dial_to) {
-      pi.addresses = {ctx->dial_to.value()};
-    }
-
     auto can_connect = host_->connectedness(pi);
 
-    if (can_connect != C::CONNECTED && can_connect != C::CAN_CONNECT) {
-      if (connection_must_exist) {
-        log_.error("connection must exist but not found for {}", ctx->str);
-        return;
-      }
-      if (pi.addresses.empty()) {
-        log_.debug("{} is not connectable at the moment", ctx->str);
-        return;
-      }
+    if (can_connect != Host::Connectedness::CONNECTED
+        && can_connect != Host::Connectedness::CAN_CONNECT) {
+      log_.debug("{} is not connectable at the moment", ctx->str);
+      ban(ctx);
+      return;
     }
 
     ctx->is_connecting = true;
@@ -278,19 +268,39 @@ namespace libp2p::protocol::gossip {
     // clang-format on
   }
 
-  void Connectivity::ban(const PeerContextPtr &ctx) {
-    //  TODO(artem): lift this parameter up to some internal config
-    constexpr Time kBanInterval { 60000 };
+  void Connectivity::dialOverExistingConnection(const PeerContextPtr &ctx) {
+    ctx->is_connecting = true;
 
+    // clang-format off
+    host_->newStream(
+        ctx->peer_id,
+        config_.protocol_version,
+        [wptr = weak_from_this(), this, ctx=ctx] (auto &&rstream) mutable {
+          auto self = wptr.lock();
+          if (self) {
+            ctx->is_connecting = false;
+            if (!rstream) {
+              log_.info("outbound connection failed, error={}",
+                        rstream.error().message());
+              ban(ctx);
+              return;
+            }
+            onNewStream(std::move(rstream.value()), true);
+          }
+        }
+    );
+    // clang-format on
+  }
+
+  void Connectivity::ban(const PeerContextPtr &ctx) {
     assert(ctx);
     if (ctx->banned_until != Time::zero()) {
       return;
     }
 
-    log_.info("banning peer {}, subscribed to {}", ctx->str,
-              fmt::join(ctx->subscribed_to, ", "));
+    log_.info("banning peer {}", ctx->str);
 
-    auto ts = scheduler_->now() + kBanInterval;
+    auto ts = scheduler_->now() + config_.ban_interval_msec;
     ctx->banned_until = ts;
     ctx->message_builder->clear();
     for (auto &s : ctx->inbound_streams) {
@@ -388,7 +398,7 @@ namespace libp2p::protocol::gossip {
       for (auto &p : peers) {
         if (!p->outbound_stream) {
           log_.debug("dialing {}", p->str);
-          dial(p, false);
+          dial(p);
         }
       }
     }

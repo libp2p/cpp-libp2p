@@ -45,8 +45,8 @@ namespace libp2p::protocol::gossip {
     void stop();
 
     /// Adds bootstrap peer to the set of connectable peers
-    void addBootstrapPeer(peer::PeerId id,
-                          boost::optional<multi::Multiaddress> address);
+    void addBootstrapPeer(const peer::PeerId &id,
+                          const boost::optional<multi::Multiaddress> &address);
 
     /// Add peer to writable set, actual writes occur on flush() (piggybacking)
     /// The idea behind writable set and flush() is a compromise between
@@ -73,7 +73,10 @@ namespace libp2p::protocol::gossip {
     void handle(StreamResult rstream) override;
 
     /// Tries to connect to peer
-    void dial(const PeerContextPtr &peer, bool connection_must_exist);
+    void dial(const PeerContextPtr &peer);
+
+    /// Tries to connect to peer over existing connection
+    void dialOverExistingConnection(const PeerContextPtr &peer);
 
     /// Attaches new stream to peer context
     void onNewStream(std::shared_ptr<connection::Stream> stream,
