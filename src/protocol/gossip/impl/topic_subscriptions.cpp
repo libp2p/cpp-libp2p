@@ -39,7 +39,8 @@ namespace libp2p::protocol::gossip {
         log_(log) {}
 
   bool TopicSubscriptions::empty() const {
-    return (not self_subscribed_) && (fanout_period_ends_ == 0)
+    return (not self_subscribed_)
+        && (fanout_period_ends_ == std::chrono::milliseconds::zero())
         && subscribed_peers_.empty() && mesh_peers_.empty();
   }
 
@@ -50,8 +51,8 @@ namespace libp2p::protocol::gossip {
 
     if (is_published_locally) {
       fanout_period_ends_ = now + config_.seen_cache_lifetime_msec;
-      log_.debug("setting fanout period for {}, {}->{}", topic_, now,
-                 fanout_period_ends_);
+      log_.debug("setting fanout period for {}, {}->{}", topic_, now.count(),
+                 fanout_period_ends_.count());
     }
 
     auto origin = peerFrom(*msg);
@@ -94,7 +95,6 @@ namespace libp2p::protocol::gossip {
       if (sz < config_.D_min) {
         auto peers = subscribed_peers_.selectRandomPeers(config_.D_min - sz);
         for (auto &p : peers) {
-
           auto it = dont_bother_until_.find(p);
           if (it != dont_bother_until_.end()) {
             if (it->second < now) {
@@ -118,8 +118,9 @@ namespace libp2p::protocol::gossip {
 
     // fanout ends some time after this host ends publishing to the topic,
     // to save space and traffic
-    if (fanout_period_ends_ != 0 && fanout_period_ends_ < now) {
-      fanout_period_ends_ = 0;
+    if (fanout_period_ends_ != Time::zero()
+        && fanout_period_ends_ < now) {
+      fanout_period_ends_ = Time::zero();
       log_.debug("fanout period reset for {}", topic_);
     }
 
@@ -196,7 +197,7 @@ namespace libp2p::protocol::gossip {
     mesh_peers_.erase(p->peer_id);
     if (p->subscribed_to.count(topic_) != 0) {
       subscribed_peers_.insert(p);
-      dont_bother_until_.insert({ p, dont_bother_until });
+      dont_bother_until_.insert({p, dont_bother_until});
     }
   }
 

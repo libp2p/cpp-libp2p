@@ -16,14 +16,15 @@
 
 namespace libp2p::protocol::gossip {
 
-  std::shared_ptr<Gossip> create(std::shared_ptr<Scheduler> scheduler,
+  std::shared_ptr<Gossip> create(std::shared_ptr<basic::Scheduler> scheduler,
                                  std::shared_ptr<Host> host, Config config) {
     return std::make_shared<GossipCore>(std::move(config), std::move(scheduler),
                                         std::move(host));
   }
 
   // clang-format off
-  GossipCore::GossipCore(Config config, std::shared_ptr<Scheduler> scheduler,
+  GossipCore::GossipCore(Config config,
+                         std::shared_ptr<basic::Scheduler> scheduler,
                          std::shared_ptr<Host> host)
       : config_(std::move(config)),
         create_message_id_([](const ByteArray &from, const ByteArray &seq,
@@ -42,7 +43,7 @@ namespace libp2p::protocol::gossip {
               onLocalSubscriptionChanged(subscribe, topic);
             }
         )),
-        msg_seq_(scheduler_->now()),
+        msg_seq_(scheduler_->now().count()),
         log_("gossip", "Gossip", local_peer_id_.toBase58().substr(46)) {}
   // clang-format on
 
@@ -97,16 +98,8 @@ namespace libp2p::protocol::gossip {
       remote_subscriptions_->onSelfSubscribed(true, topic);
     }
 
-    // clang-format off
-    heartbeat_timer_ = scheduler_->schedule(config_.heartbeat_interval_msec,
-        [self_wptr=weak_from_this()] {
-          auto self = self_wptr.lock();
-          if (self) {
-            self->onHeartbeat();
-          }
-        }
-    );
-    // clang-format on
+    heartbeat_timer_ = scheduler_->scheduleWithHandle(
+        [this] { onHeartbeat(); }, config_.heartbeat_interval_msec);
 
     connectivity_->start();
 
@@ -306,7 +299,10 @@ namespace libp2p::protocol::gossip {
     connectivity_->onHeartbeat(broadcast_on_heartbeat_);
     broadcast_on_heartbeat_.clear();
 
-    heartbeat_timer_.reschedule(config_.heartbeat_interval_msec);
+    auto res = heartbeat_timer_.reschedule(config_.heartbeat_interval_msec);
+    if (!res) {
+      log_.error("Heartbeat reschedule error: {}", res.error().message());
+    }
   }
 
   void GossipCore::onPeerConnection(bool connected, const PeerContextPtr &ctx) {

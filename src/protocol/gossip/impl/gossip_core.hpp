@@ -10,9 +10,9 @@
 
 #include <map>
 
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/host/host.hpp>
 #include <libp2p/log/sublogger.hpp>
-#include <libp2p/protocol/common/scheduler.hpp>
 
 #include "message_cache.hpp"
 #include "message_receiver.hpp"
@@ -34,7 +34,7 @@ namespace libp2p::protocol::gossip {
     GossipCore(GossipCore &&) = delete;
     GossipCore &operator=(GossipCore &&) = delete;
 
-    GossipCore(Config config, std::shared_ptr<Scheduler> scheduler,
+    GossipCore(Config config, std::shared_ptr<basic::Scheduler> scheduler,
                std::shared_ptr<Host> host);
 
     ~GossipCore() override = default;
@@ -43,10 +43,10 @@ namespace libp2p::protocol::gossip {
     // Gossip overrides
     void addBootstrapPeer(
         peer::PeerId id, boost::optional<multi::Multiaddress> address) override;
-    outcome::result<void> addBootstrapPeer(const std::string& address) override;
+    outcome::result<void> addBootstrapPeer(const std::string &address) override;
     void start() override;
     void stop() override;
-    void setValidator(const TopicId& topic, Validator validator) override;
+    void setValidator(const TopicId &topic, Validator validator) override;
     void setMessageIdFn(MessageIdFn fn) override;
     Subscription subscribe(TopicSet topics,
                            SubscriptionCallback callback) override;
@@ -85,7 +85,7 @@ namespace libp2p::protocol::gossip {
         bootstrap_peers_;
 
     /// Scheduler for timers and async calls
-    std::shared_ptr<Scheduler> scheduler_;
+    std::shared_ptr<basic::Scheduler> scheduler_;
 
     /// Host (interface to libp2p network)
     std::shared_ptr<Host> host_;
@@ -123,7 +123,7 @@ namespace libp2p::protocol::gossip {
     bool started_ = false;
 
     /// Heartbeat timer handle
-    Scheduler::Handle heartbeat_timer_;
+    basic::Scheduler::Handle heartbeat_timer_;
 
     /// Logger
     log::SubLogger log_;

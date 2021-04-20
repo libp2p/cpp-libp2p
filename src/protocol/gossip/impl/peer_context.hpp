@@ -35,7 +35,7 @@ namespace libp2p::protocol::gossip {
     std::vector<std::shared_ptr<Stream>> inbound_streams;
 
     /// Dialing to this peer is banned until this timestamp
-    Time banned_until = 0;
+    Time banned_until {0};
 
     /// If true, then outbound connection is in progress
     bool is_connecting = false;

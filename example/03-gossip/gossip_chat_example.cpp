@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
 
   // create gossip node
   auto gossip = libp2p::protocol::gossip::create(
-      injector.create<std::shared_ptr<libp2p::protocol::Scheduler>>(), host,
+      injector.create<std::shared_ptr<libp2p::basic::Scheduler>>(), host,
       std::move(config));
 
   using Message = libp2p::protocol::gossip::Gossip::Message;

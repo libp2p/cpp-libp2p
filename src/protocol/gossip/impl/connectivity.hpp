@@ -6,12 +6,12 @@
 #ifndef LIBP2P_PROTOCOL_GOSSIP_CONNECTIVITY_HPP
 #define LIBP2P_PROTOCOL_GOSSIP_CONNECTIVITY_HPP
 
-#include <unordered_map>
 #include <map>
+#include <unordered_map>
 
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/host/host.hpp>
 #include <libp2p/log/sublogger.hpp>
-#include <libp2p/protocol/common/scheduler.hpp>
 
 #include "peer_set.hpp"
 #include "stream.hpp"
@@ -32,7 +32,7 @@ namespace libp2p::protocol::gossip {
     using ConnectionStatusFeedback =
         std::function<void(bool connected, const PeerContextPtr &ctx)>;
 
-    Connectivity(Config config, std::shared_ptr<Scheduler> scheduler,
+    Connectivity(Config config, std::shared_ptr<basic::Scheduler> scheduler,
                  std::shared_ptr<Host> host,
                  std::shared_ptr<MessageReceiver> msg_receiver,
                  ConnectionStatusFeedback on_connected);
@@ -96,7 +96,7 @@ namespace libp2p::protocol::gossip {
     void flush(const PeerContextPtr &ctx) const;
 
     const Config config_;
-    std::shared_ptr<Scheduler> scheduler_;
+    std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<Host> host_;
     std::shared_ptr<MessageReceiver> msg_receiver_;
     ConnectionStatusFeedback connected_cb_;

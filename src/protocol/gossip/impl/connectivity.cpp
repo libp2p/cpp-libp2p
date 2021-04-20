@@ -26,7 +26,7 @@ namespace libp2p::protocol::gossip {
   }  // namespace
 
   Connectivity::Connectivity(Config config,
-                             std::shared_ptr<Scheduler> scheduler,
+                             std::shared_ptr<basic::Scheduler> scheduler,
                              std::shared_ptr<Host> host,
                              std::shared_ptr<MessageReceiver> msg_receiver,
                              ConnectionStatusFeedback on_connected)
@@ -162,9 +162,9 @@ namespace libp2p::protocol::gossip {
     auto &peer_id = peer_res.value();
 
     log_.debug("new {}bound stream, address={}, peer_id={}",
-                 is_outbound ? "out" : "in",
-                 stream->remoteMultiaddr().value().getStringAddress(),
-                 peer_id.toBase58());
+               is_outbound ? "out" : "in",
+               stream->remoteMultiaddr().value().getStringAddress(),
+               peer_id.toBase58());
 
     PeerContextPtr ctx;
 
@@ -180,7 +180,7 @@ namespace libp2p::protocol::gossip {
       all_peers_.insert(ctx);
     } else {
       ctx = std::move(ctx_found.value());
-      if (ctx->banned_until != 0) {
+      if (ctx->banned_until != Time::zero()) {
         // unban outbound connection only if inbound one exists
         unban(ctx);
       }
@@ -230,7 +230,7 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    if (ctx->banned_until != 0 && connection_must_exist) {
+    if (ctx->banned_until != Time::zero() && connection_must_exist) {
       // unban outbound connection only if inbound one exists
       unban(ctx);
     } else {
@@ -242,8 +242,7 @@ namespace libp2p::protocol::gossip {
       pi.addresses = {ctx->dial_to.value()};
     }
 
-    auto can_connect =
-        host_->connectedness(pi);
+    auto can_connect = host_->connectedness(pi);
 
     if (can_connect != C::CONNECTED && can_connect != C::CAN_CONNECT) {
       if (connection_must_exist) {
@@ -281,10 +280,10 @@ namespace libp2p::protocol::gossip {
 
   void Connectivity::ban(const PeerContextPtr &ctx) {
     //  TODO(artem): lift this parameter up to some internal config
-    constexpr Time kBanInterval = 60000;
+    constexpr Time kBanInterval { 60000 };
 
     assert(ctx);
-    if (ctx->banned_until != 0) {
+    if (ctx->banned_until != Time::zero()) {
       return;
     }
 
@@ -311,7 +310,7 @@ namespace libp2p::protocol::gossip {
   void Connectivity::unban(const PeerContextPtr &ctx) {
     auto ts = ctx->banned_until;
 
-    assert(ts > 0);
+    assert(ts > Time::zero());
 
     auto it = banned_peers_expiration_.find({ts, ctx});
     if (it == banned_peers_expiration_.end()) {
@@ -323,8 +322,8 @@ namespace libp2p::protocol::gossip {
   }
 
   void Connectivity::unban(BannedPeers::iterator it) {
-    const auto& ctx = it->second;
-    ctx->banned_until = 0;
+    const auto &ctx = it->second;
+    ctx->banned_until = Time::zero();
     log_.info("unbanning peer {}", ctx->str);
     banned_peers_expiration_.erase(it);
   }

@@ -17,10 +17,8 @@
 
 namespace libp2p::protocol::gossip {
 
-  Stream::Stream(size_t stream_id,
-                 const Config &config,
-                 Scheduler &scheduler,
-                 const Feedback &feedback,
+  Stream::Stream(size_t stream_id, const Config &config,
+                 basic::Scheduler &scheduler, const Feedback &feedback,
                  MessageReceiver &msg_receiver,
                  std::shared_ptr<connection::Stream> stream,
                  PeerContextPtr peer)
@@ -81,10 +79,9 @@ namespace libp2p::protocol::gossip {
 
     read_buffer_->resize(msg_len);
 
-    stream_->read(gsl::span(read_buffer_->data(), msg_len),
-                  msg_len,
-                  [self_wptr = weak_from_this(), this, buffer = read_buffer_](
-                      auto &&res) {
+    stream_->read(gsl::span(read_buffer_->data(), msg_len), msg_len,
+                  [self_wptr = weak_from_this(), this,
+                   buffer = read_buffer_](auto &&res) {
                     if (self_wptr.expired()) {
                       return;
                     }
@@ -175,14 +172,15 @@ namespace libp2p::protocol::gossip {
     );
     // clang-format on
 
-    if (timeout_ > 0) {
-      timeout_handle_ =
-          scheduler_.schedule(timeout_, [self_wptr = weak_from_this(), this] {
+    if (timeout_ > std::chrono::milliseconds::zero()) {
+      timeout_handle_ = scheduler_.scheduleWithHandle(
+          [self_wptr = weak_from_this(), this] {
             if (self_wptr.expired() || closed_) {
               return;
             }
             feedback_(peer_, Error::WRITER_TIMEOUT);
-          });
+          },
+          timeout_);
     }
   }
 
@@ -214,14 +212,12 @@ namespace libp2p::protocol::gossip {
   }
 
   void Stream::asyncPostError(Error error) {
-    scheduler_
-        .schedule([this, self_wptr = weak_from_this(), error] {
-          if (self_wptr.expired() || closed_) {
-            return;
-          }
-          feedback_(peer_, error);
-        })
-        .detach();
+    scheduler_.schedule([this, self_wptr = weak_from_this(), error] {
+      if (self_wptr.expired() || closed_) {
+        return;
+      }
+      feedback_(peer_, error);
+    });
   }
 
   void Stream::endWrite() {
@@ -234,8 +230,8 @@ namespace libp2p::protocol::gossip {
     endWrite();
     closed_ = true;
     stream_->close([self{shared_from_this()}](outcome::result<void>) {
-      log::createLogger("gossip")->debug(
-          "stream {} closed for peer {}", self->stream_id_, self->peer_->str);
+      log::createLogger("gossip")->debug("stream {} closed for peer {}",
+                                         self->stream_id_, self->peer_->str);
     });
   }
 

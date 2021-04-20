@@ -14,7 +14,7 @@ namespace libp2p::protocol::gossip {
 
   RemoteSubscriptions::RemoteSubscriptions(const Config &config,
                                            Connectivity &connectivity,
-                                           Scheduler &scheduler,
+                                           basic::Scheduler &scheduler,
                                            log::SubLogger &log)
       : config_(config),
         connectivity_(connectivity),
@@ -57,7 +57,7 @@ namespace libp2p::protocol::gossip {
   }
 
   void RemoteSubscriptions::onPeerUnsubscribed(const PeerContextPtr &peer,
-                                               TopicId topic) {
+                                               const TopicId &topic) {
     if (peer->subscribed_to.erase(topic) == 0) {
       // was not subscribed actually, ignore
       log_.debug("peer {} was not subscribed to {}", peer->str, topic);
@@ -116,7 +116,8 @@ namespace libp2p::protocol::gossip {
     if (!res) {
       return;
     }
-    res.value().onPrune(peer, scheduler_.now() + backoff_time * 1000);
+    res.value().onPrune(peer,
+                        scheduler_.now() + std::chrono::seconds(backoff_time));
   }
 
   void RemoteSubscriptions::onNewMessage(

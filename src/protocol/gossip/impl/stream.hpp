@@ -8,9 +8,9 @@
 
 #include <deque>
 
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <libp2p/protocol/common/scheduler.hpp>
 
 #include "common.hpp"
 
@@ -29,7 +29,7 @@ namespace libp2p::protocol::gossip {
     /// by design, so dependencies are stored by reference.
     /// Also, peer is passed separately because it cannot be fetched from stream
     /// once the stream is dead
-    Stream(size_t stream_id, const Config &config, Scheduler &scheduler,
+    Stream(size_t stream_id, const Config &config, basic::Scheduler &scheduler,
            const Feedback &feedback, MessageReceiver &msg_receiver,
            std::shared_ptr<connection::Stream> stream, PeerContextPtr peer);
 
@@ -52,8 +52,8 @@ namespace libp2p::protocol::gossip {
     void asyncPostError(Error error);
 
     const size_t stream_id_;
-    const Scheduler::Ticks timeout_;
-    Scheduler &scheduler_;
+    const Time timeout_;
+    basic::Scheduler &scheduler_;
     const size_t max_message_size_;
     const Feedback &feedback_;
     MessageReceiver &msg_receiver_;
@@ -75,7 +75,7 @@ namespace libp2p::protocol::gossip {
     bool reading_ = false;
 
     /// Handle for current operation timeout guard
-    Scheduler::Handle timeout_handle_;
+    basic::Scheduler::Handle timeout_handle_;
   };
 
 }  // namespace libp2p::protocol::gossip
