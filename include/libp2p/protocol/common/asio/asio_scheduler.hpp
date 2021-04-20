@@ -14,7 +14,8 @@ namespace libp2p::protocol {
 
   class AsioScheduler : public Scheduler {
    public:
-    AsioScheduler(boost::asio::io_context &io, SchedulerConfig config);
+    AsioScheduler(const std::shared_ptr<boost::asio::io_context> &io,
+                  SchedulerConfig config);
 
     ~AsioScheduler() override;
 
@@ -27,7 +28,7 @@ namespace libp2p::protocol {
 
     void onImmediate();
 
-    boost::asio::io_context &io_;
+    std::weak_ptr<boost::asio::io_context> io_;
     Ticks interval_;
     boost::asio::deadline_timer timer_;
     boost::posix_time::ptime started_;
