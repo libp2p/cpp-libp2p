@@ -11,6 +11,7 @@
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/uvarint.hpp>
+#include <libp2p/log/logger.hpp>
 
 using libp2p::common::ByteArray;
 using libp2p::common::hex_upper;
@@ -37,15 +38,35 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, Multihash::Error, e) {
 
 namespace libp2p::multi {
 
-  Multihash::Multihash(HashType type, gsl::span<const uint8_t> hash) {
-    type_ = type;
+  Multihash::Multihash(HashType type, gsl::span<const uint8_t> hash)
+      : data_(std::make_shared<const Data>(type, hash)) {}
+
+  Multihash::Data::Data(HashType t, gsl::span<const uint8_t> h) : type(t) {
     UVarint uvarint{type};
-    auto &&bytes = uvarint.toBytes();
-    data_.insert(data_.end(), bytes.begin(), bytes.end());
-    BOOST_ASSERT(hash.size() <= std::numeric_limits<uint8_t>::max());
-    data_.push_back(static_cast<uint8_t>(hash.size()));
-    hash_offset_ = data_.size();
-    data_.insert(data_.end(), hash.begin(), hash.end());
+    auto &&varint_bytes = uvarint.toBytes();
+    bytes.reserve(h.size() + 4);
+    bytes.insert(bytes.end(), varint_bytes.begin(), varint_bytes.end());
+    BOOST_ASSERT(h.size() <= std::numeric_limits<uint8_t>::max());
+    bytes.push_back(static_cast<uint8_t>(h.size()));
+    hash_offset = bytes.size();
+    bytes.insert(bytes.end(), h.begin(), h.end());
+    std_hash = boost::hash_range(bytes.begin(), bytes.end());
+  }
+
+  const Multihash::Data& Multihash::data() const {
+#ifndef NDEBUG
+    BOOST_ASSERT(data_);
+#else
+    if (data_ == nullptr) {
+      log::createLogger("Multihash")->critical("attempt to use moved object");
+      throw std::runtime_error("attempt to use moved multihash");
+    }
+#endif
+    return *data_;
+  }
+
+  size_t Multihash::stdHash() const {
+    return data().std_hash;
   }
 
   outcome::result<Multihash> Multihash::create(HashType type,
@@ -86,23 +107,27 @@ namespace libp2p::multi {
   }
 
   const HashType &Multihash::getType() const {
-    return type_;
+    return data().type;
   }
 
   gsl::span<const uint8_t> Multihash::getHash() const {
-    return gsl::span<const uint8_t>(data_).subspan(hash_offset_);
+    return gsl::span<const uint8_t>(data().bytes).subspan(data().hash_offset);
   }
 
   std::string Multihash::toHex() const {
-    return hex_upper(data_);
+    return hex_upper(data().bytes);
   }
 
   const common::ByteArray &Multihash::toBuffer() const {
-    return data_;
+    return data().bytes;
   }
 
   bool Multihash::operator==(const Multihash &other) const {
-    return this->data_ == other.data_ && this->type_ == other.type_;
+    if (data_ == other.data_) {
+      return true;
+    }
+    return data().bytes == other.data().bytes
+        && data().type == other.data().type;
   }
 
   bool Multihash::operator!=(const Multihash &other) const {
@@ -110,14 +135,10 @@ namespace libp2p::multi {
   }
 
   bool Multihash::operator<(const class libp2p::multi::Multihash &other) const {
-    return this->type_ < other.type_
-        || (this->type_ == other.type_ && this->data_ < other.data_);
+    if (data().type == other.data().type) {
+      return data().bytes < other.data().bytes;
+    }
+    return data().type < other.data().type;
   }
 
 }  // namespace libp2p::multi
-
-size_t std::hash<libp2p::multi::Multihash>::operator()(
-    const libp2p::multi::Multihash &x) const {
-  const auto &container = x.toBuffer();
-  return boost::hash_range(container.begin(), container.end());
-}
