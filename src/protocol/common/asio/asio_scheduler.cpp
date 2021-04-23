@@ -28,8 +28,10 @@ namespace libp2p::protocol {
 
   AsioScheduler::~AsioScheduler() {
     *canceled_ = true;
-    if (!io_.expired()) {
+    try {
       timer_.cancel();
+    } catch (...) {
+      // may throw
     }
   };
 
@@ -41,18 +43,15 @@ namespace libp2p::protocol {
   void AsioScheduler::scheduleImmediate() {
     if (!immediate_cb_scheduled_) {
       immediate_cb_scheduled_ = true;
-      auto io = io_.lock();
-      if (io) io->post(immediate_cb_);
+      io_->post(immediate_cb_);
     }
   }
 
   void AsioScheduler::onTimer() {
     pulse(false);
-    if (!io_.expired()) {
-      timer_.expires_at(timer_.expires_at()
+    timer_.expires_at(timer_.expires_at()
                         + boost::posix_time::milliseconds(interval_));
-      timer_.async_wait(timer_cb_);
-    }
+    timer_.async_wait(timer_cb_);
   }
 
   void AsioScheduler::onImmediate() {
