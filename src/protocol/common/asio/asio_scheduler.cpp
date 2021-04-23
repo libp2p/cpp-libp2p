@@ -9,7 +9,7 @@
 
 namespace libp2p::protocol {
 
-  AsioScheduler::AsioScheduler(const std::shared_ptr<boost::asio::io_context> &io,
+  AsioScheduler::AsioScheduler(std::shared_ptr<boost::asio::io_context> io,
                                SchedulerConfig config)
       : io_(io),
         interval_(config.period_msec),

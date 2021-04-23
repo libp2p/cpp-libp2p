@@ -14,7 +14,7 @@ namespace libp2p::protocol {
 
   class AsioScheduler : public Scheduler {
    public:
-    AsioScheduler(const std::shared_ptr<boost::asio::io_context> &io,
+    AsioScheduler(std::shared_ptr<boost::asio::io_context> io,
                   SchedulerConfig config);
 
     ~AsioScheduler() override;
