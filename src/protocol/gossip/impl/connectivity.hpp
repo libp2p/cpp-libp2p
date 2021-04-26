@@ -78,16 +78,17 @@ namespace libp2p::protocol::gossip {
     /// Tries to connect to peer over existing connection
     void dialOverExistingConnection(const PeerContextPtr &peer);
 
-    /// Attaches new stream to peer context
-    void onNewStream(std::shared_ptr<connection::Stream> stream,
-                     bool is_outbound);
+    /// Outbound stream result callback
+    void onNewStream(
+        const PeerContextPtr& ctx,
+        outcome::result<std::shared_ptr<connection::Stream>> rstream);
 
     /// Async feedback from streams
     void onStreamEvent(const PeerContextPtr &from,
                        outcome::result<Success> event);
 
     /// Bans peer from outbound candidates list for configured time interval
-    void ban(const PeerContextPtr &ctx);
+    void banOrForget(const PeerContextPtr &ctx);
 
     /// Unbans peer
     void unban(const PeerContextPtr &peer);
