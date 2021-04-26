@@ -126,6 +126,9 @@ namespace libp2p::protocol::gossip {
     /// Peers to be flushed on next heartbeat
     PeerSet writable_peers_on_heartbeat_;
 
+    /// Renew addresses in address repo periodically within heartbeat timer
+    std::chrono::milliseconds addresses_renewal_time_ {0};
+
     /// Logger
     log::SubLogger log_;
   };

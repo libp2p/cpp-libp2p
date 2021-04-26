@@ -148,7 +148,7 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    auto& stream = rstream.value();
+    auto &stream = rstream.value();
 
     // no remote peer id means dead stream
     auto peer_res = stream->remotePeerId();
@@ -445,28 +445,32 @@ namespace libp2p::protocol::gossip {
         flat_changes.emplace_back(p.second, std::move(p.first));
       });
 
-      // clang-format off
       connected_peers_.selectAll(
-          [&flat_changes, this] (const PeerContextPtr& ctx) {
-            boost::for_each(flat_changes, [&ctx] (auto&& p) {
-                ctx->message_builder->addSubscription(p.first, p.second);
+          [&flat_changes, this](const PeerContextPtr &ctx) {
+            boost::for_each(flat_changes, [&ctx](auto &&p) {
+              ctx->message_builder->addSubscription(p.first, p.second);
             });
             flush(ctx);
-          }
-       );
+          });
 
     } else {
       flush();
       writable_peers_on_heartbeat_.selectAll(
-          [this](const PeerContextPtr& ctx) {
-            flush(ctx);
-          }
-      );
+          [this](const PeerContextPtr &ctx) { flush(ctx); });
     }
-    // clang-format on
 
     writable_peers_low_latency_.clear();
     writable_peers_on_heartbeat_.clear();
+
+    if (ts >= addresses_renewal_time_) {
+      addresses_renewal_time_ = scheduler_->now()
+          + config_.address_expiration_msec - std::chrono::milliseconds(500);
+      auto &addr_repo = host_->getPeerRepository().getAddressRepository();
+      connected_peers_.selectAll([this, &addr_repo](const PeerContextPtr &ctx) {
+        std::ignore = addr_repo.updateAddresses(
+            ctx->peer_id, config_.address_expiration_msec);
+      });
+    }
   }
 
   const PeerSet &Connectivity::getConnectedPeers() const {
