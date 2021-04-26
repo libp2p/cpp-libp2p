@@ -14,13 +14,13 @@ namespace libp2p::network {
 
   void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb,
                         std::chrono::milliseconds timeout) {
-    // TODO(107): Reentrancy
-
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
 
       TRACE("reusing connection to peer {}", p.id.toBase58().substr(46));
-      cb(std::move(c));
+      scheduler_->schedule([cb{std::move(cb)}, c{std::move(c)}] () mutable {
+        cb(std::move(c));
+      });
       return;
     }
 
@@ -28,7 +28,9 @@ namespace libp2p::network {
     // did user supply its addresses in {@param p}?
     if (p.addresses.empty()) {
       // we don't have addresses of peer p
-      cb(std::errc::destination_address_required);
+      scheduler_->schedule([cb{std::move(cb)}] {
+        cb(std::errc::destination_address_required);
+      });
       return;
     }
 
@@ -99,10 +101,10 @@ namespace libp2p::network {
     }
 
     if (not dialled) {
-      // TODO(107): Reentrancy
-
       // we did not find supported transport
-      cb(std::errc::address_family_not_supported);
+      scheduler_->schedule([cb{std::move(cb)}] {
+        cb(std::errc::address_family_not_supported);
+      });
     }
   }
 
@@ -140,16 +142,20 @@ namespace libp2p::network {
   void DialerImpl::newStream(const peer::PeerId &peer_id,
                              const peer::Protocol &protocol,
                              StreamResultFunc cb) {
-    // REENTRANT, fix
-
     auto conn = cmgr_->getBestConnectionForPeer(peer_id);
     if (!conn) {
-      return cb(std::errc::not_connected);
+      scheduler_->schedule([cb{std::move(cb)}] {
+        cb(std::errc::not_connected);
+      });
+      return;
     }
 
     auto result = conn->newStream();
     if (!result) {
-      return cb(result);
+      scheduler_->schedule([cb{std::move(cb)}, result] {
+        cb(result);
+      });
+      return;
     }
 
     multiselect_->simpleStreamNegotiate(result.value(), protocol,
@@ -160,15 +166,18 @@ namespace libp2p::network {
       std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect,
       std::shared_ptr<TransportManager> tmgr,
       std::shared_ptr<ConnectionManager> cmgr,
-      std::shared_ptr<ListenerManager> listener)
+      std::shared_ptr<ListenerManager> listener,
+      std::shared_ptr<basic::Scheduler> scheduler)
       : multiselect_(std::move(multiselect)),
         tmgr_(std::move(tmgr)),
         cmgr_(std::move(cmgr)),
-        listener_(std::move(listener)) {
+        listener_(std::move(listener)),
+        scheduler_(std::move(scheduler)) {
     BOOST_ASSERT(multiselect_ != nullptr);
     BOOST_ASSERT(tmgr_ != nullptr);
     BOOST_ASSERT(cmgr_ != nullptr);
     BOOST_ASSERT(listener_ != nullptr);
+    BOOST_ASSERT(scheduler_ != nullptr);
   }
 
 }  // namespace libp2p::network
