@@ -164,8 +164,8 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto listener = std::make_shared<network::ListenerManagerImpl>(
       multiselect, std::move(router), tmgr, cmgr);
 
-  auto dialer =
-      std::make_unique<network::DialerImpl>(multiselect, tmgr, cmgr, listener);
+  auto dialer = std::make_unique<network::DialerImpl>(multiselect, tmgr, cmgr,
+                                                      listener, scheduler_);
 
   auto network = std::make_unique<network::NetworkImpl>(
       std::move(listener), std::move(dialer), cmgr);
