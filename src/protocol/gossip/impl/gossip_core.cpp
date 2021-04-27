@@ -98,12 +98,10 @@ namespace libp2p::protocol::gossip {
       remote_subscriptions_->onSelfSubscribed(true, topic);
     }
 
-    heartbeat_timer_ = scheduler_->scheduleWithHandle(
-        [this] { onHeartbeat(); }, config_.heartbeat_interval_msec);
+    heartbeat_timer_ =
+        scheduler_->scheduleWithHandle([this] { onHeartbeat(); });
 
     connectivity_->start();
-
-    onHeartbeat();
   }
 
   void GossipCore::stop() {

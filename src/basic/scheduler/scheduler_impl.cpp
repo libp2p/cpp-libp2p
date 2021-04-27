@@ -408,7 +408,7 @@ namespace libp2p::basic {
       uint64_t new_seq) {
     auto seq = ticket.second;
 
-    if (abs_time <= ticket.first || seq == 0 || new_seq <= seq) {
+    if (abs_time < ticket.first || seq == 0 || new_seq <= seq) {
       return Scheduler::Error::kInvalidArgument;
     }
 

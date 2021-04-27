@@ -338,7 +338,7 @@ namespace libp2p::protocol::gossip {
 
     if (++ctx->dial_attempts > config_.max_dial_attempts) {
       log_.info("removing peer {}", ctx->str);
-      if (!ctx.unique()) {
+      if (ctx.use_count() > 2) {
         log_.warn("{} extra links to peer still remain", ctx.use_count() - 1);
       }
       all_peers_.erase(ctx->peer_id);
