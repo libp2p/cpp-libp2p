@@ -463,8 +463,8 @@ namespace libp2p::protocol::gossip {
     writable_peers_on_heartbeat_.clear();
 
     if (ts >= addresses_renewal_time_) {
-      addresses_renewal_time_ = scheduler_->now()
-          + config_.address_expiration_msec - std::chrono::milliseconds(500);
+      addresses_renewal_time_ =
+          scheduler_->now() + config_.address_expiration_msec * 9 / 10;
       auto &addr_repo = host_->getPeerRepository().getAddressRepository();
       connected_peers_.selectAll([this, &addr_repo](const PeerContextPtr &ctx) {
         std::ignore = addr_repo.updateAddresses(
