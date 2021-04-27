@@ -88,7 +88,7 @@ namespace libp2p::connection {
               // dont send pings if something is being written
               if (!is_writing_) {
                 enqueue(pingOutMsg(++ping_counter));
-                SL_DEBUG(log(), "written ping message #{}", ping_counter);
+                SL_TRACE(log(), "written ping message #{}", ping_counter);
               }
               std::ignore = ping_handle_.reschedule(config_.ping_interval);
             }
