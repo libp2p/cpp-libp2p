@@ -32,11 +32,11 @@ namespace libp2p::protocol::gossip {
 
     ~MessageBuilder();
 
-    /// Clears constructed message
-    void clear();
+    /// Deep memory cleanup
+    void reset();
 
     /// Returns true if nothing added
-    bool empty();
+    bool empty() const;
 
     /// Serializes into byte buffer and clears internal state
     outcome::result<SharedBuffer> serialize();
@@ -60,6 +60,12 @@ namespace libp2p::protocol::gossip {
     void addMessage(const TopicMessage &msg, const MessageId &msg_id);
 
    private:
+    /// Creates protobuf structures if needed
+    void create_protobuf_structures();
+
+    /// Clears constructed message
+    void clear();
+
     /// Protobuf message being constructed
     std::unique_ptr<pubsub::pb::RPC> pb_msg_;
     std::unique_ptr<pubsub::pb::ControlMessage> control_pb_msg_;

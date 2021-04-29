@@ -323,7 +323,7 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    ctx->message_builder->clear();
+    ctx->message_builder->reset();
     for (auto &s : ctx->inbound_streams) {
       s->close();
     }
