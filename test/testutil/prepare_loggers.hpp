@@ -46,7 +46,6 @@ groups:
               std::make_shared<libp2p::log::Configurator>(),
               // Additional logging config for testing
               testing_log_config));
-
       auto r = logging_system->configure();
       if (r.has_error) {
         std::cerr << r.message << std::endl;
@@ -56,7 +55,7 @@ groups:
       libp2p::log::setLoggingSystem(logging_system);
     });
 
-    libp2p::log::setLevelOfGroup("*", level);
+    libp2p::log::setLevelOfGroup(libp2p::log::defaultGroupName, level);
   }
 
 }  // namespace testutil
