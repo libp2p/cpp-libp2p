@@ -42,7 +42,7 @@ class Session : public std::enable_shared_from_this<Session> {
     }
 
     stream_->readSome(
-        gsl::span(incoming_->data(), incoming_->data() + incoming_->size()),
+        gsl::span(incoming_->data(), static_cast<ssize_t>(incoming_->size())),
         incoming_->size(),
         [self = shared_from_this()](libp2p::outcome::result<size_t> result) {
           if (not result) {
@@ -52,8 +52,9 @@ class Session : public std::enable_shared_from_this<Session> {
             return;
           }
           std::cout << self->stream_->remotePeerId().value().toBase58() << " > "
-                    << std::string(self->incoming_->data(),
-                                   self->incoming_->data() + result.value());
+                    << std::string(self->incoming_->begin(),
+                                   self->incoming_->begin()
+                                       + static_cast<ssize_t>(result.value()));
           std::cout.flush();
           self->read();
         });
@@ -67,7 +68,7 @@ class Session : public std::enable_shared_from_this<Session> {
     }
 
     stream_->write(
-        gsl::span(buffer->data(), buffer->data() + buffer->size()),
+        gsl::span(buffer->data(), static_cast<ssize_t>(buffer->size())),
         buffer->size(),
         [self = shared_from_this(),
          buffer](libp2p::outcome::result<size_t> result) {
@@ -78,8 +79,9 @@ class Session : public std::enable_shared_from_this<Session> {
             return;
           }
           std::cout << self->stream_->remotePeerId().value().toBase58() << " < "
-                    << std::string(buffer->data(),
-                                   buffer->data() + result.value());
+                    << std::string(buffer->begin(),
+                                   buffer->begin()
+                                       + static_cast<ssize_t>(result.value()));
           std::cout.flush();
         });
     return true;
