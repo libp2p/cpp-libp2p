@@ -14,6 +14,8 @@
 
 #include "common.hpp"
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::protocol::gossip {
 
   class MessageReceiver;
@@ -76,6 +78,8 @@ namespace libp2p::protocol::gossip {
 
     /// Handle for current operation timeout guard
     basic::Scheduler::Handle timeout_handle_;
+
+    LIBP2P_INSTANCES(libp2p::protocol::gossip::Stream);
   };
 
 }  // namespace libp2p::protocol::gossip

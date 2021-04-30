@@ -17,6 +17,8 @@
 #include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/security/tls/tls_errors.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::connection {
 
   /// Secure connection of TLS 1.3 protocol
@@ -131,6 +133,8 @@ namespace libp2p::connection {
 
     /// Remote public key, extracted from peer certificate during handshake
     boost::optional<crypto::PublicKey> remote_pubkey_;
+
+    LIBP2P_INSTANCES(libp2p::connection::TlsConnection);
   };
 }  // namespace libp2p::connection
 

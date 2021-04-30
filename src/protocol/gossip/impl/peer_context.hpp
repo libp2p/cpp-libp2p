@@ -8,6 +8,8 @@
 
 #include "common.hpp"
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::protocol::gossip {
 
   class MessageBuilder;
@@ -47,6 +49,8 @@ namespace libp2p::protocol::gossip {
     PeerContext &operator=(PeerContext &&) = delete;
 
     explicit PeerContext(peer::PeerId id);
+
+    LIBP2P_INSTANCES(libp2p::protocol::gossip::PeerContext);
   };
 
   /// Operators needed to place PeerContextPtr into PeerSet but use

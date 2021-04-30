@@ -14,6 +14,8 @@
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::basic {
   /**
    * Allows to read and write messages, which are prepended with a message
@@ -49,6 +51,8 @@ namespace libp2p::basic {
 
    private:
     std::shared_ptr<ReadWriter> conn_;
+
+    LIBP2P_INSTANCES(libp2p::basic::MessageReadWriterBigEndian);
   };
 }  // namespace libp2p::basic
 

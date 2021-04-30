@@ -11,6 +11,8 @@
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/transport/upgrader.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::transport {
 
   /**
@@ -37,6 +39,8 @@ namespace libp2p::transport {
 
     void onSecured(
         outcome::result<std::shared_ptr<connection::SecureConnection>> rsecure);
+
+    LIBP2P_INSTANCES(libp2p::transport::UpgraderSession);
   };
 
 }  // namespace libp2p::transport

@@ -12,6 +12,8 @@
 #include <libp2p/log/logger.hpp>
 #include <libp2p/protocol/echo/echo_config.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::protocol {
 
   /**
@@ -44,6 +46,8 @@ namespace libp2p::protocol {
     void doWrite(size_t size);
 
     void onWrite(outcome::result<size_t> rwrite);
+
+    LIBP2P_INSTANCES(libp2p::protocol::ServerEchoSession);
   };
 
 }  // namespace libp2p::protocol

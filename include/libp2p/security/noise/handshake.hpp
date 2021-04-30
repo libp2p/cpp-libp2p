@@ -19,6 +19,8 @@
 #include <libp2p/security/noise/insecure_rw.hpp>
 #include <libp2p/security/security_adaptor.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::security::noise {
 
   std::shared_ptr<CipherSuite> defaultCipherSuite();
@@ -81,6 +83,8 @@ namespace libp2p::security::noise {
     boost::optional<crypto::PublicKey> remote_peer_pubkey_;
 
     log::Logger log_ = log::createLogger("NoiseHandshake");
+
+    LIBP2P_INSTANCES(libp2p::security::noise::Handshake);
   };
 
 }  // namespace libp2p::security::noise

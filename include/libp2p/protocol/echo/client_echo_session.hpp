@@ -10,6 +10,8 @@
 
 #include <libp2p/connection/stream.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::protocol {
 
   /**
@@ -39,6 +41,8 @@ namespace libp2p::protocol {
     std::error_code ec_;
     size_t bytes_read_ = 0;
     Then then_;
+
+    LIBP2P_INSTANCES(libp2p::protocol::ClientEchoSession);
   };
 
 }  // namespace libp2p::protocol

@@ -13,6 +13,8 @@
 #include <libp2p/host/host.hpp>
 #include <libp2p/protocol/ping/ping_config.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::protocol {
   class PingServerSession
       : public std::enable_shared_from_this<PingServerSession> {
@@ -37,6 +39,8 @@ namespace libp2p::protocol {
     std::vector<uint8_t> buffer_;
 
     bool is_started_ = false;
+
+    LIBP2P_INSTANCES(libp2p::protocol::PingServerSession);
   };
 }  // namespace libp2p::protocol
 

@@ -17,6 +17,8 @@
 #include <libp2p/security/noise/handshake_message_marshaller_impl.hpp>
 #include <libp2p/security/noise/insecure_rw.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::connection {
   class NoiseConnection : public SecureConnection,
                           public std::enable_shared_from_this<NoiseConnection> {
@@ -77,6 +79,8 @@ namespace libp2p::connection {
     size_t plaintext_len_to_write_;
     common::ByteArray writing_;
     log::Logger log_ = log::createLogger("NoiseConnection");
+
+    LIBP2P_INSTANCES(libp2p::connection::NoiseConnection);
   };
 }  // namespace libp2p::connection
 

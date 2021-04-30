@@ -12,6 +12,8 @@
 #include <libp2p/transport/transport_listener.hpp>
 #include <libp2p/transport/upgrader.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::transport {
 
   /**
@@ -43,6 +45,8 @@ namespace libp2p::transport {
     TransportListener::HandlerFunc handle_;
 
     void doAccept();
+
+    LIBP2P_INSTANCES(libp2p::transport::TcpListener);
   };
 
 }  // namespace libp2p::transport

@@ -14,6 +14,8 @@
 
 #include <libp2p/outcome/outcome-register.hpp>
 
+#include <libp2p/outcome/no-error.hpp>
+
 /**
  * __cpp_sized_deallocation macro interferes with protobuf generated files
  * and makes them uncompilable by means of clang
@@ -27,10 +29,8 @@
 namespace libp2p::outcome {
   using namespace BOOST_OUTCOME_V2_NAMESPACE;  // NOLINT
 
-  template <class R, class S = std::error_code,
-            class NoValuePolicy = policy::default_policy<R, S, void>>  //
-  using result = basic_result<R, S, NoValuePolicy>;
-
+  template <class T>
+  using result = basic_result<T, std::error_code, no_error::Policy<T>>;
 }  // namespace outcome
 
 // @see /docs/result.md

@@ -16,6 +16,8 @@
 #include <libp2p/protocol/kademlia/impl/response_handler.hpp>
 #include <libp2p/protocol/kademlia/impl/session_host.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::protocol::kademlia {
 
   class FindPeerExecutor;
@@ -85,6 +87,8 @@ namespace libp2p::protocol::kademlia {
 
     static std::atomic_size_t instance_number;
     log::SubLogger log_;
+
+    LIBP2P_INSTANCES(libp2p::protocol::kademlia::Session);
   };
 }  // namespace libp2p::protocol::kademlia
 

@@ -12,6 +12,8 @@
 #include <libp2p/connection/secure_connection.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::connection {
   class PlaintextConnection : public SecureConnection {
    public:
@@ -62,6 +64,8 @@ namespace libp2p::connection {
     crypto::PublicKey remote_;
 
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
+
+    LIBP2P_INSTANCES(libp2p::connection::PlaintextConnection);
   };
 }  // namespace libp2p::connection
 

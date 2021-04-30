@@ -14,6 +14,8 @@
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/log/logger.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::connection {
   class MplexedConnection;
 
@@ -138,6 +140,8 @@ namespace libp2p::connection {
      */
     outcome::result<void> commitData(gsl::span<const uint8_t> data,
                                      size_t data_size);
+
+    LIBP2P_INSTANCES(libp2p::connection::MplexStream);
   };
 }  // namespace libp2p::connection
 

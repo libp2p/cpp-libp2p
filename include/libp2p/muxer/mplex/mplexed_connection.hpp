@@ -15,6 +15,8 @@
 #include <libp2p/muxer/mplex/mplex_stream.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::connection {
   struct MplexFrame;
 
@@ -205,6 +207,8 @@ namespace libp2p::connection {
      * @param stream_id of the stream
      */
     void streamReset(MplexStream::StreamId stream_id);
+
+    LIBP2P_INSTANCES(libp2p::connection::MplexedConnection);
   };
 }  // namespace libp2p::connection
 

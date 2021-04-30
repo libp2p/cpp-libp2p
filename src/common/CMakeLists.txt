@@ -3,11 +3,20 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+libp2p_add_library(p2p_instances
+    instances.cpp
+    )
+target_link_libraries(p2p_instances
+    Boost::boost
+    )
+
 libp2p_add_library(p2p_hexutil
     hexutil.cpp
     )
 target_link_libraries(p2p_hexutil
     Boost::boost
+
+    p2p_instances
     )
 
 libp2p_add_library(p2p_byteutil
@@ -15,6 +24,8 @@ libp2p_add_library(p2p_byteutil
     )
 target_link_libraries(p2p_byteutil
     Boost::boost
+
+    p2p_instances
     )
 
 libp2p_add_library(p2p_literals

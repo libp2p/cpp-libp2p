@@ -8,6 +8,8 @@
 
 #include <libp2p/basic/message_read_writer.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::basic {
   /**
    * Reader/writer for Protobuf messages; user of this class MUST ENSURE that no
@@ -85,6 +87,8 @@ namespace libp2p::basic {
 
    private:
     std::shared_ptr<MessageReadWriter> read_writer_;
+
+    LIBP2P_INSTANCES(libp2p::basic::ProtobufMessageReadWriter);
   };
 }  // namespace libp2p::basic
 

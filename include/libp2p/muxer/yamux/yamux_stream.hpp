@@ -10,6 +10,8 @@
 #include <libp2p/basic/write_queue.hpp>
 #include <libp2p/connection/stream.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::connection {
 
   class YamuxedConnection;
@@ -196,6 +198,8 @@ namespace libp2p::connection {
 
     /// Close callback
     VoidResultHandlerFunc close_cb_;
+
+    LIBP2P_INSTANCES(libp2p::connection::YamuxStream);
   };
 
 }  // namespace libp2p::connection

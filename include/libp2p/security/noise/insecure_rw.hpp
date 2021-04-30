@@ -12,6 +12,8 @@
 #include <libp2p/common/types.hpp>
 #include <libp2p/connection/raw_connection.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::security::noise {
 
   /**
@@ -45,6 +47,8 @@ namespace libp2p::security::noise {
     std::shared_ptr<connection::RawConnection> connection_;
     std::shared_ptr<common::ByteArray> buffer_;
     common::ByteArray outbuf_;
+
+    LIBP2P_INSTANCES(libp2p::security::noise::InsecureReadWriter);
   };
 
 }  // namespace libp2p::security::noise

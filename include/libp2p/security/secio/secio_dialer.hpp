@@ -16,6 +16,8 @@
 #include <libp2p/security/secio/propose_message.hpp>
 #include <libp2p/security/secio/propose_message_marshaller.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::basic {
   class ProtobufMessageReadWriter;
 }
@@ -139,6 +141,8 @@ namespace libp2p::security::secio {
     boost::optional<crypto::EphemeralKeyPair> ekey_pair_;
     boost::optional<std::pair<crypto::StretchedKey, crypto::StretchedKey>>
         stretched_keys_;
+
+    LIBP2P_INSTANCES(libp2p::security::secio::Dialer);
   };
 }  // namespace libp2p::security::secio
 

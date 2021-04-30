@@ -16,6 +16,8 @@
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::security {
   class TlsAdaptor;
 }
@@ -143,6 +145,8 @@ namespace libp2p::transport {
     friend class security::TlsAdaptor;
 
     std::string debug_str_;
+
+    LIBP2P_INSTANCES(libp2p::transport::TcpConnection);
   };
 }  // namespace libp2p::transport
 

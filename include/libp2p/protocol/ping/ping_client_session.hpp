@@ -15,6 +15,8 @@
 #include <libp2p/event/bus.hpp>
 #include <libp2p/protocol/ping/ping_config.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::peer {
   class PeerId;
 }
@@ -65,6 +67,8 @@ namespace libp2p::protocol {
     std::error_code last_error_;
 
     bool is_started_ = false;
+
+    LIBP2P_INSTANCES(libp2p::protocol::PingClientSession);
   };
 }  // namespace libp2p::protocol
 

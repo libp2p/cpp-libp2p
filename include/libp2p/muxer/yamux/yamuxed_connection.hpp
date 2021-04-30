@@ -15,6 +15,8 @@
 #include <libp2p/muxer/yamux/yamux_reading_state.hpp>
 #include <libp2p/muxer/yamux/yamux_stream.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::connection {
 
   /**
@@ -235,6 +237,8 @@ namespace libp2p::connection {
 
     /// Remote peer saved here
     peer::PeerId remote_peer_;
+
+    LIBP2P_INSTANCES(libp2p::connection::YamuxedConnection);
   };
 
 }  // namespace libp2p::connection

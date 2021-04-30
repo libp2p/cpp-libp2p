@@ -16,6 +16,8 @@
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/log/logger.hpp>
 
+#include <libp2p/common/instances.hpp>
+
 namespace libp2p::crypto {
   namespace aes {
     class AesCtr;
@@ -171,6 +173,8 @@ namespace libp2p::connection {
     std::shared_ptr<common::ByteArray> read_buffer_;
 
     log::Logger log_ = log::createLogger("SecIoConnection");
+
+    LIBP2P_INSTANCES(libp2p::connection::SecioConnection);
   };
 }  // namespace libp2p::connection
 
