@@ -238,12 +238,17 @@ namespace libp2p::protocol::gossip {
           if (self) {
             onNewStream(ctx, std::move(rstream));
           }
-        }
+        },
+        config_.rw_timeout_msec
     );
     // clang-format on
   }
 
   void Connectivity::dialOverExistingConnection(const PeerContextPtr &ctx) {
+    if (ctx->is_connecting || ctx->outbound_stream) {
+      return;
+    }
+
     ctx->is_connecting = true;
 
     // clang-format off
@@ -419,8 +424,18 @@ namespace libp2p::protocol::gossip {
       if (it->first > ts) {
         break;
       }
-      connectable_peers_.insert(it->second);
+
+      // TODO temp experiment
+
+      //connectable_peers_.insert(it->second);
+
+      auto ctx = it->second;
+
       unban(it);
+
+
+      log_.debug("dialing unbanned {}", ctx->str);
+      dial(ctx);
     }
 
     // connect if needed

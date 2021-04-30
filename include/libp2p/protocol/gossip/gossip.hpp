@@ -65,7 +65,7 @@ namespace libp2p::protocol::gossip {
     std::chrono::milliseconds ban_interval_msec{std::chrono::minutes(1)};
 
     /// Max number of dial attempts before peer is forgotten
-    unsigned max_dial_attempts = 10;
+    unsigned max_dial_attempts = 3; // TODO temp experiment
 
     /// Expiration of gossip peers' addresses in address repository
     std::chrono::milliseconds address_expiration_msec{std::chrono::hours(1)};
