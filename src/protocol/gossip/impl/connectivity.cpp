@@ -8,6 +8,7 @@
 #include <cassert>
 
 #include <boost/range/algorithm/for_each.hpp>
+#include <boost/container/small_vector.hpp>
 
 #include "message_builder.hpp"
 #include "message_receiver.hpp"
@@ -167,7 +168,7 @@ namespace libp2p::protocol::gossip {
 
     auto ctx_found = all_peers_.find(peer_id);
     if (!ctx_found) {
-      if (all_peers_.size() >= config_.max_connections_num) {
+      if (connected_peers_.size() >= config_.max_connections_num) {
         log_.warn("too many connections, refusing new stream");
         stream->close([](outcome::result<void>) {});
         return;
@@ -184,10 +185,10 @@ namespace libp2p::protocol::gossip {
     }
 
     size_t stream_id = 0;
-    bool is_new_connection = false;
 
     stream_id = ctx->inbound_streams.size() + 1;
-    is_new_connection = (stream_id == 1 && !ctx->outbound_stream);
+    bool is_new_connection = is_new_connection =
+        (stream_id == 1 && !ctx->outbound_stream);
 
     auto gossip_stream = std::make_shared<Stream>(
         stream_id, config_, *scheduler_, on_stream_event_, *msg_receiver_,
@@ -229,35 +230,35 @@ namespace libp2p::protocol::gossip {
 
     ctx->is_connecting = true;
 
-    // clang-format off
     host_->newStream(
-        pi,
-        config_.protocol_version,
-        [wptr = weak_from_this(), this, ctx=ctx] (auto &&rstream) mutable {
-            auto self = wptr.lock();
-          if (self) {
-            onNewStream(ctx, std::move(rstream));
-          }
-        }
-    );
-    // clang-format on
-  }
-
-  void Connectivity::dialOverExistingConnection(const PeerContextPtr &ctx) {
-    ctx->is_connecting = true;
-
-    // clang-format off
-    host_->newStream(
-        ctx->peer_id,
-        config_.protocol_version,
-        [wptr = weak_from_this(), this, ctx=ctx] (auto &&rstream) mutable {
+        pi, config_.protocol_version,
+        [wptr = weak_from_this(), this,
+         ctx = ctx](outcome::result<std::shared_ptr<connection::Stream>>
+                        rstream) mutable {
           auto self = wptr.lock();
           if (self) {
             onNewStream(ctx, std::move(rstream));
           }
-        }
-    );
-    // clang-format on
+        },
+        config_.rw_timeout_msec);
+  }
+
+  void Connectivity::dialOverExistingConnection(const PeerContextPtr &ctx) {
+    if (ctx->is_connecting || ctx->outbound_stream) {
+      return;
+    }
+
+    ctx->is_connecting = true;
+
+    host_->newStream(ctx->peer_id, config_.protocol_version,
+                     [wptr = weak_from_this(), this, ctx = ctx](
+                         outcome::result<std::shared_ptr<connection::Stream>>
+                             rstream) mutable {
+                       auto self = wptr.lock();
+                       if (self) {
+                         onNewStream(ctx, std::move(rstream));
+                       }
+                     });
   }
 
   void Connectivity::onNewStream(
@@ -334,6 +335,7 @@ namespace libp2p::protocol::gossip {
     }
     connected_peers_.erase(ctx->peer_id);
     connectable_peers_.erase(ctx->peer_id);
+    connecting_peers_.erase(ctx->peer_id);
     connected_cb_(false, ctx);
 
     if (++ctx->dial_attempts > config_.max_dial_attempts) {
@@ -343,7 +345,8 @@ namespace libp2p::protocol::gossip {
       }
       all_peers_.erase(ctx->peer_id);
     } else {
-      log_.info("banning peer {}", ctx->str);
+      log_.info("banning peer {}, dial_attempts={}", ctx->str,
+                ctx->dial_attempts);
       auto ts = scheduler_->now() + config_.ban_interval_msec;
       ctx->banned_until = ts;
       banned_peers_expiration_.insert({ts, ctx});
@@ -419,8 +422,8 @@ namespace libp2p::protocol::gossip {
       if (it->first > ts) {
         break;
       }
-      connectable_peers_.insert(it->second);
       unban(it);
+      connecting_peers_.insert(it->second);
     }
 
     // connect if needed

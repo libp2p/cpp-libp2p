@@ -204,7 +204,7 @@ namespace libp2p::protocol::gossip {
       from->message_builder->addMessage(*msg_found.value(), msg_id);
       connectivity_->peerIsWritable(from, true);
     } else {
-      log_.warn("wanted message not in cache");
+      log_.debug("wanted message not in cache");
     }
   }
 
