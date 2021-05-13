@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <cstddef>
 
 #include <libp2p/common/types.hpp>
 
