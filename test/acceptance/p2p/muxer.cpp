@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <random>
-#include <ostream>
+#include <thread>
 
 #include <gtest/gtest.h>
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
@@ -159,7 +159,7 @@ struct Server : public std::enable_shared_from_this<Server> {
 
  private:
   template <typename... Args>
-  void println(Args &&...args) {
+  void println(Args &&... args) {
     if (!verbose())
       return;
     std::cout << "[server " << std::this_thread::get_id() << "]\t";
@@ -250,7 +250,7 @@ struct Client : public std::enable_shared_from_this<Client> {
 
  private:
   template <typename... Args>
-  void println(Args &&...args) {
+  void println(Args &&... args) {
     if (!verbose())
       return;
     std::cout << "[client " << std::this_thread::get_id() << "]\t";
