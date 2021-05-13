@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <random>
-#include <iostream>
+#include <ostream>
 
 #include <gtest/gtest.h>
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
