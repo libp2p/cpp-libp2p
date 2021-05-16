@@ -175,7 +175,7 @@ namespace libp2p::protocol::gossip {
     if (subscribe) {
       remote_subscriptions_->onPeerSubscribed(peer, topic);
     } else {
-      remote_subscriptions_->onPeerUnsubscribed(peer, topic);
+      remote_subscriptions_->onPeerUnsubscribed(peer, topic, false);
     }
   }
 

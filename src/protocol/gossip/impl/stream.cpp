@@ -229,10 +229,7 @@ namespace libp2p::protocol::gossip {
     reading_ = false;
     endWrite();
     closed_ = true;
-    stream_->close([self{shared_from_this()}](outcome::result<void>) {
-      log::createLogger("gossip")->debug("stream {} closed for peer {}",
-                                         self->stream_id_, self->peer_->str);
-    });
+    stream_->reset();
   }
 
 }  // namespace libp2p::protocol::gossip
