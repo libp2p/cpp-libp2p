@@ -96,7 +96,12 @@ namespace libp2p::protocol::gossip {
       pb_msg_->release_control();
     }
 
-    clear();
+    static constexpr size_t kSizeThreshold = 8192;
+    if (msg_sz > kSizeThreshold) {
+      reset();
+    } else {
+      clear();
+    }
 
     if (success) {
       return buffer;
