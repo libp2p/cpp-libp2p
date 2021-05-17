@@ -69,8 +69,8 @@ namespace libp2p::protocol::gossip {
           }
         });
 
-    subscribed_peers_.selectAll([this, &msg_id, &from, is_published_locally,
-                                 &origin](const PeerContextPtr &ctx) {
+    auto peers = subscribed_peers_.selectRandomPeers(config_.D_max * 2);
+    for (const auto &ctx : peers) {
       assert(ctx->message_builder);
 
       if (needToForward(ctx, from, origin)) {
@@ -79,7 +79,7 @@ namespace libp2p::protocol::gossip {
         // local messages announce themselves immediately
         connectivity_.peerIsWritable(ctx, is_published_locally);
       }
-    });
+    }
 
     seen_cache_.emplace_back(now + config_.seen_cache_lifetime_msec, msg_id);
 
@@ -129,7 +129,7 @@ namespace libp2p::protocol::gossip {
 
     if (seen_cache_size > config_.seen_cache_limit) {
       auto b = seen_cache_.begin();
-      auto e = b + (seen_cache_size - config_.seen_cache_limit);
+      auto e = b + ssize_t(seen_cache_size - config_.seen_cache_limit);
       seen_cache_.erase(b, e);
       changed = true;
     } else if (seen_cache_size != 0) {
