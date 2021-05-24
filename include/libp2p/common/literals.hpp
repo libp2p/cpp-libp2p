@@ -24,20 +24,20 @@ namespace libp2p {
 
   namespace common {
     /// Only for type casting in tests. No hash is computed
-    Hash256 operator""_hash256(const char *c, size_t s);
+    Hash256 operator""_hash256(const char *c, std::size_t s);
 
     /// Only for type casting in tests. No hash is computed
-    Hash512 operator""_hash512(const char *c, size_t s);
+    Hash512 operator""_hash512(const char *c, std::size_t s);
 
-    std::vector<uint8_t> operator""_v(const char *c, size_t s);
+    std::vector<uint8_t> operator""_v(const char *c, std::size_t s);
 
-    std::vector<uint8_t> operator""_unhex(const char *c, size_t s);
+    std::vector<uint8_t> operator""_unhex(const char *c, std::size_t s);
 
-    multi::Multiaddress operator""_multiaddr(const char *c, size_t s);
+    multi::Multiaddress operator""_multiaddr(const char *c, std::size_t s);
 
-    multi::Multihash operator""_multihash(const char *c, size_t s);
+    multi::Multihash operator""_multihash(const char *c, std::size_t s);
 
-    peer::PeerId operator""_peerid(const char *c, size_t s);
+    peer::PeerId operator""_peerid(const char *c, std::size_t s);
   }  // namespace common
 
 }  // namespace libp2p
