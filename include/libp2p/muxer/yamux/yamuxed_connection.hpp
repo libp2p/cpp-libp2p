@@ -229,6 +229,9 @@ namespace libp2p::connection {
     /// Timer handle for pings
     basic::Scheduler::Handle ping_handle_;
 
+    /// Cleanup for detached streams
+    basic::Scheduler::Handle cleanup_handle_;
+
     /// Timer handle for auto closing if inactive
     basic::Scheduler::Handle inactivity_handle_;
 
