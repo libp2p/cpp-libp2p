@@ -39,6 +39,7 @@ groups:
           - name: tls
           - name: listener_manager
           - name: libp2p_debug
+          - name: scheduler
 # --------------- End of libp2p config ---------------)");
   }
 

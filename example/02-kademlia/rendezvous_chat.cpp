@@ -42,7 +42,8 @@ class Session : public std::enable_shared_from_this<Session> {
     }
 
     stream_->readSome(
-        gsl::span(incoming_->data(), incoming_->size()), incoming_->size(),
+        gsl::span(incoming_->data(), static_cast<ssize_t>(incoming_->size())),
+        incoming_->size(),
         [self = shared_from_this()](libp2p::outcome::result<size_t> result) {
           if (not result) {
             self->close();
@@ -52,7 +53,8 @@ class Session : public std::enable_shared_from_this<Session> {
           }
           std::cout << self->stream_->remotePeerId().value().toBase58() << " > "
                     << std::string(self->incoming_->begin(),
-                                   self->incoming_->begin() + result.value());
+                                   self->incoming_->begin()
+                                       + static_cast<ssize_t>(result.value()));
           std::cout.flush();
           self->read();
         });
@@ -66,7 +68,8 @@ class Session : public std::enable_shared_from_this<Session> {
     }
 
     stream_->write(
-        gsl::span(buffer->data(), buffer->size()), buffer->size(),
+        gsl::span(buffer->data(), static_cast<ssize_t>(buffer->size())),
+        buffer->size(),
         [self = shared_from_this(),
          buffer](libp2p::outcome::result<size_t> result) {
           if (not result) {
@@ -77,7 +80,8 @@ class Session : public std::enable_shared_from_this<Session> {
           }
           std::cout << self->stream_->remotePeerId().value().toBase58() << " < "
                     << std::string(buffer->begin(),
-                                   buffer->begin() + result.value());
+                                   buffer->begin()
+                                       + static_cast<ssize_t>(result.value()));
           std::cout.flush();
         });
     return true;
@@ -175,7 +179,11 @@ groups:
 int main(int argc, char *argv[]) {
   // prepare log system
   auto logging_system = std::make_shared<soralog::LoggingSystem>(
-      std::make_shared<libp2p::log::Configurator>(logger_config));
+      std::make_shared<soralog::ConfiguratorFromYAML>(
+          // Original LibP2P logging config
+          std::make_shared<libp2p::log::Configurator>(),
+          // Additional logging config for application
+          logger_config));
   auto r = logging_system->configure();
   if (not r.message.empty()) {
     (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
@@ -186,9 +194,9 @@ int main(int argc, char *argv[]) {
 
   libp2p::log::setLoggingSystem(logging_system);
   if (std::getenv("TRACE_DEBUG") != nullptr) {
-    libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
+    libp2p::log::setLevelOfGroup("main", soralog::Level::TRACE);
   } else {
-    libp2p::log::setLevelOfGroup("*", soralog::Level::ERROR);
+    libp2p::log::setLevelOfGroup("main", soralog::Level::ERROR);
   }
 
   // resulting PeerId should be
