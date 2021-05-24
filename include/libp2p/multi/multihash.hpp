@@ -24,6 +24,12 @@ namespace libp2p::multi {
    */
   class Multihash {
    public:
+    Multihash(const Multihash &other) = default;
+    Multihash &operator=(const Multihash &other) = default;
+    Multihash(Multihash &&other) noexcept = default;
+    Multihash &operator=(Multihash &&other) noexcept = default;
+    ~Multihash() = default;
+
     using Buffer = common::ByteArray;
 
     static constexpr uint8_t kMaxHashLength = 127;

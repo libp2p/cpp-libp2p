@@ -5,17 +5,17 @@
 
 #include <libp2p/multi/multihash.hpp>
 
-#include <boost/algorithm/hex.hpp>
 #include <boost/container_hash/hash.hpp>
-#include <boost/format.hpp>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/types.hpp>
-#include <libp2p/multi/uvarint.hpp>
 #include <libp2p/log/logger.hpp>
+#include <libp2p/basic/varint_prefix_reader.hpp>
 
 using libp2p::common::ByteArray;
 using libp2p::common::hex_upper;
 using libp2p::common::unhex;
+
+#define THROW_IF_MOVED_OBJECT_ACCESSED 0
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, Multihash::Error, e) {
   using E = libp2p::multi::Multihash::Error;
@@ -41,11 +41,23 @@ namespace libp2p::multi {
   Multihash::Multihash(HashType type, gsl::span<const uint8_t> hash)
       : data_(std::make_shared<const Data>(type, hash)) {}
 
+  namespace {
+    template <typename Buffer>
+    inline void appendVarint(Buffer &buffer, uint64_t t) {
+      do {
+        uint8_t byte = t & 0x7F;
+        t >>= 7;
+        if (t != 0) {
+          byte |= 0x80;
+        }
+        buffer.push_back(byte);
+      } while (t > 0);
+    }
+  }  // namespace
+
   Multihash::Data::Data(HashType t, gsl::span<const uint8_t> h) : type(t) {
-    UVarint uvarint{type};
-    auto &&varint_bytes = uvarint.toBytes();
     bytes.reserve(h.size() + 4);
-    bytes.insert(bytes.end(), varint_bytes.begin(), varint_bytes.end());
+    appendVarint(bytes, type);
     BOOST_ASSERT(h.size() <= std::numeric_limits<uint8_t>::max());
     bytes.push_back(static_cast<uint8_t>(h.size()));
     hash_offset = bytes.size();
@@ -53,14 +65,14 @@ namespace libp2p::multi {
     std_hash = boost::hash_range(bytes.begin(), bytes.end());
   }
 
-  const Multihash::Data& Multihash::data() const {
-#ifndef NDEBUG
-    BOOST_ASSERT(data_);
-#else
+  const Multihash::Data &Multihash::data() const {
+#if THROW_IF_MOVED_OBJECT_ACCESSED
     if (data_ == nullptr) {
       log::createLogger("Multihash")->critical("attempt to use moved object");
       throw std::runtime_error("attempt to use moved multihash");
     }
+#else
+    BOOST_ASSERT(data_);
 #endif
     return *data_;
   }
@@ -89,11 +101,18 @@ namespace libp2p::multi {
       return Error::INPUT_TOO_SHORT;
     }
 
-    UVarint varint(b);
+    basic::VarintPrefixReader vr;
+    if (vr.consume(b) != basic::VarintPrefixReader::kReady) {
+      return Error::INPUT_TOO_SHORT;
+    }
 
-    const auto type = static_cast<HashType>(varint.toUInt64());
-    uint8_t length = b[varint.size()];
-    gsl::span<const uint8_t> hash = b.subspan(varint.size() + 1);
+    const auto type = static_cast<HashType>(vr.value());
+    if (b.empty()) {
+      return Error::INPUT_TOO_SHORT;
+    }
+
+    uint8_t length = b[0];
+    gsl::span<const uint8_t> hash = b.subspan(1);
 
     if (length == 0) {
       return Error::ZERO_INPUT_LENGTH;
@@ -111,7 +130,8 @@ namespace libp2p::multi {
   }
 
   gsl::span<const uint8_t> Multihash::getHash() const {
-    return gsl::span<const uint8_t>(data().bytes).subspan(data().hash_offset);
+    const auto &d = data();
+    return gsl::span<const uint8_t>(d.bytes).subspan(d.hash_offset);
   }
 
   std::string Multihash::toHex() const {
@@ -123,11 +143,12 @@ namespace libp2p::multi {
   }
 
   bool Multihash::operator==(const Multihash &other) const {
+    const auto &a = data();
+    const auto &b = other.data();
     if (data_ == other.data_) {
       return true;
     }
-    return data().bytes == other.data().bytes
-        && data().type == other.data().type;
+    return a.bytes == b.bytes && a.type == b.type;
   }
 
   bool Multihash::operator!=(const Multihash &other) const {
@@ -135,10 +156,12 @@ namespace libp2p::multi {
   }
 
   bool Multihash::operator<(const class libp2p::multi::Multihash &other) const {
-    if (data().type == other.data().type) {
-      return data().bytes < other.data().bytes;
+    const auto &a = data();
+    const auto &b = other.data();
+    if (a.type == b.type) {
+      return a.bytes < b.bytes;
     }
-    return data().type < other.data().type;
+    return a.type < b.type;
   }
 
 }  // namespace libp2p::multi
