@@ -425,6 +425,9 @@ namespace libp2p::protocol::gossip {
       if (it->first > ts) {
         break;
       }
+
+      auto ctx = it->second;
+
       unban(it);
 
       log_.debug("dialing unbanned {}", ctx->str);
