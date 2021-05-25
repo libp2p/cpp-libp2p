@@ -25,7 +25,9 @@ namespace libp2p::log {
                        std::string_view prefix)
         : log_(log::createLogger(tag, group)),
           prefix_(prefix),
-          prefix_size_(prefix_.size()) {}
+          prefix_size_(prefix_.size() + 1) {
+      prefix_ += ' ';
+    }
 
     template <typename T>
     explicit SubLogger(const std::string &tag, const std::string &group,
