@@ -78,6 +78,28 @@ namespace libp2p::connection {
     }
     started_ = true;
 
+    static constexpr auto kCleanupInterval = std::chrono::seconds(150);
+    cleanup_handle_ = scheduler_->scheduleWithHandle(
+        [this]() {
+          if (started_) {
+            std::vector<StreamId> abandoned;
+            for (auto &[id, stream] : streams_) {
+              if (stream.use_count() == 1) {
+                abandoned.push_back(id);
+                enqueue(resetStreamMsg(id));
+              }
+            }
+            if (!abandoned.empty()) {
+              log()->info("cleaning up {} abandoned streams", abandoned.size());
+              for (const auto id : abandoned) {
+                streams_.erase(id);
+              }
+            }
+            std::ignore = cleanup_handle_.reschedule(kCleanupInterval);
+          }
+        },
+        kCleanupInterval);
+
     if (config_.ping_interval != std::chrono::milliseconds::zero()) {
       ping_handle_ = scheduler_->scheduleWithHandle(
           [this, ping_counter = 0u]() mutable {
