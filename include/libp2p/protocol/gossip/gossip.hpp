@@ -56,7 +56,11 @@ namespace libp2p::protocol::gossip {
         std::chrono::minutes(2)};
 
     /// Topic's message seen cache lifetime
-    std::chrono::milliseconds seen_cache_lifetime_msec{std::chrono::minutes(1)};
+    std::chrono::milliseconds seen_cache_lifetime_msec{
+        message_cache_lifetime_msec * 3 / 4};
+
+    /// Topic's seen cache limit
+    unsigned seen_cache_limit = 100;
 
     /// Heartbeat interval
     std::chrono::milliseconds heartbeat_interval_msec{1000};
@@ -65,7 +69,7 @@ namespace libp2p::protocol::gossip {
     std::chrono::milliseconds ban_interval_msec{std::chrono::minutes(1)};
 
     /// Max number of dial attempts before peer is forgotten
-    unsigned max_dial_attempts = 10;
+    unsigned max_dial_attempts = 3;
 
     /// Expiration of gossip peers' addresses in address repository
     std::chrono::milliseconds address_expiration_msec{std::chrono::hours(1)};

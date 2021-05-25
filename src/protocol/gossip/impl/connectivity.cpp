@@ -8,7 +8,6 @@
 #include <cassert>
 
 #include <boost/range/algorithm/for_each.hpp>
-#include <boost/container/small_vector.hpp>
 
 #include "message_builder.hpp"
 #include "message_receiver.hpp"
@@ -185,10 +184,10 @@ namespace libp2p::protocol::gossip {
     }
 
     size_t stream_id = 0;
+    bool is_new_connection = false;
 
     stream_id = ctx->inbound_streams.size() + 1;
-    bool is_new_connection = is_new_connection =
-        (stream_id == 1 && !ctx->outbound_stream);
+    is_new_connection = (stream_id == 1 && !ctx->outbound_stream);
 
     auto gossip_stream = std::make_shared<Stream>(
         stream_id, config_, *scheduler_, on_stream_event_, *msg_receiver_,
@@ -230,17 +229,19 @@ namespace libp2p::protocol::gossip {
 
     ctx->is_connecting = true;
 
+    // clang-format off
     host_->newStream(
-        pi, config_.protocol_version,
-        [wptr = weak_from_this(), this,
-         ctx = ctx](outcome::result<std::shared_ptr<connection::Stream>>
-                        rstream) mutable {
-          auto self = wptr.lock();
+        pi,
+        config_.protocol_version,
+        [wptr = weak_from_this(), this, ctx=ctx] (auto &&rstream) mutable {
+            auto self = wptr.lock();
           if (self) {
             onNewStream(ctx, std::move(rstream));
           }
         },
-        config_.rw_timeout_msec);
+        config_.rw_timeout_msec
+    );
+    // clang-format on
   }
 
   void Connectivity::dialOverExistingConnection(const PeerContextPtr &ctx) {
@@ -250,15 +251,18 @@ namespace libp2p::protocol::gossip {
 
     ctx->is_connecting = true;
 
-    host_->newStream(ctx->peer_id, config_.protocol_version,
-                     [wptr = weak_from_this(), this, ctx = ctx](
-                         outcome::result<std::shared_ptr<connection::Stream>>
-                             rstream) mutable {
-                       auto self = wptr.lock();
-                       if (self) {
-                         onNewStream(ctx, std::move(rstream));
-                       }
-                     });
+    // clang-format off
+    host_->newStream(
+        ctx->peer_id,
+        config_.protocol_version,
+        [wptr = weak_from_this(), this, ctx=ctx] (auto &&rstream) mutable {
+          auto self = wptr.lock();
+          if (self) {
+            onNewStream(ctx, std::move(rstream));
+          }
+        }
+    );
+    // clang-format on
   }
 
   void Connectivity::onNewStream(
@@ -335,7 +339,6 @@ namespace libp2p::protocol::gossip {
     }
     connected_peers_.erase(ctx->peer_id);
     connectable_peers_.erase(ctx->peer_id);
-    connecting_peers_.erase(ctx->peer_id);
     connected_cb_(false, ctx);
 
     if (++ctx->dial_attempts > config_.max_dial_attempts) {
@@ -423,7 +426,9 @@ namespace libp2p::protocol::gossip {
         break;
       }
       unban(it);
-      connecting_peers_.insert(it->second);
+
+      log_.debug("dialing unbanned {}", ctx->str);
+      dial(ctx);
     }
 
     // connect if needed

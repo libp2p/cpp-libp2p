@@ -113,9 +113,6 @@ namespace libp2p::protocol::gossip {
     /// Peers can be dialed to
     PeerSet connectable_peers_;
 
-    /// Peers currently connecting
-    PeerSet connecting_peers_;
-
     /// Peers temporary banned due to connectivity problems,
     /// will become connectable after certain interval
     BannedPeers banned_peers_expiration_;
