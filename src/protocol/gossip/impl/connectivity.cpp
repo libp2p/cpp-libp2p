@@ -167,7 +167,7 @@ namespace libp2p::protocol::gossip {
 
     auto ctx_found = all_peers_.find(peer_id);
     if (!ctx_found) {
-      if (all_peers_.size() >= config_.max_connections_num) {
+      if (connected_peers_.size() >= config_.max_connections_num) {
         log_.warn("too many connections, refusing new stream");
         stream->close([](outcome::result<void>) {});
         return;
@@ -348,7 +348,8 @@ namespace libp2p::protocol::gossip {
       }
       all_peers_.erase(ctx->peer_id);
     } else {
-      log_.info("banning peer {}", ctx->str);
+      log_.info("banning peer {}, dial_attempts={}", ctx->str,
+                ctx->dial_attempts);
       auto ts = scheduler_->now() + config_.ban_interval_msec;
       ctx->banned_until = ts;
       banned_peers_expiration_.insert({ts, ctx});
@@ -425,14 +426,9 @@ namespace libp2p::protocol::gossip {
         break;
       }
 
-      // TODO temp experiment
-
-      //connectable_peers_.insert(it->second);
-
       auto ctx = it->second;
 
       unban(it);
-
 
       log_.debug("dialing unbanned {}", ctx->str);
       dial(ctx);

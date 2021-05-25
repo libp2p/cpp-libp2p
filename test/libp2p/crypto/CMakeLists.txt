@@ -30,6 +30,7 @@ addtest(ecdsa_test
     )
 target_link_libraries(ecdsa_test
     p2p_ecdsa_provider
+    p2p_instances
     )
 
 addtest(hmac_test
@@ -68,6 +69,7 @@ addtest(key_validator_test
     )
 target_link_libraries(key_validator_test
     p2p_key_validator
+    p2p_instances
     )
 
 addtest(rsa_provider_test
@@ -75,6 +77,7 @@ addtest(rsa_provider_test
     )
 target_link_libraries(rsa_provider_test
     p2p_rsa_provider
+    p2p_instances
     )
 
 addtest(secp256k1_test

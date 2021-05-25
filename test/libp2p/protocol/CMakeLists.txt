@@ -37,6 +37,7 @@ addtest(echo_test
 target_link_libraries(echo_test
     p2p_protocol_echo
     p2p_literals
+    p2p_instances
     )
 
 addtest(ping_test

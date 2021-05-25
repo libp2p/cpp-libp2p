@@ -17,4 +17,5 @@ addtest(event_bus_test
 
 target_link_libraries(event_bus_test
     p2p_logger
+    p2p_instances
     )

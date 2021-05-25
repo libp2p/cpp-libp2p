@@ -8,6 +8,7 @@ libp2p_add_library(p2p_instances
     )
 target_link_libraries(p2p_instances
     Boost::boost
+    dl
     )
 
 libp2p_add_library(p2p_hexutil

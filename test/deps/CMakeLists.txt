@@ -6,6 +6,7 @@
 addtest(outcome_test outcome_test.cpp)
 target_link_libraries(outcome_test
     Boost::boost
+    p2p_instances
     )
 
 addtest(di_test di_test.cpp)
