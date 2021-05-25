@@ -79,7 +79,7 @@ namespace libp2p::protocol::gossip {
 
     read_buffer_->resize(msg_len);
 
-    stream_->read(gsl::span(read_buffer_->data(), msg_len), msg_len,
+    stream_->read(gsl::span(read_buffer_->data(), ssize_t(msg_len)), msg_len,
                   [self_wptr = weak_from_this(), this,
                    buffer = read_buffer_](auto &&res) {
                     if (self_wptr.expired()) {
@@ -158,7 +158,7 @@ namespace libp2p::protocol::gossip {
 
     // clang-format off
     stream_->write(
-        gsl::span(data, writing_bytes_),
+        gsl::span(data, ssize_t(writing_bytes_)),
         writing_bytes_,
 
         [self_wptr = weak_from_this(), this, buffer = std::move(buffer)]
