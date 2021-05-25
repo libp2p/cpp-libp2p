@@ -23,7 +23,7 @@ namespace libp2p::connection {
 
     inline std::tuple<gsl::span<uint8_t>, gsl::span<uint8_t>> split(
         gsl::span<uint8_t> span, size_t n) {
-      return {span.first(n), span.subspan(n)};
+      return {span.first(ssize_t(n)), span.subspan(ssize_t(n))};
     }
 
     inline bool isOutbound(uint32_t our_stream_id, uint32_t their_stream_id) {
@@ -50,17 +50,14 @@ namespace libp2p::connection {
             [this](gsl::span<uint8_t> segment, StreamId stream_id, bool rst,
                    bool fin) {
               if (!segment.empty()) {
-                if (!processData(segment, stream_id)) {
-                  return false;
-                }
+                processData(segment, stream_id);
               }
               if (rst) {
-                return processRst(stream_id);
+                processRst(stream_id);
               }
               if (fin) {
-                return processFin(stream_id);
+                processFin(stream_id);
               }
-              return true;
             }),
         closed_callback_(std::move(closed_callback)),
 
@@ -251,7 +248,7 @@ namespace libp2p::connection {
     assert(n <= raw_read_buffer_->size());
 
     if (n < raw_read_buffer_->size()) {
-      bytes_read = bytes_read.first(n);
+      bytes_read = bytes_read.first(ssize_t(n));
     }
 
     reading_state_.onDataReceived(bytes_read);
@@ -331,19 +328,19 @@ namespace libp2p::connection {
       return false;
     }
 
-    if (is_fin && (frame.stream_id != 0) && !processFin(frame.stream_id)) {
-      return false;
+    if (is_fin && (frame.stream_id != 0)) {
+      processFin(frame.stream_id);
     }
 
-    if (is_rst && (frame.stream_id != 0) && !processRst(frame.stream_id)) {
-      return false;
+    if (is_rst && (frame.stream_id != 0)) {
+      processRst(frame.stream_id);
     }
 
     // proceed with incoming data
     return true;
   }
 
-  bool YamuxedConnection::processData(gsl::span<uint8_t> segment,
+  void YamuxedConnection::processData(gsl::span<uint8_t> segment,
                                       StreamId stream_id) {
     assert(stream_id != 0);
     assert(!segment.empty());
@@ -353,7 +350,7 @@ namespace libp2p::connection {
       // this may be due to overflow in previous fragments of same message
       SL_DEBUG(log(), "stream {} no longer exists", stream_id);
       reading_state_.discardDataMessage();
-      return true;
+      return;
     }
 
     SL_TRACE(log(), "YamuxedConnection::processData, stream={}, size={}",
@@ -361,7 +358,7 @@ namespace libp2p::connection {
 
     auto result = it->second->onDataReceived(segment);
     if (result == YamuxStream::kKeepStream) {
-      return true;
+      return;
     }
 
     eraseStream(stream_id);
@@ -371,7 +368,6 @@ namespace libp2p::connection {
       // overflow, reset this stream
       enqueue(resetStreamMsg(stream_id));
     }
-    return true;
   }
 
   void YamuxedConnection::processGoAway(const YamuxFrame &frame) {
@@ -481,7 +477,7 @@ namespace libp2p::connection {
     return true;
   }
 
-  bool YamuxedConnection::processFin(StreamId stream_id) {
+  void YamuxedConnection::processFin(StreamId stream_id) {
     assert(stream_id != 0);
 
     auto it = streams_.find(stream_id);
@@ -495,11 +491,11 @@ namespace libp2p::connection {
           auto cb = std::move(it2->second);
           erasePendingOutboundStream(it2);
           cb(Stream::Error::STREAM_RESET_BY_PEER);
-          return true;
+          return;
         }
       }
       SL_DEBUG(log(), "stream {} no longer exists", stream_id);
-      return true;
+      return;
     }
 
     auto result = it->second->onFINReceived();
@@ -507,10 +503,10 @@ namespace libp2p::connection {
       eraseStream(stream_id);
     }
 
-    return true;
+    return;
   }
 
-  bool YamuxedConnection::processRst(StreamId stream_id) {
+  void YamuxedConnection::processRst(StreamId stream_id) {
     assert(stream_id != 0);
 
     auto it = streams_.find(stream_id);
@@ -524,18 +520,17 @@ namespace libp2p::connection {
           auto cb = std::move(it2->second);
           erasePendingOutboundStream(it2);
           cb(Stream::Error::STREAM_RESET_BY_PEER);
-          return true;
+          return;
         }
       }
 
       SL_DEBUG(log(), "stream {} no longer exists", stream_id);
-      return true;
+      return;
     }
 
     auto stream = std::move(it->second);
     eraseStream(stream_id);
     stream->onRSTReceived();
-    return true;
   }
 
   bool YamuxedConnection::processWindowUpdate(const YamuxFrame &frame) {
@@ -745,7 +740,7 @@ namespace libp2p::connection {
     if (config_.no_streams_interval > basic::kZeroTime && streams_.empty()
         && pending_outbound_streams_.empty()) {
       SL_DEBUG(log(), "scheduling expire timer to {} msec",
-                   config_.no_streams_interval.count());
+               config_.no_streams_interval.count());
       inactivity_handle_ = scheduler_->scheduleWithHandle(
           [this] { onExpireTimer(); },
           scheduler_->now() + config_.no_streams_interval);

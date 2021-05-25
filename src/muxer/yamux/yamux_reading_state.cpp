@@ -43,12 +43,12 @@ namespace libp2p::connection {
       if (data_bytes_unread_ == 0) {
         proceed = processHeader(bytes_read);
       } else {
-        proceed = processData(bytes_read);
+        processData(bytes_read);
       }
     }
   }
 
-  bool YamuxReadingState::processData(gsl::span<uint8_t> &bytes_read) {
+  void YamuxReadingState::processData(gsl::span<uint8_t> &bytes_read) {
     assert(data_bytes_unread_ > 0);
 
     auto bytes_available = size(bytes_read);
@@ -65,7 +65,7 @@ namespace libp2p::connection {
 
     if (read_data_stream_ == 0) {
       log()->debug("discarding {} data bytes", head.size());
-      return true;
+      return;
     }
 
     StreamId stream_id = read_data_stream_;
@@ -78,7 +78,7 @@ namespace libp2p::connection {
       reset();
     }
 
-    return on_data_(head, stream_id, rst, fin);
+    on_data_(head, stream_id, rst, fin);
   }
 
   bool YamuxReadingState::processHeader(gsl::span<uint8_t> &bytes_read) {
