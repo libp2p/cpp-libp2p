@@ -23,7 +23,7 @@ namespace libp2p::connection {
 
     inline std::tuple<gsl::span<uint8_t>, gsl::span<uint8_t>> split(
         gsl::span<uint8_t> span, size_t n) {
-      return {span.subspan(0, n), span.subspan(n)};
+      return {span.subspan(0, ssize_t(n)), span.subspan(ssize_t(n))};
     }
 
   }  // namespace
