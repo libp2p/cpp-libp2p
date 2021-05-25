@@ -11,9 +11,9 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
-#include <libp2p/muxer/muxed_connection_config.hpp>
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/log/logger.hpp>
+#include <libp2p/muxer/muxed_connection_config.hpp>
 #include <libp2p/protocol/echo.hpp>
 #include <libp2p/security/noise.hpp>
 #include <libp2p/security/plaintext.hpp>
@@ -78,7 +78,11 @@ int main(int argc, char **argv) {
 
   // prepare log system
   auto logging_system = std::make_shared<soralog::LoggingSystem>(
-      std::make_shared<libp2p::log::Configurator>(logger_config));
+      std::make_shared<soralog::ConfiguratorFromYAML>(
+          // Original LibP2P logging config
+          std::make_shared<libp2p::log::Configurator>(),
+          // Additional logging config for application
+          logger_config));
   auto r = logging_system->configure();
   if (not r.message.empty()) {
     (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
@@ -89,9 +93,9 @@ int main(int argc, char **argv) {
 
   libp2p::log::setLoggingSystem(logging_system);
   if (std::getenv("TRACE_DEBUG") != nullptr) {
-    libp2p::log::setLevelOfGroup("*", soralog::Level::TRACE);
+    libp2p::log::setLevelOfGroup("main", soralog::Level::TRACE);
   } else {
-    libp2p::log::setLevelOfGroup("*", soralog::Level::ERROR);
+    libp2p::log::setLevelOfGroup("main", soralog::Level::ERROR);
   }
 
   // resulting PeerId should be

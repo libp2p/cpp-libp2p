@@ -16,6 +16,8 @@ namespace libp2p::log {
   using Level = soralog::Level;
   using Logger = std::shared_ptr<soralog::Logger>;
 
+  inline const std::string defaultGroupName("libp2p");
+
   void setLoggingSystem(std::shared_ptr<soralog::LoggingSystem> logging_system);
 
   [[nodiscard]] Logger createLogger(const std::string &tag);
