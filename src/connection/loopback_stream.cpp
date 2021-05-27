@@ -103,14 +103,19 @@ namespace libp2p::connection {
     buffer_.commit(bytes);
 
     // intentionally used deferReadCallback, since it acquires bytes written
-    deferReadCallback(outcome::success(bytes), std::move(cb));
-    /* The whole approach with such methods (deferReadCallback and
-     * deferWriteCallback) is going to be avoided in the near future, thus we do
-     * not remove  from the source code the counting of bytes written */
 
-    if (auto data_notifyee = std::move(data_notifyee_)) {
-      data_notifyee(buffer_.size());
-    }
+    // The whole approach with such methods (deferReadCallback and
+    // deferWriteCallback) is going to be avoided in the near future, thus we do
+    // not remove  from the source code the counting of bytes written
+
+    deferReadCallback(
+        outcome::success(bytes),
+        [self{shared_from_this()}, cb{std::move(cb)}](auto &&r) {
+          cb(r);
+          if (auto data_notifyee = std::move(self->data_notifyee_)) {
+            data_notifyee(self->buffer_.size());
+          }
+        });
   }
 
   void LoopbackStream::writeSome(gsl::span<const uint8_t> in, size_t bytes,
