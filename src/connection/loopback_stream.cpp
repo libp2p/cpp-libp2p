@@ -85,37 +85,28 @@ namespace libp2p::connection {
   void LoopbackStream::write(gsl::span<const uint8_t> in, size_t bytes,
                              libp2p::basic::Writer::WriteCallbackFunc cb) {
     if (is_reset_) {
-      return deferWriteCallback(Error::STREAM_RESET_BY_HOST, std::move(cb));
+      return cb(Error::STREAM_RESET_BY_HOST);
     }
     if (!is_writable_) {
-      return deferWriteCallback(Error::STREAM_NOT_WRITABLE, std::move(cb));
+      return cb(Error::STREAM_NOT_WRITABLE);
     }
     if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
-      return deferWriteCallback(Error::STREAM_INVALID_ARGUMENT, std::move(cb));
+      return cb(Error::STREAM_INVALID_ARGUMENT);
     }
 
     if (boost::asio::buffer_copy(buffer_.prepare(bytes),
                                  boost::asio::const_buffer(in.data(), bytes))
         != bytes) {
-      return deferWriteCallback(Error::STREAM_INTERNAL_ERROR, std::move(cb));
+      return cb(Error::STREAM_INTERNAL_ERROR);
     }
 
     buffer_.commit(bytes);
 
-    // intentionally used deferReadCallback, since it acquires bytes written
+    cb(bytes);
 
-    // The whole approach with such methods (deferReadCallback and
-    // deferWriteCallback) is going to be avoided in the near future, thus we do
-    // not remove  from the source code the counting of bytes written
-
-    deferReadCallback(
-        outcome::success(bytes),
-        [self{shared_from_this()}, cb{std::move(cb)}](auto &&r) {
-          cb(r);
-          if (auto data_notifyee = std::move(self->data_notifyee_)) {
-            data_notifyee(self->buffer_.size());
-          }
-        });
+    if (auto data_notifyee = std::move(data_notifyee_)) {
+      data_notifyee(buffer_.size());
+    }
   }
 
   void LoopbackStream::writeSome(gsl::span<const uint8_t> in, size_t bytes,
@@ -127,10 +118,10 @@ namespace libp2p::connection {
                             libp2p::basic::Reader::ReadCallbackFunc cb,
                             bool some) {
     if (is_reset_) {
-      return deferReadCallback(Error::STREAM_RESET_BY_HOST, std::move(cb));
+      return cb(Error::STREAM_RESET_BY_HOST);
     }
     if (!is_readable_) {
-      return deferReadCallback(Error::STREAM_NOT_READABLE, std::move(cb));
+      return cb(Error::STREAM_NOT_READABLE);
     }
     if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
       return cb(Error::STREAM_INVALID_ARGUMENT);
@@ -142,8 +133,7 @@ namespace libp2p::connection {
                         some](outcome::result<size_t> res) mutable {
       if (!res) {
         self->data_notified_ = true;
-        self->deferReadCallback(res.as_failure(), std::move(cb));
-        return;
+        return cb(res.as_failure());
       }
 
       if (self->buffer_.size() >= (some ? 1 : bytes)) {
@@ -152,14 +142,13 @@ namespace libp2p::connection {
         if (boost::asio::buffer_copy(boost::asio::buffer(out.data(), to_read),
                                      self->buffer_.data(), to_read)
             != to_read) {
-          return self->deferReadCallback(Error::STREAM_INTERNAL_ERROR,
-                                         std::move(cb));
+          return cb(Error::STREAM_INTERNAL_ERROR);
         }
 
         self->buffer_.consume(to_read);
 
         self->data_notified_ = true;
-        self->deferReadCallback(to_read, std::move(cb));
+        return cb(to_read);
       }
     };
 
