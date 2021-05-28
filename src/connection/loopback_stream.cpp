@@ -104,8 +104,16 @@ namespace libp2p::connection {
 
     cb(bytes);
 
-    if (auto data_notifyee = std::move(data_notifyee_)) {
-      data_notifyee(buffer_.size());
+    while (not data_notifyees_.empty()) {
+      auto& data_notifyee = data_notifyees_.front();
+
+      data_notified_ = false;
+      data_notifyee(0);
+      if (not data_notified_) {
+        break;
+      }
+
+      data_notifyees_.pop();
     }
   }
 
@@ -160,9 +168,7 @@ namespace libp2p::connection {
     }
 
     // subscribe to new data updates
-    if (not data_notifyee_) {
-      data_notifyee_ = std::move(read_lambda);
-    }
+    data_notifyees_.emplace(std::move(read_lambda));
   }
 
   void LoopbackStream::deferReadCallback(outcome::result<size_t> res,

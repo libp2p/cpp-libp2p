@@ -6,8 +6,11 @@
 #ifndef LIBP2P_CONNECTION_LOOPBACKSTREAM
 #define LIBP2P_CONNECTION_LOOPBACKSTREAM
 
-#include <boost/asio.hpp>
 #include <libp2p/connection/stream.hpp>
+
+#include <queue>
+
+#include <boost/asio.hpp>
 
 #include <libp2p/log/logger.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -71,7 +74,7 @@ namespace libp2p::connection {
     boost::asio::streambuf buffer_;
 
     /// when a new data arrives, this function is to be called
-    std::function<void(outcome::result<size_t>)> data_notifyee_;
+    std::queue<std::function<void(outcome::result<size_t>)>> data_notifyees_;
     bool data_notified_ = false;
 
     /// is the stream opened for reads?
