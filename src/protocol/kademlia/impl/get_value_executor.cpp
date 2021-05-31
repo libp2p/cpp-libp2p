@@ -22,7 +22,7 @@ namespace libp2p::protocol::kademlia {
 
   GetValueExecutor::GetValueExecutor(
       const Config &config, std::shared_ptr<Host> host,
-      std::shared_ptr<Scheduler> scheduler,
+      std::shared_ptr<basic::Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
       std::shared_ptr<PeerRouting> peer_routing,
       std::shared_ptr<ContentRoutingTable> content_routing_table,
@@ -129,18 +129,20 @@ namespace libp2p::protocol::kademlia {
       log_.debug("connecting to {}; active {}, in queue {}",
                  peer_info.id.toBase58(), requests_in_progress_, queue_.size());
 
-      auto holder = std::make_shared<
-          std::pair<std::shared_ptr<GetValueExecutor>, scheduler::Handle>>();
+      auto holder =
+          std::make_shared<std::pair<std::shared_ptr<GetValueExecutor>,
+                                     basic::Scheduler::Handle>>();
 
       holder->first = shared_from_this();
-      holder->second = scheduler_->schedule(
-          scheduler::toTicks(config_.connectionTimeout), [holder] {
+      holder->second = scheduler_->scheduleWithHandle(
+          [holder] {
             if (holder->first) {
               holder->second.cancel();
               holder->first->onConnected(Error::TIMEOUT);
               holder->first.reset();
             }
-          });
+          },
+          config_.connectionTimeout);
 
       host_->newStream(
           peer_info, config_.protocolId,
@@ -197,8 +199,8 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  scheduler::Ticks GetValueExecutor::responseTimeout() const {
-    return scheduler::toTicks(config_.responseTimeout);
+  Time GetValueExecutor::responseTimeout() const {
+    return config_.responseTimeout;
   }
 
   bool GetValueExecutor::match(const Message &msg) const {

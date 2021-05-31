@@ -11,7 +11,6 @@
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/log/sublogger.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/kademlia/error.hpp>
 #include <libp2p/protocol/kademlia/impl/response_handler.hpp>
 #include <libp2p/protocol/kademlia/impl/session_host.hpp>
@@ -23,9 +22,9 @@ namespace libp2p::protocol::kademlia {
   class Session : public std::enable_shared_from_this<Session> {
    public:
     Session(std::weak_ptr<SessionHost> session_host,
-            std::weak_ptr<Scheduler> scheduler,
+            std::weak_ptr<basic::Scheduler> scheduler,
             std::shared_ptr<connection::Stream> stream,
-            scheduler::Ticks operations_timeout = 0);
+            Time operations_timeout = Time::zero());
 
     ~Session();
 
@@ -65,11 +64,12 @@ namespace libp2p::protocol::kademlia {
     void cancelResponseTimeout(
         const std::shared_ptr<ResponseHandler> &response_handler);
 
-    std::unordered_map<std::shared_ptr<ResponseHandler>, Scheduler::Handle>
+    std::unordered_map<std::shared_ptr<ResponseHandler>,
+                       basic::Scheduler::Handle>
         response_handlers_;
 
     std::weak_ptr<SessionHost> session_host_;
-    std::weak_ptr<Scheduler> scheduler_;
+    std::weak_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<connection::Stream> stream_;
 
     std::vector<uint8_t> inner_buffer_;
@@ -78,8 +78,8 @@ namespace libp2p::protocol::kademlia {
     std::atomic_size_t writing_ = 0;
     bool closed_ = false;
 
-    const scheduler::Ticks operations_timeout_;
-    Scheduler::Handle reading_timeout_handle_;
+    const Time operations_timeout_;
+    basic::Scheduler::Handle reading_timeout_handle_;
 
     boost::optional<Message::Type> expected_response_type_;
 

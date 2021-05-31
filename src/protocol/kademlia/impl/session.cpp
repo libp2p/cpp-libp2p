@@ -16,9 +16,9 @@ namespace libp2p::protocol::kademlia {
   std::atomic_size_t Session::instance_number = 0;
 
   Session::Session(std::weak_ptr<SessionHost> session_host,
-                   std::weak_ptr<Scheduler> scheduler,
+                   std::weak_ptr<basic::Scheduler> scheduler,
                    std::shared_ptr<connection::Stream> stream,
-                   scheduler::Ticks operations_timeout)
+                   Time operations_timeout)
       : session_host_(std::move(session_host)),
         scheduler_(std::move(scheduler)),
         stream_(std::move(stream)),
@@ -223,7 +223,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   void Session::setReadingTimeout() {
-    if (operations_timeout_ == 0) {
+    if (operations_timeout_ == Time::zero()) {
       return;
     }
 
@@ -233,12 +233,13 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    reading_timeout_handle_ =
-        scheduler->schedule(operations_timeout_, [wp = weak_from_this()] {
+    reading_timeout_handle_ = scheduler->scheduleWithHandle(
+        [wp = weak_from_this()] {
           if (auto self = wp.lock()) {
             self->close(Error::TIMEOUT);
           }
-        });
+        },
+        operations_timeout_);
   }
 
   void Session::cancelReadingTimeout() {
@@ -251,7 +252,7 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    if (response_handler->responseTimeout() == 0) {
+    if (response_handler->responseTimeout() == Time::zero()) {
       return;
     }
 
@@ -263,17 +264,17 @@ namespace libp2p::protocol::kademlia {
 
     response_handlers_.emplace(
         response_handler,
-        scheduler->schedule(response_handler->responseTimeout(),
-                            [wp = weak_from_this(), response_handler] {
-                              if (auto self = wp.lock()) {
-                                if (response_handler) {
-                                  self->cancelResponseTimeout(response_handler);
-                                  response_handler->onResult(self,
-                                                             Error::TIMEOUT);
-                                  self->close();
-                                }
-                              }
-                            }));
+        scheduler->scheduleWithHandle(
+            [wp = weak_from_this(), response_handler] {
+              if (auto self = wp.lock()) {
+                if (response_handler) {
+                  self->cancelResponseTimeout(response_handler);
+                  response_handler->onResult(self, Error::TIMEOUT);
+                  self->close();
+                }
+              }
+            },
+            response_handler->responseTimeout()));
   }
 
   void Session::cancelResponseTimeout(
