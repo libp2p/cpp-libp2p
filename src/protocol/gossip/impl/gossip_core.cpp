@@ -16,14 +16,15 @@
 
 namespace libp2p::protocol::gossip {
 
-  std::shared_ptr<Gossip> create(std::shared_ptr<Scheduler> scheduler,
+  std::shared_ptr<Gossip> create(std::shared_ptr<basic::Scheduler> scheduler,
                                  std::shared_ptr<Host> host, Config config) {
     return std::make_shared<GossipCore>(std::move(config), std::move(scheduler),
                                         std::move(host));
   }
 
   // clang-format off
-  GossipCore::GossipCore(Config config, std::shared_ptr<Scheduler> scheduler,
+  GossipCore::GossipCore(Config config,
+                         std::shared_ptr<basic::Scheduler> scheduler,
                          std::shared_ptr<Host> host)
       : config_(std::move(config)),
         create_message_id_([](const ByteArray &from, const ByteArray &seq,
@@ -42,16 +43,16 @@ namespace libp2p::protocol::gossip {
               onLocalSubscriptionChanged(subscribe, topic);
             }
         )),
-        msg_seq_(scheduler_->now()),
+        msg_seq_(scheduler_->now().count()),
         log_("gossip", "Gossip", local_peer_id_.toBase58().substr(46)) {}
   // clang-format on
 
   void GossipCore::addBootstrapPeer(
-      peer::PeerId id, boost::optional<multi::Multiaddress> address) {
-    bootstrap_peers_[id] = address;
+      const peer::PeerId &id, boost::optional<multi::Multiaddress> address) {
     if (started_) {
-      connectivity_->addBootstrapPeer(std::move(id), std::move(address));
+      connectivity_->addBootstrapPeer(id, address);
     }
+    bootstrap_peers_[id] = std::move(address);
   }
 
   outcome::result<void> GossipCore::addBootstrapPeer(
@@ -62,7 +63,7 @@ namespace libp2p::protocol::gossip {
       return multi::Multiaddress::Error::INVALID_INPUT;
     }
     OUTCOME_TRY(peer_id, peer::PeerId::fromBase58(*peer_id_str));
-    addBootstrapPeer(std::move(peer_id), {std::move(ma)});
+    addBootstrapPeer(peer_id, {std::move(ma)});
     return outcome::success();
   }
 
@@ -97,20 +98,10 @@ namespace libp2p::protocol::gossip {
       remote_subscriptions_->onSelfSubscribed(true, topic);
     }
 
-    // clang-format off
-    heartbeat_timer_ = scheduler_->schedule(config_.heartbeat_interval_msec,
-        [self_wptr=weak_from_this()] {
-          auto self = self_wptr.lock();
-          if (self) {
-            self->onHeartbeat();
-          }
-        }
-    );
-    // clang-format on
+    heartbeat_timer_ =
+        scheduler_->scheduleWithHandle([this] { onHeartbeat(); });
 
     connectivity_->start();
-
-    onHeartbeat();
   }
 
   void GossipCore::stop() {
@@ -184,7 +175,7 @@ namespace libp2p::protocol::gossip {
     if (subscribe) {
       remote_subscriptions_->onPeerSubscribed(peer, topic);
     } else {
-      remote_subscriptions_->onPeerUnsubscribed(peer, topic);
+      remote_subscriptions_->onPeerUnsubscribed(peer, topic, false);
     }
   }
 
@@ -213,7 +204,7 @@ namespace libp2p::protocol::gossip {
       from->message_builder->addMessage(*msg_found.value(), msg_id);
       connectivity_->peerIsWritable(from, true);
     } else {
-      log_.warn("wanted message not in cache");
+      log_.debug("wanted message not in cache");
     }
   }
 
@@ -306,7 +297,10 @@ namespace libp2p::protocol::gossip {
     connectivity_->onHeartbeat(broadcast_on_heartbeat_);
     broadcast_on_heartbeat_.clear();
 
-    heartbeat_timer_.reschedule(config_.heartbeat_interval_msec);
+    auto res = heartbeat_timer_.reschedule(config_.heartbeat_interval_msec);
+    if (!res) {
+      log_.error("Heartbeat reschedule error: {}", res.error().message());
+    }
   }
 
   void GossipCore::onPeerConnection(bool connected, const PeerContextPtr &ctx) {

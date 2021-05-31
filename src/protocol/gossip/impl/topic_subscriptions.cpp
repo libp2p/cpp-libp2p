@@ -39,7 +39,8 @@ namespace libp2p::protocol::gossip {
         log_(log) {}
 
   bool TopicSubscriptions::empty() const {
-    return (not self_subscribed_) && (fanout_period_ends_ == 0)
+    return (not self_subscribed_)
+        && (fanout_period_ends_ == std::chrono::milliseconds::zero())
         && subscribed_peers_.empty() && mesh_peers_.empty();
   }
 
@@ -50,8 +51,8 @@ namespace libp2p::protocol::gossip {
 
     if (is_published_locally) {
       fanout_period_ends_ = now + config_.seen_cache_lifetime_msec;
-      log_.debug("setting fanout period for {}, {}->{}", topic_, now,
-                 fanout_period_ends_);
+      log_.debug("setting fanout period for {}, {}->{}", topic_, now.count(),
+                 fanout_period_ends_.count());
     }
 
     auto origin = peerFrom(*msg);
@@ -68,8 +69,8 @@ namespace libp2p::protocol::gossip {
           }
         });
 
-    subscribed_peers_.selectAll([this, &msg_id, &from, is_published_locally,
-                                 &origin](const PeerContextPtr &ctx) {
+    auto peers = subscribed_peers_.selectRandomPeers(config_.D_max * 2);
+    for (const auto &ctx : peers) {
       assert(ctx->message_builder);
 
       if (needToForward(ctx, from, origin)) {
@@ -78,7 +79,7 @@ namespace libp2p::protocol::gossip {
         // local messages announce themselves immediately
         connectivity_.peerIsWritable(ctx, is_published_locally);
       }
-    });
+    }
 
     seen_cache_.emplace_back(now + config_.seen_cache_lifetime_msec, msg_id);
 
@@ -94,7 +95,6 @@ namespace libp2p::protocol::gossip {
       if (sz < config_.D_min) {
         auto peers = subscribed_peers_.selectRandomPeers(config_.D_min - sz);
         for (auto &p : peers) {
-
           auto it = dont_bother_until_.find(p);
           if (it != dont_bother_until_.end()) {
             if (it->second < now) {
@@ -118,19 +118,32 @@ namespace libp2p::protocol::gossip {
 
     // fanout ends some time after this host ends publishing to the topic,
     // to save space and traffic
-    if (fanout_period_ends_ != 0 && fanout_period_ends_ < now) {
-      fanout_period_ends_ = 0;
+    if (fanout_period_ends_ != Time::zero() && fanout_period_ends_ < now) {
+      fanout_period_ends_ = Time::zero();
       log_.debug("fanout period reset for {}", topic_);
     }
 
     // shift msg ids cache
-    if (!seen_cache_.empty()) {
+    auto seen_cache_size = seen_cache_.size();
+    bool changed = false;
+
+    if (seen_cache_size > config_.seen_cache_limit) {
+      auto b = seen_cache_.begin();
+      auto e = b + ssize_t(seen_cache_size - config_.seen_cache_limit);
+      seen_cache_.erase(b, e);
+      changed = true;
+    } else if (seen_cache_size != 0) {
       auto it = std::find_if(seen_cache_.begin(), seen_cache_.end(),
                              [now](const auto &p) { return p.first >= now; });
       if (it != seen_cache_.begin()) {
         seen_cache_.erase(seen_cache_.begin(), it);
-        log_.debug("seen cache size={} for {}", seen_cache_.size(), topic_);
+        changed = true;
       }
+    }
+
+    if (changed) {
+      log_.debug("seen cache size changed {}->{} for {}", seen_cache_size,
+                 seen_cache_.size(), topic_);
     }
   }
 
@@ -196,7 +209,7 @@ namespace libp2p::protocol::gossip {
     mesh_peers_.erase(p->peer_id);
     if (p->subscribed_to.count(topic_) != 0) {
       subscribed_peers_.insert(p);
-      dont_bother_until_.insert({ p, dont_bother_until });
+      dont_bother_until_.insert({p, dont_bother_until});
     }
   }
 

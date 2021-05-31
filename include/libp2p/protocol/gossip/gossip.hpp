@@ -6,6 +6,7 @@
 #ifndef LIBP2P_GOSSIP_HPP
 #define LIBP2P_GOSSIP_HPP
 
+#include <chrono>
 #include <functional>
 #include <set>
 #include <string>
@@ -20,7 +21,7 @@
 
 namespace libp2p {
   struct Host;
-  namespace protocol {
+  namespace basic {
     class Scheduler;
   }
 }  // namespace libp2p
@@ -48,13 +49,30 @@ namespace libp2p::protocol::gossip {
     bool echo_forward_mode = false;
 
     /// Read or write timeout per whole network operation
-    unsigned rw_timeout_msec = 10000;
+    std::chrono::milliseconds rw_timeout_msec{std::chrono::seconds(10)};
 
-    unsigned message_cache_lifetime_msec = 120000;
+    /// Lifetime of a message in message cache
+    std::chrono::milliseconds message_cache_lifetime_msec{
+        std::chrono::minutes(2)};
 
-    unsigned seen_cache_lifetime_msec = 60000;
+    /// Topic's message seen cache lifetime
+    std::chrono::milliseconds seen_cache_lifetime_msec{
+        message_cache_lifetime_msec * 3 / 4};
 
-    unsigned heartbeat_interval_msec = 1000;
+    /// Topic's seen cache limit
+    unsigned seen_cache_limit = 100;
+
+    /// Heartbeat interval
+    std::chrono::milliseconds heartbeat_interval_msec{1000};
+
+    /// Ban interval between dial attempts to peer
+    std::chrono::milliseconds ban_interval_msec{std::chrono::minutes(1)};
+
+    /// Max number of dial attempts before peer is forgotten
+    unsigned max_dial_attempts = 3;
+
+    /// Expiration of gossip peers' addresses in address repository
+    std::chrono::milliseconds address_expiration_msec{std::chrono::hours(1)};
 
     /// Max RPC message size
     size_t max_message_size = 1 << 24;
@@ -76,7 +94,8 @@ namespace libp2p::protocol::gossip {
 
     /// Adds bootstrap peer to the set of connectable peers
     virtual void addBootstrapPeer(
-        peer::PeerId id, boost::optional<multi::Multiaddress> address) = 0;
+        const peer::PeerId &id,
+        boost::optional<multi::Multiaddress> address) = 0;
 
     /// Adds bootstrap peer address in string form
     virtual outcome::result<void> addBootstrapPeer(
@@ -123,7 +142,7 @@ namespace libp2p::protocol::gossip {
   };
 
   // Creates Gossip object
-  std::shared_ptr<Gossip> create(std::shared_ptr<Scheduler> scheduler,
+  std::shared_ptr<Gossip> create(std::shared_ptr<basic::Scheduler> scheduler,
                                  std::shared_ptr<Host> host,
                                  Config config = Config{});
 

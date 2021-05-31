@@ -14,7 +14,7 @@ namespace libp2p::protocol::gossip {
 
   RemoteSubscriptions::RemoteSubscriptions(const Config &config,
                                            Connectivity &connectivity,
-                                           Scheduler &scheduler,
+                                           basic::Scheduler &scheduler,
                                            log::SubLogger &log)
       : config_(config),
         connectivity_(connectivity),
@@ -57,12 +57,14 @@ namespace libp2p::protocol::gossip {
   }
 
   void RemoteSubscriptions::onPeerUnsubscribed(const PeerContextPtr &peer,
-                                               TopicId topic) {
-    if (peer->subscribed_to.erase(topic) == 0) {
+                                               const TopicId &topic,
+                                               bool disconnected) {
+    if (!disconnected && peer->subscribed_to.erase(topic) == 0) {
       // was not subscribed actually, ignore
       log_.debug("peer {} was not subscribed to {}", peer->str, topic);
       return;
     }
+
     log_.debug("peer {} unsubscribing from {}", peer->str, topic);
     auto res = getItem(topic, false);
     if (!res) {
@@ -70,6 +72,7 @@ namespace libp2p::protocol::gossip {
       log_.debug("entry doesnt exist for {}", topic);
       return;
     }
+
     TopicSubscriptions &subs = res.value();
 
     subs.onPeerUnsubscribed(peer);
@@ -79,8 +82,11 @@ namespace libp2p::protocol::gossip {
   }
 
   void RemoteSubscriptions::onPeerDisconnected(const PeerContextPtr &peer) {
-    while (!peer->subscribed_to.empty()) {
-      onPeerUnsubscribed(peer, *peer->subscribed_to.begin());
+    std::set<std::string> subscribed_to;
+    subscribed_to.swap(peer->subscribed_to);
+
+    for (const auto& topic : subscribed_to) {
+      onPeerUnsubscribed(peer, topic, true);
     }
   }
 
@@ -116,7 +122,8 @@ namespace libp2p::protocol::gossip {
     if (!res) {
       return;
     }
-    res.value().onPrune(peer, scheduler_.now() + backoff_time * 1000);
+    res.value().onPrune(peer,
+                        scheduler_.now() + std::chrono::seconds(backoff_time));
   }
 
   void RemoteSubscriptions::onNewMessage(

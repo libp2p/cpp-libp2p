@@ -21,8 +21,8 @@ namespace libp2p::connection {
     using HeaderCallback =
         std::function<bool(boost::optional<YamuxFrame> header)>;
 
-    /// Callback on data segments, returns false to terminate further processing
-    using DataCallback = std::function<bool(
+    /// Callback on data segments
+    using DataCallback = std::function<void(
         gsl::span<uint8_t> segment, StreamId stream_id, bool rst, bool fin)>;
 
 
@@ -44,7 +44,7 @@ namespace libp2p::connection {
     bool processHeader(gsl::span<uint8_t> &bytes_read);
 
     /// Processes data message fragment from incoming data stream
-    bool processData(gsl::span<uint8_t> &bytes_read);
+    void processData(gsl::span<uint8_t> &bytes_read);
 
     /// Header cb
     HeaderCallback on_header_;

@@ -156,11 +156,11 @@ TEST(Gossip, PeerSet) {
  * @then We see that all messages are both inserted and expired properly
  */
 TEST(Gossip, MessageCache) {
-  constexpr g::Time msg_lifetime = 20;
-  constexpr g::Time timer_interval = msg_lifetime / 2;
+  constexpr g::Time msg_lifetime {20};
+  constexpr g::Time timer_interval {msg_lifetime / 2};
 
-  g::Time current_time = 1234567890000ull;  // typically timestamp
-  g::Time stop_time = current_time + 400;
+  g::Time current_time {1234567890000ll};  // typically timestamp
+  g::Time stop_time = current_time + g::Time{400};
   auto clock = [&current_time]() -> g::Time { return current_time; };
 
   // 1. Create the cache
@@ -191,11 +191,11 @@ TEST(Gossip, MessageCache) {
 
   for (; current_time <= stop_time; ++current_time) {
     insertMessage(topic_1);
-    if (current_time % 2 == 1)
+    if (current_time.count() % 2 == 1)
       insertMessage(topic_2);
-    if (current_time % timer_interval == 0)
+    if (current_time.count() % timer_interval.count() == 0)
       cache.shift();
-    if (current_time % (timer_interval * 10) == 0) {
+    if (current_time.count() % (timer_interval.count() * 10) == 0) {
       for (auto it = inserted_messages.rbegin(); it != inserted_messages.rend();
            ++it) {
         auto msg = cache.getMessage(it->second);

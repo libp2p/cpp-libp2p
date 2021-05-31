@@ -21,9 +21,6 @@ namespace libp2p::protocol::gossip {
     /// String repr for logging purposes
     const std::string str;
 
-    /// Not null iff this peer can be dialed to
-    boost::optional<multi::Multiaddress> dial_to;
-
     /// Builds message to be sent to this peer
     std::shared_ptr<MessageBuilder> message_builder;
 
@@ -35,7 +32,10 @@ namespace libp2p::protocol::gossip {
     std::vector<std::shared_ptr<Stream>> inbound_streams;
 
     /// Dialing to this peer is banned until this timestamp
-    Time banned_until = 0;
+    Time banned_until {0};
+
+    /// Current dial attempts
+    unsigned dial_attempts = 0;
 
     /// If true, then outbound connection is in progress
     bool is_connecting = false;

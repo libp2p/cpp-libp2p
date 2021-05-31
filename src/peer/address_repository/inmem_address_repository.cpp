@@ -63,11 +63,20 @@ namespace libp2p::peer {
     return false;
   }
 
+  InmemAddressRepository::peer_db::iterator
+  InmemAddressRepository::findOrInsert(const PeerId &p) {
+    auto it = db_.find(p);
+    if (it == db_.end()) {
+      it = db_.emplace(p, std::make_shared<ttlmap>()).first;
+    }
+    return it;
+  }
+
   outcome::result<bool> InmemAddressRepository::addAddresses(
       const PeerId &p, gsl::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
     bool added = false;
-    auto peer_it = db_.emplace(p, std::make_shared<ttlmap>()).first;
+    auto peer_it = findOrInsert(p);
     auto &addresses = *peer_it->second;
 
     auto expires_at = Clock::now() + ttl;
@@ -85,7 +94,7 @@ namespace libp2p::peer {
       const PeerId &p, gsl::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
     bool added = false;
-    auto peer_it = db_.emplace(p, std::make_shared<ttlmap>()).first;
+    auto peer_it = findOrInsert(p);
     auto &addresses = *peer_it->second;
 
     auto expires_at = Clock::now() + ttl;

@@ -33,8 +33,8 @@ namespace libp2p::protocol::gossip {
   /// Shared buffer used to broadcast messages
   using SharedBuffer = std::shared_ptr<const ByteArray>;
 
-  /// Time may be any monotonic counter
-  using Time = uint64_t;
+  /// Time is scheduler's clock and counter
+  using Time = std::chrono::milliseconds;
 
   template <typename T>
   using Repeated = std::vector<T>;

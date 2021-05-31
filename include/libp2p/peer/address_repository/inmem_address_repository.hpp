@@ -59,13 +59,16 @@ namespace libp2p::peer {
     std::unordered_set<PeerId> getPeers() const override;
 
    private:
-    bool isNewDnsAddr(const multi::Multiaddress &ma);
-
     using ttlmap = std::unordered_map<multi::Multiaddress, Clock::time_point>;
     using ttlmap_ptr = std::shared_ptr<ttlmap>;
+    using peer_db = std::unordered_map<PeerId, ttlmap_ptr>;
+
+    bool isNewDnsAddr(const multi::Multiaddress &ma);
+
+    peer_db::iterator findOrInsert(const PeerId &p);
 
     std::shared_ptr<network::DnsaddrResolver> dnsaddr_resolver_;
-    std::unordered_map<PeerId, ttlmap_ptr> db_;
+    peer_db db_;
     std::set<multi::Multiaddress> resolved_dns_addrs_;
   };
 

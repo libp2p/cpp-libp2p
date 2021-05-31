@@ -20,7 +20,7 @@ namespace libp2p::protocol::gossip {
 
   MessageCache::MessageCache(Time message_lifetime, TimeFunction clock)
       : message_lifetime_(message_lifetime), clock_(std::move(clock)) {
-    assert(message_lifetime_ > 0);
+    assert(message_lifetime_ > Time::zero());
     table_ = std::make_unique<msg_cache_table::Table>();
   }
 

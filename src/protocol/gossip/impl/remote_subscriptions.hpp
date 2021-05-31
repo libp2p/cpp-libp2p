@@ -7,7 +7,7 @@
 #define LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP
 
 #include <libp2p/log/sublogger.hpp>
-#include <libp2p/protocol/common/scheduler.hpp>
+#include <libp2p/basic/scheduler.hpp>
 
 #include "topic_subscriptions.hpp"
 
@@ -19,7 +19,7 @@ namespace libp2p::protocol::gossip {
     /// Ctor. Dependencies are passed by ref becaus this object is a part of
     /// GossipCore and lives only within its scope
     RemoteSubscriptions(const Config &config, Connectivity &connectivity,
-                        Scheduler &scheduler, log::SubLogger &log);
+                        basic::Scheduler &scheduler, log::SubLogger &log);
 
     /// This host subscribes or unsubscribes
     void onSelfSubscribed(bool subscribed, const TopicId &topic);
@@ -28,7 +28,8 @@ namespace libp2p::protocol::gossip {
     void onPeerSubscribed(const PeerContextPtr &peer, const TopicId &topic);
 
     /// Remote peer unsubscribes
-    void onPeerUnsubscribed(const PeerContextPtr &peer, TopicId topic);
+    void onPeerUnsubscribed(const PeerContextPtr &peer, const TopicId &topic,
+                            bool disconnected);
 
     /// Peer disconnected - remove it from all topics it's subscribed to
     void onPeerDisconnected(const PeerContextPtr &peer);
@@ -61,7 +62,7 @@ namespace libp2p::protocol::gossip {
 
     const Config &config_;
     Connectivity &connectivity_;
-    Scheduler &scheduler_;
+    basic::Scheduler &scheduler_;
 
     // TODO(artem): bound table size (which may grow!)
     // by removing items not subscribed to locally. LRU(???)
