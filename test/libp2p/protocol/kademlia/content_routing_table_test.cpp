@@ -7,9 +7,8 @@
 #include <gtest/gtest.h>
 #include <unordered_set>
 
-#include <include/libp2p/protocol/common/asio/asio_scheduler.hpp>
+#include <include/libp2p/basic/scheduler.hpp>
 #include <libp2p/common/literals.hpp>
-#include "mock/libp2p/protocol/common/scheduler_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
 #include "testutil/outcome.hpp"
 
@@ -20,19 +19,29 @@ using namespace peer;
 using namespace common;
 using libp2p::event::Bus;
 
-using ::testing::_;
-using ::testing::AnyNumber;
-using ::testing::Return;
-using ::testing::ReturnRef;
+struct SchedulerStub : public basic::Scheduler {
+  ~SchedulerStub() override = default;
+
+  std::chrono::milliseconds now() noexcept override {
+    return Time();
+  }
+  Handle scheduleImpl(Callback &&, std::chrono::milliseconds,
+                      bool) noexcept override {
+    return Handle{};
+  }
+  void cancel(Handle::Ticket) noexcept override {}
+  outcome::result<Handle::Ticket> reschedule(
+      Handle::Ticket t, std::chrono::milliseconds) noexcept override {
+    return t;
+  }
+  void pulse(std::chrono::milliseconds current_clock) noexcept override {}
+};
 
 struct ContentRoutingTableTest : public ::testing::Test {
   void SetUp() override {
     config_ = std::make_unique<Config>();
 
-    scheduler_ = std::make_shared<SchedulerMock>();
-    EXPECT_CALL(*scheduler_, scheduleImmediate()).Times(AnyNumber());
-    EXPECT_CALL(*scheduler_, now()).Times(AnyNumber());
-    EXPECT_CALL(*scheduler_, cancel(_)).Times(AnyNumber());
+    scheduler_ = std::make_shared<SchedulerStub>();
 
     bus_ = std::make_shared<Bus>();
 
@@ -41,7 +50,7 @@ struct ContentRoutingTableTest : public ::testing::Test {
   }
 
   std::unique_ptr<Config> config_;
-  std::shared_ptr<SchedulerMock> scheduler_;
+  std::shared_ptr<SchedulerStub> scheduler_;
   std::shared_ptr<Bus> bus_;
   std::unique_ptr<ContentRoutingTable> table_;
   PeerId self_id = "1"_peerid;
@@ -88,8 +97,8 @@ TEST_F(ContentRoutingTableTest, Provide) {
     for (size_t limit = 1; limit <= 20; ++limit) {
       auto found = table_->getProvidersFor(cid, limit);
       ASSERT_LE(found.size(), std::min(limit, config_->maxProvidersPerKey));
-      if (limit == 20){
-	      ASSERT_GE(found.size(), prev_count);
+      if (limit == 20) {
+        ASSERT_GE(found.size(), prev_count);
       }
     }
   }

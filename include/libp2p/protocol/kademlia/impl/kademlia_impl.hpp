@@ -40,7 +40,7 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<ContentRoutingTable> content_routing_table,
         std::shared_ptr<PeerRoutingTable> peer_routing_table,
         std::shared_ptr<Validator> validator,
-        std::shared_ptr<Scheduler> scheduler, std::shared_ptr<event::Bus> bus,
+        std::shared_ptr<basic::Scheduler> scheduler, std::shared_ptr<event::Bus> bus,
         std::shared_ptr<crypto::random::RandomGenerator> random_generator);
 
     ~KademliaImpl() override = default;
@@ -121,7 +121,7 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<ContentRoutingTable> content_routing_table_;
     std::shared_ptr<PeerRoutingTable> peer_routing_table_;
     std::shared_ptr<Validator> validator_;
-    std::shared_ptr<Scheduler> scheduler_;
+    std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<event::Bus> bus_;
     std::shared_ptr<crypto::random::RandomGenerator> random_generator_;
 
@@ -160,7 +160,7 @@ namespace libp2p::protocol::kademlia {
     // Random walk's auxiliary data
     struct {
       size_t iteration = 0;
-      scheduler::Handle handle{};
+      basic::Scheduler::Handle handle{};
     } random_walking_;
 
     log::SubLogger log_;

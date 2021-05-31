@@ -15,12 +15,11 @@ namespace libp2p::protocol::kademlia {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   std::atomic_size_t PutValueExecutor::instance_number = 0;
 
-  PutValueExecutor::PutValueExecutor(const Config &config,
-                                     std::shared_ptr<Host> host,
-                                     std::shared_ptr<Scheduler> scheduler,
-                                     std::shared_ptr<SessionHost> session_host,
-                                     ContentId key, ContentValue value,
-                                     std::vector<PeerId> addressees)
+  PutValueExecutor::PutValueExecutor(
+      const Config &config, std::shared_ptr<Host> host,
+      std::shared_ptr<basic::Scheduler> scheduler,
+      std::shared_ptr<SessionHost> session_host, ContentId key,
+      ContentValue value, std::vector<PeerId> addressees)
       : config_(config),
         host_(std::move(host)),
         scheduler_(std::move(scheduler)),
@@ -76,17 +75,17 @@ namespace libp2p::protocol::kademlia {
                  addressees_.size() - addressees_idx_);
 
       auto holder = std::make_shared<
-          std::pair<std::shared_ptr<PutValueExecutor>, scheduler::Handle>>();
+          std::pair<std::shared_ptr<PutValueExecutor>, basic::Scheduler::Handle>>();
 
       holder->first = shared_from_this();
-      holder->second = scheduler_->schedule(
-          scheduler::toTicks(config_.connectionTimeout), [holder] {
+      holder->second = scheduler_->scheduleWithHandle(
+          [holder] {
             if (holder->first) {
               holder->second.cancel();
               holder->first->onConnected(Error::TIMEOUT);
               holder->first.reset();
             }
-          });
+          }, config_.connectionTimeout);
 
       host_->newStream(
           peer_info, config_.protocolId,

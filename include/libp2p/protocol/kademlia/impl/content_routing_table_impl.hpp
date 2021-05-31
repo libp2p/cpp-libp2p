@@ -13,7 +13,6 @@
 #include <boost/multi_index/ordered_index_fwd.hpp>
 #include <boost/multi_index_container_fwd.hpp>
 
-#include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 
@@ -29,7 +28,7 @@ namespace libp2p::protocol::kademlia {
     struct Record {
       ContentId key;
       peer::PeerId peer;
-      scheduler::Ticks expire_time = scheduler::Ticks{};
+      Time expire_time = Time::zero();
     };
 
     /// Table of Record with 2 indices (by key and expire time)
@@ -43,7 +42,7 @@ namespace libp2p::protocol::kademlia {
             // ordered_non_unique by expire time means accending order
             mi::ordered_non_unique<
                 mi::tag<ByExpireTime>,
-                mi::member<Record, scheduler::Ticks, &Record::expire_time>>>>;
+                mi::member<Record, Time, &Record::expire_time>>>>;
 
   }  // namespace
 
@@ -51,10 +50,7 @@ namespace libp2p::protocol::kademlia {
       : public ContentRoutingTable,
         public std::enable_shared_from_this<ContentRoutingTableImpl> {
    public:
-    using Ticks = scheduler::Ticks;
-    using AbsTime = Ticks;
-
-    ContentRoutingTableImpl(const Config &config, Scheduler &scheduler,
+    ContentRoutingTableImpl(const Config &config, basic::Scheduler &scheduler,
                             std::shared_ptr<event::Bus> bus);
 
     ~ContentRoutingTableImpl() override;
@@ -68,10 +64,10 @@ namespace libp2p::protocol::kademlia {
     void onCleanupTimer();
 
     const Config& config_;
-    Scheduler &scheduler_;
+    basic::Scheduler &scheduler_;
     std::shared_ptr<event::Bus> bus_;
     std::unique_ptr<Table> table_;
-    Scheduler::Handle cleanup_timer_;
+    basic::Scheduler::Handle cleanup_timer_;
   };
 
 }  // namespace libp2p::protocol::kademlia
