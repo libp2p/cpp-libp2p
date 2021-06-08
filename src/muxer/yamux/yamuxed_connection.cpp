@@ -17,15 +17,6 @@ namespace libp2p::connection {
       return logger;
     }
 
-    inline size_t size(const gsl::span<uint8_t> &span) {
-      return static_cast<size_t>(span.size());
-    }
-
-    inline std::tuple<gsl::span<uint8_t>, gsl::span<uint8_t>> split(
-        gsl::span<uint8_t> span, size_t n) {
-      return {span.first(ssize_t(n)), span.subspan(ssize_t(n))};
-    }
-
     inline bool isOutbound(uint32_t our_stream_id, uint32_t their_stream_id) {
       // streams id oddness and evenness, depends on connection direction,
       // outbound or inbound, resp.

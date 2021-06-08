@@ -9,6 +9,7 @@
 #include <deque>
 
 #include <libp2p/basic/scheduler.hpp>
+#include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/multi/uvarint.hpp>
 
@@ -76,6 +77,9 @@ namespace libp2p::protocol::gossip {
 
     /// Handle for current operation timeout guard
     basic::Scheduler::Handle timeout_handle_;
+
+   public:
+    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::protocol::gossip::Stream);
   };
 
 }  // namespace libp2p::protocol::gossip

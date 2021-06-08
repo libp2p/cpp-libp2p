@@ -8,6 +8,7 @@
 
 #include <libp2p/connection/secure_connection.hpp>
 
+#include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
@@ -77,6 +78,9 @@ namespace libp2p::connection {
     size_t plaintext_len_to_write_;
     common::ByteArray writing_;
     log::Logger log_ = log::createLogger("NoiseConnection");
+
+   public:
+    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::connection::NoiseConnection);
   };
 }  // namespace libp2p::connection
 

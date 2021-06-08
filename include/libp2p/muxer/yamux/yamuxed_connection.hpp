@@ -10,6 +10,7 @@
 
 #include <libp2p/basic/read_buffer.hpp>
 #include <libp2p/basic/scheduler.hpp>
+#include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
 #include <libp2p/muxer/yamux/yamux_reading_state.hpp>
@@ -238,6 +239,9 @@ namespace libp2p::connection {
 
     /// Remote peer saved here
     peer::PeerId remote_peer_;
+
+   public:
+    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::connection::YamuxedConnection);
   };
 
 }  // namespace libp2p::connection

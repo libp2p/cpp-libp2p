@@ -13,6 +13,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
+#include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 
@@ -92,7 +93,7 @@ namespace libp2p::transport {
                   ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
-                        ReadCallbackFunc cb) override;
+                           ReadCallbackFunc cb) override;
 
     void write(gsl::span<const uint8_t> in, size_t bytes,
                WriteCallbackFunc cb) override;
@@ -143,6 +144,9 @@ namespace libp2p::transport {
     friend class security::TlsAdaptor;
 
     std::string debug_str_;
+
+   public:
+    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::transport::TcpConnection);
   };
 }  // namespace libp2p::transport
 

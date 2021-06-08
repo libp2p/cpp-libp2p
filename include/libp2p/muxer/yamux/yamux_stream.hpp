@@ -8,6 +8,7 @@
 
 #include <libp2p/basic/read_buffer.hpp>
 #include <libp2p/basic/write_queue.hpp>
+#include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/stream.hpp>
 
 namespace libp2p::connection {
@@ -196,6 +197,9 @@ namespace libp2p::connection {
 
     /// Close callback
     VoidResultHandlerFunc close_cb_;
+
+   public:
+    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::connection::YamuxStream);
   };
 
 }  // namespace libp2p::connection
