@@ -52,7 +52,7 @@ TEST(MetricsInstance, AddOne) {
 
 /**
  * @given one Foo
- * @when destoy Foo
+ * @when destroy Foo
  * @then Foo removed from metrics
  */
 TEST(MetricsInstance, RemoveOne) {
