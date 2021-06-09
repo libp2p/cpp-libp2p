@@ -15,7 +15,7 @@
   struct Libp2pMetricsInstanceCount {                                \
     static auto &count() {                                           \
       static auto &count = ([]() -> auto & {                         \
-        auto &state{libp2p::metrics::instance::State::get()};        \
+        auto &state{::libp2p::metrics::instance::State::get()};      \
         std::lock_guard lock{state.mutex};                           \
         return state.counts[key];                                    \
       })();                                                          \
