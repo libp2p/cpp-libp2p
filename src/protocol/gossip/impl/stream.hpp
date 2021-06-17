@@ -79,7 +79,7 @@ namespace libp2p::protocol::gossip {
     basic::Scheduler::Handle timeout_handle_;
 
    public:
-    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::protocol::gossip::Stream);
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::protocol::gossip::Stream);
   };
 
 }  // namespace libp2p::protocol::gossip

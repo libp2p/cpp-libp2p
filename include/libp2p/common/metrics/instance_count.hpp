@@ -36,6 +36,13 @@
 #define LIBP2P_METRICS_INSTANCE_COUNT(type) \
   _LIBP2P_METRICS_INSTANCE_COUNT(::type, #type)  // require qualified name
 
+#ifdef LIBP2P_METRICS_ENABLED
+#define LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(...) \
+  LIBP2P_METRICS_INSTANCE_COUNT(__VA_ARGS__)
+#else
+#define LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(...)
+#endif
+
 namespace libp2p::metrics::instance {
   struct State {
     std::mutex mutex;

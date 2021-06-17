@@ -50,7 +50,8 @@ namespace libp2p::protocol::gossip {
 
     explicit PeerContext(peer::PeerId id);
 
-    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::protocol::gossip::PeerContext);
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
+        libp2p::protocol::gossip::PeerContext);
   };
 
   /// Operators needed to place PeerContextPtr into PeerSet but use

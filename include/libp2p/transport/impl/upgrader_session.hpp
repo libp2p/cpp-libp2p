@@ -40,7 +40,8 @@ namespace libp2p::transport {
         outcome::result<std::shared_ptr<connection::SecureConnection>> rsecure);
 
    public:
-    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::transport::UpgraderSession);
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
+        libp2p::transport::UpgraderSession);
   };
 
 }  // namespace libp2p::transport

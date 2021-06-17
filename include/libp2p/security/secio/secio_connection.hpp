@@ -11,6 +11,7 @@
 #include <mutex>
 #include <queue>
 
+#include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/secure_connection.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
@@ -171,6 +172,10 @@ namespace libp2p::connection {
     std::shared_ptr<common::ByteArray> read_buffer_;
 
     log::Logger log_ = log::createLogger("SecIoConnection");
+
+   public:
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
+        libp2p::connection::SecioConnection);
   };
 }  // namespace libp2p::connection
 

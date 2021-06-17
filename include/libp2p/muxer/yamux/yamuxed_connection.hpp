@@ -241,7 +241,8 @@ namespace libp2p::connection {
     peer::PeerId remote_peer_;
 
    public:
-    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::connection::YamuxedConnection);
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
+        libp2p::connection::YamuxedConnection);
   };
 
 }  // namespace libp2p::connection

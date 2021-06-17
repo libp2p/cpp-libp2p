@@ -146,7 +146,7 @@ namespace libp2p::transport {
     std::string debug_str_;
 
    public:
-    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::transport::TcpConnection);
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::transport::TcpConnection);
   };
 }  // namespace libp2p::transport
 

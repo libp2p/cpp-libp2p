@@ -80,7 +80,8 @@ namespace libp2p::connection {
     log::Logger log_ = log::createLogger("NoiseConnection");
 
    public:
-    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::connection::NoiseConnection);
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
+        libp2p::connection::NoiseConnection);
   };
 }  // namespace libp2p::connection
 

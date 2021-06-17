@@ -199,7 +199,7 @@ namespace libp2p::connection {
     VoidResultHandlerFunc close_cb_;
 
    public:
-    LIBP2P_METRICS_INSTANCE_COUNT(libp2p::connection::YamuxStream);
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::connection::YamuxStream);
   };
 
 }  // namespace libp2p::connection
