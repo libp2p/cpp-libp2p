@@ -5,8 +5,6 @@
 
 #include <libp2p/connection/loopback_stream.hpp>
 
-#include <tuple>
-
 namespace libp2p::connection {
 
   namespace {
@@ -14,13 +12,6 @@ namespace libp2p::connection {
     void deferCallback(boost::asio::io_context &ctx,
                        std::weak_ptr<LoopbackStream> wptr, Callback cb,
                        Arg arg) {
-      cb(arg);
-      std::ignore = ctx;
-      std::ignore = wptr;
-      return;
-      // temporary workaround for kagome to fix blocks finalization
-
-
       // defers callback to the next event loop cycle,
       // cb will be called iff Loopbackstream is still exists
       boost::asio::post(
