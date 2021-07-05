@@ -6,6 +6,8 @@
 #ifndef LIBP2P_PROTOCOL_GOSSIP_PEER_CONTEXT_HPP
 #define LIBP2P_PROTOCOL_GOSSIP_PEER_CONTEXT_HPP
 
+#include <libp2p/common/metrics/instance_count.hpp>
+
 #include "common.hpp"
 
 namespace libp2p::protocol::gossip {
@@ -32,7 +34,7 @@ namespace libp2p::protocol::gossip {
     std::vector<std::shared_ptr<Stream>> inbound_streams;
 
     /// Dialing to this peer is banned until this timestamp
-    Time banned_until {0};
+    Time banned_until{0};
 
     /// Current dial attempts
     unsigned dial_attempts = 0;
@@ -47,6 +49,9 @@ namespace libp2p::protocol::gossip {
     PeerContext &operator=(PeerContext &&) = delete;
 
     explicit PeerContext(peer::PeerId id);
+
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
+        libp2p::protocol::gossip::PeerContext);
   };
 
   /// Operators needed to place PeerContextPtr into PeerSet but use
