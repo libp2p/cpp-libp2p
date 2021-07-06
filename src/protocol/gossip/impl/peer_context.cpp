@@ -3,18 +3,35 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "message_builder.hpp"
 #include "peer_context.hpp"
+
+#include "message_builder.hpp"
+
+#include <libp2p/log/logger.hpp>
 
 namespace libp2p::protocol::gossip {
 
   namespace {
+    static auto &log() {
+      static auto log{log::createLogger("gossip")};
+      return log;
+    }
 
     std::string makeStringRepr(const peer::PeerId &id) {
-      return id.toBase58().substr(46);
+      auto str{id.toBase58()};
+      constexpr size_t n{6};
+      if (str.size() < n) {
+        log()->warn("PeerContext PEER_ID_TOO_SHORT {}", str);
+        return str + ":PEER_ID_TOO_SHORT";
+      }
+      return str.substr(str.size() - n);
     }
 
   }  // namespace
+
+  PeerContext::~PeerContext() {
+    log()->info("~PeerContext({})", str);
+  }
 
   PeerContext::PeerContext(peer::PeerId id)
       : peer_id(std::move(id)),

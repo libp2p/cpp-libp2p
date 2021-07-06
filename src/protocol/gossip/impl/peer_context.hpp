@@ -42,7 +42,7 @@ namespace libp2p::protocol::gossip {
     /// If true, then outbound connection is in progress
     bool is_connecting = false;
 
-    ~PeerContext() = default;
+    ~PeerContext();
     PeerContext(PeerContext &&) = delete;
     PeerContext(const PeerContext &) = delete;
     PeerContext &operator=(const PeerContext &) = delete;

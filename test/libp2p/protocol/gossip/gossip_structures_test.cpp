@@ -9,6 +9,9 @@
 #include <gtest/gtest.h>
 #include "testutil/libp2p/peer.hpp"
 
+#include <libp2p/log/logger.hpp>
+#include <soralog/impl/fallback_configurator.hpp>
+
 // debug stuff, unpack if it's needed to debug and trace
 #define VERBOSE 0
 #if VERBOSE
@@ -17,6 +20,13 @@
 #endif
 
 namespace g = libp2p::protocol::gossip;
+
+TEST(Gossip, Setup) {
+  auto log = std::make_shared<soralog::LoggingSystem>(
+      std::make_shared<soralog::FallbackConfigurator>());
+  EXPECT_FALSE(log->configure().has_error);
+  libp2p::log::setLoggingSystem(log);
+}
 
 /**
  * @given An arbitrary TopicMessage
@@ -156,10 +166,10 @@ TEST(Gossip, PeerSet) {
  * @then We see that all messages are both inserted and expired properly
  */
 TEST(Gossip, MessageCache) {
-  constexpr g::Time msg_lifetime {20};
-  constexpr g::Time timer_interval {msg_lifetime / 2};
+  constexpr g::Time msg_lifetime{20};
+  constexpr g::Time timer_interval{msg_lifetime / 2};
 
-  g::Time current_time {1234567890000ll};  // typically timestamp
+  g::Time current_time{1234567890000ll};  // typically timestamp
   g::Time stop_time = current_time + g::Time{400};
   auto clock = [&current_time]() -> g::Time { return current_time; };
 
