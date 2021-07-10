@@ -47,11 +47,11 @@ namespace libp2p::protocol::gossip {
     libp2p::basic::VarintReader::readVarint(
         stream_,
         [self_wptr = weak_from_this(), this]
-            (boost::optional<multi::UVarint> varint_opt) {
+            (outcome::result<multi::UVarint> varint) {
           if (self_wptr.expired()) {
             return;
           }
-          onLengthRead(std::move(varint_opt));
+          onLengthRead(std::move(varint));
         }
     );
     // clang-format on
@@ -59,16 +59,16 @@ namespace libp2p::protocol::gossip {
     reading_ = true;
   }
 
-  void Stream::onLengthRead(boost::optional<multi::UVarint> varint_opt) {
+  void Stream::onLengthRead(outcome::result<multi::UVarint> varint) {
     if (!reading_) {
       return;
     }
-    if (!varint_opt) {
+    if (varint.has_error()) {
       reading_ = false;
-      feedback_(peer_, Error::READER_DISCONNECTED);
+      feedback_(peer_, varint.error());
       return;
     }
-    auto msg_len = varint_opt->toUInt64();
+    auto msg_len = varint.value().toUInt64();
 
     TRACE("reading {} bytes from {}:{}", msg_len, peer_->str, stream_id_);
 

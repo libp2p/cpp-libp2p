@@ -41,11 +41,10 @@ namespace libp2p::protocol::kademlia {
 
     libp2p::basic::VarintReader::readVarint(
         stream_,
-        [wp = weak_from_this()](boost::optional<multi::UVarint> varint_opt) {
+        [wp = weak_from_this()](outcome::result<multi::UVarint> varint) {
           if (auto self = wp.lock())
-            self->onLengthRead(std::move(varint_opt));
+            self->onLengthRead(std::move(varint));
         });
-
     setReadingTimeout();
     return true;
   }
@@ -98,7 +97,7 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  void Session::onLengthRead(boost::optional<multi::UVarint> varint_opt) {
+  void Session::onLengthRead(outcome::result<multi::UVarint> varint) {
     if (stream_->isClosedForRead()) {
       close(Error::STREAM_RESET);
       return;
@@ -108,12 +107,12 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    if (not varint_opt) {
-      close(Error::MESSAGE_PARSE_ERROR);
+    if (varint.has_error()) {
+      close(varint.error());
       return;
     }
 
-    auto msg_len = varint_opt->toUInt64();
+    auto msg_len = varint.value().toUInt64();
     inner_buffer_.resize(msg_len);
 
     stream_->read(gsl::span(inner_buffer_.data(), inner_buffer_.size()),
