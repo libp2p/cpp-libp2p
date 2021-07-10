@@ -59,6 +59,7 @@ namespace libp2p::protocol::kademlia {
 
     ++writing_;
 
+    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
     stream_->write(gsl::span(buffer->data(), buffer->size()), buffer->size(),
                    [wp = weak_from_this(), buffer,
                     response_handler](outcome::result<size_t> result) {
@@ -115,6 +116,7 @@ namespace libp2p::protocol::kademlia {
     auto msg_len = varint.value().toUInt64();
     inner_buffer_.resize(msg_len);
 
+    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
     stream_->read(gsl::span(inner_buffer_.data(), inner_buffer_.size()),
                   msg_len, [wp = weak_from_this()](auto &&res) {
                     if (auto self = wp.lock()) {
