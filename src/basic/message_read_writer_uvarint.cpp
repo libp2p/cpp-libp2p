@@ -24,12 +24,12 @@ namespace libp2p::basic {
     VarintReader::readVarint(
         conn_,
         [self{shared_from_this()}, cb = std::move(cb)](
-            boost::optional<multi::UVarint> varint_opt) mutable {
-          if (!varint_opt) {
-            return cb(MessageReadWriterError::VARINT_EXPECTED);
+            outcome::result<multi::UVarint> varint_res) mutable {
+          if (varint_res.has_error()) {
+            return cb(varint_res.error());
           }
 
-          auto msg_len = varint_opt->toUInt64();
+          auto msg_len = varint_res.value().toUInt64();
           if (0 != msg_len) {
             auto buffer = std::make_shared<std::vector<uint8_t>>(msg_len, 0);
             self->conn_->read(
@@ -40,8 +40,9 @@ namespace libp2p::basic {
                   }
                   cb(std::move(buffer));
                 });
-          } else
+          } else {
             cb(ResultType{});
+          }
         });
   }
 

@@ -49,7 +49,7 @@ namespace libp2p::protocol::kademlia {
     void close(outcome::result<void> = outcome::success());
 
    private:
-    void onLengthRead(boost::optional<multi::UVarint> varint_opt);
+    void onLengthRead(outcome::result<multi::UVarint> varint);
 
     void onMessageRead(outcome::result<size_t> res);
 
