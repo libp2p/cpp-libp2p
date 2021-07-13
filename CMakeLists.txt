@@ -108,6 +108,12 @@ endif()
 if(TESTING OR COVERAGE)
   enable_testing()
   add_subdirectory(test)
+
+  get_property(all_test_targets GLOBAL PROPERTY TEST_TARGETS)
+  add_custom_target(tests
+    DEPENDS ${all_test_targets}
+    COMMENT "Building project tests"
+    )
 endif()
 
 if (COVERAGE)

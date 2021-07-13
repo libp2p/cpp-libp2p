@@ -1,0 +1,125 @@
+name: Sanitizers
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  asan:
+    name: "ASAN"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      name: checkout
+      with:
+        submodules: true
+        clean: true
+    - name: "install dependencies"
+      run: |
+        set -e
+        sudo apt-get update || true
+        sudo apt-get install -y ninja-build
+        sudo python3 -m pip install --upgrade pip
+        sudo pip3 install scikit-build
+        sudo pip3 install cmake requests gitpython gcovr pyyaml
+    - name: "cmake"
+      env:
+        CC: clang
+        CXX: clang++
+        ASAN_OPTIONS: "halt_on_error=0"
+      run: cmake . -GNinja -Bbuild-asan -DTESTING=ON -DASAN=ON -DEXAMPLES=OFF
+    - name: "build"
+      run: cmake --build build-asan --target tests -- -j4
+    - name: "run"
+      env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+      run: cmake --build build-asan --target test
+
+  msan:
+    name: "MSAN"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      name: checkout
+      with:
+        submodules: true
+        clean: true
+    - name: "install dependencies"
+      run: |
+        set -e
+        sudo apt-get update || true
+        sudo apt-get install -y ninja-build
+        sudo python3 -m pip install --upgrade pip
+        sudo pip3 install scikit-build
+        sudo pip3 install cmake requests gitpython gcovr pyyaml
+    - name: "cmake"
+      env:
+        CC: clang
+        CXX: clang++
+      run: cmake . -GNinja -Bbuild-msan -DTESTING=ON -DMSAN=ON -DEXAMPLES=OFF
+    - name: "build"
+      run: cmake --build build-msan --target tests -- -j4
+    - name: "run"
+      env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+      run: cmake --build build-msan --target test
+
+  tsan:
+    name: "TSAN"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      name: checkout
+      with:
+        submodules: true
+        clean: true
+    - name: "install dependencies"
+      run: |
+        set -e
+        sudo apt-get update || true
+        sudo apt-get install -y ninja-build
+        sudo python3 -m pip install --upgrade pip
+        sudo pip3 install scikit-build
+        sudo pip3 install cmake requests gitpython gcovr pyyaml
+    - name: "cmake"
+      env:
+        CC: clang
+        CXX: clang++
+      run: cmake . -GNinja -Bbuild-tsan -DTESTING=OFF -DTSAN=ON -DEXAMPLES=ON
+    - name: "build"
+      run: cmake --build build-tsan --target example_ares_resolver -- -j4
+    - name: "run"
+      run: build-tsan/example/04-dnstxt/example_ares_resolver
+
+  ubsan:
+    name: "UBSAN"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      name: checkout
+      with:
+        submodules: true
+        clean: true
+    - name: "install dependencies"
+      run: |
+        set -e
+        sudo apt-get update || true
+        sudo apt-get install -y ninja-build
+        sudo python3 -m pip install --upgrade pip
+        sudo pip3 install scikit-build
+        sudo pip3 install cmake requests gitpython gcovr pyyaml
+    - name: "cmake"
+      env:
+        CC: clang
+        CXX: clang++
+      run: cmake . -GNinja -Bbuild-ubsan -DTESTING=ON -DUBSAN=ON -DEXAMPLES=OFF
+    - name: "build"
+      run: cmake --build build-ubsan --target tests -- -j4
+    - name: "run"
+      env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+      run: cmake --build build-ubsan --target test
