@@ -37,7 +37,7 @@ namespace libp2p::protocol::kademlia {
    public:
     GetValueExecutor(
         const Config &config, std::shared_ptr<Host> host,
-        std::shared_ptr<Scheduler> scheduler,
+        std::shared_ptr<basic::Scheduler> scheduler,
         std::shared_ptr<SessionHost> session_host,
         std::shared_ptr<PeerRouting> peer_routing,
         std::shared_ptr<ContentRoutingTable> content_routing_table,
@@ -51,7 +51,7 @@ namespace libp2p::protocol::kademlia {
     outcome::result<void> start();
 
     /// @see ResponseHandler::responseTimeout
-    scheduler::Ticks responseTimeout() const override;
+    Time responseTimeout() const override;
 
     /// @see ResponseHandler::match
     bool match(const Message &msg) const override;
@@ -73,7 +73,7 @@ namespace libp2p::protocol::kademlia {
     // Primary
     const Config &config_;
     std::shared_ptr<Host> host_;
-    std::shared_ptr<Scheduler> scheduler_;
+    std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
     std::shared_ptr<PeerRouting> peer_routing_;
     std::shared_ptr<ContentRoutingTable> content_routing_table_;

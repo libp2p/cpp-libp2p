@@ -29,7 +29,7 @@ namespace libp2p::protocol::kademlia {
    public:
     AddProviderExecutor(
         const Config &config, std::shared_ptr<Host> host,
-        std::shared_ptr<Scheduler> scheduler,
+        std::shared_ptr<basic::Scheduler> scheduler,
         std::shared_ptr<SessionHost> session_host,
         const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
         ContentId key);
@@ -52,7 +52,7 @@ namespace libp2p::protocol::kademlia {
     // Primary
     const Config &config_;
     std::shared_ptr<Host> host_;
-    std::shared_ptr<Scheduler> scheduler_;
+    std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
 
     // Secondary

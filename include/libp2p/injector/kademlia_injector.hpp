@@ -47,7 +47,7 @@ namespace libp2p::injector {
         injector
             .template create<std::shared_ptr<protocol::kademlia::Validator>>();
     [[maybe_unused]] auto scheduler =
-        injector.template create<std::shared_ptr<protocol::Scheduler>>();
+        injector.template create<std::shared_ptr<basic::Scheduler>>();
     [[maybe_unused]] auto random_generator = injector.template create<
         std::shared_ptr<crypto::random::RandomGenerator>>();
     [[maybe_unused]] auto bus =

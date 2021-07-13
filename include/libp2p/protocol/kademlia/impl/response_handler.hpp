@@ -7,7 +7,6 @@
 #define LIBP2P_PROTOCOL_KADEMLIA_RESPONSEHANDLER
 
 #include <libp2p/outcome/outcome.hpp>
-#include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
 
 namespace libp2p::protocol::kademlia {
@@ -19,7 +18,7 @@ namespace libp2p::protocol::kademlia {
     virtual ~ResponseHandler() = default;
 
     /// @returns timeout for response waiting
-    virtual scheduler::Ticks responseTimeout() const = 0;
+    virtual Time responseTimeout() const = 0;
 
     /// Check if message is accorded to request
     virtual bool match(const Message &msg) const = 0;

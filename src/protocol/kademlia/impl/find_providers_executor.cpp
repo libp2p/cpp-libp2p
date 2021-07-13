@@ -17,7 +17,7 @@ namespace libp2p::protocol::kademlia {
 
   FindProvidersExecutor::FindProvidersExecutor(
       const Config &config, std::shared_ptr<Host> host,
-      std::shared_ptr<Scheduler> scheduler,
+      std::shared_ptr<basic::Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
       const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
       ContentId content_id, FoundProvidersHandler handler)
@@ -75,14 +75,13 @@ namespace libp2p::protocol::kademlia {
 
     log_.debug("started");
 
-    scheduler_
-        ->schedule(scheduler::toTicks(config_.randomWalk.timeout),
-                   [wp = weak_from_this()] {
-                     if (auto self = wp.lock()) {
-                       self->done();
-                     }
-                   })
-        .detach();
+    scheduler_->schedule(
+        [wp = weak_from_this()] {
+          if (auto self = wp.lock()) {
+            self->done();
+          }
+        },
+        config_.randomWalk.timeout);
 
     spawn();
 
@@ -144,17 +143,18 @@ namespace libp2p::protocol::kademlia {
 
       auto holder =
           std::make_shared<std::pair<std::shared_ptr<FindProvidersExecutor>,
-                                     scheduler::Handle>>();
+                                     basic::Scheduler::Handle>>();
 
       holder->first = shared_from_this();
-      holder->second = scheduler_->schedule(
-          scheduler::toTicks(config_.connectionTimeout), [holder] {
+      holder->second = scheduler_->scheduleWithHandle(
+          [holder] {
             if (holder->first) {
               holder->second.cancel();
               holder->first->onConnected(Error::TIMEOUT);
               holder->first.reset();
             }
-          });
+          },
+          config_.connectionTimeout);
 
       host_->newStream(
           peer_info, config_.protocolId,
@@ -210,8 +210,8 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  scheduler::Ticks FindProvidersExecutor::responseTimeout() const {
-    return scheduler::toTicks(config_.responseTimeout);
+  Time FindProvidersExecutor::responseTimeout() const {
+    return config_.responseTimeout;
   }
 
   bool FindProvidersExecutor::match(const Message &msg) const {

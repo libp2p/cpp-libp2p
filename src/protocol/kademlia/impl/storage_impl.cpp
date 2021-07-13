@@ -17,7 +17,7 @@ namespace libp2p::protocol::kademlia {
 
   StorageImpl::StorageImpl(const Config &config,
                            std::shared_ptr<StorageBackend> backend,
-                           std::shared_ptr<Scheduler> scheduler)
+                           std::shared_ptr<basic::Scheduler> scheduler)
       : config_(config),
         backend_(std::move(backend)),
         scheduler_(std::move(scheduler)) {
@@ -27,9 +27,8 @@ namespace libp2p::protocol::kademlia {
 
     table_ = std::make_unique<Table>();
 
-    refresh_timer_ =
-        scheduler_->schedule(scheduler::toTicks(config_.storageWipingInterval),
-                             [this] { onRefreshTimer(); });
+    refresh_timer_ = scheduler_->scheduleWithHandle(
+        [this] { onRefreshTimer(); }, config_.storageWipingInterval);
   }
 
   StorageImpl::~StorageImpl() = default;
@@ -38,7 +37,7 @@ namespace libp2p::protocol::kademlia {
     OUTCOME_TRY(backend_->putValue(key, value));
 
     auto now = scheduler_->now();
-    auto expire_time = now + scheduler::toTicks(config_.storageRecordTTL);
+    auto expire_time = now + config_.storageRecordTTL;
 
     auto &idx = table_->get<ByKey>();
 
@@ -97,13 +96,11 @@ namespace libp2p::protocol::kademlia {
       }
 
       idx_by_refresing.modify(i, [this](auto &record) {
-        record.refresh_time +=
-            scheduler::toTicks(config_.storageRefreshInterval);
+        record.refresh_time += config_.storageRefreshInterval;
       });
     }
 
-    refresh_timer_.reschedule(
-        scheduler::toTicks(config_.storageRefreshInterval));
+    std::ignore = refresh_timer_.reschedule(config_.storageRefreshInterval);
   }
 
 }  // namespace libp2p::protocol::kademlia

@@ -11,7 +11,7 @@
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/peer_info.hpp>
 #include <libp2p/peer/protocol.hpp>
-#include <libp2p/protocol/common/scheduler.hpp>
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/protocol/kademlia/content_id.hpp>
 #include <libp2p/protocol/kademlia/content_value.hpp>
 
@@ -25,7 +25,7 @@ namespace libp2p::protocol::kademlia {
 
   using Key = ContentId;
   using Value = ContentValue;
-  using Time = scheduler::Ticks;
+  using Time = std::chrono::milliseconds;
   using ValueAndTime = std::pair<Value, Time>;
 
   using FoundPeerInfoHandler = std::function<void(outcome::result<PeerInfo>)>;
