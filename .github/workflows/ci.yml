@@ -51,9 +51,6 @@ jobs:
       env:
         CC: ${{ matrix.compiler.cc }}
         CXX: ${{ matrix.compiler.cxx }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # has to be included to access other secrets
-        GITHUB_HUNTER_USERNAME: ${{ secrets.GITHUB_HUNTER_USERNAME }}
-        GITHUB_HUNTER_TOKEN: ${{ secrets.GITHUB_HUNTER_TOKEN }}
       run: cmake . -GNinja -Bbuild
     - name: build
       run: cmake --build build -- -j4
