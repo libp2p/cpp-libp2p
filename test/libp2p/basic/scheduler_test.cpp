@@ -37,7 +37,8 @@ void shouldNotCompile() {
 
   // Need to make wrapper to avoid lvalues also in std::function args
 
-  auto fn = std::function([]() { log().debug("deferred w/o handle called"); });
+  auto fn = std::function<void()>(
+      []() { log().debug("deferred w/o handle called"); });
 
   // N.B. this comment left intentionally, must not compile (lvalue)
   // scheduler->schedule(fn);

@@ -9,9 +9,9 @@
 #include <libp2p/injector/host_injector.hpp>
 
 // implementations
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include <libp2p/protocol/common/asio/asio_scheduler.hpp>
-#include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/content_routing_table_impl.hpp>
 #include <libp2p/protocol/kademlia/impl/kademlia_impl.hpp>
@@ -47,7 +47,7 @@ namespace libp2p::injector {
         injector
             .template create<std::shared_ptr<protocol::kademlia::Validator>>();
     [[maybe_unused]] auto scheduler =
-        injector.template create<std::shared_ptr<protocol::Scheduler>>();
+        injector.template create<std::shared_ptr<basic::Scheduler>>();
     [[maybe_unused]] auto random_generator = injector.template create<
         std::shared_ptr<crypto::random::RandomGenerator>>();
     [[maybe_unused]] auto bus =
@@ -96,7 +96,6 @@ namespace libp2p::injector {
         // clang-format on
     );
   }
-
 
 }  // namespace libp2p::injector
 

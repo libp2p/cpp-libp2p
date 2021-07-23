@@ -16,7 +16,7 @@ namespace libp2p::basic {
         deferred_callbacks_(*backend_),
         timed_callbacks_(*backend_, config_.max_timer_threshold) {}
 
-  std::chrono::milliseconds SchedulerImpl::now() noexcept {
+  std::chrono::milliseconds SchedulerImpl::now() const noexcept {
     return backend_->now();
   }
 

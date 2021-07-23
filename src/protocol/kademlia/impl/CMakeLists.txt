@@ -16,7 +16,7 @@ libp2p_add_library(p2p_kademlia
     find_peer_executor.cpp
     )
 target_link_libraries(p2p_kademlia
-    asio_scheduler
+    p2p_basic_scheduler
     p2p_kademlia_message
     p2p_kademlia_error
     )
