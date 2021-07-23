@@ -52,9 +52,6 @@ namespace libp2p::protocol::kademlia {
       : public ContentRoutingTable,
         public std::enable_shared_from_this<ContentRoutingTableImpl> {
    public:
-    using Ticks = scheduler::Ticks;
-    using AbsTime = Ticks;
-
     ContentRoutingTableImpl(const Config &config, basic::Scheduler &scheduler,
                             std::shared_ptr<event::Bus> bus);
 
