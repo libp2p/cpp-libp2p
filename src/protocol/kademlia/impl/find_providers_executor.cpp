@@ -266,7 +266,9 @@ namespace libp2p::protocol::kademlia {
             host_->getPeerRepository().getAddressRepository().upsertAddresses(
                 peer.info.id,
                 gsl::span(peer.info.addresses.data(),
-                          peer.info.addresses.size()),
+                          static_cast<
+                              gsl::span<const multi::Multiaddress>::index_type>(
+                              peer.info.addresses.size())),
                 peer::ttl::kDay);
         if (not add_addr_res) {
           continue;
@@ -295,7 +297,9 @@ namespace libp2p::protocol::kademlia {
             host_->getPeerRepository().getAddressRepository().upsertAddresses(
                 peer.info.id,
                 gsl::span(peer.info.addresses.data(),
-                          peer.info.addresses.size()),
+                          static_cast<
+                              gsl::span<const multi::Multiaddress>::index_type>(
+                              peer.info.addresses.size())),
                 peer::ttl::kDay);
         if (not add_addr_res) {
           continue;

@@ -220,7 +220,10 @@ namespace libp2p::protocol::kademlia {
     auto upsert_res =
         host_->getPeerRepository().getAddressRepository().upsertAddresses(
             peer_info.id,
-            gsl::span(peer_info.addresses.data(), peer_info.addresses.size()),
+            gsl::span(
+                peer_info.addresses.data(),
+                static_cast<gsl::span<const multi::Multiaddress>::index_type>(
+                    peer_info.addresses.size())),
             permanent ? peer::ttl::kPermanent : peer::ttl::kDay);
     if (not upsert_res) {
       log_.debug("{} was skipped at addind to peer routing table: {}",
@@ -480,8 +483,11 @@ namespace libp2p::protocol::kademlia {
           [[maybe_unused]] auto res =
               host_->getPeerRepository().getAddressRepository().upsertAddresses(
                   peer.info.id,
-                  gsl::span(peer.info.addresses.data(),
-                            peer.info.addresses.size()),
+                  gsl::span(
+                      peer.info.addresses.data(),
+                      static_cast<
+                          gsl::span<const multi::Multiaddress>::index_type>(
+                          peer.info.addresses.size())),
                   peer::ttl::kDay);
         }
       }
