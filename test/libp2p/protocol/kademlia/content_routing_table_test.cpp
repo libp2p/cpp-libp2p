@@ -7,11 +7,9 @@
 #include <gtest/gtest.h>
 #include <unordered_set>
 
-#include <include/libp2p/protocol/common/asio/asio_scheduler.hpp>
 #include <libp2p/common/literals.hpp>
-#include "mock/libp2p/protocol/common/scheduler_mock.hpp"
+#include "mock/libp2p/basic/scheduler_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/outcome.hpp"
 
 using namespace libp2p;
 using namespace protocol;
@@ -29,10 +27,10 @@ struct ContentRoutingTableTest : public ::testing::Test {
   void SetUp() override {
     config_ = std::make_unique<Config>();
 
-    scheduler_ = std::make_shared<SchedulerMock>();
-    EXPECT_CALL(*scheduler_, scheduleImmediate()).Times(AnyNumber());
-    EXPECT_CALL(*scheduler_, now()).Times(AnyNumber());
-    EXPECT_CALL(*scheduler_, cancel(_)).Times(AnyNumber());
+    scheduler_ = std::make_shared<basic::SchedulerMock>();
+    EXPECT_CALL(*scheduler_, scheduleImplMockCall(_, _, _)).Times(AnyNumber());
+    EXPECT_CALL(*scheduler_, nowMockCall()).Times(AnyNumber());
+    EXPECT_CALL(*scheduler_, cancelMockCall(_)).Times(AnyNumber());
 
     bus_ = std::make_shared<Bus>();
 
@@ -41,7 +39,7 @@ struct ContentRoutingTableTest : public ::testing::Test {
   }
 
   std::unique_ptr<Config> config_;
-  std::shared_ptr<SchedulerMock> scheduler_;
+  std::shared_ptr<basic::SchedulerMock> scheduler_;
   std::shared_ptr<Bus> bus_;
   std::unique_ptr<ContentRoutingTable> table_;
   PeerId self_id = "1"_peerid;
@@ -88,8 +86,8 @@ TEST_F(ContentRoutingTableTest, Provide) {
     for (size_t limit = 1; limit <= 20; ++limit) {
       auto found = table_->getProvidersFor(cid, limit);
       ASSERT_LE(found.size(), std::min(limit, config_->maxProvidersPerKey));
-      if (limit == 20){
-	      ASSERT_GE(found.size(), prev_count);
+      if (limit == 20) {
+        ASSERT_GE(found.size(), prev_count);
       }
     }
   }

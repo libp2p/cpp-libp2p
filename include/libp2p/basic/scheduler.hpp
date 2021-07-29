@@ -49,7 +49,7 @@ namespace libp2p::basic {
      * Current async
      * @return Milliseconds elapsed from async's epoch
      */
-    virtual std::chrono::milliseconds now() noexcept = 0;
+    virtual std::chrono::milliseconds now() const noexcept = 0;
 
     /**
      * Implementation-defined defer or delay function.
@@ -191,7 +191,7 @@ namespace libp2p::basic {
      * Backend's async
      * @return milliseconds since async's epoch
      */
-    virtual std::chrono::milliseconds now() noexcept = 0;
+    virtual std::chrono::milliseconds now() const noexcept = 0;
 
     /**
      * Doesn't allow lvalue callbacks

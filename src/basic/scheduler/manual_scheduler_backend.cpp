@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "manual_scheduler_backend.hpp"
+#include <libp2p/basic/scheduler/manual_scheduler_backend.hpp>
 
 namespace libp2p::basic {
 

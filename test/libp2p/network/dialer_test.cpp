@@ -6,6 +6,7 @@
 #include "libp2p/network/impl/dialer_impl.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/basic/scheduler/manual_scheduler_backend.hpp>
 #include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/common/literals.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
@@ -17,7 +18,6 @@
 #include "mock/libp2p/peer/address_repository_mock.hpp"
 #include "mock/libp2p/protocol_muxer/protocol_muxer_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
-#include "testutil/async/manual_scheduler_backend.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/outcome.hpp"
 
@@ -279,8 +279,7 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
 
   outcome::result<std::shared_ptr<Stream>> r = std::errc::io_error;
 
-  EXPECT_CALL(*proto_muxer,
-              simpleStreamNegotiate(_, protocol, _))
+  EXPECT_CALL(*proto_muxer, simpleStreamNegotiate(_, protocol, _))
       .WillOnce(Arg2CallbackWithArg(r));
 
   bool executed = false;
@@ -310,8 +309,7 @@ TEST_F(DialerTest, NewStreamSuccess) {
   // newStream returns valid stream
   EXPECT_CALL(*connection, newStream(_)).WillOnce(Arg0CallbackWithArg(stream));
 
-  EXPECT_CALL(*proto_muxer,
-              simpleStreamNegotiate(_, protocol, _))
+  EXPECT_CALL(*proto_muxer, simpleStreamNegotiate(_, protocol, _))
       .WillOnce(Arg2CallbackWithArg(stream));
 
   bool executed = false;

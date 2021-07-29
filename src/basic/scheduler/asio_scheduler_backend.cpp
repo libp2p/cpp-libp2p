@@ -12,7 +12,7 @@ namespace libp2p::basic {
       std::shared_ptr<boost::asio::io_context> io_context)
       : io_context_(std::move(io_context)), timer_(*io_context_) {}
 
-  std::chrono::milliseconds AsioSchedulerBackend::now() noexcept {
+  std::chrono::milliseconds AsioSchedulerBackend::now() const noexcept {
     return nowImpl();
   }
 

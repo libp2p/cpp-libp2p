@@ -68,3 +68,11 @@ libp2p_add_library(p2p_asio_scheduler_backend
 target_link_libraries(p2p_asio_scheduler_backend
     p2p_basic_scheduler
     )
+
+libp2p_add_library(p2p_manual_scheduler_backend
+    scheduler/manual_scheduler_backend.cpp
+    )
+target_link_libraries(p2p_manual_scheduler_backend
+    p2p_basic_scheduler
+    )
+

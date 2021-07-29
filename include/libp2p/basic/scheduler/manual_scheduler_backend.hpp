@@ -25,7 +25,7 @@ namespace libp2p::basic {
     /**
      * @return Milliseconds since clock's epoch. Clock is set manually
      */
-    std::chrono::milliseconds now() noexcept override {
+    std::chrono::milliseconds now() const noexcept override {
       return current_clock_;
     }
 
@@ -45,8 +45,8 @@ namespace libp2p::basic {
     void shift(std::chrono::milliseconds delta);
 
     /**
-     * Shifts internal timer to the nearest timer event, executes everything (i.e.
-     * deferred and timed events) in between
+     * Shifts internal timer to the nearest timer event, executes everything
+     * (i.e. deferred and timed events) in between
      */
     void shiftToTimer();
 

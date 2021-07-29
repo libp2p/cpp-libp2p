@@ -26,6 +26,6 @@ addtest(scheduler_test
     scheduler_test.cpp
     )
 target_link_libraries(scheduler_test
-    p2p_async_testutil
+    p2p_manual_scheduler_backend
     p2p_asio_scheduler_backend
     )

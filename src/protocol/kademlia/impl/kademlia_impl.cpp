@@ -31,7 +31,8 @@ namespace libp2p::protocol::kademlia {
       std::shared_ptr<ContentRoutingTable> content_routing_table,
       std::shared_ptr<PeerRoutingTable> peer_routing_table,
       std::shared_ptr<Validator> validator,
-      std::shared_ptr<Scheduler> scheduler, std::shared_ptr<event::Bus> bus,
+      std::shared_ptr<basic::Scheduler> scheduler,
+      std::shared_ptr<event::Bus> bus,
       std::shared_ptr<crypto::random::RandomGenerator> random_generator)
       : config_(config),
         host_(std::move(host)),
@@ -186,10 +187,10 @@ namespace libp2p::protocol::kademlia {
           }
         }
         if (result.size() >= limit) {
-          scheduler_
-              ->schedule([handler = std::move(handler),
-                          result = std::move(result)] { handler(result); })
-              .detach();
+          scheduler_->schedule(
+              [handler = std::move(handler), result = std::move(result)] {
+                handler(result);
+              });
 
           log_.info("Found {} providers locally from host!", result.size());
           return outcome::success();
@@ -219,7 +220,10 @@ namespace libp2p::protocol::kademlia {
     auto upsert_res =
         host_->getPeerRepository().getAddressRepository().upsertAddresses(
             peer_info.id,
-            gsl::span(peer_info.addresses.data(), peer_info.addresses.size()),
+            gsl::span(
+                peer_info.addresses.data(),
+                static_cast<gsl::span<const multi::Multiaddress>::index_type>(
+                    peer_info.addresses.size())),
             permanent ? peer::ttl::kPermanent : peer::ttl::kDay);
     if (not upsert_res) {
       log_.debug("{} was skipped at addind to peer routing table: {}",
@@ -251,10 +255,10 @@ namespace libp2p::protocol::kademlia {
     // Try to find locally
     auto peer_info = host_->getPeerRepository().getPeerInfo(peer_id);
     if (not peer_info.addresses.empty()) {
-      scheduler_
-          ->schedule([handler = std::move(handler),
-                      peer_info = std::move(peer_info)] { handler(peer_info); })
-          .detach();
+      scheduler_->schedule(
+          [handler = std::move(handler), peer_info = std::move(peer_info)] {
+            handler(peer_info);
+          });
 
       log_.debug("{} found locally", peer_id.toBase58());
       return outcome::success();
@@ -357,7 +361,7 @@ namespace libp2p::protocol::kademlia {
     if (res) {
       auto &[value, expire] = res.value();
       msg.record = Message::Record{std::move(cid), std::move(value),
-                                   std::to_string(expire)};
+                                   std::to_string(expire.count())};
     }
 
     auto buffer = std::make_shared<std::vector<uint8_t>>();
@@ -479,8 +483,11 @@ namespace libp2p::protocol::kademlia {
           [[maybe_unused]] auto res =
               host_->getPeerRepository().getAddressRepository().upsertAddresses(
                   peer.info.id,
-                  gsl::span(peer.info.addresses.data(),
-                            peer.info.addresses.size()),
+                  gsl::span(
+                      peer.info.addresses.data(),
+                      static_cast<
+                          gsl::span<const multi::Multiaddress>::index_type>(
+                          peer.info.addresses.size())),
                   peer::ttl::kDay);
         }
       }
@@ -572,16 +579,15 @@ namespace libp2p::protocol::kademlia {
     auto iteration = random_walking_.iteration++;
 
     // if period end
-    scheduler::Ticks delay =
-        ((iteration % config_.randomWalk.queries_per_period) != 0)
-        ? scheduler::toTicks(config_.randomWalk.delay)
-        : scheduler::toTicks(config_.randomWalk.interval
-                             - config_.randomWalk.delay
-                                 * config_.randomWalk.queries_per_period);
+    Time delay = config_.randomWalk.delay;
+    if ((iteration % config_.randomWalk.queries_per_period) == 0) {
+      delay = config_.randomWalk.interval
+          - config_.randomWalk.delay * config_.randomWalk.queries_per_period;
+    }
 
     // Schedule next walking
     random_walking_.handle =
-        scheduler_->schedule(delay, [this] { randomWalk(); });
+        scheduler_->scheduleWithHandle([this] { randomWalk(); }, delay);
   }
 
   std::shared_ptr<Session> KademliaImpl::openSession(

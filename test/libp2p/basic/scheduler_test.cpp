@@ -6,9 +6,9 @@
 #include <gtest/gtest.h>
 
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
+#include <libp2p/basic/scheduler/manual_scheduler_backend.hpp>
 #include <libp2p/basic/scheduler/scheduler_impl.hpp>
 
-#include "testutil/async/manual_scheduler_backend.hpp"
 #include "testutil/outcome.hpp"
 #include "testutil/prepare_loggers.hpp"
 
@@ -37,7 +37,8 @@ void shouldNotCompile() {
 
   // Need to make wrapper to avoid lvalues also in std::function args
 
-  auto fn = std::function([]() { log().debug("deferred w/o handle called"); });
+  auto fn = std::function<void()>(
+      []() { log().debug("deferred w/o handle called"); });
 
   // N.B. this comment left intentionally, must not compile (lvalue)
   // scheduler->schedule(fn);

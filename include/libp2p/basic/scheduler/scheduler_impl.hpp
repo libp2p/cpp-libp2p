@@ -30,7 +30,7 @@ namespace libp2p::basic {
     using Ticket = Scheduler::Handle::Ticket;
 
     /// Returns current async
-    std::chrono::milliseconds now() noexcept override;
+    std::chrono::milliseconds now() const noexcept override;
 
     /// Scheduler API impl
     Handle scheduleImpl(Callback &&cb, std::chrono::milliseconds delay_from_now,
