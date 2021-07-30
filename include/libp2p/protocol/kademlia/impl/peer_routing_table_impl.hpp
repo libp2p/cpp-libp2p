@@ -59,105 +59,30 @@ namespace libp2p::protocol::kademlia {
    */
   class Bucket {
    public:
-    size_t size() const {
-      return peers_.size();
-    }
+    size_t size() const;
 
-    void append(const Bucket &bucket) {
-      peers_.insert(peers_.end(), bucket.peers_.begin(), bucket.peers_.end());
-    }
+    void append(const Bucket &bucket);
 
     // sort bucket in ascending order by XOR distance from node_id
-    void sort(const NodeId &node_id) {
-      XorDistanceComparator cmp(node_id);
-      peers_.sort(cmp);
-    }
+    void sort(const NodeId &node_id);
 
-    auto find(const peer::PeerId &p) {
-      return std::find_if(peers_.begin(), peers_.end(),
-                          [&p](const auto &i) { return i.peer_id == p; });
-    }
+    auto find(const peer::PeerId &p) const;
 
-    bool moveToFront(const PeerId &pid) {
-      auto it = find(pid);
-      if (it != peers_.end()) {
-        if (it != peers_.begin()) {
-          peers_.splice(peers_.begin(), peers_, it);
-        }
-        return false;
-      }
-      return true;
-    }
+    bool moveToFront(const PeerId &pid);
 
-    void emplaceToFront(const PeerId &pid, bool is_replaceable) {
-      peers_.emplace(peers_.begin(), pid, is_replaceable);
-    }
+    void emplaceToFront(const PeerId &pid, bool is_replaceable);
 
-    boost::optional<PeerId> removeReplaceableItem() {
-      boost::optional<PeerId> result;
+    boost::optional<PeerId> removeReplaceableItem();
 
-      for (auto it = peers_.rbegin(); it != peers_.rend(); ++it) {
-        if (it->is_replaceable) {
-          result = std::move(it->peer_id);
-          peers_.erase((++it).base());
-          break;
-        }
-      }
+    void truncate(size_t limit);
 
-      return result;
-    }
+    std::vector<peer::PeerId> peerIds() const;
 
-    void truncate(size_t limit) {
-      if (limit == 0) {
-        peers_.clear();
-      } else if (peers_.size() > limit) {
-        size_t n = peers_.size() - limit;
-        for (size_t i = 0; i < n; ++i) {
-          peers_.pop_back();
-        }
-      }
-    }
+    bool contains(const peer::PeerId &p) const;
 
-    std::vector<peer::PeerId> peerIds() const {
-      std::vector<peer::PeerId> peerIds;
-      peerIds.reserve(peers_.size());
-      std::transform(peers_.begin(), peers_.end(), std::back_inserter(peerIds),
-                     [](const auto &bpi) { return bpi.peer_id; });
-      return peerIds;
-    }
+    bool remove(const peer::PeerId &p);
 
-    bool contains(const peer::PeerId &p) {
-      return find(p) != peers_.end();
-    }
-
-    bool remove(const peer::PeerId &p) {
-      auto it = find(p);
-      if (it != peers_.end()) {
-        peers_.erase(it);
-        return true;
-      }
-
-      return false;
-    }
-
-    Bucket split(size_t commonLenPrefix, const NodeId &target) {
-      Bucket b{};
-
-      std::list<BucketPeerInfo> newPeers;
-
-      while (!peers_.empty()) {
-        auto it = peers_.begin();
-        if (it->node_id.commonPrefixLen(target) > commonLenPrefix) {
-          b.peers_.splice(b.peers_.end(), peers_, it);
-        } else {
-          newPeers.splice(newPeers.end(), peers_, it);
-        }
-      }
-
-      peers_.swap(newPeers);
-
-      return b;
-    }
+    Bucket split(size_t commonLenPrefix, const NodeId &target);
 
    private:
     std::list<BucketPeerInfo> peers_;

@@ -6,16 +6,14 @@
 #include <libp2p/multi/multihash.hpp>
 
 #include <boost/container_hash/hash.hpp>
+#include <libp2p/basic/varint_prefix_reader.hpp>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/log/logger.hpp>
-#include <libp2p/basic/varint_prefix_reader.hpp>
 
 using libp2p::common::ByteArray;
 using libp2p::common::hex_upper;
 using libp2p::common::unhex;
-
-#define THROW_IF_MOVED_OBJECT_ACCESSED 0
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, Multihash::Error, e) {
   using E = libp2p::multi::Multihash::Error;
@@ -66,7 +64,7 @@ namespace libp2p::multi {
   }
 
   const Multihash::Data &Multihash::data() const {
-#if THROW_IF_MOVED_OBJECT_ACCESSED
+#if NDEBUG
     if (data_ == nullptr) {
       log::createLogger("Multihash")->critical("attempt to use moved object");
       throw std::runtime_error("attempt to use moved multihash");
@@ -111,7 +109,7 @@ namespace libp2p::multi {
       return Error::INPUT_TOO_SHORT;
     }
 
-    uint8_t length = b[0];
+    const uint8_t length = b[0];
     gsl::span<const uint8_t> hash = b.subspan(1);
 
     if (length == 0) {
