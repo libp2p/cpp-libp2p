@@ -9,7 +9,8 @@
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 
 #include <boost/assert.hpp>
-#include <deque>
+#include <boost/optional.hpp>
+#include <list>
 
 #include <libp2p/event/bus.hpp>
 #include <libp2p/log/sublogger.hpp>
@@ -50,58 +51,41 @@ namespace libp2p::protocol::kademlia {
       return std::memcmp(d1.data(), d2.data(), size) < 0;
     }
 
-    Hash256 hfrom;
+    Hash256 hfrom{};
   };
+
   /**
    * Single bucket which holds peers.
    */
-  class Bucket : public std::deque<BucketPeerInfo> {
+  class Bucket {
    public:
-    void truncate(size_t limit) {
-      if (size() > limit) {
-        erase(std::next(begin(), limit), end());
-      }
-    }
+    size_t size() const;
 
-    std::vector<peer::PeerId> peerIds() const {
-      std::vector<peer::PeerId> peerIds;
-      peerIds.reserve(size());
-      std::transform(begin(), end(), std::back_inserter(peerIds),
-                     [](const auto &bpi) { return bpi.peer_id; });
-      return peerIds;
-    }
+    void append(const Bucket &bucket);
 
-    bool contains(const peer::PeerId &p) {
-      auto it = std::find_if(begin(), end(),
-                             [=](const auto &bpi) { return bpi.peer_id == p; });
-      return it != end();
-    }
+    // sort bucket in ascending order by XOR distance from node_id
+    void sort(const NodeId &node_id);
 
-    bool remove(const peer::PeerId &p) {
-      // this shifts elements to the end
-      auto it = std::remove_if(
-          begin(), end(), [&](const auto &bpi) { return bpi.peer_id == p; });
-      if (it != end()) {
-        erase(it);
-        return true;
-      }
+    auto find(const peer::PeerId &p) const;
 
-      return false;
-    }
+    bool moveToFront(const PeerId &pid);
 
-    Bucket split(size_t commonLenPrefix, const NodeId &target) {
-      Bucket b{};
-      // remove shifts all elements "to be removed" to the end, other elements
-      // preserve their relative order
-      auto new_end = std::remove_if(begin(), end(), [&](const auto &bpi) {
-        return bpi.node_id.commonPrefixLen(target) > commonLenPrefix;
-      });
+    void emplaceToFront(const PeerId &pid, bool is_replaceable);
 
-      b.assign(std::make_move_iterator(new_end),
-               std::make_move_iterator(end()));
+    boost::optional<PeerId> removeReplaceableItem();
 
-      return b;
-    }
+    void truncate(size_t limit);
+
+    std::vector<peer::PeerId> peerIds() const;
+
+    bool contains(const peer::PeerId &p) const;
+
+    bool remove(const peer::PeerId &p);
+
+    Bucket split(size_t commonLenPrefix, const NodeId &target);
+
+   private:
+    std::list<BucketPeerInfo> peers_;
   };
 
   class PeerRoutingTableImpl
@@ -122,7 +106,7 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<event::Bus> bus);
 
     outcome::result<bool> update(const peer::PeerId &pid, bool is_permanent,
-                                 bool is_connected=false) override;
+                                 bool is_connected = false) override;
 
     void remove(const peer::PeerId &peer_id) override;
 
