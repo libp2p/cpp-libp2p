@@ -34,8 +34,12 @@ namespace libp2p::protocol::gossip {
     GossipCore(GossipCore &&) = delete;
     GossipCore &operator=(GossipCore &&) = delete;
 
-    GossipCore(Config config, std::shared_ptr<basic::Scheduler> scheduler,
-               std::shared_ptr<Host> host);
+    GossipCore(
+        Config config, std::shared_ptr<basic::Scheduler> scheduler,
+        std::shared_ptr<Host> host,
+        std::shared_ptr<peer::IdentityManager> idmgr,
+        std::shared_ptr<crypto::CryptoProvider> crypto_provider,
+        std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
     ~GossipCore() override = default;
 
@@ -52,6 +56,8 @@ namespace libp2p::protocol::gossip {
     Subscription subscribe(TopicSet topics,
                            SubscriptionCallback callback) override;
     bool publish(const TopicSet &topic, ByteArray data) override;
+
+    outcome::result<void> signMessage(TopicMessage &msg) const;
 
     // MessageReceiver overrides
     void onSubscription(const PeerContextPtr &from, bool subscribe,
@@ -90,6 +96,12 @@ namespace libp2p::protocol::gossip {
 
     /// Host (interface to libp2p network)
     std::shared_ptr<Host> host_;
+
+    std::shared_ptr<peer::IdentityManager> idmgr_;
+
+    std::shared_ptr<crypto::CryptoProvider> crypto_provider_;
+
+    std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
 
     /// This peer's id
     peer::PeerId local_peer_id_;

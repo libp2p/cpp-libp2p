@@ -8,6 +8,9 @@
 #include <cassert>
 
 #include <libp2p/common/hexutil.hpp>
+#include <libp2p/crypto/crypto_provider.hpp>
+#include <libp2p/crypto/key_marshaller.hpp>
+#include <libp2p/peer/identity_manager.hpp>
 
 #include "connectivity.hpp"
 #include "local_subscriptions.hpp"
@@ -16,16 +19,25 @@
 
 namespace libp2p::protocol::gossip {
 
-  std::shared_ptr<Gossip> create(std::shared_ptr<basic::Scheduler> scheduler,
-                                 std::shared_ptr<Host> host, Config config) {
+  std::shared_ptr<Gossip> create(
+      std::shared_ptr<basic::Scheduler> scheduler, std::shared_ptr<Host> host,
+      std::shared_ptr<peer::IdentityManager> idmgr,
+      std::shared_ptr<crypto::CryptoProvider> crypto_provider,
+      std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
+      Config config) {
     return std::make_shared<GossipCore>(std::move(config), std::move(scheduler),
-                                        std::move(host));
+                                        std::move(host), std::move(idmgr),
+                                        std::move(crypto_provider),
+                                        std::move(key_marshaller));
   }
 
   // clang-format off
   GossipCore::GossipCore(Config config,
                          std::shared_ptr<basic::Scheduler> scheduler,
-                         std::shared_ptr<Host> host)
+                         std::shared_ptr<Host> host,
+                         std::shared_ptr<peer::IdentityManager> idmgr,
+                         std::shared_ptr<crypto::CryptoProvider> crypto_provider,
+                         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller)
       : config_(std::move(config)),
         create_message_id_([](const ByteArray &from, const ByteArray &seq,
                               const ByteArray &data){
@@ -33,6 +45,9 @@ namespace libp2p::protocol::gossip {
         }),
         scheduler_(std::move(scheduler)),
         host_(std::move(host)),
+        idmgr_(std::move(idmgr)),
+        crypto_provider_(std::move(crypto_provider)),
+        key_marshaller_(std::move(key_marshaller)),
         local_peer_id_(host_->getPeerInfo().id),
         msg_cache_(
             config_.message_cache_lifetime_msec,
@@ -124,7 +139,7 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::setValidator(const TopicId &topic, Validator validator) {
     assert(validator);
-    auto sub = subscribe({topic}, [](SubscriptionData) {});
+    auto sub = subscribe({topic}, [](const SubscriptionData &) {});
     validators_[topic] = {std::move(validator), std::move(sub)};
   }
 
@@ -152,6 +167,13 @@ namespace libp2p::protocol::gossip {
 
     msg->topic_ids.assign(topics.begin(), topics.end());
 
+    if (config_.sign_messages) {
+      auto res = signMessage(*msg);
+      if (!res) {
+        log_.warn("signMessage error: {}", res.error().message());
+      }
+    }
+
     MessageId msg_id = create_message_id_(msg->from, msg->seq_no, msg->data);
 
     [[maybe_unused]] bool inserted = msg_cache_.insert(msg, msg_id);
@@ -164,6 +186,19 @@ namespace libp2p::protocol::gossip {
     }
 
     return true;
+  }
+
+  outcome::result<void> GossipCore::signMessage(TopicMessage &msg) const {
+    const auto &keypair = idmgr_->getKeyPair();
+    OUTCOME_TRY(signable, MessageBuilder::signableMessage(msg));
+    OUTCOME_TRY(signature,
+                crypto_provider_->sign(signable, keypair.privateKey));
+    msg.signature = std::move(signature);
+    if (idmgr_->getId().toMultihash().getType() != multi::HashType::identity) {
+      OUTCOME_TRY(key, key_marshaller_->marshal(keypair.publicKey));
+      msg.key = std::move(key.key);
+    }
+    return outcome::success();
   }
 
   void GossipCore::onSubscription(const PeerContextPtr &peer, bool subscribe,
