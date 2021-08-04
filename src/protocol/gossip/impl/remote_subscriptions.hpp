@@ -6,8 +6,8 @@
 #ifndef LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP
 #define LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP
 
-#include <libp2p/log/sublogger.hpp>
 #include <libp2p/basic/scheduler.hpp>
+#include <libp2p/log/sublogger.hpp>
 
 #include "topic_subscriptions.hpp"
 
@@ -36,9 +36,6 @@ namespace libp2p::protocol::gossip {
 
     /// Returns if topic exists in the table
     bool hasTopic(const TopicId &topic) const;
-
-    /// Returns if at least one of topics exists in the table
-    bool hasTopics(const TopicList &topics) const;
 
     /// Remote peer adds topic into its mesh
     void onGraft(const PeerContextPtr &peer, const TopicId &topic);

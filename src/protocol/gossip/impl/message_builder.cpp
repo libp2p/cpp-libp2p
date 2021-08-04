@@ -19,9 +19,7 @@ namespace libp2p::protocol::gossip {
     }
   }  // namespace
 
-  MessageBuilder::MessageBuilder()
-      : empty_(true),
-        control_not_empty_(false) {}
+  MessageBuilder::MessageBuilder() : empty_(true), control_not_empty_(false) {}
 
   MessageBuilder::~MessageBuilder() = default;
 
@@ -160,9 +158,7 @@ namespace libp2p::protocol::gossip {
     dst->set_from(msg.from.data(), msg.from.size());
     dst->set_data(msg.data.data(), msg.data.size());
     dst->set_seqno(msg.seq_no.data(), msg.seq_no.size());
-    for (const auto &id : msg.topic_ids) {
-      *dst->add_topicids() = id;
-    }
+    dst->set_topic(msg.topic);
     if (msg.signature) {
       dst->set_signature(msg.signature.value().data(),
                          msg.signature.value().size());

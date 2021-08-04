@@ -124,7 +124,7 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::setValidator(const TopicId &topic, Validator validator) {
     assert(validator);
-    auto sub = subscribe({topic}, [](SubscriptionData) {});
+    auto sub = subscribe({topic}, [](const SubscriptionData &) {});
     validators_[topic] = {std::move(validator), std::move(sub)};
   }
 
@@ -142,15 +142,13 @@ namespace libp2p::protocol::gossip {
                                            std::move(callback));
   }
 
-  bool GossipCore::publish(const TopicSet &topics, ByteArray data) {
-    if (!started_ || topics.empty()) {
+  bool GossipCore::publish(TopicId topic, ByteArray data) {
+    if (!started_) {
       return false;
     }
 
-    auto msg = std::make_shared<TopicMessage>(local_peer_id_, ++msg_seq_,
-                                              std::move(data));
-
-    msg->topic_ids.assign(topics.begin(), topics.end());
+    auto msg = std::make_shared<TopicMessage>(
+        local_peer_id_, ++msg_seq_, std::move(data), std::move(topic));
 
     MessageId msg_id = create_message_id_(msg->from, msg->seq_no, msg->data);
 
@@ -230,7 +228,7 @@ namespace libp2p::protocol::gossip {
     assert(started_);
 
     // do we need this message?
-    auto subscribed = remote_subscriptions_->hasTopics(msg->topic_ids);
+    auto subscribed = remote_subscriptions_->hasTopic(msg->topic);
     if (!subscribed) {
       // ignore this message
       return;
@@ -250,12 +248,9 @@ namespace libp2p::protocol::gossip {
     bool valid = true;
 
     if (!validators_.empty()) {
-      for (const auto &topic : msg->topic_ids) {
-        auto it = validators_.find(topic);
-        if (it != validators_.end()) {
-          valid = it->second.validator(msg->from, msg->data);
-          break;
-        }
+      auto it = validators_.find(msg->topic);
+      if (it != validators_.end()) {
+        valid = it->second.validator(msg->from, msg->data);
       }
     }
 

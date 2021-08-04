@@ -31,7 +31,8 @@ namespace libp2p::protocol::gossip {
     } else {
       pb_msg_->Clear();
     }
-    return pb_msg_->ParseFromArray(bytes.data(), bytes.size());
+    return pb_msg_->ParseFromArray(bytes.data(),
+                                   static_cast<int>(bytes.size()));
   }
 
   void MessageParser::dispatch(const PeerContextPtr &from,
@@ -103,15 +104,12 @@ namespace libp2p::protocol::gossip {
     }
 
     for (const auto &m : pb_msg_->publish()) {
-      if (!m.has_from() || !m.has_data() || !m.has_seqno()
-          || m.topicids_size() == 0) {
+      if (!m.has_from() || !m.has_data() || !m.has_seqno() || !m.has_topic()) {
         continue;
       }
       auto message = std::make_shared<TopicMessage>(
           fromString(m.from()), fromString(m.seqno()), fromString(m.data()));
-      for (const auto &tid : m.topicids()) {
-        message->topic_ids.push_back(tid);
-      }
+      message->topic = m.topic();
       if (m.has_signature()) {
         message->signature = fromString(m.signature());
       }

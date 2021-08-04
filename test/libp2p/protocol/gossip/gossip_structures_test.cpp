@@ -7,14 +7,8 @@
 #include "src/protocol/gossip/impl/peer_set.hpp"
 
 #include <gtest/gtest.h>
-#include "testutil/libp2p/peer.hpp"
 
-// debug stuff, unpack if it's needed to debug and trace
-#define VERBOSE 0
-#if VERBOSE
-#include <fmt/format.h>
-#define TR(var) fmt::print("{}: {}={}\n", __LINE__, #var, var)
-#endif
+#include "testutil/libp2p/peer.hpp"
 
 namespace g = libp2p::protocol::gossip;
 
@@ -27,8 +21,8 @@ namespace g = libp2p::protocol::gossip;
 TEST(Gossip, TopicMessageHasValidFields) {
   auto peer = testutil::randomPeerId();
 
-  auto msg = std::make_shared<g::TopicMessage>(peer, 0x2233445566778899ull,
-                                               g::fromString("hahaha"));
+  auto msg = std::make_shared<g::TopicMessage>(
+      peer, 0x2233445566778899ull, g::fromString("hahaha"), "topic");
   // peer is encoded properly
   auto peer_res = peerFrom(*msg);
   ASSERT_TRUE(peer_res);
@@ -156,10 +150,10 @@ TEST(Gossip, PeerSet) {
  * @then We see that all messages are both inserted and expired properly
  */
 TEST(Gossip, MessageCache) {
-  constexpr g::Time msg_lifetime {20};
-  constexpr g::Time timer_interval {msg_lifetime / 2};
+  constexpr g::Time msg_lifetime{20};
+  constexpr g::Time timer_interval{msg_lifetime / 2};
 
-  g::Time current_time {1234567890000ll};  // typically timestamp
+  g::Time current_time{1234567890000ll};  // typically timestamp
   g::Time stop_time = current_time + g::Time{400};
   auto clock = [&current_time]() -> g::Time { return current_time; };
 
@@ -176,9 +170,8 @@ TEST(Gossip, MessageCache) {
   // insert helper function
   auto insertMessage = [&](const g::TopicId &topic) {
     auto msg = std::make_shared<g::TopicMessage>(testutil::randomPeerId(),
-                                                 seq++, fake_body);
+                                                 seq++, fake_body, topic);
     auto msg_id = g::createMessageId(msg->from, msg->seq_no, msg->data);
-    msg->topic_ids.push_back(topic);
     ASSERT_TRUE(cache.insert(msg, msg_id));
     inserted_messages.emplace_back(current_time, std::move(msg_id));
   };
