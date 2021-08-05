@@ -113,13 +113,17 @@ int main(int argc, char *argv[]) {
   // create gossip node
   auto gossip = libp2p::protocol::gossip::create(
       injector.create<std::shared_ptr<libp2p::basic::Scheduler>>(), host,
+      injector.create<std::shared_ptr<libp2p::peer::IdentityManager>>(),
+      injector.create<std::shared_ptr<libp2p::crypto::CryptoProvider>>(),
+      injector
+          .create<std::shared_ptr<libp2p::crypto::marshaller::KeyMarshaller>>(),
       std::move(config));
 
   using Message = libp2p::protocol::gossip::Gossip::Message;
 
   // subscribe to chat topic, print messages to the console
   auto subscription = gossip->subscribe(
-      {options->topic}, [](boost::optional<const Message &> m) {
+      {options->topic}, [](const boost::optional<const Message &> &m) {
         if (!m) {
           // message with no value means EOS, this occurs when the node has
           // stopped

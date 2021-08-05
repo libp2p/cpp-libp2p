@@ -52,7 +52,8 @@ namespace libp2p::protocol::example::utility {
     boost::asio::ip::tcp::resolver resolver(io);
     boost::asio::ip::tcp::resolver::query query(boost::asio::ip::host_name(),
                                                 "");
-    boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
+    boost::system::error_code ec;
+    boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query, ec);
     boost::asio::ip::tcp::resolver::iterator end;
     std::string addr("127.0.0.1");
     while (it != end) {

@@ -23,10 +23,10 @@ namespace libp2p::protocol::gossip {
   /// into bytes before sending into wire
   class MessageBuilder {
    public:
-    MessageBuilder(MessageBuilder&&) = default;
-    MessageBuilder& operator=(MessageBuilder&&) = default;
-    MessageBuilder(const MessageBuilder&) = delete;
-    MessageBuilder& operator=(const MessageBuilder&) = delete;
+    MessageBuilder(MessageBuilder &&) = default;
+    MessageBuilder &operator=(MessageBuilder &&) = default;
+    MessageBuilder(const MessageBuilder &) = delete;
+    MessageBuilder &operator=(const MessageBuilder &) = delete;
 
     MessageBuilder();
 
@@ -59,6 +59,8 @@ namespace libp2p::protocol::gossip {
     /// Adds message to be forwarded
     void addMessage(const TopicMessage &msg, const MessageId &msg_id);
 
+    static outcome::result<ByteArray> signableMessage(const TopicMessage &msg);
+
    private:
     /// Creates protobuf structures if needed
     void create_protobuf_structures();
@@ -81,6 +83,6 @@ namespace libp2p::protocol::gossip {
     /// Used to prevent duplicate forwarding
     std::unordered_set<MessageId> messages_added_;
   };
-} //namespace libp2p::protocol::gossip
+}  // namespace libp2p::protocol::gossip
 
 #endif  // LIBP2P_PROTOCOL_GOSSIP_MESSAGE_BUILDER_HPP

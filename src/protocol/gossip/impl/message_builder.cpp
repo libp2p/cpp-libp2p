@@ -169,4 +169,22 @@ namespace libp2p::protocol::gossip {
     empty_ = false;
   }
 
+  outcome::result<ByteArray> MessageBuilder::signableMessage(
+      const TopicMessage &msg) {
+    pubsub::pb::Message pb_msg;
+    pb_msg.set_from(msg.from.data(), msg.from.size());
+    pb_msg.set_data(msg.data.data(), msg.data.size());
+    pb_msg.set_seqno(msg.seq_no.data(), msg.seq_no.size());
+    pb_msg.set_topic(msg.topic);
+    constexpr std::string_view kPrefix{"libp2p-pubsub:"};
+    auto size = pb_msg.ByteSizeLong();
+    ByteArray signable;
+    signable.resize(kPrefix.size() + size);
+    std::copy(kPrefix.begin(), kPrefix.end(), signable.begin());
+    if (!pb_msg.SerializeToArray(&signable[kPrefix.size()],
+                                 static_cast<int>(size))) {
+      return outcome::failure(Error::MESSAGE_SERIALIZE_ERROR);
+    }
+    return signable;
+  }
 }  // namespace libp2p::protocol::gossip

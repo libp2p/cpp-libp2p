@@ -24,6 +24,15 @@ namespace libp2p {
   namespace basic {
     class Scheduler;
   }
+  namespace crypto {
+    class CryptoProvider;
+    namespace marshaller {
+      class KeyMarshaller;
+    }
+  }  // namespace crypto
+  namespace peer {
+    class IdentityManager;
+  }
 }  // namespace libp2p
 
 namespace libp2p::protocol::gossip {
@@ -79,6 +88,9 @@ namespace libp2p::protocol::gossip {
 
     /// Protocol version
     std::string protocol_version = "/meshsub/1.0.0";
+
+    /// Sign published messages
+    bool sign_messages = false;
   };
 
   using common::ByteArray;
@@ -142,9 +154,12 @@ namespace libp2p::protocol::gossip {
   };
 
   // Creates Gossip object
-  std::shared_ptr<Gossip> create(std::shared_ptr<basic::Scheduler> scheduler,
-                                 std::shared_ptr<Host> host,
-                                 Config config = Config{});
+  std::shared_ptr<Gossip> create(
+      std::shared_ptr<basic::Scheduler> scheduler, std::shared_ptr<Host> host,
+      std::shared_ptr<peer::IdentityManager> idmgr,
+      std::shared_ptr<crypto::CryptoProvider> crypto_provider,
+      std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
+      Config config = Config{});
 
 }  // namespace libp2p::protocol::gossip
 
