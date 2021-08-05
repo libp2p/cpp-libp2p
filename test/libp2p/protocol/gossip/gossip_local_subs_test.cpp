@@ -5,8 +5,9 @@
 
 #include "src/protocol/gossip/impl/local_subscriptions.hpp"
 
-#include <gtest/gtest.h>
 #include <fmt/format.h>
+#include <gtest/gtest.h>
+
 #include "testutil/libp2p/peer.hpp"
 
 // debug stuff, unpack if it's needed to debug and trace
@@ -16,13 +17,12 @@ namespace g = libp2p::protocol::gossip;
 
 namespace {
 
-  // creates topic message for testing purposes
-  g::TopicMessage::Ptr createTestMessage(g::TopicList topics, uint64_t seq) {
-    std::string body = fmt::format("{}:{}", seq, fmt::join(topics, "-"));
+  void forwardTestMessage(std::shared_ptr<g::LocalSubscriptions> subs,
+                          g::TopicId topic, uint64_t seq) {
+    std::string body = fmt::format("{}:{}", seq, topic);
     auto msg = std::make_shared<g::TopicMessage>(testutil::randomPeerId(), seq,
-                                                 g::fromString(body));
-    msg->topic_ids = std::move(topics);
-    return msg;
+                                                 g::fromString(body), topic);
+    subs->forwardMessage(msg);
   }
 
   std::shared_ptr<g::LocalSubscriptions> createSubscriptions(
@@ -34,17 +34,6 @@ namespace {
       };
     }
     return std::make_shared<g::LocalSubscriptions>(std::move(cb));
-  }
-
-  // returns if topic containers intersect
-  template <typename ContainerX, typename ContainerY>
-  bool intersect(const ContainerX &x, const ContainerY &y) {
-    for (const auto &topic : x) {
-      if (y.count(topic) != 0) {
-        return true;
-      }
-    }
-    return false;
   }
 
   // per-subscription context
@@ -61,7 +50,7 @@ namespace {
         ASSERT_TRUE(d.has_value());
 
         // topic sets must intersect
-        ASSERT_TRUE(intersect(d->topics, topics));
+        ASSERT_TRUE(topics.count(d->topic));
 
         // messages should not appear more than once
         ASSERT_EQ(received.count(d->data), 0);
@@ -100,11 +89,11 @@ TEST(Gossip, OneSubscription) {
   uint64_t seq = 0;
 
   for (size_t i = 0; i < 3; ++i) {
-    subs->forwardMessage(createTestMessage({"1"}, seq++));
-    subs->forwardMessage(createTestMessage({"1", "2"}, seq++));
-    subs->forwardMessage(createTestMessage({"2"}, seq++));
-    subs->forwardMessage(createTestMessage({"2", "3"}, seq++));
-    subs->forwardMessage(createTestMessage({"3"}, seq++));
+    forwardTestMessage(subs, "1", seq++);
+    forwardTestMessage(subs, "2", seq++);
+    forwardTestMessage(subs, "1", seq++);
+    forwardTestMessage(subs, "2", seq++);
+    forwardTestMessage(subs, "3", seq++);
     if (i == 1) {
       // unsubscribing in the middle...
       ctx.unsubscribe();
@@ -139,10 +128,10 @@ TEST(Gossip, MultipleSubscriptons) {
   }
 
   uint64_t seq = 0;
-  subs->forwardMessage(createTestMessage({"3"}, seq++));
-  subs->forwardMessage(createTestMessage({"3", "2"}, seq++));
-  subs->forwardMessage(createTestMessage({"3", "2", "1"}, seq++));
-  subs->forwardMessage(createTestMessage({"xxx"}, seq));
+  forwardTestMessage(subs, "1", seq++);
+  forwardTestMessage(subs, "2", seq++);
+  forwardTestMessage(subs, "3", seq++);
+  forwardTestMessage(subs, "xxx", seq++);
 
   for (auto &s : ctx) {
     s->checkExpected();

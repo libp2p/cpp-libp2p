@@ -158,9 +158,7 @@ namespace libp2p::protocol::gossip {
     dst->set_from(msg.from.data(), msg.from.size());
     dst->set_data(msg.data.data(), msg.data.size());
     dst->set_seqno(msg.seq_no.data(), msg.seq_no.size());
-    for (const auto &id : msg.topic_ids) {
-      *dst->add_topicids() = id;
-    }
+    dst->set_topic(msg.topic);
     if (msg.signature) {
       dst->set_signature(msg.signature.value().data(),
                          msg.signature.value().size());
@@ -177,9 +175,7 @@ namespace libp2p::protocol::gossip {
     pb_msg.set_from(msg.from.data(), msg.from.size());
     pb_msg.set_data(msg.data.data(), msg.data.size());
     pb_msg.set_seqno(msg.seq_no.data(), msg.seq_no.size());
-    for (const auto &topic : msg.topic_ids) {
-      pb_msg.add_topicids(topic);
-    }
+    pb_msg.set_topic(msg.topic);
     constexpr std::string_view kPrefix{"libp2p-pubsub:"};
     auto size = pb_msg.ByteSizeLong();
     ByteArray signable;

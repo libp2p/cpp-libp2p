@@ -102,9 +102,10 @@ namespace libp2p::protocol::gossip {
         data(std::move(_data)) {}
 
   TopicMessage::TopicMessage(const peer::PeerId &_from, uint64_t _seq,
-                             ByteArray _data)
+                             ByteArray _data, TopicId _topic)
       : from(_from.toVector()),
         seq_no(createSeqNo(_seq)),
-        data(std::move(_data)) {}
+        data(std::move(_data)),
+        topic(std::move(_topic)) {}
 
 }  // namespace libp2p::protocol::gossip

@@ -85,22 +85,13 @@ namespace libp2p::protocol::gossip {
     std::set<std::string> subscribed_to;
     subscribed_to.swap(peer->subscribed_to);
 
-    for (const auto& topic : subscribed_to) {
+    for (const auto &topic : subscribed_to) {
       onPeerUnsubscribed(peer, topic, true);
     }
   }
 
   bool RemoteSubscriptions::hasTopic(const TopicId &topic) const {
     return table_.count(topic) != 0;
-  }
-
-  bool RemoteSubscriptions::hasTopics(const TopicList &topics) const {
-    for (const auto &topic : topics) {
-      if (hasTopic(topic)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   void RemoteSubscriptions::onGraft(const PeerContextPtr &peer,
@@ -131,14 +122,12 @@ namespace libp2p::protocol::gossip {
       const MessageId &msg_id) {
     auto now = scheduler_.now();
     bool is_published_locally = !from.has_value();
-    for (const auto &topic : msg->topic_ids) {
-      auto res = getItem(topic, is_published_locally);
-      if (!res) {
-        log_.error("error getting item for {}", topic);
-        continue;
-      }
-      res.value().onNewMessage(from, msg, msg_id, now);
+    auto res = getItem(msg->topic, is_published_locally);
+    if (!res) {
+      log_.error("error getting item for {}", msg->topic);
+      return;
     }
+    res.value().onNewMessage(from, msg, msg_id, now);
   }
 
   void RemoteSubscriptions::onHeartbeat() {
