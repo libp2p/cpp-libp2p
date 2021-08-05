@@ -51,7 +51,7 @@ namespace libp2p::protocol::gossip {
     void setMessageIdFn(MessageIdFn fn) override;
     Subscription subscribe(TopicSet topics,
                            SubscriptionCallback callback) override;
-    bool publish(const TopicSet &topic, ByteArray data) override;
+    bool publish(TopicId topic, ByteArray data) override;
 
     // MessageReceiver overrides
     void onSubscription(const PeerContextPtr &from, bool subscribe,

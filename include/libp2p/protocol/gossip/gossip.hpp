@@ -111,7 +111,7 @@ namespace libp2p::protocol::gossip {
     /// Temporary struct of fields the subscriber may store if they want
     struct Message {
       const ByteArray &from;
-      const TopicList &topics;
+      const TopicId &topic;
       const ByteArray &data;
     };
 
@@ -138,7 +138,7 @@ namespace libp2p::protocol::gossip {
                                    SubscriptionCallback callback) = 0;
 
     /// Publishes to topics. Returns false if validation fails or not started
-    virtual bool publish(const TopicSet &topic, ByteArray data) = 0;
+    virtual bool publish(TopicId topic, ByteArray data) = 0;
   };
 
   // Creates Gossip object

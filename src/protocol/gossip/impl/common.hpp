@@ -61,7 +61,7 @@ namespace libp2p::protocol::gossip {
     const ByteArray data;
 
     /// Topic ids
-    TopicList topic_ids;
+    TopicId topic;
 
     // TODO(artem): signing and protobuf issue. Seems they didn't try their
     // kitchen
@@ -72,7 +72,8 @@ namespace libp2p::protocol::gossip {
     TopicMessage(ByteArray _from, ByteArray _seq, ByteArray _data);
 
     /// Creates topic message from scratch before publishing
-    TopicMessage(const peer::PeerId &_from, uint64_t _seq, ByteArray _data);
+    TopicMessage(const peer::PeerId &_from, uint64_t _seq, ByteArray _data,
+                 TopicId _topic);
   };
 
   /// Returns "zero" peer id, needed for consistency purposes
