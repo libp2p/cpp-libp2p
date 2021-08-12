@@ -50,9 +50,9 @@ namespace libp2p::protocol::gossip {
     // clang-format off
     on_stream_event_ =
         [this, self_wptr=weak_from_this()]
-            (const PeerContextPtr &from, outcome::result<Success> event) {
+            (PeerContextPtr from, outcome::result<Success> event) {
           if (self_wptr.expired()) return;
-          onStreamEvent(from, event);
+          onStreamEvent(std::move(from), event);
         };
 
     host_->setProtocolHandler(

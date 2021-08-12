@@ -23,7 +23,7 @@ namespace libp2p::protocol::gossip {
   class Stream : public std::enable_shared_from_this<Stream> {
    public:
     /// Feedback interface to its owning object (i.e. pub-sub instance)
-    using Feedback = std::function<void(const PeerContextPtr &from,
+    using Feedback = std::function<void(PeerContextPtr from,
                                         outcome::result<Success> event)>;
 
     /// Ctor. N.B. Stream instance cannot live longer than its creators
