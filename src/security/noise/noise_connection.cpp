@@ -12,10 +12,11 @@
 #define UNIQUE_NAME(base) base##__LINE__
 #endif  // UNIQUE_NAME
 
-#define OUTCOME_CB_I(var, res) \
-  auto && (var) = (res);       \
-  if ((var).has_error()) {     \
-    return cb((var).error());  \
+#define OUTCOME_CB_I(var, res)                \
+  auto && (var) = (res);                      \
+  if ((var).has_error()) {                    \
+    self->eraseWriteBuffer(ctx.write_buffer); \
+    return cb((var).error());                 \
   }
 
 #define OUTCOME_CB_NAME_I(var, val, res) \
@@ -98,28 +99,36 @@ namespace libp2p::connection {
 
   void NoiseConnection::write(gsl::span<const uint8_t> in, size_t bytes,
                               libp2p::basic::Writer::WriteCallbackFunc cb) {
-    WriteContext context{.bytes_written = 0, .to_write = bytes};
+    OperationContext context{.bytes_served = 0,
+                             .total_bytes = bytes,
+                             .write_buffer = write_buffers_.end()};
     write(in, bytes, context, std::move(cb));
   }
 
   void NoiseConnection::write(gsl::span<const uint8_t> in, size_t bytes,
-                              NoiseConnection::WriteContext ctx,
+                              NoiseConnection::OperationContext ctx,
                               basic::Writer::WriteCallbackFunc cb) {
+    auto *self{this};  // for OUTCOME_CB
     if (0 == bytes) {
-      BOOST_ASSERT(ctx.bytes_written >= ctx.to_write);
-      return cb(ctx.to_write);
+      BOOST_ASSERT(ctx.bytes_served >= ctx.total_bytes);
+      eraseWriteBuffer(ctx.write_buffer);
+      return cb(ctx.total_bytes);
     }
     auto n{std::min(bytes, security::noise::kMaxPlainText)};
     OUTCOME_CB(encrypted, encoder_cs_->encrypt({}, in.subspan(0, n), {}));
-    writing_ = std::move(encrypted);
-    framer_->write(writing_,
+    if (write_buffers_.end() == ctx.write_buffer) {
+      constexpr auto dummy_size = 1;
+      constexpr auto dummy_value = 0x0;
+      ctx.write_buffer =
+          write_buffers_.emplace(write_buffers_.end(), dummy_size, dummy_value);
+    }
+    ctx.write_buffer->swap(encrypted);
+    framer_->write(*ctx.write_buffer,
                    [self{shared_from_this()}, in{in.subspan(n)},
                     bytes{bytes - n}, cb{std::move(cb)}, ctx](auto _n) mutable {
                      OUTCOME_CB(n, _n);
-                     WriteContext context{.bytes_written = ctx.bytes_written,
-                                          .to_write = ctx.to_write};
-                     context.bytes_written += n;
-                     self->write(in, bytes, context, cb);
+                     ctx.bytes_served += n;
+                     self->write(in, bytes, ctx, std::move(cb));
                    });
   }
 
@@ -165,5 +174,13 @@ namespace libp2p::connection {
   outcome::result<libp2p::crypto::PublicKey> NoiseConnection::remotePublicKey()
       const {
     return remote_;
+  }
+
+  void NoiseConnection::eraseWriteBuffer(BufferList::iterator &iterator) {
+    if (write_buffers_.end() == iterator) {
+      return;
+    }
+    write_buffers_.erase(iterator);
+    iterator = write_buffers_.end();
   }
 }  // namespace libp2p::connection
