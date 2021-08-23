@@ -25,8 +25,8 @@ namespace libp2p::crypto {
     }
 
     // turn private key bytes into big number
-    BIGNUM *private_bignum{
-        BN_bin2bn(private_key.data(), private_key.size(), nullptr)};
+    BIGNUM *private_bignum{BN_bin2bn(
+        private_key.data(), static_cast<int>(private_key.size()), nullptr)};
     if (nullptr == private_bignum) {
       return FAILED;
     }
@@ -92,10 +92,11 @@ namespace libp2p::crypto {
       int, gsl::span<const uint8_t>, decltype(EVP_PKEY_new_raw_public_key) *);
 
   outcome::result<std::vector<uint8_t>> GenerateEcSignature(
-      gsl::span<const uint8_t> digest,
-      const std::shared_ptr<EC_KEY> &key) {
+      gsl::span<const uint8_t> digest, const std::shared_ptr<EC_KEY> &key) {
     std::shared_ptr<ECDSA_SIG> signature{
-        ECDSA_do_sign(digest.data(), digest.size(), key.get()), ECDSA_SIG_free};
+        ECDSA_do_sign(digest.data(), static_cast<int>(digest.size()),
+                      key.get()),
+        ECDSA_SIG_free};
     if (signature == nullptr) {
       return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
     }
@@ -110,12 +111,12 @@ namespace libp2p::crypto {
     return std::move(signature_bytes);
   }
 
-  outcome::result<bool> VerifyEcSignature(
-      gsl::span<const uint8_t> digest,
-      gsl::span<const uint8_t> signature,
-      const std::shared_ptr<EC_KEY> &key) {
-    int result = ECDSA_verify(0, digest.data(), digest.size(), signature.data(),
-                              signature.size(), key.get());
+  outcome::result<bool> VerifyEcSignature(gsl::span<const uint8_t> digest,
+                                          gsl::span<const uint8_t> signature,
+                                          const std::shared_ptr<EC_KEY> &key) {
+    int result = ECDSA_verify(0, digest.data(), static_cast<int>(digest.size()),
+                              signature.data(),
+                              static_cast<int>(signature.size()), key.get());
     if (result < 0) {
       return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
     }

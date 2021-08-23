@@ -97,7 +97,7 @@ namespace libp2p::connection {
     if (not frame_buffer_->empty()) {
       auto n{std::min(bytes, frame_buffer_->size())};
       auto begin{frame_buffer_->begin()};
-      auto end{begin + n};
+      auto end{begin + static_cast<int64_t>(n)};
       std::copy(begin, end, out.begin());
       frame_buffer_->erase(begin, end);
       return cb(n);
@@ -137,13 +137,14 @@ namespace libp2p::connection {
           write_buffers_.emplace(write_buffers_.end(), dummy_size, dummy_value);
     }
     ctx.write_buffer->swap(encrypted);
-    framer_->write(*ctx.write_buffer,
-                   [self{shared_from_this()}, in{in.subspan(n)},
-                    bytes{bytes - n}, cb{std::move(cb)}, ctx](auto _n) mutable {
-                     OUTCOME_CB(n, _n);
-                     ctx.bytes_served += n;
-                     self->write(in, bytes, ctx, std::move(cb));
-                   });
+    framer_->write(
+        *ctx.write_buffer,
+        [self{shared_from_this()}, in{in.subspan(static_cast<int64_t>(n))},
+         bytes{bytes - n}, cb{std::move(cb)}, ctx](auto _n) mutable {
+          OUTCOME_CB(n, _n);
+          ctx.bytes_served += n;
+          self->write(in, bytes, ctx, std::move(cb));
+        });
   }
 
   void NoiseConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
