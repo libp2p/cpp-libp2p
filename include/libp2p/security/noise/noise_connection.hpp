@@ -75,6 +75,12 @@ namespace libp2p::connection {
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
    private:
+    void read(gsl::span<uint8_t> out, size_t bytes, OperationContext ctx,
+              ReadCallbackFunc cb);
+
+    void readSome(gsl::span<uint8_t> out, size_t bytes, OperationContext ctx,
+                  ReadCallbackFunc cb);
+
     void write(gsl::span<const uint8_t> in, size_t bytes, OperationContext ctx,
                WriteCallbackFunc cb);
 
@@ -88,7 +94,6 @@ namespace libp2p::connection {
     std::shared_ptr<security::noise::CipherState> decoder_cs_;
     std::shared_ptr<common::ByteArray> frame_buffer_;
     std::shared_ptr<security::noise::InsecureReadWriter> framer_;
-    size_t already_read_;
     BufferList write_buffers_;
     log::Logger log_ = log::createLogger("NoiseConnection");
 
