@@ -11,6 +11,7 @@
 #include "mock/libp2p/network/dialer_mock.hpp"
 #include "mock/libp2p/network/listener_mock.hpp"
 #include "mock/libp2p/network/network_mock.hpp"
+#include "mock/libp2p/network/transport_manager_mock.hpp"
 #include "mock/libp2p/peer/address_repository_mock.hpp"
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
@@ -45,7 +46,8 @@ struct BasicHostTest : public ::testing::Test {
   std::unique_ptr<Host> host = std::make_unique<host::BasicHost>(
       idmgr, std::make_unique<network::NetworkMock>(),
       std::make_unique<peer::PeerRepositoryMock>(),
-      std::make_shared<libp2p::event::Bus>());
+      std::make_shared<libp2p::event::Bus>(),
+      std::make_shared<libp2p::network::TransportManagerMock>());
 
   peer::PeerRepositoryMock &repo =
       (peer::PeerRepositoryMock &)host->getPeerRepository();

@@ -9,7 +9,6 @@ libp2p_add_library(p2p_kademlia
     storage_impl.cpp
     storage_backend_default.cpp
     validator_default.cpp
-    content_id.cpp
     put_value_executor.cpp
     get_value_executor.cpp
     add_provider_executor.cpp
@@ -17,9 +16,7 @@ libp2p_add_library(p2p_kademlia
     find_peer_executor.cpp
     )
 target_link_libraries(p2p_kademlia
-    asio_scheduler
-    p2p_peer_id
-    p2p_cid
+    p2p_basic_scheduler
     p2p_kademlia_message
     p2p_kademlia_error
     )

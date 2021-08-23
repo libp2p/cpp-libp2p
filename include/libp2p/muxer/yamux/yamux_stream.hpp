@@ -6,45 +6,50 @@
 #ifndef LIBP2P_YAMUX_STREAM_HPP
 #define LIBP2P_YAMUX_STREAM_HPP
 
-#include <deque>
-#include <mutex>
-
-#include <boost/asio/streambuf.hpp>
-#include <boost/noncopyable.hpp>
+#include <libp2p/basic/read_buffer.hpp>
+#include <libp2p/basic/write_queue.hpp>
+#include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/stream.hpp>
-#include <libp2p/muxer/yamux/yamuxed_connection.hpp>
 
 namespace libp2p::connection {
-  /**
-   * Stream implementation, used by Yamux multiplexer
-   */
-  class YamuxStream : public Stream,
-                      public std::enable_shared_from_this<YamuxStream>,
-                      private boost::noncopyable {
+
+  class YamuxedConnection;
+
+  /// Yamux specific feedback interface, stream->connection
+  class YamuxStreamFeedback {
    public:
+    virtual ~YamuxStreamFeedback() = default;
+
+    /// Stream transfers data to connection
+    virtual void writeStreamData(uint32_t stream_id,
+                                 gsl::span<const uint8_t> data, bool some) = 0;
+
+    /// Stream acknowledges received bytes
+    virtual void ackReceivedBytes(uint32_t stream_id, uint32_t bytes) = 0;
+
+    /// Stream defers callback to avoid reentrancy
+    virtual void deferCall(std::function<void()>) = 0;
+
+    /// Stream closes
+    virtual void resetStream(uint32_t stream_id) = 0;
+
+    /// Stream closed, remove from active streams if 2FINs were sent
+    virtual void streamClosed(uint32_t stream_id) = 0;
+  };
+
+  /// Stream implementation, used by Yamux multiplexer
+  class YamuxStream final : public Stream,
+                            public std::enable_shared_from_this<YamuxStream> {
+   public:
+    YamuxStream(const YamuxStream &other) = delete;
+    YamuxStream &operator=(const YamuxStream &other) = delete;
+    YamuxStream(YamuxStream &&other) = delete;
+    YamuxStream &operator=(YamuxStream &&other) = delete;
     ~YamuxStream() override = default;
 
-    /**
-     * Create an instance of YamuxStream
-     * @param yamuxed_connection, over which this stream is created
-     * @param stream_id - id of this stream
-     * @param maximum_window_size - maximum size of the stream's window
-     */
-    YamuxStream(std::weak_ptr<YamuxedConnection> yamuxed_connection,
-                YamuxedConnection::StreamId stream_id,
-                uint32_t maximum_window_size);
-
-    enum class Error {
-      NOT_WRITABLE = 1,
-      NOT_READABLE,
-      INVALID_ARGUMENT,
-      RECEIVE_OVERFLOW,
-      IS_WRITING,
-      IS_READING,
-      INVALID_WINDOW_SIZE,
-      CONNECTION_IS_DEAD,
-      INTERNAL_ERROR
-    };
+    YamuxStream(std::shared_ptr<connection::SecureConnection> connection,
+                YamuxStreamFeedback &feedback, uint32_t stream_id,
+                size_t maximum_window_size, size_t write_queue_limit);
 
     void read(gsl::span<uint8_t> out, size_t bytes,
               ReadCallbackFunc cb) override;
@@ -52,11 +57,16 @@ namespace libp2p::connection {
     void readSome(gsl::span<uint8_t> out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
+    void deferReadCallback(outcome::result<size_t> res,
+                           ReadCallbackFunc cb) override;
+
     void write(gsl::span<const uint8_t> in, size_t bytes,
                WriteCallbackFunc cb) override;
 
     void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
+
+    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
     bool isClosed() const noexcept override;
 
@@ -78,125 +88,120 @@ namespace libp2p::connection {
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() const override;
 
+    /// Increases send window. Called from Connection
+    void increaseSendWindow(size_t delta);
+
+    enum DataFromConnectionResult {
+      kKeepStream,
+      kRemoveStream,
+      kRemoveStreamAndSendRst,
+    };
+
+    /// Called from Connection. New data received
+    /// Returns kRemoveStreamAndSendRst on window overflow
+    DataFromConnectionResult onDataReceived(gsl::span<uint8_t> bytes);
+
+    /// Called from Connection on FIN received
+    /// Returns kRemoveStream if FIN was sent from this side
+    DataFromConnectionResult onFINReceived();
+
+    /// Called from Connection, stream was reset by peer
+    void onRSTReceived();
+
+    /// Data written into the wire. Called from Connection
+    void onDataWritten(size_t bytes);
+
+    /// Connection closed by network error
+    void closedByConnection(std::error_code ec);
+
    private:
-    /**
-     * Internal proxy method for reads; (\param some) denotes if the read should
-     * read 'some' or 'all' bytes
-     */
-    void read(gsl::span<uint8_t> out, size_t bytes, ReadCallbackFunc cb,
-              bool some);
+    /// Performs close-related cleanup and notifications
+    void doClose(std::error_code ec, bool notify_read_side);
 
-    /**
-     * Internal proxy method for writes; (\param some) denotes if the write
-     * should write 'some' or 'all' bytes
-     */
-    void write(gsl::span<const uint8_t> in, size_t bytes, WriteCallbackFunc cb,
-               bool some);
+    /// Called by read*() functions
+    void doRead(gsl::span<uint8_t> out, size_t bytes, ReadCallbackFunc cb,
+                bool some);
 
-    /// this stream's connection
-    std::weak_ptr<YamuxedConnection> yamuxed_connection_;
+    /// Completes the read operation if any, clears read state
+    [[nodiscard]] std::pair<ReadCallbackFunc, outcome::result<size_t>>
+    readCompleted();
 
-    /// id of this stream
-    YamuxedConnection::StreamId stream_id_;
+    /// Dequeues data from write queue and sends to the wire in async manner
+    void doWrite();
 
-    /// is the stream opened for reads?
+    /// Called by write*() functions
+    void doWrite(gsl::span<const uint8_t> in, size_t bytes,
+                 WriteCallbackFunc cb, bool some);
+
+    /// Clears close callback state
+    [[nodiscard]] std::pair<VoidResultHandlerFunc, outcome::result<void>>
+    closeCompleted();
+
+    /// Underlying connection (secured)
+    std::shared_ptr<connection::SecureConnection> connection_;
+
+    /// Yamux-specific interface of connection
+    YamuxStreamFeedback &feedback_;
+
+    /// Stream ID
+    uint32_t stream_id_;
+
+    /// True if the stream is readable, until FIN received
     bool is_readable_ = true;
 
-    /// is the stream opened for writes?
+    /// True if the stream is writable, until FIN sent
     bool is_writable_ = true;
 
-    /**
-     * default sliding window size of the stream - how much unread bytes can be
-     * on both sides
-     */
-    static constexpr uint32_t kDefaultWindowSize = 256 * 1024;  // in bytes
+    /// If set to true, then no more callbacks to client
+    bool no_more_callbacks_ = false;
 
-    /// how much unacked bytes can we have on our side
-    uint32_t receive_window_size_ = kDefaultWindowSize;
+    /// True after FIN sent
+    bool fin_sent_ = false;
 
-    /// maximum value of 'receive_window_size_'
-    uint32_t maximum_window_size_;
+    /// Non zero reason means that stream is closed and the reason of it
+    std::error_code close_reason_;
 
-    /// how much unacked bytes can we have sent to the other side
-    uint32_t send_window_size_ = kDefaultWindowSize;
+    /// Max bytes allowed to send
+    size_t window_size_;
 
-    /// buffer with bytes, not consumed by this stream
-    boost::asio::streambuf read_buffer_;
+    /// Receive window size: max buffered unreceived bytes
+    size_t peers_window_size_;
 
-    /// is the stream reading right now?
+    /// Maximum window size allowed for peer
+    size_t maximum_window_size_;
+
+    /// Write queue with callbacks
+    basic::WriteQueue write_queue_;
+
+    /// Internal read buffer, stores bytes received between read()s
+    basic::ReadBuffer internal_read_buffer_;
+
+    /// True if read operation is active
     bool is_reading_ = false;
 
-    /// read callback, non-zero during async data receive
-    ReadCallbackFunc read_cb_;
-
-    /// client's read buffer
-    gsl::span<uint8_t> external_read_buffer_;
-
-    /// bytes count client is waiting for, non-zero during async data receive
-    size_t bytes_waiting_ = 0;
-
-    /// client makes readSome operation
+    /// Read operation is readSome()
     bool reading_some_ = false;
 
-    /// starts async read operation
-    void beginRead(ReadCallbackFunc cb, gsl::span<uint8_t> out, size_t bytes,
-                   bool some);
+    /// Read callback, it is non-zero during async data receive
+    ReadCallbackFunc read_cb_;
 
-    /// ends async read operation
-    void endRead(outcome::result<size_t> result);
+    /// TODO: get rid of this. client's read buffer
+    gsl::span<uint8_t> external_read_buffer_;
 
-    /// Tries to consume requested bytes from already received data
-    outcome::result<size_t> tryConsumeReadBuffer(gsl::span<uint8_t> out,
-                                                 size_t bytes, bool some);
+    /// Size of message being read
+    size_t read_message_size_ = 0;
 
-    /**
-     * Forwards read buffer and receive window and acknowledges bytes received
-     * in async manner
-     * @param bytes number of bytes to ack
-     */
-    void sendAck(size_t bytes);
+    /// adjustWindowSize() callback, triggers when receive window size
+    /// becomes greater or equal then desired
+    VoidResultHandlerFunc window_size_cb_;
 
-    /// is the stream writing right now?
-    bool is_writing_ = false;
+    /// Close callback
+    VoidResultHandlerFunc close_cb_;
 
-    /// write callback, non-zero during async sends
-    WriteCallbackFunc write_cb_;
-
-    /// Queue of write requests that were received when stream was writing
-    std::deque<
-        std::tuple<std::vector<uint8_t>, size_t, WriteCallbackFunc, bool>>
-        write_queue_{};
-
-    mutable std::mutex write_queue_mutex_;
-
-    /// starts async write operation
-    void beginWrite(WriteCallbackFunc cb);
-
-    /// ends async write operation
-    void endWrite(outcome::result<size_t> result);
-
-    /// YamuxedConnection API starts here
-    friend class YamuxedConnection;
-
-    /**
-     * Called by underlying connection to signalize the stream was reset
-     */
-    void resetStream();
-
-    /**
-     * Called by underlying connection to signalize some data was received for
-     * this stream
-     * @param data received
-     * @param data_size - size of the received data
-     */
-    outcome::result<void> commitData(gsl::span<const uint8_t> data,
-                                     size_t data_size);
-
-    /// Called by connection on reset
-    void onConnectionReset(outcome::result<size_t> reason);
+   public:
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::connection::YamuxStream);
   };
-}  // namespace libp2p::connection
 
-OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, YamuxStream::Error)
+}  // namespace libp2p::connection
 
 #endif  // LIBP2P_YAMUX_STREAM_HPP

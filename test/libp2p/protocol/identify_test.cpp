@@ -25,6 +25,7 @@
 #include "mock/libp2p/peer/key_repository_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
 using namespace peer;
@@ -45,6 +46,8 @@ using testing::ReturnRef;
 class IdentifyTest : public testing::Test {
  public:
   void SetUp() override {
+    testutil::prepareLoggers();
+
     // create a Protobuf message, which is to be "read" or written
     for (const auto &proto : protocols_) {
       identify_pb_msg_.add_protocols(proto);
@@ -63,6 +66,7 @@ class IdentifyTest : public testing::Test {
 
     pb_msg_len_varint_ =
         std::make_shared<UVarint>(identify_pb_msg_.ByteSizeLong());
+
     identify_pb_msg_bytes_.insert(
         identify_pb_msg_bytes_.end(),
         std::make_move_iterator(pb_msg_len_varint_->toVector().begin()),
@@ -277,8 +281,8 @@ TEST_F(IdentifyTest, Receive) {
 
   peer::PeerInfo pinfo = {kRemotePeerId, {remote_multiaddr_}};
 
-  EXPECT_CALL(conn_manager_, connectedness(pinfo))
-      .WillOnce(Return(network::ConnectionManager::Connectedness::CONNECTED));
+  EXPECT_CALL(conn_manager_, getBestConnectionForPeer(kRemotePeerId))
+      .WillOnce(Return(connection_));
   EXPECT_CALL(
       addr_repo_,
       upsertAddresses(kRemotePeerId,

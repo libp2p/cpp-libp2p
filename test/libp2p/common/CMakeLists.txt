@@ -17,3 +17,7 @@ addtest(byteutil_test
 target_link_libraries(byteutil_test
     p2p_byteutil
     )
+
+addtest(metrics_test
+    metrics_test.cpp
+    )

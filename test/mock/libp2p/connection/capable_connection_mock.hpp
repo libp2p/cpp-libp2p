@@ -16,6 +16,8 @@ namespace libp2p::connection {
    public:
     ~CapableConnectionMock() override = default;
 
+    MOCK_METHOD0(newStream, outcome::result<std::shared_ptr<Stream>>());
+
     MOCK_METHOD1(newStream, void(StreamHandlerFunc));
 
     MOCK_METHOD1(onStream, void(NewStreamHandlerFunc));
@@ -39,6 +41,10 @@ namespace libp2p::connection {
     MOCK_METHOD3(writeSome,
                  void(gsl::span<const uint8_t>, size_t,
                       Writer::WriteCallbackFunc));
+    MOCK_METHOD2(deferReadCallback,
+                 void(outcome::result<size_t>, Reader::ReadCallbackFunc));
+    MOCK_METHOD2(deferWriteCallback,
+                 void(std::error_code, Writer::WriteCallbackFunc));
     bool isInitiator() const noexcept override {
       return true;  // TODO(artem): fix reuse connections in opposite direction
       // return isInitiator_hack();
@@ -55,6 +61,7 @@ namespace libp2p::connection {
 
     ~CapableConnBasedOnRawConnMock() override = default;
 
+    MOCK_METHOD0(newStream, outcome::result<std::shared_ptr<Stream>>());
     MOCK_METHOD1(newStream, void(StreamHandlerFunc));
 
     MOCK_METHOD1(onStream, void(NewStreamHandlerFunc));
@@ -103,11 +110,20 @@ namespace libp2p::connection {
 
     bool isClosed() const override {
       return real_->isClosed();
-    };
+    }
 
     outcome::result<void> close() override {
       return real_->close();
-    };
+    }
+
+    void deferReadCallback(outcome::result<size_t> res,
+                           ReadCallbackFunc cb) override {
+      real_->deferReadCallback(res, std::move(cb));
+    }
+
+    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override {
+      real_->deferWriteCallback(ec, std::move(cb));
+    }
 
    private:
     std::shared_ptr<RawConnection> real_;

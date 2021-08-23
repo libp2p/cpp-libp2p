@@ -9,11 +9,11 @@
 
 namespace libp2p::protocol {
 
-  AsioScheduler::AsioScheduler(boost::asio::io_context &io,
+  AsioScheduler::AsioScheduler(std::shared_ptr<boost::asio::io_context> io,
                                SchedulerConfig config)
       : io_(io),
         interval_(config.period_msec),
-        timer_(io, boost::posix_time::milliseconds(interval_)),
+        timer_(*io, boost::posix_time::milliseconds(interval_)),
         started_(boost::posix_time::microsec_clock::local_time()),
         canceled_(std::make_shared<bool>(false)),
         timer_cb_([this, canceled{canceled_}](
@@ -28,7 +28,11 @@ namespace libp2p::protocol {
 
   AsioScheduler::~AsioScheduler() {
     *canceled_ = true;
-    timer_.cancel();
+    try {
+      timer_.cancel();
+    } catch (...) {
+      // may throw
+    }
   };
 
   Scheduler::Ticks AsioScheduler::now() const {
@@ -39,14 +43,14 @@ namespace libp2p::protocol {
   void AsioScheduler::scheduleImmediate() {
     if (!immediate_cb_scheduled_) {
       immediate_cb_scheduled_ = true;
-      io_.post(immediate_cb_);
+      io_->post(immediate_cb_);
     }
   }
 
   void AsioScheduler::onTimer() {
     pulse(false);
     timer_.expires_at(timer_.expires_at()
-                      + boost::posix_time::milliseconds(interval_));
+                        + boost::posix_time::milliseconds(interval_));
     timer_.async_wait(timer_cb_);
   }
 

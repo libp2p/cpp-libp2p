@@ -25,9 +25,19 @@ find_package(OpenSSL REQUIRED)
 hunter_add_package(Protobuf)
 find_package(Protobuf CONFIG REQUIRED)
 
-# https://docs.hunter.sh/en/latest/packages/pkg/spdlog.html
-hunter_add_package(spdlog)
-find_package(spdlog CONFIG REQUIRED)
+find_package(Threads)
+
+hunter_add_package(c-ares)
+find_package(c-ares CONFIG REQUIRED)
+
+hunter_add_package(fmt)
+find_package(fmt CONFIG REQUIRED)
+
+hunter_add_package(yaml-cpp)
+find_package(yaml-cpp CONFIG REQUIRED)
+
+hunter_add_package(soralog)
+find_package(soralog CONFIG REQUIRED)
 
 # https://github.com/masterjedy/hat-trie
 hunter_add_package(tsl_hat_trie)

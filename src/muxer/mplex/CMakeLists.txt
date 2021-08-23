@@ -19,4 +19,5 @@ target_link_libraries(p2p_mplexed_connection
     p2p_logger
     p2p_uvarint
     p2p_varint_reader
+    p2p_connection_error
     )

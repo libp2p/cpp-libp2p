@@ -17,7 +17,7 @@ namespace libp2p::protocol::kademlia {
 
   FindProvidersExecutor::FindProvidersExecutor(
       const Config &config, std::shared_ptr<Host> host,
-      std::shared_ptr<Scheduler> scheduler,
+      std::shared_ptr<basic::Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
       const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
       ContentId content_id, FoundProvidersHandler handler)
@@ -28,7 +28,8 @@ namespace libp2p::protocol::kademlia {
         content_id_(std::move(content_id)),
         handler_(std::move(handler)),
         target_(content_id_),
-        log_("kad", "FindProvidersExecutor", ++instance_number) {
+        log_("KademliaExecutor", "kademlia", "FindProviders",
+             ++instance_number) {
     BOOST_ASSERT(host_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
     BOOST_ASSERT(session_host_ != nullptr);
@@ -74,14 +75,13 @@ namespace libp2p::protocol::kademlia {
 
     log_.debug("started");
 
-    scheduler_
-        ->schedule(scheduler::toTicks(config_.randomWalk.timeout),
-                   [wp = weak_from_this()] {
-                     if (auto self = wp.lock()) {
-                       self->done();
-                     }
-                   })
-        .detach();
+    scheduler_->schedule(
+        [wp = weak_from_this()] {
+          if (auto self = wp.lock()) {
+            self->done();
+          }
+        },
+        config_.randomWalk.timeout);
 
     spawn();
 
@@ -97,8 +97,7 @@ namespace libp2p::protocol::kademlia {
     std::vector<PeerInfo> result;
     for (auto &&peer_id : std::move(providers_)) {
       auto peer_info = host_->getPeerRepository().getPeerInfo(peer_id);
-      auto connectedness =
-          host_->getNetwork().getConnectionManager().connectedness(peer_info);
+      auto connectedness = host_->connectedness(peer_info);
       if (connectedness != Message::Connectedness::CAN_NOT_CONNECT) {
         result.emplace_back(std::move(peer_info));
       }
@@ -132,8 +131,7 @@ namespace libp2p::protocol::kademlia {
       }
 
       // Check if connectable
-      auto connectedness =
-          host_->getNetwork().getConnectionManager().connectedness(peer_info);
+      auto connectedness = host_->connectedness(peer_info);
       if (connectedness == Message::Connectedness::CAN_NOT_CONNECT) {
         continue;
       }
@@ -145,17 +143,18 @@ namespace libp2p::protocol::kademlia {
 
       auto holder =
           std::make_shared<std::pair<std::shared_ptr<FindProvidersExecutor>,
-                                     scheduler::Handle>>();
+                                     basic::Scheduler::Handle>>();
 
       holder->first = shared_from_this();
-      holder->second = scheduler_->schedule(
-          scheduler::toTicks(config_.connectionTimeout), [holder] {
+      holder->second = scheduler_->scheduleWithHandle(
+          [holder] {
             if (holder->first) {
               holder->second.cancel();
               holder->first->onConnected(Error::TIMEOUT);
               holder->first.reset();
             }
-          });
+          },
+          config_.connectionTimeout);
 
       host_->newStream(
           peer_info, config_.protocolId,
@@ -204,15 +203,15 @@ namespace libp2p::protocol::kademlia {
       --requests_in_progress_;
 
       log_.debug("write to {} failed; active {}, in queue {}", addr,
-                requests_in_progress_, queue_.size());
+                 requests_in_progress_, queue_.size());
 
       spawn();
       return;
     }
   }
 
-  scheduler::Ticks FindProvidersExecutor::responseTimeout() const {
-    return scheduler::toTicks(config_.responseTimeout);
+  Time FindProvidersExecutor::responseTimeout() const {
+    return config_.responseTimeout;
   }
 
   bool FindProvidersExecutor::match(const Message &msg) const {
@@ -267,7 +266,9 @@ namespace libp2p::protocol::kademlia {
             host_->getPeerRepository().getAddressRepository().upsertAddresses(
                 peer.info.id,
                 gsl::span(peer.info.addresses.data(),
-                          peer.info.addresses.size()),
+                          static_cast<
+                              gsl::span<const multi::Multiaddress>::index_type>(
+                              peer.info.addresses.size())),
                 peer::ttl::kDay);
         if (not add_addr_res) {
           continue;
@@ -296,7 +297,9 @@ namespace libp2p::protocol::kademlia {
             host_->getPeerRepository().getAddressRepository().upsertAddresses(
                 peer.info.id,
                 gsl::span(peer.info.addresses.data(),
-                          peer.info.addresses.size()),
+                          static_cast<
+                              gsl::span<const multi::Multiaddress>::index_type>(
+                              peer.info.addresses.size())),
                 peer::ttl::kDay);
         if (not add_addr_res) {
           continue;

@@ -10,8 +10,8 @@
 #include <unordered_map>
 #include <utility>
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/capable_connection.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/muxer/mplex/mplex_stream.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
 
@@ -22,12 +22,6 @@ namespace libp2p::connection {
       : public CapableConnection,
         public std::enable_shared_from_this<MplexedConnection> {
    public:
-    enum class Error {
-      BAD_FRAME_FORMAT = 1,
-      TOO_MANY_STREAMS,
-      CONNECTION_INACTIVE
-    };
-
     /**
      * Create a new instance of MplexedConnection
      * @param connection to be multiplexed
@@ -45,6 +39,8 @@ namespace libp2p::connection {
     void start() override;
 
     void stop() override;
+
+    outcome::result<std::shared_ptr<Stream>> newStream() override;
 
     void newStream(StreamHandlerFunc cb) override;
 
@@ -76,6 +72,10 @@ namespace libp2p::connection {
                WriteCallbackFunc cb) override;
     void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
+
+    void deferReadCallback(outcome::result<size_t> res,
+                           ReadCallbackFunc cb) override;
+    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
    private:
     struct WriteData {
@@ -171,7 +171,7 @@ namespace libp2p::connection {
     NewStreamHandlerFunc new_stream_handler_;
 
     bool is_active_ = false;
-    common::Logger log_ = common::createLogger("MplexedConnection");
+    log::Logger log_ = log::createLogger("MplexConn");
 
     /// MPLEX STREAM API
     friend class MplexStream;
@@ -207,7 +207,5 @@ namespace libp2p::connection {
     void streamReset(MplexStream::StreamId stream_id);
   };
 }  // namespace libp2p::connection
-
-OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, MplexedConnection::Error)
 
 #endif  // LIBP2P_MPLEXED_CONNECTION_HPP

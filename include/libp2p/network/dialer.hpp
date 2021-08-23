@@ -59,6 +59,14 @@ namespace libp2p::network {
       newStream(peer_info, protocol, std::move(cb),
                 std::chrono::milliseconds::zero());
     }
+
+    /**
+     * NewStream returns a new stream to given peer p.
+     * If there is no connection to p, returns error.
+     */
+    virtual void newStream(const peer::PeerId &peer_id,
+                           const peer::Protocol &protocol,
+                           StreamResultFunc cb) = 0;
   };
 
 }  // namespace libp2p::network

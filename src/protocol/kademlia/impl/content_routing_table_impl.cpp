@@ -12,20 +12,20 @@
 namespace libp2p::protocol::kademlia {
 
   ContentRoutingTableImpl::ContentRoutingTableImpl(
-      const Config &config, Scheduler &scheduler,
+      const Config &config, basic::Scheduler &scheduler,
       std::shared_ptr<event::Bus> bus)
       : config_(config), scheduler_(scheduler), bus_(std::move(bus)) {
     BOOST_ASSERT(bus_ != nullptr);
     table_ = std::make_unique<Table>();
 
-    cleanup_timer_ = scheduler_.schedule([this] {
-      cleanup_timer_ = scheduler_.schedule(
-          scheduler::toTicks(config_.providerWipingInterval),
+    cleanup_timer_ = scheduler_.scheduleWithHandle([this] {
+      cleanup_timer_ = scheduler_.scheduleWithHandle(
           [wp = weak_from_this()] {
             if (auto self = wp.lock()) {
               self->onCleanupTimer();
             }
-          });
+          },
+          config_.providerWipingInterval);
     });
   }
 
@@ -47,8 +47,7 @@ namespace libp2p::protocol::kademlia {
 
   void ContentRoutingTableImpl::addProvider(const ContentId &key,
                                             const peer::PeerId &peer) {
-    auto expires =
-        scheduler_.now() + scheduler::toTicks(config_.providerRecordTTL);
+    auto expires = scheduler_.now() + config_.providerRecordTTL;
     auto &idx = table_->get<ByKey>();
     auto [begin, end] = idx.equal_range(key);
     auto oldest = begin;
@@ -88,8 +87,7 @@ namespace libp2p::protocol::kademlia {
       idx.erase(ci);
     }
 
-    cleanup_timer_.reschedule(
-        scheduler::toTicks(config_.providerWipingInterval));
+    std::ignore = cleanup_timer_.reschedule(config_.providerWipingInterval);
   }
 
 }  // namespace libp2p::protocol::kademlia

@@ -26,7 +26,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, Message::Error, e) {
 }
 namespace libp2p::protocol::kademlia {
 
-  using ConnStatus = network::ConnectionManager::Connectedness;
+  using ConnStatus = Host::Connectedness;
 
   namespace {
 

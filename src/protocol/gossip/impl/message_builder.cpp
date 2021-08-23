@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/message_builder.hpp>
+#include "message_builder.hpp"
 
 #include <libp2p/multi/uvarint.hpp>
 
@@ -19,11 +19,7 @@ namespace libp2p::protocol::gossip {
     }
   }  // namespace
 
-  MessageBuilder::MessageBuilder()
-      : pb_msg_(std::make_unique<pubsub::pb::RPC>()),
-        control_pb_msg_(std::make_unique<pubsub::pb::ControlMessage>()),
-        empty_(true),
-        control_not_empty_(false) {}
+  MessageBuilder::MessageBuilder() : empty_(true), control_not_empty_(false) {}
 
   MessageBuilder::~MessageBuilder() = default;
 
@@ -37,11 +33,30 @@ namespace libp2p::protocol::gossip {
     messages_added_.clear();
   }
 
-  bool MessageBuilder::empty() {
+  void MessageBuilder::reset() {
+    pb_msg_.reset();
+    control_pb_msg_.reset();
+    empty_ = true;
+    control_not_empty_ = false;
+    decltype(ihaves_){}.swap(ihaves_);
+    decltype(iwant_){}.swap(iwant_);
+    decltype(messages_added_){}.swap(messages_added_);
+  }
+
+  void MessageBuilder::create_protobuf_structures() {
+    if (pb_msg_ == nullptr) {
+      pb_msg_ = std::make_unique<pubsub::pb::RPC>();
+      control_pb_msg_ = std::make_unique<pubsub::pb::ControlMessage>();
+    }
+  }
+
+  bool MessageBuilder::empty() const {
     return empty_;
   }
 
   outcome::result<SharedBuffer> MessageBuilder::serialize() {
+    create_protobuf_structures();
+
     for (auto &[topic, message_ids] : ihaves_) {
       auto *ih = control_pb_msg_->add_ihave();
       ih->set_topicid(topic);
@@ -79,7 +94,12 @@ namespace libp2p::protocol::gossip {
       pb_msg_->release_control();
     }
 
-    clear();
+    static constexpr size_t kSizeThreshold = 8192;
+    if (msg_sz > kSizeThreshold) {
+      reset();
+    } else {
+      clear();
+    }
 
     if (success) {
       return buffer;
@@ -88,6 +108,8 @@ namespace libp2p::protocol::gossip {
   }
 
   void MessageBuilder::addSubscription(bool subscribe, const TopicId &topic) {
+    create_protobuf_structures();
+
     auto *dst = pb_msg_->add_subscriptions();
     dst->set_subscribe(subscribe);
     dst->set_topicid(topic);
@@ -107,12 +129,16 @@ namespace libp2p::protocol::gossip {
   }
 
   void MessageBuilder::addGraft(const TopicId &topic) {
+    create_protobuf_structures();
+
     control_pb_msg_->add_graft()->set_topicid(topic);
     control_not_empty_ = true;
     empty_ = false;
   }
 
   void MessageBuilder::addPrune(const TopicId &topic) {
+    create_protobuf_structures();
+
     control_pb_msg_->add_prune()->set_topicid(topic);
     control_not_empty_ = true;
     empty_ = false;
@@ -120,6 +146,8 @@ namespace libp2p::protocol::gossip {
 
   void MessageBuilder::addMessage(const TopicMessage &msg,
                                   const MessageId &msg_id) {
+    create_protobuf_structures();
+
     if (messages_added_.count(msg_id) != 0) {
       // prevent duplicates
       return;
@@ -130,9 +158,7 @@ namespace libp2p::protocol::gossip {
     dst->set_from(msg.from.data(), msg.from.size());
     dst->set_data(msg.data.data(), msg.data.size());
     dst->set_seqno(msg.seq_no.data(), msg.seq_no.size());
-    for (auto &id : msg.topic_ids) {
-      *dst->add_topicids() = id;
-    }
+    dst->set_topic(msg.topic);
     if (msg.signature) {
       dst->set_signature(msg.signature.value().data(),
                          msg.signature.value().size());
@@ -143,4 +169,22 @@ namespace libp2p::protocol::gossip {
     empty_ = false;
   }
 
+  outcome::result<ByteArray> MessageBuilder::signableMessage(
+      const TopicMessage &msg) {
+    pubsub::pb::Message pb_msg;
+    pb_msg.set_from(msg.from.data(), msg.from.size());
+    pb_msg.set_data(msg.data.data(), msg.data.size());
+    pb_msg.set_seqno(msg.seq_no.data(), msg.seq_no.size());
+    pb_msg.set_topic(msg.topic);
+    constexpr std::string_view kPrefix{"libp2p-pubsub:"};
+    auto size = pb_msg.ByteSizeLong();
+    ByteArray signable;
+    signable.resize(kPrefix.size() + size);
+    std::copy(kPrefix.begin(), kPrefix.end(), signable.begin());
+    if (!pb_msg.SerializeToArray(&signable[kPrefix.size()],
+                                 static_cast<int>(size))) {
+      return outcome::failure(Error::MESSAGE_SERIALIZE_ERROR);
+    }
+    return signable;
+  }
 }  // namespace libp2p::protocol::gossip

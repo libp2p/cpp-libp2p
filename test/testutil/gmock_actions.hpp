@@ -62,6 +62,10 @@ ACTION_P(Arg3CallbackWithArg, in) {
   arg3(in);
 }
 
+ACTION_P(Arg4CallbackWithArg, in) {
+  arg4(in);
+}
+
 ACTION_P(UpgradeToSecureInbound, do_upgrade) {
   arg1(do_upgrade(arg0));
 }

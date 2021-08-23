@@ -52,4 +52,5 @@ addtest(dialer_test
 target_link_libraries(dialer_test
     p2p_dialer
     p2p_literals
+    p2p_manual_scheduler_backend
     )

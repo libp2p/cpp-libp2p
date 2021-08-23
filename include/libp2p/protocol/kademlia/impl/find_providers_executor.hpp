@@ -14,7 +14,7 @@
 
 #include <libp2p/common/types.hpp>
 #include <libp2p/host/host.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
+#include <libp2p/log/sublogger.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/peer_id_with_distance.hpp>
@@ -31,7 +31,7 @@ namespace libp2p::protocol::kademlia {
    public:
     FindProvidersExecutor(
         const Config &config, std::shared_ptr<Host> host,
-        std::shared_ptr<Scheduler> scheduler,
+        std::shared_ptr<basic::Scheduler> scheduler,
         std::shared_ptr<SessionHost> session_host,
         const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
         ContentId key, FoundProvidersHandler handler);
@@ -43,7 +43,7 @@ namespace libp2p::protocol::kademlia {
     void done();
 
     /// @see ResponseHandler::responseTimeout
-    scheduler::Ticks responseTimeout() const override;
+    Time responseTimeout() const override;
 
     /// @see ResponseHandler::match
     bool match(const Message &msg) const override;
@@ -65,7 +65,7 @@ namespace libp2p::protocol::kademlia {
     // Primary
     const Config &config_;
     std::shared_ptr<Host> host_;
-    std::shared_ptr<Scheduler> scheduler_;
+    std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
     const Key content_id_;
     FoundProvidersHandler handler_;
@@ -83,7 +83,7 @@ namespace libp2p::protocol::kademlia {
 
     std::unordered_set<PeerId> providers_;
 
-    SubLogger log_;
+    log::SubLogger log_;
   };
 
 }  // namespace libp2p::protocol::kademlia

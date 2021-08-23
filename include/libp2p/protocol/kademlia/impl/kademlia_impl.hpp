@@ -15,8 +15,8 @@
 #include <libp2p/crypto/random_generator.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
+#include <libp2p/log/sublogger.hpp>
 #include <libp2p/outcome/outcome.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
@@ -40,7 +40,8 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<ContentRoutingTable> content_routing_table,
         std::shared_ptr<PeerRoutingTable> peer_routing_table,
         std::shared_ptr<Validator> validator,
-        std::shared_ptr<Scheduler> scheduler, std::shared_ptr<event::Bus> bus,
+        std::shared_ptr<basic::Scheduler> scheduler,
+        std::shared_ptr<event::Bus> bus,
         std::shared_ptr<crypto::random::RandomGenerator> random_generator);
 
     ~KademliaImpl() override = default;
@@ -66,7 +67,8 @@ namespace libp2p::protocol::kademlia {
                                         FoundProvidersHandler handler) override;
 
     /// @see PeerRouting::addPeer
-    void addPeer(const PeerInfo &peer_info, bool permanent) override;
+    void addPeer(const PeerInfo &peer_info, bool permanent,
+                 bool is_connected = false) override;
 
     /// @see PeerRouting::findPeer
     outcome::result<void> findPeer(const peer::PeerId &peer_id,
@@ -120,7 +122,7 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<ContentRoutingTable> content_routing_table_;
     std::shared_ptr<PeerRoutingTable> peer_routing_table_;
     std::shared_ptr<Validator> validator_;
-    std::shared_ptr<Scheduler> scheduler_;
+    std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<event::Bus> bus_;
     std::shared_ptr<crypto::random::RandomGenerator> random_generator_;
 
@@ -159,10 +161,10 @@ namespace libp2p::protocol::kademlia {
     // Random walk's auxiliary data
     struct {
       size_t iteration = 0;
-      scheduler::Handle handle{};
+      basic::Scheduler::Handle handle{};
     } random_walking_;
 
-    SubLogger log_;
+    log::SubLogger log_;
   };
 
 }  // namespace libp2p::protocol::kademlia

@@ -10,36 +10,9 @@
 #include <boost/container_hash/hash.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, MplexStream::Error, e) {
-  using E = libp2p::connection::MplexStream::Error;
-  switch (e) {
-    case E::CONNECTION_IS_DEAD:
-      return "underlying connection is closed or deleted";
-    case E::BAD_WINDOW_SIZE:
-      return "bad windows size was passed for adjusting";
-    case E::INVALID_ARGUMENT:
-      return "invalid argument was passed";
-    case E::IS_READING:
-      return "read was called before the last read completed";
-    case E::IS_CLOSED_FOR_READS:
-      return "this stream is closed for reads";
-    case E::IS_WRITING:
-      return "write was called before the last write completed";
-    case E::IS_CLOSED_FOR_WRITES:
-      return "this stream is closed for writes";
-    case E::IS_RESET:
-      return "this stream was reset";
-    case E::RECEIVE_OVERFLOW:
-      return "stream received more data than it is allowed by the window size";
-    case E::INTERNAL_ERROR:
-      return "internal error happened";
-  }
-  return "unknown error";
-}
-
 #define TRY_GET_CONNECTION(conn_var_name) \
   if (connection_.expired()) {            \
-    return Error::CONNECTION_IS_DEAD;     \
+    return Error::STREAM_RESET_BY_HOST;   \
   }                                       \
   auto(conn_var_name) = connection_.lock();
 
@@ -69,17 +42,19 @@ namespace libp2p::connection {
 
   void MplexStream::read(gsl::span<uint8_t> out, size_t bytes,
                          ReadCallbackFunc cb, bool some) {
+    // TODO(107): Reentrancy
+
     if (is_reset_) {
-      return cb(Error::IS_RESET);
+      return cb(Error::STREAM_RESET_BY_PEER);
     }
     if (!is_readable_) {
-      return cb(Error::IS_CLOSED_FOR_READS);
+      return cb(Error::STREAM_NOT_READABLE);
     }
     if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
-      return cb(Error::INVALID_ARGUMENT);
+      return cb(Error::STREAM_INVALID_ARGUMENT);
     }
     if (is_reading_) {
-      return cb(Error::IS_READING);
+      return cb(Error::STREAM_IS_READING);
     }
 
     // this lambda checks, if there's enough data in our read buffer, and gives
@@ -97,7 +72,7 @@ namespace libp2p::connection {
         if (boost::asio::buffer_copy(boost::asio::buffer(out.data(), to_read),
                                      self->read_buffer_.data(), to_read)
             != to_read) {
-          return cb(Error::INTERNAL_ERROR);
+          return cb(Error::STREAM_INTERNAL_ERROR);
         }
 
         self->is_reading_ = false;
@@ -116,7 +91,7 @@ namespace libp2p::connection {
     }
 
     if (connection_.expired()) {
-      return cb(Error::CONNECTION_IS_DEAD);
+      return cb(Error::STREAM_RESET_BY_HOST);
     }
 
     // subscribe to new data updates
@@ -126,14 +101,16 @@ namespace libp2p::connection {
 
   void MplexStream::write(gsl::span<const uint8_t> in, size_t bytes,
                           WriteCallbackFunc cb) {
+    // TODO(107): Reentrancy
+
     if (is_reset_) {
-      return cb(Error::IS_RESET);
+      return cb(Error::STREAM_RESET_BY_PEER);
     }
     if (!is_writable_) {
-      return cb(Error::IS_CLOSED_FOR_WRITES);
+      return cb(Error::STREAM_NOT_WRITABLE);
     }
     if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
-      return cb(Error::INVALID_ARGUMENT);
+      return cb(Error::STREAM_INVALID_ARGUMENT);
     }
     if (is_writing_) {
       std::vector<uint8_t> in_vector(in.begin(), in.end());
@@ -142,7 +119,7 @@ namespace libp2p::connection {
       return;
     }
     if (connection_.expired()) {
-      return cb(Error::CONNECTION_IS_DEAD);
+      return cb(Error::STREAM_RESET_BY_HOST);
     }
 
     is_writing_ = true;
@@ -168,6 +145,24 @@ namespace libp2p::connection {
         });
   }
 
+  void MplexStream::deferReadCallback(outcome::result<size_t> res,
+                                      ReadCallbackFunc cb) {
+    if (connection_.expired()) {
+      // TODO(107) Reentrancy here, defer callback
+      return cb(Error::STREAM_RESET_BY_HOST);
+    }
+    connection_.lock()->deferReadCallback(res, std::move(cb));
+  }
+
+  void MplexStream::deferWriteCallback(std::error_code ec,
+                                       WriteCallbackFunc cb) {
+    if (connection_.expired()) {
+      // TODO(107) Reentrancy here, defer callback
+      return cb(Error::STREAM_RESET_BY_HOST);
+    }
+    connection_.lock()->deferWriteCallback(ec, std::move(cb));
+  }
+
   void MplexStream::writeSome(gsl::span<const uint8_t> in, size_t bytes,
                               WriteCallbackFunc cb) {
     write(in, bytes, std::move(cb));
@@ -179,7 +174,7 @@ namespace libp2p::connection {
 
   void MplexStream::close(VoidResultHandlerFunc cb) {
     if (connection_.expired()) {
-      return cb(Error::CONNECTION_IS_DEAD);
+      return cb(Error::STREAM_RESET_BY_HOST);
     }
     connection_.lock()->streamClose(
         stream_id_,
@@ -217,7 +212,7 @@ namespace libp2p::connection {
   void MplexStream::adjustWindowSize(uint32_t new_size,
                                      VoidResultHandlerFunc cb) {
     if (new_size == 0) {
-      return cb(Error::BAD_WINDOW_SIZE);
+      return cb(Error::STREAM_INVALID_WINDOW_SIZE);
     }
     receive_window_size_ = new_size;
     cb(outcome::success());
@@ -248,22 +243,22 @@ namespace libp2p::connection {
     if (data_size == 0) {
       is_reset_ = true;
       if (data_notifyee_ && !data_notified_) {
-        data_notifyee_(Error::CONNECTION_IS_DEAD);
+        data_notifyee_(Error::STREAM_RESET_BY_HOST);
       }
-      return Error::CONNECTION_IS_DEAD;
+      return Error::STREAM_RESET_BY_HOST;
     }
 
     if (data_size > receive_window_size_) {
       // we have received more data, than we can handle
       reset();
-      return Error::RECEIVE_OVERFLOW;
+      return Error::STREAM_RECEIVE_OVERFLOW;
     }
 
     if (boost::asio::buffer_copy(
             read_buffer_.prepare(data_size),
             boost::asio::const_buffer(data.data(), data_size))
         != data_size) {
-      return Error::INTERNAL_ERROR;
+      return Error::STREAM_INTERNAL_ERROR;
     }
     read_buffer_.commit(data_size);
     receive_window_size_ -= data_size;

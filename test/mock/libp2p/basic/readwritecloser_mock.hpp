@@ -8,7 +8,7 @@
 
 #include <gmock/gmock.h>
 #include "common/hexutil.hpp"
-#include "include/libp2p/basic/readwritecloser.hpp"
+#include "libp2p/basic/readwritecloser.hpp"
 
 namespace libp2p::basic {
   class ReadWriteCloserMock : public ReadWriteCloser {

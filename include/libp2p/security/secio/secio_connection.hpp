@@ -11,10 +11,11 @@
 #include <mutex>
 #include <queue>
 
-#include <libp2p/common/logger.hpp>
+#include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/secure_connection.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
+#include <libp2p/log/logger.hpp>
 
 namespace libp2p::crypto {
   namespace aes {
@@ -100,11 +101,16 @@ namespace libp2p::connection {
     void readSome(gsl::span<uint8_t> out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
+    void deferReadCallback(outcome::result<size_t> res,
+                           ReadCallbackFunc cb) override;
+
     void write(gsl::span<const uint8_t> in, size_t bytes,
                WriteCallbackFunc cb) override;
 
     void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
+
+    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
     bool isClosed() const override;
 
@@ -165,7 +171,11 @@ namespace libp2p::connection {
 
     std::shared_ptr<common::ByteArray> read_buffer_;
 
-    common::Logger log_ = common::createLogger("SECCONN");
+    log::Logger log_ = log::createLogger("SecIoConnection");
+
+   public:
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
+        libp2p::connection::SecioConnection);
   };
 }  // namespace libp2p::connection
 

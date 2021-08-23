@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <thread>
 
@@ -11,6 +10,7 @@
 #include <libp2p/peer/address_repository.hpp>
 #include <libp2p/peer/address_repository/inmem_address_repository.hpp>
 #include <libp2p/peer/errors.hpp>
+#include "mock/libp2p/network/dnsaddr_resolver_mock.hpp"
 #include "testutil/outcome.hpp"
 
 using namespace libp2p::peer;
@@ -21,7 +21,9 @@ using std::literals::chrono_literals::operator""ms;
 
 struct InmemAddressRepository_Test : public ::testing::Test {
   void SetUp() override {
-    db = std::make_unique<InmemAddressRepository>();
+    auto dnsaddr_resolver_mock =
+        std::make_shared<libp2p::network::DnsaddrResolverMock>();
+    db = std::make_unique<InmemAddressRepository>(dnsaddr_resolver_mock);
     db->onAddressAdded([](const PeerId &p, const Multiaddress &ma) {
       std::cout << "added  : <" << p.toMultihash().toHex() << "> "
                 << ma.getStringAddress() << '\n';

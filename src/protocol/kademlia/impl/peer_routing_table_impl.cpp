@@ -36,6 +36,103 @@ namespace {
 
 namespace libp2p::protocol::kademlia {
 
+  size_t Bucket::size() const {
+    return peers_.size();
+  }
+
+  void Bucket::append(const Bucket &bucket) {
+    peers_.insert(peers_.end(), bucket.peers_.begin(), bucket.peers_.end());
+  }
+
+  void Bucket::sort(const NodeId &node_id) {
+    XorDistanceComparator cmp(node_id);
+    peers_.sort(cmp);
+  }
+
+  auto Bucket::find(const peer::PeerId &p) const {
+    return std::find_if(peers_.begin(), peers_.end(),
+                        [&p](const auto &i) { return i.peer_id == p; });
+  }
+
+  bool Bucket::moveToFront(const PeerId &pid) {
+    auto it = find(pid);
+    if (it != peers_.end()) {
+      if (it != peers_.begin()) {
+        peers_.splice(peers_.begin(), peers_, it);
+      }
+      return false;
+    }
+    return true;
+  }
+
+  void Bucket::emplaceToFront(const PeerId &pid, bool is_replaceable) {
+    peers_.emplace(peers_.begin(), pid, is_replaceable);
+  }
+
+  boost::optional<PeerId> Bucket::removeReplaceableItem() {
+    boost::optional<PeerId> result;
+
+    for (auto it = peers_.rbegin(); it != peers_.rend(); ++it) {
+      if (it->is_replaceable) {
+        result = std::move(it->peer_id);
+        peers_.erase((++it).base());
+        break;
+      }
+    }
+
+    return result;
+  }
+
+  void Bucket::truncate(size_t limit) {
+    if (limit == 0) {
+      peers_.clear();
+    } else if (peers_.size() > limit) {
+      peers_.erase(std::next(peers_.begin(), static_cast<long>(limit)),
+                   peers_.end());
+    }
+  }
+
+  std::vector<peer::PeerId> Bucket::peerIds() const {
+    std::vector<peer::PeerId> peerIds;
+    peerIds.reserve(peers_.size());
+    std::transform(peers_.begin(), peers_.end(), std::back_inserter(peerIds),
+                   [](const auto &bpi) { return bpi.peer_id; });
+    return peerIds;
+  }
+
+  bool Bucket::contains(const peer::PeerId &p) const {
+    return find(p) != peers_.end();
+  }
+
+  bool Bucket::remove(const peer::PeerId &p) {
+    auto it = find(p);
+    if (it != peers_.end()) {
+      peers_.erase(it);
+      return true;
+    }
+
+    return false;
+  }
+
+  Bucket Bucket::split(size_t commonLenPrefix, const NodeId &target) {
+    Bucket b{};
+
+    std::list<BucketPeerInfo> new_peers;
+
+    while (!peers_.empty()) {
+      auto it = peers_.begin();
+      if (it->node_id.commonPrefixLen(target) > commonLenPrefix) {
+        b.peers_.splice(b.peers_.end(), peers_, it);
+      } else {
+        new_peers.splice(new_peers.end(), peers_, it);
+      }
+    }
+
+    peers_.swap(new_peers);
+
+    return b;
+  }
+
   PeerRoutingTableImpl::PeerRoutingTableImpl(
       const Config &config,
       std::shared_ptr<peer::IdentityManager> identity_manager,
@@ -47,7 +144,7 @@ namespace libp2p::protocol::kademlia {
           BOOST_ASSERT(identity_manager_ != nullptr);
           return identity_manager_->getId();
         }()),
-        log_("kad", "PeerRoutingTable") {
+        log_("PeerRoutingTable", "kademlia") {
     BOOST_ASSERT(identity_manager_ != nullptr);
     BOOST_ASSERT(bus_ != nullptr);
     BOOST_ASSERT(config_.maxBucketSize > 1);
@@ -74,39 +171,56 @@ namespace libp2p::protocol::kademlia {
       // if this happens, search both surrounding buckets for nearby peers
       if (bucketId > 0) {
         auto &left = buckets_.at(bucketId - 1);
-        bucket.insert(bucket.end(), left.begin(), left.end());
+        bucket.append(left);
       }
       if (bucketId < buckets_.size() - 1) {
         auto &right = buckets_.at(bucketId + 1);
-        bucket.insert(bucket.end(), right.begin(), right.end());
+        bucket.append(right);
       }
     }
 
     // sort bucket in ascending order by XOR distance from local peer.
-    XorDistanceComparator cmp(node_id);
-    std::sort(bucket.begin(), bucket.end(), cmp);
+    bucket.sort(node_id);
 
     bucket.truncate(count);
 
-    return bucket.toVector();
+    return bucket.peerIds();
   }
 
-  outcome::result<bool> PeerRoutingTableImpl::update(const peer::PeerId &pid) {
+  namespace {
+    outcome::result<bool> replacePeer(Bucket &bucket, const peer::PeerId &pid,
+                                      bool is_replaceable, event::Bus &bus) {
+      const auto removed = bucket.removeReplaceableItem();
+      if (!removed.has_value()) {
+        return PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY;
+      }
+      bus.getChannel<events::PeerRemovedChannel>().publish(removed.value());
+      bucket.emplaceToFront(pid, is_replaceable);
+      bus.getChannel<events::PeerAddedChannel>().publish(pid);
+      return true;
+    }
+  }  // namespace
+
+  outcome::result<bool> PeerRoutingTableImpl::update(const peer::PeerId &pid,
+                                                     bool is_permanent,
+                                                     bool is_connected) {
     NodeId nodeId(pid);
     size_t cpl = nodeId.commonPrefixLen(local_);
 
     auto bucketId = getBucketId(buckets_, cpl);
     auto &bucket = buckets_.at(bucketId);
 
-    // Trying to find and move to front
-    auto it = std::remove(bucket.rbegin(), bucket.rend(), pid);
-    if (it != bucket.rend()) {
-      *it = pid;
+    // Trying to find and move to front if its a long lived connected peer
+    if (is_connected) {
+      if (!bucket.moveToFront(pid)) {
+        return false;
+      }
+    } else if (bucket.contains(pid)) {
       return false;
     }
 
     if (bucket.size() < config_.maxBucketSize) {
-      bucket.push_front(pid);
+      bucket.emplaceToFront(pid, !is_permanent);
       bus_->getChannel<events::PeerAddedChannel>().publish(pid);
       return true;
     }
@@ -119,22 +233,18 @@ namespace libp2p::protocol::kademlia {
 
       // the structure of the table has changed, so let's recheck if the peer
       // now has a dedicated bucket.
-      auto bid = cpl;
-      if (bid >= buckets_.size()) {
-        bid = buckets_.size() - 1;
+      auto resizedBucketId = getBucketId(buckets_, cpl);
+      auto &resizedBucket = buckets_.at(resizedBucketId);
+      if (resizedBucket.size() < config_.maxBucketSize) {
+        resizedBucket.emplaceToFront(pid, !is_permanent);
+        bus_->getChannel<events::PeerAddedChannel>().publish(pid);
+        return true;
       }
 
-      auto &lastBucket = buckets_.at(bid);
-      if (lastBucket.size() >= config_.maxBucketSize) {
-        return Error::PEER_REJECTED_NO_CAPACITY;
-      }
-
-      lastBucket.push_front(pid);
-      bus_->getChannel<events::PeerAddedChannel>().publish(pid);
-      return false;
+      return replacePeer(resizedBucket, pid, !is_permanent, *bus_);
     }
 
-    return Error::PEER_REJECTED_NO_CAPACITY;
+    return replacePeer(bucket, pid, !is_permanent, *bus_);
   }
 
   void PeerRoutingTableImpl::nextBucket() {
@@ -164,8 +274,9 @@ namespace libp2p::protocol::kademlia {
 
   std::vector<peer::PeerId> PeerRoutingTableImpl::getAllPeers() const {
     std::vector<peer::PeerId> vec;
-    for (auto &bucket : buckets_) {
-      vec.insert(vec.end(), bucket.begin(), bucket.end());
+    for (const auto &bucket : buckets_) {
+      auto peer_ids = bucket.peerIds();
+      vec.insert(vec.end(), peer_ids.begin(), peer_ids.end());
     }
     return vec;
   }

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/stream.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
 
 #define TRACE_ENABLED 0
@@ -18,7 +18,9 @@ namespace libp2p::network {
       // we have connection to this peer
 
       TRACE("reusing connection to peer {}", p.id.toBase58().substr(46));
-      cb(std::move(c));
+      scheduler_->schedule([cb{std::move(cb)}, c{std::move(c)}] () mutable {
+        cb(std::move(c));
+      });
       return;
     }
 
@@ -26,7 +28,9 @@ namespace libp2p::network {
     // did user supply its addresses in {@param p}?
     if (p.addresses.empty()) {
       // we don't have addresses of peer p
-      cb(std::errc::destination_address_required);
+      scheduler_->schedule([cb{std::move(cb)}] {
+        cb(std::errc::destination_address_required);
+      });
       return;
     }
 
@@ -98,7 +102,9 @@ namespace libp2p::network {
 
     if (not dialled) {
       // we did not find supported transport
-      cb(std::errc::address_family_not_supported);
+      scheduler_->schedule([cb{std::move(cb)}] {
+        cb(std::errc::address_family_not_supported);
+      });
     }
   }
 
@@ -117,10 +123,6 @@ namespace libp2p::network {
           }
           auto &&conn = rconn.value();
 
-          if (!conn->isInitiator()) {
-            TRACE("dialer: opening outbound stream inside inbound connection");
-          }
-
           // 2. open new stream on that connection
           conn->newStream(
               [this, cb{std::move(cb)},
@@ -129,43 +131,53 @@ namespace libp2p::network {
                 if (!rstream) {
                   return cb(rstream.error());
                 }
-                auto &&stream = rstream.value();
 
-                TRACE("dialer: before multiselect");
-
-                // 3. negotiate a protocol over that stream
-                std::vector<peer::Protocol> protocols{protocol};
-                this->multiselect_->selectOneOf(
-                    protocols, stream, true /* initiator */,
-                    [cb{std::move(cb)},
-                     stream](outcome::result<peer::Protocol> rproto) mutable {
-                      if (!rproto) {
-                        return cb(rproto.error());
-                      }
-
-                      TRACE("dialer: inside multiselect callback");
-
-                      // 4. return stream back to the user
-                      cb(std::move(stream));
-                    });
+                this->multiselect_->simpleStreamNegotiate(
+                    rstream.value(), protocol, std::move(cb));
               });
         },
         timeout);
+  }
+
+  void DialerImpl::newStream(const peer::PeerId &peer_id,
+                             const peer::Protocol &protocol,
+                             StreamResultFunc cb) {
+    auto conn = cmgr_->getBestConnectionForPeer(peer_id);
+    if (!conn) {
+      scheduler_->schedule([cb{std::move(cb)}] {
+        cb(std::errc::not_connected);
+      });
+      return;
+    }
+
+    auto result = conn->newStream();
+    if (!result) {
+      scheduler_->schedule([cb{std::move(cb)}, result] {
+        cb(result);
+      });
+      return;
+    }
+
+    multiselect_->simpleStreamNegotiate(result.value(), protocol,
+                                        std::move(cb));
   }
 
   DialerImpl::DialerImpl(
       std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect,
       std::shared_ptr<TransportManager> tmgr,
       std::shared_ptr<ConnectionManager> cmgr,
-      std::shared_ptr<ListenerManager> listener)
+      std::shared_ptr<ListenerManager> listener,
+      std::shared_ptr<basic::Scheduler> scheduler)
       : multiselect_(std::move(multiselect)),
         tmgr_(std::move(tmgr)),
         cmgr_(std::move(cmgr)),
-        listener_(std::move(listener)) {
+        listener_(std::move(listener)),
+        scheduler_(std::move(scheduler)) {
     BOOST_ASSERT(multiselect_ != nullptr);
     BOOST_ASSERT(tmgr_ != nullptr);
     BOOST_ASSERT(cmgr_ != nullptr);
     BOOST_ASSERT(listener_ != nullptr);
+    BOOST_ASSERT(scheduler_ != nullptr);
   }
 
 }  // namespace libp2p::network

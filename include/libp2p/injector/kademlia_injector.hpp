@@ -9,9 +9,9 @@
 #include <libp2p/injector/host_injector.hpp>
 
 // implementations
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include <libp2p/protocol/common/asio/asio_scheduler.hpp>
-#include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/content_routing_table_impl.hpp>
 #include <libp2p/protocol/kademlia/impl/kademlia_impl.hpp>
@@ -21,6 +21,45 @@
 #include <libp2p/protocol/kademlia/impl/validator_default.hpp>
 
 namespace libp2p::injector {
+
+  template <typename Injector>
+  std::shared_ptr<libp2p::protocol::kademlia::Kademlia> get_kademlia(
+      const Injector &injector) {
+    static auto initialized =
+        boost::optional<std::shared_ptr<libp2p::protocol::kademlia::Kademlia>>(
+            boost::none);
+    if (initialized) {
+      return initialized.value();
+    }
+
+    [[maybe_unused]] auto config =
+        injector.template create<protocol::kademlia::Config>();
+    [[maybe_unused]] auto host =
+        injector.template create<std::shared_ptr<Host>>();
+    [[maybe_unused]] auto storage =
+        injector
+            .template create<std::shared_ptr<protocol::kademlia::Storage>>();
+    [[maybe_unused]] auto table = injector.template create<
+        std::shared_ptr<protocol::kademlia::PeerRoutingTable>>();
+    [[maybe_unused]] auto content_routing_table = injector.template create<
+        std::shared_ptr<protocol::kademlia::ContentRoutingTable>>();
+    [[maybe_unused]] auto validator =
+        injector
+            .template create<std::shared_ptr<protocol::kademlia::Validator>>();
+    [[maybe_unused]] auto scheduler =
+        injector.template create<std::shared_ptr<basic::Scheduler>>();
+    [[maybe_unused]] auto random_generator = injector.template create<
+        std::shared_ptr<crypto::random::RandomGenerator>>();
+    [[maybe_unused]] auto bus =
+        injector.template create<std::shared_ptr<event::Bus>>();
+
+    initialized = std::make_shared<libp2p::protocol::kademlia::KademliaImpl>(
+        config, std::move(host), std::move(storage),
+        std::move(content_routing_table), std::move(table),
+        std::move(validator), std::move(scheduler), std::move(bus),
+        std::move(random_generator));
+    return initialized.value();
+  }
 
   template <
       typename T, typename C = std::decay_t<T>,
@@ -40,9 +79,7 @@ namespace libp2p::injector {
     return di::make_injector<InjectorConfig>(
         // clang-format off
 
-        di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
         di::bind<crypto::random::RandomGenerator>.template to<crypto::random::BoostRandomGenerator>(),
-        di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
 
         di::bind<protocol::kademlia::Config>.template to<protocol::kademlia::Config>().in(di::singleton),
         di::bind<protocol::kademlia::ContentRoutingTable>.template to<protocol::kademlia::ContentRoutingTableImpl>(),

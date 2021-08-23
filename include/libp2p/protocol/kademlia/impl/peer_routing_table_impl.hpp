@@ -9,67 +9,83 @@
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 
 #include <boost/assert.hpp>
-#include <deque>
+#include <boost/optional.hpp>
+#include <list>
 
 #include <libp2p/event/bus.hpp>
+#include <libp2p/log/sublogger.hpp>
 #include <libp2p/peer/identity_manager.hpp>
-#include <libp2p/protocol/common/sublogger.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
 
 namespace libp2p::protocol::kademlia {
 
+  struct BucketPeerInfo {
+    peer::PeerId peer_id;
+    bool is_replaceable;
+    NodeId node_id;
+    BucketPeerInfo(const peer::PeerId &peer_id, bool is_replaceable)
+        : peer_id(peer_id), is_replaceable(is_replaceable), node_id(peer_id) {}
+  };
+
+  struct XorDistanceComparator {
+    explicit XorDistanceComparator(const peer::PeerId &from) {
+      crypto::Sha256 hash;
+      hash.write(from.toVector()).value();
+      memcpy(hfrom.data(), hash.digest().value().data(),
+             std::min<size_t>(hash.digestSize(), hfrom.size()));
+    }
+
+    explicit XorDistanceComparator(const NodeId &from)
+        : hfrom(from.getData()) {}
+
+    explicit XorDistanceComparator(const Hash256 &hash) : hfrom(hash) {}
+
+    bool operator()(const BucketPeerInfo &a, const BucketPeerInfo &b) {
+      NodeId from(hfrom);
+      auto d1 = a.node_id.distance(from);
+      auto d2 = b.node_id.distance(from);
+      constexpr auto size = Hash256().size();
+
+      // return true, if distance d1 is less than d2, false otherwise
+      return std::memcmp(d1.data(), d2.data(), size) < 0;
+    }
+
+    Hash256 hfrom{};
+  };
+
   /**
    * Single bucket which holds peers.
    */
-  class Bucket : public std::deque<peer::PeerId> {
+  class Bucket {
    public:
-    void truncate(size_t limit) {
-      if (size() > limit) {
-        erase(std::next(begin(), limit), end());
-      }
-    }
+    size_t size() const;
 
-    std::vector<peer::PeerId> toVector() const {
-      return {begin(), end()};
-    }
+    void append(const Bucket &bucket);
 
-    bool contains(const peer::PeerId &p) const {
-      auto it = std::find(begin(), end(), p);
-      return it != end();
-    }
+    // sort bucket in ascending order by XOR distance from node_id
+    void sort(const NodeId &node_id);
 
-    bool remove(const peer::PeerId &p) {
-      // this shifts elements to the end
-      auto it = std::remove(begin(), end(), p);
-      if (it != end()) {
-        erase(it);
-        return true;
-      }
+    auto find(const peer::PeerId &p) const;
 
-      return false;
-    }
+    bool moveToFront(const PeerId &pid);
 
-    void moveToFront(const peer::PeerId &p) {
-      remove(p);
-      push_front(p);
-    }
+    void emplaceToFront(const PeerId &pid, bool is_replaceable);
 
-    Bucket split(size_t commonLenPrefix, const NodeId &target) {
-      Bucket b{};
-      // remove shifts all elements "to be removed" to the end, other elements
-      // preserve their relative order
-      auto new_end =
-          std::remove_if(begin(), end(), [&](const peer::PeerId &pid) {
-            NodeId nodeId(pid);
-            return nodeId.commonPrefixLen(target) > commonLenPrefix;
-          });
+    boost::optional<PeerId> removeReplaceableItem();
 
-      b.assign(std::make_move_iterator(new_end),
-               std::make_move_iterator(end()));
+    void truncate(size_t limit);
 
-      return b;
-    }
+    std::vector<peer::PeerId> peerIds() const;
+
+    bool contains(const peer::PeerId &p) const;
+
+    bool remove(const peer::PeerId &p);
+
+    Bucket split(size_t commonLenPrefix, const NodeId &target);
+
+   private:
+    std::list<BucketPeerInfo> peers_;
   };
 
   class PeerRoutingTableImpl
@@ -89,7 +105,8 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<peer::IdentityManager> identity_manager,
         std::shared_ptr<event::Bus> bus);
 
-    outcome::result<bool> update(const peer::PeerId &pid) override;
+    outcome::result<bool> update(const peer::PeerId &pid, bool is_permanent,
+                                 bool is_connected = false) override;
 
     void remove(const peer::PeerId &peer_id) override;
 
@@ -111,7 +128,7 @@ namespace libp2p::protocol::kademlia {
 
     std::vector<Bucket> buckets_;
 
-    SubLogger log_;
+    log::SubLogger log_;
   };
 
 }  // namespace libp2p::protocol::kademlia

@@ -31,11 +31,15 @@ option(MSAN "Enable memory sanitizer" OFF)
 option(TSAN "Enable thread sanitizer" OFF)
 option(UBSAN "Enable UB sanitizer" OFF)
 option(EXPOSE_MOCKS "Make mocks header files visible for child projects" OFF)
+option(METRICS_ENABLED "Enable libp2p metrics" OFF)
 
 include(cmake/print.cmake)
 print("C flags: ${CMAKE_C_FLAGS}")
 print("CXX flags: ${CMAKE_CXX_FLAGS}")
 print("Using CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
+
+# the property is out of "if TESTING" scope due to addtest func is out too
+set_property(GLOBAL PROPERTY TEST_TARGETS)
 
 include(CheckCXXCompilerFlag)
 include(cmake/install.cmake)
@@ -44,6 +48,9 @@ include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 include(cmake/san.cmake)
 
+if (METRICS_ENABLED)
+  add_compile_definitions("LIBP2P_METRICS_ENABLED")
+endif ()
 
 ## setup compilation flags
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang|Clang|GNU)$")
@@ -59,6 +66,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang|Clang|GNU)$")
   add_flag(-Wdouble-promotion)       # (GCC >= 4.6, Clang >= 3.8) warn if float is implicit promoted to double
   add_flag(-Wsign-compare)
   add_flag(-Wtype-limits)            # size_t - size_t >= 0 -> always true
+
+  # suppress warnings if a certain compiler version doesn't know some of the warnings above
+  add_flag(-Wno-unknown-warning-option)
 
   # disable those flags
   add_flag(-Wno-unused-command-line-argument)    # clang: warning: argument unused during compilation: '--coverage' [-Wunused-command-line-argument]
@@ -77,9 +87,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # TODO(warchant): add flags https://github.com/lefticus/cppbestpractices/blob/master/02-Use_the_Tools_Available.md#msvc
 endif ()
 
-if (COVERAGE)
-  include(cmake/coverage.cmake)
-endif ()
 if (CLANG_TIDY)
   include(cmake/clang-tidy.cmake)
 endif ()
@@ -98,8 +105,11 @@ add_subdirectory(src)
 if(EXAMPLES)
   add_subdirectory(example)
 endif()
-
-if(TESTING)
+if(TESTING OR COVERAGE)
   enable_testing()
   add_subdirectory(test)
 endif()
+
+if (COVERAGE)
+  include(cmake/coverage.cmake)
+endif ()

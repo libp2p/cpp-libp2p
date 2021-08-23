@@ -12,6 +12,7 @@
 #include <boost/asio/ssl.hpp>
 #include <boost/noncopyable.hpp>
 
+#include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/secure_connection.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/peer/identity_manager.hpp>
@@ -86,6 +87,10 @@ namespace libp2p::connection {
     void readSome(gsl::span<uint8_t> out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
+    /// Defers read callback to avoid reentrancy in async calls
+    void deferReadCallback(outcome::result<size_t> res,
+                           ReadCallbackFunc cb) override;
+
     /// Async writes exactly the # of bytes given
     void write(gsl::span<const uint8_t> in, size_t bytes,
                WriteCallbackFunc cb) override;
@@ -93,6 +98,9 @@ namespace libp2p::connection {
     /// Async writes up to the # of bytes given
     void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
+
+    /// Defers error callback to avoid reentrancy in async calls
+    void deferWriteCallback(std::error_code ec, ReadCallbackFunc cb) override;
 
     /// Returns true if raw connection is closed
     bool isClosed() const override;
@@ -124,6 +132,9 @@ namespace libp2p::connection {
 
     /// Remote public key, extracted from peer certificate during handshake
     boost::optional<crypto::PublicKey> remote_pubkey_;
+
+   public:
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::connection::TlsConnection);
   };
 }  // namespace libp2p::connection
 

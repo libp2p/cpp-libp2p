@@ -14,10 +14,18 @@ namespace libp2p::protocol_muxer {
    public:
     ~ProtocolMuxerMock() override = default;
 
-    MOCK_METHOD4(selectOneOf,
+    MOCK_METHOD5(selectOneOf,
                  void(gsl::span<const peer::Protocol> protocols,
                       std::shared_ptr<basic::ReadWriter> connection,
-                      bool is_initiator, ProtocolHandlerFunc cb));
+                      bool is_initiator, bool negotiate_multiselect,
+                      ProtocolHandlerFunc cb));
+
+    MOCK_METHOD3(
+        simpleStreamNegotiate,
+        void(const std::shared_ptr<connection::Stream> &,
+             const peer::Protocol &,
+             std::function<
+                 void(outcome::result<std::shared_ptr<connection::Stream>>)>));
   };
 }  // namespace libp2p::protocol_muxer
 

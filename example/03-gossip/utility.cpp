@@ -29,53 +29,31 @@ namespace libp2p::protocol::example::utility {
     return res ? res.value().toBase58().substr(46) : "???";
   }
 
-  libp2p::common::Logger setupLoggers(char level) {
-    static const char *kPattern = "%L %T.%e %v";
-
-    spdlog::level::level_enum spdlog_level = spdlog::level::info;
+  void setupLoggers(char level) {
     switch (level) {
       case 'e':
-        spdlog_level = spdlog::level::err;
+        libp2p::log::setLevelOfGroup("main", libp2p::log::Level::ERROR);
         break;
       case 'w':
-        spdlog_level = spdlog::level::warn;
+        libp2p::log::setLevelOfGroup("main", libp2p::log::Level::WARN);
         break;
       case 'd':
-        spdlog_level = spdlog::level::debug;
+        libp2p::log::setLevelOfGroup("main", libp2p::log::Level::DEBUG);
         break;
       case 't':
-        spdlog_level = spdlog::level::trace;
+        libp2p::log::setLevelOfGroup("main", libp2p::log::Level::TRACE);
         break;
       default:
         break;
     }
-
-    auto gossip_logger = libp2p::common::createLogger("gossip");
-    gossip_logger->set_pattern(kPattern);
-
-    auto debug_logger = libp2p::common::createLogger("debug");
-    debug_logger->set_pattern(kPattern);
-
-    auto logger = libp2p::common::createLogger("gossip-example");
-    logger->set_pattern(kPattern);
-
-    gossip_logger->set_level(spdlog_level);
-    debug_logger->set_level(spdlog_level);
-    logger->set_level(spdlog_level);
-
-    if (spdlog_level == spdlog::level::trace) {
-      // for all loggers
-      spdlog::set_level(spdlog_level);
-    }
-
-    return logger;
   }
 
   std::string getLocalIP(boost::asio::io_context &io) {
     boost::asio::ip::tcp::resolver resolver(io);
     boost::asio::ip::tcp::resolver::query query(boost::asio::ip::host_name(),
                                                 "");
-    boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
+    boost::system::error_code ec;
+    boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query, ec);
     boost::asio::ip::tcp::resolver::iterator end;
     std::string addr("127.0.0.1");
     while (it != end) {

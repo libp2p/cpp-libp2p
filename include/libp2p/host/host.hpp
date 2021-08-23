@@ -46,6 +46,14 @@ namespace libp2p {
 
     using NewConnectionHandler = std::function<void(peer::PeerInfo &&)>;
 
+    enum class Connectedness {
+      NOT_CONNECTED,  ///< we don't know peer's addresses, and are not connected
+      CONNECTED,      ///< we have at least one connection to this peer
+      CAN_CONNECT,    ///< we know peer's addr, and we can dial
+      CAN_NOT_CONNECT  ///< we know peer's addr, but can not dial (no
+      ///< transports)
+    };
+
     /**
      * @brief Get a version of Libp2p, supported by this Host
      */
@@ -91,6 +99,13 @@ namespace libp2p {
      * May return 0 addresses if we don't know our observed addresses.
      */
     virtual std::vector<multi::Multiaddress> getObservedAddresses() const = 0;
+
+    /**
+    * @brief Get connectedness information for given peer
+    * @param p Peer info
+    * @return Connectedness
+    */
+    virtual Connectedness connectedness(const peer::PeerInfo &p) const = 0;
 
     /**
      * @brief Let Host handle given {@param proto} protocol
@@ -175,6 +190,17 @@ namespace libp2p {
       newStream(peer_info, protocol, handler,
                 std::chrono::milliseconds::zero());
     }
+
+    /**
+     * @brief Open new stream to the peer {@param peer} with protocol
+     * {@param protocol} in optimistic way. Assuming that connection exists.
+     * @param peer stream will be opened to this peer
+     * @param protocol "speak" using this protocol
+     * @param handler callback, will be executed on success or fail
+     */
+    virtual void newStream(
+        const peer::PeerId &peer_id, const peer::Protocol &protocol,
+        const StreamResultHandler &handler) = 0;
 
     /**
      * @brief Create listener on given multiaddress.

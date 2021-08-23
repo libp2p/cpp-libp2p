@@ -76,7 +76,7 @@ namespace libp2p::security {
   void Plaintext::secureInbound(
       std::shared_ptr<connection::RawConnection> inbound,
       SecConnCallbackFunc cb) {
-    log_->debug("securing inbound connection");
+    SL_DEBUG(log_, "securing inbound connection");
     auto rw = std::make_shared<basic::ProtobufMessageReadWriter>(inbound);
     sendExchangeMsg(inbound, rw, cb);
     receiveExchangeMsg(inbound, rw, boost::none, cb);
@@ -85,7 +85,7 @@ namespace libp2p::security {
   void Plaintext::secureOutbound(
       std::shared_ptr<connection::RawConnection> outbound,
       const peer::PeerId &p, SecConnCallbackFunc cb) {
-    log_->debug("securing outbound connection");
+    SL_DEBUG(log_, "securing outbound connection");
     auto rw = std::make_shared<basic::ProtobufMessageReadWriter>(outbound);
     sendExchangeMsg(outbound, rw, cb);
     receiveExchangeMsg(outbound, rw, p, cb);
@@ -97,6 +97,9 @@ namespace libp2p::security {
       SecConnCallbackFunc cb) const {
     plaintext::ExchangeMessage exchange_msg{
         .pubkey = idmgr_->getKeyPair().publicKey, .peer_id = idmgr_->getId()};
+
+    // TODO(107): Reentrancy
+
     PLAINTEXT_OUTCOME_TRY(proto_exchange_msg,
                           marshaller_->handyToProto(exchange_msg), conn, cb)
 

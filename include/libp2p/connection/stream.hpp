@@ -31,6 +31,22 @@ namespace libp2p::connection {
    * forbidden
    */
   struct Stream : public basic::ReadWriter {
+    enum class Error {
+      STREAM_INTERNAL_ERROR = 1,
+      STREAM_INVALID_ARGUMENT,
+      STREAM_PROTOCOL_ERROR,
+      STREAM_IS_READING,
+      STREAM_NOT_READABLE,
+      STREAM_NOT_WRITABLE,
+      STREAM_CLOSED_BY_HOST,
+      STREAM_CLOSED_BY_PEER,
+      STREAM_RESET_BY_HOST,
+      STREAM_RESET_BY_PEER,
+      STREAM_INVALID_WINDOW_SIZE,
+      STREAM_WRITE_OVERFLOW,
+      STREAM_RECEIVE_OVERFLOW,
+    };
+
     using Handler = void(std::shared_ptr<Stream>);
     using VoidResultHandlerFunc = std::function<void(outcome::result<void>)>;
 
@@ -103,5 +119,7 @@ namespace libp2p::connection {
     virtual outcome::result<multi::Multiaddress> remoteMultiaddr() const = 0;
   };
 }  // namespace libp2p::connection
+
+OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, Stream::Error)
 
 #endif  // LIBP2P_CONNECTION_STREAM_HPP

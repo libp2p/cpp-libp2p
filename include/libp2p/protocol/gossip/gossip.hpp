@@ -6,6 +6,7 @@
 #ifndef LIBP2P_GOSSIP_HPP
 #define LIBP2P_GOSSIP_HPP
 
+#include <chrono>
 #include <functional>
 #include <set>
 #include <string>
@@ -13,17 +14,34 @@
 
 #include <boost/optional.hpp>
 
-#include <libp2p/peer/peer_id.hpp>
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/multi/multiaddress.hpp>
+#include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/common/subscription.hpp>
+
+namespace libp2p {
+  struct Host;
+  namespace basic {
+    class Scheduler;
+  }
+  namespace crypto {
+    class CryptoProvider;
+    namespace marshaller {
+      class KeyMarshaller;
+    }
+  }  // namespace crypto
+  namespace peer {
+    class IdentityManager;
+  }
+}  // namespace libp2p
 
 namespace libp2p::protocol::gossip {
 
   /// Gossip pub-sub protocol config
   struct Config {
-    /// Network density factor for gossip meshes
-    size_t D = 6;
+    /// Network density factors for gossip meshes
+    size_t D_min = 5;
+    size_t D_max = 10;
 
     /// Ideal number of connected peers to support the network
     size_t ideal_connections_num = 100;
@@ -40,19 +58,39 @@ namespace libp2p::protocol::gossip {
     bool echo_forward_mode = false;
 
     /// Read or write timeout per whole network operation
-    unsigned rw_timeout_msec = 10000;
+    std::chrono::milliseconds rw_timeout_msec{std::chrono::seconds(10)};
 
-    unsigned message_cache_lifetime_msec = 120000;
+    /// Lifetime of a message in message cache
+    std::chrono::milliseconds message_cache_lifetime_msec{
+        std::chrono::minutes(2)};
 
-    unsigned seen_cache_lifetime_msec = 60000;
+    /// Topic's message seen cache lifetime
+    std::chrono::milliseconds seen_cache_lifetime_msec{
+        message_cache_lifetime_msec * 3 / 4};
 
-    unsigned heartbeat_interval_msec = 1000;
+    /// Topic's seen cache limit
+    unsigned seen_cache_limit = 100;
+
+    /// Heartbeat interval
+    std::chrono::milliseconds heartbeat_interval_msec{1000};
+
+    /// Ban interval between dial attempts to peer
+    std::chrono::milliseconds ban_interval_msec{std::chrono::minutes(1)};
+
+    /// Max number of dial attempts before peer is forgotten
+    unsigned max_dial_attempts = 3;
+
+    /// Expiration of gossip peers' addresses in address repository
+    std::chrono::milliseconds address_expiration_msec{std::chrono::hours(1)};
 
     /// Max RPC message size
     size_t max_message_size = 1 << 24;
 
     /// Protocol version
     std::string protocol_version = "/meshsub/1.0.0";
+
+    /// Sign published messages
+    bool sign_messages = false;
   };
 
   using common::ByteArray;
@@ -68,7 +106,12 @@ namespace libp2p::protocol::gossip {
 
     /// Adds bootstrap peer to the set of connectable peers
     virtual void addBootstrapPeer(
-        peer::PeerId id, boost::optional<multi::Multiaddress> address) = 0;
+        const peer::PeerId &id,
+        boost::optional<multi::Multiaddress> address) = 0;
+
+    /// Adds bootstrap peer address in string form
+    virtual outcome::result<void> addBootstrapPeer(
+        const std::string &address) = 0;
 
     /// Starts client and server
     virtual void start() = 0;
@@ -80,9 +123,23 @@ namespace libp2p::protocol::gossip {
     /// Temporary struct of fields the subscriber may store if they want
     struct Message {
       const ByteArray &from;
-      const TopicList &topics;
+      const TopicId &topic;
       const ByteArray &data;
     };
+
+    /// Validator of messages arriving from the wire
+    using Validator =
+        std::function<bool(const ByteArray &from, const ByteArray &data)>;
+
+    /// Sets message validator for topic
+    virtual void setValidator(const TopicId &topic, Validator validator) = 0;
+
+    /// Creates unique message ID out of message fields
+    using MessageIdFn = std::function<ByteArray(
+        const ByteArray &from, const ByteArray &seq, const ByteArray &data)>;
+
+    /// Sets message ID funtion that differs from default (from+sec_no)
+    virtual void setMessageIdFn(MessageIdFn fn) = 0;
 
     /// Empty message means EOS (end of subscription data stream)
     using SubscriptionData = boost::optional<const Message &>;
@@ -93,8 +150,16 @@ namespace libp2p::protocol::gossip {
                                    SubscriptionCallback callback) = 0;
 
     /// Publishes to topics. Returns false if validation fails or not started
-    virtual bool publish(const TopicSet &topic, ByteArray data) = 0;
+    virtual bool publish(TopicId topic, ByteArray data) = 0;
   };
+
+  // Creates Gossip object
+  std::shared_ptr<Gossip> create(
+      std::shared_ptr<basic::Scheduler> scheduler, std::shared_ptr<Host> host,
+      std::shared_ptr<peer::IdentityManager> idmgr,
+      std::shared_ptr<crypto::CryptoProvider> crypto_provider,
+      std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
+      Config config = Config{});
 
 }  // namespace libp2p::protocol::gossip
 

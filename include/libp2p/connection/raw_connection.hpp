@@ -15,6 +15,17 @@ namespace libp2p::connection {
    * @bried Represents raw network connection, which is neither encrypted nor multiplexed.
    */
   struct RawConnection : public basic::ReadWriteCloser {
+    enum class Error {
+      CONNECTION_INTERNAL_ERROR = 1,
+      CONNECTION_INVALID_ARGUMENT,
+      CONNECTION_PROTOCOL_ERROR,
+      CONNECTION_NOT_ACTIVE,
+      CONNECTION_TOO_MANY_STREAMS,
+      CONNECTION_DIRECT_IO_FORBIDDEN,
+      CONNECTION_CLOSED_BY_HOST,
+      CONNECTION_CLOSED_BY_PEER,
+    };
+
     ~RawConnection() override = default;
 
     /// returns if this side is an initiator of this connection, or false if it
@@ -33,5 +44,7 @@ namespace libp2p::connection {
   };
 
 }  // namespace libp2p::connection
+
+OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, RawConnection::Error)
 
 #endif  // LIBP2P_RAW_CONNECTION_HPP

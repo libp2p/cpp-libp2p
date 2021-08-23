@@ -23,6 +23,10 @@ namespace libp2p::connection {
 
     using NewStreamHandlerFunc = std::function<void(std::shared_ptr<Stream>)>;
 
+    using ConnectionClosedCallback = std::function<void(
+        const peer::PeerId &,
+        const std::shared_ptr<connection::CapableConnection> &)>;
+
     ~CapableConnection() override = default;
 
     /**
@@ -40,6 +44,12 @@ namespace libp2p::connection {
      * @note calling 'start' after 'close' is UB
      */
     virtual void stop() = 0;
+
+    /**
+     * @brief Opens new stream in a synchronous (optimistic) manner
+     * @return Stream or error
+     */
+    virtual outcome::result<std::shared_ptr<Stream>> newStream() = 0;
 
     /**
      * @brief Opens new stream using this connection

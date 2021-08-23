@@ -8,9 +8,9 @@
 
 #include <vector>
 
-#include <libp2p/common/logger.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/network/router.hpp>
 #include <libp2p/peer/peer_info.hpp>
@@ -85,7 +85,7 @@ namespace libp2p::protocol {
     event::Handle new_protos_sub_;
     event::Handle rm_protos_sub_;
 
-    libp2p::common::Logger log_ = libp2p::common::createLogger("IdentifyDelta");
+    libp2p::log::Logger log_ = libp2p::log::createLogger("IdentifyDelta");
   };
 }  // namespace libp2p::protocol
 

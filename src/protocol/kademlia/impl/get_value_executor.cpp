@@ -22,7 +22,7 @@ namespace libp2p::protocol::kademlia {
 
   GetValueExecutor::GetValueExecutor(
       const Config &config, std::shared_ptr<Host> host,
-      std::shared_ptr<Scheduler> scheduler,
+      std::shared_ptr<basic::Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
       std::shared_ptr<PeerRouting> peer_routing,
       std::shared_ptr<ContentRoutingTable> content_routing_table,
@@ -41,7 +41,7 @@ namespace libp2p::protocol::kademlia {
         key_(std::move(key)),
         handler_(std::move(handler)),
         target_(key_),
-        log_("kad", "GetValueExecutor", ++instance_number) {
+        log_("KademliaExecutor", "kademlia", "GetValue", ++instance_number) {
     BOOST_ASSERT(host_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
     BOOST_ASSERT(session_host_ != nullptr);
@@ -119,8 +119,7 @@ namespace libp2p::protocol::kademlia {
       }
 
       // Check if connectable
-      auto connectedness =
-          host_->getNetwork().getConnectionManager().connectedness(peer_info);
+      auto connectedness = host_->connectedness(peer_info);
       if (connectedness == Message::Connectedness::CAN_NOT_CONNECT) {
         continue;
       }
@@ -130,18 +129,20 @@ namespace libp2p::protocol::kademlia {
       log_.debug("connecting to {}; active {}, in queue {}",
                  peer_info.id.toBase58(), requests_in_progress_, queue_.size());
 
-      auto holder = std::make_shared<
-          std::pair<std::shared_ptr<GetValueExecutor>, scheduler::Handle>>();
+      auto holder =
+          std::make_shared<std::pair<std::shared_ptr<GetValueExecutor>,
+                                     basic::Scheduler::Handle>>();
 
       holder->first = shared_from_this();
-      holder->second = scheduler_->schedule(
-          scheduler::toTicks(config_.connectionTimeout), [holder] {
+      holder->second = scheduler_->scheduleWithHandle(
+          [holder] {
             if (holder->first) {
               holder->second.cancel();
               holder->first->onConnected(Error::TIMEOUT);
               holder->first.reset();
             }
-          });
+          },
+          config_.connectionTimeout);
 
       host_->newStream(
           peer_info, config_.protocolId,
@@ -191,15 +192,15 @@ namespace libp2p::protocol::kademlia {
       --requests_in_progress_;
 
       log_.debug("write to {} failed; active {}, in queue {}", addr,
-                requests_in_progress_, queue_.size());
+                 requests_in_progress_, queue_.size());
 
       spawn();
       return;
     }
   }
 
-  scheduler::Ticks GetValueExecutor::responseTimeout() const {
-    return scheduler::toTicks(config_.responseTimeout);
+  Time GetValueExecutor::responseTimeout() const {
+    return config_.responseTimeout;
   }
 
   bool GetValueExecutor::match(const Message &msg) const {
@@ -254,7 +255,9 @@ namespace libp2p::protocol::kademlia {
             host_->getPeerRepository().getAddressRepository().upsertAddresses(
                 peer.info.id,
                 gsl::span(peer.info.addresses.data(),
-                          peer.info.addresses.size()),
+                          static_cast<
+                              gsl::span<const multi::Multiaddress>::index_type>(
+                              peer.info.addresses.size())),
                 peer::ttl::kDay);
         if (not add_addr_res) {
           continue;

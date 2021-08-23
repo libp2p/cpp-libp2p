@@ -30,6 +30,7 @@ libp2p_add_library(p2p_dialer
 target_link_libraries(p2p_dialer
     Boost::boost
     p2p_multiaddress
+    p2p_multiselect
     p2p_peer_id
     p2p_logger
     )
@@ -54,4 +55,12 @@ libp2p_add_library(p2p_connection_manager
     )
 target_link_libraries(p2p_connection_manager
     Boost::boost
+    )
+
+libp2p_add_library(p2p_dnsaddr_resolver
+    dnsaddr_resolver_impl.cpp
+    )
+target_link_libraries(p2p_dnsaddr_resolver
+    Boost::boost
+    p2p_cares
     )

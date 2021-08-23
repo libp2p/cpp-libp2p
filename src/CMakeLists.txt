@@ -5,8 +5,10 @@
 
 add_subdirectory(basic)
 add_subdirectory(common)
+add_subdirectory(connection)
 add_subdirectory(crypto)
 add_subdirectory(host)
+add_subdirectory(log)
 add_subdirectory(multi)
 add_subdirectory(muxer)
 add_subdirectory(network)

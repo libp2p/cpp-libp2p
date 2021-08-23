@@ -55,6 +55,53 @@ namespace libp2p::common {
    */
   outcome::result<std::vector<uint8_t>> unhex(std::string_view hex);
 
+  /**
+   * Creates unsigned bytes span out of string, debug purpose helper
+   * @param str String
+   * @return Span
+   */
+  inline gsl::span<const uint8_t> sv2span(const std::string_view &str) {
+    return gsl::span<const uint8_t>((const uint8_t *)str.data(),  // NOLINT
+                                    (ssize_t)str.size());         // NOLINT
+  }
+
+  /**
+   * sv2span() identity overload, for uniformity
+   * @param s Span
+   * @return s
+   */
+  inline gsl::span<const uint8_t> sv2span(const gsl::span<const uint8_t> &s) {
+    return s;
+  }
+
+  /**
+   * Makes printable string out of bytes, for diagnostic purposes
+   * @tparam Bytes Bytes or char sequence
+   * @param str Input
+   * @return String
+   */
+  template <class Bytes>
+  inline std::string dumpBin(const Bytes &str) {
+    std::string ret;
+    ret.reserve(str.size() + 2);
+    bool non_printable_detected = false;
+    for (auto c : str) {
+      if (std::isprint(c) != 0) {
+        ret.push_back((char)c);  // NOLINT
+      } else {
+        ret.push_back('?');
+        non_printable_detected = true;
+      }
+    }
+    if (non_printable_detected) {
+      ret.reserve(ret.size() * 3);
+      ret += " (";
+      ret += hex_lower(sv2span(str));
+      ret += ')';
+    }
+    return ret;
+  }
+
 }  // namespace libp2p::common
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::common, UnhexError);

@@ -6,6 +6,8 @@
 #include "libp2p/network/impl/dialer_impl.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/basic/scheduler/manual_scheduler_backend.hpp>
+#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/common/literals.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
@@ -25,6 +27,7 @@ using namespace connection;
 using namespace transport;
 using namespace protocol_muxer;
 using namespace common;
+using namespace basic;
 
 using ::testing::_;
 using ::testing::ContainerEq;
@@ -51,8 +54,14 @@ struct DialerTest : public ::testing::Test {
 
   std::shared_ptr<ListenerMock> listener = std::make_shared<ListenerMock>();
 
-  std::shared_ptr<Dialer> dialer =
-      std::make_shared<DialerImpl>(proto_muxer, tmgr, cmgr, listener);
+  std::shared_ptr<ManualSchedulerBackend> scheduler_backend =
+      std::make_shared<ManualSchedulerBackend>();
+
+  std::shared_ptr<Scheduler> scheduler =
+      std::make_shared<SchedulerImpl>(scheduler_backend, Scheduler::Config{});
+
+  std::shared_ptr<Dialer> dialer = std::make_shared<DialerImpl>(
+      proto_muxer, tmgr, cmgr, listener, scheduler);
 
   multi::Multiaddress ma1 = "/ip4/127.0.0.1/tcp/1"_multiaddr;
   multi::Multiaddress ma2 = "/ip4/127.0.0.1/tcp/2"_multiaddr;
@@ -100,6 +109,10 @@ TEST_F(DialerTest, DialAllTheAddresses) {
     executed = true;
   });
 
+  while (!scheduler_backend->empty()) {
+    scheduler_backend->shift(std::chrono::milliseconds(1));
+  }
+
   ASSERT_TRUE(executed);
 }
 
@@ -131,6 +144,10 @@ TEST_F(DialerTest, DialNewConnection) {
     executed = true;
   });
 
+  while (!scheduler_backend->empty()) {
+    scheduler_backend->shift(std::chrono::milliseconds(1));
+  }
+
   ASSERT_TRUE(executed);
 }
 
@@ -152,6 +169,10 @@ TEST_F(DialerTest, DialNoAddresses) {
     EXPECT_EQ(e.value(), (int)std::errc::destination_address_required);
     executed = true;
   });
+
+  while (!scheduler_backend->empty()) {
+    scheduler_backend->shift(std::chrono::milliseconds(1));
+  }
 
   ASSERT_TRUE(executed);
 }
@@ -177,6 +198,10 @@ TEST_F(DialerTest, DialNoTransports) {
     executed = true;
   });
 
+  while (!scheduler_backend->empty()) {
+    scheduler_backend->shift(std::chrono::milliseconds(1));
+  }
+
   ASSERT_TRUE(executed);
 }
 
@@ -196,6 +221,10 @@ TEST_F(DialerTest, DialExistingConnection) {
     (void)conn;
     executed = true;
   });
+
+  while (!scheduler_backend->empty()) {
+    scheduler_backend->shift(std::chrono::milliseconds(1));
+  }
 
   ASSERT_TRUE(executed);
 }
@@ -227,6 +256,11 @@ TEST_F(DialerTest, NewStreamFailed) {
     EXPECT_EQ(e.value(), (int)std::errc::io_error);
     executed = true;
   });
+
+  while (!scheduler_backend->empty()) {
+    scheduler_backend->shift(std::chrono::milliseconds(1));
+  }
+
   ASSERT_TRUE(executed);
 }
 
@@ -243,9 +277,10 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
   // newStream returns valid stream
   EXPECT_CALL(*connection, newStream(_)).WillOnce(Arg0CallbackWithArg(stream));
 
-  outcome::result<peer::Protocol> r = std::errc::io_error;
-  EXPECT_CALL(*proto_muxer, selectOneOf(Contains(Eq(protocol)), _, true, _))
-      .WillOnce(Arg3CallbackWithArg(r));
+  outcome::result<std::shared_ptr<Stream>> r = std::errc::io_error;
+
+  EXPECT_CALL(*proto_muxer, simpleStreamNegotiate(_, protocol, _))
+      .WillOnce(Arg2CallbackWithArg(r));
 
   bool executed = false;
   dialer->newStream(pinfo, protocol, [&](auto &&rstream) {
@@ -253,6 +288,11 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
     EXPECT_EQ(e.value(), (int)std::errc::io_error);
     executed = true;
   });
+
+  while (!scheduler_backend->empty()) {
+    scheduler_backend->shift(std::chrono::milliseconds(1));
+  }
+
   ASSERT_TRUE(executed);
 }
 
@@ -269,8 +309,8 @@ TEST_F(DialerTest, NewStreamSuccess) {
   // newStream returns valid stream
   EXPECT_CALL(*connection, newStream(_)).WillOnce(Arg0CallbackWithArg(stream));
 
-  EXPECT_CALL(*proto_muxer, selectOneOf(Contains(Eq(protocol)), _, true, _))
-      .WillOnce(Arg3CallbackWithArg(protocol));
+  EXPECT_CALL(*proto_muxer, simpleStreamNegotiate(_, protocol, _))
+      .WillOnce(Arg2CallbackWithArg(stream));
 
   bool executed = false;
   dialer->newStream(pinfo, protocol, [&](auto &&rstream) {
@@ -278,5 +318,10 @@ TEST_F(DialerTest, NewStreamSuccess) {
     (void)s;
     executed = true;
   });
+
+  while (!scheduler_backend->empty()) {
+    scheduler_backend->shift(std::chrono::milliseconds(1));
+  }
+
   ASSERT_TRUE(executed);
 }

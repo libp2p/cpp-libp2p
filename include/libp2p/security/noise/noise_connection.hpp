@@ -8,11 +8,12 @@
 
 #include <libp2p/connection/secure_connection.hpp>
 
-#include <libp2p/common/logger.hpp>
+#include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/crypto/x25519_provider.hpp>
+#include <libp2p/log/logger.hpp>
 #include <libp2p/security/noise/crypto/state.hpp>
 #include <libp2p/security/noise/handshake_message_marshaller_impl.hpp>
 #include <libp2p/security/noise/insecure_rw.hpp>
@@ -45,11 +46,16 @@ namespace libp2p::connection {
     void readSome(gsl::span<uint8_t> out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
+    void deferReadCallback(outcome::result<size_t> res,
+                           ReadCallbackFunc cb) override;
+
     void write(gsl::span<const uint8_t> in, size_t bytes,
                WriteCallbackFunc cb) override;
 
     void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
+
+    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
     bool isInitiator() const noexcept override;
 
@@ -77,7 +83,11 @@ namespace libp2p::connection {
     std::shared_ptr<security::noise::InsecureReadWriter> framer_;
     size_t already_read_;
     common::ByteArray writing_;
-    common::Logger log_ = common::createLogger("NoiseConn");
+    log::Logger log_ = log::createLogger("NoiseConnection");
+
+   public:
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
+        libp2p::connection::NoiseConnection);
   };
 }  // namespace libp2p::connection
 

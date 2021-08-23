@@ -17,7 +17,7 @@ namespace libp2p::protocol::kademlia {
 
   AddProviderExecutor::AddProviderExecutor(
       const Config &config, std::shared_ptr<Host> host,
-      std::shared_ptr<Scheduler> scheduler,
+      std::shared_ptr<basic::Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
       const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
       ContentId key)
@@ -27,7 +27,7 @@ namespace libp2p::protocol::kademlia {
         session_host_(std::move(session_host)),
         key_(std::move(key)),
         target_(key_),
-        log_("kad", "AddProviderExecutor", ++instance_number) {
+        log_("KademliaExecutor", "kademlia", "AddProvider", ++instance_number) {
     auto nearest_peer_ids =
         peer_routing_table->getNearestPeers(target_, config_.maxBucketSize);
 
@@ -65,14 +65,13 @@ namespace libp2p::protocol::kademlia {
 
     log_.debug("started");
 
-    scheduler_
-        ->schedule(scheduler::toTicks(config_.randomWalk.timeout),
-                   [wp = weak_from_this()] {
-                     if (auto self = wp.lock()) {
-                       self->done();
-                     }
-                   })
-        .detach();
+    scheduler_->schedule(
+        [wp = weak_from_this()] {
+          if (auto self = wp.lock()) {
+            self->done();
+          }
+        },
+        config_.randomWalk.timeout);
 
     spawn();
     return outcome::success();
@@ -112,8 +111,7 @@ namespace libp2p::protocol::kademlia {
       }
 
       // Check if connectable
-      auto connectedness =
-          host_->getNetwork().getConnectionManager().connectedness(peer_info);
+      auto connectedness = host_->connectedness(peer_info);
       if (connectedness == Message::Connectedness::CAN_NOT_CONNECT) {
         continue;
       }
@@ -124,18 +122,20 @@ namespace libp2p::protocol::kademlia {
                  peer_info.id.toBase58(), requests_succeed_,
                  requests_in_progress_, queue_.size());
 
-      auto holder = std::make_shared<
-          std::pair<std::shared_ptr<AddProviderExecutor>, scheduler::Handle>>();
+      auto holder =
+          std::make_shared<std::pair<std::shared_ptr<AddProviderExecutor>,
+                                     basic::Scheduler::Handle>>();
 
       holder->first = shared_from_this();
-      holder->second = scheduler_->schedule(
-          scheduler::toTicks(config_.connectionTimeout), [holder] {
+      holder->second = scheduler_->scheduleWithHandle(
+          [holder] {
             if (holder->first) {
               holder->second.cancel();
               holder->first->onConnected(Error::TIMEOUT);
               holder->first.reset();
             }
-          });
+          },
+          config_.connectionTimeout);
 
       host_->newStream(
           peer_info, config_.protocolId,
@@ -184,10 +184,10 @@ namespace libp2p::protocol::kademlia {
     if (session->write(serialized_request_, {})) {
       ++requests_succeed_;
       log_.debug("write to {} successfuly; done {}, active {}, in queue {}",
-                addr, requests_succeed_, requests_in_progress_, queue_.size());
+                 addr, requests_succeed_, requests_in_progress_, queue_.size());
     } else {
       log_.debug("write to {} failed; done {}, active {}, in queue {}", addr,
-                requests_succeed_, requests_in_progress_, queue_.size());
+                 requests_succeed_, requests_in_progress_, queue_.size());
     }
 
     spawn();

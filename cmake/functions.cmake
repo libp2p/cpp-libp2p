@@ -22,6 +22,7 @@ function(addtest test_name)
       LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/test_lib
       )
   disable_clang_tidy(${test_name})
+  set_property(GLOBAL APPEND PROPERTY TEST_TARGETS ${test_name})
 endfunction()
 
 function(addtest_part test_name)
@@ -83,7 +84,7 @@ function(compile_proto_to_cpp PROTO_LIBRARY_NAME PB_H PB_CC PROTO)
       COMMAND ${GEN_COMMAND}
       ARGS -I${PROJECT_SOURCE_DIR}/src -I${GEN_ARGS} --cpp_out=${SCHEMA_OUT_DIR} ${PROTO_ABS}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-      DEPENDS ${PROTOBUF_DEPENDS}
+      DEPENDS ${PROTOBUF_DEPENDS} ${PROTO_ABS}
       VERBATIM
   )
 

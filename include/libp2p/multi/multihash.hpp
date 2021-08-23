@@ -24,6 +24,12 @@ namespace libp2p::multi {
    */
   class Multihash {
    public:
+    Multihash(const Multihash &other) = default;
+    Multihash &operator=(const Multihash &other) = default;
+    Multihash(Multihash &&other) noexcept = default;
+    Multihash &operator=(Multihash &&other) noexcept = default;
+    ~Multihash() = default;
+
     using Buffer = common::ByteArray;
 
     static constexpr uint8_t kMaxHashLength = 127;
@@ -86,6 +92,11 @@ namespace libp2p::multi {
      */
     const Buffer &toBuffer() const;
 
+    /**
+     * @return Pre-calculated hash for std containers
+     */
+    size_t stdHash() const;
+
     bool operator==(const Multihash &other) const;
     bool operator!=(const Multihash &other) const;
     bool operator<(const Multihash &other) const;
@@ -110,9 +121,20 @@ namespace libp2p::multi {
      * Contains a one byte hash type, a one byte hash length, and the stored
      * hash itself
      */
-    std::vector<uint8_t> data_;
-    uint8_t hash_offset_{};  ///< size of non-hash data from the beginning
-    HashType type_;
+    struct Data {
+      // TODO(artem): move to small_vector<const uint8_t, some_size>
+      // as soon as toBuffer() -> span<const uint8_t> is acceptable
+      std::vector<uint8_t> bytes;
+      uint8_t hash_offset{};  ///< size of non-hash data from the beginning
+      HashType type;
+      size_t std_hash; ///< Hash for unordered containers
+
+      Data(HashType t, gsl::span<const uint8_t> h);
+    };
+
+    const Data& data() const;
+
+    std::shared_ptr<const Data> data_;
   };
 
 }  // namespace libp2p::multi
@@ -120,7 +142,9 @@ namespace libp2p::multi {
 namespace std {
   template <>
   struct hash<libp2p::multi::Multihash> {
-    size_t operator()(const libp2p::multi::Multihash &x) const;
+    size_t operator()(const libp2p::multi::Multihash &x) const {
+      return x.stdHash();
+    }
   };
 }  // namespace std
 

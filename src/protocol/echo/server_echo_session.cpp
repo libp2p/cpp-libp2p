@@ -12,11 +12,16 @@ namespace libp2p::protocol {
   ServerEchoSession::ServerEchoSession(
       std::shared_ptr<connection::Stream> stream, EchoConfig config)
       : stream_(std::move(stream)),
-        buf_(config.max_recv_size, 0),
         config_{config},
         repeat_infinitely_{config.max_server_repeats == 0} {
     BOOST_ASSERT(stream_ != nullptr);
     BOOST_ASSERT(config_.max_recv_size > 0);
+
+    size_t max_recv_size = 65536;
+    if (config_.max_recv_size < max_recv_size) {
+      max_recv_size = config_.max_recv_size;
+    }
+    buf_.resize(max_recv_size);
   }
 
   void ServerEchoSession::start() {
@@ -50,20 +55,29 @@ namespace libp2p::protocol {
       return stop();
     }
 
-    log_->info("read message: {}",
-               std::string{buf_.begin(), buf_.begin() + rread.value()});
+    static constexpr size_t kMsgSizeThreshold = 120;
+
+    if (rread.value() < kMsgSizeThreshold) {
+      log_->debug("read message: {}",
+                 std::string{buf_.begin(), buf_.begin() + rread.value()});
+    } else {
+      log_->debug("read {} bytes", rread.value());
+    }
     this->doWrite(rread.value());
+    doRead();
   }
 
   void ServerEchoSession::doWrite(size_t size) {
-    if (stream_->isClosedForWrite()) {
+    if (stream_->isClosedForWrite() || size == 0) {
       return stop();
     }
 
-    stream_->write(buf_, size,
-                   [self{shared_from_this()}](outcome::result<size_t> rwrite) {
-                     self->onWrite(rwrite);
-                   });
+    auto write_buf = std::vector<uint8_t>(buf_.begin(), buf_.begin() + size);
+    gsl::span<const uint8_t> span = write_buf;
+    stream_->write(
+        span, size,
+        [self{shared_from_this()}, write_buf{std::move(write_buf)}](
+            outcome::result<size_t> rwrite) { self->onWrite(rwrite); });
   }
 
   void ServerEchoSession::onWrite(outcome::result<size_t> rwrite) {
@@ -72,12 +86,15 @@ namespace libp2p::protocol {
       return stop();
     }
 
-    log_->info("written message: {}",
-               std::string{buf_.begin(), buf_.begin() + rwrite.value()});
+    if (rwrite.value() < 120) {
+      log_->info("written message: {}",
+                 std::string{buf_.begin(), buf_.begin() + rwrite.value()});
+    } else {
+      log_->info("written {} bytes", rwrite.value());
+    }
 
     if (!repeat_infinitely_) {
       --config_.max_server_repeats;
     }
-    doRead();
   }
 }  // namespace libp2p::protocol

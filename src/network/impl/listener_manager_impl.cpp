@@ -5,14 +5,14 @@
 
 #include <libp2p/network/impl/listener_manager_impl.hpp>
 
-#include <libp2p/common/logger.hpp>
+#include <libp2p/log/logger.hpp>
 
 namespace libp2p::network {
 
   namespace {
-    spdlog::logger &log() {
-      static common::Logger logger = common::createLogger("listener_mgr");
-      return *logger;
+    log::Logger log() {
+      static log::Logger logger = log::createLogger("ListenerManager");
+      return logger;
     }
   }  // namespace
 
@@ -87,7 +87,9 @@ namespace libp2p::network {
 
   // starts listening on all provided multiaddresses
   void ListenerManagerImpl::start() {
-    BOOST_ASSERT(!started);
+    if (started) {
+      return;
+    }
 
     auto begin = listeners_.begin();
     auto end = listeners_.end();
@@ -106,7 +108,9 @@ namespace libp2p::network {
 
   // stops listening on all multiaddresses
   void ListenerManagerImpl::stop() {
-    BOOST_ASSERT(started);
+    if (!started) {
+      return;
+    }
 
     auto begin = listeners_.begin();
     auto end = listeners_.end();
@@ -176,7 +180,7 @@ namespace libp2p::network {
   void ListenerManagerImpl::onConnection(
       outcome::result<std::shared_ptr<connection::CapableConnection>> rconn) {
     if (!rconn) {
-      log().warn("can not accept valid connection, {}",
+      log()->warn("can not accept valid connection, {}",
                  rconn.error().message());
       return;  // ignore
     }
@@ -184,7 +188,7 @@ namespace libp2p::network {
 
     auto rid = conn->remotePeer();
     if (!rid) {
-      log().warn("can not get remote peer id, {}", rid.error().message());
+      log()->warn("can not get remote peer id, {}", rid.error().message());
       return;  // ignore
     }
     auto &&id = rid.value();
@@ -193,28 +197,43 @@ namespace libp2p::network {
     conn->onStream(
         [this](outcome::result<std::shared_ptr<connection::Stream>> rstream) {
           if (!rstream) {
-            log().warn("can not accept stream, {}", rstream.error().message());
+            log()->warn("can not accept stream, {}", rstream.error().message());
             return;  // ignore
           }
           auto &&stream = rstream.value();
+
+          auto protocols = this->router_->getSupportedProtocols();
+          if (protocols.empty()) {
+            log()->warn("no protocols are served, resetting inbound stream");
+            stream->reset();
+            return;
+          }
 
           // negotiate protocols
           this->multiselect_->selectOneOf(
               this->router_->getSupportedProtocols(), stream,
               false /* not initiator */,
+              true /* need to negotiate multistream itself - SPEC ???*/,
               [this, stream](outcome::result<peer::Protocol> rproto) {
-                if (!rproto) {
-                  log().warn("can not negotiate protocols, {}",
-                             rproto.error().message());
-                  return;  // ignore
-                }
-                auto &&proto = rproto.value();
+                bool success = true;
 
-                auto rhandle = this->router_->handle(proto, stream);
-                if (!rhandle) {
-                  log().warn("no protocol handler found, {}",
-                             rhandle.error().message());
-                  return;  // this is not an error
+                if (!rproto) {
+                  log()->warn("can not negotiate protocols, {}",
+                             rproto.error().message());
+                  success = false;
+                } else {
+                  auto &&proto = rproto.value();
+
+                  auto rhandle = this->router_->handle(proto, stream);
+                  if (!rhandle) {
+                    log()->warn("no protocol handler found, {}",
+                                rhandle.error().message());
+                    success = false;
+                  }
+                }
+
+                if (!success) {
+                  stream->reset();
                 }
               });
         });

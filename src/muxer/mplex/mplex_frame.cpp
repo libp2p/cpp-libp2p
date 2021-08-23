@@ -60,7 +60,7 @@ namespace libp2p::connection {
         flag = Flag::RESET_INITIATOR;
         break;
       default:
-        return MplexedConnection::Error::BAD_FRAME_FORMAT;
+        return RawConnection::Error::CONNECTION_PROTOCOL_ERROR;
     }
 
     return MplexFrame{flag,
@@ -72,21 +72,22 @@ namespace libp2p::connection {
                  std::function<void(outcome::result<MplexFrame>)> cb) {
     // read first varint
     basic::VarintReader::readVarint(
-        reader, [reader, cb{std::move(cb)}](auto &&varint_opt) mutable {
-          if (!varint_opt) {
-            return cb(MplexedConnection::Error::BAD_FRAME_FORMAT);
+        reader, [reader, cb{std::move(cb)}](auto &&varint_res) mutable {
+          if (varint_res.has_error()) {
+            return cb(varint_res.error());
           }
 
           // read second varint
           basic::VarintReader::readVarint(
               reader,
               [reader, cb{std::move(cb)},
-               id_flag = varint_opt->toUInt64()](auto &&varint_opt) mutable {
-                if (!varint_opt) {
-                  return cb(MplexedConnection::Error::BAD_FRAME_FORMAT);
+               id_flag =
+                   varint_res.value().toUInt64()](auto &&varint_res) mutable {
+                if (varint_res.has_error()) {
+                  return cb(varint_res.error());
                 }
 
-                auto length = varint_opt->toUInt64();
+                auto length = varint_res.value().toUInt64();
                 if (length == 0) {
                   // no data in this frame
                   return cb(createFrame(id_flag, {}));

@@ -9,6 +9,7 @@
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
 #include <libp2p/peer/identity_manager.hpp>
+#include <libp2p/network/transport_manager.hpp>
 
 namespace libp2p::host {
 
@@ -26,7 +27,8 @@ namespace libp2p::host {
     BasicHost(std::shared_ptr<peer::IdentityManager> idmgr,
               std::unique_ptr<network::Network> network,
               std::unique_ptr<peer::PeerRepository> repo,
-              std::shared_ptr<event::Bus> bus);
+              std::shared_ptr<event::Bus> bus,
+              std::shared_ptr<network::TransportManager> transport_manager);
 
     std::string_view getLibp2pVersion() const override;
 
@@ -41,6 +43,8 @@ namespace libp2p::host {
     std::vector<multi::Multiaddress> getAddressesInterfaces() const override;
 
     std::vector<multi::Multiaddress> getObservedAddresses() const override;
+
+    Connectedness connectedness(const peer::PeerInfo &p) const override;
 
     void connect(const peer::PeerInfo &peer_info,
                  const ConnectionResultHandler &handler,
@@ -60,6 +64,9 @@ namespace libp2p::host {
     void newStream(const peer::PeerInfo &p, const peer::Protocol &protocol,
                    const StreamResultHandler &handler,
                    std::chrono::milliseconds timeout) override;
+
+    void newStream(const peer::PeerId &peer_id, const peer::Protocol &protocol,
+                   const StreamResultHandler &handler) override;
 
     outcome::result<void> listen(const multi::Multiaddress &ma) override;
 
@@ -88,6 +95,7 @@ namespace libp2p::host {
     std::unique_ptr<network::Network> network_;
     std::unique_ptr<peer::PeerRepository> repo_;
     std::shared_ptr<event::Bus> bus_;
+    std::shared_ptr<network::TransportManager> transport_manager_;
   };
 
 }  // namespace libp2p::host

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/protocol/gossip/impl/message_cache.hpp>
+#include "message_cache.hpp"
 
 #include <cassert>
 
@@ -12,6 +12,7 @@
 #include <boost/multi_index_container.hpp>
 
 #include <libp2p/common/hexutil.hpp>
+
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
 
@@ -19,7 +20,7 @@ namespace libp2p::protocol::gossip {
 
   MessageCache::MessageCache(Time message_lifetime, TimeFunction clock)
       : message_lifetime_(message_lifetime), clock_(std::move(clock)) {
-    assert(message_lifetime_ > 0);
+    assert(message_lifetime_ > Time::zero());
     table_ = std::make_unique<msg_cache_table::Table>();
   }
 

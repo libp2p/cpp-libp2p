@@ -11,8 +11,8 @@
 
 #include <boost/asio/streambuf.hpp>
 #include <boost/noncopyable.hpp>
-#include <libp2p/common/logger.hpp>
 #include <libp2p/connection/stream.hpp>
+#include <libp2p/log/logger.hpp>
 
 namespace libp2p::connection {
   class MplexedConnection;
@@ -50,30 +50,22 @@ namespace libp2p::connection {
 
     ~MplexStream() override = default;
 
-    enum class Error {
-      CONNECTION_IS_DEAD = 1,
-      BAD_WINDOW_SIZE,
-      INVALID_ARGUMENT,
-      IS_READING,
-      IS_CLOSED_FOR_READS,
-      IS_WRITING,
-      IS_CLOSED_FOR_WRITES,
-      IS_RESET,
-      RECEIVE_OVERFLOW,
-      INTERNAL_ERROR
-    };
-
     void read(gsl::span<uint8_t> out, size_t bytes,
               ReadCallbackFunc cb) override;
 
     void readSome(gsl::span<uint8_t> out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
+    void deferReadCallback(outcome::result<size_t> res,
+                           ReadCallbackFunc cb) override;
+
     void write(gsl::span<const uint8_t> in, size_t bytes,
                WriteCallbackFunc cb) override;
 
     void writeSome(gsl::span<const uint8_t> in, size_t bytes,
                    WriteCallbackFunc cb) override;
+
+    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
     bool isClosed() const noexcept override;
 
@@ -105,7 +97,7 @@ namespace libp2p::connection {
 
     std::weak_ptr<MplexedConnection> connection_;
     StreamId stream_id_;
-    common::Logger log_ = common::createLogger("MplexStream");
+    log::Logger log_ = log::createLogger("MplexStream");
 
     /// data, received for this stream, comes here
     boost::asio::streambuf read_buffer_;
@@ -156,7 +148,5 @@ namespace std {
         const libp2p::connection::MplexStream::StreamId &id) const;
   };
 }  // namespace std
-
-OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, MplexStream::Error)
 
 #endif  // LIBP2P_MPLEX_STREAM_HPP

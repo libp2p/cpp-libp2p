@@ -6,6 +6,8 @@
 #include "acceptance/p2p/host/peer/test_peer.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
+#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/hmac_provider/hmac_provider_impl.hpp>
@@ -13,6 +15,7 @@
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 #include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
+#include <libp2p/network/impl/dnsaddr_resolver_impl.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include <libp2p/security/secio/exchange_message_marshaller_impl.hpp>
 #include <libp2p/security/secio/propose_message_marshaller_impl.hpp>
@@ -20,6 +23,8 @@
 #include "acceptance/p2p/host/protocol/client_test_session.hpp"
 
 using namespace libp2p;  // NOLINT
+
+libp2p::network::c_ares::Ares Peer::cares_;
 
 Peer::Peer(Peer::Duration timeout, bool secure)
     : muxed_config_{1024576, 1000},
@@ -37,6 +42,9 @@ Peer::Peer(Peer::Duration timeout, bool secure)
       crypto_provider_{std::make_shared<crypto::CryptoProviderImpl>(
           random_provider_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
           secp256k1_provider_, hmac_provider_)},
+      scheduler_{std::make_shared<basic::SchedulerImpl>(
+          std::make_shared<basic::AsioSchedulerBackend>(context_),
+          basic::Scheduler::Config{})},
       secure_{secure} {
   EXPECT_OUTCOME_TRUE_MSG(
       keys, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
@@ -97,6 +105,7 @@ void Peer::wait() {
   if (thread_.joinable()) {
     thread_.join();
   }
+  host_->stop();
 }
 
 Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
@@ -113,7 +122,8 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto idmgr =
       std::make_shared<peer::IdentityManagerImpl>(keyPair, key_marshaller);
 
-  auto multiselect = std::make_shared<protocol_muxer::Multiselect>();
+  auto multiselect =
+      std::make_shared<protocol_muxer::multiselect::Multiselect>();
 
   auto router = std::make_shared<network::RouterImpl>();
 
@@ -136,7 +146,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   }
 
   std::vector<std::shared_ptr<muxer::MuxerAdaptor>> muxer_adaptors = {
-      std::make_shared<muxer::Yamux>(muxed_config_)};
+      std::make_shared<muxer::Yamux>(muxed_config_, scheduler_, nullptr)};
 
   auto upgrader = std::make_shared<transport::UpgraderImpl>(
       multiselect, std::move(security_adaptors), std::move(muxer_adaptors));
@@ -149,18 +159,22 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
 
   auto bus = std::make_shared<libp2p::event::Bus>();
 
-  auto cmgr = std::make_shared<network::ConnectionManagerImpl>(bus, tmgr);
+  auto cmgr = std::make_shared<network::ConnectionManagerImpl>(bus);
 
   auto listener = std::make_shared<network::ListenerManagerImpl>(
       multiselect, std::move(router), tmgr, cmgr);
 
-  auto dialer =
-      std::make_unique<network::DialerImpl>(multiselect, tmgr, cmgr, listener);
+  auto dialer = std::make_unique<network::DialerImpl>(multiselect, tmgr, cmgr,
+                                                      listener, scheduler_);
 
   auto network = std::make_unique<network::NetworkImpl>(
       std::move(listener), std::move(dialer), cmgr);
 
-  auto addr_repo = std::make_shared<peer::InmemAddressRepository>();
+  auto dnsaddr_resolver =
+      std::make_shared<network::DnsaddrResolverImpl>(context_, cares_);
+
+  auto addr_repo =
+      std::make_shared<peer::InmemAddressRepository>(dnsaddr_resolver);
 
   auto key_repo = std::make_shared<peer::InmemKeyRepository>();
 
@@ -169,6 +183,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto peer_repo = std::make_unique<peer::PeerRepositoryImpl>(
       std::move(addr_repo), std::move(key_repo), std::move(protocol_repo));
 
-  return std::make_shared<host::BasicHost>(
-      idmgr, std::move(network), std::move(peer_repo), std::move(bus));
+  return std::make_shared<host::BasicHost>(idmgr, std::move(network),
+                                           std::move(peer_repo), std::move(bus),
+                                           std::move(tmgr));
 }

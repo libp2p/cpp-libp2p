@@ -174,6 +174,16 @@ namespace libp2p::connection {
     return raw_connection_->remoteMultiaddr();
   }
 
+  void SecioConnection::deferReadCallback(outcome::result<size_t> res,
+                                          ReadCallbackFunc cb) {
+    raw_connection_->deferReadCallback(res, std::move(cb));
+  }
+
+  void SecioConnection::deferWriteCallback(std::error_code ec,
+                                           WriteCallbackFunc cb) {
+    raw_connection_->deferWriteCallback(ec, std::move(cb));
+  }
+
   inline void SecioConnection::popUserData(gsl::span<uint8_t> out,
                                            size_t bytes) {
     auto to{out.begin()};
@@ -186,6 +196,8 @@ namespace libp2p::connection {
 
   void SecioConnection::read(gsl::span<uint8_t> out, size_t bytes,
                              basic::Reader::ReadCallbackFunc cb) {
+    // TODO(107): Reentrancy
+
     if (!isInitialized()) {
       log_->error("Reading on unintialized connection");
       cb(Error::CONN_NOT_INITIALIZED);
@@ -204,7 +216,7 @@ namespace libp2p::connection {
 
     if (user_data_buffer_.size() >= bytes) {
       popUserData(out, bytes);
-      log_->trace("Successfully read {} bytes", bytes);
+      SL_TRACE(log_, "Successfully read {} bytes", bytes);
       cb(bytes);
       return;
     }
@@ -230,6 +242,8 @@ namespace libp2p::connection {
 
   void SecioConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
                                  basic::Reader::ReadCallbackFunc cb) {
+    // TODO(107): Reentrancy
+
     if (!isInitialized()) {
       cb(Error::CONN_NOT_INITIALIZED);
       return;
@@ -244,7 +258,7 @@ namespace libp2p::connection {
       size_t to_read{bytes_available < read_limit ? bytes_available
                                                   : read_limit};
       popUserData(out, to_read);
-      log_->trace("Successfully read {} bytes", to_read);
+      SL_TRACE(log_, "Successfully read {} bytes", to_read);
       cb(to_read);
       return;
     }
@@ -283,7 +297,7 @@ namespace libp2p::connection {
             cb(Error::OVERSIZED_FRAME);
             return;
           }
-          self->log_->trace("Expecting frame of size {}.", frame_len);
+          SL_TRACE(self->log_, "Expecting frame of size {}.", frame_len);
           self->raw_connection_->read(
               *buffer, frame_len,
               [self, buffer, frame_len,
@@ -297,7 +311,7 @@ namespace libp2p::connection {
                   cb(Error::STREAM_IS_BROKEN);
                   return;
                 }
-                self->log_->trace("Received frame with len {}",
+                SL_TRACE(self->log_, "Received frame with len {}",
                                   read_frame_bytes);
                 IO_OUTCOME_TRY(mac_size, self->macSize(), cb)
                 const auto data_size{frame_len - mac_size};
@@ -318,7 +332,7 @@ namespace libp2p::connection {
                 for (auto &&e : decrypted_bytes) {
                   self->user_data_buffer_.emplace(std::forward<decltype(e)>(e));
                 }
-                self->log_->trace("Frame decrypted successfully {} -> {}",
+                SL_TRACE(self->log_, "Frame decrypted successfully {} -> {}",
                                   frame_len, decrypted_bytes_len);
                 cb(decrypted_bytes_len);
               });
@@ -327,6 +341,8 @@ namespace libp2p::connection {
 
   void SecioConnection::write(gsl::span<const uint8_t> in, size_t bytes,
                               basic::Writer::WriteCallbackFunc cb) {
+    // TODO(107): Reentrancy
+
     if (!isInitialized()) {
       cb(Error::CONN_NOT_INITIALIZED);
     }

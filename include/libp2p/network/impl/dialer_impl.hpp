@@ -6,6 +6,7 @@
 #ifndef LIBP2P_DIALER_IMPL_HPP
 #define LIBP2P_DIALER_IMPL_HPP
 
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/network/dialer.hpp>
 #include <libp2p/network/listener_manager.hpp>
@@ -21,7 +22,8 @@ namespace libp2p::network {
     DialerImpl(std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect,
                std::shared_ptr<TransportManager> tmgr,
                std::shared_ptr<ConnectionManager> cmgr,
-               std::shared_ptr<ListenerManager> listener);
+               std::shared_ptr<ListenerManager> listener,
+               std::shared_ptr<basic::Scheduler> scheduler);
 
     // Establishes a connection to a given peer
     void dial(const peer::PeerInfo &p, DialResultFunc cb,
@@ -33,11 +35,15 @@ namespace libp2p::network {
                    StreamResultFunc cb,
                    std::chrono::milliseconds timeout) override;
 
+    void newStream(const peer::PeerId &peer_id, const peer::Protocol &protocol,
+                   StreamResultFunc cb) override;
+
    private:
     std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect_;
     std::shared_ptr<TransportManager> tmgr_;
     std::shared_ptr<ConnectionManager> cmgr_;
     std::shared_ptr<ListenerManager> listener_;
+    std::shared_ptr<basic::Scheduler> scheduler_;
   };
 
 }  // namespace libp2p::network

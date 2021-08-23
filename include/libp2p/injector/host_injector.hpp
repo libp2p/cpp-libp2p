@@ -14,26 +14,28 @@
 #include <libp2p/peer/impl/peer_repository_impl.hpp>
 #include <libp2p/peer/key_repository/inmem_key_repository.hpp>
 #include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
+#include <libp2p/protocol/common/asio/asio_scheduler.hpp>
 
 namespace libp2p::injector {
 
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
-  auto makeHostInjector(Ts &&... args) {
+  inline auto makeHostInjector(Ts &&... args) {
     using namespace boost;  // NOLINT
 
     // clang-format off
     return di::make_injector<InjectorConfig>(
         makeNetworkInjector<InjectorConfig>(),
 
-        di::bind<Host>.template to<host::BasicHost>(),
-
-        di::bind<muxer::MuxedConnectionConfig>.to(muxer::MuxedConnectionConfig()),
-
         // repositories
         di::bind<peer::PeerRepository>.template to<peer::PeerRepositoryImpl>(),
         di::bind<peer::AddressRepository>.template to<peer::InmemAddressRepository>(),
         di::bind<peer::KeyRepository>.template to<peer::InmemKeyRepository>(),
         di::bind<peer::ProtocolRepository>.template to<peer::InmemProtocolRepository>(),
+
+        di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
+        di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
+
+        di::bind<Host>.template to<host::BasicHost>(),
 
         // user-defined overrides...
         std::forward<decltype(args)>(args)...

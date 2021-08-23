@@ -8,20 +8,6 @@
 #include <boost/assert.hpp>
 #include <libp2p/muxer/mplex/mplex_frame.hpp>
 
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, MplexedConnection::Error, e) {
-  using E = libp2p::connection::MplexedConnection::Error;
-  switch (e) {
-    case E::BAD_FRAME_FORMAT:
-      return "the other side has sent something, which is not a valid Mplex "
-             "frame";
-    case E::TOO_MANY_STREAMS:
-      return "number of streams exceeds the maximum";
-    case E::CONNECTION_INACTIVE:
-      return "connection is not active";
-  }
-  return "unknown MplexError";
-}
-
 namespace libp2p::connection {
   using StreamId = MplexStream::StreamId;
 
@@ -48,12 +34,33 @@ namespace libp2p::connection {
     log_->info("stopping an mplex connection");
   }
 
-  void MplexedConnection::newStream(StreamHandlerFunc cb) {
+  outcome::result<std::shared_ptr<Stream>> MplexedConnection::newStream() {
     if (!is_active_) {
-      return cb(Error::CONNECTION_INACTIVE);
+      return Error::CONNECTION_NOT_ACTIVE;
     }
     if (streams_.size() >= config_.maximum_streams) {
-      return cb(Error::TOO_MANY_STREAMS);
+      return Error::CONNECTION_TOO_MANY_STREAMS;
+    }
+
+    StreamId new_stream_id{last_issued_stream_number_++, true};
+    auto new_stream_frame =
+        createFrameBytes(MplexFrame::Flag::NEW_STREAM, new_stream_id.number);
+    write({std::move(new_stream_frame), [](auto &&) {}});
+
+    auto new_stream =
+        std::make_shared<MplexStream>(shared_from_this(), new_stream_id);
+    streams_[new_stream_id] = new_stream;
+    return new_stream;
+  }
+
+  void MplexedConnection::newStream(StreamHandlerFunc cb) {
+    // TODO(107): Reentrancy
+
+    if (!is_active_) {
+      return cb(Error::CONNECTION_NOT_ACTIVE);
+    }
+    if (streams_.size() >= config_.maximum_streams) {
+      return cb(Error::CONNECTION_TOO_MANY_STREAMS);
     }
 
     StreamId new_stream_id{last_issued_stream_number_++, true};
@@ -133,6 +140,16 @@ namespace libp2p::connection {
   void MplexedConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
                                     WriteCallbackFunc cb) {
     connection_->writeSome(in, bytes, std::move(cb));
+  }
+
+  void MplexedConnection::deferReadCallback(outcome::result<size_t> res,
+                                            ReadCallbackFunc cb) {
+    connection_->deferReadCallback(res, std::move(cb));
+  }
+
+  void MplexedConnection::deferWriteCallback(std::error_code ec,
+                                             WriteCallbackFunc cb) {
+    connection_->deferWriteCallback(ec, std::move(cb));
   }
 
   void MplexedConnection::write(WriteData data) {

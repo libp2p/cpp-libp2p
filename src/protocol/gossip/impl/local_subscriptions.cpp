@@ -3,28 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "local_subscriptions.hpp"
+
 #include <cassert>
 
-#include <libp2p/protocol/gossip/impl/local_subscriptions.hpp>
-
 namespace libp2p::protocol::gossip {
-
-  namespace {
-
-    // Returns whether items in 2 topic sets intersect
-    // ContainerX is any container, ContainerY must have count() method
-    template <typename ContainerX, typename ContainerY>
-    bool intersect(const ContainerX &x, const ContainerY &y) {
-      for (const auto &topic : x) {
-        if (y.count(topic) != 0) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-  }  // namespace
-
   LocalSubscriptions::LocalSubscriptions(OnSubscriptionSetChange change_fn)
       : change_fn_(std::move(change_fn)) {}
 
@@ -48,8 +31,8 @@ namespace libp2p::protocol::gossip {
 
   void LocalSubscriptions::forwardMessage(const TopicMessage::Ptr &msg) {
     assert(msg);
-    if (intersect(msg->topic_ids, topics_)) {
-      Gossip::Message tmp_msg{msg->from, msg->topic_ids, msg->data};
+    if (topics_.count(msg->topic) != 0) {
+      Gossip::Message tmp_msg{msg->from, msg->topic, msg->data};
       publish(tmp_msg);
     }
   }
@@ -68,7 +51,7 @@ namespace libp2p::protocol::gossip {
 
     assert(it != filters_.end());
 
-    return intersect(data.value().topics, it->second);
+    return it->second.count(data.value().topic) != 0;
   }
 
   void LocalSubscriptions::unsubscribe(uint64_t ticket) {
