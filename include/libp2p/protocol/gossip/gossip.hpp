@@ -31,7 +31,7 @@ namespace libp2p {
     }
   }  // namespace crypto
   namespace peer {
-    class IdentityManager;
+    struct IdentityManager;
   }
 }  // namespace libp2p
 
