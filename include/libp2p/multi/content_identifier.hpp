@@ -34,6 +34,8 @@ namespace libp2p::multi {
     ContentIdentifier(Version version, MulticodecType::Code content_type,
                       Multihash content_address);
 
+    virtual ~ContentIdentifier() = default;
+
     /**
      * @param base is a human-readable multibase prefix
      * @returns human readable representation of the CID
