@@ -10,7 +10,8 @@
 #include <boost/outcome/success_failure.hpp>
 #include <boost/outcome/try.hpp>
 
-#define OUTCOME_TRY(...) BOOST_OUTCOME_TRY(__VA_ARGS__)
+#define OUTCOME_TRY(...) \
+  BOOST_OUTCOME_TRY(__VA_ARGS__)  // NOLINT(bugprone-branch-clone)
 
 #include <libp2p/outcome/outcome-register.hpp>
 
@@ -31,7 +32,7 @@ namespace libp2p::outcome {
             class NoValuePolicy = policy::default_policy<R, S, void>>  //
   using result = basic_result<R, S, NoValuePolicy>;
 
-}  // namespace outcome
+}  // namespace libp2p::outcome
 
 // @see /docs/result.md
 
