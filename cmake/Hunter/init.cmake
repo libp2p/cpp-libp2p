@@ -31,7 +31,7 @@ set(
 include(${CMAKE_CURRENT_LIST_DIR}/HunterGate.cmake)
 
 HunterGate(
-    URL  "https://github.com/soramitsu/soramitsu-hunter/archive/tags/v0.23.257-soramitsu11.tar.gz"
-    SHA1 "aa48b7125c3400c41c3229647b5a8152f0108470"
+    URL  "https://github.com/soramitsu/soramitsu-hunter/archive/tags/v0.23.257-soramitsu13.tar.gz"
+    SHA1 "8c88d8bac2dee771926b84a6e28642a267f88ea8"
     LOCAL
 )

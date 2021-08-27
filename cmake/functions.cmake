@@ -61,7 +61,7 @@ function(compile_proto_to_cpp PROTO_LIBRARY_NAME PB_H PB_CC PROTO)
     message(FATAL_ERROR "Protobuf_INCLUDE_DIR is empty")
   endif ()
 
-  get_filename_component(PROTO_ABS "${PROTO}" REALPATH)
+  get_filename_component(PROTO_ABS "${PROTO}" ABSOLUTE)
   # get relative (to CMAKE_BINARY_DIR) path of current proto file
   file(RELATIVE_PATH SCHEMA_REL "${CMAKE_BINARY_DIR}/src" "${CMAKE_CURRENT_BINARY_DIR}")
 
