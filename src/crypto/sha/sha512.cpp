@@ -73,13 +73,12 @@ namespace libp2p::crypto {
     return HashType::SHA512;
   }
 
-  libp2p::common::Hash512 sha512(gsl::span<const uint8_t> input) {
+  outcome::result<libp2p::common::Hash512> sha512(
+      gsl::span<const uint8_t> input) {
+    Sha512 sha;
+    OUTCOME_TRY(sha.write(input));
     libp2p::common::Hash512 out;
-    SHA512_CTX ctx;
-    SHA512_Init(&ctx);
-    SHA512_Update(&ctx, input.data(), input.size());
-    SHA512_Final(out.data(), &ctx);
-    // TODO(igor-egorov) FIL-67 Try to add checks for SHA-X return values
+    OUTCOME_TRY(sha.digestOut(out));
     return out;
   }
 }  // namespace libp2p::crypto

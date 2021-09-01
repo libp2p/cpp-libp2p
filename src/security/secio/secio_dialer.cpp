@@ -84,8 +84,8 @@ namespace {
 namespace libp2p::security::secio {
   Dialer::Dialer(std::shared_ptr<connection::RawConnection> connection)
       : rw{std::make_shared<libp2p::basic::ProtobufMessageReadWriter>(
-            std::make_shared<libp2p::basic::MessageReadWriterBigEndian>(
-                std::move(connection)))} {}
+          std::make_shared<libp2p::basic::MessageReadWriterBigEndian>(
+              std::move(connection)))} {}
 
   void Dialer::storeLocalPeerProposalBytes(
       const std::shared_ptr<std::vector<uint8_t>> &bytes) {
@@ -193,8 +193,8 @@ namespace libp2p::security::secio {
     std::copy(remote.rand.begin(), remote.rand.end(),
               std::back_inserter(corpus2));
 
-    auto oh1{crypto::sha256(corpus1)};
-    auto oh2{crypto::sha256(corpus2)};
+    OUTCOME_TRY(oh1, crypto::sha256(corpus1));
+    OUTCOME_TRY(oh2, crypto::sha256(corpus2));
 
     if (oh1 == oh2) {
       return Error::PEER_COMMUNICATING_ITSELF;

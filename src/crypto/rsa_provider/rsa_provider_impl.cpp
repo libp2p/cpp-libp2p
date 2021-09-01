@@ -130,7 +130,7 @@ namespace libp2p::crypto::rsa {
   outcome::result<Signature> RsaProviderImpl::sign(
       gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
     OUTCOME_TRY(rsa, rsaFromPrivateKey(private_key));
-    Hash256 digest = sha256(message);
+    OUTCOME_TRY(digest, sha256(message));
     Signature signature(RSA_size(rsa.get()));
     unsigned int signature_size = 0;
     if (1
@@ -148,7 +148,7 @@ namespace libp2p::crypto::rsa {
     OUTCOME_TRY(x509_key, RsaProviderImpl::getPublicKeyFromBytes(public_key));
     EVP_PKEY *key = X509_PUBKEY_get0(x509_key.get());
     std::unique_ptr<RSA, void (*)(RSA *)> rsa{EVP_PKEY_get1_RSA(key), RSA_free};
-    Hash256 digest = sha256(message);
+    OUTCOME_TRY(digest, sha256(message));
     int result = RSA_verify(NID_sha256, digest.data(), digest.size(),
                             signature.data(), signature.size(), rsa.get());
     return 1 == result;

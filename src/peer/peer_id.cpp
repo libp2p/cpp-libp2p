@@ -36,7 +36,7 @@ namespace libp2p::peer {
       algo = multi::identity;
       hash = key.key;
     } else {
-      auto shash = crypto::sha256(key.key);
+      OUTCOME_TRY(shash, crypto::sha256(key.key));
       hash = std::vector<uint8_t>{shash.begin(), shash.end()};
     }
 
@@ -81,7 +81,7 @@ namespace libp2p::peer {
     return encodeBase58(hash_.toBuffer());
   }
 
-  const std::vector<uint8_t>& PeerId::toVector() const {
+  const std::vector<uint8_t> &PeerId::toVector() const {
     return hash_.toBuffer();
   }
 

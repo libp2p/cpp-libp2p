@@ -11,16 +11,6 @@
 #include <libp2p/crypto/error.hpp>
 
 namespace libp2p::crypto {
-  libp2p::common::Hash256 sha256(gsl::span<const uint8_t> input) {
-    libp2p::common::Hash256 out;
-    SHA256_CTX ctx;
-    SHA256_Init(&ctx);
-    SHA256_Update(&ctx, input.data(), input.size());
-    SHA256_Final(out.data(), &ctx);
-    // TODO(igor-egorov) FIL-67 Try to add checks for SHA-X return values
-    return out;
-  }
-
   Sha256::Sha256() {  // NOLINT
     initialized_ = 1 == SHA256_Init(&ctx_);
   }
@@ -81,5 +71,14 @@ namespace libp2p::crypto {
 
   HashType Sha256::hashType() const {
     return HashType::SHA256;
+  }
+
+  outcome::result<libp2p::common::Hash256> sha256(
+      gsl::span<const uint8_t> input) {
+    Sha256 sha;
+    OUTCOME_TRY(sha.write(input));
+    libp2p::common::Hash256 out;
+    OUTCOME_TRY(sha.digestOut(out));
+    return out;
   }
 }  // namespace libp2p::crypto
