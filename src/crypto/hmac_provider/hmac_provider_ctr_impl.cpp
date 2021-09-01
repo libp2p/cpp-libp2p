@@ -40,7 +40,8 @@ namespace libp2p::crypto::hmac {
       return;
     }
     initialized_ = 1
-        == HMAC_Init_ex(hmac_ctx_, key_.data(), key_.size(), hash_st_, nullptr);
+        == HMAC_Init_ex(hmac_ctx_, key_.data(), static_cast<int>(key_.size()),
+                        hash_st_, nullptr);
   }
 
   HmacProviderCtrImpl::~HmacProviderCtrImpl() {
@@ -89,8 +90,8 @@ namespace libp2p::crypto::hmac {
     hmac_ctx_ = HMAC_CTX_new();
     if (nullptr == hmac_ctx_
         or 1
-            != HMAC_Init_ex(hmac_ctx_, key_.data(), key_.size(), hash_st_,
-                            nullptr)) {
+            != HMAC_Init_ex(hmac_ctx_, key_.data(),
+                            static_cast<int>(key_.size()), hash_st_, nullptr)) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
     initialized_ = true;
