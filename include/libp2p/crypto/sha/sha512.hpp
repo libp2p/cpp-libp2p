@@ -31,6 +31,8 @@ namespace libp2p::crypto {
 
     size_t blockSize() const override;
 
+    HashType hashType() const override;
+
    private:
     void sinkCtx();
 
