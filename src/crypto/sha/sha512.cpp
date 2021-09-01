@@ -73,11 +73,6 @@ namespace libp2p::crypto {
     return HashType::SHA512;
   }
 
-  libp2p::common::Hash512 sha512(std::string_view input) {
-    std::vector<uint8_t> bytes{input.begin(), input.end()};
-    return sha512(bytes);
-  }
-
   libp2p::common::Hash512 sha512(gsl::span<const uint8_t> input) {
     libp2p::common::Hash512 out;
     SHA512_CTX ctx;

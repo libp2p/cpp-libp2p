@@ -39,13 +39,6 @@ namespace libp2p::crypto {
   };
 
   /**
-   * Take a SHA-256 hash from string
-   * @param input to be hashed
-   * @return hashed bytes
-   */
-  [[deprecated]] libp2p::common::Hash256 sha256(std::string_view input);
-
-  /**
    * Take a SHA-256 hash from bytes
    * @param input to be hashed
    * @return hashed bytes
