@@ -78,12 +78,8 @@ namespace libp2p::multi {
 
   std::vector<uint8_t> ContentIdentifierCodec::encodeCIDV0(
       const void *byte_buffer, size_t sz) {
-    libp2p::crypto::Sha256 hasher;
-    auto write_res = hasher.write(gsl::span<const uint8_t>(
+    auto digest_res = crypto::sha256(gsl::make_span(
         reinterpret_cast<const uint8_t *>(byte_buffer), sz));  // NOLINT
-    BOOST_ASSERT(write_res.has_value());
-
-    auto digest_res = hasher.digest();
     BOOST_ASSERT(digest_res.has_value());
 
     auto &hash = digest_res.value();

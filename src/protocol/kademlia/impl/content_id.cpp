@@ -17,13 +17,9 @@ namespace libp2p::protocol::kademlia {
       : data(multi::ContentIdentifierCodec::encodeCIDV0("", 0)) {}
 
   ContentId::ContentId(std::string_view str) {
-    libp2p::crypto::Sha256 hasher;
-    auto write_res = hasher.write(gsl::span<const uint8_t>(
+    auto digest_res = crypto::sha256(gsl::make_span(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         reinterpret_cast<const uint8_t *>(str.data()), str.size()));
-    BOOST_ASSERT(write_res.has_value());
-
-    auto digest_res = hasher.digest();
     BOOST_ASSERT(digest_res.has_value());
 
     auto mhash_res = libp2p::multi::Multihash::create(
