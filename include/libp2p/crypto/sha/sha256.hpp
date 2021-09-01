@@ -21,7 +21,7 @@ namespace libp2p::crypto {
 
     outcome::result<void> write(gsl::span<const uint8_t> data) override;
 
-    outcome::result<std::vector<uint8_t>> digest() override;
+    outcome::result<void> digestOut(gsl::span<uint8_t> out) const override;
 
     outcome::result<void> reset() override;
 

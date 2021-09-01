@@ -44,17 +44,18 @@ namespace libp2p::crypto {
     return outcome::success();
   }
 
-  outcome::result<std::vector<uint8_t>> Sha256::digest() {
+  outcome::result<void> Sha256::digestOut(gsl::span<uint8_t> out) const {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
+    if (out.size() != static_cast<ptrdiff_t>(digestSize())) {
+      return HmacProviderError::WRONG_DIGEST_SIZE;
+    }
     SHA256_CTX ctx = ctx_;
-    std::vector<uint8_t> result;
-    result.resize(digestSize());
-    if (1 != SHA256_Final(result.data(), &ctx)) {
+    if (1 != SHA256_Final(out.data(), &ctx)) {
       return HmacProviderError::FAILED_FINALIZE_DIGEST;
     }
-    return result;
+    return outcome::success();
   }
 
   outcome::result<void> Sha256::reset() {
