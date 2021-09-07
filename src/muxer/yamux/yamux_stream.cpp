@@ -444,7 +444,7 @@ namespace libp2p::connection {
 
     if (!is_readable_) {
       // half closed
-      return deferReadCallback(Error::STREAM_NOT_READABLE, std::move(read_cb_));
+      return deferReadCallback(Error::STREAM_NOT_READABLE, std::move(cb));
     }
 
     is_reading_ = true;

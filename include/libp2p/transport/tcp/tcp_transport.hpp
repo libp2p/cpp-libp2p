@@ -6,8 +6,6 @@
 #ifndef LIBP2P_TCP_TRANSPORT_HPP
 #define LIBP2P_TCP_TRANSPORT_HPP
 
-#define BOOST_ASIO_NO_DEPRECATED
-
 #include <boost/asio.hpp>
 #include <libp2p/transport/tcp/tcp_listener.hpp>
 #include <libp2p/transport/tcp/tcp_util.hpp>

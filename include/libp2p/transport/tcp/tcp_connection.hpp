@@ -6,8 +6,6 @@
 #ifndef LIBP2P_TCP_CONNECTION_HPP
 #define LIBP2P_TCP_CONNECTION_HPP
 
-#define BOOST_ASIO_NO_DEPRECATED
-
 #include <atomic>
 #include <chrono>
 
