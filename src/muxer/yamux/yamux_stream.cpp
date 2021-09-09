@@ -242,7 +242,8 @@ namespace libp2p::connection {
 
       assert(bytes_consumed > 0);
 
-      external_read_buffer_ = external_read_buffer_.subspan(bytes_consumed);
+      external_read_buffer_ =
+          external_read_buffer_.subspan(static_cast<ptrdiff_t>(bytes_consumed));
 
       read_completed = external_read_buffer_.empty();
       if (reading_some_) {
@@ -423,7 +424,7 @@ namespace libp2p::connection {
     // If something is still in read buffer, the client can consume these bytes
     auto bytes_available_now = internal_read_buffer_.size();
     if (bytes_available_now >= bytes || (some && bytes_available_now > 0)) {
-      out = out.first(bytes);
+      out = out.first(static_cast<ptrdiff_t>(bytes));
       size_t consumed = internal_read_buffer_.consume(out);
 
       assert(consumed > 0);
@@ -452,12 +453,13 @@ namespace libp2p::connection {
     external_read_buffer_ = out;
     read_message_size_ = bytes;
     reading_some_ = some;
-    external_read_buffer_ = external_read_buffer_.first(read_message_size_);
+    external_read_buffer_ =
+        external_read_buffer_.first(static_cast<ptrdiff_t>(read_message_size_));
 
     if (bytes_available_now > 0) {
       internal_read_buffer_.consume(external_read_buffer_);
-      external_read_buffer_ =
-          external_read_buffer_.subspan(bytes_available_now);
+      external_read_buffer_ = external_read_buffer_.subspan(
+          static_cast<ptrdiff_t>(bytes_available_now));
     }
   }
 
@@ -538,7 +540,8 @@ namespace libp2p::connection {
       return deferWriteCallback(Error::STREAM_WRITE_OVERFLOW, std::move(cb));
     }
 
-    write_queue_.enqueue(in.first(bytes), some, std::move(cb));
+    write_queue_.enqueue(in.first(static_cast<ptrdiff_t>(bytes)), some,
+                         std::move(cb));
     doWrite();
   }
 
