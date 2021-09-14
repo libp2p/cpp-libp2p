@@ -41,9 +41,9 @@ namespace libp2p::crypto {
     virtual HashType hashType() const = 0;
 
     outcome::result<libp2p::common::ByteArray> digest() const {
-      libp2p::common::ByteArray result;
-      result.resize(digestSize());
-      OUTCOME_TRY(digestOut(result));
+      outcome::result<libp2p::common::ByteArray> result{outcome::success()};
+      result.value().resize(digestSize());
+      OUTCOME_TRY(digestOut(result.value()));
       return result;
     }
   };

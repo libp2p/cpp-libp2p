@@ -77,8 +77,8 @@ namespace libp2p::crypto {
       gsl::span<const uint8_t> input) {
     Sha512 sha;
     OUTCOME_TRY(sha.write(input));
-    libp2p::common::Hash512 out;
-    OUTCOME_TRY(sha.digestOut(out));
-    return out;
+    outcome::result<libp2p::common::Hash512> result{outcome::success()};
+    OUTCOME_TRY(sha.digestOut(result.value()));
+    return result;
   }
 }  // namespace libp2p::crypto
