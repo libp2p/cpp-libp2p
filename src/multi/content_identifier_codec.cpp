@@ -78,12 +78,8 @@ namespace libp2p::multi {
 
   std::vector<uint8_t> ContentIdentifierCodec::encodeCIDV0(
       const void *byte_buffer, size_t sz) {
-    libp2p::crypto::Sha256 hasher;
-    auto write_res = hasher.write(gsl::span<const uint8_t>(
+    auto digest_res = crypto::sha256(gsl::make_span(
         reinterpret_cast<const uint8_t *>(byte_buffer), sz));  // NOLINT
-    BOOST_ASSERT(write_res.has_value());
-
-    auto digest_res = hasher.digest();
     BOOST_ASSERT(digest_res.has_value());
 
     auto &hash = digest_res.value();
@@ -101,8 +97,8 @@ namespace libp2p::multi {
     std::vector<uint8_t> bytes;
     // Reserve space for CID version size + content-type size + multihash size
     bytes.reserve(1 + 1 + mhash.toBuffer().size());
-    bytes.push_back(1);  // CID version
-    bytes.push_back(static_cast<uint8_t>(content_type)); // Content-Type
+    bytes.push_back(1);                                   // CID version
+    bytes.push_back(static_cast<uint8_t>(content_type));  // Content-Type
     std::copy(mhash.toBuffer().begin(), mhash.toBuffer().end(),
               std::back_inserter(bytes));  // multihash data
     return bytes;
@@ -122,12 +118,13 @@ namespace libp2p::multi {
     auto version = version_opt.value().toUInt64();
     if (version == 1) {
       auto version_length = UVarint::calculateSize(bytes);
-      auto multicodec_opt = UVarint::create(bytes.subspan(version_length));
+      auto multicodec_opt = UVarint::create(
+          bytes.subspan(static_cast<ptrdiff_t>(version_length)));
       if (!multicodec_opt) {
         return DecodeError::EMPTY_MULTICODEC;
       }
-      auto multicodec_length =
-          UVarint::calculateSize(bytes.subspan(version_length));
+      auto multicodec_length = UVarint::calculateSize(
+          bytes.subspan(static_cast<ptrdiff_t>(version_length)));
       OUTCOME_TRY(hash,
                   Multihash::createFromBytes(
                       bytes.subspan(version_length + multicodec_length)));

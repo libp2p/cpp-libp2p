@@ -26,7 +26,7 @@ namespace libp2p::crypto {
      * Does not affect the internal state.
      * New data still could be fed via write method.
      */
-    virtual outcome::result<std::vector<uint8_t>> digest() = 0;
+    virtual outcome::result<void> digestOut(gsl::span<uint8_t> out) const = 0;
 
     /// resets the internal state
     virtual outcome::result<void> reset() = 0;
@@ -39,6 +39,13 @@ namespace libp2p::crypto {
 
     /// runtime identifiable hasher type
     virtual HashType hashType() const = 0;
+
+    outcome::result<libp2p::common::ByteArray> digest() const {
+      outcome::result<libp2p::common::ByteArray> result{outcome::success()};
+      result.value().resize(digestSize());
+      OUTCOME_TRY(digestOut(result.value()));
+      return result;
+    }
   };
 }  // namespace libp2p::crypto
 

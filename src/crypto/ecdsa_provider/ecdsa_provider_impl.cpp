@@ -51,7 +51,7 @@ namespace libp2p::crypto::ecdsa {
 
   outcome::result<Signature> EcdsaProviderImpl::sign(
       gsl::span<const uint8_t> message, const PrivateKey &key) const {
-    auto digest = sha256(message);
+    OUTCOME_TRY(digest, sha256(message));
     OUTCOME_TRY(ec_key, convertBytesToEcKey(key, d2i_ECPrivateKey));
     OUTCOME_TRY(signature, GenerateEcSignature(digest, ec_key));
     return std::move(signature);
@@ -60,7 +60,7 @@ namespace libp2p::crypto::ecdsa {
   outcome::result<bool> EcdsaProviderImpl::verify(
       gsl::span<const uint8_t> message, const Signature &signature,
       const PublicKey &key) const {
-    auto digest = sha256(message);
+    OUTCOME_TRY(digest, sha256(message));
     OUTCOME_TRY(ec_key, convertBytesToEcKey(key, d2i_EC_PUBKEY));
     OUTCOME_TRY(signature_status, VerifyEcSignature(digest, signature, ec_key));
     return signature_status;

@@ -11,21 +11,6 @@
 #include <libp2p/crypto/error.hpp>
 
 namespace libp2p::crypto {
-  libp2p::common::Hash256 sha256(std::string_view input) {
-    std::vector<uint8_t> bytes{input.begin(), input.end()};
-    return sha256(bytes);
-  }
-
-  libp2p::common::Hash256 sha256(gsl::span<const uint8_t> input) {
-    libp2p::common::Hash256 out;
-    SHA256_CTX ctx;
-    SHA256_Init(&ctx);
-    SHA256_Update(&ctx, input.data(), input.size());
-    SHA256_Final(out.data(), &ctx);
-    // TODO(igor-egorov) FIL-67 Try to add checks for SHA-X return values
-    return out;
-  }
-
   Sha256::Sha256() {  // NOLINT
     initialized_ = 1 == SHA256_Init(&ctx_);
   }
@@ -44,17 +29,18 @@ namespace libp2p::crypto {
     return outcome::success();
   }
 
-  outcome::result<std::vector<uint8_t>> Sha256::digest() {
+  outcome::result<void> Sha256::digestOut(gsl::span<uint8_t> out) const {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
+    if (out.size() != static_cast<ptrdiff_t>(digestSize())) {
+      return HmacProviderError::WRONG_DIGEST_SIZE;
+    }
     SHA256_CTX ctx = ctx_;
-    std::vector<uint8_t> result;
-    result.resize(digestSize());
-    if (1 != SHA256_Final(result.data(), &ctx)) {
+    if (1 != SHA256_Final(out.data(), &ctx)) {
       return HmacProviderError::FAILED_FINALIZE_DIGEST;
     }
-    return result;
+    return outcome::success();
   }
 
   outcome::result<void> Sha256::reset() {
@@ -85,5 +71,14 @@ namespace libp2p::crypto {
 
   HashType Sha256::hashType() const {
     return HashType::SHA256;
+  }
+
+  outcome::result<libp2p::common::Hash256> sha256(
+      gsl::span<const uint8_t> input) {
+    Sha256 sha;
+    OUTCOME_TRY(sha.write(input));
+    outcome::result<libp2p::common::Hash256> result{outcome::success()};
+    OUTCOME_TRY(sha.digestOut(result.value()));
+    return result;
   }
 }  // namespace libp2p::crypto

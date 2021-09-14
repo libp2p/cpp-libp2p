@@ -32,7 +32,7 @@ TEST_F(PeerIdTest, FromPubkeySuccess) {
   pubkey.type = Key::Type::RSA;
   pubkey.data = kBuffer;
 
-  auto hash = libp2p::crypto::sha256(pubkey.data);
+  auto hash = libp2p::crypto::sha256(pubkey.data).value();
   EXPECT_OUTCOME_TRUE(multihash,
                       Multihash::create(libp2p::multi::sha256,
                                         Buffer{hash.begin(), hash.end()}))

@@ -54,7 +54,7 @@ namespace libp2p::crypto::secp256k1 {
 
   outcome::result<Signature> Secp256k1ProviderImpl::sign(
       gsl::span<const uint8_t> message, const PrivateKey &key) const {
-    auto digest = sha256(message);
+    OUTCOME_TRY(digest, sha256(message));
     OUTCOME_TRY(private_key, bytesToPrivateKey(key));
     OUTCOME_TRY(signature, GenerateEcSignature(digest, private_key));
     return std::move(signature);
@@ -63,7 +63,7 @@ namespace libp2p::crypto::secp256k1 {
   outcome::result<bool> Secp256k1ProviderImpl::verify(
       gsl::span<const uint8_t> message, const Signature &signature,
       const PublicKey &key) const {
-    auto digest = sha256(message);
+    OUTCOME_TRY(digest, sha256(message));
     OUTCOME_TRY(public_key, bytesToPublicKey(key));
     OUTCOME_TRY(result, VerifyEcSignature(digest, signature, public_key));
     return result;
@@ -73,11 +73,12 @@ namespace libp2p::crypto::secp256k1 {
   Secp256k1ProviderImpl::bytesToPrivateKey(const PrivateKey &input) {
     std::shared_ptr<EC_KEY> key{EC_KEY_new_by_curve_name(NID_secp256k1),
                                 EC_KEY_free};
-    if (key.get() == nullptr) {
+    if (key == nullptr) {
       return KeyGeneratorError::INTERNAL_ERROR;
     }
     std::unique_ptr<BIGNUM, void (*)(BIGNUM *)> key_bignum{
-        BN_bin2bn(input.data(), input.size(), nullptr), BN_free};
+        BN_bin2bn(input.data(), static_cast<int>(input.size()), nullptr),
+        BN_free};
     if (key_bignum == nullptr) {
       return KeyGeneratorError::INTERNAL_ERROR;
     }
@@ -113,7 +114,8 @@ namespace libp2p::crypto::secp256k1 {
     }
     const uint8_t *public_key_ptr = input.data();
     EC_KEY *key_ptr = key.get();
-    key_ptr = o2i_ECPublicKey(&key_ptr, &public_key_ptr, input.size());
+    key_ptr = o2i_ECPublicKey(&key_ptr, &public_key_ptr,
+                              static_cast<long>(input.size()));
     if (key_ptr == nullptr) {
       return KeyGeneratorError::INTERNAL_ERROR;
     }

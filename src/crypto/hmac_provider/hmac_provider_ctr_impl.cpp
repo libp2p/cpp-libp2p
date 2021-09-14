@@ -40,7 +40,8 @@ namespace libp2p::crypto::hmac {
       return;
     }
     initialized_ = 1
-        == HMAC_Init_ex(hmac_ctx_, key_.data(), key_.size(), hash_st_, nullptr);
+        == HMAC_Init_ex(hmac_ctx_, key_.data(), static_cast<int>(key_.size()),
+                        hash_st_, nullptr);
   }
 
   HmacProviderCtrImpl::~HmacProviderCtrImpl() {
@@ -58,9 +59,13 @@ namespace libp2p::crypto::hmac {
     return outcome::success();
   }
 
-  outcome::result<std::vector<uint8_t>> HmacProviderCtrImpl::digest() {
+  outcome::result<void> HmacProviderCtrImpl::digestOut(
+      gsl::span<uint8_t> out) const {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+    }
+    if (out.size() != static_cast<ptrdiff_t>(digestSize())) {
+      return HmacProviderError::WRONG_DIGEST_SIZE;
     }
     HMAC_CTX *ctx_copy = HMAC_CTX_new();
     if (nullptr == ctx_copy) {
@@ -70,16 +75,14 @@ namespace libp2p::crypto::hmac {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
     auto free_ctx_copy = gsl::finally([ctx_copy] { HMAC_CTX_free(ctx_copy); });
-    std::vector<uint8_t> result;
-    result.resize(digestSize());
     unsigned len{0};
-    if (1 != HMAC_Final(ctx_copy, result.data(), &len)) {
+    if (1 != HMAC_Final(ctx_copy, out.data(), &len)) {
       return HmacProviderError::FAILED_FINALIZE_DIGEST;
     }
     if (len != digestSize()) {
       return HmacProviderError::WRONG_DIGEST_SIZE;
     }
-    return result;
+    return outcome::success();
   }
 
   outcome::result<void> HmacProviderCtrImpl::reset() {
@@ -87,8 +90,8 @@ namespace libp2p::crypto::hmac {
     hmac_ctx_ = HMAC_CTX_new();
     if (nullptr == hmac_ctx_
         or 1
-            != HMAC_Init_ex(hmac_ctx_, key_.data(), key_.size(), hash_st_,
-                            nullptr)) {
+            != HMAC_Init_ex(hmac_ctx_, key_.data(),
+                            static_cast<int>(key_.size()), hash_st_, nullptr)) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
     initialized_ = true;

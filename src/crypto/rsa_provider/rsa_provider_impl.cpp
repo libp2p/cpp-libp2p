@@ -104,7 +104,8 @@ namespace libp2p::crypto::rsa {
   outcome::result<PublicKey> RsaProviderImpl::derive(
       const PrivateKey &private_key) const {
     const unsigned char *data_pointer = private_key.data();
-    RSA *rsa = d2i_RSAPrivateKey(nullptr, &data_pointer, private_key.size());
+    RSA *rsa = d2i_RSAPrivateKey(nullptr, &data_pointer,
+                                 static_cast<long>(private_key.size()));
     if (nullptr == rsa) {
       return KeyGeneratorError::KEY_DERIVATION_FAILED;
     }
@@ -119,7 +120,8 @@ namespace libp2p::crypto::rsa {
       const PrivateKey &private_key) {
     const unsigned char *data_pointer = private_key.data();
     std::shared_ptr<RSA> rsa{
-        d2i_RSAPrivateKey(nullptr, &data_pointer, private_key.size()),
+        d2i_RSAPrivateKey(nullptr, &data_pointer,
+                          static_cast<long>(private_key.size())),
         RSA_free};
     if (nullptr == rsa) {
       return KeyValidatorError::INVALID_PRIVATE_KEY;
@@ -130,7 +132,7 @@ namespace libp2p::crypto::rsa {
   outcome::result<Signature> RsaProviderImpl::sign(
       gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
     OUTCOME_TRY(rsa, rsaFromPrivateKey(private_key));
-    Hash256 digest = sha256(message);
+    OUTCOME_TRY(digest, sha256(message));
     Signature signature(RSA_size(rsa.get()));
     unsigned int signature_size = 0;
     if (1
@@ -148,7 +150,7 @@ namespace libp2p::crypto::rsa {
     OUTCOME_TRY(x509_key, RsaProviderImpl::getPublicKeyFromBytes(public_key));
     EVP_PKEY *key = X509_PUBKEY_get0(x509_key.get());
     std::unique_ptr<RSA, void (*)(RSA *)> rsa{EVP_PKEY_get1_RSA(key), RSA_free};
-    Hash256 digest = sha256(message);
+    OUTCOME_TRY(digest, sha256(message));
     int result = RSA_verify(NID_sha256, digest.data(), digest.size(),
                             signature.data(), signature.size(), rsa.get());
     return 1 == result;
@@ -159,7 +161,8 @@ namespace libp2p::crypto::rsa {
     const uint8_t *bytes = input_key.data();
     std::shared_ptr<X509_PUBKEY> key{X509_PUBKEY_new(), X509_PUBKEY_free};
     X509_PUBKEY *key_ptr = key.get();
-    if (d2i_X509_PUBKEY(&key_ptr, &bytes, input_key.size()) == nullptr) {
+    if (d2i_X509_PUBKEY(&key_ptr, &bytes, static_cast<long>(input_key.size()))
+        == nullptr) {
       return KeyValidatorError::INVALID_PUBLIC_KEY;
     }
     return key;

@@ -30,10 +30,7 @@ namespace libp2p::protocol::kademlia {
 
   struct XorDistanceComparator {
     explicit XorDistanceComparator(const peer::PeerId &from) {
-      crypto::Sha256 hash;
-      hash.write(from.toVector()).value();
-      memcpy(hfrom.data(), hash.digest().value().data(),
-             std::min<size_t>(hash.digestSize(), hfrom.size()));
+      hfrom = crypto::sha256(from.toVector()).value();
     }
 
     explicit XorDistanceComparator(const NodeId &from)

@@ -23,13 +23,15 @@ namespace libp2p::crypto {
 
     outcome::result<void> write(gsl::span<const uint8_t> data) override;
 
-    outcome::result<std::vector<uint8_t>> digest() override;
+    outcome::result<void> digestOut(gsl::span<uint8_t> out) const override;
 
     outcome::result<void> reset() override;
 
     size_t digestSize() const override;
 
     size_t blockSize() const override;
+
+    HashType hashType() const override;
 
    private:
     void sinkCtx();
@@ -39,18 +41,12 @@ namespace libp2p::crypto {
   };
 
   /**
-   * Take a SHA-512 hash from string
-   * @param input to be hashed
-   * @return hashed bytes
-   */
-  [[deprecated]] libp2p::common::Hash512 sha512(std::string_view input);
-
-  /**
    * Take a SHA-512 hash from bytes
    * @param input to be hashed
    * @return hashed bytes
    */
-  [[deprecated]] libp2p::common::Hash512 sha512(gsl::span<const uint8_t> input);
+  outcome::result<libp2p::common::Hash512> sha512(
+      gsl::span<const uint8_t> input);
 }  // namespace libp2p::crypto
 
 #endif  // LIBP2P_SHA512_HPP

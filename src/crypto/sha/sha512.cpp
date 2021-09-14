@@ -29,17 +29,18 @@ namespace libp2p::crypto {
     return outcome::success();
   }
 
-  outcome::result<std::vector<uint8_t>> Sha512::digest() {
+  outcome::result<void> Sha512::digestOut(gsl::span<uint8_t> out) const {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
+    if (out.size() != static_cast<ptrdiff_t>(digestSize())) {
+      return HmacProviderError::WRONG_DIGEST_SIZE;
+    }
     SHA512_CTX ctx = ctx_;
-    std::vector<uint8_t> result;
-    result.resize(digestSize());
-    if (1 != SHA512_Final(result.data(), &ctx)) {
+    if (1 != SHA512_Final(out.data(), &ctx)) {
       return HmacProviderError::FAILED_FINALIZE_DIGEST;
     }
-    return result;
+    return outcome::success();
   }
 
   outcome::result<void> Sha512::reset() {
@@ -68,18 +69,16 @@ namespace libp2p::crypto {
     }
   }
 
-  libp2p::common::Hash512 sha512(std::string_view input) {
-    std::vector<uint8_t> bytes{input.begin(), input.end()};
-    return sha512(bytes);
+  HashType Sha512::hashType() const {
+    return HashType::SHA512;
   }
 
-  libp2p::common::Hash512 sha512(gsl::span<const uint8_t> input) {
-    libp2p::common::Hash512 out;
-    SHA512_CTX ctx;
-    SHA512_Init(&ctx);
-    SHA512_Update(&ctx, input.data(), input.size());
-    SHA512_Final(out.data(), &ctx);
-    // TODO(igor-egorov) FIL-67 Try to add checks for SHA-X return values
-    return out;
+  outcome::result<libp2p::common::Hash512> sha512(
+      gsl::span<const uint8_t> input) {
+    Sha512 sha;
+    OUTCOME_TRY(sha.write(input));
+    outcome::result<libp2p::common::Hash512> result{outcome::success()};
+    OUTCOME_TRY(sha.digestOut(result.value()));
+    return result;
   }
 }  // namespace libp2p::crypto
