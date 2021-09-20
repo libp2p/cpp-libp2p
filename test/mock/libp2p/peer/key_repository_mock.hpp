@@ -6,7 +6,7 @@
 #ifndef LIBP2P_KEY_REPOSITORY_MOCK_HPP
 #define LIBP2P_KEY_REPOSITORY_MOCK_HPP
 
-#include "libp2p/peer/key_repository.hpp"
+#include <libp2p/peer/key_repository.hpp>
 
 #include <gmock/gmock.h>
 

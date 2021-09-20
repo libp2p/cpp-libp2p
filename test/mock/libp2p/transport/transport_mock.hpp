@@ -6,8 +6,9 @@
 #ifndef LIBP2P_TRANSPORT_MOCK_HPP
 #define LIBP2P_TRANSPORT_MOCK_HPP
 
+#include <libp2p/transport/transport_adaptor.hpp>
+
 #include <gmock/gmock.h>
-#include "libp2p/transport/transport_adaptor.hpp"
 
 namespace libp2p::transport {
   class TransportMock : public TransportAdaptor {

@@ -6,7 +6,7 @@
 #ifndef LIBP2P_TEST_MOCK_LIBP2P_NETWORK_DNSADDR_RESOLVER_MOCK_HPP
 #define LIBP2P_TEST_MOCK_LIBP2P_NETWORK_DNSADDR_RESOLVER_MOCK_HPP
 
-#include "libp2p/network/dnsaddr_resolver.hpp"
+#include <libp2p/network/dnsaddr_resolver.hpp>
 
 #include <gmock/gmock.h>
 

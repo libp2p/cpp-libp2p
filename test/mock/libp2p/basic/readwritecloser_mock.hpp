@@ -6,9 +6,11 @@
 #ifndef LIBP2P_READWRITECLOSER_MOCK_HPP
 #define LIBP2P_READWRITECLOSER_MOCK_HPP
 
+#include <libp2p/basic/readwritecloser.hpp>
+
 #include <gmock/gmock.h>
-#include "common/hexutil.hpp"
-#include "libp2p/basic/readwritecloser.hpp"
+
+#include <libp2p/common/hexutil.hpp>
 
 namespace libp2p::basic {
   class ReadWriteCloserMock : public ReadWriteCloser {

@@ -6,8 +6,10 @@
 #ifndef LIBP2P_READER_MOCK_HPP
 #define LIBP2P_READER_MOCK_HPP
 
-#include <gmock/gmock.h>
 #include <libp2p/basic/reader.hpp>
+
+#include <gmock/gmock.h>
+
 #include <libp2p/common/hexutil.hpp>
 
 namespace libp2p::basic {

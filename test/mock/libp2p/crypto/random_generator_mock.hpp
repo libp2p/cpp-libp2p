@@ -6,7 +6,7 @@
 #ifndef LIBP2P_RANDOM_GENERATOR_MOCK_HPP
 #define LIBP2P_RANDOM_GENERATOR_MOCK_HPP
 
-#include "libp2p/crypto/random_generator.hpp"
+#include <libp2p/crypto/random_generator.hpp>
 
 #include <gmock/gmock.h>
 

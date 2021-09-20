@@ -6,8 +6,9 @@
 #ifndef LIBP2P_IDENTITY_MANAGER_MOCK_HPP
 #define LIBP2P_IDENTITY_MANAGER_MOCK_HPP
 
+#include <libp2p/peer/identity_manager.hpp>
+
 #include <gmock/gmock.h>
-#include "libp2p/peer/identity_manager.hpp"
 
 namespace libp2p::peer {
 

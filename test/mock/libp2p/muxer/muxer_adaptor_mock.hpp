@@ -6,8 +6,9 @@
 #ifndef LIBP2P_MUXER_ADAPTOR_MOCK_HPP
 #define LIBP2P_MUXER_ADAPTOR_MOCK_HPP
 
-#include <gmock/gmock.h>
 #include <libp2p/muxer/muxer_adaptor.hpp>
+
+#include <gmock/gmock.h>
 
 namespace libp2p::muxer {
   struct MuxerAdaptorMock : public MuxerAdaptor {

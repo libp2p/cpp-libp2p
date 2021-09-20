@@ -6,9 +6,9 @@
 #ifndef LIBP2P_TRANSPORT_MANAGER_MOCK_HPP
 #define LIBP2P_TRANSPORT_MANAGER_MOCK_HPP
 
-#include <gmock/gmock.h>
+#include <libp2p/network/transport_manager.hpp>
 
-#include "libp2p/network/transport_manager.hpp"
+#include <gmock/gmock.h>
 
 namespace libp2p::network {
 
