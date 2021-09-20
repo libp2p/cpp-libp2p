@@ -6,8 +6,9 @@
 #ifndef LIBP2P_ADDRESS_REPOSITORY_MOCK_HPP
 #define LIBP2P_ADDRESS_REPOSITORY_MOCK_HPP
 
+#include <libp2p/peer/address_repository.hpp>
+
 #include <gmock/gmock.h>
-#include "libp2p/peer/address_repository.hpp"
 
 namespace libp2p::peer {
 

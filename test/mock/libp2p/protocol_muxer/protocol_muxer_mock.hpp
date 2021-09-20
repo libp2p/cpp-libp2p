@@ -6,8 +6,9 @@
 #ifndef LIBP2P_PROTOCOL_MUXER_MOCK_HPP
 #define LIBP2P_PROTOCOL_MUXER_MOCK_HPP
 
+#include <libp2p/protocol_muxer/protocol_muxer.hpp>
+
 #include <gmock/gmock.h>
-#include "libp2p/protocol_muxer/protocol_muxer.hpp"
 
 namespace libp2p::protocol_muxer {
   class ProtocolMuxerMock : public ProtocolMuxer {

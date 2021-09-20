@@ -6,11 +6,12 @@
 #ifndef LIBP2P_UPGRADER_MOCK_HPP
 #define LIBP2P_UPGRADER_MOCK_HPP
 
-#include "libp2p/transport/upgrader.hpp"
+#include <libp2p/transport/upgrader.hpp>
 
 #include <gmock/gmock.h>
-#include "libp2p/muxer/yamux.hpp"
-#include "libp2p/security/plaintext.hpp"
+
+#include <libp2p/muxer/yamux.hpp>
+#include <libp2p/security/plaintext.hpp>
 
 namespace libp2p::transport {
 

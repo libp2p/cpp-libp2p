@@ -6,7 +6,7 @@
 #ifndef LIBP2P_LISTENER_MOCK_HPP
 #define LIBP2P_LISTENER_MOCK_HPP
 
-#include "libp2p/network/listener_manager.hpp"
+#include <libp2p/network/listener_manager.hpp>
 
 #include <gmock/gmock.h>
 

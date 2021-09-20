@@ -8,7 +8,7 @@
 
 #include <gmock/gmock.h>
 
-#include "libp2p/connection/capable_connection.hpp"
+#include <libp2p/connection/capable_connection.hpp>
 
 namespace libp2p::connection {
 

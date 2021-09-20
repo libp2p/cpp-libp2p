@@ -6,8 +6,9 @@
 #ifndef LIBP2P_BASIC_SCHEDULERMOCK
 #define LIBP2P_BASIC_SCHEDULERMOCK
 
+#include <libp2p/basic/scheduler.hpp>
+
 #include <gmock/gmock.h>
-#include "libp2p/basic/scheduler.hpp"
 
 namespace libp2p::basic {
 

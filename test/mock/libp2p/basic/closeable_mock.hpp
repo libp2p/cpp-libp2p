@@ -6,8 +6,9 @@
 #ifndef LIBP2P_CLOSEABLE_MOCK_HPP
 #define LIBP2P_CLOSEABLE_MOCK_HPP
 
+#include <libp2p/basic/closeable.hpp>
+
 #include <gmock/gmock.h>
-#include "include/libp2p/basic/closeable.hpp"
 
 namespace libp2p::basic {
   class CloseableMock : public Closeable {

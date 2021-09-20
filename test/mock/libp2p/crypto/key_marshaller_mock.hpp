@@ -6,8 +6,9 @@
 #ifndef LIBP2P_KEY_MARSHALLER_MOCK_HPP
 #define LIBP2P_KEY_MARSHALLER_MOCK_HPP
 
+#include <libp2p/crypto/key_marshaller.hpp>
+
 #include <gmock/gmock.h>
-#include "libp2p/crypto/key_marshaller.hpp"
 
 namespace libp2p::crypto::marshaller {
 

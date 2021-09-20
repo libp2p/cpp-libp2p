@@ -6,10 +6,11 @@
 #ifndef LIBP2P_CONNECTION_MANAGER_MOCK_HPP
 #define LIBP2P_CONNECTION_MANAGER_MOCK_HPP
 
+#include <libp2p/network/connection_manager.hpp>
+
 #include <vector>
 
 #include <gmock/gmock.h>
-#include "libp2p/network/connection_manager.hpp"
 
 namespace libp2p::network {
 

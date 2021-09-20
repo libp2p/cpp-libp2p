@@ -30,7 +30,7 @@ option(LSAN "Enable leak sanitizer" OFF)
 option(MSAN "Enable memory sanitizer" OFF)
 option(TSAN "Enable thread sanitizer" OFF)
 option(UBSAN "Enable UB sanitizer" OFF)
-option(EXPOSE_MOCKS "Make mocks header files visible for child projects" OFF)
+option(EXPOSE_MOCKS "Make mocks header files visible for child projects" ON)
 option(METRICS_ENABLED "Enable libp2p metrics" OFF)
 
 include(cmake/print.cmake)

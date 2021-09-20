@@ -6,8 +6,9 @@
 #ifndef LIBP2P_STREAM_MOCK_HPP
 #define LIBP2P_STREAM_MOCK_HPP
 
+#include <libp2p/connection/stream.hpp>
+
 #include <gmock/gmock.h>
-#include "libp2p/connection/stream.hpp"
 
 namespace libp2p::connection {
   class StreamMock : public Stream {

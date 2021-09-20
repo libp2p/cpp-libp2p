@@ -6,10 +6,11 @@
 #ifndef LIBP2P_HOST_MOCK_HPP
 #define LIBP2P_HOST_MOCK_HPP
 
+#include <libp2p/host/host.hpp>
+
 #include <vector>
 
 #include <gmock/gmock.h>
-#include "libp2p/host/host.hpp"
 
 namespace libp2p {
   class HostMock : public Host {

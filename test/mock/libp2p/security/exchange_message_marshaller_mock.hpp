@@ -6,10 +6,12 @@
 #ifndef LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP
 #define LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP
 
-#include <generated/security/plaintext/protobuf/plaintext.pb.h>
+#include <libp2p/security/plaintext/exchange_message_marshaller.hpp>
+
 #include <gmock/gmock.h>
-#include "libp2p/security/plaintext/exchange_message.hpp"
-#include "libp2p/security/plaintext/exchange_message_marshaller.hpp"
+
+#include <generated/security/plaintext/protobuf/plaintext.pb.h>
+#include <libp2p/security/plaintext/exchange_message.hpp>
 
 namespace libp2p::security::plaintext {
   class ExchangeMessageMarshallerMock : public ExchangeMessageMarshaller {

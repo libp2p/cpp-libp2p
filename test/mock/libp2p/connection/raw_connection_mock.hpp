@@ -6,7 +6,7 @@
 #ifndef LIBP2P_RAW_CONNECTION_MOCK_HPP
 #define LIBP2P_RAW_CONNECTION_MOCK_HPP
 
-#include "libp2p/connection/raw_connection.hpp"
+#include <libp2p/connection/raw_connection.hpp>
 
 #include <gmock/gmock.h>
 
