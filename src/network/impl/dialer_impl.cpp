@@ -3,24 +3,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <functional>
+#include <iostream>
+
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
-
-#define TRACE_ENABLED 0
-#include <libp2p/common/trace.hpp>
 
 namespace libp2p::network {
 
   void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb,
                         std::chrono::milliseconds timeout) {
+    SL_TRACE(log_, "Dialing to {}", p.id.toBase58().substr(46));
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
 
-      TRACE("reusing connection to peer {}", p.id.toBase58().substr(46));
-      scheduler_->schedule([cb{std::move(cb)}, c{std::move(c)}] () mutable {
-        cb(std::move(c));
-      });
+      SL_TRACE(log_, "Reusing connection to peer {}",
+               p.id.toBase58().substr(46));
+      scheduler_->schedule(
+          [cb{std::move(cb)}, c{std::move(c)}]() mutable { cb(std::move(c)); });
+      return;
+    }
+
+    if (auto ctx = dialing_peers_.find(p.id); dialing_peers_.end() != ctx) {
+      SL_TRACE(log_, "Dialing to {} is already in progress",
+               p.id.toBase58().substr(46));
+      // populate known addresses for in-progress dial if any new appear
+      for (const auto &addr : p.addresses) {
+        if (0 == ctx->second.tried_addresses.count(addr)) {
+          ctx->second.addresses.insert(addr);
+        }
+      }
+      ctx->second.callbacks.emplace_back(std::move(cb));
       return;
     }
 
@@ -28,83 +42,94 @@ namespace libp2p::network {
     // did user supply its addresses in {@param p}?
     if (p.addresses.empty()) {
       // we don't have addresses of peer p
-      scheduler_->schedule([cb{std::move(cb)}] {
-        cb(std::errc::destination_address_required);
-      });
+      scheduler_->schedule(
+          [cb{std::move(cb)}] { cb(std::errc::destination_address_required); });
       return;
     }
 
-    struct DialHandlerCtx {
-      bool connected;
-      size_t calls_remain;
-      DialResultFunc cb;
+    DialCtx new_ctx{.addresses = {p.addresses.begin(), p.addresses.end()},
+                    .timeout = timeout};
+    new_ctx.callbacks.emplace_back(std::move(cb));
+    bool scheduled = dialing_peers_.emplace(p.id, std::move(new_ctx)).second;
+    BOOST_ASSERT(scheduled);
+    rotate(p.id);
+  }
 
-      DialHandlerCtx(size_t addresses, DialResultFunc cb)
-          : connected(false), calls_remain(addresses), cb{std::move(cb)} {}
-    };
-    auto handler_ctx = std::make_shared<DialHandlerCtx>(p.addresses.size(), cb);
-    auto dial_handler =
-        [listener{listener_}, ctx{std::move(handler_ctx)}](
-            outcome::result<std::shared_ptr<connection::CapableConnection>>
-                connection_result) {
-          --ctx->calls_remain;
-          if (ctx->connected) {
-            // we already got connected to the peer via some other address
-            if (connection_result) {
-              // lets close the redundant connection if so
-              auto &&conn = connection_result.value();
-              if (not conn->isClosed()) {
-                auto close_res = conn->close();
-                BOOST_ASSERT(close_res);
-              }
-            }  // otherwise we don't care about any failure since that was going
-               // to be a redundant connection to the moment
-            return;
-          }
+  void DialerImpl::rotate(const peer::PeerId &peer_id) {
+    auto ctx_found = dialing_peers_.find(peer_id);
+    if (dialing_peers_.end() == ctx_found) {
+      SL_ERROR(log_, "State inconsistency - cannot dial {}",
+               peer_id.toBase58());
+      return;
+    }
+    auto &&ctx = ctx_found->second;
 
-          if (connection_result) {
-            // we've got the first successful connection to the peer, hooray!
-            ctx->connected = true;
-            // allow the connection accept inbound streams
-            listener->onConnection(connection_result);
-            // return connection to the user
-            ctx->cb(connection_result.value());
-            return;
-          }
-
-          // here we handle failed attempt to connect
-          if (0 == ctx->calls_remain) {
-            // that was the last attempt to connect and we are still not
-            // connected so lets report an error to the user
-            ctx->cb(connection_result.error());
-            return;
-          }  // otherwise we don't care about this particular failure because at
-             // the end we either would get connected or will do the same -
-             // report the error to the user inside the callback of the last
-             // dial attempt
-        };
-
-    bool dialled{false};
-    // for all multiaddresses supplied in peerinfo
-    for (auto &&ma : p.addresses) {
-      // try to find best possible transport
-      if (auto tr = this->tmgr_->findBest(ma); tr != nullptr) {
-        // we can dial to this peer!
-        dialled = true;
-        // dial using best transport
-        tr->dial(p.id, ma, dial_handler, timeout);
-        // All the dials are still to be executed sequentially within the single
-        // boost::asio::io_context. Immediate spawn of all of them allows us to
-        // have the closest timeout to the specified instead of
-        // NumberOfMultiaddresses multiplied by a single timeout value.
-      }
+    if (ctx.addresses.empty() and not ctx.dialled) {
+      completeDial(peer_id, std::errc::address_family_not_supported);
+      return;
+    }
+    if (ctx.addresses.empty() and ctx.result.has_value()) {
+      completeDial(peer_id, ctx.result.value());
+      return;
+    }
+    if (ctx.addresses.empty()) {
+      // this would never happen. Previous if-statement should work instead'
+      completeDial(peer_id, std::errc::host_unreachable);
+      return;
     }
 
-    if (not dialled) {
-      // we did not find supported transport
-      scheduler_->schedule([cb{std::move(cb)}] {
-        cb(std::errc::address_family_not_supported);
-      });
+    auto dial_handler =
+        [this, peer_id](
+            outcome::result<std::shared_ptr<connection::CapableConnection>>
+                result) {
+          auto ctx_found = dialing_peers_.find(peer_id);
+          if (dialing_peers_.end() == ctx_found) {
+            SL_ERROR(
+                log_,
+                "State inconsistency - uninteresting dial result for peer {}",
+                peer_id.toBase58());
+            if (result.has_value() and not result.value()->isClosed()) {
+              auto close_res = result.value()->close();
+              BOOST_ASSERT(close_res);
+            }
+            return;
+          }
+
+          if (result.has_value()) {
+            listener_->onConnection(result);
+            completeDial(peer_id, result);
+            return;
+          }
+
+          // store an error otherwise and reschedule one more rotate
+          ctx_found->second.result = std::move(result);
+          scheduler_->schedule([this, peer_id] { rotate(peer_id); });
+        };
+
+    auto first_addr = ctx.addresses.begin();
+    const auto addr = *first_addr;
+    ctx.tried_addresses.insert(addr);
+    ctx.addresses.erase(first_addr);
+    if (auto tr = tmgr_->findBest(addr); nullptr != tr) {
+      ctx.dialled = true;
+      SL_TRACE(log_, "Dial to {} via {}", peer_id.toBase58().substr(46),
+               addr.getStringAddress());
+      tr->dial(peer_id, addr, dial_handler, ctx.timeout);
+    } else {
+      scheduler_->schedule([this, peer_id] { rotate(peer_id); });
+    }
+  }
+
+  void DialerImpl::completeDial(const peer::PeerId &peer_id,
+                                const DialResult &result) {
+    if (auto ctx_found = dialing_peers_.find(peer_id);
+        dialing_peers_.end() != ctx_found) {
+      auto &&ctx = ctx_found->second;
+      for (auto i = 0u; i < ctx.callbacks.size(); ++i) {
+        scheduler_->schedule(
+            [result, cb{std::move(ctx.callbacks[i])}] { cb(result); });
+      }
+      dialing_peers_.erase(ctx_found);
     }
   }
 
@@ -112,7 +137,8 @@ namespace libp2p::network {
                              const peer::Protocol &protocol,
                              StreamResultFunc cb,
                              std::chrono::milliseconds timeout) {
-    // 1. make new connection or reuse existing
+    SL_TRACE(log_, "New stream to {} for {} (peer info)",
+             p.id.toBase58().substr(46), protocol);
     this->dial(
         p,
         [this, cb{std::move(cb)}, protocol](
@@ -123,18 +149,13 @@ namespace libp2p::network {
           }
           auto &&conn = rconn.value();
 
-          // 2. open new stream on that connection
-          conn->newStream(
-              [this, cb{std::move(cb)},
-               protocol](outcome::result<std::shared_ptr<connection::Stream>>
-                             rstream) mutable {
-                if (!rstream) {
-                  return cb(rstream.error());
-                }
-
-                this->multiselect_->simpleStreamNegotiate(
-                    rstream.value(), protocol, std::move(cb));
-              });
+          auto result = conn->newStream();
+          if (!result) {
+            scheduler_->schedule([cb{std::move(cb)}, result] { cb(result); });
+            return;
+          }
+          multiselect_->simpleStreamNegotiate(result.value(), protocol,
+                                              std::move(cb));
         },
         timeout);
   }
@@ -142,19 +163,18 @@ namespace libp2p::network {
   void DialerImpl::newStream(const peer::PeerId &peer_id,
                              const peer::Protocol &protocol,
                              StreamResultFunc cb) {
+    SL_TRACE(log_, "New stream to {} for {} (peer id)",
+             peer_id.toBase58().substr(46), protocol);
     auto conn = cmgr_->getBestConnectionForPeer(peer_id);
     if (!conn) {
-      scheduler_->schedule([cb{std::move(cb)}] {
-        cb(std::errc::not_connected);
-      });
+      scheduler_->schedule(
+          [cb{std::move(cb)}] { cb(std::errc::not_connected); });
       return;
     }
 
     auto result = conn->newStream();
     if (!result) {
-      scheduler_->schedule([cb{std::move(cb)}, result] {
-        cb(result);
-      });
+      scheduler_->schedule([cb{std::move(cb)}, result] { cb(result); });
       return;
     }
 
@@ -172,12 +192,14 @@ namespace libp2p::network {
         tmgr_(std::move(tmgr)),
         cmgr_(std::move(cmgr)),
         listener_(std::move(listener)),
-        scheduler_(std::move(scheduler)) {
+        scheduler_(std::move(scheduler)),
+        log_(log::createLogger("DialerImpl", "network")) {
     BOOST_ASSERT(multiselect_ != nullptr);
     BOOST_ASSERT(tmgr_ != nullptr);
     BOOST_ASSERT(cmgr_ != nullptr);
     BOOST_ASSERT(listener_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
+    BOOST_ASSERT(log_ != nullptr);
   }
 
 }  // namespace libp2p::network
