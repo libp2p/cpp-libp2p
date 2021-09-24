@@ -71,7 +71,8 @@ namespace libp2p::protocol::kademlia {
       idx.erase(oldest);
     }
     table_->insert({key, peer, expires});
-    bus_->getChannel<events::ProvideContentChannel>().publish({key, peer});
+    bus_->getChannel<event::protocol::kademlia::ProvideContentChannel>()
+        .publish({key, peer});
   }
 
   void ContentRoutingTableImpl::onCleanupTimer() {

@@ -8,9 +8,9 @@
 #include <string>
 #include <unordered_set>
 
+#include <generated/protocol/identify/protobuf/identify.pb.h>
 #include <libp2p/basic/protobuf_message_read_writer.hpp>
 #include <libp2p/protocol/identify/utils.hpp>
-#include <generated/protocol/identify/protobuf/identify.pb.h>
 
 namespace {
   const std::string kIdentifyDeltaProtocol = "/p2p/id/delta/1.0.0";
@@ -42,7 +42,7 @@ namespace libp2p::protocol {
 
   void IdentifyDelta::start() {
     new_protos_sub_ =
-        bus_.getChannel<network::event::ProtocolsAddedChannel>().subscribe(
+        bus_.getChannel<event::network::ProtocolsAddedChannel>().subscribe(
             [self{weak_from_this()}](std::vector<peer::Protocol> new_protos) {
               if (auto s = self.lock()) {
                 return self.lock()->sendDelta(
@@ -50,7 +50,7 @@ namespace libp2p::protocol {
               }
             });
     rm_protos_sub_ =
-        bus_.getChannel<network::event::ProtocolsRemovedChannel>().subscribe(
+        bus_.getChannel<event::network::ProtocolsRemovedChannel>().subscribe(
             [self{weak_from_this()}](std::vector<peer::Protocol> rm_protos) {
               if (auto s = self.lock()) {
                 return self.lock()->sendDelta(gsl::span<const peer::Protocol>(),

@@ -13,19 +13,20 @@
 #include <libp2p/event/bus.hpp>
 #include <libp2p/peer/peer_info.hpp>
 
+namespace libp2p::event::network {
+
+  /// fired when any new connection, in or outbound, is created
+  using OnNewConnectionChannel =
+      channel_decl<struct OnNewConnection,
+                   std::weak_ptr<connection::CapableConnection>>;
+
+  /// fired when all connections to peer closed
+  using OnPeerDisconnectedChannel =
+      channel_decl<struct PeerDisconnected, const libp2p::peer::PeerId &>;
+
+}  // namespace libp2p::event::network
+
 namespace libp2p::network {
-
-  namespace event {
-    /// fired when any new connection, in or outbound, is created
-    struct OnNewConnection {};
-    using OnNewConnectionChannel = libp2p::event::channel_decl<
-        OnNewConnection, std::weak_ptr<connection::CapableConnection>>;
-
-    /// fired when all connections to peer closed
-    struct PeerDisconnected {};
-    using OnPeerDisconnectedChannel =
-        libp2p::event::channel_decl<PeerDisconnected, const peer::PeerId &>;
-  }  // namespace event
 
   /**
    * @brief Connection Manager stores all known connections, and is capable of

@@ -177,7 +177,7 @@ namespace libp2p::host {
 
   event::Handle BasicHost::setOnNewConnectionHandler(
       const NewConnectionHandler &h) const {
-    return bus_->getChannel<network::event::OnNewConnectionChannel>().subscribe(
+    return bus_->getChannel<event::network::OnNewConnectionChannel>().subscribe(
         [h{std::move(h)}](auto &&conn) {
           if (auto connection = conn.lock()) {
             auto remote_peer_res = connection->remotePeer();

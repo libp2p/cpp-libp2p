@@ -11,22 +11,20 @@
 
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/event/bus.hpp>
-#include <libp2p/peer/protocol.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <libp2p/peer/protocol.hpp>
+
+namespace libp2p::event::network {
+
+  using ProtocolsAddedChannel =
+      channel_decl<struct ProtocolsAdded, std::vector<peer::Protocol>>;
+
+  using ProtocolsRemovedChannel =
+      channel_decl<struct ProtocolsRemoved, std::vector<peer::Protocol>>;
+
+}  // namespace libp2p::event::network
 
 namespace libp2p::network {
-
-  namespace event {
-    using libp2p::event::channel_decl;
-
-    struct ProtocolsAdded {};
-    using ProtocolsAddedChannel =
-        channel_decl<ProtocolsAdded, std::vector<peer::Protocol>>;
-
-    struct ProtocolsRemoved {};
-    using ProtocolsRemovedChannel =
-        channel_decl<ProtocolsRemoved, std::vector<peer::Protocol>>;
-  }  // namespace event
 
   /**
    * Manager for application-level protocols; when a new stream arrives for a

@@ -127,7 +127,7 @@ TEST_F(IdentifyDeltaTest, Send) {
       .WillOnce(InvokeLambda(outcome::success()));
 
   id_delta_->start();
-  bus_.getChannel<network::event::ProtocolsAddedChannel>().publish(
+  bus_.getChannel<event::network::ProtocolsAddedChannel>().publish(
       added_protos_);
 }
 

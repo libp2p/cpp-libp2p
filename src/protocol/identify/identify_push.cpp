@@ -43,13 +43,13 @@ namespace libp2p::protocol {
 
     sub_handles_.reserve(kChannelsAmount);
     sub_handles_.push_back(
-        bus_.getChannel<network::event::ListenAddressAddedChannel>().subscribe(
+        bus_.getChannel<event::network::ListenAddressAddedChannel>().subscribe(
             send_push));
     sub_handles_.push_back(
-        bus_.getChannel<network::event::ListenAddressRemovedChannel>()
+        bus_.getChannel<event::network::ListenAddressRemovedChannel>()
             .subscribe(send_push));
     sub_handles_.push_back(
-        bus_.getChannel<peer::event::KeyPairChangedChannel>().subscribe(
+        bus_.getChannel<event::peer::KeyPairChangedChannel>().subscribe(
             std::move(send_push)));
   }
 

@@ -14,19 +14,17 @@
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
 
+namespace libp2p::event::network {
+
+  using ListenAddressAddedChannel =
+      channel_decl<struct ListenAddressAdded, multi::Multiaddress>;
+
+  using ListenAddressRemovedChannel =
+      channel_decl<struct ListenAddressRemoved, multi::Multiaddress>;
+
+}  // namespace libp2p::event::network
+
 namespace libp2p::network {
-
-  namespace event {
-    using libp2p::event::channel_decl;
-
-    struct ListenAddressAdded {};
-    using ListenAddressAddedChannel =
-        channel_decl<ListenAddressAdded, multi::Multiaddress>;
-
-    struct ListenAddressRemoved {};
-    using ListenAddressRemovedChannel =
-        channel_decl<ListenAddressRemoved, multi::Multiaddress>;
-  }  // namespace event
 
   /**
    * @brief Class, which is capable of listening (opening a server) on

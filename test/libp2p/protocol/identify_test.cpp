@@ -292,6 +292,6 @@ TEST_F(IdentifyTest, Receive) {
 
   // trigger the event, to which Identify object reacts
   identify_->start();
-  bus_.getChannel<network::event::OnNewConnectionChannel>().publish(
+  bus_.getChannel<event::network::OnNewConnectionChannel>().publish(
       std::weak_ptr<CapableConnection>(connection_));
 }

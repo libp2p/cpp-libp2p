@@ -14,7 +14,7 @@ namespace libp2p::network {
       static auto logger = libp2p::log::createLogger("ConnectionManager");
       return logger.get();
     }
-  }
+  }  // namespace
 
   std::vector<ConnectionManager::ConnectionSPtr>
   ConnectionManagerImpl::getConnectionsToPeer(const peer::PeerId &p) const {
@@ -56,7 +56,7 @@ namespace libp2p::network {
     } else {
       connections_[p].insert(c);
     }
-    bus_->getChannel<event::OnNewConnectionChannel>().publish(c);
+    bus_->getChannel<event::network::OnNewConnectionChannel>().publish(c);
   }
 
   std::vector<ConnectionManager::ConnectionSPtr>
@@ -125,7 +125,7 @@ namespace libp2p::network {
     // connections not appeared during close() calls, which may call their
     // external callbacks
     if (connections_.count(p) == 0) {
-      bus_->getChannel<event::OnPeerDisconnectedChannel>().publish(p);
+      bus_->getChannel<event::network::OnPeerDisconnectedChannel>().publish(p);
     }
   }
 
@@ -149,7 +149,8 @@ namespace libp2p::network {
 
     if (it->second.empty()) {
       connections_.erase(peer_id);
-      bus_->getChannel<event::OnPeerDisconnectedChannel>().publish(peer_id);
+      bus_->getChannel<event::network::OnPeerDisconnectedChannel>().publish(
+          peer_id);
     }
   }
 

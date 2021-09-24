@@ -11,17 +11,16 @@
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
 
+namespace libp2p::event::protocol::kademlia {
+
+  using PeerAddedChannel = channel_decl<struct PeerAdded, libp2p::peer::PeerId>;
+
+  using PeerRemovedChannel =
+      channel_decl<struct PeerRemoved, libp2p::peer::PeerId>;
+
+}  // namespace libp2p::event::protocol::kademlia
+
 namespace libp2p::protocol::kademlia {
-
-  namespace events {
-
-    using PeerAddedChannel =
-        event::channel_decl<struct PeerAdded, peer::PeerId>;
-
-    using PeerRemovedChannel =
-        event::channel_decl<struct PeerRemoved, peer::PeerId>;
-
-  }  // namespace events
 
   /**
    * @class PeerRoutingTable
@@ -35,7 +34,7 @@ namespace libp2p::protocol::kademlia {
      */
     virtual outcome::result<bool> update(const peer::PeerId &peer,
                                          bool is_permanent,
-                                         bool is_connected=false) = 0;
+                                         bool is_connected = false) = 0;
 
     /// Removes a peer with given @param peer from the routing table.
     /// This is to be used when we are sure a node has disconnected completely.
