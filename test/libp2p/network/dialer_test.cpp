@@ -20,6 +20,7 @@
 #include "mock/libp2p/transport/transport_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/outcome.hpp"
+#include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
 using namespace network;
@@ -36,6 +37,12 @@ using ::testing::Eq;
 using ::testing::Return;
 
 struct DialerTest : public ::testing::Test {
+  void SetUp() override {
+    testutil::prepareLoggers();
+    dialer = std::make_shared<DialerImpl>(proto_muxer, tmgr, cmgr, listener,
+                                          scheduler);
+  }
+
   std::shared_ptr<StreamMock> stream = std::make_shared<StreamMock>();
 
   std::shared_ptr<CapableConnectionMock> connection =
@@ -60,8 +67,7 @@ struct DialerTest : public ::testing::Test {
   std::shared_ptr<Scheduler> scheduler =
       std::make_shared<SchedulerImpl>(scheduler_backend, Scheduler::Config{});
 
-  std::shared_ptr<Dialer> dialer = std::make_shared<DialerImpl>(
-      proto_muxer, tmgr, cmgr, listener, scheduler);
+  std::shared_ptr<Dialer> dialer;
 
   multi::Multiaddress ma1 = "/ip4/127.0.0.1/tcp/1"_multiaddr;
   multi::Multiaddress ma2 = "/ip4/127.0.0.1/tcp/2"_multiaddr;
@@ -236,7 +242,7 @@ TEST_F(DialerTest, DialExistingConnection) {
 ///
 
 /**
- * @given existing connection to peer
+ * @given no connections to peer
  * @when newStream is executed
  * @then get failure
  */
@@ -248,7 +254,7 @@ TEST_F(DialerTest, NewStreamFailed) {
   // report random error.
   // we simulate a case when "newStream" gets error
   outcome::result<std::shared_ptr<Stream>> r = std::errc::io_error;
-  EXPECT_CALL(*connection, newStream(_)).WillOnce(Arg0CallbackWithArg(r));
+  EXPECT_CALL(*connection, newStream()).WillOnce(Return(r));
 
   bool executed = false;
   dialer->newStream(pinfo, protocol, [&](auto &&rstream) {
@@ -275,7 +281,7 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
       .WillOnce(Return(connection));
 
   // newStream returns valid stream
-  EXPECT_CALL(*connection, newStream(_)).WillOnce(Arg0CallbackWithArg(stream));
+  EXPECT_CALL(*connection, newStream()).WillOnce(Return(stream));
 
   outcome::result<std::shared_ptr<Stream>> r = std::errc::io_error;
 
@@ -307,7 +313,7 @@ TEST_F(DialerTest, NewStreamSuccess) {
       .WillOnce(Return(connection));
 
   // newStream returns valid stream
-  EXPECT_CALL(*connection, newStream(_)).WillOnce(Arg0CallbackWithArg(stream));
+  EXPECT_CALL(*connection, newStream()).WillOnce(Return(stream));
 
   EXPECT_CALL(*proto_muxer, simpleStreamNegotiate(_, protocol, _))
       .WillOnce(Arg2CallbackWithArg(stream));
