@@ -72,7 +72,7 @@ namespace libp2p::network {
     void rotate(const peer::PeerId &peer_id);
 
     // Finalize dialing to the peer and propagate a given result to all
-    // connection requestors
+    // connection requesters
     void completeDial(const peer::PeerId &peer_id, const DialResult &result);
 
     std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect_;
