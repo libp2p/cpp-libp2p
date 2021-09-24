@@ -17,7 +17,7 @@ namespace libp2p::protocol {
       PingConfig config)
       : io_service_{io_service},
         bus_{bus},
-        channel_{bus_.getChannel<event::PeerIsDeadChannel>()},
+        channel_{bus_.getChannel<event::protocol::PeerIsDeadChannel>()},
         stream_{std::move(stream)},
         rand_gen_{std::move(rand_gen)},
         config_{config},

@@ -60,7 +60,7 @@ namespace libp2p::protocol {
           }
         });
 
-    sub_ = bus_.getChannel<network::event::OnNewConnectionChannel>().subscribe(
+    sub_ = bus_.getChannel<event::network::OnNewConnectionChannel>().subscribe(
         [wp = weak_from_this()](auto &&conn) {
           if (auto self = wp.lock()) {
             return self->onNewConnection(conn);

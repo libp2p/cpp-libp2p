@@ -11,15 +11,16 @@
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
 
+namespace libp2p::event::protocol::kademlia {
+
+  using ProvideContentChannel =
+      channel_decl<struct ProvideContent,
+                   std::pair<const libp2p::protocol::kademlia::ContentId &,
+                             const libp2p::peer::PeerId &>>;
+
+}  // namespace libp2p::event::protocol::kademlia
+
 namespace libp2p::protocol::kademlia {
-
-  namespace events {
-
-    using ProvideContentChannel =
-        event::channel_decl<struct ProvideContent,
-                            std::pair<const ContentId &, const peer::PeerId &>>;
-
-  }  // namespace events
 
   /**
    * @class ContentRoutingTable

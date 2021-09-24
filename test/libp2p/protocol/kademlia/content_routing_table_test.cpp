@@ -54,7 +54,8 @@ bool hasPeer(A &peerset, PeerId &peer) {
 TEST_F(ContentRoutingTableTest, BusWorks) {
   srand(0);  // to make test deterministic
 
-  auto &provideCh = bus_->getChannel<events::ProvideContentChannel>();
+  auto &provideCh =
+      bus_->getChannel<event::protocol::kademlia::ProvideContentChannel>();
 
   std::unordered_set<PeerId> peerset;
 

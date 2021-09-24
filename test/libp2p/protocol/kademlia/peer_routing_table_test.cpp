@@ -52,8 +52,9 @@ bool hasPeer(A &peerset, PeerId &peer) {
 TEST_F(PeerRoutingTableTest, BusWorks) {
   srand(0);  // to make test deterministic
 
-  auto &addCh = bus_->getChannel<events::PeerAddedChannel>();
-  auto &remCh = bus_->getChannel<events::PeerRemovedChannel>();
+  auto &addCh = bus_->getChannel<event::protocol::kademlia::PeerAddedChannel>();
+  auto &remCh =
+      bus_->getChannel<event::protocol::kademlia::PeerRemovedChannel>();
 
   std::unordered_set<PeerId> peerset;
 
@@ -106,8 +107,9 @@ TEST_F(PeerRoutingTableTest, FindMultiple) {
 TEST_F(PeerRoutingTableTest, RecyclingTest) {
   config_->maxBucketSize = 1;
   srand(0);  // to make test deterministic
-  auto &addCh = bus_->getChannel<events::PeerAddedChannel>();
-  auto &remCh = bus_->getChannel<events::PeerRemovedChannel>();
+  auto &addCh = bus_->getChannel<event::protocol::kademlia::PeerAddedChannel>();
+  auto &remCh =
+      bus_->getChannel<event::protocol::kademlia::PeerRemovedChannel>();
 
   std::unordered_set<PeerId> peerset;
 
@@ -162,8 +164,9 @@ TEST_F(PeerRoutingTableTest, RecyclingTest) {
 TEST_F(PeerRoutingTableTest, PreferLongLivedPeers) {
   config_->maxBucketSize = 2;
   srand(0);  // to make test deterministic
-  auto &addCh = bus_->getChannel<events::PeerAddedChannel>();
-  auto &remCh = bus_->getChannel<events::PeerRemovedChannel>();
+  auto &addCh = bus_->getChannel<event::protocol::kademlia::PeerAddedChannel>();
+  auto &remCh =
+      bus_->getChannel<event::protocol::kademlia::PeerRemovedChannel>();
 
   std::unordered_set<PeerId> peerset;
 

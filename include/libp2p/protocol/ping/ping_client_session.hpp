@@ -19,14 +19,16 @@ namespace libp2p::peer {
   class PeerId;
 }
 
+namespace libp2p::event::protocol {
+
+  /// emitted when Ping timeout is expired, or error happens during the ping
+  /// process
+  using PeerIsDeadChannel =
+      channel_decl<struct PeerIsDead, libp2p::peer::PeerId>;
+
+}  // namespace libp2p::event::protocol
+
 namespace libp2p::protocol {
-  namespace event {
-    /// emitted when Ping timeout is expired, or error happens during the ping
-    /// process
-    struct PeerIsDead {};
-    using PeerIsDeadChannel =
-        libp2p::event::channel_decl<PeerIsDead, peer::PeerId>;
-  }  // namespace event
 
   class PingClientSession
       : public std::enable_shared_from_this<PingClientSession> {
@@ -52,7 +54,7 @@ namespace libp2p::protocol {
 
     boost::asio::io_service &io_service_;
     libp2p::event::Bus &bus_;
-    decltype(bus_.getChannel<event::PeerIsDeadChannel>()) channel_;
+    decltype(bus_.getChannel<event::protocol::PeerIsDeadChannel>()) channel_;
 
     std::shared_ptr<connection::Stream> stream_;
     std::shared_ptr<crypto::random::RandomGenerator> rand_gen_;

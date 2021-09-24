@@ -156,7 +156,8 @@ namespace libp2p::protocol::kademlia {
     auto bucket_id = getBucketId(buckets_, cpl);
     auto &bucket = buckets_.at(bucket_id);
     bucket.remove(peer_id);
-    bus_->getChannel<events::PeerRemovedChannel>().publish(peer_id);
+    bus_->getChannel<event::protocol::kademlia::PeerRemovedChannel>().publish(
+        peer_id);
   }
 
   std::vector<peer::PeerId> PeerRoutingTableImpl::getNearestPeers(
@@ -194,9 +195,11 @@ namespace libp2p::protocol::kademlia {
       if (!removed.has_value()) {
         return PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY;
       }
-      bus.getChannel<events::PeerRemovedChannel>().publish(removed.value());
+      bus.getChannel<event::protocol::kademlia::PeerRemovedChannel>().publish(
+          removed.value());
       bucket.emplaceToFront(pid, is_replaceable);
-      bus.getChannel<events::PeerAddedChannel>().publish(pid);
+      bus.getChannel<event::protocol::kademlia::PeerAddedChannel>().publish(
+          pid);
       return true;
     }
   }  // namespace
@@ -221,7 +224,8 @@ namespace libp2p::protocol::kademlia {
 
     if (bucket.size() < config_.maxBucketSize) {
       bucket.emplaceToFront(pid, !is_permanent);
-      bus_->getChannel<events::PeerAddedChannel>().publish(pid);
+      bus_->getChannel<event::protocol::kademlia::PeerAddedChannel>().publish(
+          pid);
       return true;
     }
 
@@ -237,7 +241,8 @@ namespace libp2p::protocol::kademlia {
       auto &resizedBucket = buckets_.at(resizedBucketId);
       if (resizedBucket.size() < config_.maxBucketSize) {
         resizedBucket.emplaceToFront(pid, !is_permanent);
-        bus_->getChannel<events::PeerAddedChannel>().publish(pid);
+        bus_->getChannel<event::protocol::kademlia::PeerAddedChannel>().publish(
+            pid);
         return true;
       }
 

@@ -78,7 +78,7 @@ namespace libp2p::protocol::kademlia {
     // subscribe to new connection
     new_connection_subscription_ =
         host_->getBus()
-            .getChannel<network::event::OnNewConnectionChannel>()
+            .getChannel<event::network::OnNewConnectionChannel>()
             .subscribe([this](
                            // NOLINTNEXTLINE
                            std::weak_ptr<connection::CapableConnection> conn) {

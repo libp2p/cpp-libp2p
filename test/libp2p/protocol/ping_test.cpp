@@ -144,7 +144,7 @@ TEST_F(PingTest, PingClientTimeoutExpired) {
   EXPECT_CALL(*stream_, remotePeerId()).WillOnce(Return(peer_id_));
 
   boost::optional<peer::PeerId> dead_peer_id;
-  auto h = bus_.getChannel<protocol::event::PeerIsDeadChannel>().subscribe(
+  auto h = bus_.getChannel<event::protocol::PeerIsDeadChannel>().subscribe(
       [&dead_peer_id](auto &&peer_id) mutable { dead_peer_id = peer_id; });
 
   ping_->startPinging(conn_,
