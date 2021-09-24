@@ -18,7 +18,8 @@
 
 namespace libp2p::network {
 
-  class DialerImpl : public Dialer {
+  class DialerImpl : public Dialer,
+                     public std::enable_shared_from_this<DialerImpl> {
    public:
     ~DialerImpl() override = default;
 
@@ -70,7 +71,8 @@ namespace libp2p::network {
     // Perform a single attempt to dial to the peer via the next known address
     void rotate(const peer::PeerId &peer_id);
 
-    // Finalize dialing to the peer and propagate a given result to all re
+    // Finalize dialing to the peer and propagate a given result to all
+    // connection requestors
     void completeDial(const peer::PeerId &peer_id, const DialResult &result);
 
     std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect_;

@@ -79,31 +79,44 @@ namespace libp2p::network {
     }
 
     auto dial_handler =
-        [this, peer_id](
+        [wp{weak_from_this()}, peer_id](
             outcome::result<std::shared_ptr<connection::CapableConnection>>
                 result) {
-          auto ctx_found = dialing_peers_.find(peer_id);
-          if (dialing_peers_.end() == ctx_found) {
-            SL_ERROR(
-                log_,
-                "State inconsistency - uninteresting dial result for peer {}",
-                peer_id.toBase58());
-            if (result.has_value() and not result.value()->isClosed()) {
-              auto close_res = result.value()->close();
-              BOOST_ASSERT(close_res);
+          if (auto self = wp.lock()) {
+            auto ctx_found = self->dialing_peers_.find(peer_id);
+            if (self->dialing_peers_.end() == ctx_found) {
+              SL_ERROR(
+                  self->log_,
+                  "State inconsistency - uninteresting dial result for peer {}",
+                  peer_id.toBase58());
+              if (result.has_value() and not result.value()->isClosed()) {
+                auto close_res = result.value()->close();
+                BOOST_ASSERT(close_res);
+              }
+              return;
             }
+
+            if (result.has_value()) {
+              self->listener_->onConnection(result);
+              self->completeDial(peer_id, result);
+              return;
+            }
+
+            // store an error otherwise and reschedule one more rotate
+            ctx_found->second.result = std::move(result);
+            self->scheduler_->schedule([wp, peer_id] {
+              if (auto self = wp.lock()) {
+                self->rotate(peer_id);
+              }
+            });
             return;
           }
-
-          if (result.has_value()) {
-            listener_->onConnection(result);
-            completeDial(peer_id, result);
-            return;
+          // closing the connection when dialer and connection requester
+          // callback no more exist
+          if (result.has_value() and not result.value()->isClosed()) {
+            auto close_res = result.value()->close();
+            BOOST_ASSERT(close_res);
           }
-
-          // store an error otherwise and reschedule one more rotate
-          ctx_found->second.result = std::move(result);
-          scheduler_->schedule([this, peer_id] { rotate(peer_id); });
         };
 
     auto first_addr = ctx.addresses.begin();
@@ -116,7 +129,11 @@ namespace libp2p::network {
                addr.getStringAddress());
       tr->dial(peer_id, addr, dial_handler, ctx.timeout);
     } else {
-      scheduler_->schedule([this, peer_id] { rotate(peer_id); });
+      scheduler_->schedule([wp{weak_from_this()}, peer_id] {
+        if (auto self = wp.lock()) {
+          self->rotate(peer_id);
+        }
+      });
     }
   }
 
@@ -139,9 +156,9 @@ namespace libp2p::network {
                              std::chrono::milliseconds timeout) {
     SL_TRACE(log_, "New stream to {} for {} (peer info)",
              p.id.toBase58().substr(46), protocol);
-    this->dial(
+    dial(
         p,
-        [this, cb{std::move(cb)}, protocol](
+        [self{shared_from_this()}, cb{std::move(cb)}, protocol](
             outcome::result<std::shared_ptr<connection::CapableConnection>>
                 rconn) mutable {
           if (!rconn) {
@@ -151,11 +168,12 @@ namespace libp2p::network {
 
           auto result = conn->newStream();
           if (!result) {
-            scheduler_->schedule([cb{std::move(cb)}, result] { cb(result); });
+            self->scheduler_->schedule(
+                [cb{std::move(cb)}, result] { cb(result); });
             return;
           }
-          multiselect_->simpleStreamNegotiate(result.value(), protocol,
-                                              std::move(cb));
+          self->multiselect_->simpleStreamNegotiate(result.value(), protocol,
+                                                    std::move(cb));
         },
         timeout);
   }

@@ -16,7 +16,7 @@ namespace libp2p::network {
     ~NetworkImpl() override = default;
 
     NetworkImpl(std::shared_ptr<ListenerManager> listener,
-                std::unique_ptr<Dialer> dialer,
+                std::shared_ptr<Dialer> dialer,
                 std::shared_ptr<ConnectionManager> cmgr);
 
     void closeConnections(const peer::PeerId &p) override;
@@ -29,7 +29,7 @@ namespace libp2p::network {
 
    private:
     std::shared_ptr<ListenerManager> listener_;
-    std::unique_ptr<Dialer> dialer_;
+    std::shared_ptr<Dialer> dialer_;
     std::shared_ptr<ConnectionManager> cmgr_;
   };
 
