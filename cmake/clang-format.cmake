@@ -16,6 +16,7 @@ if(CLANG_FORMAT_BIN)
   add_custom_target(
     clang-format
     COMMAND "${CLANG_FORMAT_BIN}"
+    -style=file
     -i
     ${ALL_CXX_SOURCE_FILES}
   )
