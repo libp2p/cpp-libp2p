@@ -1,7 +1,7 @@
 file(GLOB_RECURSE
   ALL_CXX_SOURCE_FILES
-  core/*.[ch]pp
-  core/*.[ch]
+  src/*.[ch]pp
+  src/*.[ch]
   test/*.[ch]pp
   test/*.[ch]
   )
