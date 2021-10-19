@@ -84,7 +84,7 @@ namespace libp2p::crypto::marshaller {
       const ProtobufKey &proto_key) const {
     protobuf::PublicKey protobuf_key;
     if (!protobuf_key.ParseFromArray(proto_key.key.data(),
-                                     proto_key.key.size())) {
+                                     static_cast<int>(proto_key.key.size()))) {
       return CryptoProviderError::FAILED_UNMARSHAL_DATA;
     }
 
@@ -101,7 +101,7 @@ namespace libp2p::crypto::marshaller {
       const ProtobufKey &proto_key) const {
     protobuf::PublicKey protobuf_key;
     if (!protobuf_key.ParseFromArray(proto_key.key.data(),
-                                     proto_key.key.size())) {
+                                     static_cast<int>(proto_key.key.size()))) {
       return CryptoProviderError::FAILED_UNMARSHAL_DATA;
     }
 

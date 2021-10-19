@@ -6,6 +6,8 @@
 #ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_NOISE_CONNECTION_HPP
 #define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_NOISE_CONNECTION_HPP
 
+#include <list>
+
 #include <libp2p/connection/secure_connection.hpp>
 
 #include <libp2p/common/metrics/instance_count.hpp>
@@ -22,6 +24,14 @@ namespace libp2p::connection {
   class NoiseConnection : public SecureConnection,
                           public std::enable_shared_from_this<NoiseConnection> {
    public:
+    using BufferList = std::list<common::ByteArray>;
+
+    struct OperationContext {
+      size_t bytes_served;                /// written or read bytes count
+      const size_t total_bytes;           /// total size to process
+      BufferList::iterator write_buffer;  /// temporary data storage
+    };
+
     ~NoiseConnection() override = default;
 
     NoiseConnection(
@@ -65,6 +75,17 @@ namespace libp2p::connection {
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
    private:
+    void read(gsl::span<uint8_t> out, size_t bytes, OperationContext ctx,
+              ReadCallbackFunc cb);
+
+    void readSome(gsl::span<uint8_t> out, size_t bytes, OperationContext ctx,
+                  ReadCallbackFunc cb);
+
+    void write(gsl::span<const uint8_t> in, size_t bytes, OperationContext ctx,
+               WriteCallbackFunc cb);
+
+    void eraseWriteBuffer(BufferList::iterator &iterator);
+
     std::shared_ptr<RawConnection> raw_connection_;
     crypto::PublicKey local_;
     crypto::PublicKey remote_;
@@ -73,10 +94,7 @@ namespace libp2p::connection {
     std::shared_ptr<security::noise::CipherState> decoder_cs_;
     std::shared_ptr<common::ByteArray> frame_buffer_;
     std::shared_ptr<security::noise::InsecureReadWriter> framer_;
-    size_t already_read_;
-    size_t already_wrote_;
-    size_t plaintext_len_to_write_;
-    common::ByteArray writing_;
+    BufferList write_buffers_;
     log::Logger log_ = log::createLogger("NoiseConnection");
 
    public:
