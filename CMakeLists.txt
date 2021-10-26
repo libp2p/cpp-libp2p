@@ -87,6 +87,9 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # TODO(warchant): add flags https://github.com/lefticus/cppbestpractices/blob/master/02-Use_the_Tools_Available.md#msvc
 endif ()
 
+if (COVERAGE)
+  include(cmake/coverage.cmake)
+endif ()
 if (CLANG_TIDY)
   include(cmake/clang-tidy.cmake)
 endif ()
@@ -109,7 +112,3 @@ if(TESTING OR COVERAGE)
   enable_testing()
   add_subdirectory(test)
 endif()
-
-if (COVERAGE)
-  include(cmake/coverage.cmake)
-endif ()
