@@ -1,7 +1,7 @@
 file(GLOB_RECURSE
   ALL_CXX_SOURCE_FILES
-  core/*.[ch]pp
-  core/*.[ch]
+  src/*.[ch]pp
+  src/*.[ch]
   test/*.[ch]pp
   test/*.[ch]
   )
@@ -16,6 +16,7 @@ if(CLANG_FORMAT_BIN)
   add_custom_target(
     clang-format
     COMMAND "${CLANG_FORMAT_BIN}"
+    -style=file
     -i
     ${ALL_CXX_SOURCE_FILES}
   )

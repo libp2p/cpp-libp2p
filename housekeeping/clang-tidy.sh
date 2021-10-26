@@ -23,7 +23,7 @@ cd $(dirname $0)/..
 FILES=$(get_files)
 
 CLANG_TIDY=$(which clang-tidy)
-RUN_CLANG_TIDY=$(which run-clang-tidy.py)
+RUN_CLANG_TIDY=$(which run-clang-tidy.py) || RUN_CLANG_TIDY=$(which run-clang-tidy)
 
 # filter compile_commands.json
 echo ${FILES} | python3 ./housekeeping/filter_compile_commands.py -p ${BUILD_DIR}
