@@ -1,0 +1,19 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(Boost CONFIG REQUIRED random filesystem program_options)
+find_dependency(OpenSSL REQUIRED)
+find_dependency(Protobuf CONFIG REQUIRED)
+find_dependency(Threads)
+find_dependency(c-ares CONFIG REQUIRED)
+find_dependency(fmt CONFIG REQUIRED)
+find_dependency(yaml-cpp CONFIG REQUIRED)
+find_dependency(soralog CONFIG REQUIRED)
+find_dependency(tsl_hat_trie CONFIG REQUIRED)
+find_dependency(Boost.DI CONFIG REQUIRED)
+find_dependency(SQLiteModernCpp CONFIG REQUIRED)
+
+include("${CMAKE_CURRENT_LIST_DIR}/libp2pTargets.cmake")
+
+check_required_components(libp2p)
