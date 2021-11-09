@@ -175,7 +175,9 @@ namespace libp2p::protocol::gossip {
     MessageId msg_id = create_message_id_(msg->from, msg->seq_no, msg->data);
 
     [[maybe_unused]] bool inserted = msg_cache_.insert(msg, msg_id);
-    assert(inserted);
+    if (!inserted) {
+      log_.info("GossipCore::publish msg_cache_.insert = false");
+    }
 
     remote_subscriptions_->onNewMessage(boost::none, msg, msg_id);
 
