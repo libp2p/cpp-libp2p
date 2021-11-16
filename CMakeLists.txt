@@ -15,6 +15,7 @@ set(CMAKE_TOOLCHAIN_FILE
 
 include("cmake/Hunter/init.cmake")
 cmake_policy(SET CMP0048 NEW)
+
 project(libp2p VERSION 0.0.1 LANGUAGES C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -113,3 +114,16 @@ endif()
 if (COVERAGE)
   include(cmake/coverage.cmake)
 endif ()
+
+include(CMakePackageConfigHelpers)
+
+set(CONFIG_INCLUDE_DIRS ${CMAKE_INSTALL_FULL_INCLUDEDIR}/libp2p)
+configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/libp2pConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/libp2pConfig.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
+        )
+
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/libp2pConfig.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
+        )
