@@ -23,6 +23,10 @@
 #include <libp2p/protocol/base_protocol.hpp>
 
 namespace libp2p {
+  struct Libp2pClientVersion {
+    std::string _;
+  };
+
   /**
    * Main class, which represents single peer in p2p network.
    *
@@ -101,10 +105,10 @@ namespace libp2p {
     virtual std::vector<multi::Multiaddress> getObservedAddresses() const = 0;
 
     /**
-    * @brief Get connectedness information for given peer
-    * @param p Peer info
-    * @return Connectedness
-    */
+     * @brief Get connectedness information for given peer
+     * @param p Peer info
+     * @return Connectedness
+     */
     virtual Connectedness connectedness(const peer::PeerInfo &p) const = 0;
 
     /**
@@ -198,9 +202,9 @@ namespace libp2p {
      * @param protocol "speak" using this protocol
      * @param handler callback, will be executed on success or fail
      */
-    virtual void newStream(
-        const peer::PeerId &peer_id, const peer::Protocol &protocol,
-        const StreamResultHandler &handler) = 0;
+    virtual void newStream(const peer::PeerId &peer_id,
+                           const peer::Protocol &protocol,
+                           const StreamResultHandler &handler) = 0;
 
     /**
      * @brief Create listener on given multiaddress.

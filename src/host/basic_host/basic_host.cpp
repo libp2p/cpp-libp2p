@@ -16,12 +16,14 @@ namespace libp2p::host {
       std::unique_ptr<network::Network> network,
       std::unique_ptr<peer::PeerRepository> repo,
       std::shared_ptr<event::Bus> bus,
-      std::shared_ptr<network::TransportManager> transport_manager)
+      std::shared_ptr<network::TransportManager> transport_manager,
+      Libp2pClientVersion libp2p_client_version)
       : idmgr_(std::move(idmgr)),
         network_(std::move(network)),
         repo_(std::move(repo)),
         bus_(std::move(bus)),
-        transport_manager_(std::move(transport_manager)) {
+        transport_manager_(std::move(transport_manager)),
+        libp2p_client_version_(std::move(libp2p_client_version)) {
     BOOST_ASSERT(idmgr_ != nullptr);
     BOOST_ASSERT(network_ != nullptr);
     BOOST_ASSERT(repo_ != nullptr);
@@ -34,7 +36,7 @@ namespace libp2p::host {
   }
 
   std::string_view BasicHost::getLibp2pClientVersion() const {
-    return "libp2p";
+    return libp2p_client_version_._;
   }
 
   peer::PeerId BasicHost::getId() const {
