@@ -27,13 +27,22 @@ namespace libp2p::crypto::ecdsa {
     virtual outcome::result<PublicKey> derive(const PrivateKey &key) const = 0;
 
     /**
-     * @brief Create signature for a message
+     * @brief Create a signature for a message
      * @param message - data to signing
      * @param privateKey - key for signing
      * @return ECDSA signature or error code
      */
     virtual outcome::result<Signature> sign(gsl::span<const uint8_t> message,
                                             const PrivateKey &key) const = 0;
+
+    /**
+     * @brief Create a signature for already prehashed message
+     * @param message - prehashed message aka digest
+     * @param key - key for signing
+     * @return a signature or an error
+     */
+    virtual outcome::result<Signature> signPrehashed(
+        const PrehashedMessage &message, const PrivateKey &key) const = 0;
 
     /**
      * @brief Verify signature for a message
@@ -44,7 +53,18 @@ namespace libp2p::crypto::ecdsa {
      */
     virtual outcome::result<bool> verify(gsl::span<const uint8_t> message,
                                          const Signature &signature,
-                                         const PublicKey &publicKey) const = 0;
+                                         const PublicKey &public_key) const = 0;
+
+    /**
+     * @brief Verify message signature
+     * @param message - prehashed message aka digest
+     * @param signature - signature to verify
+     * @param public_key - a key to verify against
+     * @return true - when signature matches, false - otherwise
+     */
+    virtual outcome::result<bool> verifyPrehashed(
+        const PrehashedMessage &message, const Signature &signature,
+        const PublicKey &public_key) const = 0;
 
     virtual ~EcdsaProvider() = default;
   };

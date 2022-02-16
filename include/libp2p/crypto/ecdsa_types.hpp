@@ -16,6 +16,7 @@ namespace libp2p::crypto::ecdsa {
   using PrivateKey = std::array<uint8_t, 121>;
   using PublicKey = std::array<uint8_t, 91>;
   using Signature = std::vector<uint8_t>;
+  using PrehashedMessage = std::array<uint8_t, 32>;
 
   /**
    * @struct Key pair

@@ -52,8 +52,13 @@ namespace libp2p::crypto::ecdsa {
   outcome::result<Signature> EcdsaProviderImpl::sign(
       gsl::span<const uint8_t> message, const PrivateKey &key) const {
     OUTCOME_TRY(digest, sha256(message));
+    return signPrehashed(digest, key);
+  }
+
+  outcome::result<Signature> EcdsaProviderImpl::signPrehashed(
+      const PrehashedMessage &message, const PrivateKey &key) const {
     OUTCOME_TRY(ec_key, convertBytesToEcKey(key, d2i_ECPrivateKey));
-    OUTCOME_TRY(signature, GenerateEcSignature(digest, ec_key));
+    OUTCOME_TRY(signature, GenerateEcSignature(message, ec_key));
     return std::move(signature);
   }
 
@@ -61,8 +66,15 @@ namespace libp2p::crypto::ecdsa {
       gsl::span<const uint8_t> message, const Signature &signature,
       const PublicKey &key) const {
     OUTCOME_TRY(digest, sha256(message));
-    OUTCOME_TRY(ec_key, convertBytesToEcKey(key, d2i_EC_PUBKEY));
-    OUTCOME_TRY(signature_status, VerifyEcSignature(digest, signature, ec_key));
+    return verifyPrehashed(digest, signature, key);
+  }
+
+  outcome::result<bool> EcdsaProviderImpl::verifyPrehashed(
+      const PrehashedMessage &message, const Signature &signature,
+      const PublicKey &public_key) const {
+    OUTCOME_TRY(ec_key, convertBytesToEcKey(public_key, d2i_EC_PUBKEY));
+    OUTCOME_TRY(signature_status,
+                VerifyEcSignature(message, signature, ec_key));
     return signature_status;
   }
 
@@ -100,4 +112,5 @@ namespace libp2p::crypto::ecdsa {
     }
     return ec_key;
   }
+
 };  // namespace libp2p::crypto::ecdsa

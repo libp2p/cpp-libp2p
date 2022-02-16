@@ -22,9 +22,16 @@ namespace libp2p::crypto::ecdsa {
     outcome::result<Signature> sign(gsl::span<const uint8_t> message,
                                     const PrivateKey &key) const override;
 
+    outcome::result<Signature> signPrehashed(
+        const PrehashedMessage &message, const PrivateKey &key) const override;
+
     outcome::result<bool> verify(gsl::span<const uint8_t> message,
                                  const Signature &signature,
                                  const PublicKey &key) const override;
+
+    outcome::result<bool> verifyPrehashed(
+        const PrehashedMessage &message, const Signature &signature,
+        const PublicKey &public_key) const override;
 
    private:
     /**
