@@ -8,8 +8,8 @@
 
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
-#include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/network/transport_manager.hpp>
+#include <libp2p/peer/identity_manager.hpp>
 
 namespace libp2p::host {
 
@@ -28,7 +28,8 @@ namespace libp2p::host {
               std::unique_ptr<network::Network> network,
               std::unique_ptr<peer::PeerRepository> repo,
               std::shared_ptr<event::Bus> bus,
-              std::shared_ptr<network::TransportManager> transport_manager);
+              std::shared_ptr<network::TransportManager> transport_manager,
+              Libp2pClientVersion libp2p_client_version);
 
     std::string_view getLibp2pVersion() const override;
 
@@ -96,6 +97,7 @@ namespace libp2p::host {
     std::unique_ptr<peer::PeerRepository> repo_;
     std::shared_ptr<event::Bus> bus_;
     std::shared_ptr<network::TransportManager> transport_manager_;
+    Libp2pClientVersion libp2p_client_version_;
   };
 
 }  // namespace libp2p::host

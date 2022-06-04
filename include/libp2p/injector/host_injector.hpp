@@ -17,9 +17,13 @@
 #include <libp2p/protocol/common/asio/asio_scheduler.hpp>
 
 namespace libp2p::injector {
+  inline auto useLibp2pClientVersion(Libp2pClientVersion _) {
+    return boost::di::bind<Libp2pClientVersion>().template to(
+        std::move(_))[boost::di::override];
+  }
 
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
-  inline auto makeHostInjector(Ts &&... args) {
+  inline auto makeHostInjector(Ts &&...args) {
     using namespace boost;  // NOLINT
 
     // clang-format off
@@ -34,6 +38,8 @@ namespace libp2p::injector {
 
         di::bind<protocol::SchedulerConfig>.template to(protocol::SchedulerConfig {}),
         di::bind<protocol::Scheduler>.template to<protocol::AsioScheduler>(),
+
+        di::bind<Libp2pClientVersion>.template to(Libp2pClientVersion{"libp2p"}),
 
         di::bind<Host>.template to<host::BasicHost>(),
 

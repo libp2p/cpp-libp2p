@@ -183,7 +183,7 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto peer_repo = std::make_unique<peer::PeerRepositoryImpl>(
       std::move(addr_repo), std::move(key_repo), std::move(protocol_repo));
 
-  return std::make_shared<host::BasicHost>(idmgr, std::move(network),
-                                           std::move(peer_repo), std::move(bus),
-                                           std::move(tmgr));
+  return std::make_shared<host::BasicHost>(
+      idmgr, std::move(network), std::move(peer_repo), std::move(bus),
+      std::move(tmgr), Libp2pClientVersion{});
 }
