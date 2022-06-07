@@ -14,7 +14,6 @@
 #include <boost/multi_index_container_fwd.hpp>
 
 #include <libp2p/basic/scheduler.hpp>
-#include <libp2p/protocol/common/scheduler.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 
