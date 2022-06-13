@@ -16,7 +16,6 @@ target_link_libraries(gossip_example_common
     p2p_inmem_key_repository
     p2p_inmem_protocol_repository
     p2p_gossip
-    asio_scheduler
     Boost::program_options
     )
 

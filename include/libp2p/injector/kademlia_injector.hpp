@@ -11,7 +11,6 @@
 // implementations
 #include <libp2p/basic/scheduler.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
-#include <libp2p/protocol/common/asio/asio_scheduler.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/content_routing_table_impl.hpp>
 #include <libp2p/protocol/kademlia/impl/kademlia_impl.hpp>

@@ -292,18 +292,15 @@ int main(int argc, char *argv[]) {
     // Key for group of chat
     libp2p::protocol::kademlia::ContentId content_id("meet me here");
 
-    auto &scheduler = injector.create<libp2p::protocol::Scheduler &>();
+    auto &scheduler = injector.create<libp2p::basic::Scheduler &>();
 
     std::function<void()> find_providers = [&] {
       [[maybe_unused]] auto res1 = kademlia->findProviders(
           content_id, 0,
           [&](libp2p::outcome::result<std::vector<libp2p::peer::PeerInfo>>
                   res) {
-            scheduler
-                .schedule(libp2p::protocol::scheduler::toTicks(
-                              kademlia_config.randomWalk.interval),
-                          find_providers)
-                .detach();
+            scheduler.schedule(std::function{find_providers},
+                               kademlia_config.randomWalk.interval);
 
             if (not res) {
               std::cerr << "Cannot find providers: " << res.error().message()
@@ -322,11 +319,8 @@ int main(int argc, char *argv[]) {
       [[maybe_unused]] auto res =
           kademlia->provide(content_id, not kademlia_config.passiveMode);
 
-      scheduler
-          .schedule(libp2p::protocol::scheduler::toTicks(
-                        kademlia_config.randomWalk.interval),
-                    provide)
-          .detach();
+      scheduler.schedule(std::function{provide},
+                         kademlia_config.randomWalk.interval);
     };
 
     io->post([&] {
