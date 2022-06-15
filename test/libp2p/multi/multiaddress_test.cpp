@@ -259,3 +259,14 @@ TEST_F(MultiaddressTest, DnsAndIpfs) {
   ASSERT_EQ(peer_id_opt.value(),
             "12D3KooWDgtynm4S9M3m6ZZhXYu2RrWKdvkCSScc25xKDVSg1Sjd");
 }
+
+/**
+ * @given a multiaddr of polkadot telemetry endpoint
+ * @when it gets parsed
+ * @then there are no errors and the original address could be composed back
+ */
+TEST_F(MultiaddressTest, ParityWss) {
+  auto addr = "/dns/telemetry.polkadot.io/tcp/443/x-parity-wss/%2Fsubmit%2F"s;
+  EXPECT_OUTCOME_TRUE(address, Multiaddress::create(addr));
+  ASSERT_EQ(address.getStringAddress(), addr);
+}

@@ -96,12 +96,15 @@ namespace libp2p::multi::converters {
       case Protocol::Code::DNS6:
       case Protocol::Code::DNS_ADDR:
       case Protocol::Code::UNIX:
+      case Protocol::Code::X_PARITY_WS:
+      case Protocol::Code::X_PARITY_WSS:
         return DnsConverter::addressToHex(addr);
 
       case Protocol::Code::IP6_ZONE:
       case Protocol::Code::ONION3:
       case Protocol::Code::GARLIC64:
       case Protocol::Code::QUIC:
+      case Protocol::Code::WS:
       case Protocol::Code::WSS:
       case Protocol::Code::P2P_WEBSOCKET_STAR:
       case Protocol::Code::P2P_STARDUST:
@@ -176,6 +179,25 @@ namespace libp2p::multi::converters {
               if (i != domain_name.end()) {
                 return ConversionError::INVALID_ADDRESS;
               }
+              break;
+            }
+
+            case Protocol::Code::X_PARITY_WS:
+            case Protocol::Code::X_PARITY_WSS: {
+              // fetch the size of the address based on the varint prefix
+              auto prefixedvarint = hex.substr(lastpos, 2);
+              OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
+
+              auto addrsize = UVarint(prefixBytes).toUInt64();
+
+              // get the ipfs address as hex values
+              auto hex_domain_name = hex.substr(lastpos + 2, addrsize * 2);
+              OUTCOME_TRY(domain_name, unhex(hex_domain_name));
+
+              lastpos += addrsize * 2 + 2;
+
+              results += "/";
+              results += std::string(domain_name.begin(), domain_name.end());
               break;
             }
 
