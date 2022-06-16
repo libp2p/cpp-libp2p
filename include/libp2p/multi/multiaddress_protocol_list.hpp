@@ -23,6 +23,7 @@ namespace libp2p::multi {
      */
     static const int kVarLen = -1;
 
+    // https://github.com/multiformats/multicodec
     enum class Code : std::size_t {
       IP4 = 4,
       TCP = 6,
@@ -52,6 +53,9 @@ namespace libp2p::multi {
       P2P_WEBRTC_STAR = 275,
       P2P_WEBRTC_DIRECT = 276,
       P2P_CIRCUIT = 290,
+      // Range for private use: 0x300000 – 0x3FFFFF
+      X_PARITY_WS = 0x300001,
+      X_PARITY_WSS = 0x300002,
     };
 
     constexpr bool operator==(const Protocol &p) const {
@@ -71,14 +75,14 @@ namespace libp2p::multi {
     /**
      * The total number of known protocols
      */
-    static const std::size_t kProtocolsNum = 28;
+    static const std::size_t kProtocolsNum = 30;
 
     /**
      * Returns a protocol with the corresponding name if it exists, or nullptr
      * otherwise
      */
     static constexpr auto get(std::string_view name) -> Protocol const * {
-      if(name == "ipfs") {
+      if (name == "ipfs") {
         name = "p2p";  // IPFS is a legacy name, P2P is the preferred one
       }
       for (Protocol const &protocol : protocols_) {
@@ -145,6 +149,8 @@ namespace libp2p::multi {
         {Protocol::Code::P2P_WEBRTC_STAR, 0, "p2p-webrtc-star"},
         {Protocol::Code::P2P_WEBRTC_DIRECT, 0, "p2p-webrtc-direct"},
         {Protocol::Code::P2P_CIRCUIT, 0, "p2p-circuit"},
+        {Protocol::Code::X_PARITY_WS, Protocol::kVarLen, "x-parity-ws"},
+        {Protocol::Code::X_PARITY_WSS, Protocol::kVarLen, "x-parity-wss"},
     };
   };
 
