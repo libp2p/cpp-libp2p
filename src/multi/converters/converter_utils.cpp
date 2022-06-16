@@ -120,15 +120,15 @@ namespace libp2p::multi::converters {
       gsl::span<const uint8_t> bytes) {
     std::string results;
 
-    size_t lastpos = 0;
+    ssize_t lastpos = 0;
 
     // set up variables
     const std::string hex = hex_upper(bytes);
 
     // Process Hex String
-    while (lastpos < (size_t)bytes.size() * 2) {
+    while (lastpos < bytes.size() * 2) {
       gsl::span<const uint8_t, -1> pid_bytes{bytes};
-      int protocol_int = UVarint(pid_bytes.subspan(lastpos / 2)).toUInt64();
+      auto protocol_int = UVarint(pid_bytes.subspan(lastpos / 2)).toUInt64();
       Protocol const *protocol =
           ProtocolList::get(static_cast<Protocol::Code>(protocol_int));
       if (protocol == nullptr) {
@@ -136,8 +136,8 @@ namespace libp2p::multi::converters {
       }
 
       if (protocol->code != Protocol::Code::P2P) {
-        lastpos = lastpos
-            + UVarint::calculateSize(pid_bytes.subspan(lastpos / 2)) * 2;
+        lastpos += static_cast<ssize_t>(
+            UVarint::calculateSize(pid_bytes.subspan(lastpos / 2)) * 2);
         std::string address;
         address = hex.substr(lastpos, protocol->size / 4);
 
@@ -160,7 +160,8 @@ namespace libp2p::multi::converters {
               auto prefixedvarint = hex.substr(lastpos, 2);
               OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
 
-              auto addrsize = UVarint(prefixBytes).toUInt64();
+              ssize_t addrsize =
+                  static_cast<ssize_t>(UVarint(prefixBytes).toUInt64());
 
               // get the ipfs address as hex values
               auto hex_domain_name = hex.substr(lastpos + 2, addrsize * 2);
@@ -188,7 +189,8 @@ namespace libp2p::multi::converters {
               auto prefixedvarint = hex.substr(lastpos, 2);
               OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
 
-              auto addrsize = UVarint(prefixBytes).toUInt64();
+              ssize_t addrsize =
+                  static_cast<ssize_t>(UVarint(prefixBytes).toUInt64());
 
               // get the ipfs address as hex values
               auto hex_domain_name = hex.substr(lastpos + 2, addrsize * 2);
@@ -247,8 +249,8 @@ namespace libp2p::multi::converters {
         auto prefixedvarint = hex.substr(lastpos, 2);
         OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
 
-        auto addrsize = UVarint(prefixBytes).toUInt64();
-
+        ssize_t addrsize =
+            static_cast<ssize_t>(UVarint(prefixBytes).toUInt64());
         // get the ipfs address as hex values
         auto ipfsAddr = hex.substr(lastpos + 2, addrsize * 2);
 
