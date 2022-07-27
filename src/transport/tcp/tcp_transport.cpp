@@ -41,6 +41,7 @@ namespace libp2p::transport {
           [self, conn, handler{std::move(handler)}, remoteId](auto ec,
                                                               auto &e) mutable {
             if (ec) {
+              conn->close();
               return handler(ec);
             }
 
