@@ -108,17 +108,17 @@ TEST_P(KeyGeneratorTest, DerivePublicKeySuccess) {
   ASSERT_EQ(keys.publicKey.data, derived.data);
 }
 
-INSTANTIATE_TEST_CASE_P(TestAllKeyTypes, KeyGeneratorTest,
-                        ::testing::Values(Key::Type::RSA, Key::Type::Ed25519,
-                                          Key::Type::Secp256k1,
-                                          Key::Type::ECDSA));
+INSTANTIATE_TEST_SUITE_P(TestAllKeyTypes, KeyGeneratorTest,
+                         ::testing::Values(Key::Type::RSA, Key::Type::Ed25519,
+                                           Key::Type::Secp256k1,
+                                           Key::Type::ECDSA));
 
 class KeyLengthTest
     : public KeyGenTest,
       public ::testing::TestWithParam<
           std::tuple<Key::Type, const uint32_t, const uint32_t>> {};
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TestSomeKeyLengths, KeyLengthTest,
     ::testing::Values(std::tuple(Key::Type::Ed25519, 32, 32),
                       std::tuple(Key::Type::Secp256k1, 32, 33),

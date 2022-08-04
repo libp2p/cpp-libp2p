@@ -129,8 +129,8 @@ auto makeTestCases() {
   // clang-format on
 }
 
-INSTANTIATE_TEST_CASE_P(Marshaller, Pubkey,
-                        ::testing::ValuesIn(makeTestCases<PublicKey>()));
+INSTANTIATE_TEST_SUITE_P(Marshaller, Pubkey,
+                         ::testing::ValuesIn(makeTestCases<PublicKey>()));
 
-INSTANTIATE_TEST_CASE_P(Marshaller, Privkey,
-                        ::testing::ValuesIn(makeTestCases<PrivateKey>()));
+INSTANTIATE_TEST_SUITE_P(Marshaller, Privkey,
+                         ::testing::ValuesIn(makeTestCases<PrivateKey>()));

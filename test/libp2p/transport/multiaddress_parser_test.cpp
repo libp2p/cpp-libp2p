@@ -36,8 +36,8 @@ TEST_P(TransportParserTest, ParseSuccessfully) {
 }
 
 auto addresses = {"/ip4/127.0.0.1/tcp/5050"_multiaddr};
-INSTANTIATE_TEST_CASE_P(TestSupported, TransportParserTest,
-                        ::testing::ValuesIn(addresses));
+INSTANTIATE_TEST_SUITE_P(TestSupported, TransportParserTest,
+                         ::testing::ValuesIn(addresses));
 
 /**
  * @given Transport parser and a multiaddress
