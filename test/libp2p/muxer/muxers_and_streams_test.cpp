@@ -222,8 +222,7 @@ namespace libp2p::regression {
       behavior_(*this);
     }
 
-    void onConnected(
-        outcome::result<std::shared_ptr<connection::Stream>> rstream) {
+    void onConnected(StreamAndProtocolOrError rstream) {
       if (!rstream) {
         TRACE("({}): connect error: {}", stats_.node_id,
               rstream.error().message());
@@ -276,10 +275,6 @@ namespace libp2p::regression {
   };
 
   void runEventLoop(std::shared_ptr<boost::asio::io_context> io) {
-    boost::asio::signal_set signals(*io, SIGINT, SIGTERM);
-    signals.async_wait(
-        [&io](const boost::system::error_code &, int) { io->stop(); });
-
     auto max_duration = std::chrono::seconds(300);
     if (std::getenv("TRACE_DEBUG") != nullptr) {
       max_duration = std::chrono::seconds(86400);
@@ -484,7 +479,6 @@ TEST(StreamsRegression, YamuxStreamsGetNotifiedAboutEOFJumboMsg) {
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
           .template to<libp2p::muxer::Yamux>()[boost::di::override]);
 }
-
 
 TEST(StreamsRegression, MplexStreamsGetNotifiedAboutEOF) {
   testStreamsGetNotifiedAboutEOF(

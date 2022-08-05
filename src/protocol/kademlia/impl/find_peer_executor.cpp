@@ -164,8 +164,7 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  void FindPeerExecutor::onConnected(
-      outcome::result<std::shared_ptr<connection::Stream>> stream_res) {
+  void FindPeerExecutor::onConnected(StreamAndProtocolOrError stream_res) {
     if (not stream_res) {
       --requests_in_progress_;
 

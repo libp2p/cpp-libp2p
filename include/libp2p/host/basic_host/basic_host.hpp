@@ -8,8 +8,8 @@
 
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
-#include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/network/transport_manager.hpp>
+#include <libp2p/peer/identity_manager.hpp>
 
 namespace libp2p::host {
 
@@ -52,21 +52,15 @@ namespace libp2p::host {
 
     void disconnect(const peer::PeerId &peer_id) override;
 
-    void setProtocolHandler(
-        const peer::Protocol &proto,
-        const std::function<connection::Stream::Handler> &handler) override;
+    void setProtocolHandler(StreamProtocols protocols, StreamAndProtocolCb cb,
+                            ProtocolPredicate predicate) override;
 
-    void setProtocolHandler(
-        const peer::Protocol &proto,
-        const std::function<connection::Stream::Handler> &handler,
-        const std::function<bool(const peer::Protocol &)> &predicate) override;
+    void newStream(const peer::PeerInfo &peer_info, StreamProtocols protocols,
+                   StreamAndProtocolOrErrorCb cb,
+                   std::chrono::milliseconds timeout = {}) override;
 
-    void newStream(const peer::PeerInfo &p, const peer::Protocol &protocol,
-                   const StreamResultHandler &handler,
-                   std::chrono::milliseconds timeout) override;
-
-    void newStream(const peer::PeerId &peer_id, const peer::Protocol &protocol,
-                   const StreamResultHandler &handler) override;
+    void newStream(const peer::PeerId &peer_id, StreamProtocols protocols,
+                   StreamAndProtocolOrErrorCb cb) override;
 
     outcome::result<void> listen(const multi::Multiaddress &ma) override;
 

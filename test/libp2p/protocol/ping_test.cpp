@@ -83,7 +83,7 @@ TEST_F(PingTest, PingServer) {
       .Times(2)
       .WillRepeatedly(Return(false));
 
-  ping_->handle(stream_);
+  ping_->handle(StreamAndProtocol{stream_, {}});
 }
 
 /**
@@ -95,8 +95,8 @@ TEST_F(PingTest, PingClient) {
   EXPECT_CALL(*conn_, remotePeer()).WillOnce(Return(peer_id_));
   EXPECT_CALL(host_, getPeerRepository()).WillOnce(ReturnRef(peer_repo_));
   EXPECT_CALL(peer_repo_, getPeerInfo(peer_id_)).WillOnce(Return(peer_info_));
-  EXPECT_CALL(host_, newStream(peer_info_, kPingProto, _, _))
-      .WillOnce(InvokeArgument<2>(stream_));
+  EXPECT_CALL(host_, newStream(peer_info_, StreamProtocols{kPingProto}, _, _))
+      .WillOnce(InvokeArgument<2>(StreamAndProtocol{stream_, kPingProto}));
 
   EXPECT_CALL(*rand_gen_, randomBytes(kPingMsgSize))
       .Times(2)
@@ -132,8 +132,8 @@ TEST_F(PingTest, PingClientTimeoutExpired) {
   EXPECT_CALL(*conn_, remotePeer()).WillOnce(Return(peer_id_));
   EXPECT_CALL(host_, getPeerRepository()).WillOnce(ReturnRef(peer_repo_));
   EXPECT_CALL(peer_repo_, getPeerInfo(peer_id_)).WillOnce(Return(peer_info_));
-  EXPECT_CALL(host_, newStream(peer_info_, kPingProto, _, _))
-      .WillOnce(InvokeArgument<2>(stream_));
+  EXPECT_CALL(host_, newStream(peer_info_, StreamProtocols{kPingProto}, _, _))
+      .WillOnce(InvokeArgument<2>(StreamAndProtocol{stream_, kPingProto}));
 
   EXPECT_CALL(*rand_gen_, randomBytes(kPingMsgSize)).WillOnce(Return(buffer_));
   EXPECT_CALL(*stream_,

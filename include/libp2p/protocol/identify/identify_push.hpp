@@ -32,7 +32,7 @@ namespace libp2p::protocol {
      * In Identify-Push, handle means we accepted an Identify-Push stream and
      * should receive an Identify message
      */
-    void handle(StreamResult stream_res) override;
+    void handle(StreamAndProtocol stream) override;
 
     /**
      * Start this Identify-Push, so that it subscribes to events, when some

@@ -29,6 +29,7 @@ using namespace multi;
 
 using testing::_;
 using testing::Const;
+using testing::InvokeArgument;
 using testing::Ref;
 using testing::Return;
 using testing::ReturnRef;
@@ -100,10 +101,6 @@ class IdentifyDeltaTest : public testing::Test {
                                        "/ip4/192.168.0.1"_multiaddr}};
 };
 
-ACTION_P(InvokeLambda, s) {
-  arg2(std::move(s));
-}
-
 /**
  * @given Identify-Delta
  * @when new protocols event is arrived
@@ -119,12 +116,15 @@ TEST_F(IdentifyDeltaTest, Send) {
       .WillOnce(Return(kPeerInfo));
 
   // stream handling and message sending
-  EXPECT_CALL(host_, newStream(kPeerInfo, kIdentifyDeltaProtocol, _, _))
-      .WillOnce(InvokeLambda(stream_));
+  EXPECT_CALL(
+      host_,
+      newStream(kPeerInfo, StreamProtocols{kIdentifyDeltaProtocol}, _, _))
+      .WillOnce(InvokeArgument<2>(
+          StreamAndProtocol{stream_, kIdentifyDeltaProtocol}));
   EXPECT_CALL(*stream_,
               write(gsl::span<const uint8_t>(msg_added_protos_bytes_),
                     msg_added_protos_bytes_.size(), _))
-      .WillOnce(InvokeLambda(outcome::success()));
+      .WillOnce(InvokeArgument<2>(outcome::success()));
 
   id_delta_->start();
   bus_.getChannel<event::network::ProtocolsAddedChannel>().publish(
@@ -157,6 +157,7 @@ TEST_F(IdentifyDeltaTest, Receive) {
   EXPECT_CALL(*stream_, remoteMultiaddr())
       .Times(1)
       .WillRepeatedly(Return(outcome::success(kPeerInfo.addresses[0])));
+  EXPECT_CALL(*stream_, close(_)).WillOnce(Return());
 
   EXPECT_CALL(host_, getPeerRepository()).WillOnce(ReturnRef(peer_repo_));
   EXPECT_CALL(peer_repo_, getProtocolRepository())
@@ -170,5 +171,5 @@ TEST_F(IdentifyDeltaTest, Receive) {
                               gsl::span<const peer::Protocol>(removed_protos_)))
       .WillOnce(Return(outcome::success()));
 
-  id_delta_->handle(stream_);
+  id_delta_->handle(StreamAndProtocol{stream_, {}});
 }

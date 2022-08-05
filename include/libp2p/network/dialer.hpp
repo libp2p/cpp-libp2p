@@ -9,8 +9,11 @@
 #include <chrono>
 
 #include <libp2p/connection/capable_connection.hpp>
+#include <libp2p/connection/stream_and_protocol.hpp>
 #include <libp2p/peer/peer_info.hpp>
 #include <libp2p/peer/protocol.hpp>
+#include <libp2p/peer/protocol_predicate.hpp>
+#include <libp2p/peer/stream_protocols.hpp>
 
 namespace libp2p::network {
 
@@ -24,9 +27,6 @@ namespace libp2p::network {
     using DialResult =
         outcome::result<std::shared_ptr<connection::CapableConnection>>;
     using DialResultFunc = std::function<void(DialResult)>;
-
-    using StreamResult = outcome::result<std::shared_ptr<connection::Stream>>;
-    using StreamResultFunc = std::function<void(StreamResult)>;
 
     /**
      * Establishes a connection or returns existing one to a given peer with a
@@ -47,26 +47,17 @@ namespace libp2p::network {
      * If there is no connection to p, attempts to create one.
      */
     virtual void newStream(const peer::PeerInfo &peer_info,
-                           const peer::Protocol &protocol, StreamResultFunc cb,
-                           std::chrono::milliseconds timeout) = 0;
-
-    /**
-     * NewStream returns a new stream to given peer p.
-     * If there is no connection to p, attempts to create one.
-     */
-    inline void newStream(const peer::PeerInfo &peer_info,
-                          const peer::Protocol &protocol, StreamResultFunc cb) {
-      newStream(peer_info, protocol, std::move(cb),
-                std::chrono::milliseconds::zero());
-    }
+                           StreamProtocols protocols,
+                           StreamAndProtocolOrErrorCb cb,
+                           std::chrono::milliseconds timeout = {}) = 0;
 
     /**
      * NewStream returns a new stream to given peer p.
      * If there is no connection to p, returns error.
      */
     virtual void newStream(const peer::PeerId &peer_id,
-                           const peer::Protocol &protocol,
-                           StreamResultFunc cb) = 0;
+                           StreamProtocols protocols,
+                           StreamAndProtocolOrErrorCb cb) = 0;
   };
 
 }  // namespace libp2p::network

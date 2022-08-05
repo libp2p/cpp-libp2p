@@ -26,16 +26,11 @@ namespace libp2p::protocol {
     return kIdentifyDeltaProtocol;
   }
 
-  void IdentifyDelta::handle(StreamResult stream_res) {
-    if (!stream_res) {
-      return;
-    }
+  void IdentifyDelta::handle(StreamAndProtocol stream) {
     // receive a Delta message
-    auto rw =
-        std::make_shared<basic::ProtobufMessageReadWriter>(stream_res.value());
+    auto rw = std::make_shared<basic::ProtobufMessageReadWriter>(stream);
     rw->read<identify::pb::Identify>(
-        [self{shared_from_this()},
-         s = std::move(stream_res.value())](auto &&msg_res) {
+        [self{shared_from_this()}, s = std::move(stream)](auto &&msg_res) {
           self->deltaReceived(std::forward<decltype(msg_res)>(msg_res), s);
         });
   }

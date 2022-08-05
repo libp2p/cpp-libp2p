@@ -107,15 +107,7 @@ bool Cmp::operator()(const std::shared_ptr<Session> &lhs,
   return *lhs < *rhs;
 }
 
-void handleIncomingStream(
-    libp2p::protocol::BaseProtocol::StreamResult stream_res) {
-  if (not stream_res) {
-    std::cerr << " ! incoming connection failed: "
-              << stream_res.error().message() << std::endl;
-    return;
-  }
-  auto &stream = stream_res.value();
-
+void handleIncomingStream(libp2p::StreamAndProtocol stream) {
   // reject incoming stream with themselves
   if (stream->remotePeerId().value() == self_id) {
     stream->reset();
@@ -133,8 +125,7 @@ void handleIncomingStream(
   }
 }
 
-void handleOutgoingStream(
-    libp2p::protocol::BaseProtocol::StreamResult stream_res) {
+void handleOutgoingStream(libp2p::StreamAndProtocolOrError stream_res) {
   if (not stream_res) {
     std::cerr << " ! outgoing connection failed: "
               << stream_res.error().message() << std::endl;

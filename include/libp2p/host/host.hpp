@@ -11,6 +11,7 @@
 #include <string_view>
 
 #include <libp2p/connection/stream.hpp>
+#include <libp2p/connection/stream_and_protocol.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/network/network.hpp>
@@ -20,6 +21,8 @@
 #include <libp2p/peer/peer_info.hpp>
 #include <libp2p/peer/peer_repository.hpp>
 #include <libp2p/peer/protocol.hpp>
+#include <libp2p/peer/protocol_predicate.hpp>
+#include <libp2p/peer/stream_protocols.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
 
 namespace libp2p {
@@ -40,9 +43,6 @@ namespace libp2p {
     using ConnectionResult =
         outcome::result<std::shared_ptr<connection::CapableConnection>>;
     using ConnectionResultHandler = std::function<void(ConnectionResult)>;
-
-    using StreamResult = outcome::result<std::shared_ptr<connection::Stream>>;
-    using StreamResultHandler = std::function<void(StreamResult)>;
 
     using NewConnectionHandler = std::function<void(peer::PeerInfo &&)>;
 
@@ -101,33 +101,22 @@ namespace libp2p {
     virtual std::vector<multi::Multiaddress> getObservedAddresses() const = 0;
 
     /**
-    * @brief Get connectedness information for given peer
-    * @param p Peer info
-    * @return Connectedness
-    */
+     * @brief Get connectedness information for given peer
+     * @param p Peer info
+     * @return Connectedness
+     */
     virtual Connectedness connectedness(const peer::PeerInfo &p) const = 0;
 
     /**
-     * @brief Let Host handle given {@param proto} protocol
-     * @param proto protocol to be handled
-     * @param handler callback that is executed when some other Host creates
-     * stream to our host with {@param proto} protocol.
-     */
-    virtual void setProtocolHandler(
-        const peer::Protocol &proto,
-        const std::function<connection::Stream::Handler> &handler) = 0;
-
-    /**
-     * @brief Let Host handle given protocol, and use matcher to check if we
+     * @brief Let Host handle given protocols, and use matcher to check if we
      * support given remote protocol.
-     * @param handler of the arrived stream
+     * @param cb of the arrived stream
      * @param predicate function that takes received protocol (/ping/1.0.0) and
      * should return true, if this protocol can be handled.
      */
-    virtual void setProtocolHandler(
-        const peer::Protocol &protocol,
-        const std::function<connection::Stream::Handler> &handler,
-        const std::function<bool(const peer::Protocol &)> &predicate) = 0;
+    virtual void setProtocolHandler(StreamProtocols protocols,
+                                    StreamAndProtocolCb cb,
+                                    ProtocolPredicate predicate = {}) = 0;
 
     /**
      * @brief Initiates connection to the peer {@param peer_info}.
@@ -168,39 +157,25 @@ namespace libp2p {
      * @brief Open new stream to the peer {@param peer_info} with protocol
      * {@param protocol} with a specific timeout.
      * @param peer_info stream will be opened to this peer
-     * @param protocol "speak" using this protocol
-     * @param handler callback, will be executed on success or fail
+     * @param protocols "speak" using first supported protocol
+     * @param cb callback, will be executed on success or fail
      * @param timeout in milliseconds
      */
     virtual void newStream(const peer::PeerInfo &peer_info,
-                           const peer::Protocol &protocol,
-                           const StreamResultHandler &handler,
-                           std::chrono::milliseconds timeout) = 0;
-
-    /**
-     * @brief Open new stream to the peer {@param peer_info} with protocol
-     * {@param protocol}.
-     * @param peer_info stream will be opened to this peer
-     * @param protocol "speak" using this protocol
-     * @param handler callback, will be executed on success or fail
-     */
-    inline void newStream(const peer::PeerInfo &peer_info,
-                          const peer::Protocol &protocol,
-                          const StreamResultHandler &handler) {
-      newStream(peer_info, protocol, handler,
-                std::chrono::milliseconds::zero());
-    }
+                           StreamProtocols protocols,
+                           StreamAndProtocolOrErrorCb cb,
+                           std::chrono::milliseconds timeout = {}) = 0;
 
     /**
      * @brief Open new stream to the peer {@param peer} with protocol
      * {@param protocol} in optimistic way. Assuming that connection exists.
      * @param peer stream will be opened to this peer
-     * @param protocol "speak" using this protocol
-     * @param handler callback, will be executed on success or fail
+     * @param protocols "speak" using first supported protocol
+     * @param cb callback, will be executed on success or fail
      */
-    virtual void newStream(
-        const peer::PeerId &peer_id, const peer::Protocol &protocol,
-        const StreamResultHandler &handler) = 0;
+    virtual void newStream(const peer::PeerId &peer_id,
+                           StreamProtocols protocols,
+                           StreamAndProtocolOrErrorCb cb) = 0;
 
     /**
      * @brief Create listener on given multiaddress.

@@ -35,12 +35,12 @@ namespace libp2p::network {
 
     // NewStream returns a new stream to given peer p.
     // If there is no connection to p, attempts to create one.
-    void newStream(const peer::PeerInfo &p, const peer::Protocol &protocol,
-                   StreamResultFunc cb,
-                   std::chrono::milliseconds timeout) override;
+    void newStream(const peer::PeerInfo &p, StreamProtocols protocols,
+                   StreamAndProtocolOrErrorCb cb,
+                   std::chrono::milliseconds timeout = {}) override;
 
-    void newStream(const peer::PeerId &peer_id, const peer::Protocol &protocol,
-                   StreamResultFunc cb) override;
+    void newStream(const peer::PeerId &peer_id, StreamProtocols protocols,
+                   StreamAndProtocolOrErrorCb cb) override;
 
    private:
     // A context to handle an intermediary state of the peer we are dialing to
@@ -74,6 +74,9 @@ namespace libp2p::network {
     // Finalize dialing to the peer and propagate a given result to all
     // connection requesters
     void completeDial(const peer::PeerId &peer_id, const DialResult &result);
+
+    void newStream(std::shared_ptr<connection::CapableConnection> conn,
+                   StreamProtocols protocols, StreamAndProtocolOrErrorCb cb);
 
     std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect_;
     std::shared_ptr<TransportManager> tmgr_;

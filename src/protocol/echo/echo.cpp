@@ -7,15 +7,8 @@
 
 namespace libp2p::protocol {
 
-  void Echo::handle(StreamResult rstream) {
-    if (!rstream) {
-      log_->info("incoming connection failed due to '{}'",
-                 rstream.error().message());
-      return;
-    }
-
-    auto session =
-        std::make_shared<ServerEchoSession>(rstream.value(), config_);
+  void Echo::handle(StreamAndProtocol stream) {
+    auto session = std::make_shared<ServerEchoSession>(stream, config_);
     session->start();
   }
 

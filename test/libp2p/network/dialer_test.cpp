@@ -34,6 +34,7 @@ using ::testing::_;
 using ::testing::ContainerEq;
 using ::testing::Contains;
 using ::testing::Eq;
+using ::testing::InvokeArgument;
 using ::testing::Return;
 
 struct DialerTest : public ::testing::Test {
@@ -72,7 +73,7 @@ struct DialerTest : public ::testing::Test {
   multi::Multiaddress ma1 = "/ip4/127.0.0.1/tcp/1"_multiaddr;
   multi::Multiaddress ma2 = "/ip4/127.0.0.1/tcp/2"_multiaddr;
   peer::PeerId pid = "1"_peerid;
-  peer::Protocol protocol = "/protocol/1.0.0";
+  const StreamProtocols protocols = {"/protocol/1.0.0"};
 
   peer::PeerInfo pinfo{.id = pid, .addresses = {ma1}};
   peer::PeerInfo pinfo_two_addrs{.id = pid, .addresses = {ma1, ma2}};
@@ -257,7 +258,7 @@ TEST_F(DialerTest, NewStreamFailed) {
   EXPECT_CALL(*connection, newStream()).WillOnce(Return(r));
 
   bool executed = false;
-  dialer->newStream(pinfo, protocol, [&](auto &&rstream) {
+  dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
     EXPECT_OUTCOME_FALSE(e, rstream);
     EXPECT_EQ(e.value(), (int)std::errc::io_error);
     executed = true;
@@ -283,15 +284,15 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
   // newStream returns valid stream
   EXPECT_CALL(*connection, newStream()).WillOnce(Return(stream));
 
-  outcome::result<std::shared_ptr<Stream>> r = std::errc::io_error;
+  auto r = std::make_error_code(std::errc::io_error);
 
-  EXPECT_CALL(*proto_muxer, simpleStreamNegotiate(_, protocol, _))
-      .WillOnce(Arg2CallbackWithArg(r));
+  EXPECT_CALL(*proto_muxer, selectOneOf(gsl::make_span(protocols), _, _, _, _))
+      .WillOnce(InvokeArgument<4>(r));
 
   bool executed = false;
-  dialer->newStream(pinfo, protocol, [&](auto &&rstream) {
+  dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
     EXPECT_OUTCOME_FALSE(e, rstream);
-    EXPECT_EQ(e.value(), (int)std::errc::io_error);
+    EXPECT_EQ(e, r);
     executed = true;
   });
 
@@ -315,11 +316,11 @@ TEST_F(DialerTest, NewStreamSuccess) {
   // newStream returns valid stream
   EXPECT_CALL(*connection, newStream()).WillOnce(Return(stream));
 
-  EXPECT_CALL(*proto_muxer, simpleStreamNegotiate(_, protocol, _))
-      .WillOnce(Arg2CallbackWithArg(stream));
+  EXPECT_CALL(*proto_muxer, selectOneOf(gsl::make_span(protocols), _, _, _, _))
+      .WillOnce(InvokeArgument<4>(protocols[0]));
 
   bool executed = false;
-  dialer->newStream(pinfo, protocol, [&](auto &&rstream) {
+  dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
     EXPECT_OUTCOME_TRUE(s, rstream);
     (void)s;
     executed = true;

@@ -24,11 +24,8 @@ namespace libp2p::protocol {
     return kIdentifyPushProtocol;
   }
 
-  void IdentifyPush::handle(StreamResult stream_res) {
-    if (!stream_res) {
-      return;
-    }
-    msg_processor_->receiveIdentify(std::move(stream_res.value()));
+  void IdentifyPush::handle(StreamAndProtocol stream) {
+    msg_processor_->receiveIdentify(std::move(stream));
   }
 
   void IdentifyPush::start() {

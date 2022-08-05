@@ -150,54 +150,60 @@ namespace libp2p::network {
     }
   }
 
-  void DialerImpl::newStream(const peer::PeerInfo &p,
-                             const peer::Protocol &protocol,
-                             StreamResultFunc cb,
+  void DialerImpl::newStream(const peer::PeerInfo &p, StreamProtocols protocols,
+                             StreamAndProtocolOrErrorCb cb,
                              std::chrono::milliseconds timeout) {
     SL_TRACE(log_, "New stream to {} for {} (peer info)",
-             p.id.toBase58().substr(46), protocol);
+             p.id.toBase58().substr(46), fmt::join(protocols, " "));
     dial(
         p,
-        [self{shared_from_this()}, cb{std::move(cb)}, protocol](
+        [self{shared_from_this()}, protocols{std::move(protocols)},
+         cb{std::move(cb)}](
             outcome::result<std::shared_ptr<connection::CapableConnection>>
                 rconn) mutable {
           if (!rconn) {
             return cb(rconn.error());
           }
           auto &&conn = rconn.value();
-
-          auto result = conn->newStream();
-          if (!result) {
-            self->scheduler_->schedule(
-                [cb{std::move(cb)}, result] { cb(result); });
-            return;
-          }
-          self->multiselect_->simpleStreamNegotiate(result.value(), protocol,
-                                                    std::move(cb));
+          self->newStream(std::move(conn), std::move(protocols), std::move(cb));
         },
         timeout);
   }
 
   void DialerImpl::newStream(const peer::PeerId &peer_id,
-                             const peer::Protocol &protocol,
-                             StreamResultFunc cb) {
+                             StreamProtocols protocols,
+                             StreamAndProtocolOrErrorCb cb) {
     SL_TRACE(log_, "New stream to {} for {} (peer id)",
-             peer_id.toBase58().substr(46), protocol);
+             peer_id.toBase58().substr(46), fmt::join(protocols, " "));
     auto conn = cmgr_->getBestConnectionForPeer(peer_id);
     if (!conn) {
       scheduler_->schedule(
           [cb{std::move(cb)}] { cb(std::errc::not_connected); });
       return;
     }
+    newStream(std::move(conn), std::move(protocols), std::move(cb));
+  }
 
-    auto result = conn->newStream();
-    if (!result) {
-      scheduler_->schedule([cb{std::move(cb)}, result] { cb(result); });
+  void DialerImpl::newStream(
+      std::shared_ptr<connection::CapableConnection> conn,
+      StreamProtocols protocols, StreamAndProtocolOrErrorCb cb) {
+    auto stream_res = conn->newStream();
+    if (stream_res.has_error()) {
+      scheduler_->schedule(std::bind(std::move(cb), stream_res.error()));
       return;
     }
-
-    multiselect_->simpleStreamNegotiate(result.value(), protocol,
-                                        std::move(cb));
+    auto &&stream = stream_res.value();
+    auto stream_copy = stream;
+    multiselect_->selectOneOf(
+        protocols, std::move(stream_copy), true, true,
+        [stream{std::move(stream)}, cb{std::move(cb)}](
+            outcome::result<peer::Protocol> protocol_res) mutable {
+          if (protocol_res.has_error()) {
+            return cb(protocol_res.error());
+          }
+          auto &&protocol = protocol_res.value();
+          cb(StreamAndProtocol{std::move(stream), std::move(protocol)});
+        });
   }
 
   DialerImpl::DialerImpl(

@@ -15,18 +15,12 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::network, RouterImpl::Error, e) {
 }
 
 namespace libp2p::network {
-  void RouterImpl::setProtocolHandler(const peer::Protocol &protocol,
-                                      const ProtoHandler &handler) {
-    setProtocolHandler(protocol, handler, [protocol](const auto &p) {
-      // perfect match func
-      return protocol == p;
-    });
-  }
-
-  void RouterImpl::setProtocolHandler(const peer::Protocol &protocol,
-                                      const ProtoHandler &handler,
-                                      const ProtoPredicate &predicate) {
-    proto_handlers_[protocol] = PredicateAndHandler{predicate, handler};
+  void RouterImpl::setProtocolHandler(StreamProtocols protocols,
+                                      StreamAndProtocolCb cb,
+                                      ProtocolPredicate predicate) {
+    for (auto &protocol : protocols) {
+      proto_handlers_[protocol] = PredicateAndHandler{predicate, cb};
+    }
   }
 
   std::vector<peer::Protocol> RouterImpl::getSupportedProtocols() const {
@@ -61,10 +55,10 @@ namespace libp2p::network {
       return Error::NO_HANDLER_FOUND;
     }
 
-    const auto &pred_hand = matched_proto.value();
-    if (matched_proto.key() == p || pred_hand.predicate(p)) {
+    const auto &[predicate, cb] = matched_proto.value();
+    if (matched_proto.key() == p or (predicate and predicate(p))) {
       // perfect or predicate match
-      pred_hand.handler(std::move(stream));
+      cb(StreamAndProtocol{std::move(stream), matched_proto.key()});
       return outcome::success();
     }
 
@@ -73,22 +67,21 @@ namespace libp2p::network {
     // predicate; the longest match is to be called
     auto matched_protos = proto_handlers_.equal_prefix_range_ks(p.data(), 2);
 
-    std::reference_wrapper<const ProtoHandler> longest_match{
-        matched_protos.first.value().handler};
-    size_t longest_match_size = 0;
+    auto longest_match{matched_protos.second};
     for (auto match = matched_protos.first; match != matched_protos.second;
          ++match) {
-      if (match.value().predicate(p)
-          && match.key().size() > longest_match_size) {
-        longest_match_size = match.key().size();
-        longest_match = match.value().handler;
+      if (match->predicate and match->predicate(p)
+          and (longest_match == matched_protos.second
+               or match.key().size() > longest_match.key().size())) {
+        longest_match = match;
       }
     }
 
-    if (longest_match_size == 0) {
+    if (longest_match == matched_protos.second) {
       return Error::NO_HANDLER_FOUND;
     }
-    longest_match(std::move(stream));
+    longest_match->handler(
+        StreamAndProtocol{std::move(stream), longest_match.key()});
     return outcome::success();
   }
 

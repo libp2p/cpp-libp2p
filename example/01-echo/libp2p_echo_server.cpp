@@ -125,11 +125,10 @@ int main(int argc, char **argv) {
           libp2p::protocol::EchoConfig::kInfiniteNumberOfRepeats,
       .max_recv_size =
           libp2p::muxer::MuxedConnectionConfig::kDefaultMaxWindowSize}};
-  server.host->setProtocolHandler(
-      echo.getProtocolId(),
-      [&echo](std::shared_ptr<libp2p::connection::Stream> received_stream) {
-        echo.handle(std::move(received_stream));
-      });
+  server.host->setProtocolHandler(echo.getProtocolId(),
+                                  [&echo](libp2p::StreamAndProtocol stream) {
+                                    echo.handle(std::move(stream));
+                                  });
 
   // launch a Listener part of the Host
   server.io_context->post([host{std::move(server.host)}] {

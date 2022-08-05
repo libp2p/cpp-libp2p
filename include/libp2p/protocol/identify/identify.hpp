@@ -62,7 +62,7 @@ namespace libp2p::protocol {
      * In Identify, handle means we are being identified by the other peer, so
      * we are expected to send the Identify message
      */
-    void handle(StreamResult stream_res) override;
+    void handle(StreamAndProtocol stream) override;
 
     /**
      * Start accepting NewConnectionEvent-s and asking each of them for Identify

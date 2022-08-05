@@ -45,7 +45,7 @@ namespace libp2p::protocol {
      * In Identify-Delta, handle means we accepted an Identify-Delta stream and
      * should receive a Delta message
      */
-    void handle(StreamResult stream_res) override;
+    void handle(StreamAndProtocol stream) override;
 
     /**
      * Start this Identify-Delta, so that it subscribes to events, when

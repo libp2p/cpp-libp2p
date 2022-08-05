@@ -150,8 +150,9 @@ TEST_F(BasicHostTest, NewStream) {
 
   EXPECT_CALL(network, getDialer()).WillOnce(ReturnRef(*dialer));
   EXPECT_CALL(*dialer,
-              newStream(pinfo, protocol, _, std::chrono::milliseconds::zero()))
-      .WillOnce(Arg2CallbackWithArg(stream));
+              newStream(pinfo, StreamProtocols{protocol}, _,
+                        std::chrono::milliseconds::zero()))
+      .WillOnce(Arg2CallbackWithArg(StreamAndProtocol{stream, protocol}));
 
   bool executed = false;
   host->newStream(pinfo, protocol, [&](auto &&result) {

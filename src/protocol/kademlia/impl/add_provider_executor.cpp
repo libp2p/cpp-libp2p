@@ -154,8 +154,7 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  void AddProviderExecutor::onConnected(
-      outcome::result<std::shared_ptr<connection::Stream>> stream_res) {
+  void AddProviderExecutor::onConnected(StreamAndProtocolOrError stream_res) {
     if (not stream_res) {
       --requests_in_progress_;
 

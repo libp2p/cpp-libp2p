@@ -57,8 +57,7 @@ namespace libp2p::protocol::kademlia {
     void spawn();
 
     /// Handles result of connection
-    void onConnected(
-        outcome::result<std::shared_ptr<connection::Stream>> stream_res);
+    void onConnected(StreamAndProtocolOrError stream_res);
 
     static std::atomic_size_t instance_number;
 

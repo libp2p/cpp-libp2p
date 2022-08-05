@@ -24,12 +24,9 @@ namespace libp2p::protocol {
     return detail::kPingProto;
   }
 
-  void Ping::handle(StreamResult res) {
-    if (!res) {
-      return;
-    }
+  void Ping::handle(StreamAndProtocol stream) {
     auto session =
-        std::make_shared<PingServerSession>(std::move(res.value()), config_);
+        std::make_shared<PingServerSession>(std::move(stream), config_);
     session->start();
   }
 
