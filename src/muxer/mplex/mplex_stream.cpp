@@ -40,10 +40,32 @@ namespace libp2p::connection {
     read(out, bytes, std::move(cb), true);
   }
 
+  void MplexStream::readDone(outcome::result<size_t> res) {
+    auto cb{std::move(reading_->cb)};
+    reading_.reset();
+    cb(res);
+  }
+
+  bool MplexStream::readTry() {
+    auto size{std::min(read_buffer_.size(), reading_->bytes)};
+    if (reading_->some ? size == 0 : size != reading_->bytes) {
+      return false;
+    }
+    if (boost::asio::buffer_copy(
+            boost::asio::buffer(reading_->out.data(), size),
+            read_buffer_.data(), size)
+        != size) {
+      readDone(Error::STREAM_INTERNAL_ERROR);
+      return true;
+    }
+    read_buffer_.consume(size);
+    receive_window_size_ += size;
+    readDone(size);
+    return true;
+  }
+
   void MplexStream::read(gsl::span<uint8_t> out, size_t bytes,
                          ReadCallbackFunc cb, bool some) {
-    // TODO(107): Reentrancy
-
     if (is_reset_) {
       return cb(Error::STREAM_RESET_BY_PEER);
     }
@@ -53,50 +75,18 @@ namespace libp2p::connection {
     if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
       return cb(Error::STREAM_INVALID_ARGUMENT);
     }
-    if (is_reading_) {
+    if (reading_.has_value()) {
       return cb(Error::STREAM_IS_READING);
     }
 
-    // this lambda checks, if there's enough data in our read buffer, and gives
-    // it to the caller, if so
-    auto read_lambda = [self{shared_from_this()}, cb{std::move(cb)}, out, bytes,
-                        some](outcome::result<size_t> res) mutable {
-      if (!res) {
-        self->data_notified_ = true;
-        return cb(res);
-      }
-      if ((some && self->read_buffer_.size() != 0)
-          || (!some && self->read_buffer_.size() >= bytes)) {
-        auto to_read =
-            some ? std::min(self->read_buffer_.size(), bytes) : bytes;
-        if (boost::asio::buffer_copy(boost::asio::buffer(out.data(), to_read),
-                                     self->read_buffer_.data(), to_read)
-            != to_read) {
-          return cb(Error::STREAM_INTERNAL_ERROR);
-        }
-
-        self->is_reading_ = false;
-        self->read_buffer_.consume(to_read);
-        self->receive_window_size_ += to_read;
-        self->data_notified_ = true;
-        cb(to_read);
-      }
-    };
-
-    // return immediately, if there's enough data in the buffer
-    data_notified_ = false;
-    read_lambda(0);
-    if (data_notified_) {
+    reading_.emplace(Reading{out, bytes, std::move(cb), some});
+    if (readTry()) {
       return;
     }
 
     if (connection_.expired()) {
-      return cb(Error::STREAM_RESET_BY_HOST);
+      return readDone(Error::STREAM_RESET_BY_HOST);
     }
-
-    // subscribe to new data updates
-    is_reading_ = true;
-    data_notifyee_ = std::move(read_lambda);
   }
 
   void MplexStream::write(gsl::span<const uint8_t> in, size_t bytes,
@@ -242,8 +232,8 @@ namespace libp2p::connection {
                                                 size_t data_size) {
     if (data_size == 0) {
       is_reset_ = true;
-      if (data_notifyee_ && !data_notified_) {
-        data_notifyee_(Error::STREAM_RESET_BY_HOST);
+      if (reading_.has_value()) {
+        readDone(Error::STREAM_RESET_BY_HOST);
       }
       return Error::STREAM_RESET_BY_HOST;
     }
@@ -263,8 +253,8 @@ namespace libp2p::connection {
     read_buffer_.commit(data_size);
     receive_window_size_ -= data_size;
 
-    if (data_notifyee_ && !data_notified_) {
-      data_notifyee_(data_size);
+    if (reading_.has_value()) {
+      readTry();
     }
 
     return outcome::success();
