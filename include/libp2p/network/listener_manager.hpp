@@ -31,9 +31,6 @@ namespace libp2p::network {
    * registered transports.
    */
   struct ListenerManager {
-    using StreamResult = outcome::result<std::shared_ptr<connection::Stream>>;
-    using StreamResultFunc = std::function<void(StreamResult)>;
-
     virtual ~ListenerManager() = default;
 
     /**
@@ -92,24 +89,6 @@ namespace libp2p::network {
      */
     virtual std::vector<multi::Multiaddress> getListenAddressesInterfaces()
         const = 0;
-
-    /**
-     * @brief Add new protocol handler
-     * @param protocol protocol to be handled
-     * @param cb callback executed on new stream
-     */
-    virtual void setProtocolHandler(const peer::Protocol &protocol,
-                                    StreamResultFunc cb) = 0;
-
-    /**
-     * @brief Add new protocol handler with matcher
-     * @param protocol protocol to be handled
-     * @param cb callback executed on new stream
-     * @param matcher function, which is executed to match protocols.
-     */
-    virtual void setProtocolHandler(const peer::Protocol &protocol,
-                                    StreamResultFunc cb,
-                                    Router::ProtoPredicate matcher) = 0;
 
     /**
      * @brief Getter for Router.
