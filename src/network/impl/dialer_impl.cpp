@@ -189,7 +189,8 @@ namespace libp2p::network {
       StreamProtocols protocols, StreamAndProtocolOrErrorCb cb) {
     auto stream_res = conn->newStream();
     if (stream_res.has_error()) {
-      scheduler_->schedule(std::bind(std::move(cb), stream_res.error()));
+      scheduler_->schedule(
+          [cb{std::move(cb)}, error{stream_res.error()}] { cb(error); });
       return;
     }
     auto &&stream = stream_res.value();

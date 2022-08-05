@@ -625,7 +625,7 @@ namespace libp2p::protocol::kademlia {
     log_.debug("incoming stream with {}",
                stream->remotePeerId().value().toBase58());
 
-    auto session = openSession(stream);
+    auto session = openSession(stream);  // NOLINT(cppcoreguidelines-slicing)
 
     if (!session->read()) {
       sessions_.erase(stream);
