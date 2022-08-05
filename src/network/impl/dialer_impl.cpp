@@ -217,7 +217,7 @@ namespace libp2p::network {
         cmgr_(std::move(cmgr)),
         listener_(std::move(listener)),
         scheduler_(std::move(scheduler)),
-        log_(log::createLogger("DialerImpl", "network")) {
+        log_(log::createLogger("DialerImpl")) {
     BOOST_ASSERT(multiselect_ != nullptr);
     BOOST_ASSERT(tmgr_ != nullptr);
     BOOST_ASSERT(cmgr_ != nullptr);
