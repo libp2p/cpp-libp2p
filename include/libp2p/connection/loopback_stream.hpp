@@ -65,7 +65,7 @@ namespace libp2p::connection {
     libp2p::peer::PeerInfo own_peer_info_;
     std::shared_ptr<boost::asio::io_context> io_context_;
 
-    log::Logger log_ = log::createLogger("LoopbackStream", "network");
+    log::Logger log_ = log::createLogger("LoopbackStream");
 
     /// data, received for this stream, comes here
     boost::asio::streambuf buffer_;

@@ -159,7 +159,7 @@ struct Server : public std::enable_shared_from_this<Server> {
 
  private:
   template <typename... Args>
-  void println(Args &&... args) {
+  void println(Args &&...args) {
     if (!verbose())
       return;
     std::cout << "[server " << std::this_thread::get_id() << "]\t";
@@ -250,7 +250,7 @@ struct Client : public std::enable_shared_from_this<Client> {
 
  private:
   template <typename... Args>
-  void println(Args &&... args) {
+  void println(Args &&...args) {
     if (!verbose())
       return;
     std::cout << "[client " << std::this_thread::get_id() << "]\t";
@@ -441,6 +441,6 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   EXPECT_GE(server->streamWrites, totalClients * streams * rounds);
 }
 
-INSTANTIATE_TEST_CASE_P(AllMuxers, MuxerAcceptanceTest,
-                        ::testing::Values(MuxerType::mplex, MuxerType::yamux),
-                        MuxerAcceptanceTest::PrintToStringParamName());
+INSTANTIATE_TEST_SUITE_P(AllMuxers, MuxerAcceptanceTest,
+                         ::testing::Values(MuxerType::mplex, MuxerType::yamux),
+                         MuxerAcceptanceTest::PrintToStringParamName());

@@ -70,7 +70,7 @@ namespace libp2p::protocol::gossip {
     peer::Protocol getProtocolId() const override;
 
     /// BaseProtocol override, on new inbound stream
-    void handle(StreamResult rstream) override;
+    void handle(StreamAndProtocol stream) override;
 
     /// Tries to connect to peer
     void dial(const PeerContextPtr &peer);
@@ -79,9 +79,8 @@ namespace libp2p::protocol::gossip {
     void dialOverExistingConnection(const PeerContextPtr &peer);
 
     /// Outbound stream result callback
-    void onNewStream(
-        const PeerContextPtr& ctx,
-        outcome::result<std::shared_ptr<connection::Stream>> rstream);
+    void onNewStream(const PeerContextPtr &ctx,
+                     StreamAndProtocolOrError rstream);
 
     /// Async feedback from streams
     void onStreamEvent(const PeerContextPtr &from,
@@ -127,7 +126,7 @@ namespace libp2p::protocol::gossip {
     PeerSet writable_peers_on_heartbeat_;
 
     /// Renew addresses in address repo periodically within heartbeat timer
-    std::chrono::milliseconds addresses_renewal_time_ {0};
+    std::chrono::milliseconds addresses_renewal_time_{0};
 
     /// Logger
     log::SubLogger log_;

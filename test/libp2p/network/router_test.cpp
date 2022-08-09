@@ -41,7 +41,7 @@ class RouterTest : public ::testing::Test, public RouterImpl {
    * @param proto, for which the handler is to be set
    */
   void setHandlerWithFail(const Protocol &proto) {
-    this->setProtocolHandler(proto, [](auto &&) { FAIL(); });
+    this->setProtocolHandler({proto}, [](auto &&) { FAIL(); });
   }
 
   /**
@@ -64,9 +64,9 @@ class RouterTest : public ::testing::Test, public RouterImpl {
  * @then the corresponding handler is invoked
  */
 TEST_F(RouterTest, SetHandlerPerfect) {
-  this->setProtocolHandler(kDefaultProtocol,
-                           [this](std::shared_ptr<Stream> stream) mutable {
-                             stream_to_receive = std::move(stream);
+  this->setProtocolHandler({kDefaultProtocol},
+                           [this](libp2p::StreamAndProtocol stream) mutable {
+                             stream_to_receive = std::move(stream.stream);
                            });
 
   EXPECT_TRUE(this->handle(kDefaultProtocol, kStreamToSend));
@@ -95,19 +95,20 @@ TEST_F(RouterTest, SetHandlerPerfectInvokeFail) {
  */
 TEST_F(RouterTest, SetHandlerWithPredicate) {
   // this match is shorter, than the next two; must not be invoked
-  this->setProtocolHandler(kProtocolPrefix, [](auto &&) { FAIL(); },
-                           [](auto &&) { return true; });
+  this->setProtocolHandler(
+      {kProtocolPrefix}, [](auto &&) { FAIL(); }, [](auto &&) { return true; });
 
   // this match is equal to the next one, but its handler will evaluate to
   // false; must not be invoked
-  this->setProtocolHandler(kVersionProtocolPrefix, [](auto &&) { FAIL(); },
-                           [](auto &&) { return false; });
+  this->setProtocolHandler(
+      {kVersionProtocolPrefix}, [](auto &&) { FAIL(); },
+      [](auto &&) { return false; });
 
   // this match must be invoked
   this->setProtocolHandler(
-      kVersionProtocolPrefix,
-      [this](std::shared_ptr<Stream> stream) mutable {
-        stream_to_receive = std::move(stream);
+      {kVersionProtocolPrefix},
+      [this](libp2p::StreamAndProtocol stream) mutable {
+        stream_to_receive = std::move(stream.stream);
       },
       [this](const auto &proto) { return proto == kDefaultProtocol; });
 

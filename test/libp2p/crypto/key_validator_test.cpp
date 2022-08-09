@@ -123,9 +123,9 @@ TEST_P(GeneratedKeysTest, InvalidPublicKeyInvalidatesPair) {
   EXPECT_OUTCOME_FALSE_1(validator->validate(invalid_pair))
 }
 
-INSTANTIATE_TEST_CASE_P(GeneratedValidKeysCases, GeneratedKeysTest,
-                        ::testing::Values(Key::Type::RSA, Key::Type::Ed25519,
-                                          Key::Type::Secp256k1));
+INSTANTIATE_TEST_SUITE_P(GeneratedValidKeysCases, GeneratedKeysTest,
+                         ::testing::Values(Key::Type::RSA, Key::Type::Ed25519,
+                                           Key::Type::Secp256k1));
 
 class RandomKeyTest : public BaseKeyTest,
                       public ::testing::TestWithParam<Key::Type> {};
@@ -148,9 +148,9 @@ TEST_P(RandomKeyTest, Every32byteIsValidPrivateKey) {
   EXPECT_OUTCOME_TRUE_1(crypto_provider->derivePublicKey(private_key))
 }
 
-INSTANTIATE_TEST_CASE_P(RandomSequencesCases, RandomKeyTest,
-                        ::testing::Values(Key::Type::Ed25519,
-                                          Key::Type::Secp256k1));
+INSTANTIATE_TEST_SUITE_P(RandomSequencesCases, RandomKeyTest,
+                         ::testing::Values(Key::Type::Ed25519,
+                                           Key::Type::Secp256k1));
 
 class UnspecifiedKeyTest : public BaseKeyTest, public ::testing::Test {};
 

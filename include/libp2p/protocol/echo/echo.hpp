@@ -27,7 +27,7 @@ namespace libp2p::protocol {
     peer::Protocol getProtocolId() const override;
 
     // handle incoming stream
-    void handle(StreamResult rstream) override;
+    void handle(StreamAndProtocol stream) override;
 
     // create client session, which simplifies writing tests and interaction
     // with server.

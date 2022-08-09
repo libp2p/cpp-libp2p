@@ -10,9 +10,12 @@
 #include <vector>
 
 #include <libp2p/connection/stream.hpp>
+#include <libp2p/connection/stream_and_protocol.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/protocol.hpp>
+#include <libp2p/peer/protocol_predicate.hpp>
+#include <libp2p/peer/stream_protocols.hpp>
 
 namespace libp2p::event::network {
 
@@ -33,34 +36,21 @@ namespace libp2p::network {
    * https://github.com/libp2p/go-libp2p-core/blob/consolidate-skeleton/host/host.go#L37
    */
   struct Router {
-    using ProtoHandler = std::function<connection::Stream::Handler>;
-    using ProtoPredicate = std::function<bool(const peer::Protocol &)>;
-
     virtual ~Router() = default;
-
-    /**
-     * Set handler for the {@param protocol}; only the perfect handler match
-     * will be invoked
-     * @param protocol to be handled
-     * @param handler to be called, when a new stream for this protocol arrives
-     * @see Host::setProtocolHandler(...)
-     */
-    virtual void setProtocolHandler(const peer::Protocol &protocol,
-                                    const ProtoHandler &handler) = 0;
 
     /**
      * Set handler for the <protocol, predicate> pair. First, searches all
      * handlers by prefix of the given protocol, then executes handler callback
      * for all matches when {@param predicate} returns true
-     * @param protocol, for which pairs <protocol, handler> are to be retrieved
-     * @param handler to be executed over the protocols, for which the predicate
+     * @param protocols, for which pairs <protocol, handler> are to be retrieved
+     * @param cb to be executed over the protocols, for which the predicate
      * was evaluated to true
      * @param predicate to be executed over the found protocols
      * @see Host::setProtocolHandler(...) for examples
      */
-    virtual void setProtocolHandler(const peer::Protocol &protocol,
-                                    const ProtoHandler &handler,
-                                    const ProtoPredicate &predicate) = 0;
+    virtual void setProtocolHandler(StreamProtocols protocols,
+                                    StreamAndProtocolCb cb,
+                                    ProtocolPredicate predicate = {}) = 0;
 
     /**
      * Get a list of handled protocols

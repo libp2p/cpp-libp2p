@@ -130,31 +130,26 @@ namespace libp2p::host {
     return Connectedness::CAN_NOT_CONNECT;
   }
 
-  void BasicHost::setProtocolHandler(
-      const peer::Protocol &proto,
-      const std::function<connection::Stream::Handler> &handler) {
-    network_->getListener().getRouter().setProtocolHandler(proto, handler);
+  void BasicHost::setProtocolHandler(StreamProtocols protocols,
+                                     StreamAndProtocolCb cb,
+                                     ProtocolPredicate predicate) {
+    network_->getListener().getRouter().setProtocolHandler(
+        std::move(protocols), std::move(cb), std::move(predicate));
   }
 
-  void BasicHost::setProtocolHandler(
-      const peer::Protocol &proto,
-      const std::function<connection::Stream::Handler> &handler,
-      const std::function<bool(const peer::Protocol &)> &predicate) {
-    network_->getListener().getRouter().setProtocolHandler(proto, handler,
-                                                           predicate);
-  }
-
-  void BasicHost::newStream(const peer::PeerInfo &p,
-                            const peer::Protocol &protocol,
-                            const Host::StreamResultHandler &handler,
+  void BasicHost::newStream(const peer::PeerInfo &peer_info,
+                            StreamProtocols protocols,
+                            StreamAndProtocolOrErrorCb cb,
                             std::chrono::milliseconds timeout) {
-    network_->getDialer().newStream(p, protocol, handler, timeout);
+    network_->getDialer().newStream(peer_info, std::move(protocols),
+                                    std::move(cb), timeout);
   }
 
   void BasicHost::newStream(const peer::PeerId &peer_id,
-                            const peer::Protocol &protocol,
-                            const StreamResultHandler &handler) {
-    network_->getDialer().newStream(peer_id, protocol, handler);
+                            StreamProtocols protocols,
+                            StreamAndProtocolOrErrorCb cb) {
+    network_->getDialer().newStream(peer_id, std::move(protocols),
+                                    std::move(cb));
   }
 
   outcome::result<void> BasicHost::listen(const multi::Multiaddress &ma) {

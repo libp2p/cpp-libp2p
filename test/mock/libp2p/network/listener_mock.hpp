@@ -30,22 +30,14 @@ namespace libp2p::network {
     MOCK_CONST_METHOD0(getListenAddressesInterfaces,
                        std::vector<multi::Multiaddress>());
 
-    MOCK_METHOD1(handleProtocol, void(std::shared_ptr<protocol::BaseProtocol>));
-
-    MOCK_METHOD2(setProtocolHandler,
-                 void(const peer::Protocol &, StreamResultFunc));
-
-    MOCK_METHOD3(setProtocolHandler,
-                 void(const peer::Protocol &, StreamResultFunc,
-                      Router::ProtoPredicate));
-
     MOCK_METHOD1(removeListener,
                  outcome::result<void>(const multi::Multiaddress &));
 
     MOCK_METHOD0(getRouter, Router &());
 
-    MOCK_METHOD1(onConnection, void(
-        outcome::result<std::shared_ptr<connection::CapableConnection>>));
+    MOCK_METHOD1(
+        onConnection,
+        void(outcome::result<std::shared_ptr<connection::CapableConnection>>));
   };
 }  // namespace libp2p::network
 

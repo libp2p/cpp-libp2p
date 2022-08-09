@@ -38,6 +38,7 @@ using namespace multi;
 
 using testing::_;
 using testing::Const;
+using testing::InvokeArgument;
 using testing::NiceMock;
 using testing::Ref;
 using testing::Return;
@@ -185,16 +186,12 @@ TEST_F(IdentifyTest, Send) {
                                                  identify_pb_msg_bytes_.size()),
                         outcome::success(identify_pb_msg_bytes_.size())));
 
-  identify_->handle(std::static_pointer_cast<Stream>(stream_));
+  identify_->handle(StreamAndProtocol{stream_, {}});
 }
 
 ACTION_P(ReadPut, buf) {
   std::copy(buf.begin(), buf.end(), arg0.begin());
   arg2(buf.size());
-}
-
-ACTION_P(ReturnStreamRes, s) {
-  arg2(outcome::success(std::move(s)));
 }
 
 /**
@@ -204,14 +201,16 @@ ACTION_P(ReturnStreamRes, s) {
  * peer to be identified @and accepts the received message
  */
 TEST_F(IdentifyTest, Receive) {
-  EXPECT_CALL(host_, setProtocolHandler(kIdentifyProto, _)).WillOnce(Return());
+  EXPECT_CALL(host_, setProtocolHandler(StreamProtocols{kIdentifyProto}, _, _))
+      .WillOnce(Return());
 
   EXPECT_CALL(*connection_, remotePeer()).WillOnce(Return(kRemotePeerId));
   EXPECT_CALL(*connection_, remoteMultiaddr())
       .WillOnce(Return(remote_multiaddr_));
 
-  EXPECT_CALL(host_, newStream(kRemotePeerInfo, kIdentifyProto, _, _))
-      .WillOnce(ReturnStreamRes(std::static_pointer_cast<Stream>(stream_)));
+  EXPECT_CALL(host_,
+              newStream(kRemotePeerInfo, StreamProtocols{kIdentifyProto}, _, _))
+      .WillOnce(InvokeArgument<2>(StreamAndProtocol{stream_, kIdentifyProto}));
 
   EXPECT_CALL(*stream_, read(_, 1, _))
       .WillOnce(ReadPut(gsl::make_span(identify_pb_msg_bytes_.data(), 1)));

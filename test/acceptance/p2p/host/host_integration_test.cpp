@@ -62,7 +62,6 @@ struct HostIntegrationTest
  * @then all clients interact with all servers predefined number of times
  */
 TEST_P(HostIntegrationTest, InteractAllToAllSuccess) {
-
   testutil::prepareLoggers();
 
   const auto [peer_count, ping_times, start_port, timeout, future_timeout,
@@ -126,7 +125,7 @@ namespace {
   using Config = HostIntegrationTestConfig;
 }
 
-INSTANTIATE_TEST_CASE_P(AllTestCases, HostIntegrationTest,
+INSTANTIATE_TEST_SUITE_P(AllTestCases, HostIntegrationTest,
                         ::testing::Values(
                             // ports are not freed, so new ports each time
                             Config{1u, 1u, 40510u, 2s, 2s, 200ms, false},

@@ -16,7 +16,7 @@ namespace libp2p::protocol {
     ~BaseProtocolMock() override = default;
 
     MOCK_CONST_METHOD0(getProtocolId, peer::Protocol());
-    MOCK_METHOD1(handle, void(StreamResult));
+    MOCK_METHOD1(handle, void(StreamAndProtocol));
   };
 
 }  // namespace libp2p::protocol

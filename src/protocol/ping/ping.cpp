@@ -24,12 +24,9 @@ namespace libp2p::protocol {
     return detail::kPingProto;
   }
 
-  void Ping::handle(StreamResult res) {
-    if (!res) {
-      return;
-    }
+  void Ping::handle(StreamAndProtocol stream) {
     auto session =
-        std::make_shared<PingServerSession>(std::move(res.value()), config_);
+        std::make_shared<PingServerSession>(std::move(stream.stream), config_);
     session->start();
   }
 
@@ -43,14 +40,15 @@ namespace libp2p::protocol {
     }
     auto peer_info = host_.getPeerRepository().getPeerInfo(remote_peer.value());
     return host_.newStream(
-        peer_info, detail::kPingProto,
+        peer_info, {detail::kPingProto},
         [self{shared_from_this()}, cb = std::move(cb)](auto &&stream_res) {
           if (!stream_res) {
             return cb(stream_res.error());
           }
           auto session = std::make_shared<PingClientSession>(
-              self->io_context_, self->bus_, std::move(stream_res.value()),
-              self->rand_gen_, self->config_);
+              self->io_context_, self->bus_,
+              std::move(stream_res.value().stream), self->rand_gen_,
+              self->config_);
           session->start();
           cb(std::move(session));
         });

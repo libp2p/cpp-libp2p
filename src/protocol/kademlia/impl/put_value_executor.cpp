@@ -90,7 +90,7 @@ namespace libp2p::protocol::kademlia {
           config_.connectionTimeout);
 
       host_->newStream(
-          peer_info, config_.protocolId,
+          peer_info, {config_.protocolId},
           [holder](auto &&stream_res) {
             if (holder->first) {
               holder->second.cancel();
@@ -107,8 +107,7 @@ namespace libp2p::protocol::kademlia {
     }
   }
 
-  void PutValueExecutor::onConnected(
-      outcome::result<std::shared_ptr<connection::Stream>> stream_res) {
+  void PutValueExecutor::onConnected(StreamAndProtocolOrError stream_res) {
     if (not stream_res) {
       --requests_in_progress_;
 
@@ -120,7 +119,7 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    auto &stream = stream_res.value();
+    auto &stream = stream_res.value().stream;
     assert(stream->remoteMultiaddr().has_value());
 
     std::string addr(stream->remoteMultiaddr().value().getStringAddress());

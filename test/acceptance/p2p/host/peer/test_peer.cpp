@@ -51,10 +51,8 @@ Peer::Peer(Peer::Duration timeout, bool secure)
       "failed to generate keys");
   host_ = makeHost(keys);
 
-  auto handler = [this](std::shared_ptr<Stream> result) {
-    echo_->handle(result);
-  };
-  host_->setProtocolHandler(echo_->getProtocolId(), handler);
+  auto handler = [this](StreamAndProtocol stream) { echo_->handle(stream); };
+  host_->setProtocolHandler({echo_->getProtocolId()}, handler);
 }
 
 void Peer::startServer(const multi::Multiaddress &address,
@@ -73,16 +71,16 @@ void Peer::startClient(const peer::PeerInfo &pinfo, size_t message_count,
   context_->post([this, server_id = pinfo.id.toBase58(), pinfo, message_count,
                   counter = std::move(counter)]() mutable {
     this->host_->newStream(
-        pinfo, echo_->getProtocolId(),
+        pinfo, {echo_->getProtocolId()},
         [server_id = std::move(server_id), ping_times = message_count,
-         counter = std::move(counter)](
-            outcome::result<sptr<Stream>> rstream) mutable {
+         counter =
+             std::move(counter)](StreamAndProtocolOrError rstream) mutable {
           // get stream
           EXPECT_OUTCOME_TRUE_MSG(stream, rstream,
                                   "failed to connect to server: " + server_id);
           // make client session
-          auto client =
-              std::make_shared<protocol::ClientTestSession>(stream, ping_times);
+          auto client = std::make_shared<protocol::ClientTestSession>(
+              stream.stream, ping_times);
           // handle session
           client->handle(
               [server_id = std::move(server_id), client,

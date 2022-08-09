@@ -296,8 +296,8 @@ const std::vector<
                            MulticodecType::Code::DAG_PB, ZERO_MULTIHASH),
          ZERO_MULTIHASH.toBuffer()}};
 
-INSTANTIATE_TEST_CASE_P(EncodeTests, CidEncodeTest,
-                        testing::ValuesIn(encodeSuite));
+INSTANTIATE_TEST_SUITE_P(EncodeTests, CidEncodeTest,
+                         testing::ValuesIn(encodeSuite));
 
 const std::vector<
     std::pair<std::vector<uint8_t>, libp2p::outcome::result<ContentIdentifier>>>
@@ -306,8 +306,8 @@ const std::vector<
          ContentIdentifier(ContentIdentifier::Version::V0,
                            MulticodecType::Code::DAG_PB, EXAMPLE_MULTIHASH)}};
 
-INSTANTIATE_TEST_CASE_P(DecodeTests, CidDecodeTest,
-                        testing::ValuesIn(decodeSuite));
+INSTANTIATE_TEST_SUITE_P(DecodeTests, CidDecodeTest,
+                         testing::ValuesIn(decodeSuite));
 
 const std::vector<ContentIdentifier> encodeDecodeSuite = {
     ContentIdentifier(ContentIdentifier::Version::V0,
@@ -317,5 +317,5 @@ const std::vector<ContentIdentifier> encodeDecodeSuite = {
     ContentIdentifier(ContentIdentifier::Version::V1,
                       MulticodecType::Code::SHA1, EXAMPLE_MULTIHASH)};
 
-INSTANTIATE_TEST_CASE_P(EncodeDecodeTest, CidEncodeDecodeTest,
-                        testing::ValuesIn(encodeDecodeSuite));
+INSTANTIATE_TEST_SUITE_P(EncodeDecodeTest, CidEncodeDecodeTest,
+                         testing::ValuesIn(encodeDecodeSuite));

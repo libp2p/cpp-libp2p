@@ -68,10 +68,9 @@ namespace libp2p::protocol::kademlia {
 
     // handle streams for observed protocol
     host_->setProtocolHandler(
-        protocol_,
-        [wp = weak_from_this()](protocol::BaseProtocol::StreamResult rstream) {
+        {protocol_}, [wp = weak_from_this()](StreamAndProtocol stream) {
           if (auto self = wp.lock()) {
-            self->handleProtocol(std::move(rstream));
+            self->handleProtocol(std::move(stream));
           }
         });
 
@@ -616,15 +615,8 @@ namespace libp2p::protocol::kademlia {
     log_.debug("session completed, total sessions: {}", sessions_.size());
   }
 
-  void KademliaImpl::handleProtocol(
-      protocol::BaseProtocol::StreamResult stream_res) {
-    if (!stream_res) {
-      log_.warn("incoming stream failed due to '{}'",
-                stream_res.error().message());
-      return;
-    }
-
-    auto &stream = stream_res.value();
+  void KademliaImpl::handleProtocol(StreamAndProtocol stream_and_protocol) {
+    auto &stream = stream_and_protocol.stream;
 
     if (stream->remotePeerId().value() == self_id_) {
       log_.debug("incoming stream with themselves");
