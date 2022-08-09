@@ -56,7 +56,8 @@ namespace libp2p::network {
     }
 
     const auto &[predicate, cb] = matched_proto.value();
-    if (matched_proto.key() == p or (predicate and predicate(p))) {
+    auto matched = matched_proto.key() == p or (predicate and predicate(p));
+    if (matched) {
       // perfect or predicate match
       cb(StreamAndProtocol{std::move(stream), matched_proto.key()});
       return outcome::success();

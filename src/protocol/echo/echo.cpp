@@ -8,7 +8,8 @@
 namespace libp2p::protocol {
 
   void Echo::handle(StreamAndProtocol stream) {
-    auto session = std::make_shared<ServerEchoSession>(stream, config_);
+    auto session =
+        std::make_shared<ServerEchoSession>(std::move(stream.stream), config_);
     session->start();
   }
 

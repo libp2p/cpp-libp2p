@@ -25,7 +25,7 @@ namespace libp2p::protocol {
   }
 
   void IdentifyPush::handle(StreamAndProtocol stream) {
-    msg_processor_->receiveIdentify(std::move(stream));
+    msg_processor_->receiveIdentify(std::move(stream.stream));
   }
 
   void IdentifyPush::start() {
@@ -53,12 +53,13 @@ namespace libp2p::protocol {
   void IdentifyPush::sendPush() {
     detail::streamToEachConnectedPeer(
         msg_processor_->getHost(), msg_processor_->getConnectionManager(),
-        kIdentifyPushProtocol, [self{weak_from_this()}](auto &&s_res) {
+        {kIdentifyPushProtocol}, [self{weak_from_this()}](auto &&s_res) {
           if (!s_res) {
             return;
           }
           if (auto t = self.lock()) {
-            return t->msg_processor_->sendIdentify(std::move(s_res.value()));
+            return t->msg_processor_->sendIdentify(
+                std::move(s_res.value().stream));
           }
         });
   }

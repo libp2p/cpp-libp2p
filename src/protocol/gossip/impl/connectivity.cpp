@@ -56,7 +56,7 @@ namespace libp2p::protocol::gossip {
         };
 
     host_->setProtocolHandler(
-        config_.protocol_version,
+        {config_.protocol_version},
         [self_wptr=weak_from_this()]
             (StreamAndProtocol stream) {
           auto h = self_wptr.lock();
@@ -136,7 +136,9 @@ namespace libp2p::protocol::gossip {
     return config_.protocol_version;
   }
 
-  void Connectivity::handle(StreamAndProtocol stream) {
+  void Connectivity::handle(StreamAndProtocol stream_and_protocol) {
+    auto &stream = stream_and_protocol.stream;
+
     if (!started_) {
       stream->reset();
       return;
@@ -224,7 +226,7 @@ namespace libp2p::protocol::gossip {
     // clang-format off
     host_->newStream(
         pi,
-        config_.protocol_version,
+        {config_.protocol_version},
         [wptr = weak_from_this(), this, ctx=ctx] (auto &&rstream) mutable {
             auto self = wptr.lock();
           if (self) {
@@ -246,7 +248,7 @@ namespace libp2p::protocol::gossip {
     // clang-format off
     host_->newStream(
         ctx->peer_id,
-        config_.protocol_version,
+        {config_.protocol_version},
         [wptr = weak_from_this(), this, ctx=ctx] (auto &&rstream) mutable {
           auto self = wptr.lock();
           if (self) {
@@ -272,10 +274,10 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    auto &stream = rstream.value();
+    auto &stream = rstream.value().stream;
 
     if (!started_) {
-      rstream.value()->reset();
+      stream->reset();
       return;
     }
 

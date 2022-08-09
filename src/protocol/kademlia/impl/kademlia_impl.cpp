@@ -68,7 +68,7 @@ namespace libp2p::protocol::kademlia {
 
     // handle streams for observed protocol
     host_->setProtocolHandler(
-        protocol_, [wp = weak_from_this()](StreamAndProtocol stream) {
+        {protocol_}, [wp = weak_from_this()](StreamAndProtocol stream) {
           if (auto self = wp.lock()) {
             self->handleProtocol(std::move(stream));
           }
@@ -615,7 +615,9 @@ namespace libp2p::protocol::kademlia {
     log_.debug("session completed, total sessions: {}", sessions_.size());
   }
 
-  void KademliaImpl::handleProtocol(StreamAndProtocol stream) {
+  void KademliaImpl::handleProtocol(StreamAndProtocol stream_and_protocol) {
+    auto &stream = stream_and_protocol.stream;
+
     if (stream->remotePeerId().value() == self_id_) {
       log_.debug("incoming stream with themselves");
       stream->reset();
@@ -625,7 +627,7 @@ namespace libp2p::protocol::kademlia {
     log_.debug("incoming stream with {}",
                stream->remotePeerId().value().toBase58());
 
-    auto session = openSession(stream);  // NOLINT(cppcoreguidelines-slicing)
+    auto session = openSession(stream);
 
     if (!session->read()) {
       sessions_.erase(stream);

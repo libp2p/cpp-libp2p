@@ -18,16 +18,13 @@ namespace libp2p::connection {
 
 namespace libp2p {
   /**
-   * Extends stream pointer with protocol.
+   * Stream pointer and protocol.
    * Used by `Host::newStream`, `Dialer::newStream`, `Host::setProtocolHandler`,
-   * `Router::setProtocolHandler`. Keeps `newStream` and `setProtocolHandler`
-   * callbacks simple and compatible.
+   * `Router::setProtocolHandler`.
    */
-  struct StreamAndProtocol : std::shared_ptr<connection::Stream> {
+  struct StreamAndProtocol {
+    std::shared_ptr<connection::Stream> stream;
     peer::Protocol protocol;
-    StreamAndProtocol(std::shared_ptr<connection::Stream> stream,
-                      peer::Protocol protocol)
-        : shared_ptr{std::move(stream)}, protocol{std::move(protocol)} {}
   };
 
   using StreamAndProtocolOrError = outcome::result<StreamAndProtocol>;

@@ -101,7 +101,7 @@ namespace libp2p::regression {
       // clang-format off
       host_->newStream(
           connect_to,
-          getProtocolId(),
+          {getProtocolId()},
           [wptr = weak_from_this()] (auto rstream) {
             auto self = wptr.lock();
             if (self) {  self->onConnected(std::move(rstream)); }
@@ -190,10 +190,10 @@ namespace libp2p::regression {
       if (!started_) {
         // clang-format off
         host_->setProtocolHandler(
-            getProtocolId(),
-            [wptr = weak_from_this()] (auto rstream) {
+            {getProtocolId()},
+            [wptr = weak_from_this()] (StreamAndProtocol stream) {
               auto self = wptr.lock();
-              if (self) { self->onAccepted(std::move(rstream)); }
+              if (self) { self->onAccepted(std::move(stream)); }
             }
         );
         // clang-format on
@@ -209,16 +209,9 @@ namespace libp2p::regression {
       return "/kocher/1.0.0";
     }
 
-    void onAccepted(
-        outcome::result<std::shared_ptr<connection::Stream>> rstream) {
-      if (!rstream) {
-        TRACE("({}): accept error: {}", stats_.node_id,
-              rstream.error().message());
-        stats_.put(Stats::ACCEPT_FAILURE);
-      } else {
-        stats_.put(Stats::ACCEPTED);
-        accepted_stream_ = std::move(rstream.value());
-      }
+    void onAccepted(StreamAndProtocol stream) {
+      stats_.put(Stats::ACCEPTED);
+      accepted_stream_ = std::move(stream.stream);
       behavior_(*this);
     }
 
@@ -230,7 +223,7 @@ namespace libp2p::regression {
       } else {
         TRACE("({}): connected", stats_.node_id);
         stats_.put(Stats::CONNECTED);
-        connected_stream_ = std::move(rstream.value());
+        connected_stream_ = std::move(rstream.value().stream);
       }
       behavior_(*this);
     }

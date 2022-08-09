@@ -41,7 +41,7 @@ namespace libp2p::protocol {
   }
 
   void Identify::handle(StreamAndProtocol stream) {
-    msg_processor_->sendIdentify(std::move(stream));
+    msg_processor_->sendIdentify(std::move(stream.stream));
   }
 
   void Identify::start() {
@@ -49,7 +49,7 @@ namespace libp2p::protocol {
     BOOST_ASSERT(!started_);
     started_ = true;
 
-    host_.setProtocolHandler(kIdentifyProto,
+    host_.setProtocolHandler({kIdentifyProto},
                              [wp = weak_from_this()](StreamAndProtocol stream) {
                                if (auto self = wp.lock()) {
                                  self->handle(std::move(stream));
@@ -85,12 +85,13 @@ namespace libp2p::protocol {
                                  std::move(remote_peer_addr_res.value())}};
 
     msg_processor_->getHost().newStream(
-        peer_info, kIdentifyProto,
+        peer_info, {kIdentifyProto},
         [self{shared_from_this()}](auto &&stream_res) {
           if (!stream_res) {
             return;
           }
-          self->msg_processor_->receiveIdentify(std::move(stream_res.value()));
+          self->msg_processor_->receiveIdentify(
+              std::move(stream_res.value().stream));
         });
   }
 }  // namespace libp2p::protocol

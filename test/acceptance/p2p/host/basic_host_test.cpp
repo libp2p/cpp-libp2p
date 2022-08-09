@@ -155,7 +155,7 @@ TEST_F(BasicHostTest, NewStream) {
       .WillOnce(Arg2CallbackWithArg(StreamAndProtocol{stream, protocol}));
 
   bool executed = false;
-  host->newStream(pinfo, protocol, [&](auto &&result) {
+  host->newStream(pinfo, {protocol}, [&](auto &&result) {
     EXPECT_OUTCOME_TRUE(stream, result);
     (void)stream;
     executed = true;

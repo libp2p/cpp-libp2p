@@ -48,8 +48,14 @@ namespace libp2p::connection {
 
   bool MplexStream::readTry() {
     auto size{std::min(read_buffer_.size(), reading_->bytes)};
-    if (reading_->some ? size == 0 : size != reading_->bytes) {
-      return false;
+    if (reading_->some) {
+      if (size == 0) {
+        return false;
+      }
+    } else {
+      if (size != reading_->bytes) {
+        return false;
+      }
     }
     if (boost::asio::buffer_copy(
             boost::asio::buffer(reading_->out.data(), size),

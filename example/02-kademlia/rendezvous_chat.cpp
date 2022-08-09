@@ -107,7 +107,9 @@ bool Cmp::operator()(const std::shared_ptr<Session> &lhs,
   return *lhs < *rhs;
 }
 
-void handleIncomingStream(libp2p::StreamAndProtocol stream) {
+void handleIncomingStream(libp2p::StreamAndProtocol stream_and_protocol) {
+  auto &stream = stream_and_protocol.stream;
+
   // reject incoming stream with themselves
   if (stream->remotePeerId().value() == self_id) {
     stream->reset();
@@ -131,7 +133,7 @@ void handleOutgoingStream(libp2p::StreamAndProtocolOrError stream_res) {
               << stream_res.error().message() << std::endl;
     return;
   }
-  auto &stream = stream_res.value();
+  auto &stream = stream_res.value().stream;
 
   // reject outgoing stream to themselves
   if (stream->remotePeerId().value() == self_id) {
@@ -277,8 +279,8 @@ int main(int argc, char *argv[]) {
             .create<std::shared_ptr<libp2p::protocol::kademlia::Kademlia>>();
 
     // Handle streams for observed protocol
-    host->setProtocolHandler("/chat/1.0.0", handleIncomingStream);
-    host->setProtocolHandler("/chat/1.1.0", handleIncomingStream);
+    host->setProtocolHandler({"/chat/1.0.0"}, handleIncomingStream);
+    host->setProtocolHandler({"/chat/1.1.0"}, handleIncomingStream);
 
     // Key for group of chat
     libp2p::protocol::kademlia::ContentId content_id("meet me here");
@@ -301,7 +303,7 @@ int main(int argc, char *argv[]) {
 
             auto &providers = res.value();
             for (auto &provider : providers) {
-              host->newStream(provider, "/chat/1.1.0", handleOutgoingStream);
+              host->newStream(provider, {"/chat/1.1.0"}, handleOutgoingStream);
             }
           });
     };

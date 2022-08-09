@@ -125,14 +125,15 @@ int main(int argc, char *argv[]) {
 
     // create Host object and open a stream through it
     host->newStream(
-        peer_info, echo.getProtocolId(), [&echo, &message](auto &&stream_res) {
+        peer_info, {echo.getProtocolId()},
+        [&echo, &message](auto &&stream_res) {
           if (!stream_res) {
             std::cerr << "Cannot connect to server: "
                       << stream_res.error().message() << std::endl;
             std::exit(EXIT_FAILURE);
           }
 
-          auto stream_p = std::move(stream_res.value());
+          auto stream_p = std::move(stream_res.value().stream);
 
           auto echo_client = echo.createClient(stream_p);
 

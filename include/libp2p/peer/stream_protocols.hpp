@@ -14,16 +14,9 @@ namespace libp2p {
   /**
    * Protocol list.
    * Used by `Host::newStream`, `Dialer::newStream`, `Host::setProtocolHandler`,
-   * `Router::setProtocolHandler`. Overloads argument constructor instead of
-   * `newStream` and `setProtocolHandler`.
+   * `Router::setProtocolHandler`.
    */
-  struct StreamProtocols : std::vector<peer::Protocol> {
-    StreamProtocols(const char *protocol) : vector{protocol} {}
-    StreamProtocols(peer::Protocol &&protocol) : vector{std::move(protocol)} {}
-    StreamProtocols(const peer::Protocol &protocol) : vector{protocol} {}
-    StreamProtocols(std::vector<peer::Protocol> &&protocols)
-        : vector{std::move(protocols)} {}
-  };
+  using StreamProtocols = std::vector<peer::Protocol>;
 }  // namespace libp2p
 
 #endif  // LIBP2P_PEER_STREAM_PROTOCOLS_HPP
