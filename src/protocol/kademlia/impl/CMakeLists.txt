@@ -17,6 +17,7 @@ libp2p_add_library(p2p_kademlia
     )
 target_link_libraries(p2p_kademlia
     p2p_basic_scheduler
+    p2p_byteutil
     p2p_kademlia_message
     p2p_kademlia_error
     )
