@@ -317,6 +317,15 @@ namespace libp2p::protocol::kademlia {
       log_.warn("incoming PutValue failed: {}", res.error().message());
       return;
     }
+
+    // echo request
+    auto buffer = std::make_shared<std::vector<uint8_t>>();
+    if (not msg.serialize(*buffer)) {
+      session->close(Error::MESSAGE_SERIALIZE_ERROR);
+      BOOST_UNREACHABLE_RETURN();
+    }
+
+    session->write(buffer, {});
   }
 
   void KademliaImpl::onGetValue(const std::shared_ptr<Session> &session,
@@ -453,6 +462,11 @@ namespace libp2p::protocol::kademlia {
 
   void KademliaImpl::onFindNode(const std::shared_ptr<Session> &session,
                                 Message &&msg) {
+    if (msg.key.empty()) {
+      log_.warn("FindNode failed: empty key in message");
+      return;
+    }
+
     if (msg.closer_peers) {
       for (auto &peer : msg.closer_peers.value()) {
         if (peer.conn_status != Message::Connectedness::CAN_NOT_CONNECT) {
