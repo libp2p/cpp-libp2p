@@ -207,7 +207,7 @@ namespace libp2p::protocol::kademlia {
         // Check if message type is appropriate
         msg.type == Message::Type::kGetValue
         // Check if response is accorded to request
-        && msg.key == key_.data;
+        && msg.key == key_;
   }
 
   void GetValueExecutor::onResult(const std::shared_ptr<Session> &session,

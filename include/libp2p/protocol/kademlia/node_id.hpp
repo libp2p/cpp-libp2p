@@ -66,7 +66,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     explicit NodeId(const ContentId &content_id) {
-      auto digest_res = crypto::sha256(content_id.data);
+      auto digest_res = crypto::sha256(content_id);
       BOOST_ASSERT(digest_res.has_value());
       data_ = std::move(digest_res.value());
     }

@@ -43,7 +43,7 @@ struct ContentRoutingTableTest : public ::testing::Test {
   std::shared_ptr<Bus> bus_;
   std::unique_ptr<ContentRoutingTable> table_;
   PeerId self_id = "1"_peerid;
-  ContentId cid = ContentId{"content_key"};
+  ContentId cid = makeKeySha256("content_key");
 };
 
 template <typename A>

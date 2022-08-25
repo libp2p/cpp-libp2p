@@ -283,7 +283,7 @@ int main(int argc, char *argv[]) {
     host->setProtocolHandler({"/chat/1.1.0"}, handleIncomingStream);
 
     // Key for group of chat
-    libp2p::protocol::kademlia::ContentId content_id("meet me here");
+    auto content_id = libp2p::protocol::kademlia::makeKeySha256("meet me here");
 
     auto &scheduler = injector.create<libp2p::basic::Scheduler &>();
 
@@ -330,8 +330,8 @@ int main(int argc, char *argv[]) {
 
       host->start();
 
-      auto cid = libp2p::multi::ContentIdentifierCodec::decode(content_id.data)
-                     .value();
+      auto cid =
+          libp2p::multi::ContentIdentifierCodec::decode(content_id).value();
       auto peer_id =
           libp2p::peer::PeerId::fromHash(cid.content_address).value();
 

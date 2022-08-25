@@ -132,15 +132,41 @@ namespace libp2p::protocol::kademlia {
 
     auto session = session_host_->openSession(stream);
 
+    if (!session->write(serialized_request_, shared_from_this())) {
+      --requests_in_progress_;
+      log_.debug("write to {} failed; done {}, active {}, in queue {}", addr,
+                 requests_succeed_, requests_in_progress_,
+                 addressees_.size() - addressees_idx_);
+      spawn();
+    }
+  }
+
+  Time PutValueExecutor::responseTimeout() const {
+    return config_.responseTimeout;
+  }
+
+  bool PutValueExecutor::match(const Message &msg) const {
+    return
+        // Check if message type is appropriate
+        msg.type == Message::Type::kPutValue
+        // Check if response is accorded to request
+        && msg.key == key_;
+  }
+
+  void PutValueExecutor::onResult(const std::shared_ptr<Session> &session,
+                                  outcome::result<Message> msg_res) {
     --requests_in_progress_;
 
-    if (session->write(serialized_request_, {})) {
+    if (msg_res.has_error()) {
+      log_.debug(
+          "write to {} failed; done {}, active {}, in queue {}; error: {}",
+          session->stream()->remotePeerId().value().toBase58(),
+          requests_succeed_, requests_in_progress_,
+          addressees_.size() - addressees_idx_, msg_res.error().message());
+    } else {
       ++requests_succeed_;
       log_.debug("write to {} successfuly; done {}, active {}, in queue {}",
-                 addr, requests_succeed_, requests_in_progress_,
-                 addressees_.size() - addressees_idx_);
-    } else {
-      log_.debug("write to {} failed; done {}, active {}, in queue {}", addr,
+                 session->stream()->remotePeerId().value().toBase58(),
                  requests_succeed_, requests_in_progress_,
                  addressees_.size() - addressees_idx_);
     }

@@ -19,8 +19,6 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, Message::Error, e) {
       return "invalid peer id";
     case E::INVALID_ADDRESSES:
       return "invalid peer addresses";
-    case E::INVALID_KEY:
-      return "invalid key";
   }
   return "unknown error (libp2p::protocol::kademlia::Message::Error)";
 }
@@ -48,7 +46,8 @@ namespace libp2p::protocol::kademlia {
 
       auto peer_id_res = PeerId::fromBytes(gsl::span<const uint8_t>(
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<const uint8_t *>(src.id().data()), src.id().size()));
+          reinterpret_cast<const uint8_t *>(src.id().data()),
+          gsl::narrow<ptrdiff_t>(src.id().size())));
       if (!peer_id_res) {
         return Message::Error::INVALID_PEER_ID;
       }
@@ -57,7 +56,8 @@ namespace libp2p::protocol::kademlia {
       for (const auto &addr : src.addrs()) {
         auto res = multi::Multiaddress::create(gsl::span<const uint8_t>(
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            reinterpret_cast<const uint8_t *>(addr.data()), addr.size()));
+            reinterpret_cast<const uint8_t *>(addr.data()),
+            gsl::narrow<ptrdiff_t>(addr.size())));
         if (!res) {
           return Message::Error::INVALID_ADDRESSES;
         }
@@ -87,16 +87,10 @@ namespace libp2p::protocol::kademlia {
     }
 
     template <class PbContainer>
-    outcome::result<void> assign_record(Message::Record &dst,
-                                        const PbContainer &src) {
-      auto ca_res = Key::fromWire(src.key());
-      if (!ca_res) {
-        return Message::Error::INVALID_KEY;
-      }
-      dst.key = std::move(ca_res.value());
+    void assign_record(Message::Record &dst, const PbContainer &src) {
+      assign_blob(dst.key, src.key());
       dst.time_received = src.timereceived();
       assign_blob(dst.value, src.value());
-      return outcome::success();
     }
 
   }  // namespace
@@ -113,7 +107,7 @@ namespace libp2p::protocol::kademlia {
   bool Message::deserialize(const void *data, size_t sz) {
     clear();
     pb::Message pb_msg;
-    if (!pb_msg.ParseFromArray(data, sz)) {
+    if (!pb_msg.ParseFromArray(data, gsl::narrow<int>(sz))) {
       error_message_ = "Invalid protobuf data";
       return false;
     }
@@ -125,11 +119,7 @@ namespace libp2p::protocol::kademlia {
     assign_blob(key, pb_msg.key());
     if (pb_msg.has_record()) {
       record.emplace();
-      auto res = assign_record(record.value(), pb_msg.record());
-      if (not res.has_value()) {
-        error_message_ = "Bad record: " + res.error().message();
-        return false;
-      }
+      assign_record(record.value(), pb_msg.record());
     }
     auto closer_res = assign_peers(closer_peers, pb_msg.closerpeers());
     if (not closer_res) {
@@ -151,7 +141,7 @@ namespace libp2p::protocol::kademlia {
     if (record) {
       const Record &rec_src = record.value();
       pb::Record rec;
-      rec.set_key(rec_src.key.data.data(), rec_src.key.data.size());
+      rec.set_key(rec_src.key.data(), rec_src.key.size());
       rec.set_value(rec_src.value.data(), rec_src.value.size());
       rec.set_timereceived(rec_src.time_received);
       *pb_msg.mutable_record() = std::move(rec);
@@ -187,7 +177,7 @@ namespace libp2p::protocol::kademlia {
     buffer.resize(prefix_sz + msg_sz);
     memcpy(buffer.data(), varint_vec.data(), prefix_sz);
     return pb_msg.SerializeToArray(buffer.data() + prefix_sz,  // NOLINT
-                                   msg_sz);
+                                   gsl::narrow<int>(msg_sz));
   }
 
   void Message::selfAnnounce(PeerInfo self) {
@@ -206,7 +196,7 @@ namespace libp2p::protocol::kademlia {
                                 boost::optional<PeerInfo> self_announce) {
     Message msg;
     msg.type = Message::Type::kGetValue;
-    msg.key = key.data;
+    msg.key = key;
     if (self_announce) {
       msg.selfAnnounce(std::move(self_announce.value()));
     }
@@ -216,7 +206,7 @@ namespace libp2p::protocol::kademlia {
   Message createAddProviderRequest(PeerInfo self, const Key &key) {
     Message msg;
     msg.type = Message::Type::kAddProvider;
-    msg.key = key.data;
+    msg.key = key;
     msg.provider_peers = Message::Peers{
         {Message::Peer{std::move(self), Message::Connectedness::CAN_CONNECT}}};
     return msg;
@@ -226,7 +216,7 @@ namespace libp2p::protocol::kademlia {
                                     boost::optional<PeerInfo> self_announce) {
     Message msg;
     msg.type = Message::Type::kGetProviders;
-    msg.key = key.data;
+    msg.key = key;
     if (self_announce) {
       msg.selfAnnounce(std::move(self_announce.value()));
     }

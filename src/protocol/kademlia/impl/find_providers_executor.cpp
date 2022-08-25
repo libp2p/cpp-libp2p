@@ -218,7 +218,7 @@ namespace libp2p::protocol::kademlia {
         // Check if message type is appropriate
         msg.type == Message::Type::kGetProviders
         // Check if response is accorded to request
-        && msg.key == content_id_.data;
+        && msg.key == content_id_;
   }
 
   void FindProvidersExecutor::onResult(const std::shared_ptr<Session> &session,
