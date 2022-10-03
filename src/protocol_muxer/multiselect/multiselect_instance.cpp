@@ -58,7 +58,6 @@ namespace libp2p::protocol_muxer::multiselect {
 
     write_queue_.clear();
     is_writing_ = false;
-    ls_response_.reset();
 
     if (is_initiator_) {
       std::ignore = sendProposal();
@@ -94,18 +93,6 @@ namespace libp2p::protocol_muxer::multiselect {
 
     wait_for_protocol_reply_ = true;
     return true;
-  }
-
-  void MultiselectInstance::sendLS() {
-    if (!ls_response_) {
-      auto msg_res = detail::createMessage(protocols_, true);
-      if (!msg_res) {
-        // will defer error
-        return send(msg_res);
-      }
-      ls_response_ = std::make_shared<MsgBuf>(std::move(msg_res.value()));
-    }
-    send(ls_response_.value());
   }
 
   void MultiselectInstance::sendNA() {
@@ -266,9 +253,6 @@ namespace libp2p::protocol_muxer::multiselect {
           break;
         case Message::kNAMessage:
           result = handleNA();
-          break;
-        case Message::kLSMessage:
-          sendLS();
           break;
         case Message::kWrongProtocolVersion: {
           SL_DEBUG(log(), "Received unsupported protocol version: {}",

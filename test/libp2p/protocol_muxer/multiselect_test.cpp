@@ -16,8 +16,8 @@
  * @then bad_alloc is thrown
  */
 TEST(Multiselect, TmpBufThrows) {
-  using libp2p::protocol_muxer::multiselect::detail::TmpMsgBuf;
   using libp2p::protocol_muxer::multiselect::kMaxMessageSize;
+  using libp2p::protocol_muxer::multiselect::detail::TmpMsgBuf;
   TmpMsgBuf buf;
   buf.resize(kMaxMessageSize / 2);
   EXPECT_THROW(buf.resize(buf.capacity() + 1), std::bad_alloc);
@@ -27,14 +27,13 @@ TEST(Multiselect, SingleValidMessages) {
   using namespace libp2p::protocol_muxer::multiselect;
 
   std::vector<Message> messages({
-                                    {Message::kRightProtocolVersion, "/multistream/1.0.0"},
-                                    {Message::kRightProtocolVersion, "/multistream/1.0.1"},
-                                    {Message::kRightProtocolVersion, "/multistream-select/0.4.0"},
-                                    {Message::kWrongProtocolVersion, "/multistream/2.0.0"},
-                                    {Message::kProtocolName, "/echo/1.0.0"},
-                                    {Message::kNAMessage, "na"},
-                                    {Message::kLSMessage, "ls"},
-                                });
+      {Message::kRightProtocolVersion, "/multistream/1.0.0"},
+      {Message::kRightProtocolVersion, "/multistream/1.0.1"},
+      {Message::kRightProtocolVersion, "/multistream-select/0.4.0"},
+      {Message::kWrongProtocolVersion, "/multistream/2.0.0"},
+      {Message::kProtocolName, "/echo/1.0.0"},
+      {Message::kNAMessage, "na"},
+  });
 
   detail::Parser reader;
   for (const auto &m : messages) {
@@ -55,14 +54,13 @@ TEST(Multiselect, SingleValidMessagesPartialRead) {
   using namespace libp2p::protocol_muxer::multiselect;
 
   std::vector<Message> messages({
-                                    {Message::kRightProtocolVersion, "/multistream/1.0.0"},
-                                    {Message::kRightProtocolVersion, "/multistream/1.0.1"},
-                                    {Message::kRightProtocolVersion, "/multistream-select/0.4.0"},
-                                    {Message::kWrongProtocolVersion, "/multistream/2.0.0"},
-                                    {Message::kProtocolName, "/echo/1.0.0"},
-                                    {Message::kNAMessage, "na"},
-                                    {Message::kLSMessage, "ls"},
-                                });
+      {Message::kRightProtocolVersion, "/multistream/1.0.0"},
+      {Message::kRightProtocolVersion, "/multistream/1.0.1"},
+      {Message::kRightProtocolVersion, "/multistream-select/0.4.0"},
+      {Message::kWrongProtocolVersion, "/multistream/2.0.0"},
+      {Message::kProtocolName, "/echo/1.0.0"},
+      {Message::kNAMessage, "na"},
+  });
 
   using Span = gsl::span<const uint8_t>;
 

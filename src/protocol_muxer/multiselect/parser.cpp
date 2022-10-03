@@ -173,12 +173,10 @@ namespace libp2p::protocol_muxer::multiselect::detail {
       }
       if (msg.content == kNA) {
         msg.type = Message::kNAMessage;
-      } else if (msg.content == kLS) {
-        msg.type = Message::kLSMessage;
       }
     }
 
     state_ = kReady;
   }
 
-}  // namespace libp2p::protocol_muxer::mutiselect::detail
+}  // namespace libp2p::protocol_muxer::multiselect::detail
