@@ -177,7 +177,7 @@ namespace libp2p::protocol_muxer::multiselect {
       return;
     }
 
-    size_t bytes_needed = parser_.bytesNeeded();
+    auto bytes_needed = parser_.bytesNeeded();
 
     assert(bytes_needed > 0);
 
@@ -188,7 +188,7 @@ namespace libp2p::protocol_muxer::multiselect {
     }
 
     gsl::span<uint8_t> span(*read_buffer_);
-    span = span.first(bytes_needed);
+    span = span.first(static_cast<Parser::IndexType>(bytes_needed));
 
     connection_->read(span, bytes_needed,
                       [wptr = weak_from_this(), round = current_round_,
@@ -205,14 +205,14 @@ namespace libp2p::protocol_muxer::multiselect {
       return close(res.error());
     }
 
-    size_t bytes_read = res.value();
+    auto bytes_read = res.value();
     if (bytes_read > read_buffer_->size()) {
       log()->error("onDataRead(): invalid state");
       return close(ProtocolMuxer::Error::INTERNAL_ERROR);
     }
 
     gsl::span<const uint8_t> span(*read_buffer_);
-    span = span.first(bytes_read);
+    span = span.first(static_cast<Parser::IndexType>(bytes_read));
 
     SL_TRACE(log(), "received {}", common::dumpBin(span));
 

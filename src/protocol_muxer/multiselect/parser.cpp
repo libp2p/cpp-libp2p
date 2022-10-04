@@ -74,12 +74,12 @@ namespace libp2p::protocol_muxer::multiselect::detail {
   }
 
   void Parser::readFinished(gsl::span<const uint8_t> msg) {
-    assert(expected_msg_size_ == static_cast<size_t>(msg.size()));
+    assert(expected_msg_size_ == msg.size());
     assert(expected_msg_size_ != 0);
 
     auto span2sv = [](gsl::span<const uint8_t> span) -> std::string_view {
       if (span.empty()) {
-        return std::string_view();
+        return {};
       }
       return std::string_view((const char *)(span.data()),  // NOLINT
                               static_cast<size_t>(span.size()));
