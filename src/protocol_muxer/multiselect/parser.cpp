@@ -47,7 +47,12 @@ namespace libp2p::protocol_muxer::multiselect::detail {
           state_ = kOverflow;
           break;
         }
-        expected_msg_size_ = varint_reader_.value();
+        if (varint_reader_.value()
+            > std::numeric_limits<decltype(expected_msg_size_)>::max()) {
+          state_ = kError;
+          break;
+        }
+        expected_msg_size_ = static_cast<IndexType>(varint_reader_.value());
         if (expected_msg_size_ == 0) {
           // zero varint received, not acceptable, but not fatal
           reset();
