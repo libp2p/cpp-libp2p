@@ -47,7 +47,12 @@ namespace libp2p::protocol_muxer::multiselect::detail {
           state_ = kOverflow;
           break;
         }
-        expected_msg_size_ = varint_reader_.value();
+        if (varint_reader_.value()
+            > std::numeric_limits<decltype(expected_msg_size_)>::max()) {
+          state_ = kError;
+          break;
+        }
+        expected_msg_size_ = static_cast<IndexType>(varint_reader_.value());
         if (expected_msg_size_ == 0) {
           // zero varint received, not acceptable, but not fatal
           reset();
@@ -74,12 +79,12 @@ namespace libp2p::protocol_muxer::multiselect::detail {
   }
 
   void Parser::readFinished(gsl::span<const uint8_t> msg) {
-    assert(expected_msg_size_ == static_cast<size_t>(msg.size()));
+    assert(expected_msg_size_ == msg.size());
     assert(expected_msg_size_ != 0);
 
     auto span2sv = [](gsl::span<const uint8_t> span) -> std::string_view {
       if (span.empty()) {
-        return std::string_view();
+        return {};
       }
       return std::string_view((const char *)(span.data()),  // NOLINT
                               static_cast<size_t>(span.size()));
@@ -173,12 +178,10 @@ namespace libp2p::protocol_muxer::multiselect::detail {
       }
       if (msg.content == kNA) {
         msg.type = Message::kNAMessage;
-      } else if (msg.content == kLS) {
-        msg.type = Message::kLSMessage;
       }
     }
 
     state_ = kReady;
   }
 
-}  // namespace libp2p::protocol_muxer::mutiselect::detail
+}  // namespace libp2p::protocol_muxer::multiselect::detail

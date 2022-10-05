@@ -6,8 +6,8 @@
 #ifndef LIBP2P_MULTISELECT_PARSER_HPP
 #define LIBP2P_MULTISELECT_PARSER_HPP
 
-#include <libp2p/basic/varint_prefix_reader.hpp>
 #include <libp2p/basic/read_buffer.hpp>
+#include <libp2p/basic/varint_prefix_reader.hpp>
 
 #include "common.hpp"
 
@@ -17,11 +17,14 @@ namespace libp2p::protocol_muxer::multiselect::detail {
   /// Logic is similar to that of VarintPrefixReader
   class Parser {
     using VarintPrefixReader = basic::VarintPrefixReader;
+
    public:
     Parser() = default;
 
     /// Number of messages in a packet will rarely exceed 4
     using Messages = boost::container::small_vector<Message, 4>;
+
+    using IndexType = gsl::span<const uint8_t>::index_type;
 
     /// State similar to that of VarintPrefixReader
     enum State {
@@ -39,7 +42,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     }
 
     /// Returns protocol messages parsed
-    const Messages& messages() const {
+    const Messages &messages() const {
       return messages_;
     }
 
@@ -81,12 +84,12 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     VarintPrefixReader varint_reader_;
 
     /// Message size expected as per length prefix
-    size_t expected_msg_size_ = 0;
+    IndexType expected_msg_size_ = 0;
 
     /// Recursion depth for nested messages, limited
     size_t recursion_depth_ = 0;
   };
 
-}
+}  // namespace libp2p::protocol_muxer::multiselect::detail
 
 #endif  // LIBP2P_MULTISELECT_PARSER_HPP
