@@ -259,7 +259,7 @@ namespace libp2p::security::tls_details {
     // 3. Create certificate
     X509 *cert = X509_new();
     CLEANUP_PTR(cert, X509_free);
-    X509_set_version(cert, 3);
+    X509_set_version(cert, 2);
     assignPubkey(cert, cert_keys.public_key);
     assignSerial(cert);
     assignIssuer(cert);
