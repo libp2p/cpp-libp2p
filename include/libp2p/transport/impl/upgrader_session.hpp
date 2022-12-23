@@ -27,17 +27,28 @@ namespace libp2p::transport {
                     std::shared_ptr<connection::RawConnection> raw,
                     HandlerFunc handler);
 
-    void secureOutbound(const peer::PeerId &remoteId);
+    void upgradeInbound();
 
-    void secureInbound();
+    void upgradeOutbound(const peer::PeerId &remoteId);
 
    private:
     std::shared_ptr<transport::Upgrader> upgrader_;
     std::shared_ptr<connection::RawConnection> raw_;
     HandlerFunc handler_;
 
+    void onLayersUpgraded(
+        outcome::result<std::shared_ptr<connection::LayerConnection>> res);
+
+    void upgradeToSecureInbound();
+
+    void upgradeToSecureOutbound(const peer::PeerId &remoteId);
+
+    void secureOutbound(const peer::PeerId &remoteId);
+
+    void secureInbound();
+
     void onSecured(
-        outcome::result<std::shared_ptr<connection::SecureConnection>> rsecure);
+        outcome::result<std::shared_ptr<connection::SecureConnection>> res);
 
    public:
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(

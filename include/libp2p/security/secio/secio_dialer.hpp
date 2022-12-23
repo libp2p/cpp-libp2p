@@ -42,7 +42,7 @@ namespace libp2p::security::secio {
       crypto::common::HashType hash;
     };
 
-    Dialer(std::shared_ptr<connection::RawConnection> connection);
+    Dialer(std::shared_ptr<connection::LayerConnection> connection);
 
     /// Stores byte-exact copy of SECIO proposal sent to remote peer
     void storeLocalPeerProposalBytes(

@@ -24,12 +24,12 @@ namespace libp2p::connection {
   }  // namespace
 
   TlsConnection::TlsConnection(
-      std::shared_ptr<RawConnection> raw_connection,
+      std::shared_ptr<LayerConnection> original_connection,
       std::shared_ptr<boost::asio::ssl::context> ssl_context,
       const peer::IdentityManager &idmgr, tcp_socket_t &tcp_socket,
       boost::optional<peer::PeerId> remote_peer)
       : local_peer_(idmgr.getId()),
-        raw_connection_(std::move(raw_connection)),
+        original_connection_(std::move(original_connection)),
         ssl_context_(std::move(ssl_context)),
         socket_(std::ref(tcp_socket), *ssl_context_),
         remote_peer_(std::move(remote_peer)) {}
@@ -37,7 +37,7 @@ namespace libp2p::connection {
   void TlsConnection::asyncHandshake(
       HandshakeCallback cb,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller) {
-    bool is_client = raw_connection_->isInitiator();
+    bool is_client = original_connection_->isInitiator();
 
     socket_.async_handshake(is_client ? boost::asio::ssl::stream_base::client
                                       : boost::asio::ssl::stream_base::server,
@@ -69,7 +69,7 @@ namespace libp2p::connection {
       if (remote_peer_.has_value()) {
         if (remote_peer_.value() != id.peer_id) {
           SL_DEBUG(log(), "peer ids mismatch: expected={}, got={}",
-                      remote_peer_.value().toBase58(), id.peer_id.toBase58());
+                   remote_peer_.value().toBase58(), id.peer_id.toBase58());
           ec = TlsError::TLS_UNEXPECTED_PEER_ID;
           break;
         }
@@ -79,8 +79,8 @@ namespace libp2p::connection {
       remote_pubkey_ = std::move(id.public_key);
 
       SL_DEBUG(log(), "handshake success for {}bound connection to {}",
-                  (raw_connection_->isInitiator() ? "out" : "in"),
-                  remote_peer_->toBase58());
+               (original_connection_->isInitiator() ? "out" : "in"),
+               remote_peer_->toBase58());
       return cb(shared_from_this());
     }
 
@@ -89,7 +89,7 @@ namespace libp2p::connection {
     log()->info("handshake error: {}", ec.message());
     if (auto close_res = close(); !close_res) {
       log()->info("cannot close raw connection: {}",
-                 close_res.error().message());
+                  close_res.error().message());
     }
     return cb(ec);
   }
@@ -113,15 +113,15 @@ namespace libp2p::connection {
   }
 
   bool TlsConnection::isInitiator() const noexcept {
-    return raw_connection_->isInitiator();
+    return original_connection_->isInitiator();
   }
 
   outcome::result<multi::Multiaddress> TlsConnection::localMultiaddr() {
-    return raw_connection_->localMultiaddr();
+    return original_connection_->localMultiaddr();
   }
 
   outcome::result<multi::Multiaddress> TlsConnection::remoteMultiaddr() {
-    return raw_connection_->remoteMultiaddr();
+    return original_connection_->remoteMultiaddr();
   }
 
   template <typename Callback>
@@ -153,7 +153,7 @@ namespace libp2p::connection {
 
   void TlsConnection::deferReadCallback(outcome::result<size_t> res,
                                         Reader::ReadCallbackFunc cb) {
-    raw_connection_->deferReadCallback(res, std::move(cb));
+    original_connection_->deferReadCallback(res, std::move(cb));
   }
 
   void TlsConnection::write(gsl::span<const uint8_t> in, size_t bytes,
@@ -172,14 +172,14 @@ namespace libp2p::connection {
 
   void TlsConnection::deferWriteCallback(std::error_code ec,
                                          Writer::WriteCallbackFunc cb) {
-    raw_connection_->deferWriteCallback(ec, std::move(cb));
+    original_connection_->deferWriteCallback(ec, std::move(cb));
   }
 
   bool TlsConnection::isClosed() const {
-    return raw_connection_->isClosed();
+    return original_connection_->isClosed();
   }
 
   outcome::result<void> TlsConnection::close() {
-    return raw_connection_->close();
+    return original_connection_->close();
   }
 }  // namespace libp2p::connection

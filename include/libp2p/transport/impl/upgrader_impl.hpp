@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <gsl/span>
+#include <libp2p/layer/layer_adaptor.hpp>
 #include <libp2p/muxer/muxer_adaptor.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/protocol.hpp>
@@ -19,6 +20,7 @@
 namespace libp2p::transport {
   class UpgraderImpl : public Upgrader,
                        public std::enable_shared_from_this<UpgraderImpl> {
+    using LayerAdaptorSPtr = std::shared_ptr<layer::LayerAdaptor>;
     using SecAdaptorSPtr = std::shared_ptr<security::SecurityAdaptor>;
     using MuxAdaptorSPtr = std::shared_ptr<muxer::MuxerAdaptor>;
 
@@ -33,28 +35,39 @@ namespace libp2p::transport {
      * the Muxed (Capable) ones
      */
     UpgraderImpl(std::shared_ptr<protocol_muxer::ProtocolMuxer> protocol_muxer,
+                 std::vector<LayerAdaptorSPtr> layer_adaptors,
                  std::vector<SecAdaptorSPtr> security_adaptors,
                  std::vector<MuxAdaptorSPtr> muxer_adaptors);
 
     ~UpgraderImpl() override = default;
 
-    void upgradeToSecureOutbound(RawSPtr conn, const peer::PeerId &remoteId,
-                                 OnSecuredCallbackFunc cb) override;
+    void upgradeLayersInbound(RawSPtr conn, OnLayerCallbackFunc cb) override;
 
-    void upgradeToSecureInbound(RawSPtr conn,
+    void upgradeLayersOutbound(RawSPtr conn, OnLayerCallbackFunc cb) override;
+
+    void upgradeToSecureInbound(LayerSPtr conn,
                                 OnSecuredCallbackFunc cb) override;
+    void upgradeToSecureOutbound(LayerSPtr conn, const peer::PeerId &remoteId,
+                                 OnSecuredCallbackFunc cb) override;
 
     void upgradeToMuxed(SecSPtr conn, OnMuxedCallbackFunc cb) override;
 
     enum class Error { SUCCESS = 0, NO_ADAPTOR_FOUND = 1 };
 
    private:
+    void upgradeToNextLayerOutbound(size_t layer_index, LayerSPtr conn,
+                                    OnLayerCallbackFunc cb);
+
+    void upgradeToNextLayerInbound(size_t layer_index, LayerSPtr conn,
+                                   OnLayerCallbackFunc cb);
+
     std::shared_ptr<protocol_muxer::ProtocolMuxer> protocol_muxer_;
 
+    const std::vector<LayerAdaptorSPtr> layer_adaptors_;
     std::vector<SecAdaptorSPtr> security_adaptors_;
-    std::vector<peer::Protocol> security_protocols_;
-
     std::vector<MuxAdaptorSPtr> muxer_adaptors_;
+
+    std::vector<peer::Protocol> security_protocols_;
     std::vector<peer::Protocol> muxer_protocols_;
   };
 }  // namespace libp2p::transport

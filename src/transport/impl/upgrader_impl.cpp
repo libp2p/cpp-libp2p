@@ -37,23 +37,31 @@ namespace {
 namespace libp2p::transport {
   UpgraderImpl::UpgraderImpl(
       std::shared_ptr<protocol_muxer::ProtocolMuxer> protocol_muxer,
+      std::vector<LayerAdaptorSPtr> layer_adaptors,
       std::vector<SecAdaptorSPtr> security_adaptors,
       std::vector<MuxAdaptorSPtr> muxer_adaptors)
       : protocol_muxer_{std::move(protocol_muxer)},
+        layer_adaptors_{std::move(layer_adaptors)},
+        // TODO(xDimon): to discuss: Why not simple move?
         security_adaptors_{security_adaptors.begin(), security_adaptors.end()},
         muxer_adaptors_{muxer_adaptors.begin(), muxer_adaptors.end()} {
     BOOST_ASSERT(protocol_muxer_ != nullptr);
+
+    BOOST_ASSERT(std::all_of(layer_adaptors_.begin(), layer_adaptors_.end(),
+                             [](auto &&ptr) { return ptr != nullptr; }));
+
     BOOST_ASSERT_MSG(!security_adaptors_.empty(),
                      "upgrader has no security adaptors");
     BOOST_ASSERT(std::all_of(security_adaptors_.begin(),
                              security_adaptors_.end(),
-                             [](auto &&t) { return t != nullptr; }));
+                             [](auto &&ptr) { return ptr != nullptr; }));
+
     BOOST_ASSERT_MSG(!muxer_adaptors_.empty(),
                      "upgrader got no muxer adaptors");
     BOOST_ASSERT(std::all_of(muxer_adaptors_.begin(), muxer_adaptors_.end(),
-                             [](auto &&t) { return t != nullptr; }));
+                             [](auto &&ptr) { return ptr != nullptr; }));
 
-    // so that we don't need to extract lists of supported protos every time
+    // so that we don't need to extract lists of supported protocols every time
     std::transform(
         security_adaptors_.begin(), security_adaptors_.end(),
         std::back_inserter(security_protocols_),
@@ -65,8 +73,74 @@ namespace libp2p::transport {
         [](const auto &adaptor) { return adaptor->getProtocolId(); });
   }
 
-  void UpgraderImpl::upgradeToSecureInbound(RawSPtr conn,
+  void UpgraderImpl::upgradeLayersInbound(RawSPtr conn,
+                                          OnLayerCallbackFunc cb) {
+    upgradeToNextLayerInbound(0, std::move(conn), std::move(cb));
+  }
+
+  void UpgraderImpl::upgradeLayersOutbound(RawSPtr conn,
+                                           OnLayerCallbackFunc cb) {
+    upgradeToNextLayerOutbound(0, std::move(conn), std::move(cb));
+  }
+
+  void UpgraderImpl::upgradeToNextLayerInbound(size_t layer_index,
+                                               LayerSPtr conn,
+                                               OnLayerCallbackFunc cb) {
+    BOOST_ASSERT_MSG(!conn->isInitiator(),
+                     "connection is initiator, and upgrade for inbound is "
+                     "called (should be upgrade for outbound)");
+
+    if (layer_index >= layer_adaptors_.size()) {
+      return cb(conn);
+    }
+    const auto &adaptor = layer_adaptors_[layer_index];
+
+    return adaptor->upgradeConnection(
+        conn,
+        [self{shared_from_this()}, layer_index, cb{std::move(cb)}](
+            outcome::result<LayerSPtr> next_layer_conn_res) mutable {
+          if (next_layer_conn_res.has_error()) {
+            return cb(next_layer_conn_res.error());
+          }
+          auto &next_layer_conn = next_layer_conn_res.value();
+
+          self->upgradeToNextLayerInbound(
+              layer_index + 1, std::move(next_layer_conn), std::move(cb));
+        });
+  }
+
+  void UpgraderImpl::upgradeToNextLayerOutbound(size_t layer_index,
+                                                LayerSPtr conn,
+                                                OnLayerCallbackFunc cb) {
+    BOOST_ASSERT_MSG(
+        conn->isInitiator(),
+        "connection is NOT initiator, and upgrade of outbound() is "
+        "called (should be upgrade of inbound)");
+
+    if (layer_index >= layer_adaptors_.size()) {
+      return cb(conn);
+    }
+    const auto &adaptor = layer_adaptors_[layer_index];
+
+    return adaptor->upgradeConnection(
+        conn,
+        [self{shared_from_this()}, layer_index, cb{std::move(cb)}](
+            outcome::result<LayerSPtr> next_layer_conn_res) mutable {
+          if (next_layer_conn_res.has_error()) {
+            return cb(next_layer_conn_res.error());
+          }
+          auto &next_layer_conn = next_layer_conn_res.value();
+          self->upgradeToNextLayerOutbound(
+              layer_index + 1, std::move(next_layer_conn), std::move(cb));
+        });
+  }
+
+  void UpgraderImpl::upgradeToSecureInbound(LayerSPtr conn,
                                             OnSecuredCallbackFunc cb) {
+    BOOST_ASSERT_MSG(!conn->isInitiator(),
+                     "connection is initiator, and upgrade for inbound is "
+                     "called (should be upgrade for outbound)");
+
     protocol_muxer_->selectOneOf(
         security_protocols_, conn, conn->isInitiator(), true,
         [self{shared_from_this()}, cb = std::move(cb),
@@ -81,17 +155,17 @@ namespace libp2p::transport {
             return cb(Error::NO_ADAPTOR_FOUND);
           }
 
-          BOOST_ASSERT_MSG(!conn->isInitiator(),
-                           "connection is initiator, and SecureInbound is "
-                           "called (should be SecureOutbound)");
-
           return adaptor->secureInbound(std::move(conn), std::move(cb));
         });
   }
 
-  void UpgraderImpl::upgradeToSecureOutbound(RawSPtr conn,
+  void UpgraderImpl::upgradeToSecureOutbound(LayerSPtr conn,
                                              const peer::PeerId &remoteId,
                                              OnSecuredCallbackFunc cb) {
+    BOOST_ASSERT_MSG(conn->isInitiator(),
+                     "connection is NOT initiator, and upgrade for outbound is "
+                     "called (should be upgrade for inbound)");
+
     protocol_muxer_->selectOneOf(
         security_protocols_, conn, conn->isInitiator(), true,
         [self{shared_from_this()}, cb = std::move(cb), conn,
@@ -105,10 +179,6 @@ namespace libp2p::transport {
           if (adaptor == nullptr) {
             return cb(Error::NO_ADAPTOR_FOUND);
           }
-
-          BOOST_ASSERT_MSG(conn->isInitiator(),
-                           "connection is NOT initiator, and SecureOutbound is "
-                           "called (should be SecureInbound)");
 
           return adaptor->secureOutbound(std::move(conn), remoteId,
                                          std::move(cb));

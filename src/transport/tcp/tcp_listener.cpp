@@ -98,7 +98,7 @@ namespace libp2p::transport {
           auto session = std::make_shared<UpgraderSession>(
               self->upgrader_, std::move(conn), self->handle_);
 
-          session->secureInbound();
+          session->upgradeInbound();
 
           self->doAccept();
         });

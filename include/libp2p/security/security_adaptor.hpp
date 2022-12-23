@@ -11,8 +11,8 @@
 #include <libp2p/basic/adaptor.hpp>
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/connection/secure_connection.hpp>
-#include <libp2p/peer/peer_id.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <libp2p/peer/peer_id.hpp>
 
 namespace libp2p::security {
 
@@ -33,7 +33,7 @@ namespace libp2p::security {
      * @param cb with secured connection or error
      */
     virtual void secureInbound(
-        std::shared_ptr<connection::RawConnection> inbound,
+        std::shared_ptr<connection::LayerConnection> inbound,
         SecConnCallbackFunc cb) = 0;
 
     /**
@@ -44,7 +44,7 @@ namespace libp2p::security {
      * @param cb with secured connection or error
      */
     virtual void secureOutbound(
-        std::shared_ptr<connection::RawConnection> outbound,
+        std::shared_ptr<connection::LayerConnection> outbound,
         const peer::PeerId &p, SecConnCallbackFunc cb) = 0;
   };
 }  // namespace libp2p::security

@@ -37,13 +37,13 @@ namespace libp2p::connection {
         outcome::result<std::shared_ptr<connection::SecureConnection>>)>;
 
     /// Ctor.
-    /// \param raw_connection TCP connection, established at the moment
+    /// \param original_connection TCP connection, established at the moment
     /// \param ssl_context Wrapper around SSL_CTX
     /// \param idmgr Identity manager, contains this host's keys
     /// \param tcp_socket Raw socket extracted from raw connection
     /// \param remote_peer Expected peer id of remote peer, has value for
     /// outbound connections
-    TlsConnection(std::shared_ptr<RawConnection> raw_connection,
+    TlsConnection(std::shared_ptr<LayerConnection> original_connection,
                   std::shared_ptr<boost::asio::ssl::context> ssl_context,
                   const peer::IdentityManager &idmgr, tcp_socket_t &tcp_socket,
                   boost::optional<peer::PeerId> remote_peer);
@@ -119,7 +119,7 @@ namespace libp2p::connection {
     const peer::PeerId local_peer_;
 
     /// Raw TCP connection
-    std::shared_ptr<RawConnection> raw_connection_;
+    std::shared_ptr<LayerConnection> original_connection_;
 
     /// SSL context, shared among connections
     std::shared_ptr<boost::asio::ssl::context> ssl_context_;

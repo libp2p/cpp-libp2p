@@ -52,8 +52,8 @@ namespace libp2p::security::noise {
       std::unique_ptr<security::noise::HandshakeMessageMarshaller>
           noise_marshaller,
       crypto::KeyPair local_key,
-      std::shared_ptr<connection::RawConnection> connection, bool is_initiator,
-      boost::optional<peer::PeerId> remote_peer_id,
+      std::shared_ptr<connection::LayerConnection> connection,
+      bool is_initiator, boost::optional<peer::PeerId> remote_peer_id,
       SecurityAdaptor::SecConnCallbackFunc cb,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller)
       : crypto_provider_{std::move(crypto_provider)},
@@ -143,8 +143,8 @@ namespace libp2p::security::noise {
     auto &&handy_payload = remote_payload.first;
     if (initiator_ and remote_peer_id_ != remote_id) {
       SL_DEBUG(log_,
-          "Remote peer id mismatches already known, expected {}, got {}",
-          remote_peer_id_->toHex(), remote_id.toHex());
+               "Remote peer id mismatches already known, expected {}, got {}",
+               remote_peer_id_->toHex(), remote_id.toHex());
       return std::errc::bad_address;
     }
     ByteArray to_verify;

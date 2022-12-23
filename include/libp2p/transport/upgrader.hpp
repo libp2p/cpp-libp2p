@@ -9,6 +9,7 @@
 #include <memory>
 
 #include <libp2p/connection/capable_connection.hpp>
+#include <libp2p/connection/layer_connection.hpp>
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/connection/secure_connection.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -23,13 +24,32 @@ namespace libp2p::transport {
    */
   struct Upgrader {
     using RawSPtr = std::shared_ptr<connection::RawConnection>;
+    using LayerSPtr = std::shared_ptr<connection::LayerConnection>;
     using SecSPtr = std::shared_ptr<connection::SecureConnection>;
     using CapSPtr = std::shared_ptr<connection::CapableConnection>;
 
+    using OnLayerCallbackFunc = std::function<void(outcome::result<LayerSPtr>)>;
     using OnSecuredCallbackFunc = std::function<void(outcome::result<SecSPtr>)>;
     using OnMuxedCallbackFunc = std::function<void(outcome::result<CapSPtr>)>;
 
     virtual ~Upgrader() = default;
+
+    /**
+     * Upgrade outbound connection to next layer one
+     * @param conn to be upgraded
+     * @param cb - callback, which is called, when a connection is upgraded or
+     * error happens
+     */
+    virtual void upgradeLayersOutbound(RawSPtr conn,
+                                       OnLayerCallbackFunc cb) = 0;
+
+    /**
+     * Upgrade inbound connection to next layer one
+     * @param conn to be upgraded
+     * @param cb - callback, which is called, when a connection is upgraded or
+     * error happens
+     */
+    virtual void upgradeLayersInbound(RawSPtr conn, OnLayerCallbackFunc cb) = 0;
 
     /**
      * Upgrade outbound raw connection to the secure one
@@ -38,18 +58,17 @@ namespace libp2p::transport {
      * @param cb - callback, which is called, when a connection is upgraded or
      * error happens
      */
-    virtual void upgradeToSecureOutbound(RawSPtr conn,
+    virtual void upgradeToSecureOutbound(LayerSPtr conn,
                                          const peer::PeerId &remoteId,
                                          OnSecuredCallbackFunc cb) = 0;
 
     /**
      * Upgrade inbound raw connection to the secure one
      * @param conn to be upgraded
-     * @param remoteId peer id of remote peer
      * @param cb - callback, which is called, when a connection is upgraded or
      * error happens
      */
-    virtual void upgradeToSecureInbound(RawSPtr conn,
+    virtual void upgradeToSecureInbound(LayerSPtr conn,
                                         OnSecuredCallbackFunc cb) = 0;
 
     /**

@@ -15,18 +15,49 @@ namespace libp2p::transport {
         raw_(std::move(raw)),
         handler_(std::move(handler)) {}
 
-  void UpgraderSession::secureOutbound(const peer::PeerId &remoteId) {
-    auto self{shared_from_this()};
-    upgrader_->upgradeToSecureOutbound(raw_, remoteId, [self](auto &&r) {
-      self->onSecured(std::forward<decltype(r)>(r));
-    });
+  void UpgraderSession::upgradeInbound() {
+    auto on_layers_upgraded = [self{shared_from_this()}](auto &&res) {
+      if (!res) {
+        return self->handler_(res.error());
+      }
+      self->secureInbound();
+    };
+
+    upgrader_->upgradeLayersInbound(raw_, std::move(on_layers_upgraded));
+  }
+
+  void UpgraderSession::upgradeOutbound(const peer::PeerId &remoteId) {
+    auto on_layers_upgraded = [self{shared_from_this()}, remoteId](auto &&res) {
+      if (!res) {
+        return self->handler_(res.error());
+      }
+      self->secureOutbound(remoteId);
+    };
+
+    upgrader_->upgradeLayersOutbound(raw_, std::move(on_layers_upgraded));
   }
 
   void UpgraderSession::secureInbound() {
-    upgrader_->upgradeToSecureInbound(
-        raw_, [self{shared_from_this()}](auto &&r) {
-          self->onSecured(std::forward<decltype(r)>(r));
-        });
+    auto on_sec_upgraded = [self{shared_from_this()}](auto &&res) {
+      if (!res) {
+        return self->handler_(res.error());
+      }
+      self->onSecured(res.value());
+    };
+
+    upgrader_->upgradeToSecureInbound(raw_, std::move(on_sec_upgraded));
+  }
+
+  void UpgraderSession::secureOutbound(const peer::PeerId &remoteId) {
+    auto on_sec_upgraded = [self{shared_from_this()}](auto &&res) {
+      if (!res) {
+        return self->handler_(res.error());
+      }
+      self->onSecured(res.value());
+    };
+
+    upgrader_->upgradeToSecureOutbound(raw_, remoteId,
+                                       std::move(on_sec_upgraded));
   }
 
   void UpgraderSession::onSecured(
@@ -40,4 +71,5 @@ namespace libp2p::transport {
                                 self->handler_(std::forward<decltype(r)>(r));
                               });
   }
+
 }  // namespace libp2p::transport

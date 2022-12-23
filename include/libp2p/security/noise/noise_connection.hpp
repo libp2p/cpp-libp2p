@@ -35,7 +35,7 @@ namespace libp2p::connection {
     ~NoiseConnection() override = default;
 
     NoiseConnection(
-        std::shared_ptr<RawConnection> raw_connection,
+        std::shared_ptr<LayerConnection> original_connection,
         crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
         std::shared_ptr<security::noise::CipherState> encoder,
@@ -86,7 +86,7 @@ namespace libp2p::connection {
 
     void eraseWriteBuffer(BufferList::iterator &iterator);
 
-    std::shared_ptr<RawConnection> raw_connection_;
+    std::shared_ptr<LayerConnection> original_connection_;
     crypto::PublicKey local_;
     crypto::PublicKey remote_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;

@@ -60,7 +60,7 @@ namespace libp2p::connection {
     };
 
     SecioConnection(
-        std::shared_ptr<RawConnection> raw_connection,
+        std::shared_ptr<LayerConnection> original_connection,
         std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
         crypto::PublicKey local_pubkey, crypto::PublicKey remote_pubkey,
@@ -149,7 +149,7 @@ namespace libp2p::connection {
     /// Returns MAC digest size in bytes for the chosen algorithm
     outcome::result<size_t> macSize() const;
 
-    std::shared_ptr<RawConnection> raw_connection_;
+    std::shared_ptr<LayerConnection> original_connection_;
     std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
 

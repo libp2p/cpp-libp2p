@@ -82,7 +82,7 @@ namespace {
 }  // namespace
 
 namespace libp2p::security::secio {
-  Dialer::Dialer(std::shared_ptr<connection::RawConnection> connection)
+  Dialer::Dialer(std::shared_ptr<connection::LayerConnection> connection)
       : rw{std::make_shared<libp2p::basic::ProtobufMessageReadWriter>(
           std::make_shared<libp2p::basic::MessageReadWriterBigEndian>(
               std::move(connection)))} {}

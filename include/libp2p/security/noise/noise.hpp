@@ -27,10 +27,10 @@ namespace libp2p::security {
 
     peer::Protocol getProtocolId() const override;
 
-    void secureInbound(std::shared_ptr<connection::RawConnection> inbound,
+    void secureInbound(std::shared_ptr<connection::LayerConnection> inbound,
                        SecConnCallbackFunc cb) override;
 
-    void secureOutbound(std::shared_ptr<connection::RawConnection> outbound,
+    void secureOutbound(std::shared_ptr<connection::LayerConnection> outbound,
                         const peer::PeerId &p, SecConnCallbackFunc cb) override;
 
    private:
