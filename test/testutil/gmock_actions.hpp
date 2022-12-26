@@ -66,6 +66,14 @@ ACTION_P(Arg4CallbackWithArg, in) {
   arg4(in);
 }
 
+ACTION_P(UpgradeLayersInbound, do_upgrade) {
+  arg1(do_upgrade(arg0));
+}
+
+ACTION_P(UpgradeLayersOutbound, do_upgrade) {
+  arg1(do_upgrade(arg0));
+}
+
 ACTION_P(UpgradeToSecureInbound, do_upgrade) {
   arg1(do_upgrade(arg0));
 }

@@ -6,9 +6,8 @@
 #include <libp2p/basic/message_read_writer_uvarint.hpp>
 
 #include <gtest/gtest.h>
-#include <libp2p/basic/protobuf_message_read_writer.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include "mock/libp2p/connection/raw_connection_mock.hpp"
+#include "mock/libp2p/connection/layer_connection_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 
 using namespace libp2p;
@@ -22,8 +21,8 @@ using testing::Return;
 
 class MessageReadWriterTest : public testing::Test {
  public:
-  std::shared_ptr<RawConnectionMock> conn_mock_ =
-      std::make_shared<RawConnectionMock>();
+  std::shared_ptr<LayerConnectionMock> conn_mock_ =
+      std::make_shared<LayerConnectionMock>();
 
   std::shared_ptr<MessageReadWriter> msg_rw_ =
       std::make_shared<MessageReadWriterUvarint>(conn_mock_);

@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_RAW_CONNECTION_MOCK_HPP
-#define LIBP2P_RAW_CONNECTION_MOCK_HPP
+#ifndef LIBP2P_CONNECTION_LAYERCONNECTIONMOCK
+#define LIBP2P_CONNECTION_LAYERCONNECTIONMOCK
 
-#include <libp2p/connection/raw_connection.hpp>
+#include <libp2p/connection/layer_connection.hpp>
 
 #include <gmock/gmock.h>
 
 namespace libp2p::connection {
 
-  class RawConnectionMock : public virtual RawConnection {
+  class LayerConnectionMock : public virtual LayerConnection {
    public:
-    ~RawConnectionMock() override = default;
+    ~LayerConnectionMock() override = default;
 
     MOCK_CONST_METHOD0(isClosed, bool(void));
 
@@ -48,4 +48,4 @@ namespace libp2p::connection {
 
 }  // namespace libp2p::connection
 
-#endif  // LIBP2P_RAW_CONNECTION_MOCK_HPP
+#endif  // LIBP2P_CONNECTION_LAYERCONNECTIONMOCK

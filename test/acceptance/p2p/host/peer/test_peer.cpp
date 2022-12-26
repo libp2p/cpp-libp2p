@@ -129,6 +129,8 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
       std::make_shared<security::plaintext::ExchangeMessageMarshallerImpl>(
           key_marshaller);
 
+  std::vector<std::shared_ptr<layer::LayerAdaptor>> layer_adaptors;
+
   std::vector<std::shared_ptr<security::SecurityAdaptor>> security_adaptors;
 
   if (secure_) {
@@ -147,7 +149,8 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
       std::make_shared<muxer::Yamux>(muxed_config_, scheduler_, nullptr)};
 
   auto upgrader = std::make_shared<transport::UpgraderImpl>(
-      multiselect, std::move(security_adaptors), std::move(muxer_adaptors));
+      multiselect, std::move(layer_adaptors), std::move(security_adaptors),
+      std::move(muxer_adaptors));
 
   std::vector<std::shared_ptr<transport::TransportAdaptor>> transports = {
       std::make_shared<transport::TcpTransport>(context_, std::move(upgrader))};

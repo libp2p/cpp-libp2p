@@ -17,11 +17,11 @@ namespace libp2p::security {
     MOCK_CONST_METHOD0(getProtocolId, peer::Protocol());
 
     MOCK_METHOD2(secureInbound,
-                 void(std::shared_ptr<connection::RawConnection>,
+                 void(std::shared_ptr<connection::LayerConnection>,
                       SecConnCallbackFunc));
 
     MOCK_METHOD3(secureOutbound,
-                 void(std::shared_ptr<connection::RawConnection>,
+                 void(std::shared_ptr<connection::LayerConnection>,
                       const peer::PeerId &, SecConnCallbackFunc));
   };
 }  // namespace libp2p::security

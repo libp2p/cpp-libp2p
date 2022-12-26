@@ -5,15 +5,13 @@
 
 #include "libp2p/transport/impl/upgrader_impl.hpp"
 
-#include <numeric>
 #include <unordered_map>
 
 #include <gtest/gtest.h>
 #include <testutil/gmock_actions.hpp>
-#include <testutil/outcome.hpp>
 #include "libp2p/multi/multihash.hpp"
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
-#include "mock/libp2p/connection/raw_connection_mock.hpp"
+#include "mock/libp2p/connection/layer_connection_mock.hpp"
 #include "mock/libp2p/connection/secure_connection_mock.hpp"
 #include "mock/libp2p/muxer/muxer_adaptor_mock.hpp"
 #include "mock/libp2p/protocol_muxer/protocol_muxer_mock.hpp"
@@ -22,6 +20,7 @@
 
 using namespace libp2p::transport;
 using namespace libp2p::muxer;
+using namespace libp2p::layer;
 using namespace libp2p::security;
 using namespace libp2p::peer;
 using namespace libp2p::connection;
@@ -50,14 +49,18 @@ class UpgraderTest : public testing::Test {
           .WillByDefault(Return(muxer_protos_[i]));
     }
 
-    upgrader_ = std::make_shared<UpgraderImpl>(multiselect_mock_,
-                                               security_mocks_, muxer_mocks_);
+    upgrader_ = std::make_shared<UpgraderImpl>(
+        multiselect_mock_, layer_adaptors_, security_mocks_, muxer_mocks_);
   }
 
   PeerId peer_id_ = testutil::randomPeerId();
 
   std::shared_ptr<ProtocolMuxerMock> multiselect_mock_ =
       std::make_shared<ProtocolMuxerMock>();
+
+  std::vector<std::shared_ptr<LayerAdaptor>> layer_adaptors_{
+      //
+  };
 
   std::vector<Protocol> security_protos_{"security_proto1", "security_proto2"};
   std::vector<std::shared_ptr<SecurityAdaptor>> security_mocks_{
@@ -71,8 +74,8 @@ class UpgraderTest : public testing::Test {
 
   std::shared_ptr<Upgrader> upgrader_;
 
-  std::shared_ptr<RawConnectionMock> raw_conn_ =
-      std::make_shared<NiceMock<RawConnectionMock>>();
+  std::shared_ptr<LayerConnectionMock> raw_conn_ =
+      std::make_shared<NiceMock<LayerConnectionMock>>();
   std::shared_ptr<SecureConnectionMock> sec_conn_ =
       std::make_shared<NiceMock<SecureConnectionMock>>();
   std::shared_ptr<CapableConnectionMock> muxed_conn_ =
@@ -89,7 +92,7 @@ TEST_F(UpgraderTest, DISABLED_UpgradeSecureInitiator) {
       .WillOnce(Arg4CallbackWithArg(security_protos_[0]));
   EXPECT_CALL(
       *std::static_pointer_cast<SecurityAdaptorMock>(security_mocks_[0]),
-      secureOutbound(std::static_pointer_cast<RawConnection>(raw_conn_),
+      secureOutbound(std::static_pointer_cast<LayerConnection>(raw_conn_),
                      peer_id_, _))
       .WillOnce(Arg2CallbackWithArg(sec_conn_));
 
@@ -109,7 +112,7 @@ TEST_F(UpgraderTest, DISABLED_UpgradeSecureNotInitiator) {
       .WillOnce(Arg4CallbackWithArg(success(security_protos_[1])));
   EXPECT_CALL(
       *std::static_pointer_cast<SecurityAdaptorMock>(security_mocks_[1]),
-      secureInbound(std::static_pointer_cast<RawConnection>(raw_conn_), _))
+      secureInbound(std::static_pointer_cast<LayerConnection>(raw_conn_), _))
       .WillOnce(Arg1CallbackWithArg(success(sec_conn_)));
 
   upgrader_->upgradeToSecureInbound(
