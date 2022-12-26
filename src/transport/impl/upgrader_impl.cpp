@@ -112,10 +112,9 @@ namespace libp2p::transport {
   void UpgraderImpl::upgradeToNextLayerOutbound(size_t layer_index,
                                                 LayerSPtr conn,
                                                 OnLayerCallbackFunc cb) {
-    BOOST_ASSERT_MSG(
-        conn->isInitiator(),
-        "connection is NOT initiator, and upgrade of outbound() is "
-        "called (should be upgrade of inbound)");
+    BOOST_ASSERT_MSG(conn->isInitiator(),
+                     "connection is NOT initiator, and upgrade of outbound is "
+                     "called (should be upgrade of inbound)");
 
     if (layer_index >= layer_adaptors_.size()) {
       return cb(conn);

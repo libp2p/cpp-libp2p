@@ -63,7 +63,7 @@ namespace libp2p::transport {
 
     std::shared_ptr<protocol_muxer::ProtocolMuxer> protocol_muxer_;
 
-    const std::vector<LayerAdaptorSPtr> layer_adaptors_;
+    std::vector<LayerAdaptorSPtr> layer_adaptors_;
     std::vector<SecAdaptorSPtr> security_adaptors_;
     std::vector<MuxAdaptorSPtr> muxer_adaptors_;
 

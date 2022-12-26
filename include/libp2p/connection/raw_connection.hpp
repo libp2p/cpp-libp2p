@@ -11,9 +11,9 @@
 namespace libp2p::connection {
 
   /**
-   * @bried Represents raw network connection, which is neither encrypted nor multiplexed.
+   * @bried Represents raw network connection, before any upgrade
    */
-  struct RawConnection : public LayerConnection {
+  struct RawConnection : public virtual LayerConnection {
     enum class Error {
       CONNECTION_INTERNAL_ERROR = 1,
       CONNECTION_INVALID_ARGUMENT,
