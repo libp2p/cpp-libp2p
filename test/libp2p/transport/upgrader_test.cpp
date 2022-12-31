@@ -109,13 +109,13 @@ class UpgraderTest : public testing::Test {
 TEST_F(UpgraderTest, UpgradeLayersInitiator) {
   setAllOutbound();
 
-  EXPECT_CALL(*std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[0]),
-              upgradeConnection(
-                  std::static_pointer_cast<LayerConnection>(raw_conn_), _))
+  EXPECT_CALL(
+      *std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[0]),
+      upgradeOutbound(std::static_pointer_cast<LayerConnection>(raw_conn_), _))
       .WillOnce(Arg1CallbackWithArg(layer1_conn_));
 
   EXPECT_CALL(*std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[1]),
-              upgradeConnection(
+              upgradeOutbound(
                   std::static_pointer_cast<LayerConnection>(layer1_conn_), _))
       .WillOnce(Arg1CallbackWithArg(layer2_conn_));
 
@@ -128,13 +128,13 @@ TEST_F(UpgraderTest, UpgradeLayersInitiator) {
 TEST_F(UpgraderTest, UpgradeLayersNotInitiator) {
   setAllInbound();
 
-  EXPECT_CALL(*std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[0]),
-              upgradeConnection(
-                  std::static_pointer_cast<LayerConnection>(raw_conn_), _))
+  EXPECT_CALL(
+      *std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[0]),
+      upgradeInbound(std::static_pointer_cast<LayerConnection>(raw_conn_), _))
       .WillOnce(Arg1CallbackWithArg(layer1_conn_));
 
   EXPECT_CALL(*std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[1]),
-              upgradeConnection(
+              upgradeInbound(
                   std::static_pointer_cast<LayerConnection>(layer1_conn_), _))
       .WillOnce(Arg1CallbackWithArg(layer2_conn_));
 

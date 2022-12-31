@@ -17,7 +17,12 @@ namespace libp2p::layer {
 
     MOCK_METHOD(peer::Protocol, getProtocolId, (), (const, override));
 
-    MOCK_METHOD(void, upgradeConnection,
+    MOCK_METHOD(void, upgradeInbound,
+                (std::shared_ptr<connection::LayerConnection>,
+                 LayerConnCallbackFunc),
+                (const, override));
+
+    MOCK_METHOD(void, upgradeOutbound,
                 (std::shared_ptr<connection::LayerConnection>,
                  LayerConnCallbackFunc),
                 (const, override));

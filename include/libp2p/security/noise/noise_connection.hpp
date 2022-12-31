@@ -86,7 +86,7 @@ namespace libp2p::connection {
 
     void eraseWriteBuffer(BufferList::iterator &iterator);
 
-    std::shared_ptr<LayerConnection> original_connection_;
+    std::shared_ptr<LayerConnection> connection_;
     crypto::PublicKey local_;
     crypto::PublicKey remote_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;

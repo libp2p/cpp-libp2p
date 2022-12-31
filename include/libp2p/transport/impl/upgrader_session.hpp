@@ -36,9 +36,10 @@ namespace libp2p::transport {
     std::shared_ptr<connection::RawConnection> raw_;
     HandlerFunc handler_;
 
-    void secureOutbound(const peer::PeerId &remoteId);
+    void secureOutbound(std::shared_ptr<connection::LayerConnection> conn,
+                        const peer::PeerId &remoteId);
 
-    void secureInbound();
+    void secureInbound(std::shared_ptr<connection::LayerConnection> conn);
 
     void onSecured(
         outcome::result<std::shared_ptr<connection::SecureConnection>> res);

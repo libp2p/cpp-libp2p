@@ -17,10 +17,11 @@ namespace libp2p::transport {
 
   void UpgraderSession::upgradeInbound() {
     auto on_layers_upgraded = [self{shared_from_this()}](auto &&res) {
-      if (!res) {
-        return self->handler_(res.error());
+      if (res.has_error()) {
+        return self->handler_(res.as_failure());
       }
-      self->secureInbound();
+      auto &conn = res.value();
+      self->secureInbound(std::move(conn));
     };
 
     upgrader_->upgradeLayersInbound(raw_, std::move(on_layers_upgraded));
@@ -28,35 +29,40 @@ namespace libp2p::transport {
 
   void UpgraderSession::upgradeOutbound(const peer::PeerId &remoteId) {
     auto on_layers_upgraded = [self{shared_from_this()}, remoteId](auto &&res) {
-      if (!res) {
-        return self->handler_(res.error());
+      if (res.has_error()) {
+        return self->handler_(res.as_failure());
       }
-      self->secureOutbound(remoteId);
+      auto &conn = res.value();
+      self->secureOutbound(std::move(conn), remoteId);
     };
 
     upgrader_->upgradeLayersOutbound(raw_, std::move(on_layers_upgraded));
   }
 
-  void UpgraderSession::secureInbound() {
+  void UpgraderSession::secureInbound(
+      std::shared_ptr<connection::LayerConnection> conn) {
     auto on_sec_upgraded = [self{shared_from_this()}](auto &&res) {
       if (!res) {
-        return self->handler_(res.error());
+        return self->handler_(res.as_failure());
       }
+      auto &conn = res.value();
       self->onSecured(res.value());
     };
 
-    upgrader_->upgradeToSecureInbound(raw_, std::move(on_sec_upgraded));
+    upgrader_->upgradeToSecureInbound(conn, std::move(on_sec_upgraded));
   }
 
-  void UpgraderSession::secureOutbound(const peer::PeerId &remoteId) {
+  void UpgraderSession::secureOutbound(
+      std::shared_ptr<connection::LayerConnection> conn,
+      const peer::PeerId &remoteId) {
     auto on_sec_upgraded = [self{shared_from_this()}](auto &&res) {
       if (!res) {
-        return self->handler_(res.error());
+        return self->handler_(res.as_failure());
       }
       self->onSecured(res.value());
     };
 
-    upgrader_->upgradeToSecureOutbound(raw_, remoteId,
+    upgrader_->upgradeToSecureOutbound(conn, remoteId,
                                        std::move(on_sec_upgraded));
   }
 

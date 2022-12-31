@@ -13,8 +13,10 @@ set(CMAKE_TOOLCHAIN_FILE
     "Default toolchain"
     )
 
-include("cmake/Hunter/init.cmake")
 cmake_policy(SET CMP0048 NEW)
+cmake_policy(SET CMP0135 NEW)
+
+include("cmake/Hunter/init.cmake")
 
 project(libp2p VERSION 0.0.1 LANGUAGES C CXX)
 

@@ -28,7 +28,17 @@ namespace libp2p::layer {
      * @param conn - connection to be upgraded
      * @param cb - callback with an upgraded connection or error
      */
-    virtual void upgradeConnection(
+    virtual void upgradeInbound(
+        std::shared_ptr<connection::LayerConnection> conn,
+        LayerConnCallbackFunc cb) const = 0;
+
+    /**
+     * Make a next-layer connection from the current-layer one, using this
+     * adaptor
+     * @param conn - connection to be upgraded
+     * @param cb - callback with an upgraded connection or error
+     */
+    virtual void upgradeOutbound(
         std::shared_ptr<connection::LayerConnection> conn,
         LayerConnCallbackFunc cb) const = 0;
   };

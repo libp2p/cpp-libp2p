@@ -42,9 +42,8 @@ namespace libp2p::transport {
       std::vector<MuxAdaptorSPtr> muxer_adaptors)
       : protocol_muxer_{std::move(protocol_muxer)},
         layer_adaptors_{std::move(layer_adaptors)},
-        // TODO(xDimon): to discuss: Why not simple move?
-        security_adaptors_{security_adaptors.begin(), security_adaptors.end()},
-        muxer_adaptors_{muxer_adaptors.begin(), muxer_adaptors.end()} {
+        security_adaptors_{std::move(security_adaptors)},
+        muxer_adaptors_{std::move(muxer_adaptors)} {
     BOOST_ASSERT(protocol_muxer_ != nullptr);
 
     BOOST_ASSERT(std::all_of(layer_adaptors_.begin(), layer_adaptors_.end(),
@@ -95,14 +94,14 @@ namespace libp2p::transport {
     }
     const auto &adaptor = layer_adaptors_[layer_index];
 
-    return adaptor->upgradeConnection(
+    return adaptor->upgradeInbound(
         conn,
         [self{shared_from_this()}, layer_index, cb{std::move(cb)}](
             outcome::result<LayerSPtr> next_layer_conn_res) mutable {
           if (next_layer_conn_res.has_error()) {
-            return cb(next_layer_conn_res.error());
+            return cb(next_layer_conn_res.as_failure());
           }
-          auto &next_layer_conn = next_layer_conn_res.value();
+          auto next_layer_conn = std::move(next_layer_conn_res.value());
 
           self->upgradeToNextLayerInbound(
               layer_index + 1, std::move(next_layer_conn), std::move(cb));
@@ -121,7 +120,7 @@ namespace libp2p::transport {
     }
     const auto &adaptor = layer_adaptors_[layer_index];
 
-    return adaptor->upgradeConnection(
+    return adaptor->upgradeOutbound(
         conn,
         [self{shared_from_this()}, layer_index, cb{std::move(cb)}](
             outcome::result<LayerSPtr> next_layer_conn_res) mutable {

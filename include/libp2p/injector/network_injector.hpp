@@ -9,6 +9,8 @@
 #include <boost/di.hpp>
 
 // implementations
+#include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
+#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
 #include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
@@ -21,8 +23,6 @@
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
 #include <libp2p/muxer/mplex.hpp>
 #include <libp2p/muxer/yamux.hpp>
-#include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
-#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/network/impl/connection_manager_impl.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
 #include <libp2p/network/impl/dnsaddr_resolver_impl.hpp>
@@ -196,6 +196,27 @@ namespace libp2p::injector {
    * );
    * @endcode
    */
+  template <typename... AdaptorImpl>
+  inline auto useLayerAdaptors() {
+    return boost::di::bind<layer::LayerAdaptor *[]>()  // NOLINT
+        .template to<AdaptorImpl...>()[boost::di::override];
+  }
+
+  /**
+   * @brief Bind security adaptors by type. Can be used once. Technically many
+   * types can be specified, even the same type, but in the end only 1 instance
+   * for each type is created.
+   * @tparam SecImpl one or many types of security adaptors to be used
+   * @return injector binding
+   *
+   * @code
+   * struct SomeNewAdaptor : public SecurityAdaptor {...};
+   *
+   * auto injector = makeNetworkInjector(
+   *   useSecurityAdaptors<Plaintext, SomeNewAdaptor, SecioAdaptor>()
+   * );
+   * @endcode
+   */
   template <typename... SecImpl>
   inline auto useSecurityAdaptors() {
     return boost::di::bind<security::SecurityAdaptor *[]>()  // NOLINT
@@ -235,7 +256,7 @@ namespace libp2p::injector {
    * @return complete network injector
    */
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
-  inline auto makeNetworkInjector(Ts &&... args) {
+  inline auto makeNetworkInjector(Ts &&...args) {
     using namespace boost;  // NOLINT
 
     auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();

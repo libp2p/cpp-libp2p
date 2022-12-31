@@ -5,8 +5,8 @@
 
 #include <libp2p/connection/stream.hpp>
 
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, RawConnection::Error, e) {
-  using E = libp2p::connection::RawConnection::Error;
+OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, LayerConnection::Error, e) {
+  using E = libp2p::connection::LayerConnection::Error;
   switch (e) {
     case E::CONNECTION_INTERNAL_ERROR:
       return "Connection: internal error";

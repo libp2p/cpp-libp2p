@@ -18,6 +18,7 @@ target_link_libraries(p2p_default_network
     p2p_secio
     p2p_noise
     p2p_tls
+    p2p_websocket
     p2p_connection_manager
     p2p_transport_manager
     p2p_listener_manager

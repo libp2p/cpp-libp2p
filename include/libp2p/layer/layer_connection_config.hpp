@@ -15,7 +15,7 @@ namespace libp2p::layer {
    * Config of layer connection
    */
   struct LayerConnectionConfig {
-    //
+    virtual ~LayerConnectionConfig() = default;
   };
 }  // namespace libp2p::layer
 
