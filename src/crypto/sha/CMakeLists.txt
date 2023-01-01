@@ -4,6 +4,7 @@
 #
 
 libp2p_add_library(p2p_sha
+    sha1.cpp
     sha256.cpp
     sha512.cpp
     )

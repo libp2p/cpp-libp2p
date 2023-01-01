@@ -26,6 +26,8 @@ namespace libp2p::common {
     c.push_back(g);
   }
 
+  /// Hash160 as a sequence of 20 bytes
+  using Hash160 = std::array<uint8_t, 20u>;
   /// Hash256 as a sequence of 32 bytes
   using Hash256 = std::array<uint8_t, 32u>;
   /// Hash512 as a sequence of 64 bytes
