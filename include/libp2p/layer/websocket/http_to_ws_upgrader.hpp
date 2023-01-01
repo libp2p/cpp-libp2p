@@ -31,8 +31,7 @@ namespace libp2p::layer::websocket {
     HttpToWsUpgrader(std::shared_ptr<connection::LayerConnection> connection,
                      bool is_initiator, LayerAdaptor::LayerConnCallbackFunc cb,
                      std::shared_ptr<basic::Scheduler> scheduler,
-                     std::shared_ptr<const WsConnectionConfig> config,
-                     std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider);
+                     std::shared_ptr<const WsConnectionConfig> config);
 
     void upgrade();
 
@@ -74,12 +73,11 @@ namespace libp2p::layer::websocket {
     LayerAdaptor::LayerConnCallbackFunc connection_cb_;
     std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<const WsConnectionConfig> config_;
-    std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider_;
 
     std::shared_ptr<common::ByteArray> read_buffer_;
     std::shared_ptr<HttpReadWriter> rw_;
 
-    std::optional<common::ByteArray> key_;
+    std::optional<std::string> key_;
 
     log::Logger log_ = log::createLogger("HttpToWsUpgrader");
   };

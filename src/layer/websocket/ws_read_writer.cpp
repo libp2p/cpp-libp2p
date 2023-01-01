@@ -279,7 +279,7 @@ namespace libp2p::connection::websocket {
     auto amount = std::min<size_t>(outbuf_.size(), kMaxFrameSize);
 
     bool finally = true;
-    bool masked = true;
+    bool masked = connection_->isInitiator();
     std::array<uint64_t, 4> mask{};
     std::vector<uint8_t> frame;
 

@@ -15,8 +15,6 @@ target_link_libraries(p2p_websocket
 
 libp2p_add_library(p2p_websocket_connection
     ws_connection.cpp
-    ws_frame.cpp
-    ws_reading_state.cpp
     ws_read_writer.cpp
     )
 target_link_libraries(p2p_websocket_connection
@@ -25,4 +23,5 @@ target_link_libraries(p2p_websocket_connection
     p2p_read_buffer
     p2p_write_queue
     p2p_connection_error
+    p2p_sha
     )

@@ -9,9 +9,9 @@
 
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/common/hexutil.hpp>
+#include <libp2p/crypto/sha/sha1.hpp>
 #include <libp2p/layer/websocket/ws_connection.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base64.hpp>
-#include <libp2p/peer/peer_id.hpp>
 
 #ifndef UNIQUE_NAME
 #define UNIQUE_NAME(base) base##__LINE__
@@ -50,20 +50,17 @@ namespace libp2p::layer::websocket {
       std::shared_ptr<connection::LayerConnection> connection,
       bool is_initiator, LayerAdaptor::LayerConnCallbackFunc cb,
       std::shared_ptr<basic::Scheduler> scheduler,
-      std::shared_ptr<const WsConnectionConfig> config,
-      std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider)
+      std::shared_ptr<const WsConnectionConfig> config)
       : conn_{std::move(connection)},
         initiator_{is_initiator},
         connection_cb_{std::move(cb)},
         scheduler_{std::move(scheduler)},
         config_{std::move(config)},
-        hmac_provider_{std::move(hmac_provider)},
         read_buffer_{std::make_shared<common::ByteArray>(kMaxMsgLen)},
         rw_{std::make_shared<HttpReadWriter>(conn_, read_buffer_)} {
     BOOST_ASSERT(conn_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
     BOOST_ASSERT(config_ != nullptr);
-    BOOST_ASSERT(hmac_provider_ != nullptr);
     read_buffer_->resize(kMaxMsgLen);
   }
 
@@ -132,7 +129,7 @@ namespace libp2p::layer::websocket {
   }  // namespace
 
   gsl::span<const uint8_t> HttpToWsUpgrader::createHttpRequest() {
-    auto request = strToSpan(
+    static auto request = strToSpan(
         "GET /index.html HTTP/1.1\r\n"  // FIXME hardcode
         "Host: www.example.com\r\n"
         "Connection: upgrade\r\n"
@@ -142,26 +139,25 @@ namespace libp2p::layer::websocket {
   }
 
   gsl::span<const uint8_t> HttpToWsUpgrader::createHttpResponse() {
-    std::string r =
-        "101 Switching Protocols\r\n"  // FIXME hardcode
+    static std::string response_ =
+        "HTTP/1.1 101 Switching Protocols\r\n"  // FIXME hardcode
+        "Connection: upgrade\r\n"
         "Upgrade: websocket\r\n";
     if (key_.has_value()) {
-      auto data = key_.value();
-      auto guid = strToSpan("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+      static const auto guid =
+          strToSpan("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+      std::vector<uint8_t> data(key_->begin(), key_->end());
       data.insert(data.end(), guid.begin(), guid.end());
-      auto k =
-          common::unhex("55cd433be9568ee79525a0919cf4b31c28108cee").value();
-      auto d = hmac_provider_->calculateDigest(crypto::hmac::HashType::SHA1, k,
-                                               data);
-      auto v = d.value();
-      auto e = multi::detail::encodeBase64(v);
-      r += "Sec-WebSocket-Accept: ";
-      r += e;
-      r += "\r\n";
+      auto hash = crypto::sha1(data).value();
+      auto encoded_hash =
+          multi::detail::encodeBase64({hash.begin(), hash.end()});
+      response_ += "Sec-WebSocket-Accept: ";
+      response_ += encoded_hash;
+      response_ += "\r\n";
     }
-    r += "\r\n";
+    response_ += "\r\n";
 
-    auto response = strToSpan(r);
+    auto response = strToSpan(response_);
     return response;
   }
 
@@ -244,9 +240,7 @@ namespace libp2p::layer::websocket {
         } else if (line.size() > 19
                    and line.subspan(0, 19)
                        == strToSpan("Sec-WebSocket-Key: ")) {
-          std::string encoded_key(std::next(line.begin(), 19), line.end());
-          OUTCOME_TRY(decoded_key, multi::detail::decodeBase64(encoded_key));
-          key_.emplace(std::move(decoded_key));
+          key_.emplace(std::next(line.begin(), 19), line.end());
         }
 
         begin = pos + delimiter.size();

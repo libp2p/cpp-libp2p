@@ -7,7 +7,7 @@
 
 #include <boost/asio/error.hpp>
 
-#include <libp2p/layer/websocket/ws_frame.hpp>
+//#include <libp2p/layer/websocket/ws_frame.hpp>
 #include <libp2p/log/logger.hpp>
 
 #define PP_CAT(a, b) PP_CAT_I(a, b)
@@ -41,23 +41,25 @@ namespace libp2p::connection {
         }()),
         connection_(std::move(connection)),
         scheduler_(std::move(scheduler)),
-        raw_read_buffer_(std::make_shared<Buffer>()),
-        reading_state_(
-            [this](boost::optional<websocket::WsFrame> header) {
-              return processHeader(std::move(header));
-            },
-            [this](gsl::span<uint8_t> segment, bool fin) {
-              if (!segment.empty()) {
-                processData(segment);
-              }
-              if (fin) {
-                processFin();
-              }
-            }) {
+        raw_read_buffer_(std::make_shared<Buffer>())
+//        ,
+//        reading_state_(
+//            [this](boost::optional<websocket::WsFrame> header) {
+//              return processHeader(std::move(header));
+//            },
+//            [this](gsl::span<uint8_t> segment, bool fin) {
+//              if (!segment.empty()) {
+//                processData(segment);
+//              }
+//              if (fin) {
+//                processFin();
+//              }
+//            })
+  {
     BOOST_ASSERT(config_ != nullptr);
     BOOST_ASSERT(connection_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
-    raw_read_buffer_->resize(websocket::WsFrame::kInitialWindowSize + 4096);
+//    raw_read_buffer_->resize(websocket::WsFrame::kInitialWindowSize + 4096);
     framer_ = std::make_shared<websocket::WsReadWriter>(connection_,
                                                         raw_read_buffer_);
   }
@@ -75,7 +77,7 @@ namespace libp2p::connection {
             if (started_) {
               // don't send pings if something is being written
               if (!is_writing_) {
-                enqueue(websocket::pingOutMsg(++ping_counter));
+//                enqueue(websocket::pingOutMsg(++ping_counter));
                 SL_TRACE(log_, "written ping message #{}", ping_counter);
               }
               std::ignore = ping_handle_.reschedule(config_->ping_interval);
@@ -159,14 +161,14 @@ namespace libp2p::connection {
 
   void WsConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
                               OperationContext ctx, ReadCallbackFunc cb) {
-    if (not frame_buffer_->empty()) {
-      auto n{std::min(bytes, frame_buffer_->size())};
-      auto begin{frame_buffer_->begin()};
-      auto end{begin + static_cast<int64_t>(n)};
-      std::copy(begin, end, out.begin());
-      frame_buffer_->erase(begin, end);
-      return cb(n);
-    }
+//    if (not frame_buffer_->empty()) {
+//      auto n{std::min(bytes, frame_buffer_->size())};
+//      auto begin{frame_buffer_->begin()};
+//      auto end{begin + static_cast<int64_t>(n)};
+//      std::copy(begin, end, out.begin());
+//      frame_buffer_->erase(begin, end);
+//      return cb(n);
+//    }
     framer_->read([self{shared_from_this()}, out, bytes, cb{std::move(cb)},
                    ctx](auto _data) mutable {
       OUTCOME_CB(data, _data);
@@ -198,8 +200,10 @@ namespace libp2p::connection {
       ctx.write_buffer_it = write_buffers_.emplace(write_buffers_.end());
     }
 
-    auto n = std::min(bytes, websocket::WsFrame::kMaxDataSize);
-    auto x = in.subspan(0, n);
+//    auto n = std::min(bytes, websocket::WsFrame::kMaxDataSize);
+//    auto x = in.subspan(0, n);
+    auto x = in;
+    auto n = in.size();
 
     ctx.write_buffer_it->assign(x.begin(), x.end());
 
@@ -259,7 +263,8 @@ namespace libp2p::connection {
       if (ec.value() == boost::asio::error::eof) {
         ec = Error::CONNECTION_CLOSED_BY_PEER;
       }
-      close(ec, boost::none);
+//      close(ec, boost::none);
+      close();
       return;
     }
 
@@ -274,7 +279,7 @@ namespace libp2p::connection {
       bytes_read = bytes_read.first(ssize_t(n));
     }
 
-    reading_state_.onDataReceived(bytes_read);
+//    reading_state_.onDataReceived(bytes_read);
 
     if (!started_) {
       return;
@@ -282,34 +287,34 @@ namespace libp2p::connection {
 
     continueReading();
   }
-
-  bool WsConnection::processHeader(boost::optional<websocket::WsFrame> header) {
-    using FrameType = websocket::WsFrame::FrameType;
-
-    if (!header) {
-      SL_DEBUG(log_, "cannot parse yamux frame: corrupted");
-      close(Error::CONNECTION_PROTOCOL_ERROR,
-            websocket::WsFrame::GoAwayError::PROTOCOL_ERROR);
-      return false;
-    }
-
-    SL_TRACE(log_, "WsConnection::processHeader");
-
-    auto &frame = header.value();
-
-    if (frame.type == FrameType::GO_AWAY) {
-      return false;
-    }
-
-    // bool is_fin = frame.flagIsSet(websocket::WsFrame::Flag::FIN);
-    //
-    // if (is_fin && (frame.stream_id != 0)) {
-    //   processFin();
-    // }
-
-    // proceed with incoming data
-    return true;
-  }
+//
+//  bool WsConnection::processHeader(boost::optional<websocket::WsFrame> header) {
+//    using FrameType = websocket::WsFrame::FrameType;
+//
+//    if (!header) {
+//      SL_DEBUG(log_, "cannot parse yamux frame: corrupted");
+//      close(Error::CONNECTION_PROTOCOL_ERROR,
+//            websocket::WsFrame::GoAwayError::PROTOCOL_ERROR);
+//      return false;
+//    }
+//
+//    SL_TRACE(log_, "WsConnection::processHeader");
+//
+//    auto &frame = header.value();
+//
+//    if (frame.type == FrameType::GO_AWAY) {
+//      return false;
+//    }
+//
+//    // bool is_fin = frame.flagIsSet(websocket::WsFrame::Flag::FIN);
+//    //
+//    // if (is_fin && (frame.stream_id != 0)) {
+//    //   processFin();
+//    // }
+//
+//    // proceed with incoming data
+//    return true;
+//  }
 
   void WsConnection::processData(gsl::span<uint8_t> segment) {
     assert(!segment.empty());
@@ -334,42 +339,42 @@ namespace libp2p::connection {
     std::ignore = connection_->close();
   }
 
-  void WsConnection::close(
-      std::error_code notify_streams_code,
-      boost::optional<websocket::WsFrame::GoAwayError> reply_to_peer_code) {
-    if (!started_) {
-      return;
-    }
-
-    started_ = false;
-
-    SL_DEBUG(log_, "closing connection, reason: {}",
-             notify_streams_code.message());
-
-    write_queue_.clear();
-
-    if (reply_to_peer_code.has_value() && !connection_->isClosed()) {
-      enqueue(goAwayMsg(reply_to_peer_code.value()));
-    }
-
-    //    Streams streams;
-    //    streams.swap(streams_);
-    //
-    //    PendingOutboundStreams pending_streams;
-    //    pending_streams.swap(pending_outbound_streams_);
-    //
-    //    for (auto [_, stream] : streams) {
-    //      stream->closedByConnection(notify_streams_code);
-    //    }
-    //
-    //    for (auto [_, cb] : pending_streams) {
-    //      cb(notify_streams_code);
-    //    }
-    //
-    //    if (closed_callback_) {
-    //      closed_callback_(remote_peer_, shared_from_this());
-    //    }
-  }
+//  void WsConnection::close(
+//      std::error_code notify_streams_code,
+//      boost::optional<websocket::WsFrame::GoAwayError> reply_to_peer_code) {
+//    if (!started_) {
+//      return;
+//    }
+//
+//    started_ = false;
+//
+//    SL_DEBUG(log_, "closing connection, reason: {}",
+//             notify_streams_code.message());
+//
+//    write_queue_.clear();
+//
+//    if (reply_to_peer_code.has_value() && !connection_->isClosed()) {
+//      enqueue(goAwayMsg(reply_to_peer_code.value()));
+//    }
+//
+//    //    Streams streams;
+//    //    streams.swap(streams_);
+//    //
+//    //    PendingOutboundStreams pending_streams;
+//    //    pending_streams.swap(pending_outbound_streams_);
+//    //
+//    //    for (auto [_, stream] : streams) {
+//    //      stream->closedByConnection(notify_streams_code);
+//    //    }
+//    //
+//    //    for (auto [_, cb] : pending_streams) {
+//    //      cb(notify_streams_code);
+//    //    }
+//    //
+//    //    if (closed_callback_) {
+//    //      closed_callback_(remote_peer_, shared_from_this());
+//    //    }
+//  }
 
   //  void WsConnection::writeStreamData(uint32_t stream_id,
   //                                     gsl::span<const uint8_t> data, bool
@@ -431,7 +436,8 @@ namespace libp2p::connection {
                                    bool some) {
     if (!res) {
       // write error
-      close(res.error(), boost::none);
+//      close(res.error(), boost::none);
+      close();
       return;
     }
 
