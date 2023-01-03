@@ -99,22 +99,8 @@ namespace libp2p::connection {
     /// Read callback
     void onRead(outcome::result<size_t> res);
 
-//    /// Processes incoming header, called from sReadingState
-//    bool processHeader(boost::optional<websocket::WsFrame> header);
-
     /// Processes incoming data, called from WsReadingState
     void processData(gsl::span<uint8_t> segment);
-
-    void processFin();
-
-//    void processPing(const websocket::WsFrame &frame);
-//
-//    void processPong(const websocket::WsFrame &frame);
-
-//    /// Closes everything, notifies handlers
-//    void close(
-//        std::error_code notify_streams_code,
-//        boost::optional<websocket::WsFrame::GoAwayError> reply_to_peer_code);
 
     /// Writes data to underlying connection or (if is_writing_) enqueues them
     /// If stream_id != 0, stream will be acknowledged about data written
@@ -142,15 +128,12 @@ namespace libp2p::connection {
     bool started_ = false;
 
     std::shared_ptr<common::ByteArray> frame_buffer_;
-    std::shared_ptr<websocket::WsReadWriter> framer_;
+    std::shared_ptr<websocket::WsReadWriter> ws_read_writer_;
     BufferList write_buffers_;
     log::Logger log_ = log::createLogger("WsConnection");
 
     /// TODO(artem): change read() interface to reduce copying
     std::shared_ptr<Buffer> raw_read_buffer_;
-
-//    /// Buffering and segmenting
-//    websocket::WsReadingState reading_state_;
 
     /// True if waiting for current write operation to complete
     bool is_writing_ = false;

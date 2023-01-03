@@ -341,15 +341,13 @@ namespace libp2p::connection::websocket {
 
   void WsReadWriter::write(gsl::span<const uint8_t> buffer,
                            basic::Writer::WriteCallbackFunc cb) {
+    write_cb_ = std::move(cb);
+
     outbuf_.clear();
     outbuf_.reserve(buffer.size());
     outbuf_.insert(outbuf_.end(), buffer.begin(), buffer.end());
 
     sendData();
   }
-
-  void WsReadWriter::writeHeader(WriteCallbackFunc cb) {}
-
-  void WsReadWriter::writeData(WriteCallbackFunc cb) {}
 
 }  // namespace libp2p::connection::websocket

@@ -111,10 +111,6 @@ namespace libp2p::connection::websocket {
     void readData();
     void handleData(outcome::result<size_t> res);
 
-    void writeHeader(WriteCallbackFunc cb);
-
-    void writeData(WriteCallbackFunc cb);
-
     std::shared_ptr<connection::LayerConnection> connection_;
     std::shared_ptr<common::ByteArray> buffer_;
     common::ByteArray outbuf_;
@@ -123,7 +119,7 @@ namespace libp2p::connection::websocket {
     ReadCallbackFunc pong_cb_;
     WriteCallbackFunc write_cb_;
 
-    ReadingState reading_state_ = ReadingState::WaitHeader;
+    ReadingState reading_state_ = ReadingState::Idle;
     WritingState writing_state_ = WritingState::Ready;
     Opcode last_frame_opcode_;
     std::shared_ptr<common::ByteArray> incoming_ping_data_;
