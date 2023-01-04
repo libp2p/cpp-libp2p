@@ -269,6 +269,10 @@ namespace libp2p::connection::websocket {
     BOOST_UNREACHABLE_RETURN();
   }
 
+  void WsReadWriter::sendPing(gsl::span<const uint8_t> buffer, WriteCallbackFunc cb) {
+    write(buffer, std::move(cb));
+  }
+
   void WsReadWriter::sendPong(gsl::span<const uint8_t> buffer) {
     write(buffer, [](auto res) {
       // TODO log pong

@@ -85,7 +85,7 @@ namespace libp2p::connection {
     void read(gsl::span<uint8_t> out, size_t bytes, OperationContext ctx,
               ReadCallbackFunc cb);
 
-    void readSome(gsl::span<uint8_t> out, size_t bytes, OperationContext ctx,
+    void readSome(gsl::span<uint8_t> out, size_t required_bytes, OperationContext ctx,
                   ReadCallbackFunc cb);
 
     void write(gsl::span<const uint8_t> in, size_t bytes, OperationContext ctx,
@@ -93,24 +93,9 @@ namespace libp2p::connection {
 
     void eraseWriteBuffer(BufferList::iterator &iterator);
 
-    /// Initiates async readSome on connection
-    void continueReading();
-
-    /// Read callback
-    void onRead(outcome::result<size_t> res);
-
-    /// Processes incoming data, called from WsReadingState
-    void processData(gsl::span<uint8_t> segment);
-
     /// Writes data to underlying connection or (if is_writing_) enqueues them
     /// If stream_id != 0, stream will be acknowledged about data written
     void enqueue(Buffer packet, bool some = false);
-
-    /// Performs write into connection
-    void doWrite(WriteQueueItem packet);
-
-    /// Write callback
-    void onDataWritten(outcome::result<size_t> res, bool some);
 
     /// Expire timer callback
     void onExpireTimer();
@@ -127,13 +112,12 @@ namespace libp2p::connection {
     /// True if started
     bool started_ = false;
 
+    std::shared_ptr<Buffer> raw_read_buffer_;
     std::shared_ptr<common::ByteArray> frame_buffer_;
     std::shared_ptr<websocket::WsReadWriter> ws_read_writer_;
     BufferList write_buffers_;
     log::Logger log_ = log::createLogger("WsConnection");
 
-    /// TODO(artem): change read() interface to reduce copying
-    std::shared_ptr<Buffer> raw_read_buffer_;
 
     /// True if waiting for current write operation to complete
     bool is_writing_ = false;

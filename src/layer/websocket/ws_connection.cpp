@@ -41,27 +41,12 @@ namespace libp2p::connection {
         }()),
         connection_(std::move(connection)),
         scheduler_(std::move(scheduler)),
-        raw_read_buffer_(std::make_shared<Buffer>())
-  // ,
-  // reading_state_(
-  //     [this](boost::optional<websocket::WsFrame> header) {
-  //       return processHeader(std::move(header));
-  //     },
-  //     [this](gsl::span<uint8_t> segment, bool fin) {
-  //       if (!segment.empty()) {
-  //         processData(segment);
-  //       }
-  //       if (fin) {
-  //         processFin();
-  //       }
-  //     })
-  {
+        raw_read_buffer_(std::make_shared<Buffer>()),
+        ws_read_writer_(std::make_shared<websocket::WsReadWriter>(
+            connection_, raw_read_buffer_)) {
     BOOST_ASSERT(config_ != nullptr);
     BOOST_ASSERT(connection_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
-    // raw_read_buffer_->resize(websocket::WsFrame::kInitialWindowSize + 4096);
-    ws_read_writer_ = std::make_shared<websocket::WsReadWriter>(
-        connection_, raw_read_buffer_);
   }
 
   void WsConnection::start() {
@@ -77,7 +62,16 @@ namespace libp2p::connection {
             if (started_) {
               // don't send pings if something is being written
               if (!is_writing_) {
-                //  enqueue(websocket::pingOutMsg(++ping_counter));
+                ++ping_counter;
+
+                ws_read_writer_->sendPing(
+                    gsl::make_span(reinterpret_cast<const uint8_t *>(  // NOLINT
+                                       &ping_counter),
+                                   sizeof(ping_counter)),
+                    [](const auto &res) {
+                      // TODO handle sent ping
+                    });
+
                 SL_TRACE(log_, "written ping message #{}", ping_counter);
               }
               std::ignore = ping_handle_.reschedule(config_->ping_interval);
@@ -85,8 +79,6 @@ namespace libp2p::connection {
           },
           config_->ping_interval);
     }
-
-    continueReading();
   }
 
   void WsConnection::stop() {
@@ -156,28 +148,32 @@ namespace libp2p::connection {
     readSome(out, bytes, context, std::move(cb));
   }
 
-  void WsConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
+  void WsConnection::readSome(gsl::span<uint8_t> out, size_t required_bytes,
                               OperationContext ctx, ReadCallbackFunc cb) {
-    // if (not frame_buffer_->empty()) {
-    //   auto n{std::min(bytes, frame_buffer_->size())};
-    //   auto begin{frame_buffer_->begin()};
-    //   auto end{begin + static_cast<int64_t>(n)};
-    //   std::copy(begin, end, out.begin());
-    //   frame_buffer_->erase(begin, end);
-    //   return cb(n);
-    // }
+    // Return available data if any
+    if (not frame_buffer_->empty()) {
+      auto available_bytes =
+          std::min<ssize_t>(required_bytes, frame_buffer_->size());
+      auto begin = frame_buffer_->begin();
+      auto end = std::next(begin, available_bytes);
+
+      std::copy(begin, end, out.begin());
+      frame_buffer_->erase(begin, end);
+
+      return cb(available_bytes);
+    }
+
+    // Otherwise try to read
     ws_read_writer_->read([self = shared_from_this(),  //
                            out,                        //
-                           bytes,                      //
+                           required_bytes,             //
                            cb = std::move(cb),         //
                            ctx]                        //
-                          (auto _data) mutable {
-                            OUTCOME_CB(data, _data);
-                            //  OUTCOME_CB(decrypted,
-                            //  self->decoder_cs_->decrypt({}, *data, {}));
-                            //  self->frame_buffer_->assign(decrypted.begin(),
-                            //  decrypted.end());
-                            self->readSome(out, bytes, ctx, std::move(cb));
+                          (auto res) mutable {
+                            OUTCOME_CB(data, res);
+                            self->frame_buffer_ = std::move(res.value());
+                            self->readSome(out, required_bytes, ctx,
+                                           std::move(cb));
                           });
   }
 
@@ -234,157 +230,6 @@ namespace libp2p::connection {
   void WsConnection::deferWriteCallback(std::error_code ec,
                                         WriteCallbackFunc cb) {
     connection_->deferWriteCallback(ec, std::move(cb));
-  }
-
-  void WsConnection::continueReading() {
-#warning  // TODO Read over ws_read_writer
-    SL_TRACE(log_, "continueReading");
-    connection_->readSome(*raw_read_buffer_, raw_read_buffer_->size(),
-                          [wptr = weak_from_this(), buffer = raw_read_buffer_](
-                              outcome::result<size_t> res) {
-                            auto self = wptr.lock();
-                            if (self) {
-                              self->onRead(res);
-                            }
-                          });
-  }
-
-  void WsConnection::onRead(outcome::result<size_t> res) {
-    if (!started_) {
-      return;
-    }
-
-    if (!res) {
-      std::error_code ec = res.error();
-      if (ec.value() == boost::asio::error::eof) {
-        ec = Error::CONNECTION_CLOSED_BY_PEER;
-      }
-      //      close(ec, boost::none);
-      close();
-      return;
-    }
-
-    auto n = res.value();
-    gsl::span<uint8_t> bytes_read(*raw_read_buffer_);
-
-    SL_TRACE(log_, "read {} bytes", n);
-
-    assert(n <= raw_read_buffer_->size());
-
-    if (n < raw_read_buffer_->size()) {
-      bytes_read = bytes_read.first(ssize_t(n));
-    }
-
-    //    reading_state_.onDataReceived(bytes_read);
-
-    if (!started_) {
-      return;
-    }
-
-    continueReading();
-  }
-
-  void WsConnection::processData(gsl::span<uint8_t> segment) {
-    assert(!segment.empty());
-
-    SL_TRACE(log_, "WsConnection::processData, size={}", segment.size());
-
-    //  auto result = it->second->onDataReceived(segment);
-    //  if (result == WsStream::kKeepStream) {
-    //    return;
-    //  }
-    //
-    //  reading_state_.discardDataMessage();
-    //
-    //  if (result == WsStream::kRemoveStreamAndSendRst) {
-    //    // overflow, reset this stream
-    //    enqueue(resetStreamMsg(stream_id));
-    //  }
-  }
-
-  void WsConnection::enqueue(Buffer packet,
-                             // StreamId stream_id,
-                             bool some) {
-    if (is_writing_) {
-      write_queue_.push_back(WriteQueueItem{std::move(packet),
-                                            // stream_id,
-                                            some});
-    } else {
-      doWrite(WriteQueueItem{std::move(packet),
-                             // stream_id,
-                             some});
-    }
-  }
-
-  void WsConnection::doWrite(WriteQueueItem packet) {
-    assert(!is_writing_);
-
-    //    auto write_func =
-    //        packet.some ? &CapableConnection::writeSome :
-    //        &CapableConnection::write;
-    //    auto span = gsl::span<const uint8_t>(packet.packet);
-    //    auto sz = packet.packet.size();
-    //    auto cb = [wptr{weak_from_this()},
-    //               packet = std::move(packet)](outcome::result<size_t> res) {
-    //      auto self = wptr.lock();
-    //      if (self)
-    //        self->onDataWritten(res, packet.stream_id, packet.some);
-    //    };
-    //
-    //    is_writing_ = true;
-    //    ((connection_.get())->*write_func)(span, sz, std::move(cb));
-  }
-
-  void WsConnection::onDataWritten(outcome::result<size_t> res,
-                                   // StreamId stream_id,
-                                   bool some) {
-    if (!res) {
-      // write error
-      // close(res.error(), boost::none);
-      close();
-      return;
-    }
-
-    // this instance may be killed inside further callback
-    auto wptr = weak_from_this();
-
-    // if (stream_id != 0) {
-    //   // pass write ack to stream about data size written except header size
-    //
-    //   auto sz = res.value();
-    //   if (!some) {
-    //     if (sz < WsFrame::kHeaderLength) {
-    //       log_->error("onDataWritten : too small size arrived: {}", sz);
-    //       sz = 0;
-    //     } else {
-    //       sz -= WsFrame::kHeaderLength;
-    //     }
-    //   }
-    //
-    //   // if (sz > 0) {
-    //   //   auto it = streams_.find(stream_id);
-    //   //   if (it == streams_.end()) {
-    //   //     SL_DEBUG(log_, "onDataWritten : stream {} no longer exists",
-    //   //              stream_id);
-    //   //   } else {
-    //   //     // stream can now call write callbacks
-    //   //     it->second->onDataWritten(sz);
-    //   //   }
-    //   // }
-    // }
-
-    if (wptr.expired()) {
-      // *this* no longer exists
-      return;
-    }
-
-    is_writing_ = false;
-
-    if (started_ && !write_queue_.empty()) {
-      auto next_packet = std::move(write_queue_.front());
-      write_queue_.pop_front();
-      doWrite(std::move(next_packet));
-    }
   }
 
   void WsConnection::onExpireTimer() {
