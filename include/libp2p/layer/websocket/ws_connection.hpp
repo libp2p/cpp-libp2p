@@ -75,13 +75,6 @@ namespace libp2p::connection {
    private:
     using Buffer = common::ByteArray;
 
-    struct WriteQueueItem {
-      // TODO(artem): reform in buffers (shared + vector writes)
-
-      Buffer packet;
-      bool some;
-    };
-
     void read(gsl::span<uint8_t> out, size_t bytes, OperationContext ctx,
               ReadCallbackFunc cb);
 
@@ -93,15 +86,8 @@ namespace libp2p::connection {
 
     void eraseWriteBuffer(BufferList::iterator &iterator);
 
-    /// Writes data to underlying connection or (if is_writing_) enqueues them
-    /// If stream_id != 0, stream will be acknowledged about data written
-    void enqueue(Buffer packet, bool some = false);
-
-    /// Expire timer callback
-    void onExpireTimer();
-
     /// Config
-    const std::shared_ptr<const layer::WsConnectionConfig> config_;
+    std::shared_ptr<const layer::WsConnectionConfig> config_;
 
     /// Underlying connection
     std::shared_ptr<LayerConnection> connection_;
@@ -121,9 +107,6 @@ namespace libp2p::connection {
 
     /// True if waiting for current write operation to complete
     bool is_writing_ = false;
-
-    /// Write queue
-    std::deque<WriteQueueItem> write_queue_;
 
     /// Timer handle for pings
     basic::Scheduler::Handle ping_handle_;

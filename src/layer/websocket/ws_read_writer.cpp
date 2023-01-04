@@ -45,9 +45,13 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection::websocket, WsReadWriter::Error,
 
 namespace libp2p::connection::websocket {
   WsReadWriter::WsReadWriter(
+      std::shared_ptr<basic::Scheduler> scheduler,
       std::shared_ptr<connection::LayerConnection> connection,
       std::shared_ptr<common::ByteArray> buffer)
-      : connection_{std::move(connection)}, buffer_{std::move(buffer)} {}
+      : scheduler_(std::move(scheduler)),
+        connection_{std::move(connection)},
+        buffer_{std::move(buffer)},
+        log_(log::createLogger("WsReadWriter")) {}
 
   void WsReadWriter::read(basic::MessageReadWriter::ReadCallbackFunc cb) {
     if (reading_state_ != ReadingState::Idle) {
@@ -68,13 +72,17 @@ namespace libp2p::connection::websocket {
   }
 
   void WsReadWriter::handleFlagsAndPrelen(outcome::result<size_t> res) {
-    BOOST_ASSERT(reading_state_ == ReadingState::WaitHeader);
+    BOOST_ASSERT(reading_state_ == ReadingState::ReadOpcodeAndPrelen);
     if (res.has_error()) {
+      SL_DEBUG(log_, "Can't read flags and length of frame: {}",
+               res.error().message());
       read_cb_(res.as_failure());
       return;
     }
     auto read_bytes = res.value();
     if (read_bytes != 2) {
+      SL_DEBUG(log_, "Can't read flags and length of frame: {}",
+               make_error_code(Error::NOT_ENOUGH_DATA).message());
       read_cb_(Error::NOT_ENOUGH_DATA);
       return;
     }
@@ -83,11 +91,13 @@ namespace libp2p::connection::websocket {
     ctx.opcode = static_cast<Opcode>(data[0] & 0b0000'1111);
     ctx.prelen = static_cast<uint8_t>(data[1] & 0b0111'1111);
     ctx.masked = static_cast<bool>(data[1] & 0b1000'0000);
+
+    reading_state_ = ReadingState::ReadSizeAndMask;
     readSizeAndMask();
   }
 
   void WsReadWriter::readSizeAndMask() {
-    BOOST_ASSERT(reading_state_ == ReadingState::ReadOpcodeAndPrelen);
+    BOOST_ASSERT(reading_state_ == ReadingState::ReadSizeAndMask);
 
     size_t need_to_read = 0;
     if (ctx.prelen < 126) {
@@ -111,6 +121,8 @@ namespace libp2p::connection::websocket {
 
   void WsReadWriter::handleSizeAndMask(outcome::result<size_t> res) {
     if (res.has_error()) {
+      SL_DEBUG(log_, "Can't read size and mask of frame: {}",
+               res.error().message());
       read_cb_(res.as_failure());
       return;
     }
@@ -120,6 +132,8 @@ namespace libp2p::connection::websocket {
     if (ctx.prelen == 126) {
       uint16_t length = 0;
       if (remaining_bytes < sizeof(length)) {
+        SL_DEBUG(log_, "Can't read size of frame: {}",
+                 make_error_code(Error::NOT_ENOUGH_DATA).message());
         read_cb_(Error::NOT_ENOUGH_DATA);
         return;
       }
@@ -130,6 +144,8 @@ namespace libp2p::connection::websocket {
     } else if (ctx.prelen == 127) {
       uint64_t length = 0;
       if (remaining_bytes < sizeof(length)) {
+        SL_DEBUG(log_, "Can't read size of frame: {}",
+                 make_error_code(Error::NOT_ENOUGH_DATA).message());
         read_cb_(Error::NOT_ENOUGH_DATA);
         return;
       }
@@ -143,6 +159,8 @@ namespace libp2p::connection::websocket {
 
     if (ctx.masked) {
       if (remaining_bytes < ctx.mask.size()) {
+        SL_DEBUG(log_, "Can't read mask of frame: {}",
+                 make_error_code(Error::NOT_ENOUGH_DATA).message());
         read_cb_(Error::NOT_ENOUGH_DATA);
         return;
       }
@@ -163,6 +181,8 @@ namespace libp2p::connection::websocket {
     if (ctx.opcode == Opcode::Continue) {
       if (last_frame_opcode_ == Opcode::Text
           or last_frame_opcode_ == Opcode::Binary) {
+        SL_DEBUG(log_, "Can't handle frame: {}",
+                 make_error_code(Error::UNEXPECTED_CONTINUE).message());
         read_cb_(Error::UNEXPECTED_CONTINUE);
         return;
       }
@@ -175,12 +195,15 @@ namespace libp2p::connection::websocket {
     else if (ctx.opcode == Opcode::Close) {
       if (not closed_by_remote_) {
         closed_by_remote_ = true;
+        SL_DEBUG(log_, "Close-frame is received");
         read_cb_(Error::CLOSED);
         return;
       }
     }
 
     else {
+      SL_DEBUG(log_, "Can't handle frame: {}",
+               make_error_code(Error::UNKNOWN_OPCODE).message());
       read_cb_(Error::UNKNOWN_OPCODE);
       return;
     }
@@ -206,10 +229,12 @@ namespace libp2p::connection::websocket {
 
     if (res.has_error()) {
       if (reading_state_ != ReadingState::Idle) {
+        SL_DEBUG(log_, "Can't read data of frame: {}", res.error().message());
         read_cb_(res.as_failure());
         return;
       }
       if (ctx.opcode == Opcode::Pong) {
+        SL_DEBUG(log_, "Can't read data of frame: {}", res.error().message());
         pong_cb_(res.as_failure());
       }
       return;
@@ -258,6 +283,7 @@ namespace libp2p::connection::websocket {
 
     if (ctx.opcode == Opcode::Close) {
       if (ctx.remaining_data == 0) {
+        SL_DEBUG(log_, "Close-frame has received");
         read_cb_(Error::CLOSED);
         pong_cb_(Error::CLOSED);
       } else {
@@ -269,7 +295,8 @@ namespace libp2p::connection::websocket {
     BOOST_UNREACHABLE_RETURN();
   }
 
-  void WsReadWriter::sendPing(gsl::span<const uint8_t> buffer, WriteCallbackFunc cb) {
+  void WsReadWriter::sendPing(gsl::span<const uint8_t> buffer,
+                              WriteCallbackFunc cb) {
     write(buffer, std::move(cb));
   }
 
@@ -280,11 +307,29 @@ namespace libp2p::connection::websocket {
   }
 
   void WsReadWriter::sendData() {
-    auto amount = std::min<size_t>(outbuf_.size(), kMaxFrameSize);
-
     bool finally = true;
-    bool masked = connection_->isInitiator();
-    std::array<uint64_t, 4> mask{};
+    bool masked = connection_->isInitiator();  // only client is masking data
+
+    // Calculate amount of bytes sending by one frame
+    size_t amount = 0;
+    for (auto &chunk : writing_queue_) {
+      amount += chunk.data.size() - chunk.sent_bytes;
+      if (amount > kMaxFrameSize) {
+        finally = false;  // Will remain some bytes to next frame(s)
+      }
+      if (amount >= kMaxFrameSize) {
+        amount = kMaxFrameSize;
+        break;
+      }
+    }
+
+    std::array<uint8_t, 4> mask{0};
+    if (masked) {
+      uint32_t mask_int = std::rand();
+      std::copy_n(reinterpret_cast<uint8_t *>(&mask_int),  // NOLINT
+                  sizeof(mask_int), mask.begin());
+    }
+
     std::vector<uint8_t> frame;
 
     // clang-format off
@@ -321,22 +366,70 @@ namespace libp2p::connection::websocket {
       std::copy_n(mask.begin(), mask.size(), std::back_inserter(frame));
     }
     // data
-    std::copy_n(outbuf_.begin(), amount, std::back_inserter(frame));
+    size_t remaining = amount;
+    for (auto &chunk : writing_queue_) {
+      if (remaining == 0) {  // data is over
+        break;
+      }
+      auto chunk_size =
+          std::min(chunk.data.size() - chunk.sent_bytes, remaining);
+      auto chunk_begin = std::next(chunk.data.begin(), chunk.sent_bytes);
+      auto chunk_end = std::next(chunk_begin, chunk_size);
+      if (chunk_begin == chunk_end) {  // empty or completely sent chunk
+        continue;
+      }
+      if (masked) {
+        std::transform(chunk_begin, chunk_end, std::back_inserter(frame),
+                       [&, idx = 0u](uint8_t i) mutable {
+                         return i ^ mask[idx++ % sizeof(mask)];
+                       });
+      } else {
+        std::copy_n(chunk_begin, amount, std::back_inserter(frame));
+      }
+    }
 
     // remove processed data out of buffer
-    std::copy_n(outbuf_.begin() + amount, outbuf_.size() - amount,
-                outbuf_.begin());
-    outbuf_.resize(outbuf_.size() - amount);
-
-    auto write_cb = [self{shared_from_this()}](outcome::result<size_t> result) {
-      IO_OUTCOME_TRY(written_bytes, result, self->write_cb_);
-      if (self->outbuf_.size() != written_bytes) {
-        return self->write_cb_(std::errc::broken_pipe);
+    auto write_cb = [self = shared_from_this(), frame_size = frame.size(),
+                     amount](auto res) mutable {
+      if (res.has_error()) {
+        while (not self->writing_queue_.empty()) {
+          auto &chunk = self->writing_queue_.front();
+          chunk.cb(res.as_failure());
+          self->writing_queue_.pop_front();
+        }
+        return;
       }
-      if (self->outbuf_.empty()) {
-        self->write_cb_(written_bytes);
-      } else {
-        self->sendData();
+
+      auto written_bytes = res.value();
+
+      if (frame_size != written_bytes) {
+        while (not self->writing_queue_.empty()) {
+          auto &chunk = self->writing_queue_.front();
+          chunk.cb(std::errc::broken_pipe);
+          self->writing_queue_.pop_front();
+        }
+        return;
+      }
+
+      while (not self->writing_queue_.empty()) {
+        auto &chunk = self->writing_queue_.front();
+        auto chunk_size = chunk.data.size() - chunk.sent_bytes;
+        if (chunk_size <= amount) {  // completely sent chunk
+          amount -= chunk_size;
+          chunk.cb(chunk.data.size());
+          self->writing_queue_.pop_front();
+        } else {  // partially sent chunk
+          chunk.sent_bytes += amount;
+          break;
+        }
+      }
+
+      if (not self->writing_queue_.empty()) {
+        self->scheduler_->schedule([wp = self->weak_from_this()] {
+          if (auto self = wp.lock()) {
+            self->sendData();
+          }
+        });
       }
     };
 
@@ -345,13 +438,15 @@ namespace libp2p::connection::websocket {
 
   void WsReadWriter::write(gsl::span<const uint8_t> buffer,
                            basic::Writer::WriteCallbackFunc cb) {
-    write_cb_ = std::move(cb);
+    writing_queue_.emplace_back(
+        WritingItem{.data = common::ByteArray(buffer.begin(), buffer.end()),
+                    .cb = std::move(cb)});
 
-    outbuf_.clear();
-    outbuf_.reserve(buffer.size());
-    outbuf_.insert(outbuf_.end(), buffer.begin(), buffer.end());
-
-    sendData();
+    scheduler_->schedule([wp = weak_from_this()] {
+      if (auto self = wp.lock()) {
+        self->sendData();
+      }
+    });
   }
 
 }  // namespace libp2p::connection::websocket

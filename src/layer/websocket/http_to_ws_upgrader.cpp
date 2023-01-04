@@ -23,7 +23,7 @@
     cb((var).error());                         \
     return;                                    \
   }                                            \
-  auto && (val) = (var).value();
+  [[maybe_unused]] auto && (val) = (var).value();
 
 #define IO_OUTCOME_TRY(name, res, cb) \
   IO_OUTCOME_TRY_NAME(UNIQUE_NAME(name), name, res, cb)

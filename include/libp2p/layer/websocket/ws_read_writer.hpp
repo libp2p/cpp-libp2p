@@ -7,7 +7,12 @@
 #define LIBP2P_LAYER_WEBSOCKET_WSREADWRITTER
 
 #include <libp2p/basic/message_read_writer.hpp>
+
+#include <deque>
+
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/connection/layer_connection.hpp>
+#include <libp2p/log/logger.hpp>
 
 namespace libp2p::connection::websocket {
 
@@ -39,7 +44,8 @@ namespace libp2p::connection::websocket {
      * @param connection - raw connection
      * @param buffer - pointer to buffer where to store bytes from network
      */
-    WsReadWriter(std::shared_ptr<connection::LayerConnection> connection,
+    WsReadWriter(std::shared_ptr<basic::Scheduler> scheduler,
+                 std::shared_ptr<connection::LayerConnection> connection,
                  std::shared_ptr<common::ByteArray> buffer);
 
     /// read next message from the network
@@ -59,6 +65,7 @@ namespace libp2p::connection::websocket {
       Idle,
       WaitHeader,
       ReadOpcodeAndPrelen,
+      ReadSizeAndMask,
       HandleHeader,
       WaitData,
       ReadData,
@@ -111,13 +118,19 @@ namespace libp2p::connection::websocket {
     void readData();
     void handleData(outcome::result<size_t> res);
 
+    std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<connection::LayerConnection> connection_;
     std::shared_ptr<common::ByteArray> buffer_;
-    common::ByteArray outbuf_;
+
+    struct WritingItem {
+      common::ByteArray data;
+      size_t sent_bytes = 0;
+      WriteCallbackFunc cb;
+    };
+    std::deque<WritingItem> writing_queue_;
 
     ReadCallbackFunc read_cb_;
     ReadCallbackFunc pong_cb_;
-    WriteCallbackFunc write_cb_;
 
     ReadingState reading_state_ = ReadingState::Idle;
     WritingState writing_state_ = WritingState::Ready;
@@ -137,6 +150,8 @@ namespace libp2p::connection::websocket {
       std::array<uint8_t, 4> mask;
       size_t remaining_data;
     } ctx;
+
+    log::Logger log_;
   };
 
 }  // namespace libp2p::connection::websocket

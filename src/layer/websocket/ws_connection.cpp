@@ -5,29 +5,7 @@
 
 #include <libp2p/layer/websocket/ws_connection.hpp>
 
-#include <boost/asio/error.hpp>
-
-//#include <libp2p/layer/websocket/ws_frame.hpp>
 #include <libp2p/log/logger.hpp>
-
-#define PP_CAT(a, b) PP_CAT_I(a, b)
-#define PP_CAT_I(a, b) PP_CAT_II(~, a##b)
-#define PP_CAT_II(p, res) res
-
-#define UNIQUE_NAME(base) PP_CAT(base, __LINE__)
-
-#define OUTCOME_CB_I(var, res)                   \
-  auto && (var) = (res);                         \
-  if ((var).has_error()) {                       \
-    self->eraseWriteBuffer(ctx.write_buffer_it); \
-    return cb((var).as_failure());               \
-  }
-
-#define OUTCOME_CB_NAME_I(var, val, res) \
-  OUTCOME_CB_I(var, res)                 \
-  [[maybe_unused]] auto && (val) = (var).value();
-
-#define OUTCOME_CB(name, res) OUTCOME_CB_NAME_I(UNIQUE_NAME(name), name, res)
 
 namespace libp2p::connection {
 
@@ -43,7 +21,7 @@ namespace libp2p::connection {
         scheduler_(std::move(scheduler)),
         raw_read_buffer_(std::make_shared<Buffer>()),
         ws_read_writer_(std::make_shared<websocket::WsReadWriter>(
-            connection_, raw_read_buffer_)) {
+            scheduler_, connection_, raw_read_buffer_)) {
     BOOST_ASSERT(config_ != nullptr);
     BOOST_ASSERT(connection_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
@@ -133,7 +111,13 @@ namespace libp2p::connection {
               cb{std::move(cb)},         //
               ctx]                       //
              (auto res) mutable {
-               OUTCOME_CB(read_bytes, res);
+               if (res.has_error()) {
+                 SL_DEBUG(self->log_,
+                          "Can't read data: {}",
+                          res.error().message());
+                 return cb(res.as_failure());
+               }
+               auto read_bytes = res.value();
                ctx.bytes_served += read_bytes;
                self->read(out.subspan(read_bytes), bytes - read_bytes, ctx,
                           std::move(cb));
@@ -151,7 +135,7 @@ namespace libp2p::connection {
   void WsConnection::readSome(gsl::span<uint8_t> out, size_t required_bytes,
                               OperationContext ctx, ReadCallbackFunc cb) {
     // Return available data if any
-    if (not frame_buffer_->empty()) {
+    if (frame_buffer_ && not frame_buffer_->empty()) {
       auto available_bytes =
           std::min<ssize_t>(required_bytes, frame_buffer_->size());
       auto begin = frame_buffer_->begin();
@@ -170,8 +154,14 @@ namespace libp2p::connection {
                            cb = std::move(cb),         //
                            ctx]                        //
                           (auto res) mutable {
-                            OUTCOME_CB(data, res);
-                            self->frame_buffer_ = std::move(res.value());
+                            if (res.has_error()) {
+                              SL_DEBUG(self->log_,
+                                       "Can't read some data: {}",
+                                       res.error().message());
+                              return cb(res.as_failure());
+                            }
+                            auto& data = res.value();
+                            self->frame_buffer_ = std::move(data);
                             self->readSome(out, required_bytes, ctx,
                                            std::move(cb));
                           });
@@ -210,7 +200,13 @@ namespace libp2p::connection {
          cb = std::move(cb),                                //
          ctx]                                               //
         (auto res) mutable {
-          OUTCOME_CB(writen_bytes, res);
+          if (res.has_error()) {
+            SL_DEBUG(self->log_,
+                     "Can't write data: {}",
+                     res.error().message());
+            return cb(res.as_failure());
+          }
+          auto& writen_bytes = res.value();
           ctx.bytes_served += writen_bytes;
           self->write(in, bytes, ctx, std::move(cb));
         });
@@ -230,13 +226,6 @@ namespace libp2p::connection {
   void WsConnection::deferWriteCallback(std::error_code ec,
                                         WriteCallbackFunc cb) {
     connection_->deferWriteCallback(ec, std::move(cb));
-  }
-
-  void WsConnection::onExpireTimer() {
-    // if (streams_.empty() && pending_outbound_streams_.empty()) {
-    //   SL_DEBUG(log_, "closing expired connection");
-    //   close(Error::CONNECTION_NOT_ACTIVE, WsFrame::GoAwayError::NORMAL);
-    // }
   }
 
   void WsConnection::eraseWriteBuffer(BufferList::iterator &iterator) {
