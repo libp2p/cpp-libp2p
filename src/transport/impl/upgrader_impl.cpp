@@ -5,6 +5,10 @@
 
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 
+#include <fmt/format.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <libp2p/multi/converters/conversion_error.hpp>
 #include <numeric>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::transport, UpgraderImpl::Error, e) {
@@ -67,7 +71,7 @@ namespace libp2p::transport {
         [](const auto &adaptor) { return adaptor->getProtocolId(); });
 
     std::transform(
-        muxer_adaptors.begin(), muxer_adaptors.end(),
+        muxer_adaptors_.begin(), muxer_adaptors_.end(),
         std::back_inserter(muxer_protocols_),
         [](const auto &adaptor) { return adaptor->getProtocolId(); });
   }
@@ -77,9 +81,38 @@ namespace libp2p::transport {
     upgradeToNextLayerInbound(0, std::move(conn), std::move(cb));
   }
 
-  void UpgraderImpl::upgradeLayersOutbound(RawSPtr conn,
+  void UpgraderImpl::upgradeLayersOutbound(RawSPtr conn, std::string layers,
                                            OnLayerCallbackFunc cb) {
-    upgradeToNextLayerOutbound(0, std::move(conn), std::move(cb));
+    std::string_view addr = layers;
+    addr.remove_prefix(1);
+    if (addr.back() == '/') {
+      addr.remove_suffix(1);
+    }
+
+    std::vector<std::string> tokens;
+
+    boost::algorithm::split(tokens, addr, boost::algorithm::is_any_of("/"));
+
+    ProtoAddrVec pvs;
+    bool expecting_proto = true;
+    for (auto &token : tokens) {
+      if (expecting_proto) {
+        const auto *p = multi::ProtocolList::get(token);
+        if (p != nullptr) {
+          pvs.emplace_back(*p, "");
+          if (p->size != 0) {
+            expecting_proto = false;
+          }
+        } else {
+          cb(multi::converters::ConversionError::NO_SUCH_PROTOCOL);
+        }
+      } else {  // expecting address
+        pvs.back().second = token;
+        expecting_proto = true;
+      }
+    }
+
+    upgradeToNextLayerOutbound(pvs, 0, std::move(conn), std::move(cb));
   }
 
   void UpgraderImpl::upgradeToNextLayerInbound(size_t layer_index,
@@ -108,28 +141,43 @@ namespace libp2p::transport {
         });
   }
 
-  void UpgraderImpl::upgradeToNextLayerOutbound(size_t layer_index,
+  void UpgraderImpl::upgradeToNextLayerOutbound(ProtoAddrVec layers,
+                                                size_t layer_index,
                                                 LayerSPtr conn,
                                                 OnLayerCallbackFunc cb) {
     BOOST_ASSERT_MSG(conn->isInitiator(),
                      "connection is NOT initiator, and upgrade of outbound is "
                      "called (should be upgrade of inbound)");
 
-    if (layer_index >= layer_adaptors_.size()) {
+    if (layer_index >= layers.size()) {
       return cb(conn);
     }
-    const auto &adaptor = layer_adaptors_[layer_index];
+    const auto &protocol = layers[layer_index];
+
+    auto adaptor_it =
+        std::find_if(layer_adaptors_.begin(), layer_adaptors_.end(),
+                     [&](const auto &adaptor) {
+                       return adaptor->getProtocolId()
+                           == fmt::format("/{}", protocol.first.name);
+                     });
+
+    if (adaptor_it == layer_adaptors_.end()) {
+      return cb(multi::converters::ConversionError::NOT_IMPLEMENTED);
+    }
+
+    const auto &adaptor = *adaptor_it;
 
     return adaptor->upgradeOutbound(
         conn,
-        [self{shared_from_this()}, layer_index, cb{std::move(cb)}](
+        [self{shared_from_this()}, layers, layer_index, cb{std::move(cb)}](
             outcome::result<LayerSPtr> next_layer_conn_res) mutable {
           if (next_layer_conn_res.has_error()) {
             return cb(next_layer_conn_res.error());
           }
           auto &next_layer_conn = next_layer_conn_res.value();
-          self->upgradeToNextLayerOutbound(
-              layer_index + 1, std::move(next_layer_conn), std::move(cb));
+          self->upgradeToNextLayerOutbound(layers, layer_index + 1,
+                                           std::move(next_layer_conn),
+                                           std::move(cb));
         });
   }
 

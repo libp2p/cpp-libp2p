@@ -43,7 +43,8 @@ namespace libp2p::transport {
 
     void upgradeLayersInbound(RawSPtr conn, OnLayerCallbackFunc cb) override;
 
-    void upgradeLayersOutbound(RawSPtr conn, OnLayerCallbackFunc cb) override;
+    void upgradeLayersOutbound(RawSPtr conn, std::string layers,
+                               OnLayerCallbackFunc cb) override;
 
     void upgradeToSecureInbound(LayerSPtr conn,
                                 OnSecuredCallbackFunc cb) override;
@@ -55,8 +56,10 @@ namespace libp2p::transport {
     enum class Error { SUCCESS = 0, NO_ADAPTOR_FOUND = 1 };
 
    private:
-    void upgradeToNextLayerOutbound(size_t layer_index, LayerSPtr conn,
-                                    OnLayerCallbackFunc cb);
+    using ProtoAddrVec = std::vector<std::pair<multi::Protocol, std::string>>;
+
+    void upgradeToNextLayerOutbound(ProtoAddrVec layers, size_t layer_index,
+                                    LayerSPtr conn, OnLayerCallbackFunc cb);
 
     void upgradeToNextLayerInbound(size_t layer_index, LayerSPtr conn,
                                    OnLayerCallbackFunc cb);

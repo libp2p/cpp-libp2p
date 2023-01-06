@@ -10,10 +10,12 @@
 
 namespace libp2p::layer {
 
-  WsAdaptor::WsAdaptor(std::shared_ptr<basic::Scheduler> scheduler,
-                       std::shared_ptr<const WsConnectionConfig> config,
-                       bool tls_enabled)
+  WsAdaptor::WsAdaptor(
+      std::shared_ptr<basic::Scheduler> scheduler,
+      std::shared_ptr<crypto::random::RandomGenerator> random_generator,
+      std::shared_ptr<const WsConnectionConfig> config, bool tls_enabled)
       : scheduler_(std::move(scheduler)),
+        random_generator_(std::move(random_generator)),
         config_(std::move(config)),
         tls_enabled_(tls_enabled) {
     BOOST_ASSERT(scheduler_ != nullptr);
@@ -24,7 +26,7 @@ namespace libp2p::layer {
       LayerAdaptor::LayerConnCallbackFunc cb) const {
     log_->info("upgrade inbound connection to websocket");
     auto upgrader = std::make_shared<websocket::HttpToWsUpgrader>(
-        conn, false, std::move(cb), scheduler_, config_);
+        conn, false, std::move(cb), scheduler_, random_generator_, config_);
     upgrader->upgrade();
   }
 
@@ -33,7 +35,7 @@ namespace libp2p::layer {
       LayerAdaptor::LayerConnCallbackFunc cb) const {
     log_->info("upgrade outbound connection to websocket");
     auto upgrader = std::make_shared<websocket::HttpToWsUpgrader>(
-        conn, true, std::move(cb), scheduler_, config_);
+        conn, true, std::move(cb), scheduler_, random_generator_, config_);
     upgrader->upgrade();
   }
 

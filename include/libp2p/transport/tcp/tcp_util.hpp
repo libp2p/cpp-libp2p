@@ -86,6 +86,31 @@ namespace libp2p::transport::detail {
     return {host, port};
   }
 
+  // Obtain layers string from provided address
+  inline std::string getLayers(const multi::Multiaddress &address) {
+    auto v = address.getProtocolsWithValues();
+
+    // get host
+    auto it = v.begin();
+    // get port
+    ++it;
+
+    std::string layers;
+    while (++it != v.end()) {
+      if (it->first.code == multi::Protocol::Code::P2P) {
+        break;
+      }
+      layers += "/";
+      layers += it->first.name;
+      if (not it->second.empty()) {
+        layers += "/";
+        layers += it->second;
+      }
+    }
+
+    return layers;
+  }
+
   inline outcome::result<boost::asio::ip::tcp::endpoint> makeEndpoint(
       const multi::Multiaddress &ma) {
     using P = multi::Protocol::Code;
@@ -94,7 +119,7 @@ namespace libp2p::transport::detail {
     try {
       auto v = ma.getProtocolsWithValues();
       auto it = v.begin();
-      if (!(it->first.code == P::IP4 || it->first.code == P::IP6)) {
+      if (it->first.code != P::IP4 && it->first.code != P::IP6) {
         return std::errc::address_family_not_supported;
       }
 

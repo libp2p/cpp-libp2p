@@ -14,7 +14,7 @@ namespace libp2p::transport {
 
   namespace {
     auto &log() {
-      static auto logger = log::createLogger("tcp-conn");
+      static auto logger = log::createLogger("TcpConnection");
       return *logger;
     }
 

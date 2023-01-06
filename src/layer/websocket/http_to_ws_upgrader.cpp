@@ -50,16 +50,19 @@ namespace libp2p::layer::websocket {
       std::shared_ptr<connection::LayerConnection> connection,
       bool is_initiator, LayerAdaptor::LayerConnCallbackFunc cb,
       std::shared_ptr<basic::Scheduler> scheduler,
+      std::shared_ptr<crypto::random::RandomGenerator> random_generator,
       std::shared_ptr<const WsConnectionConfig> config)
       : conn_{std::move(connection)},
         initiator_{is_initiator},
         connection_cb_{std::move(cb)},
         scheduler_{std::move(scheduler)},
+        random_generator_{std::move(random_generator)},
         config_{std::move(config)},
         read_buffer_{std::make_shared<common::ByteArray>(kMaxMsgLen)},
         rw_{std::make_shared<HttpReadWriter>(conn_, read_buffer_)} {
     BOOST_ASSERT(conn_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
+    BOOST_ASSERT(random_generator_ != nullptr);
     BOOST_ASSERT(config_ != nullptr);
     read_buffer_->resize(kMaxMsgLen);
   }
@@ -89,7 +92,7 @@ namespace libp2p::layer::websocket {
           if (handle_result.has_error()) {
             // handle error if needed
           }
-          return self->onUpgraded(handle_result.error());
+          return self->onUpgraded(handle_result);
         });
       });
 
@@ -129,19 +132,29 @@ namespace libp2p::layer::websocket {
   }  // namespace
 
   gsl::span<const uint8_t> HttpToWsUpgrader::createHttpRequest() {
-    static auto request = strToSpan(
+    static std::string request_;
+    request_ =
         "GET /index.html HTTP/1.1\r\n"  // FIXME hardcode
         "Host: www.example.com\r\n"
-        "Connection: upgrade\r\n"
-        "Upgrade: websocket\r\n"
-        "\r\n");
+        "Connection: Upgrade\r\n"
+        "Upgrade: websocket\r\n";
+    std::array<uint8_t, 20> data;
+    random_generator_->fillRandomly(data);
+    key_.emplace(multi::detail::encodeBase64({data.begin(), data.end()}));
+    request_ += "Sec-WebSocket-Key: ";
+    request_ += key_.value();
+    request_ += "\r\n";
+    request_ += "\r\n";
+
+    auto request = strToSpan(request_);
     return request;
   }
 
   gsl::span<const uint8_t> HttpToWsUpgrader::createHttpResponse() {
-    static std::string response_ =
+    static std::string response_;
+    response_ =
         "HTTP/1.1 101 Switching Protocols\r\n"  // FIXME hardcode
-        "Connection: upgrade\r\n"
+        "Connection: Upgrade\r\n"
         "Upgrade: websocket\r\n";
     if (key_.has_value()) {
       static const auto guid =
@@ -163,17 +176,11 @@ namespace libp2p::layer::websocket {
 
   void HttpToWsUpgrader::sendHttpUpgradeRequest(
       gsl::span<const uint8_t> payload, basic::Writer::WriteCallbackFunc cb) {
-    // IO_OUTCOME_TRY(write_result, handshake_state_->writeMessage({}, payload),
-    //                cb);
-    // auto write_cb = [self{shared_from_this()}, cb{std::move(cb)},
-    //                  wr{write_result}](outcome::result<size_t> result) {
-    //   IO_OUTCOME_TRY(bytes_written, result, cb);
-    //   if (wr.cs1 and wr.cs2) {
-    //     self->setCipherStates(wr.cs1, wr.cs2);
-    //   }
-    //   cb(bytes_written);
-    // };
-    // rw_->write(write_result.data, write_cb);
+    auto write_cb = [self{shared_from_this()}, cb{std::move(cb)}](auto result) {
+      IO_OUTCOME_TRY(buffer, result, cb);
+      cb(std::move(buffer));
+    };
+    rw_->write(payload, write_cb);
   }
 
   void HttpToWsUpgrader::readHttpUpgradeRequest(
@@ -195,15 +202,13 @@ namespace libp2p::layer::websocket {
   }
 
   void HttpToWsUpgrader::readHttpUpgradeResponse(
-      basic::MessageReadWriter::ReadCallbackFunc cb) {}
-
-  //  namespace {
-  //    gsl::span<const uint8_t> strToSpan(std::string_view str) {
-  //      return gsl::span<const uint8_t>(
-  //          reinterpret_cast<const uint8_t *>(str.data()),  // NOLINT
-  //          str.size());
-  //    }
-  //  }  // namespace
+      basic::MessageReadWriter::ReadCallbackFunc cb) {
+    auto read_cb = [self{shared_from_this()}, cb{std::move(cb)}](auto result) {
+      IO_OUTCOME_TRY(buffer, result, cb);
+      cb(std::move(buffer));
+    };
+    rw_->read(read_cb);
+  }
 
   outcome::result<void> HttpToWsUpgrader::handleRemoteRequest(
       gsl::span<const uint8_t> payload) {
@@ -263,10 +268,75 @@ namespace libp2p::layer::websocket {
 
   outcome::result<void> HttpToWsUpgrader::handleRemoteResponse(
       gsl::span<const uint8_t> payload) {
-    // TODO process request:
+    bool status_is_101 = false;
+    bool connection_is_upgrade = false;
+    bool upgrade_is_websocket = false;
+    std::string accept_hash;
+    bool valid_accept = false;
+
+    if (payload.subspan(0, 12) == strToSpan("HTTP/1.1 101")) {  // NOLINT
+      status_is_101 = true;
+    }
+
+    auto delimiter = strToSpan("\r\n");
+
+    ssize_t begin = 0;
+    ssize_t end;
+    for (ssize_t pos = 0; pos <= payload.size() - delimiter.size(); ++pos) {
+      if (payload.subspan(pos, delimiter.size()) == delimiter) {
+        end = pos;
+        if (end == begin) {
+          break;
+        }
+        auto line = payload.subspan(begin, end - begin);
+
+        if (line.size() > 12
+            and line.subspan(0, 12) == strToSpan("Connection: ")) {
+          if (line.subspan(12) == strToSpan("Upgrade")) {
+            connection_is_upgrade = true;
+          }
+        } else if (line.size() > 9
+                   and line.subspan(0, 9) == strToSpan("Upgrade: ")) {
+          if (line.subspan(9) == strToSpan("websocket")) {
+            upgrade_is_websocket = true;
+          }
+        } else if (line.size() > 22
+                   and line.subspan(0, 22)
+                       == strToSpan("Sec-WebSocket-Accept: ")) {
+          accept_hash.assign(std::next(line.begin(), 22), line.end());
+        }
+
+        begin = pos + delimiter.size();
+        pos = begin;
+      }
+    }
+
+    if (key_.has_value()) {
+      static const auto guid =
+          strToSpan("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+      std::vector<uint8_t> data(key_->begin(), key_->end());
+      data.insert(data.end(), guid.begin(), guid.end());
+      auto hash = crypto::sha1(data).value();
+      valid_accept = accept_hash
+          == multi::detail::encodeBase64({hash.begin(), hash.end()});
+    }
+
     // - this is HTTP response with code 101
+    if (not status_is_101) {
+      return Error::BAD_RESPONSE;
+    }
+    // - header Connection is upgrade
+    if (not connection_is_upgrade) {
+      return Error::BAD_RESPONSE;
+    }
     // - header Upgrade is websocket
+    if (not upgrade_is_websocket) {
+      return Error::BAD_RESPONSE;
+    }
     // - Sec-WebSocket-Accept corresponds of request's Sec-WebSocket-Key
+    if (not valid_accept) {
+      return Error::BAD_RESPONSE;
+    }
 
     return outcome::success();
   }

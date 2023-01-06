@@ -10,6 +10,7 @@
 #include <libp2p/basic/scheduler.hpp>
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
+#include <libp2p/crypto/random_generator.hpp>
 #include <libp2p/crypto/hmac_provider.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/crypto/x25519_provider.hpp>
@@ -31,11 +32,12 @@ namespace libp2p::layer::websocket {
     HttpToWsUpgrader(std::shared_ptr<connection::LayerConnection> connection,
                      bool is_initiator, LayerAdaptor::LayerConnCallbackFunc cb,
                      std::shared_ptr<basic::Scheduler> scheduler,
+                     std::shared_ptr<crypto::random::RandomGenerator> random_generator,
                      std::shared_ptr<const WsConnectionConfig> config);
 
     void upgrade();
 
-    enum class Error { BAD_REQUEST };
+    enum class Error { BAD_REQUEST, BAD_RESPONSE };
 
    private:
     // Outbound connection
@@ -72,6 +74,7 @@ namespace libp2p::layer::websocket {
     bool initiator_;
     LayerAdaptor::LayerConnCallbackFunc connection_cb_;
     std::shared_ptr<basic::Scheduler> scheduler_;
+    std::shared_ptr<crypto::random::RandomGenerator> random_generator_;
     std::shared_ptr<const WsConnectionConfig> config_;
 
     std::shared_ptr<common::ByteArray> read_buffer_;

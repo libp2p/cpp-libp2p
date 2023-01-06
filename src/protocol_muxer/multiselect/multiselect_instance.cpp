@@ -16,7 +16,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
   namespace {
     const log::Logger &log() {
-      static log::Logger logger = log::createLogger("multiselect");
+      static log::Logger logger = log::createLogger("Multiselect");
       return logger;
     }
   }  // namespace

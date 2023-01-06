@@ -29,7 +29,7 @@ namespace libp2p::transport {
 
     void upgradeInbound();
 
-    void upgradeOutbound(const peer::PeerId &remoteId);
+    void upgradeOutbound(std::string layers, const peer::PeerId &remoteId);
 
    private:
     std::shared_ptr<transport::Upgrader> upgrader_;

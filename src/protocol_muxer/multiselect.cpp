@@ -12,7 +12,7 @@ namespace libp2p::protocol_muxer::multiselect {
   namespace {
 #ifndef WITHOUT_TRACE_LOG_MESSAGE
     const log::Logger &log() {
-      static log::Logger logger = log::createLogger("multiselect");
+      static log::Logger logger = log::createLogger("Multiselect");
       return logger;
     }
 #endif

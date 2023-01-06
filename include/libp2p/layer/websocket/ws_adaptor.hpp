@@ -7,6 +7,7 @@
 #define LIBP2P_LAYER_WEBSOCKETADAPTOR
 
 #include <libp2p/basic/scheduler.hpp>
+#include <libp2p/crypto/random_generator.hpp>
 #include <libp2p/layer/layer_adaptor.hpp>
 #include <libp2p/layer/layer_connection_config.hpp>
 #include <libp2p/layer/websocket/ws_connection.hpp>
@@ -20,6 +21,7 @@ namespace libp2p::layer {
     static constexpr auto kSecureProtocolId = "/wss";
 
     WsAdaptor(std::shared_ptr<basic::Scheduler> scheduler,
+              std::shared_ptr<crypto::random::RandomGenerator> random_generator,
               std::shared_ptr<const WsConnectionConfig> config,
               bool tls_enabled = false);
 
@@ -37,6 +39,7 @@ namespace libp2p::layer {
 
    private:
     std::shared_ptr<basic::Scheduler> scheduler_;
+    std::shared_ptr<crypto::random::RandomGenerator> random_generator_;
     std::shared_ptr<const WsConnectionConfig> config_;
     bool tls_enabled_;
 

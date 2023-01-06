@@ -30,16 +30,19 @@ namespace libp2p::transport {
 
     auto [host, port] = detail::getHostAndTcpPort(address);
 
+    auto layers = detail::getLayers(address);
+
     auto connect = [self{shared_from_this()}, conn, handler{std::move(handler)},
-                    remoteId, timeout](auto ec, auto r) mutable {
+                    remoteId, layers = std::move(layers),
+                    timeout](auto ec, auto r) mutable {
       if (ec) {
         return handler(ec);
       }
 
       conn->connect(
           r,
-          [self, conn, handler{std::move(handler)}, remoteId](auto ec,
-                                                              auto &e) mutable {
+          [self, conn, handler{std::move(handler)}, remoteId,
+           layers = std::move(layers)](auto ec, auto &e) mutable {
             if (ec) {
               conn->close();
               return handler(ec);
@@ -48,7 +51,7 @@ namespace libp2p::transport {
             auto session = std::make_shared<UpgraderSession>(
                 self->upgrader_, std::move(conn), handler);
 
-            session->upgradeOutbound(remoteId);
+            session->upgradeOutbound(layers, remoteId);
           },
           timeout);
     };

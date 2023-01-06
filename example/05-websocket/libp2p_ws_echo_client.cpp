@@ -9,6 +9,7 @@
 
 #include <libp2p/common/literals.hpp>
 #include <libp2p/injector/host_injector.hpp>
+#include <libp2p/layer/websocket/ws_adaptor.hpp>
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/protocol/echo.hpp>
@@ -90,7 +91,8 @@ int main(int argc, char *argv[]) {
   libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{1}};
 
   // create a default Host via an injector
-  auto injector = libp2p::injector::makeHostInjector();
+  auto injector = libp2p::injector::makeHostInjector(
+      libp2p::injector::useLayerAdaptors<libp2p::layer::WsAdaptor>());
 
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
 
