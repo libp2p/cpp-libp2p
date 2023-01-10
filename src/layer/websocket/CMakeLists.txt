@@ -4,7 +4,7 @@
 #
 
 libp2p_add_library(p2p_websocket
-    ws_adapter.cpp
+    ws_adaptor.cpp
     http_to_ws_upgrader.cpp
     http_read_writer.cpp
     )

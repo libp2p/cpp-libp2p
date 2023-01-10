@@ -46,7 +46,7 @@ namespace libp2p::connection::websocket {
      */
     WsReadWriter(std::shared_ptr<basic::Scheduler> scheduler,
                  std::shared_ptr<connection::LayerConnection> connection,
-                 std::shared_ptr<common::ByteArray> buffer);
+                 gsl::span<const uint8_t> preloaded_data);
 
     /// read next message from the network
     void read(ReadCallbackFunc cb) override;
@@ -62,7 +62,6 @@ namespace libp2p::connection::websocket {
     void sendPong(gsl::span<const uint8_t> buffer);
 
     enum class ReadingState {
-      Idle,
       WaitHeader,
       ReadOpcodeAndPrelen,
       ReadSizeAndMask,
@@ -110,20 +109,34 @@ namespace libp2p::connection::websocket {
     };
 
    private:
+    template <class CallBack>
+    void defferCall(CallBack &&cb) {
+      scheduler_->schedule([cb = std::forward<CallBack>(cb)] { cb(); });
+    }
+
+    void consume(size_t size);
+
+    void read(size_t size, std::function<void()> cb);
+    void readSome(size_t size, std::function<void()> cb);
+
     void readFlagsAndPrelen();
-    void handleFlagsAndPrelen(outcome::result<size_t> res);
+    void handleFlagsAndPrelen();
     void readSizeAndMask();
-    void handleSizeAndMask(outcome::result<size_t> res);
+    void handleSizeAndMask();
     void handleFrame();
     void readData();
-    void handleData(outcome::result<size_t> res);
+    void handleData();
 
     std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<connection::LayerConnection> connection_;
-    std::shared_ptr<common::ByteArray> buffer_;
+
+    std::shared_ptr<common::ByteArray> read_buffer_;
+    size_t read_bytes_ = 0;
 
     struct WritingItem {
       common::ByteArray data;
+      size_t header_size = 0;
+      size_t written_bytes = 0;
       size_t sent_bytes = 0;
       WriteCallbackFunc cb;
     };
@@ -132,7 +145,7 @@ namespace libp2p::connection::websocket {
     ReadCallbackFunc read_cb_;
     ReadCallbackFunc pong_cb_;
 
-    ReadingState reading_state_ = ReadingState::Idle;
+    ReadingState reading_state_ = ReadingState::WaitHeader;
     WritingState writing_state_ = WritingState::Ready;
     Opcode last_frame_opcode_;
     std::shared_ptr<common::ByteArray> incoming_ping_data_;
@@ -146,9 +159,10 @@ namespace libp2p::connection::websocket {
       Opcode opcode;
       uint8_t prelen;
       bool masked;
-      size_t length;
+      uint8_t mask_index = 0;
+      size_t length = 0;
       std::array<uint8_t, 4> mask;
-      size_t remaining_data;
+      size_t remaining_data = 0;
     } ctx;
 
     log::Logger log_;

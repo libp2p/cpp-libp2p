@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
   using libp2p::crypto::PublicKey;
   using libp2p::common::operator""_unhex;
 
-  auto run_duration = std::chrono::seconds(5);
+  auto run_duration = std::chrono::seconds(3000);
 
   std::string message("Hello from C++");
 

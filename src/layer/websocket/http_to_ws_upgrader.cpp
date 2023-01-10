@@ -32,10 +32,23 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::layer::websocket, HttpToWsUpgrader::Error,
                             e) {
   using E = libp2p::layer::websocket::HttpToWsUpgrader::Error;
   switch (e) {
-    case E::BAD_REQUEST:
-      return "Bad request";
+    case E::BAD_REQUEST_BAD_METHOD:
+      return "Bad method of request";
+    case E::BAD_REQUEST_BAD_UPDATE_HEADER:
+      return "Update-header of request is absent or invalid";
+    case E::BAD_REQUEST_BAD_CONNECTION_HEADER:
+      return "Connection-header of request is absent or invalid";
+    case E::BAD_RESPONSE_BAD_STATUS:
+      return "Bad status of response or invalid";
+    case E::BAD_RESPONSE_BAD_UPDATE_HEADER:
+      return "Update-header of response is absent or invalid";
+    case E::BAD_RESPONSE_BAD_CONNECTION_HEADER:
+      return "Connection-header of response is absent or invalid";
+    case E::BAD_RESPONSE_BAD_WS_ACCEPT_HEADER:
+      return "SecWsAccept-header of response is absent, invalid "
+             "or does not match sent key";
     default:
-      return "Unknown error";
+      return "Unknown error (HttpToWsUpgrader::Error)";
   }
 }
 
@@ -254,13 +267,13 @@ namespace libp2p::layer::websocket {
     }
 
     if (not method_is_get) {
-      return Error::BAD_REQUEST;
+      return Error::BAD_REQUEST_BAD_METHOD;
     }
     if (not connection_is_upgrade) {
-      return Error::BAD_REQUEST;
+      return Error::BAD_REQUEST_BAD_CONNECTION_HEADER;
     }
     if (not upgrade_is_websocket) {
-      return Error::BAD_REQUEST;
+      return Error::BAD_REQUEST_BAD_UPDATE_HEADER;
     }
 
     return outcome::success();
@@ -323,19 +336,19 @@ namespace libp2p::layer::websocket {
 
     // - this is HTTP response with code 101
     if (not status_is_101) {
-      return Error::BAD_RESPONSE;
+      return Error::BAD_RESPONSE_BAD_STATUS;
     }
     // - header Connection is upgrade
     if (not connection_is_upgrade) {
-      return Error::BAD_RESPONSE;
+      return Error::BAD_RESPONSE_BAD_CONNECTION_HEADER;
     }
     // - header Upgrade is websocket
     if (not upgrade_is_websocket) {
-      return Error::BAD_RESPONSE;
+      return Error::BAD_RESPONSE_BAD_UPDATE_HEADER;
     }
     // - Sec-WebSocket-Accept corresponds of request's Sec-WebSocket-Key
     if (not valid_accept) {
-      return Error::BAD_RESPONSE;
+      return Error::BAD_RESPONSE_BAD_WS_ACCEPT_HEADER;
     }
 
     return outcome::success();
@@ -348,8 +361,8 @@ namespace libp2p::layer::websocket {
     }
     log_->info("WsHandshake succeeded");
 
-    auto ws_connection =
-        std::make_shared<connection::WsConnection>(config_, conn_, scheduler_);
+    auto ws_connection = std::make_shared<connection::WsConnection>(
+        config_, conn_, scheduler_, rw_->remainingData());
     ws_connection->start();
     connection_cb_(std::move(ws_connection));
   }

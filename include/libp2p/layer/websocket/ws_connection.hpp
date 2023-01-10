@@ -11,7 +11,6 @@
 #include <libp2p/connection/layer_connection.hpp>
 #include <libp2p/layer/websocket/ws_connection_config.hpp>
 #include <libp2p/layer/websocket/ws_read_writer.hpp>
-#include <libp2p/layer/websocket/ws_reading_state.hpp>
 #include <libp2p/log/logger.hpp>
 
 namespace libp2p::connection {
@@ -22,8 +21,8 @@ namespace libp2p::connection {
     using BufferList = std::list<common::ByteArray>;
 
     struct OperationContext {
-      size_t bytes_served;                /// written or read bytes count
-      const size_t total_bytes;           /// total size to process
+      size_t bytes_served;                   /// written or read bytes count
+      const size_t total_bytes;              /// total size to process
       BufferList::iterator write_buffer_it;  /// temporary data storage
     };
 
@@ -40,7 +39,8 @@ namespace libp2p::connection {
     explicit WsConnection(
         std::shared_ptr<const layer::WsConnectionConfig> config,
         std::shared_ptr<LayerConnection> connection,
-        std::shared_ptr<basic::Scheduler> scheduler);
+        std::shared_ptr<basic::Scheduler> scheduler,
+        gsl::span<const uint8_t> preloaded_data);
 
     bool isInitiator() const noexcept override;
 
@@ -78,13 +78,8 @@ namespace libp2p::connection {
     void read(gsl::span<uint8_t> out, size_t bytes, OperationContext ctx,
               ReadCallbackFunc cb);
 
-    void readSome(gsl::span<uint8_t> out, size_t required_bytes, OperationContext ctx,
-                  ReadCallbackFunc cb);
-
-    void write(gsl::span<const uint8_t> in, size_t bytes, OperationContext ctx,
-               WriteCallbackFunc cb);
-
-    void eraseWriteBuffer(BufferList::iterator &iterator);
+    void readSome(gsl::span<uint8_t> out, size_t required_bytes,
+                  OperationContext ctx, ReadCallbackFunc cb);
 
     /// Config
     std::shared_ptr<const layer::WsConnectionConfig> config_;
@@ -98,12 +93,10 @@ namespace libp2p::connection {
     /// True if started
     bool started_ = false;
 
-    std::shared_ptr<Buffer> raw_read_buffer_;
-    std::shared_ptr<common::ByteArray> frame_buffer_;
+    BufferList read_buffers_;
     std::shared_ptr<websocket::WsReadWriter> ws_read_writer_;
     BufferList write_buffers_;
     log::Logger log_ = log::createLogger("WsConnection");
-
 
     /// True if waiting for current write operation to complete
     bool is_writing_ = false;
