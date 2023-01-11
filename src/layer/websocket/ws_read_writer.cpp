@@ -225,6 +225,9 @@ namespace libp2p::connection::websocket {
     }
 
     consume(processed_bytes);
+    if (read_buffer_->size() < ctx.length) {
+      read_buffer_->resize(std::min(ctx.length, kMaxFrameSize));
+    }
 
     reading_state_ = ReadingState::HandleHeader;
     handleFrame();
@@ -257,8 +260,7 @@ namespace libp2p::connection::websocket {
     }
 
     else {
-      SL_DEBUG(log_, "Can't handle frame: {}",
-               make_error_code(Error::UNKNOWN_OPCODE).message());
+      SL_DEBUG(log_, "Can't handle frame: unknown opcode 0x{:X}", ctx.opcode);
       read_cb_(Error::UNKNOWN_OPCODE);
       return;
     }

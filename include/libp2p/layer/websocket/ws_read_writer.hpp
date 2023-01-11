@@ -156,7 +156,7 @@ namespace libp2p::connection::websocket {
 
     struct Context {
       bool finally;
-      Opcode opcode;
+      Opcode opcode = Opcode::_undefined;
       uint8_t prelen;
       bool masked;
       uint8_t mask_index = 0;

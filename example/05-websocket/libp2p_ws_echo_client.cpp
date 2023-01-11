@@ -47,8 +47,8 @@ int main(int argc, char *argv[]) {
     if (n > (int)message.size()) {  // NOLINT
       std::string jumbo_message;
       auto sz = static_cast<size_t>(n);
-      jumbo_message.reserve(sz + message.size());
-      for (size_t i = 0, count = sz / message.size(); i < count; ++i) {
+      jumbo_message.reserve(sz + message.size() - 1);
+      while (jumbo_message.size() < sz) {
         jumbo_message.append(message);
       }
       jumbo_message.resize(sz);
