@@ -41,9 +41,10 @@ namespace libp2p::transport {
 
     ~UpgraderImpl() override = default;
 
-    void upgradeLayersInbound(RawSPtr conn, OnLayerCallbackFunc cb) override;
+    void upgradeLayersInbound(RawSPtr conn, ProtoAddrVec layers,
+                              OnLayerCallbackFunc cb) override;
 
-    void upgradeLayersOutbound(RawSPtr conn, std::string layers,
+    void upgradeLayersOutbound(RawSPtr conn, ProtoAddrVec layers,
                                OnLayerCallbackFunc cb) override;
 
     void upgradeToSecureInbound(LayerSPtr conn,
@@ -56,13 +57,27 @@ namespace libp2p::transport {
     enum class Error { SUCCESS = 0, NO_ADAPTOR_FOUND = 1 };
 
    private:
-    using ProtoAddrVec = std::vector<std::pair<multi::Protocol, std::string>>;
+    /**
+     * Upgrade outbound connection to next layer one
+     * @param conn to be upgraded
+     * @param layers - protocols vector of required layers
+     * @param layer_index - next layer index to update the connection
+     * @param cb - callback, which is called, when a connection is upgraded or
+     * error happens
+     */
+    void upgradeToNextLayerOutbound(LayerSPtr conn, ProtoAddrVec layers,
+                                    size_t layer_index, OnLayerCallbackFunc cb);
 
-    void upgradeToNextLayerOutbound(ProtoAddrVec layers, size_t layer_index,
-                                    LayerSPtr conn, OnLayerCallbackFunc cb);
-
-    void upgradeToNextLayerInbound(size_t layer_index, LayerSPtr conn,
-                                   OnLayerCallbackFunc cb);
+    /**
+     * Upgrade inbound connection to next layer one
+     * @param conn to be upgraded
+     * @param layers - protocols vector of required layers
+     * @param layer_index - next layer index to update the connection
+     * @param cb - callback, which is called, when a connection is upgraded or
+     * error happens
+     */
+    void upgradeToNextLayerInbound(LayerSPtr conn, ProtoAddrVec layers,
+                                   size_t layer_index, OnLayerCallbackFunc cb);
 
     std::shared_ptr<protocol_muxer::ProtocolMuxer> protocol_muxer_;
 

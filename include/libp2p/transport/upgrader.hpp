@@ -23,6 +23,8 @@ namespace libp2p::transport {
    * and using the chosen protocols to actually upgrade the connections
    */
   struct Upgrader {
+    using ProtoAddrVec = std::vector<std::pair<multi::Protocol, std::string>>;
+
     using RawSPtr = std::shared_ptr<connection::RawConnection>;
     using LayerSPtr = std::shared_ptr<connection::LayerConnection>;
     using SecSPtr = std::shared_ptr<connection::SecureConnection>;
@@ -35,21 +37,26 @@ namespace libp2p::transport {
     virtual ~Upgrader() = default;
 
     /**
-     * Upgrade outbound connection to next layer one
+     * Upgrade outbound connection to each required layers
      * @param conn to be upgraded
+     * @param layers - vector of layer protocols for each of which you need to
+     * update the connection
      * @param cb - callback, which is called, when a connection is upgraded or
      * error happens
      */
-    virtual void upgradeLayersOutbound(RawSPtr conn, std::string layers,
+    virtual void upgradeLayersOutbound(RawSPtr conn, ProtoAddrVec layers,
                                        OnLayerCallbackFunc cb) = 0;
 
     /**
-     * Upgrade inbound connection to next layer one
+     * Upgrade inbound connection to each required layers
      * @param conn to be upgraded
+     * @param layers - vector of layer protocols for each of which you need to
+     * update the connection
      * @param cb - callback, which is called, when a connection is upgraded or
      * error happens
      */
-    virtual void upgradeLayersInbound(RawSPtr conn, OnLayerCallbackFunc cb) = 0;
+    virtual void upgradeLayersInbound(RawSPtr conn, ProtoAddrVec layers,
+                                      OnLayerCallbackFunc cb) = 0;
 
     /**
      * Upgrade outbound raw connection to the secure one

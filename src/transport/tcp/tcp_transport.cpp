@@ -44,14 +44,14 @@ namespace libp2p::transport {
           [self, conn, handler{std::move(handler)}, remoteId,
            layers = std::move(layers)](auto ec, auto &e) mutable {
             if (ec) {
-              conn->close();
+              std::ignore = conn->close();
               return handler(ec);
             }
 
             auto session = std::make_shared<UpgraderSession>(
-                self->upgrader_, std::move(conn), handler);
+                self->upgrader_, std::move(layers), std::move(conn), handler);
 
-            session->upgradeOutbound(layers, remoteId);
+            session->upgradeOutbound(remoteId);
           },
           timeout);
     };

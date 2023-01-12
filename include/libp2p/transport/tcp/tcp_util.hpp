@@ -86,29 +86,19 @@ namespace libp2p::transport::detail {
     return {host, port};
   }
 
+  using ProtoAddrVec = std::vector<std::pair<multi::Protocol, std::string>>;
+
   // Obtain layers string from provided address
-  inline std::string getLayers(const multi::Multiaddress &address) {
+  inline ProtoAddrVec getLayers(const multi::Multiaddress &address) {
     auto v = address.getProtocolsWithValues();
 
-    // get host
-    auto it = v.begin();
-    // get port
-    ++it;
+    auto begin = std::next(v.begin(), 2);  // skip host and port
 
-    std::string layers;
-    while (++it != v.end()) {
-      if (it->first.code == multi::Protocol::Code::P2P) {
-        break;
-      }
-      layers += "/";
-      layers += it->first.name;
-      if (not it->second.empty()) {
-        layers += "/";
-        layers += it->second;
-      }
-    }
+    auto end = std::find_if(begin, v.end(), [](const auto &p) {
+      return p.first.code == multi::Protocol::Code::P2P;
+    });
 
-    return layers;
+    return {begin, end};
   }
 
   inline outcome::result<boost::asio::ip::tcp::endpoint> makeEndpoint(

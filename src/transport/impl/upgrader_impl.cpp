@@ -6,8 +6,6 @@
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 
 #include <fmt/format.h>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <libp2p/multi/converters/conversion_error.hpp>
 #include <numeric>
 
@@ -76,47 +74,21 @@ namespace libp2p::transport {
         [](const auto &adaptor) { return adaptor->getProtocolId(); });
   }
 
-  void UpgraderImpl::upgradeLayersInbound(RawSPtr conn,
+  void UpgraderImpl::upgradeLayersInbound(RawSPtr conn, ProtoAddrVec layers,
                                           OnLayerCallbackFunc cb) {
-    upgradeToNextLayerInbound(0, std::move(conn), std::move(cb));
+    upgradeToNextLayerInbound(std::move(conn), std::move(layers), 0,
+                              std::move(cb));
   }
 
-  void UpgraderImpl::upgradeLayersOutbound(RawSPtr conn, std::string layers,
+  void UpgraderImpl::upgradeLayersOutbound(RawSPtr conn, ProtoAddrVec layers,
                                            OnLayerCallbackFunc cb) {
-    std::string_view addr = layers;
-    addr.remove_prefix(1);
-    if (addr.back() == '/') {
-      addr.remove_suffix(1);
-    }
-
-    std::vector<std::string> tokens;
-
-    boost::algorithm::split(tokens, addr, boost::algorithm::is_any_of("/"));
-
-    ProtoAddrVec pvs;
-    bool expecting_proto = true;
-    for (auto &token : tokens) {
-      if (expecting_proto) {
-        const auto *p = multi::ProtocolList::get(token);
-        if (p != nullptr) {
-          pvs.emplace_back(*p, "");
-          if (p->size != 0) {
-            expecting_proto = false;
-          }
-        } else {
-          cb(multi::converters::ConversionError::NO_SUCH_PROTOCOL);
-        }
-      } else {  // expecting address
-        pvs.back().second = token;
-        expecting_proto = true;
-      }
-    }
-
-    upgradeToNextLayerOutbound(pvs, 0, std::move(conn), std::move(cb));
+    upgradeToNextLayerOutbound(std::move(conn), std::move(layers), 0,
+                               std::move(cb));
   }
 
-  void UpgraderImpl::upgradeToNextLayerInbound(size_t layer_index,
-                                               LayerSPtr conn,
+  void UpgraderImpl::upgradeToNextLayerInbound(LayerSPtr conn,
+                                               ProtoAddrVec layers,
+                                               size_t layer_index,
                                                OnLayerCallbackFunc cb) {
     BOOST_ASSERT_MSG(!conn->isInitiator(),
                      "connection is initiator, and upgrade for inbound is "
@@ -129,21 +101,23 @@ namespace libp2p::transport {
 
     return adaptor->upgradeInbound(
         conn,
-        [self{shared_from_this()}, layer_index, cb{std::move(cb)}](
+        [self{shared_from_this()}, layers = std::move(layers), layer_index,
+         cb{std::move(cb)}](
             outcome::result<LayerSPtr> next_layer_conn_res) mutable {
           if (next_layer_conn_res.has_error()) {
             return cb(next_layer_conn_res.as_failure());
           }
           auto next_layer_conn = std::move(next_layer_conn_res.value());
 
-          self->upgradeToNextLayerInbound(
-              layer_index + 1, std::move(next_layer_conn), std::move(cb));
+          self->upgradeToNextLayerInbound(std::move(next_layer_conn),
+                                          std::move(layers), layer_index + 1,
+                                          std::move(cb));
         });
   }
 
-  void UpgraderImpl::upgradeToNextLayerOutbound(ProtoAddrVec layers,
+  void UpgraderImpl::upgradeToNextLayerOutbound(LayerSPtr conn,
+                                                ProtoAddrVec layers,
                                                 size_t layer_index,
-                                                LayerSPtr conn,
                                                 OnLayerCallbackFunc cb) {
     BOOST_ASSERT_MSG(conn->isInitiator(),
                      "connection is NOT initiator, and upgrade of outbound is "
@@ -169,14 +143,15 @@ namespace libp2p::transport {
 
     return adaptor->upgradeOutbound(
         conn,
-        [self{shared_from_this()}, layers, layer_index, cb{std::move(cb)}](
+        [self{shared_from_this()}, layers = std::move(layers), layer_index,
+         cb{std::move(cb)}](
             outcome::result<LayerSPtr> next_layer_conn_res) mutable {
           if (next_layer_conn_res.has_error()) {
             return cb(next_layer_conn_res.error());
           }
           auto &next_layer_conn = next_layer_conn_res.value();
-          self->upgradeToNextLayerOutbound(layers, layer_index + 1,
-                                           std::move(next_layer_conn),
+          self->upgradeToNextLayerOutbound(std::move(next_layer_conn),
+                                           std::move(layers), layer_index + 1,
                                            std::move(cb));
         });
   }
