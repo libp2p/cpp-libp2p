@@ -5,31 +5,51 @@
 
 #include <libp2p/multi/converters/udp_converter.hpp>
 
+#include <libp2p/common/byteutil.hpp>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/multi/converters/conversion_error.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::multi::converters {
 
-  auto UdpConverter::addressToHex(std::string_view addr)
-      -> outcome::result<std::string> {
-    int64_t n = 0;
-    for (auto &c : addr) {
+  outcome::result<std::string> UdpConverter::addressToHex(
+      std::string_view addr) {
+    for (auto c : addr) {
       if (std::isdigit(c) == 0) {
         return ConversionError::INVALID_ADDRESS;
       }
     }
+    int64_t port_int = 0;
     try {
-      n = std::stoi(std::string(addr));
+      port_int = std::stoi(std::string(addr));
     } catch (std::exception &e) {
       return ConversionError::INVALID_ADDRESS;
     }
-    if (n == 0) {
-      return "0000";
-    }
-    if (n < 65536 && n > 0) {
-      return common::int_to_hex(n, 4);
+    if (port_int >= 0 and port_int <= 65535) {
+      return common::int_to_hex(port_int, 4);
     }
     return ConversionError::INVALID_ADDRESS;
   }
-}  // namespace libp2p::multi::converters
+
+  outcome::result<common::ByteArray> UdpConverter::addressToBytes(
+      std::string_view addr) {
+    for (auto c : addr) {
+      if (std::isdigit(c) == 0) {
+        return ConversionError::INVALID_ADDRESS;
+      }
+    }
+    int64_t port_int = 0;
+    try {
+      port_int = std::stoi(std::string(addr));
+    } catch (std::exception &e) {
+      return ConversionError::INVALID_ADDRESS;
+    }
+    if (port_int >= 0 and port_int <= 65535) {
+      auto port_int16 = static_cast<uint16_t>(port_int);
+      common::ByteArray bytes;
+      common::putUint16BE(bytes, port_int16);
+      return std::move(bytes);
+    }
+    return ConversionError::INVALID_ADDRESS;
+  }
+
+}  // namespace libp2p::multi::converters=

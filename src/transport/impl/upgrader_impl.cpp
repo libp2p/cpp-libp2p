@@ -131,8 +131,7 @@ namespace libp2p::transport {
     auto adaptor_it =
         std::find_if(layer_adaptors_.begin(), layer_adaptors_.end(),
                      [&](const auto &adaptor) {
-                       return adaptor->getProtocolId()
-                           == fmt::format("/{}", protocol.first.name);
+                       return adaptor->getProtocolId() == protocol.first.name;
                      });
 
     if (adaptor_it == layer_adaptors_.end()) {

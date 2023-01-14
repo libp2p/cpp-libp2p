@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include <boost/algorithm/hex.hpp>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/converters/conversion_error.hpp>
@@ -18,27 +19,44 @@ using std::string_literals::operator""s;
 
 namespace libp2p::multi::converters {
 
-  auto IpfsConverter::addressToHex(std::string_view addr)
-      -> outcome::result<std::string> {
-    MultibaseCodecImpl codec;
-    std::string encodingStr = ""s
-        + static_cast<char>(MultibaseCodecImpl::Encoding::BASE58)
+  outcome::result<std::string> IpfsConverter::addressToHex(
+      std::string_view addr) {
+    std::string encoded =
+        static_cast<char>(MultibaseCodecImpl::Encoding::BASE58)
         + std::string(addr);
 
-    OUTCOME_TRY(buf, codec.decode(encodingStr));
+    MultibaseCodecImpl codec;
+    auto decoded_res = codec.decode(encoded);
+    if (decoded_res.has_error()) {
+      return ConversionError::INVALID_ADDRESS;
+    }
+    auto &decoded = decoded_res.value();
 
     // throw everything in a hex string so we can debug the results
-    std::string addr_encoded;
+    std::string hex = UVarint(decoded.size()).toHex();
+    hex.reserve(hex.size() + addr.size() * 2);
+    boost::algorithm::hex_lower(decoded.begin(), decoded.end(),
+                                std::back_inserter(hex));
+    return std::move(hex);
+  }
 
-    size_t ilen = 0;
-    for (uint8_t const &elem : buf) {
-      // get the char so we can see it in the debugger
-      auto miu = common::int_to_hex(elem);
-      addr_encoded += miu;
+  outcome::result<common::ByteArray> IpfsConverter::addressToBytes(
+      std::string_view addr) {
+    std::string encoded =
+        static_cast<char>(MultibaseCodecImpl::Encoding::BASE58)
+        + std::string(addr);
+
+    MultibaseCodecImpl codec;
+    auto decoded_res = codec.decode(encoded);
+    if (decoded_res.has_error()) {
+      return ConversionError::INVALID_ADDRESS;
     }
-    ilen = addr_encoded.length() / 2;
-    auto result = UVarint{ilen}.toHex() + addr_encoded;
-    return result;
+    auto &decoded = decoded_res.value();
+
+    auto bytes = UVarint(decoded.size()).toVector();
+    bytes.reserve(bytes.size() + decoded.size());
+    bytes.insert(bytes.end(), decoded.begin(), decoded.end());
+    return std::move(bytes);
   }
 
 }  // namespace libp2p::multi::converters

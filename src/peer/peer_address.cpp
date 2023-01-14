@@ -43,7 +43,7 @@ namespace libp2p::peer {
                 multiaddress.getFirstValueForProtocol(Protocol::Code::P2P));
     OUTCOME_TRY(id, PeerId::fromBase58(id_b58_str));
 
-    multiaddress.decapsulate(Protocol::Code::P2P);
+    multiaddress.decapsulate(Protocol::Code::P2P, id_b58_str);
 
     return PeerAddress{std::move(id), std::move(multiaddress)};
   }

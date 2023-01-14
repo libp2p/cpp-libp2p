@@ -17,8 +17,8 @@ namespace libp2p::layer {
 
   class WsAdaptor : public LayerAdaptor {
    public:
-    static constexpr auto kNoSecureProtocolId = "/ws";
-    static constexpr auto kSecureProtocolId = "/wss";
+    static constexpr auto kNoSecureProtocolId = "ws";
+    static constexpr auto kSecureProtocolId = "wss";
 
     WsAdaptor(std::shared_ptr<basic::Scheduler> scheduler,
               std::shared_ptr<crypto::random::RandomGenerator> random_generator,

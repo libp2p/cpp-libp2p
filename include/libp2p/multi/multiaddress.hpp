@@ -85,7 +85,7 @@ namespace libp2p::multi {
      * decapsulated
      * @return true, if such protocol was found and removed, false otherwise
      */
-    bool decapsulate(Protocol::Code proto);
+    bool decapsulate(Protocol::Code proto, std::string address);
 
     /**
      * Split the Multiaddress by the first protocol, such that:

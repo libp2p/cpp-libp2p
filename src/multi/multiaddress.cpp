@@ -57,7 +57,7 @@ namespace libp2p::multi {
     // address
     auto bytes_result = converters::multiaddrToBytes(address);
     if (!bytes_result) {
-      return Error::INVALID_INPUT;
+      return bytes_result.as_failure();
     }
     auto &&bytes = bytes_result.value();
 
@@ -100,13 +100,17 @@ namespace libp2p::multi {
                                         address.bytes_);
   }
 
-  bool Multiaddress::decapsulate(Protocol::Code proto) {
+  bool Multiaddress::decapsulate(Protocol::Code proto, std::string address) {
     auto p = ProtocolList::get(proto);
     if (p == nullptr) {
       return false;
     }
 
     std::string proto_str = '/' + std::string(p->name);
+    if (not address.empty()) {
+      proto_str += '/';
+      proto_str += address;
+    }
     auto proto_bytes = converters::multiaddrToBytes(proto_str);
     if (!proto_bytes) {
       return false;
@@ -135,17 +139,6 @@ namespace libp2p::multi {
   bool Multiaddress::decapsulateStringFromAddress(std::string_view proto,
                                                   const ByteBuffer &bytes) {
     auto str_pos = stringified_address_.rfind(proto);
-    if (proto == "/p2p" or proto == "/ipfs") {
-      auto alt_pos =
-          stringified_address_.rfind(proto == "/ipfs" ? "/p2p" : "/ipfs");
-      if (alt_pos != std::string::npos) {
-        if (str_pos == std::string::npos) {
-          str_pos = alt_pos;
-        } else {
-          str_pos = std::max(str_pos, alt_pos);
-        }
-      }
-    }
     if (str_pos == std::string::npos) {
       return false;
     }
