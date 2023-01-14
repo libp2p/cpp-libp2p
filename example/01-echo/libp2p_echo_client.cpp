@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/layer/websocket/ws_adaptor.hpp>
@@ -99,7 +100,10 @@ int main(int argc, char *argv[]) {
   // create io_context - in fact, thing, which allows us to execute async
   // operations
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
-  context->post([log, host{std::move(host)}, &echo, &message, argv] {  // NOLINT
+  auto sch = injector.create<std::shared_ptr<libp2p::basic::Scheduler>>();
+
+  context->post([log, host{std::move(host)}, &echo, &message, argv,
+                 sch] {  // NOLINT
     auto server_ma_res =
         libp2p::multi::Multiaddress::create(argv[1]);  // NOLINT
     if (!server_ma_res) {
@@ -130,7 +134,7 @@ int main(int argc, char *argv[]) {
     // create Host object and open a stream through it
     host->newStream(
         peer_info, {echo.getProtocolId()},
-        [log, &echo, &message](auto &&stream_res) {
+        [log, &echo, &message, sch](auto &&stream_res) {
           if (!stream_res) {
             log->error("Cannot connect to server: {}",
                        stream_res.error().message());
@@ -146,18 +150,32 @@ int main(int argc, char *argv[]) {
           } else {
             log->info("SENDING {} bytes", message.size());
           }
-          echo_client->sendAnd(
-              message,
-              [log, stream = std::move(stream_p)](auto &&response_result) {
-                auto &resp = response_result.value();
-                if (resp.size() < 120) {
-                  log->info("RESPONSE {}", resp);
-                } else {
-                  log->info("RESPONSE size={}", resp.size());
-                }
-                stream->close([](auto &&) { std::exit(EXIT_SUCCESS); });
-              });
+
+          sch->schedule(
+              [log, message, stream = std::move(stream_p), echo_client] {
+                echo_client->sendAnd(
+                    message,
+                    [log,
+                     stream = std::move(stream)](auto &&response_result) {
+                      if (response_result.has_error()) {
+                        log->info("Error happened: {}",
+                                  response_result.error().message());
+                        stream->close(
+                            [log](auto &&) { std::exit(EXIT_SUCCESS); });
+                        return;
+                      }
+                      auto &resp = response_result.value();
+                      if (resp.size() < 120) {
+                        log->info("RESPONSE {}", resp);
+                      } else {
+                        log->info("RESPONSE size={}", resp.size());
+                      }
+                      stream->close([](auto &&) { std::exit(EXIT_SUCCESS); });
+                    });
+              },
+              std::chrono::milliseconds(1000));
         });
+
   });
 
   // run the IO context
