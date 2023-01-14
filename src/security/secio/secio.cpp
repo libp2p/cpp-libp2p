@@ -84,7 +84,7 @@ namespace libp2p::security {
     propose_message_.pubkey.swap(public_key_res.value().key);
   }
 
-  peer::Protocol Secio::getProtocolId() const {
+  peer::ProtocolName Secio::getProtocolId() const {
     return kProtocolId;
   }
 

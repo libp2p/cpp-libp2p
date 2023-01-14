@@ -20,7 +20,7 @@ namespace libp2p::protocol {
       std::shared_ptr<IdentifyMessageProcessor> msg_processor, event::Bus &bus)
       : msg_processor_{std::move(msg_processor)}, bus_{bus} {}
 
-  peer::Protocol IdentifyPush::getProtocolId() const {
+  peer::ProtocolName IdentifyPush::getProtocolId() const {
     return kIdentifyPushProtocol;
   }
 

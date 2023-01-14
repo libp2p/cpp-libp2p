@@ -39,7 +39,7 @@ namespace libp2p::protocol {
     IdentifyDelta(Host &host, network::ConnectionManager &conn_manager,
                   event::Bus &bus);
 
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
     /**
      * In Identify-Delta, handle means we accepted an Identify-Delta stream and
@@ -67,8 +67,8 @@ namespace libp2p::protocol {
      * @param added protocols
      * @param removed protocols
      */
-    void sendDelta(gsl::span<const peer::Protocol> added,
-                   gsl::span<const peer::Protocol> removed);
+    void sendDelta(gsl::span<const peer::ProtocolName> added,
+                   gsl::span<const peer::ProtocolName> removed);
 
     /**
      * Send a Delta message

@@ -68,7 +68,7 @@ namespace libp2p::security {
     BOOST_ASSERT(key_marshaller_);
   }
 
-  peer::Protocol Plaintext::getProtocolId() const {
+  peer::ProtocolName Plaintext::getProtocolId() const {
     // TODO(akvinikym) 29.05.19: think about creating SecurityProtocolRegister
     return "/plaintext/2.0.0";
   }

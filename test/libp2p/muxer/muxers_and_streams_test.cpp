@@ -205,7 +205,7 @@ namespace libp2p::regression {
       }
     }
 
-    static peer::Protocol getProtocolId() {
+    static peer::ProtocolName getProtocolId() {
       return "/kocher/1.0.0";
     }
 

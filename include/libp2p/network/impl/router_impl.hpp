@@ -18,16 +18,16 @@ namespace libp2p::network {
     void setProtocolHandler(StreamProtocols protocols, StreamAndProtocolCb cb,
                             ProtocolPredicate predicate = {}) override;
 
-    std::vector<peer::Protocol> getSupportedProtocols() const override;
+    std::vector<peer::ProtocolName> getSupportedProtocols() const override;
 
-    void removeProtocolHandlers(const peer::Protocol &protocol) override;
+    void removeProtocolHandlers(const peer::ProtocolName &protocol) override;
 
     void removeAll() override;
 
     enum class Error { NO_HANDLER_FOUND = 1 };
 
     outcome::result<void> handle(
-        const peer::Protocol &p,
+        const peer::ProtocolName &p,
         std::shared_ptr<connection::Stream> stream) override;
 
    private:

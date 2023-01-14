@@ -132,7 +132,7 @@ namespace libp2p::protocol::gossip {
     ctx->outbound_stream->write(std::move(serialized));
   }
 
-  peer::Protocol Connectivity::getProtocolId() const {
+  peer::ProtocolName Connectivity::getProtocolId() const {
     return config_.protocol_version;
   }
 

@@ -22,16 +22,16 @@ namespace libp2p::peer {
     ~InmemProtocolRepository() override = default;
 
     outcome::result<void> addProtocols(const PeerId &p,
-                                       gsl::span<const Protocol> ms) override;
+                                       gsl::span<const ProtocolName> ms) override;
 
     outcome::result<void> removeProtocols(
-        const PeerId &p, gsl::span<const Protocol> ms) override;
+        const PeerId &p, gsl::span<const ProtocolName> ms) override;
 
-    outcome::result<std::vector<Protocol>> getProtocols(
+    outcome::result<std::vector<ProtocolName>> getProtocols(
         const PeerId &p) const override;
 
-    outcome::result<std::vector<Protocol>> supportsProtocols(
-        const PeerId &p, const std::set<Protocol> &protocols) const override;
+    outcome::result<std::vector<ProtocolName>> supportsProtocols(
+        const PeerId &p, const std::set<ProtocolName> &protocols) const override;
 
     void clear(const PeerId &p) override;
 
@@ -40,7 +40,7 @@ namespace libp2p::peer {
     std::unordered_set<PeerId> getPeers() const override;
 
    private:
-    using set = std::set<Protocol>;
+    using set = std::set<ProtocolName>;
     using set_ptr = std::shared_ptr<set>;
 
     outcome::result<set_ptr> getProtocolSet(const PeerId &p) const;

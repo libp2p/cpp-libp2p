@@ -14,7 +14,7 @@ namespace libp2p::security {
    public:
     ~SecurityAdaptorMock() override = default;
 
-    MOCK_CONST_METHOD0(getProtocolId, peer::Protocol());
+    MOCK_CONST_METHOD0(getProtocolId, peer::ProtocolName());
 
     MOCK_METHOD2(secureInbound,
                  void(std::shared_ptr<connection::LayerConnection>,

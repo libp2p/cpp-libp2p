@@ -69,7 +69,7 @@ class UpgraderTest : public testing::Test {
       std::make_shared<NiceMock<SecurityAdaptorMock>>(),
       std::make_shared<NiceMock<SecurityAdaptorMock>>()};
 
-  std::vector<Protocol> muxer_protos_{"muxer_proto1", "muxer_proto2"};
+  std::vector<ProtocolName> muxer_protos_{"muxer_proto1", "muxer_proto2"};
   std::vector<std::shared_ptr<MuxerAdaptor>> muxer_adaptors_{
       std::make_shared<NiceMock<MuxerAdaptorMock>>(),
       std::make_shared<NiceMock<MuxerAdaptorMock>>()};
@@ -148,7 +148,7 @@ TEST_F(UpgraderTest, UpgradeSecureInitiator) {
   setAllOutbound();
 
   EXPECT_CALL(*muxer_,
-              selectOneOf(gsl::span<const Protocol>(security_protos_),
+              selectOneOf(gsl::span<const ProtocolName>(security_protos_),
                           std::static_pointer_cast<ReadWriter>(layer2_conn_),
                           true, true, _))
       .WillOnce(Arg4CallbackWithArg(security_protos_[0]));
@@ -169,7 +169,7 @@ TEST_F(UpgraderTest, UpgradeSecureNotInitiator) {
   setAllInbound();
 
   EXPECT_CALL(*muxer_,
-              selectOneOf(gsl::span<const Protocol>(security_protos_),
+              selectOneOf(gsl::span<const ProtocolName>(security_protos_),
                           std::static_pointer_cast<ReadWriter>(layer2_conn_),
                           false, true, _))
       .WillOnce(Arg4CallbackWithArg(success(security_protos_[1])));
@@ -189,7 +189,7 @@ TEST_F(UpgraderTest, UpgradeSecureFail) {
   setAllInbound();
 
   EXPECT_CALL(*muxer_,
-              selectOneOf(gsl::span<const Protocol>(security_protos_),
+              selectOneOf(gsl::span<const ProtocolName>(security_protos_),
                           std::static_pointer_cast<ReadWriter>(layer2_conn_),
                           false, true, _))
       .WillOnce(Arg4CallbackWithArg(failure(std::error_code())));
@@ -203,7 +203,7 @@ TEST_F(UpgraderTest, UpgradeMux) {
   setAllOutbound();
 
   EXPECT_CALL(*muxer_,
-              selectOneOf(gsl::span<const Protocol>(muxer_protos_),
+              selectOneOf(gsl::span<const ProtocolName>(muxer_protos_),
                           std::static_pointer_cast<ReadWriter>(sec_conn_), true,
                           true, _))
       .WillOnce(Arg4CallbackWithArg(success(muxer_protos_[0])));
@@ -222,7 +222,7 @@ TEST_F(UpgraderTest, UpgradeMuxFail) {
   setAllOutbound();
 
   EXPECT_CALL(*muxer_,
-              selectOneOf(gsl::span<const Protocol>(muxer_protos_),
+              selectOneOf(gsl::span<const ProtocolName>(muxer_protos_),
                           std::static_pointer_cast<ReadWriter>(sec_conn_), true,
                           true, _))
       .WillOnce(Arg4CallbackWithArg(failure(std::error_code())));

@@ -25,7 +25,7 @@ namespace libp2p::security {
 
     ~Noise() override = default;
 
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
     void secureInbound(std::shared_ptr<connection::LayerConnection> inbound,
                        SecConnCallbackFunc cb) override;

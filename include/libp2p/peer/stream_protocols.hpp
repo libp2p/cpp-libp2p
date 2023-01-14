@@ -16,7 +16,7 @@ namespace libp2p {
    * Used by `Host::newStream`, `Dialer::newStream`, `Host::setProtocolHandler`,
    * `Router::setProtocolHandler`.
    */
-  using StreamProtocols = std::vector<peer::Protocol>;
+  using StreamProtocols = std::vector<peer::ProtocolName>;
 }  // namespace libp2p
 
 #endif  // LIBP2P_PEER_STREAM_PROTOCOLS_HPP

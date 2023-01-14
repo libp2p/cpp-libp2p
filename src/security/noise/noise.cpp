@@ -8,7 +8,7 @@
 #include <libp2p/security/noise/noise.hpp>
 
 namespace libp2p::security {
-  peer::Protocol Noise::getProtocolId() const {
+  peer::ProtocolName Noise::getProtocolId() const {
     return kProtocolId;
   }
 

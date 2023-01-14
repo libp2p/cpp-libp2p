@@ -20,10 +20,10 @@
 namespace libp2p::event::network {
 
   using ProtocolsAddedChannel =
-      channel_decl<struct ProtocolsAdded, std::vector<peer::Protocol>>;
+      channel_decl<struct ProtocolsAdded, std::vector<peer::ProtocolName>>;
 
   using ProtocolsRemovedChannel =
-      channel_decl<struct ProtocolsRemoved, std::vector<peer::Protocol>>;
+      channel_decl<struct ProtocolsRemoved, std::vector<peer::ProtocolName>>;
 
 }  // namespace libp2p::event::network
 
@@ -57,13 +57,13 @@ namespace libp2p::network {
      * @return supported protocols; may also include protocol prefixes; if any
      * set
      */
-    virtual std::vector<peer::Protocol> getSupportedProtocols() const = 0;
+    virtual std::vector<peer::ProtocolName> getSupportedProtocols() const = 0;
 
     /**
      * Remove handlers, associated with the given protocol prefix
      * @param protocol prefix, for which the handlers are to be removed
      */
-    virtual void removeProtocolHandlers(const peer::Protocol &protocol) = 0;
+    virtual void removeProtocolHandlers(const peer::ProtocolName &protocol) = 0;
 
     /**
      * Remove all handlers
@@ -79,7 +79,7 @@ namespace libp2p::network {
      * @param stream with this stream
      */
     virtual outcome::result<void> handle(
-        const peer::Protocol &p,
+        const peer::ProtocolName &p,
         std::shared_ptr<connection::Stream> stream) = 0;
   };
 

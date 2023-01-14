@@ -21,7 +21,7 @@ namespace libp2p::basic {
      * @return protocol id of the adaptor
      * @example '/yamux/1.0.0' or '/plaintext/1.5.0'
      */
-    virtual peer::Protocol getProtocolId() const = 0;
+    virtual peer::ProtocolName getProtocolId() const = 0;
   };
 }  // namespace libp2p::basic
 

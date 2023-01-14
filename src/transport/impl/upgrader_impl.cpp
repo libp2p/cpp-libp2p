@@ -24,7 +24,7 @@ namespace {
   template <typename AdaptorType>
   std::shared_ptr<AdaptorType> findAdaptor(
       const std::vector<std::shared_ptr<AdaptorType>> &adaptors,
-      const libp2p::peer::Protocol &proto) {
+      const libp2p::peer::ProtocolName &proto) {
     auto adaptor = std::find_if(
         adaptors.begin(), adaptors.end(),
         [&proto](const auto &a) { return proto == a->getProtocolId(); });
@@ -165,7 +165,7 @@ namespace libp2p::transport {
     protocol_muxer_->selectOneOf(
         security_protocols_, conn, conn->isInitiator(), true,
         [self{shared_from_this()}, cb = std::move(cb),
-         conn](outcome::result<peer::Protocol> proto_res) mutable {
+         conn](outcome::result<peer::ProtocolName> proto_res) mutable {
           if (!proto_res) {
             return cb(proto_res.error());
           }
@@ -190,7 +190,7 @@ namespace libp2p::transport {
     protocol_muxer_->selectOneOf(
         security_protocols_, conn, conn->isInitiator(), true,
         [self{shared_from_this()}, cb = std::move(cb), conn,
-         remoteId](outcome::result<peer::Protocol> proto_res) mutable {
+         remoteId](outcome::result<peer::ProtocolName> proto_res) mutable {
           if (!proto_res) {
             return cb(proto_res.error());
           }
@@ -210,7 +210,7 @@ namespace libp2p::transport {
     return protocol_muxer_->selectOneOf(
         muxer_protocols_, conn, conn->isInitiator(), true,
         [self{shared_from_this()}, cb = std::move(cb),
-         conn](outcome::result<peer::Protocol> proto_res) mutable {
+         conn](outcome::result<peer::ProtocolName> proto_res) mutable {
           if (!proto_res) {
             return cb(proto_res.error());
           }

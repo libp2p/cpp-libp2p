@@ -30,7 +30,7 @@ namespace libp2p::security {
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
     /// Returns "/tls/1.0.0"
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
     /// Performs async handshake for inbound connection
     void secureInbound(std::shared_ptr<connection::LayerConnection> inbound,

@@ -20,11 +20,11 @@ class RouterTest : public ::testing::Test, public RouterImpl {
       std::make_shared<StreamMock>(kDefaultStreamId);
   std::shared_ptr<Stream> stream_to_receive;
 
-  const Protocol kDefaultProtocol = "/ping/1.5.2";
-  const Protocol kVersionProtocolPrefix = "/ping/1.5";
-  const Protocol kProtocolPrefix = "/ping/";
+  const ProtocolName kDefaultProtocol = "/ping/1.5.2";
+  const ProtocolName kVersionProtocolPrefix = "/ping/1.5";
+  const ProtocolName kProtocolPrefix = "/ping/";
 
-  const Protocol kAnotherProtocol = "/http/2.2.8";
+  const ProtocolName kAnotherProtocol = "/http/2.2.8";
 
   /**
    * Knowing that a provided stream is a mocked one, get its ID
@@ -40,7 +40,7 @@ class RouterTest : public ::testing::Test, public RouterImpl {
    * called
    * @param proto, for which the handler is to be set
    */
-  void setHandlerWithFail(const Protocol &proto) {
+  void setHandlerWithFail(const ProtocolName &proto) {
     this->setProtocolHandler({proto}, [](auto &&) { FAIL(); });
   }
 
@@ -49,7 +49,7 @@ class RouterTest : public ::testing::Test, public RouterImpl {
    * called
    * @param protocols, for which the handlers are to be set
    */
-  void setHandlersWithFail(gsl::span<const Protocol> protocols) {
+  void setHandlersWithFail(gsl::span<const ProtocolName> protocols) {
     for (const auto &proto : protocols) {
       setHandlerWithFail(proto);
     }
@@ -124,8 +124,8 @@ TEST_F(RouterTest, SetHandlerWithPredicate) {
  * @then getSupportedProtocols() call returns protocol, which were set
  */
 TEST_F(RouterTest, GetSupportedProtocols) {
-  static const std::vector<Protocol> kExpectedVec1{kDefaultProtocol};
-  static const std::vector<Protocol> kExpectedVec2{kDefaultProtocol,
+  static const std::vector<ProtocolName> kExpectedVec1{kDefaultProtocol};
+  static const std::vector<ProtocolName> kExpectedVec2{kDefaultProtocol,
                                                    kProtocolPrefix};
 
   ASSERT_TRUE(this->getSupportedProtocols().empty());
@@ -150,7 +150,7 @@ TEST_F(RouterTest, GetSupportedProtocols) {
  */
 TEST_F(RouterTest, RemoveProtocolHandlers) {
   setHandlersWithFail(
-      std::vector<Protocol>{kDefaultProtocol, kAnotherProtocol});
+      std::vector<ProtocolName>{kDefaultProtocol, kAnotherProtocol});
 
   this->removeProtocolHandlers(kAnotherProtocol);
   const auto supported_protos = this->getSupportedProtocols();
@@ -164,7 +164,7 @@ TEST_F(RouterTest, RemoveProtocolHandlers) {
  * @then corresponding handlers are removed
  */
 TEST_F(RouterTest, RemoveProtocolHandlersForPrefix) {
-  setHandlersWithFail(std::vector<Protocol>{
+  setHandlersWithFail(std::vector<ProtocolName>{
       kDefaultProtocol, kVersionProtocolPrefix, kAnotherProtocol});
 
   this->removeProtocolHandlers(kProtocolPrefix);
@@ -180,7 +180,7 @@ TEST_F(RouterTest, RemoveProtocolHandlersForPrefix) {
  */
 TEST_F(RouterTest, RemoveAll) {
   setHandlersWithFail(
-      std::vector<Protocol>{kDefaultProtocol, kAnotherProtocol});
+      std::vector<ProtocolName>{kDefaultProtocol, kAnotherProtocol});
 
   this->removeAll();
   ASSERT_TRUE(this->getSupportedProtocols().empty());

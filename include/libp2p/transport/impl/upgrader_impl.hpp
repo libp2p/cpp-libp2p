@@ -85,8 +85,8 @@ namespace libp2p::transport {
     std::vector<SecAdaptorSPtr> security_adaptors_;
     std::vector<MuxAdaptorSPtr> muxer_adaptors_;
 
-    std::vector<peer::Protocol> security_protocols_;
-    std::vector<peer::Protocol> muxer_protocols_;
+    std::vector<peer::ProtocolName> security_protocols_;
+    std::vector<peer::ProtocolName> muxer_protocols_;
   };
 }  // namespace libp2p::transport
 

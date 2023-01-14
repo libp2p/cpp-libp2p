@@ -82,7 +82,7 @@ namespace libp2p::transport {
                              std::shared_ptr<Upgrader> upgrader)
       : context_(std::move(context)), upgrader_(std::move(upgrader)) {}
 
-  peer::Protocol TcpTransport::getProtocolId() const {
+  peer::ProtocolName TcpTransport::getProtocolId() const {
     return "/tcp/1.0.0";
   }
 

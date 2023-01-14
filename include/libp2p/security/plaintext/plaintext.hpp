@@ -44,7 +44,7 @@ namespace libp2p::security {
         std::shared_ptr<peer::IdentityManager> idmgr,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
     void secureInbound(std::shared_ptr<connection::LayerConnection> inbound,
                        SecConnCallbackFunc cb) override;

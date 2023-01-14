@@ -37,7 +37,7 @@ namespace libp2p::transport {
 
     bool canDial(const multi::Multiaddress &ma) const override;
 
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
    private:
     std::shared_ptr<boost::asio::io_context> context_;

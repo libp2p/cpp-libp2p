@@ -21,7 +21,7 @@ namespace libp2p::protocol::kademlia {
 
   using peer::PeerId;
   using peer::PeerInfo;
-  using peer::Protocol;
+  using peer::ProtocolName;
 
   using Key = ContentId;
   using Value = ContentValue;

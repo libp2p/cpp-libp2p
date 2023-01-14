@@ -168,7 +168,7 @@ namespace libp2p::protocol {
     auto peer_id = std::move(*peer_id_opt);
 
     // store the received protocols
-    std::vector<peer::Protocol> protocols;
+    std::vector<peer::ProtocolName> protocols;
     for (const auto &proto : msg.protocols()) {
       protocols.push_back(proto);
     }

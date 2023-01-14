@@ -29,7 +29,7 @@ namespace libp2p::security {
     assert(key_marshaller_);
   }
 
-  peer::Protocol TlsAdaptor::getProtocolId() const {
+  peer::ProtocolName TlsAdaptor::getProtocolId() const {
     return "/tls/1.0.0";
   }
 

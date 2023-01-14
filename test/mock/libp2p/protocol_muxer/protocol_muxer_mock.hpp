@@ -16,7 +16,7 @@ namespace libp2p::protocol_muxer {
     ~ProtocolMuxerMock() override = default;
 
     MOCK_METHOD5(selectOneOf,
-                 void(gsl::span<const peer::Protocol> protocols,
+                 void(gsl::span<const peer::ProtocolName> protocols,
                       std::shared_ptr<basic::ReadWriter> connection,
                       bool is_initiator, bool negotiate_multiselect,
                       ProtocolHandlerFunc cb));
@@ -24,7 +24,7 @@ namespace libp2p::protocol_muxer {
     MOCK_METHOD3(
         simpleStreamNegotiate,
         void(const std::shared_ptr<connection::Stream> &,
-             const peer::Protocol &,
+             const peer::ProtocolName &,
              std::function<
                  void(outcome::result<std::shared_ptr<connection::Stream>>)>));
   };

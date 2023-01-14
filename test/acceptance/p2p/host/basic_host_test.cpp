@@ -146,7 +146,7 @@ TEST_F(BasicHostTest, Connect) {
  */
 TEST_F(BasicHostTest, NewStream) {
   peer::PeerInfo pinfo{"2"_peerid, {ma1}};
-  peer::Protocol protocol = "/proto/1.0.0";
+  peer::ProtocolName protocol = "/proto/1.0.0";
 
   EXPECT_CALL(network, getDialer()).WillOnce(ReturnRef(*dialer));
   EXPECT_CALL(*dialer,

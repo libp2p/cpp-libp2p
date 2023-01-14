@@ -27,7 +27,7 @@ namespace libp2p::layer {
 
     ~WsAdaptor() override = default;
 
-    peer::Protocol getProtocolId() const noexcept override {
+    peer::ProtocolName getProtocolId() const noexcept override {
       return tls_enabled_ ? kSecureProtocolId : kNoSecureProtocolId;
     }
 
