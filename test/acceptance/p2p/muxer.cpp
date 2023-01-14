@@ -63,11 +63,13 @@ struct UpgraderSemiMock : public Upgrader {
                    std::shared_ptr<MuxerAdaptor> m)
       : security(std::move(s)), mux(std::move(m)) {}
 
-  void upgradeLayersOutbound(RawSPtr conn, OnLayerCallbackFunc cb) override {
+  void upgradeLayersOutbound(RawSPtr conn, ProtoAddrVec layers,
+                             OnLayerCallbackFunc cb) override {
     cb(conn);
   }
 
-  void upgradeLayersInbound(RawSPtr conn, OnLayerCallbackFunc cb) override {
+  void upgradeLayersInbound(RawSPtr conn, ProtoAddrVec layers,
+                            OnLayerCallbackFunc cb) override {
     cb(conn);
   }
 

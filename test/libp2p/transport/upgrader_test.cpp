@@ -9,7 +9,10 @@
 
 #include <gtest/gtest.h>
 #include <testutil/gmock_actions.hpp>
+#include "libp2p/multi/multiaddress.hpp"
+#include "libp2p/multi/multiaddress_protocol_list.hpp"
 #include "libp2p/multi/multihash.hpp"
+#include "libp2p/transport/tcp/tcp_util.hpp"
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/layer_connection_mock.hpp"
 #include "mock/libp2p/connection/raw_connection_mock.hpp"
@@ -19,6 +22,7 @@
 #include "mock/libp2p/protocol_muxer/protocol_muxer_mock.hpp"
 #include "mock/libp2p/security/security_adaptor_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
+#include "testutil/outcome.hpp"
 
 using namespace libp2p::transport;
 using namespace libp2p::muxer;
@@ -28,6 +32,7 @@ using namespace libp2p::peer;
 using namespace libp2p::connection;
 using namespace libp2p::protocol_muxer;
 using namespace libp2p::basic;
+using namespace libp2p::multi;
 
 using testing::_;
 using testing::NiceMock;
@@ -39,6 +44,11 @@ using libp2p::outcome::success;
 class UpgraderTest : public testing::Test {
  protected:
   void SetUp() override {
+    for (size_t i = 0; i < layer_adaptors_.size(); ++i) {
+      ON_CALL(*std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[i]),
+              getProtocolId())
+          .WillByDefault(Return(layer_protos_[i]));
+    }
     for (size_t i = 0; i < security_protos_.size(); ++i) {
       ON_CALL(
           *std::static_pointer_cast<SecurityAdaptorMock>(security_adaptors_[i]),
@@ -64,7 +74,15 @@ class UpgraderTest : public testing::Test {
       std::make_shared<NiceMock<LayerAdaptorMock>>(),
       std::make_shared<NiceMock<LayerAdaptorMock>>()};
 
-  std::vector<Protocol> security_protos_{"security_proto1", "security_proto2"};
+  std::vector<ProtocolName> layer_protos_{
+      std::string(libp2p::multi::ProtocolList::get(
+                      libp2p::multi::Protocol::Code::_DUMMY_PROTO_1)
+                      ->name),
+      std::string(libp2p::multi::ProtocolList::get(
+                      libp2p::multi::Protocol::Code::_DUMMY_PROTO_2)
+                      ->name)};
+  std::vector<ProtocolName> security_protos_{"security_proto1",
+                                             "security_proto2"};
   std::vector<std::shared_ptr<SecurityAdaptor>> security_adaptors_{
       std::make_shared<NiceMock<SecurityAdaptorMock>>(),
       std::make_shared<NiceMock<SecurityAdaptorMock>>()};
@@ -109,6 +127,13 @@ class UpgraderTest : public testing::Test {
 TEST_F(UpgraderTest, UpgradeLayersInitiator) {
   setAllOutbound();
 
+  ASSERT_OUTCOME_SUCCESS(
+      address,
+      libp2p::multi::Multiaddress::create(
+          "/ip4/127.0.0.1/tcp/1234/_dummy_proto_1/_dummy_proto_2"
+          "/p2p/12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV"));
+  auto layers = detail::getLayers(address);
+
   EXPECT_CALL(
       *std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[0]),
       upgradeOutbound(std::static_pointer_cast<LayerConnection>(raw_conn_), _))
@@ -119,14 +144,22 @@ TEST_F(UpgraderTest, UpgradeLayersInitiator) {
                   std::static_pointer_cast<LayerConnection>(layer1_conn_), _))
       .WillOnce(Arg1CallbackWithArg(layer2_conn_));
 
-  upgrader_->upgradeLayersOutbound(raw_conn_, [this](auto &&upgraded_conn_res) {
-    ASSERT_TRUE(upgraded_conn_res);
-    ASSERT_EQ(upgraded_conn_res.value(), layer2_conn_);
-  });
+  upgrader_->upgradeLayersOutbound(
+      raw_conn_, layers, [this](auto &&upgraded_conn_res) {
+        ASSERT_OUTCOME_SUCCESS(upgraded_conn, upgraded_conn_res);
+        ASSERT_EQ(upgraded_conn, layer2_conn_);
+      });
 }
 
 TEST_F(UpgraderTest, UpgradeLayersNotInitiator) {
   setAllInbound();
+
+  ASSERT_OUTCOME_SUCCESS(
+      address,
+      libp2p::multi::Multiaddress::create(
+          "/ip4/127.0.0.1/tcp/1234/_dummy_proto_1/_dummy_proto_2"
+          "/p2p/12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV"));
+  auto layers = detail::getLayers(address);
 
   EXPECT_CALL(
       *std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[0]),
@@ -138,10 +171,11 @@ TEST_F(UpgraderTest, UpgradeLayersNotInitiator) {
                   std::static_pointer_cast<LayerConnection>(layer1_conn_), _))
       .WillOnce(Arg1CallbackWithArg(layer2_conn_));
 
-  upgrader_->upgradeLayersInbound(raw_conn_, [this](auto &&upgraded_conn_res) {
-    ASSERT_TRUE(upgraded_conn_res);
-    ASSERT_EQ(upgraded_conn_res.value(), layer2_conn_);
-  });
+  upgrader_->upgradeLayersInbound(
+      raw_conn_, layers, [this](auto &&upgraded_conn_res) {
+        ASSERT_TRUE(upgraded_conn_res);
+        ASSERT_EQ(upgraded_conn_res.value(), layer2_conn_);
+      });
 }
 
 TEST_F(UpgraderTest, UpgradeSecureInitiator) {
