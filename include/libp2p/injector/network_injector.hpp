@@ -183,17 +183,17 @@ namespace libp2p::injector {
   }
 
   /**
-   * @brief Bind security adaptors by type. Can be used once. Technically many
+   * @brief Bind layer adaptors by type. Can be used once. Technically many
    * types can be specified, even the same type, but in the end only 1 instance
    * for each type is created.
-   * @tparam SecImpl one or many types of security adaptors to be used
+   * @tparam LayerImpl one or many types of layer adaptors to be used
    * @return injector binding
    *
    * @code
-   * struct SomeNewAdaptor : public SecurityAdaptor {...};
+   * struct SomeNewAdaptor : public LayerAdaptor {...};
    *
    * auto injector = makeNetworkInjector(
-   *   useSecurityAdaptors<Plaintext, SomeNewAdaptor, SecioAdaptor>()
+   *   useLayerAdaptors<WsAdaptor>()
    * );
    * @endcode
    */
@@ -281,6 +281,8 @@ namespace libp2p::injector {
 
     // clang-format off
     return di::make_injector<InjectorConfig>(
+        di::bind<crypto::random::RandomGenerator>.template to<crypto::random::BoostRandomGenerator>(),
+
         di::bind<crypto::KeyPair>().template to(std::move(keypair)),
         di::bind<crypto::random::CSPRNG>().template to(std::move(csprng)),
         di::bind<crypto::ed25519::Ed25519Provider>().template to(std::move(ed25519_provider)),

@@ -25,8 +25,6 @@ namespace libp2p::injector {
     return di::make_injector<InjectorConfig>(
         makeNetworkInjector<InjectorConfig>(),
 
-        di::bind<crypto::random::RandomGenerator>.template to<crypto::random::BoostRandomGenerator>(),
-
         // repositories
         di::bind<peer::PeerRepository>.template to<peer::PeerRepositoryImpl>(),
         di::bind<peer::AddressRepository>.template to<peer::InmemAddressRepository>(),
