@@ -135,10 +135,16 @@ namespace libp2p::connection::websocket {
 
     struct WritingItem {
       common::ByteArray data;
-      size_t header_size = 0;
-      size_t written_bytes = 0;
-      size_t sent_bytes = 0;
       WriteCallbackFunc cb;
+      size_t header_size;
+      size_t written_bytes;
+      size_t sent_bytes;
+      WritingItem(common::ByteArray data, WriteCallbackFunc cb)
+          : data(std::move(data)),
+            cb(std::move(cb)),
+            header_size(0),
+            written_bytes(0),
+            sent_bytes(0) {}
     };
     std::deque<WritingItem> writing_queue_;
 
@@ -155,13 +161,13 @@ namespace libp2p::connection::websocket {
     bool closed_by_remote_ = false;
 
     struct Context {
-      bool finally;
+      bool finally = true;
       Opcode opcode = Opcode::_undefined;
-      uint8_t prelen;
-      bool masked;
+      uint8_t prelen = 0;
+      bool masked = false;
       uint8_t mask_index = 0;
       size_t length = 0;
-      std::array<uint8_t, 4> mask;
+      std::array<uint8_t, 4> mask{0};
       size_t remaining_data = 0;
     } ctx;
 

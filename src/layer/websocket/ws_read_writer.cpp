@@ -201,14 +201,16 @@ namespace libp2p::connection::websocket {
       uint16_t length = 0;
       processed_bytes += sizeof(length);
       BOOST_ASSERT(read_bytes_ >= processed_bytes);
-      std::copy_n(pos, sizeof(length), &length);
+      std::copy_n(pos, sizeof(length),
+                  reinterpret_cast<uint8_t *>(&length));  // NOLINT
       ctx.length = be16toh(length);
       pos = std::next(pos, sizeof(length));
     } else if (ctx.prelen == 127) {
       uint64_t length = 0;
       processed_bytes += sizeof(length);
       BOOST_ASSERT(read_bytes_ >= processed_bytes);
-      std::copy_n(pos, sizeof(length), &length);
+      std::copy_n(pos, sizeof(length),
+                  reinterpret_cast<uint8_t *>(&length));  // NOLINT
       ctx.length = be64toh(length);
       pos = std::next(pos, sizeof(length));
     }
@@ -493,12 +495,14 @@ namespace libp2p::connection::websocket {
       frame[1] |= (126 & 0b0111'1111);
       uint16_t length = amount;
       length = htobe16(length);
-      std::copy_n(&length, sizeof(length), std::back_inserter(frame));
+      std::copy_n(reinterpret_cast<uint8_t *>(&length),  // NOLINT
+                  sizeof(length), std::back_inserter(frame));
     } else {
       frame[1] |= (127 & 0b0111'1111);
       uint64_t length = amount;
       length = htobe64(length);
-      std::copy_n(&length, sizeof(length), std::back_inserter(frame));
+      std::copy_n(reinterpret_cast<uint8_t *>(&length),  // NOLINT
+                  sizeof(length), std::back_inserter(frame));
     }
     // mask
     if (masked) {
@@ -551,6 +555,7 @@ namespace libp2p::connection::websocket {
           chunk.cb(res.as_failure());
           self->writing_queue_.pop_front();
         }
+        std::ignore = self->connection_->close();
         return;
       }
 
@@ -564,6 +569,7 @@ namespace libp2p::connection::websocket {
           chunk.cb(std::errc::broken_pipe);
           self->writing_queue_.pop_front();
         }
+        std::ignore = self->connection_->close();
         return;
       }
 
@@ -577,8 +583,12 @@ namespace libp2p::connection::websocket {
         SL_TRACE(self->log_, "sent header of frame: {} bytes",
                  sent_header_size);
 
-        const auto sent_data_size = chunk.data.size() - chunk.sent_bytes;
-        if (sent_data_size <= written_bytes) {  // completely sent chunk
+        const auto sent_data_size =
+            std::min(chunk.written_bytes - chunk.sent_bytes, written_bytes);
+        chunk.sent_bytes += sent_data_size;
+        written_bytes -= sent_data_size;
+
+        if (chunk.sent_bytes == chunk.data.size()) {  // completely sent chunk
           SL_TRACE(self->log_,
                    "sent data of frame: chunk completely sent ({} bytes)",
                    sent_data_size);
@@ -588,10 +598,8 @@ namespace libp2p::connection::websocket {
           SL_TRACE(self->log_,
                    "sent data of frame: chunk partially sent ({} bytes)",
                    sent_data_size);
-          chunk.sent_bytes += sent_data_size;
           break;
         }
-        written_bytes -= sent_data_size;
       }
 
       for (auto &chunk : self->writing_queue_) {
@@ -612,9 +620,8 @@ namespace libp2p::connection::websocket {
                            basic::Writer::WriteCallbackFunc cb) {
     SL_TRACE(log_, "write data: {}", buffer.size());
 
-    writing_queue_.emplace_back(
-        WritingItem{.data = common::ByteArray(buffer.begin(), buffer.end()),
-                    .cb = std::move(cb)});
+    writing_queue_.emplace_back(common::ByteArray(buffer.begin(), buffer.end()),
+                                std::move(cb));
 
     scheduler_->schedule([wp = weak_from_this()] {
       if (auto self = wp.lock()) {
