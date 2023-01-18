@@ -22,6 +22,7 @@ sinks:
   - name: console
     type: console
     color: true
+    latency: 0
 groups:
   - name: main
     sink: console
@@ -48,9 +49,9 @@ int main(int argc, char *argv[]) {
     if (n > (int)message.size()) {  // NOLINT
       std::string jumbo_message;
       auto sz = static_cast<size_t>(n);
-      jumbo_message.reserve(sz + message.size() - 1);
+      jumbo_message.reserve(sz + 9);
       while (jumbo_message.size() < sz) {
-        jumbo_message.append(message);
+        jumbo_message.append(fmt::format("[{:08}]", jumbo_message.size() + 10));
       }
       jumbo_message.resize(sz);
       message.swap(jumbo_message);
@@ -155,8 +156,7 @@ int main(int argc, char *argv[]) {
               [log, message, stream = std::move(stream_p), echo_client] {
                 echo_client->sendAnd(
                     message,
-                    [log,
-                     stream = std::move(stream)](auto &&response_result) {
+                    [log, stream = std::move(stream)](auto &&response_result) {
                       if (response_result.has_error()) {
                         log->info("Error happened: {}",
                                   response_result.error().message());
