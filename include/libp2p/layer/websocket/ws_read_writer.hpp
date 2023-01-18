@@ -39,6 +39,8 @@ namespace libp2p::connection::websocket {
 
     static constexpr size_t kMaxFrameSize = 1 << 20;  // 1Mb
 
+    static constexpr size_t kMaxControlFrameDataSize = 125;  // By RFC6455
+
     /**
      * Initializes read writer
      * @param connection - raw connection
@@ -48,18 +50,18 @@ namespace libp2p::connection::websocket {
                  std::shared_ptr<connection::LayerConnection> connection,
                  gsl::span<const uint8_t> preloaded_data);
 
+    void ping(gsl::span<const uint8_t> payload);
+
+    void setPongHandler(std::function<void(gsl::span<const uint8_t>)> handler);
+
     /// read next message from the network
     void read(ReadCallbackFunc cb) override;
 
     /// write the given bytes to the network
     void write(gsl::span<const uint8_t> buffer, WriteCallbackFunc cb) override;
 
-    void sendContinueFrame();
-    void sendTextFrame();
-    void sendData();
-    void sendClose();
-    void sendPing(gsl::span<const uint8_t> buffer, WriteCallbackFunc cb);
-    void sendPong(gsl::span<const uint8_t> buffer);
+    enum class ReasonOfClose;
+    void close(ReasonOfClose reason);
 
     enum class ReadingState {
       WaitHeader,
@@ -68,20 +70,27 @@ namespace libp2p::connection::websocket {
       HandleHeader,
       WaitData,
       ReadData,
-      HandleData
-    };
-    enum class WritingState {
-      Ready,
-      CreateHeader,
-      SendHeader,
-      SendData,
-      SendPing,
-      SendPong,
-      SendClose
+      HandleData,
+      Closed
     };
 
     enum class Error {
       NOT_ENOUGH_DATA,
+      UNEXPECTED_CONTINUE,
+      INTERNAL_ERROR,
+      CLOSED,
+      UNKNOWN_OPCODE
+    };
+
+    enum class ReasonOfClose {
+      NORMAL_CLOSE,
+      TOO_LONG_PING_PAYLOAD,
+      TOO_LONG_PONG_PAYLOAD,
+      TOO_LONG_CLOSE_PAYLOAD,
+      TOO_LONG_DATA_PAYLOAD,
+      SOME_DATA_AFTER_CLOSED_BY_REMOTE,
+      PINGING_TIMEOUT,
+
       UNEXPECTED_CONTINUE,
       INTERNAL_ERROR,
       CLOSED,
@@ -117,7 +126,6 @@ namespace libp2p::connection::websocket {
     void consume(size_t size);
 
     void read(size_t size, std::function<void()> cb);
-    void readSome(size_t size, std::function<void()> cb);
 
     void readFlagsAndPrelen();
     void handleFlagsAndPrelen();
@@ -127,8 +135,18 @@ namespace libp2p::connection::websocket {
     void readData();
     void handleData();
 
+    bool hasOutgoingData();
+    void shutdown(outcome::result<void> res);
+
+    enum class ControlFrameType { Ping, Pong, Close };
+    void sendControlFrame(ControlFrameType type,
+                          std::shared_ptr<common::ByteArray> payload);
+    void sendDataFrame();
+    void sendData();
+
     std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<connection::LayerConnection> connection_;
+    std::function<void(gsl::span<const uint8_t>)> read_pong_handler_;
 
     std::shared_ptr<common::ByteArray> read_buffer_;
     size_t read_bytes_ = 0;
@@ -148,14 +166,14 @@ namespace libp2p::connection::websocket {
     };
     std::deque<WritingItem> writing_queue_;
 
-    ReadCallbackFunc read_cb_;
-    ReadCallbackFunc pong_cb_;
+    ReadCallbackFunc read_data_handler_;
 
     ReadingState reading_state_ = ReadingState::WaitHeader;
-    WritingState writing_state_ = WritingState::Ready;
     Opcode last_frame_opcode_;
-    std::shared_ptr<common::ByteArray> incoming_ping_data_;
-    std::shared_ptr<common::ByteArray> incoming_pong_data_;
+    common::ByteArray incoming_control_data_;
+    std::shared_ptr<common::ByteArray> outgoing_ping_data_;
+    std::shared_ptr<common::ByteArray> outgoing_pong_data_;
+    std::shared_ptr<common::ByteArray> outgoing_close_data_;
 
     bool closed_by_host_ = false;
     bool closed_by_remote_ = false;

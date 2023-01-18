@@ -34,53 +34,62 @@ namespace libp2p::connection {
     }
     started_ = true;
 
-    // if (config_->ping_interval != std::chrono::milliseconds::zero()) {
-    //   ping_handle_ = scheduler_->scheduleWithHandle(
-    //       [wp = weak_from_this(), ping_counter = 0u]() mutable {
-    //         auto self = wp.lock();
-    //         if (self and self->started_) {
-    //           // don't send pings if something is being written
-    //           if (!self->is_writing_) {
-    //             std::ignore = self->ping_handle_.reschedule(
-    //                 std::chrono::milliseconds(100));
-    //             return;
-    //           }
-    //
-    //           ++ping_counter;
-    //
-    //           self->ws_read_writer_->sendPing(
-    //               gsl::make_span(reinterpret_cast<const uint8_t *>( // NOLINT
-    //                                  &ping_counter),
-    //                              sizeof(ping_counter)),
-    //               [wp, ping_counter](const auto &res) {
-    //                 if (auto self = wp.lock()) {
-    //                   if (res.has_value()) {
-    //                     SL_TRACE(self->log_, "written ping message #{}",
-    //                              ping_counter);
-    //                     std::ignore = self->ping_handle_.reschedule(
-    //                         self->config_->ping_interval);
-    //
-    //                   } else {
-    //                     SL_WARN(self->log_,
-    //                             "writing of ping message #{} was failed",
-    //                             ping_counter);
-    //                     std::ignore = self->close();
-    //                   }
-    //                 }
-    //               });
-    //         }
-    //       },
-    //       config_->ping_interval);
-    // }
+    if (config_->ping_interval != std::chrono::milliseconds::zero()) {
+      // Set pong handler
+      ws_read_writer_->setPongHandler([wp = weak_from_this()](auto payload) {
+        if (auto self = wp.lock()) {
+          self->onPong(payload);
+        }
+      });
+
+      ping_handle_ = scheduler_->scheduleWithHandle(
+          [wp = weak_from_this()]() mutable {
+            if (auto self = wp.lock(); self and self->started_) {
+              ++self->ping_counter_;
+
+              auto payload =
+                  gsl::make_span(reinterpret_cast<const uint8_t *>(  // NOLINT
+                                     &self->ping_counter_),
+                                 sizeof(self->ping_counter_));
+              // Send ping
+              self->ws_read_writer_->ping(payload);
+
+              // Start timer of pong waiting
+              self->ping_timeout_handle_ =
+                  self->scheduler_->scheduleWithHandle([wp] {
+                    if (auto self = wp.lock()) {
+                      self->ws_read_writer_->close(
+                          websocket::WsReadWriter::ReasonOfClose::
+                              PINGING_TIMEOUT);
+                    }
+                  });
+            }
+          },
+          config_->ping_interval);
+    }
   }
 
   void WsConnection::stop() {
-    if (!started_) {
+    if (not started_) {
       log_->error("already stopped (double stop)");
       return;
     }
-    ping_handle_.cancel();
     started_ = false;
+    ping_handle_.cancel();
+    ping_timeout_handle_.cancel();
+  }
+
+  void WsConnection::onPong(gsl::span<const uint8_t> payload) {
+    auto expected = gsl::make_span(
+        reinterpret_cast<const uint8_t *>(&ping_counter_),  // NOLINT
+        sizeof(ping_counter_));
+    if (payload == expected) {
+      SL_DEBUG(log_, "Correct pong has received for ping");
+      ping_timeout_handle_.cancel();
+      std::ignore = ping_handle_.reschedule(config_->ping_interval);
+      return;
+    }
+    SL_DEBUG(log_, "Received unexpected pong. Ignoring");
   }
 
   bool WsConnection::isInitiator() const noexcept {
@@ -172,7 +181,7 @@ namespace libp2p::connection {
         auto in_end = std::next(in_begin, available_bytes);
         auto out_begin = std::next(out.begin(), copied_bytes);
 
-        SL_TRACE(log_, "copy {} bytes", available_bytes);
+        SL_TRACE(log_, "copy {} first bytes", available_bytes);
 
         std::copy(in_begin, in_end, out_begin);
         copied_bytes += available_bytes;

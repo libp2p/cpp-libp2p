@@ -81,6 +81,8 @@ namespace libp2p::connection {
     void readSome(gsl::span<uint8_t> out, size_t required_bytes,
                   OperationContext ctx, ReadCallbackFunc cb);
 
+    void onPong(gsl::span<const uint8_t> payload);
+
     /// Config
     std::shared_ptr<const layer::WsConnectionConfig> config_;
 
@@ -98,11 +100,10 @@ namespace libp2p::connection {
     BufferList write_buffers_;
     log::Logger log_ = log::createLogger("WsConnection");
 
-    /// True if waiting for current write operation to complete
-    bool is_writing_ = false;
-
     /// Timer handle for pings
+    size_t ping_counter_ = 0u;
     basic::Scheduler::Handle ping_handle_;
+    basic::Scheduler::Handle ping_timeout_handle_;
 
     /// Timer handle for auto closing if inactive
     basic::Scheduler::Handle inactivity_handle_;

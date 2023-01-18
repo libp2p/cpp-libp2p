@@ -10,6 +10,8 @@
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/common/hexutil.hpp>
 
+#define DUMP_WS_DATA 0
+
 #ifndef UNIQUE_NAME
 #define UNIQUE_NAME(base) base##__LINE__
 #endif  // UNIQUE_NAME
@@ -44,6 +46,48 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection::websocket, WsReadWriter::Error,
   }
 }
 
+#if DUMP_WS_DATA
+#define LOG_HEX_BYTES(LOG, LVL, LABEL, BEGIN, END)                        \
+  if ((LOG)->level() >= (LVL)) {                                          \
+    auto _begin = (BEGIN);                                                \
+    size_t b = 0, e = 0;                                                  \
+    for (auto it = (BEGIN); it <= (END); ++it) {                          \
+      if ((e - b) == 100 || it == (END)) {                                \
+        (LOG)->log((LVL), "{} {}-{}\t{}", LABEL, b, e,                    \
+                   common::hex_lower(gsl::make_span(&*(_begin), e - b))); \
+        if (it == (END)) {                                                \
+          break;                                                          \
+        }                                                                 \
+        _begin = it;                                                      \
+        b = e;                                                            \
+      }                                                                   \
+      ++e;                                                                \
+    }                                                                     \
+  }                                                                       \
+  void(0)
+#define LOG_RAW_BYTES(LOG, LVL, LABEL, BEGIN, END)                             \
+  if ((LOG)->level() >= (LVL)) {                                               \
+    auto _begin = (BEGIN);                                                     \
+    size_t b = 0, e = 0;                                                       \
+    for (auto it = (BEGIN); it <= (END); ++it) {                               \
+      if ((e - b) == 100 || it == (END)) {                                     \
+        (LOG)->log((LVL), "{} {}-{}\t{}", LABEL, b, e,                         \
+                   common::dumpBin(gsl::make_span(&*(_begin), e - b), false)); \
+        if (it == (END)) {                                                     \
+          break;                                                               \
+        }                                                                      \
+        _begin = it;                                                           \
+        b = e;                                                                 \
+      }                                                                        \
+      ++e;                                                                     \
+    }                                                                          \
+  }                                                                            \
+  void(0)
+#else
+#define LOG_HEX_BYTES(LOG, LVL, LABEL, BEGIN, END) void(0)
+#define LOG_RAW_BYTES(LOG, LVL, LABEL, BEGIN, END) void(0)
+#endif
+
 namespace libp2p::connection::websocket {
   WsReadWriter::WsReadWriter(
       std::shared_ptr<basic::Scheduler> scheduler,
@@ -60,20 +104,129 @@ namespace libp2p::connection::websocket {
               read_buffer_->begin());
   }
 
+  void WsReadWriter::ping(gsl::span<const uint8_t> payload) {
+    // already closed by host
+    if (closed_by_host_) {
+      return;
+    }
+
+    outgoing_ping_data_ =
+        std::make_shared<common::ByteArray>(payload.begin(), payload.end());
+  }
+
+  void WsReadWriter::setPongHandler(
+      std::function<void(gsl::span<const uint8_t>)> handler) {
+    read_pong_handler_ = std::move(handler);
+  }
+
   void WsReadWriter::read(basic::MessageReadWriter::ReadCallbackFunc cb) {
     if (reading_state_ == ReadingState::WaitHeader) {
-      SL_TRACE(log_, "read next portion of data (next frame)");
-      read_cb_ = std::move(cb);
+      SL_TRACE(log_, "R: read next portion of data (next frame)");
+      read_data_handler_ = std::move(cb);
       return readFlagsAndPrelen();
     }
     if (reading_state_ == ReadingState::WaitData) {
-      SL_TRACE(log_, "read next portion of data (same frame)");
-      read_cb_ = std::move(cb);
+      SL_TRACE(log_, "R: read next portion of data (same frame)");
+      read_data_handler_ = std::move(cb);
       return readData();
     }
-    SL_TRACE(log_, "can't read next portion of data; reading_state is {}",
-             reading_state_);
+    if (reading_state_ == ReadingState::Closed) {
+      SL_TRACE(log_, "R: can't read - remote closed");
+      return cb(Error::CLOSED);
+    }
+    SL_WARN(log_, "R: can't read next portion of data; reading_state is {}",
+            reading_state_);
     cb(Error::INTERNAL_ERROR);  // Reentrancy
+  }
+
+  void WsReadWriter::write(gsl::span<const uint8_t> buffer,
+                           basic::Writer::WriteCallbackFunc cb) {
+    if (closed_by_host_) {
+      cb(Error::CLOSED);
+      return;
+    }
+
+    SL_TRACE(log_, "W: write data: {}", buffer.size());
+
+    LOG_RAW_BYTES(log_, log::Level::TRACE, "W: OUT", buffer.begin(),
+                  buffer.end());
+
+    writing_queue_.emplace_back(common::ByteArray(buffer.begin(), buffer.end()),
+                                std::move(cb));
+
+    scheduler_->schedule([wp = weak_from_this()] {
+      if (auto self = wp.lock()) {
+        self->sendData();
+      }
+    });
+  }
+
+  void WsReadWriter::close(ReasonOfClose reason) {
+    // already closed by host
+    if (closed_by_host_) {
+      return;
+    }
+
+    bool need_to_send = true;
+    uint16_t code = 1001;
+    std::string_view message;
+
+    switch (reason) {
+      case ReasonOfClose::NORMAL_CLOSE:
+        code = 1000;
+        message = "";
+        break;
+      case ReasonOfClose::TOO_LONG_PING_PAYLOAD:
+        code = 1002;
+        message = "Too long ping payload";
+        break;
+      case ReasonOfClose::TOO_LONG_PONG_PAYLOAD:
+        code = 1002;
+        message = "Too long pong payload";
+        break;
+      case ReasonOfClose::TOO_LONG_CLOSE_PAYLOAD:
+        code = 1002;
+        message = "Too long close payload";
+        break;
+      case ReasonOfClose::TOO_LONG_DATA_PAYLOAD:
+        code = 1009;
+        message = "Too long pong payload";
+        break;
+      case ReasonOfClose::SOME_DATA_AFTER_CLOSED_BY_REMOTE:
+        // Incorrect behavior
+        need_to_send = false;
+        std::ignore = connection_->close();
+        break;
+      case ReasonOfClose::PINGING_TIMEOUT:
+        code = 1008;
+        message = "Pong was not received on time";
+        break;
+      case ReasonOfClose::UNEXPECTED_CONTINUE:
+        code = 1002;
+        message = "Unexpected continue-frame";
+        break;
+      case ReasonOfClose::INTERNAL_ERROR:
+        message = "Internal error";
+        break;
+      case ReasonOfClose::UNKNOWN_OPCODE:
+        code = 1002;
+        message = "Unsupported opcode has received";
+        break;
+      case ReasonOfClose::CLOSED:
+        // Already closed early
+        need_to_send = false;
+        break;
+    }
+
+    if (need_to_send) {
+      code = htobe16(code);
+      outgoing_close_data_ =
+          std::make_shared<common::ByteArray>(sizeof(code) + message.size());
+      std::copy_n(reinterpret_cast<uint8_t *>(&code),  // NOLINT
+                  sizeof(code), outgoing_close_data_->begin());
+      std::copy_n(message.begin(), message.size(),
+                  outgoing_close_data_->begin() + 2);
+    }
   }
 
   void WsReadWriter::consume(size_t size) {
@@ -83,11 +236,11 @@ namespace libp2p::connection::websocket {
   }
 
   void WsReadWriter::read(size_t size, std::function<void()> cb) {
-    SL_TRACE(log_, "read data from buffer or connection");
+    SL_TRACE(log_, "R: read data from buffer or connection");
 
     if (read_bytes_ >= size) {
-      SL_TRACE(log_, "buffer has enough data (has {}, needed {})", read_bytes_,
-               size);
+      SL_TRACE(log_, "R: buffer has enough data (has {}, needed {})",
+               read_bytes_, size);
 
       //   |<-----size----->|
       //   |<--------read------>|
@@ -98,13 +251,13 @@ namespace libp2p::connection::websocket {
       return;
     }
 
-    SL_TRACE(log_, "buffer does not have enough data (has {}, needed {})",
+    SL_TRACE(log_, "R: buffer does not have enough data (has {}, needed {})",
              read_bytes_, size);
 
     auto in = gsl::make_span(std::next(read_buffer_->data(), read_bytes_),
                              read_buffer_->size() - read_bytes_);
 
-    SL_TRACE(log_, "try to read from connection upto {} bytes",
+    SL_TRACE(log_, "R: try to read from connection upto {} bytes",
              read_buffer_->size() - read_bytes_);
 
     connection_->readSome(
@@ -112,17 +265,21 @@ namespace libp2p::connection::websocket {
         [self = shared_from_this(), size,
          cb = std::move(cb)](auto res) mutable {
           if (res.has_error()) {
-            SL_DEBUG(self->log_, "Can't read data: {}", res.error().message());
-            return self->read_cb_(res.as_failure());
+            SL_DEBUG(self->log_, "R: Can't read data: {}",
+                     res.error().message());
+            if (self->read_data_handler_) {
+              self->read_data_handler_(res.as_failure());
+            }
+            return;
           }
           auto read_bytes = res.value();
 
           self->read_bytes_ += read_bytes;
 
-          SL_TRACE(self->log_, "read {} more bytes; buffer has {} bytes now",
+          SL_TRACE(self->log_, "R: read {} more bytes; buffer has {} bytes now",
                    read_bytes, self->read_bytes_);
 
-          if (self->read_bytes_ + read_bytes < size) {
+          if (self->read_bytes_ < size) {
             //   |<---------------size------------->|
             //   |<----read---->|<--new_read-->|
             //   |##############|++++++++++++++++|_____________|
@@ -141,14 +298,14 @@ namespace libp2p::connection::websocket {
   }
 
   void WsReadWriter::readFlagsAndPrelen() {
-    SL_TRACE(log_, "read flags and prelen");
+    SL_TRACE(log_, "R: read flags and prelen");
     BOOST_ASSERT(reading_state_ == ReadingState::WaitHeader);
     reading_state_ = ReadingState::ReadOpcodeAndPrelen;
     read(2, [self = shared_from_this()]() { self->handleFlagsAndPrelen(); });
   }
 
   void WsReadWriter::handleFlagsAndPrelen() {
-    SL_TRACE(log_, "handle flags and prelen");
+    SL_TRACE(log_, "R: handle flags and prelen");
     BOOST_ASSERT(reading_state_ == ReadingState::ReadOpcodeAndPrelen);
     BOOST_ASSERT(read_bytes_ >= 2);
 
@@ -166,7 +323,7 @@ namespace libp2p::connection::websocket {
   }
 
   void WsReadWriter::readSizeAndMask() {
-    SL_TRACE(log_, "read size and mask");
+    SL_TRACE(log_, "R: read size and mask");
     BOOST_ASSERT(reading_state_ == ReadingState::ReadSizeAndMask);
 
     size_t need_to_read = 0;
@@ -192,7 +349,7 @@ namespace libp2p::connection::websocket {
   }
 
   void WsReadWriter::handleSizeAndMask() {
-    SL_TRACE(log_, "handle size and mask");
+    SL_TRACE(log_, "R: handle size and mask");
     size_t processed_bytes = 0;
 
     auto *pos = read_buffer_->data();
@@ -214,16 +371,16 @@ namespace libp2p::connection::websocket {
       ctx.length = be64toh(length);
       pos = std::next(pos, sizeof(length));
     }
-    SL_TRACE(log_, "size of frame data is {}", ctx.length);
+    SL_TRACE(log_, "R: size of frame data is {}", ctx.length);
 
     if (ctx.masked) {
       processed_bytes += ctx.mask.size();
       BOOST_ASSERT(read_bytes_ >= processed_bytes);
       std::copy_n(pos, ctx.mask.size(), ctx.mask.begin());
-      SL_TRACE(log_, "mask of frame is {:02x}{:02x}{:02x}{:02x}", ctx.mask[0],
-               ctx.mask[1], ctx.mask[2], ctx.mask[3]);
+      SL_TRACE(log_, "R: mask of frame is {:02x}{:02x}{:02x}{:02x}",
+               ctx.mask[0], ctx.mask[1], ctx.mask[2], ctx.mask[3]);
     } else {
-      SL_TRACE(log_, "no mask of frame");
+      SL_TRACE(log_, "R: no mask of frame");
     }
 
     consume(processed_bytes);
@@ -236,14 +393,17 @@ namespace libp2p::connection::websocket {
   }
 
   void WsReadWriter::handleFrame() {
-    SL_TRACE(log_, "handle frame");
+    SL_TRACE(log_, "R: handle frame");
     BOOST_ASSERT(reading_state_ == ReadingState::HandleHeader);
     if (ctx.opcode == Opcode::Continue) {
       if (last_frame_opcode_ == Opcode::Text
           or last_frame_opcode_ == Opcode::Binary) {
-        SL_DEBUG(log_, "Can't handle frame: {}",
+        SL_DEBUG(log_, "R: Can't handle frame: {}",
                  make_error_code(Error::UNEXPECTED_CONTINUE).message());
-        read_cb_(Error::UNEXPECTED_CONTINUE);
+        close(ReasonOfClose::UNEXPECTED_CONTINUE);
+        if (read_data_handler_) {
+          read_data_handler_(Error::UNEXPECTED_CONTINUE);
+        }
         return;
       }
     }
@@ -252,18 +412,15 @@ namespace libp2p::connection::websocket {
       last_frame_opcode_ = not ctx.finally ? ctx.opcode : Opcode::_undefined;
     }
 
-    else if (ctx.opcode == Opcode::Close) {
-      if (not closed_by_remote_) {
-        closed_by_remote_ = true;
-        SL_DEBUG(log_, "Close-frame is received");
-        read_cb_(Error::CLOSED);
-        return;
+    else if (ctx.opcode != Opcode::Ping and  //
+             ctx.opcode != Opcode::Pong and  //
+             ctx.opcode != Opcode::Close) {
+      SL_DEBUG(log_, "R: Can't handle frame: unknown opcode 0x{:X}",
+               ctx.opcode);
+      close(ReasonOfClose::UNKNOWN_OPCODE);
+      if (read_data_handler_) {
+        read_data_handler_(Error::UNKNOWN_OPCODE);
       }
-    }
-
-    else {
-      SL_DEBUG(log_, "Can't handle frame: unknown opcode 0x{:X}", ctx.opcode);
-      read_cb_(Error::UNKNOWN_OPCODE);
       return;
     }
 
@@ -274,7 +431,7 @@ namespace libp2p::connection::websocket {
   }
 
   void WsReadWriter::readData() {
-    SL_TRACE(log_, "read data");
+    SL_TRACE(log_, "R: read data");
     BOOST_ASSERT(reading_state_ == ReadingState::WaitData);
     reading_state_ = ReadingState::ReadData;
 
@@ -288,132 +445,160 @@ namespace libp2p::connection::websocket {
   }
 
   void WsReadWriter::handleData() {
-    SL_TRACE(log_, "handle data");
+    SL_TRACE(log_, "R: handle data");
     BOOST_ASSERT(reading_state_ == ReadingState::ReadData);
     reading_state_ = ReadingState::HandleData;
 
-    // if (res.has_error()) {
-    //    if (reading_state_ != ReadingState::Idle) {
-    //      SL_DEBUG(log_, "Can't read data of frame: {}",
-    //      res.error().message()); read_cb_(res.as_failure()); return;
-    //    }
-    //    if (ctx.opcode == Opcode::Pong) {
-    //      SL_DEBUG(log_, "Can't read data of frame: {}",
-    //      res.error().message()); pong_cb_(res.as_failure());
-    //    }
-    //    return;
-    // }
+    auto consuming_data_size = std::min(read_bytes_, ctx.remaining_data);
+    auto extra_data_size = read_bytes_ - consuming_data_size;
+
+    auto new_buffer_size =
+        std::min(kMaxFrameSize, ctx.remaining_data - consuming_data_size)
+        + kMinBufferSize;
+
+    SL_TRACE(log_,
+             "R: > remain_to_read={} "
+             "in_buff={} "
+             "will_consume={} "
+             "extra={} "
+             "new_buff_size={}",
+             ctx.remaining_data, read_bytes_, consuming_data_size,
+             extra_data_size, new_buffer_size);
+
+    // [read:[consuming|extra|     ]]
+
+    // new
+    auto buffer = std::make_shared<std::vector<uint8_t>>(new_buffer_size);
+
+    // [read:[consuming|extra|     ]]
+    // [buff:[                     ]]
+
+    std::swap(read_buffer_, buffer);
+
+    // [read:[                     ]]
+    // [buff:[consuming|extra|     ]]
+
+    // copy extra data to new buffer
+    std::copy_n(std::next(buffer->begin(), consuming_data_size),
+                extra_data_size, read_buffer_->begin());
+
+    // [read:[extra|               ]]
+    // [buff:[consuming|extra|     ]]
+
+    // drop extra data
+    buffer->resize(consuming_data_size);
+
+    // [read:[extra|               ]]
+    // [buff:[consuming|           ]]
+
+    read_bytes_ -= consuming_data_size;
+    BOOST_ASSERT(read_bytes_ == extra_data_size);
+
+    LOG_RAW_BYTES(log_, log::Level::TRACE, "R: IN_frame", buffer->begin(),
+                  buffer->end());
+
+    if (ctx.masked) {
+      for (auto &byte : *buffer) {
+        byte ^= ctx.mask[ctx.mask_index++ % ctx.mask.size()];
+      }
+    }
+
+    ctx.remaining_data -= consuming_data_size;
+
+    reading_state_ = (ctx.remaining_data > 0) ? ReadingState::WaitData
+                                              : ReadingState::WaitHeader;
+    SL_TRACE(log_,
+             "R: < remain_to_read={} "
+             "in_buff={}",
+             ctx.remaining_data, read_bytes_);
 
     if (ctx.opcode == Opcode::Text or ctx.opcode == Opcode::Binary) {
-      auto consuming_data_size = std::min(read_bytes_, ctx.remaining_data);
-      auto extra_data_size = read_bytes_ - consuming_data_size;
-
-      auto new_buffer_size = std::max(
-          kMinBufferSize,
-          std::min(kMaxFrameSize, ctx.remaining_data - consuming_data_size));
-
-      SL_TRACE(log_,
-               "> remain_to_read={} "
-               "in_buff={} "
-               "will_consume={} "
-               "extra={} "
-               "new_buff_size={}",
-               ctx.remaining_data, read_bytes_, consuming_data_size,
-               extra_data_size, new_buffer_size);
-
-      // new
-      auto buffer = std::make_shared<std::vector<uint8_t>>(new_buffer_size);
-      std::swap(read_buffer_, buffer);
-      read_bytes_ -= consuming_data_size;
-
-      // copy extra data
-      std::copy_n(std::next(buffer->begin(), consuming_data_size),
-                  extra_data_size, read_buffer_->begin());
-
-      buffer->resize(consuming_data_size);
-
-      if (ctx.masked) {
-        SL_TRACE(log_, "IN_masked {}", common::hex_lower(*buffer));
-        // size_t i = 0;
-        for (auto &byte : *buffer) {
-          // {
-          //   size_t mi = ctx.mask_index % ctx.mask.size();
-          //   auto b = byte;
-          //   auto m = ctx.mask[mi];
-          //   auto um = b ^ m;
-          //
-          //   SL_TRACE(
-          //       log_,
-          //       "byte[{}]=({:02x}) --> mask[{}]={:02x} ==> '{}' {:02x} {}",
-          //       i++, (int)byte, mi, m, (char)((um >= 0x20) ? um : '?'),
-          //       (int)(um), (int)(um));
-          // }
-
-          byte ^= ctx.mask[ctx.mask_index++ % ctx.mask.size()];
-        }
-        SL_TRACE(log_, "IN_unmasked {}", common::hex_lower(*buffer));
-      } else {
-        SL_TRACE(log_, "IN_nomasked {}", common::hex_lower(*buffer));
-      }
-
-      scheduler_->schedule([this, cb = std::move(read_cb_),
+      scheduler_->schedule([log = log_, cb = std::move(read_data_handler_),
                             buffer = std::move(buffer)]() mutable {
-        SL_TRACE(log_, "return result buff {} bytes", buffer->size());
-        SL_TRACE(log_, "IN {}", common::hex_lower(*buffer));
+        SL_TRACE(log, "R: return result buff {} bytes", buffer->size());
+
+        LOG_RAW_BYTES(log, log::Level::TRACE, "R: IN", buffer->begin(),
+                      buffer->end());
+
         cb(std::move(buffer));
       });
 
-      ctx.remaining_data -= consuming_data_size;
-
-      reading_state_ = (ctx.remaining_data > 0) ? ReadingState::WaitData
-                                                : ReadingState::WaitHeader;
-      SL_TRACE(log_,
-               "< remain_to_read={} "
-               "in_buff={}",
-               ctx.remaining_data, read_bytes_);
       return;
     }
 
     if (ctx.opcode == Opcode::Ping) {
-      SL_DEBUG(log_, "Ping-frame data is received");
-      //  incoming_ping_data_->insert(incoming_ping_data_->end(),
-      //                              read_buffer_->begin(),
-      //                              std::next(read_buffer_->begin(),
-      //                              read_data));
-      //  if (ctx.remaining_data == 0) {
-      //    sendPong(*incoming_ping_data_);
-      //    reading_state_ = ReadingState::WaitHeader;
-      //    readFlagsAndPrelen();
-      //  } else {
-      //    reading_state_ = ReadingState::WaitData;
-      //    readData();
-      //  }
+      incoming_control_data_.insert(incoming_control_data_.end(),
+                                    buffer->begin(), buffer->end());
+      if (incoming_control_data_.size() > kMaxControlFrameDataSize) {
+        SL_TRACE(log_, "R: Received ping-frame is too long");
+        close(ReasonOfClose::TOO_LONG_PING_PAYLOAD);
+        return;
+      }
+
+      if (ctx.remaining_data == 0) {
+        SL_DEBUG(log_, "R: Ping-frame is received");
+        outgoing_pong_data_ = std::make_shared<common::ByteArray>(
+            std::move(incoming_control_data_));
+        reading_state_ = ReadingState::WaitHeader;
+        readFlagsAndPrelen();
+      } else {
+        reading_state_ = ReadingState::WaitData;
+        readData();
+      }
       return;
     }
 
     if (ctx.opcode == Opcode::Pong) {
-      SL_DEBUG(log_, "Ping-frame frame is received");
-      //  incoming_pong_data_->insert(incoming_pong_data_->end(),
-      //                              read_buffer_->begin(),
-      //                              std::next(read_buffer_->begin(),
-      //                              read_data));
-      //  if (ctx.remaining_data == 0) {
-      //    pong_cb_(std::move(incoming_pong_data_));
-      //    incoming_pong_data_ = std::make_shared<std::vector<uint8_t>>();
-      //    reading_state_ = ReadingState::WaitHeader;
-      //    readFlagsAndPrelen();
-      //  } else {
-      //    reading_state_ = ReadingState::WaitData;
-      //    readData();
-      //  }
+      incoming_control_data_.insert(incoming_control_data_.end(),
+                                    buffer->begin(), buffer->end());
+      if (incoming_control_data_.size() > kMaxControlFrameDataSize) {
+        SL_TRACE(log_, "R: Received pong-frame is too long");
+        close(ReasonOfClose::TOO_LONG_PONG_PAYLOAD);
+        return;
+      }
+
+      if (ctx.remaining_data == 0) {
+        SL_DEBUG(log_, "R: Pong-frame is received");
+        read_pong_handler_(incoming_control_data_);
+        incoming_control_data_.clear();
+        reading_state_ = ReadingState::WaitHeader;
+        readFlagsAndPrelen();
+      } else {
+        reading_state_ = ReadingState::WaitData;
+        readData();
+      }
       return;
     }
 
     if (ctx.opcode == Opcode::Close) {
+      incoming_control_data_.insert(incoming_control_data_.end(),
+                                    buffer->begin(), buffer->end());
+      if (incoming_control_data_.size() > kMaxControlFrameDataSize) {
+        SL_TRACE(log_, "R: Received close-frame is too long");
+        close(ReasonOfClose::TOO_LONG_CLOSE_PAYLOAD);
+        return;
+      }
+
       if (ctx.remaining_data == 0) {
-        SL_DEBUG(log_, "Close-frame has received");
-        read_cb_(Error::CLOSED);
-        pong_cb_(Error::CLOSED);
+        if (incoming_control_data_.size() >= 2) {
+          uint16_t code;
+          std::copy_n(incoming_control_data_.begin(), 2,
+                      reinterpret_cast<uint8_t *>(&code));  // NOLINT
+          if (incoming_control_data_.size() > 2) {
+            std::string_view msg(reinterpret_cast<char *>(  // NOLINT
+                                     incoming_control_data_.data()),
+                                 incoming_control_data_.size());
+            SL_DEBUG(log_, "R: Close-frame is received; code: {}, message: {}",
+                     code, msg);
+          } else {
+            SL_DEBUG(log_, "R: Close-frame is received; code: {}", code);
+          }
+        } else {
+          SL_DEBUG(log_, "R: Close-frame is received");
+        }
+        closed_by_remote_ = true;
+        reading_state_ = ReadingState::Closed;
+        shutdown(Error::CLOSED);
       } else {
         reading_state_ = ReadingState::WaitData;
         readData();
@@ -423,24 +608,171 @@ namespace libp2p::connection::websocket {
     BOOST_UNREACHABLE_RETURN();
   }
 
-  void WsReadWriter::sendPing(gsl::span<const uint8_t> buffer,
-                              WriteCallbackFunc cb) {
-    write(buffer, std::move(cb));
+  bool WsReadWriter::hasOutgoingData() {
+    // Ready to send control frame
+    if (outgoing_close_data_ or outgoing_pong_data_ or outgoing_ping_data_) {
+      return true;
+    }
+
+    // Exists unsent data
+    return std::all_of(
+        writing_queue_.begin(), writing_queue_.end(),
+        [](auto &chunk) { return chunk.data.size() > chunk.written_bytes; });
   }
 
-  void WsReadWriter::sendPong(gsl::span<const uint8_t> buffer) {
-    write(buffer, [](auto res) {
-      // TODO log pong
-    });
+  void WsReadWriter::shutdown(outcome::result<void> res) {
+    BOOST_ASSERT(res.has_error());
+
+    // Drop control frame data
+    outgoing_close_data_.reset();
+    outgoing_pong_data_.reset();
+    outgoing_ping_data_.reset();
+
+    // Drop unsent data
+    for (auto &chunk : writing_queue_) {
+      chunk.cb(res.as_failure());
+    }
+    writing_queue_.clear();
+
+    // callback of reading
+    if (read_data_handler_) {
+      read_data_handler_(res.as_failure());
+    }
+
+    std::ignore = connection_->close();
   }
 
   void WsReadWriter::sendData() {
-    SL_TRACE(log_, "send data");
+    if (outgoing_close_data_) {
+      sendControlFrame(ControlFrameType::Close,
+                       std::move(outgoing_close_data_));
+      return;
+    }
+
+    if (outgoing_pong_data_) {
+      sendControlFrame(ControlFrameType::Pong, std::move(outgoing_pong_data_));
+      return;
+    }
+
+    if (outgoing_ping_data_) {
+      sendControlFrame(ControlFrameType::Ping, std::move(outgoing_ping_data_));
+      return;
+    }
+
+    sendDataFrame();
+  }
+
+  void WsReadWriter::sendControlFrame(
+      ControlFrameType type, std::shared_ptr<common::ByteArray> payload) {
+    BOOST_ASSERT(type == ControlFrameType::Ping
+                 or type == ControlFrameType::Pong
+                 or type == ControlFrameType::Close);
+
+    const auto *marker = type == ControlFrameType::Ping ? "ping"
+        : type == ControlFrameType::Pong                ? "pong"
+                                                        : "close";
+    const auto opcode = type == ControlFrameType::Ping ? Opcode::Ping
+        : type == ControlFrameType::Pong               ? Opcode::Pong
+                                                       : Opcode::Close;
 
     bool finally = true;
 
-    // Calculate amount of bytes sending by one frame
+    size_t amount = payload->size();
+
+    if (amount == 0) {
+      SL_TRACE(log_, "W: send {}: no data", marker);
+      return;
+    }
+
+    if (amount > kMaxControlFrameDataSize) {
+      close(ReasonOfClose::INTERNAL_ERROR);
+      sendControlFrame(ControlFrameType::Close,
+                       std::move(outgoing_close_data_));
+      return;
+    }
+
+    SL_TRACE(log_, "W: make {}-frame: {} bytes", marker, amount);
+
+    bool masked = false;  // only client is masking data
+    std::array<uint8_t, 4> mask{0};
+    if (masked) {
+      uint32_t mask_int = std::rand();
+      std::copy_n(reinterpret_cast<uint8_t *>(&mask_int),  // NOLINT
+                  sizeof(mask_int), mask.begin());
+      SL_TRACE(log_, "W: mask of frame is {:02x}{:02x}{:02x}{:02x}", mask[0],
+               mask[1], mask[2], mask[3]);
+    } else {
+      SL_TRACE(log_, "W: no mask of frame");
+    }
+
+    auto out = std::make_shared<common::ByteArray>();
+    auto &frame = *out;
+
+    frame.reserve(2                   // header
+                  + (masked ? 4 : 0)  // mask
+                  + amount);          // data
+
+    frame.resize(2);
+    frame[0] = finally ? 0b1000'0000 : 0;      // finally flag
+    frame[0] |= static_cast<uint8_t>(opcode);  // opcode
+    frame[1] = masked ? 0b1000'0000 : 0;       // masked flag
+    frame[1] |= (amount & 0b0111'1111);        // length
+    // mask
+    if (masked) {
+      std::copy_n(mask.begin(), mask.size(), std::back_inserter(frame));
+    }
+
+    // data
+    if (masked) {
+      std::transform(payload->begin(), payload->end(),
+                     std::back_inserter(frame),
+                     [&, idx = 0u](uint8_t byte) mutable {
+                       return byte ^ mask[idx++ % mask.size()];
+                     });
+    } else {
+      frame.insert(frame.end(), payload->begin(), payload->end());
+    }
+
+    auto write_cb = [self = shared_from_this(), out, marker,
+                     opcode](auto res) mutable {
+      if (res.has_error()) {
+        self->shutdown(res.as_failure());
+        return;
+      }
+
+      auto written_bytes = res.value();
+
+      if (out->size() != written_bytes) {
+        self->shutdown(std::errc::broken_pipe);
+        return;
+      }
+
+      SL_TRACE(self->log_, "W: sent {}-frame: {}", marker, written_bytes);
+
+      if (opcode == Opcode::Close) {
+        self->shutdown(Error::CLOSED);
+        return;
+      }
+
+      if (self->hasOutgoingData()) {
+        self->scheduler_->schedule([wp = self->weak_from_this()] {
+          if (auto self = wp.lock()) {
+            self->sendData();
+          }
+        });
+      }
+    };
+
+    connection_->write(*out, out->size(), std::move(write_cb));
+
+    closed_by_host_ = true;
+  }
+
+  void WsReadWriter::sendDataFrame() {
+    bool finally = true;
     size_t amount = 0;
+
+    // Calculate amount of bytes sending by one frame
     for (auto &chunk : writing_queue_) {
       amount += chunk.data.size() - chunk.written_bytes;
       if (amount > kMaxFrameSize) {
@@ -453,11 +785,12 @@ namespace libp2p::connection::websocket {
     }
 
     if (amount == 0) {
-      SL_TRACE(log_, "send data: no data");
       return;
     }
 
-    SL_TRACE(log_, "make frame: {} bytes", amount);
+    SL_TRACE(log_, "W: send data");
+
+    SL_TRACE(log_, "W: make frame: {} bytes", amount);
 
     bool masked = connection_->isInitiator();  // only client is masking data
     std::array<uint8_t, 4> mask{0};
@@ -465,13 +798,14 @@ namespace libp2p::connection::websocket {
       uint32_t mask_int = std::rand();
       std::copy_n(reinterpret_cast<uint8_t *>(&mask_int),  // NOLINT
                   sizeof(mask_int), mask.begin());
-      SL_TRACE(log_, "mask of frame is {:02x}{:02x}{:02x}{:02x}", mask[0],
+      SL_TRACE(log_, "W: mask of frame is {:02x}{:02x}{:02x}{:02x}", mask[0],
                mask[1], mask[2], mask[3]);
     } else {
-      SL_TRACE(log_, "no mask of frame");
+      SL_TRACE(log_, "W: no mask of frame");
     }
 
-    std::vector<uint8_t> frame;
+    auto out = std::make_shared<common::ByteArray>();
+    auto &frame = *out;
 
     // clang-format off
     frame.reserve(
@@ -523,65 +857,53 @@ namespace libp2p::connection::websocket {
       if (chunk_begin == chunk_end) {  // empty or completely sent chunk
         continue;
       }
-      SL_TRACE(log_, "OUT_orig {}",
-               common::hex_lower(gsl::make_span(chunk_begin.base(),
-                                                chunk_end - chunk_begin)));
-      auto fs = frame.size();
+
       if (masked) {
         std::transform(chunk_begin, chunk_end, std::back_inserter(frame),
                        [&, idx = 0u](uint8_t byte) mutable {
                          return byte ^ mask[idx++ % mask.size()];
                        });
-        SL_TRACE(
-            log_, "OUT_masked {}",
-            common::hex_lower(gsl::make_span(
-                std::next(frame.begin(), fs).base(), chunk_end - chunk_begin)));
       } else {
         std::copy(chunk_begin, chunk_end, std::back_inserter(frame));
-        SL_TRACE(
-            log_, "OUT_nomask {}",
-            common::hex_lower(gsl::make_span(
-                std::next(frame.begin(), fs).base(), chunk_end - chunk_begin)));
       }
+
       chunk.written_bytes += chunk_size;
     }
 
+    LOG_RAW_BYTES(log_, log::Level::TRACE, "W: OUT_frame", frame.begin(),
+                  frame.end());
+
     // remove processed data out of buffer
-    auto write_cb = [self = shared_from_this(),
-                     frame_size = frame.size()](auto res) mutable {
+    auto write_cb = [self = shared_from_this(), out](auto res) mutable {
       if (res.has_error()) {
-        while (not self->writing_queue_.empty()) {
-          auto &chunk = self->writing_queue_.front();
-          chunk.cb(res.as_failure());
-          self->writing_queue_.pop_front();
-        }
-        std::ignore = self->connection_->close();
+        self->shutdown(res.as_failure());
         return;
       }
 
       auto written_bytes = res.value();
 
-      SL_TRACE(self->log_, "sent frame: {}", written_bytes);
+      SL_TRACE(self->log_, "W: sent data-frame: {}", written_bytes);
 
-      if (frame_size != written_bytes) {
-        while (not self->writing_queue_.empty()) {
-          auto &chunk = self->writing_queue_.front();
-          chunk.cb(std::errc::broken_pipe);
-          self->writing_queue_.pop_front();
-        }
-        std::ignore = self->connection_->close();
+      if (out->size() != written_bytes) {
+        self->shutdown(std::errc::broken_pipe);
         return;
       }
 
       while (not self->writing_queue_.empty()) {
         auto &chunk = self->writing_queue_.front();
 
-        const auto sent_header_size =
-            std::min(chunk.header_size, written_bytes);
-        chunk.header_size -= sent_header_size;
-        written_bytes -= sent_header_size;
-        SL_TRACE(self->log_, "sent header of frame: {} bytes",
-                 sent_header_size);
+        if (chunk.header_size > 0) {
+          const auto sent_header_size =
+              std::min(chunk.header_size, written_bytes);
+          chunk.header_size -= sent_header_size;
+          written_bytes -= sent_header_size;
+          SL_TRACE(self->log_, "W: sent header of frame: {} bytes",
+                   sent_header_size);
+        }
+
+        if (written_bytes == 0) {
+          break;
+        }
 
         const auto sent_data_size =
             std::min(chunk.written_bytes - chunk.sent_bytes, written_bytes);
@@ -589,45 +911,31 @@ namespace libp2p::connection::websocket {
         written_bytes -= sent_data_size;
 
         if (chunk.sent_bytes == chunk.data.size()) {  // completely sent chunk
-          SL_TRACE(self->log_,
-                   "sent data of frame: chunk completely sent ({} bytes)",
-                   sent_data_size);
+          SL_TRACE(
+              self->log_,
+              "W: sent data of frame: chunk completely sent: +{} bytes ({}/{})",
+              sent_data_size, chunk.sent_bytes, chunk.data.size());
           chunk.cb(chunk.data.size());
           self->writing_queue_.pop_front();
         } else {  // partially sent chunk
-          SL_TRACE(self->log_,
-                   "sent data of frame: chunk partially sent ({} bytes)",
-                   sent_data_size);
+          SL_TRACE(
+              self->log_,
+              "W: sent data of frame: chunk partially sent: +{} bytes ({}/{})",
+              sent_data_size, chunk.sent_bytes, chunk.data.size());
           break;
         }
       }
 
-      for (auto &chunk : self->writing_queue_) {
-        if (chunk.data.size() > chunk.written_bytes) {
-          self->scheduler_->schedule([wp = self->weak_from_this()] {
-            if (auto self = wp.lock()) {
-              self->sendData();
-            }
-          });
-        }
+      if (self->hasOutgoingData()) {
+        self->scheduler_->schedule([wp = self->weak_from_this()] {
+          if (auto self = wp.lock()) {
+            self->sendData();
+          }
+        });
       }
     };
 
-    connection_->write(frame, frame.size(), std::move(write_cb));
-  }
-
-  void WsReadWriter::write(gsl::span<const uint8_t> buffer,
-                           basic::Writer::WriteCallbackFunc cb) {
-    SL_TRACE(log_, "write data: {}", buffer.size());
-
-    writing_queue_.emplace_back(common::ByteArray(buffer.begin(), buffer.end()),
-                                std::move(cb));
-
-    scheduler_->schedule([wp = weak_from_this()] {
-      if (auto self = wp.lock()) {
-        self->sendData();
-      }
-    });
+    connection_->write(*out, out->size(), std::move(write_cb));
   }
 
 }  // namespace libp2p::connection::websocket
