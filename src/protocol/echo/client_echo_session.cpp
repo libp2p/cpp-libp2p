@@ -78,16 +78,16 @@ namespace libp2p::protocol {
 
           auto log = log::createLogger("Echo");
           size_t i = 0;
-          log->error("Compare:  [{}] {:02x} `{}` {:02x} `{}`", i, buf_[i],
+          log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`", i, buf_[i],
                      (char)buf_[i], recv_buf_[i], (char)recv_buf_[i]);
           for (size_t i = 1; i < buf_.size() - 1; ++i) {
             if (buf_[i] != recv_buf_[i]) {
-              log->error("Compare:  [{}] {:02x} `{}` {:02x} `{}`", i, buf_[i],
+              log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`", i, buf_[i],
                          (char)buf_[i], recv_buf_[i], (char)recv_buf_[i]);
             }
           }
           i = buf_.size() - 1;
-          log->error("Compare:  [{}] {:02x} `{}` {:02x} `{}`", i, buf_[i],
+          log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`", i, buf_[i],
                      (char)buf_[i], recv_buf_[i], (char)recv_buf_[i]);
         }
         auto begin = recv_buf_.begin();

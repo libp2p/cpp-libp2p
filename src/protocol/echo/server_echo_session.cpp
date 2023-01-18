@@ -63,8 +63,7 @@ namespace libp2p::protocol {
     } else {
       log_->debug("read {} bytes", rread.value());
     }
-    this->doWrite(rread.value());
-    doRead();
+    doWrite(rread.value());
   }
 
   void ServerEchoSession::doWrite(size_t size) {
@@ -96,5 +95,6 @@ namespace libp2p::protocol {
     if (!repeat_infinitely_) {
       --config_.max_server_repeats;
     }
+    doRead();
   }
 }  // namespace libp2p::protocol
