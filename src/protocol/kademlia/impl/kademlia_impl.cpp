@@ -131,7 +131,10 @@ namespace libp2p::protocol::kademlia {
       auto &[value, ts] = res.value();
       if (scheduler_->now() < ts) {
         if (handler) {
-          handler(std::move(value));
+          scheduler_->schedule(
+              [handler{std::move(handler)}, value{std::move(value)}]() mutable {
+                handler(std::move(value));
+              });
           return outcome::success();
         }
       }
