@@ -156,6 +156,10 @@ namespace libp2p::protocol::kademlia {
           config_.connectionTimeout);
     }
 
+    if (done_) {
+      return;
+    }
+
     if (requests_in_progress_ == 0) {
       done_ = true;
       log_.debug("done");
@@ -210,6 +214,10 @@ namespace libp2p::protocol::kademlia {
 
   void GetValueExecutor::onResult(const std::shared_ptr<Session> &session,
                                   outcome::result<Message> msg_res) {
+    if (done_) {
+      return;
+    }
+
     gsl::final_action respawn([this] {
       --requests_in_progress_;
       spawn();
