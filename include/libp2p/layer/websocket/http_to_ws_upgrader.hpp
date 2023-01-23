@@ -27,6 +27,8 @@ namespace libp2p::layer::websocket {
       : public std::enable_shared_from_this<HttpToWsUpgrader> {
    public:
     static constexpr size_t kMaxMsgLen = 65536;
+    static constexpr std::string_view kServerName = "libp2p";
+    static constexpr std::string_view kClientName = "libp2p";
 
     HttpToWsUpgrader(
         std::shared_ptr<connection::LayerConnection> connection,
@@ -87,6 +89,9 @@ namespace libp2p::layer::websocket {
 
     std::shared_ptr<common::ByteArray> read_buffer_;
     std::shared_ptr<HttpReadWriter> rw_;
+
+    std::string request_;
+    std::string response_;
 
     std::optional<std::string> key_;
 

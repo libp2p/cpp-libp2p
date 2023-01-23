@@ -12,6 +12,7 @@
 #include <libp2p/crypto/sha/sha1.hpp>
 #include <libp2p/layer/websocket/ws_connection.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base64.hpp>
+#include <libp2p/transport/tcp/tcp_util.hpp>
 
 #ifndef UNIQUE_NAME
 #define UNIQUE_NAME(base) base##__LINE__
@@ -145,30 +146,33 @@ namespace libp2p::layer::websocket {
   }  // namespace
 
   gsl::span<const uint8_t> HttpToWsUpgrader::createHttpRequest() {
-    static std::string request_;
-    request_ =
-        "GET /index.html HTTP/1.1\r\n"  // FIXME hardcode
-        "Host: www.example.com\r\n"
-        "Connection: Upgrade\r\n"
-        "Upgrade: websocket\r\n";
-    std::array<uint8_t, 20> data;
+    std::string host = "unknown";
+    auto addr_res = conn_->remoteMultiaddr();
+    if (addr_res.has_value()) {
+      const auto &addr = addr_res.value();
+      auto [h, p] = libp2p::transport::detail::getHostAndTcpPort(addr);
+      host = fmt::format("{}:{}", h, p);
+    }
+
+    std::array<uint8_t, 20> data{};
     random_generator_->fillRandomly(data);
     key_.emplace(multi::detail::encodeBase64({data.begin(), data.end()}));
-    request_ += "Sec-WebSocket-Key: ";
-    request_ += key_.value();
-    request_ += "\r\n";
-    request_ += "\r\n";
 
-    auto request = strToSpan(request_);
-    return request;
+    request_ = fmt::format(
+        "GET / HTTP/1.1\r\n"
+        "Host: {}\r\n"
+        "User-Agent: {}\r\n"
+        "Connection: Upgrade\r\n"
+        "Upgrade: websocket\r\n"
+        "Sec-WebSocket-Key: {}\r\n"
+        "\r\n",
+        host, kClientName, key_.value());
+
+    return strToSpan(request_);
   }
 
   gsl::span<const uint8_t> HttpToWsUpgrader::createHttpResponse() {
-    static std::string response_;
-    response_ =
-        "HTTP/1.1 101 Switching Protocols\r\n"  // FIXME hardcode
-        "Connection: Upgrade\r\n"
-        "Upgrade: websocket\r\n";
+    std::string sec_accept_header;
     if (key_.has_value()) {
       static const auto guid =
           strToSpan("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
@@ -177,14 +181,21 @@ namespace libp2p::layer::websocket {
       auto hash = crypto::sha1(data).value();
       auto encoded_hash =
           multi::detail::encodeBase64({hash.begin(), hash.end()});
-      response_ += "Sec-WebSocket-Accept: ";
-      response_ += encoded_hash;
-      response_ += "\r\n";
+      sec_accept_header =
+          fmt::format("Sec-WebSocket-Accept: {}\r\n", encoded_hash);
     }
-    response_ += "\r\n";
 
-    auto response = strToSpan(response_);
-    return response;
+    response_ = fmt::format(
+        "HTTP/1.1 101 Switching Protocols\r\n"
+        "Server: {}\r\n"
+        "Connection: Upgrade\r\n"
+        "Upgrade: websocket\r\n"
+        "{}"
+        "\r\n",
+        kServerName, sec_accept_header);
+
+    return strToSpan(response_);
+    ;
   }
 
   void HttpToWsUpgrader::sendHttpUpgradeRequest(
