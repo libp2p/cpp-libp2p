@@ -162,9 +162,10 @@ namespace libp2p::layer::websocket {
         "GET / HTTP/1.1\r\n"
         "Host: {}\r\n"
         "User-Agent: {}\r\n"
-        "Connection: Upgrade\r\n"
         "Upgrade: websocket\r\n"
+        "Connection: Upgrade\r\n"
         "Sec-WebSocket-Key: {}\r\n"
+        "Sec-WebSocket-Version: 13\r\n"
         "\r\n",
         host, kClientName, key_.value());
 
