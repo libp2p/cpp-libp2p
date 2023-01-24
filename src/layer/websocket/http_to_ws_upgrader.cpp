@@ -146,6 +146,20 @@ namespace libp2p::layer::websocket {
       return {reinterpret_cast<const uint8_t *>(str.data()),  // NOLINT
               static_cast<gsl::span<const uint8_t>::index_type>(str.size())};
     }
+
+    bool isCaseInsensitiveEquals(gsl::span<const uint8_t> lhs,
+                                 gsl::span<const uint8_t> rhs) {
+      if (lhs.size() != rhs.size())
+        return false;
+      auto it1 = lhs.begin();
+      auto it2 = rhs.begin();
+      for (; it1 != lhs.end(); ++it1, ++it2) {
+        if (::toupper(*it1) != ::toupper(*it2)) {
+          return false;
+        }
+      }
+      return true;
+    }
   }  // namespace
 
   gsl::span<const uint8_t> HttpToWsUpgrader::createHttpRequest() {
@@ -256,18 +270,21 @@ namespace libp2p::layer::websocket {
         auto line = payload.subspan(begin, end - begin);
 
         if (line.size() > 12
-            and boost::iequals(line.subspan(0, 12), "Connection: ")) {
-          if (boost::iequals(line.subspan(12), "Upgrade")) {
+            and isCaseInsensitiveEquals(line.subspan(0, 12),
+                                        strToSpan("Connection: "))) {
+          if (isCaseInsensitiveEquals(line.subspan(12), strToSpan("Upgrade"))) {
             connection_is_upgrade = true;
           }
         } else if (line.size() > 9
-                   and boost::iequals(line.subspan(0, 9), "Upgrade: ")) {
-          if (boost::iequals(line.subspan(9), "websocket")) {
+                   and isCaseInsensitiveEquals(line.subspan(0, 9),
+                                               strToSpan("Upgrade: "))) {
+          if (isCaseInsensitiveEquals(line.subspan(9),
+                                      strToSpan("websocket"))) {
             upgrade_is_websocket = true;
           }
         } else if (line.size() > 19
-                   and boost::iequals(line.subspan(0, 19),
-                                      "Sec-WebSocket-Key: ")) {
+                   and isCaseInsensitiveEquals(
+                       line.subspan(0, 19), strToSpan("Sec-WebSocket-Key: "))) {
           key_.assign(std::next(line.begin(), 19), line.end());
           key_is_set = true;
         }
@@ -318,18 +335,22 @@ namespace libp2p::layer::websocket {
         auto line = payload.subspan(begin, end - begin);
 
         if (line.size() > 12
-            and boost::iequals(line.subspan(0, 12), "Connection: ")) {
-          if (boost::iequals(line.subspan(12), "Upgrade")) {
+            and isCaseInsensitiveEquals(line.subspan(0, 12),
+                                        strToSpan("Connection: "))) {
+          if (isCaseInsensitiveEquals(line.subspan(12), strToSpan("Upgrade"))) {
             connection_is_upgrade = true;
           }
         } else if (line.size() > 9
-                   and boost::iequals(line.subspan(0, 9), "Upgrade: ")) {
-          if (boost::iequals(line.subspan(9), "websocket")) {
+                   and isCaseInsensitiveEquals(line.subspan(0, 9),
+                                               strToSpan("Upgrade: "))) {
+          if (isCaseInsensitiveEquals(line.subspan(9),
+                                      strToSpan("websocket"))) {
             upgrade_is_websocket = true;
           }
         } else if (line.size() > 22
-                   and boost::iequals(line.subspan(0, 22),
-                                      "Sec-WebSocket-Accept: ")) {
+                   and isCaseInsensitiveEquals(
+                       line.subspan(0, 22),
+                       strToSpan("Sec-WebSocket-Accept: "))) {
           accept_hash.assign(std::next(line.begin(), 22), line.end());
         }
 
