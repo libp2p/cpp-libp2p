@@ -43,6 +43,7 @@ namespace libp2p::layer::websocket {
       BAD_REQUEST_BAD_METHOD,
       BAD_REQUEST_BAD_UPDATE_HEADER,
       BAD_REQUEST_BAD_CONNECTION_HEADER,
+      BAD_REQUEST_BAD_WS_KEY_HEADER,
       BAD_RESPONSE_BAD_STATUS,
       BAD_RESPONSE_BAD_UPDATE_HEADER,
       BAD_RESPONSE_BAD_CONNECTION_HEADER,
@@ -93,7 +94,7 @@ namespace libp2p::layer::websocket {
     std::string request_;
     std::string response_;
 
-    std::optional<std::string> key_;
+    std::string key_;
 
     log::Logger log_ = log::createLogger("HttpToWsUpgrader");
   };
