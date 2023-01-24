@@ -13,6 +13,7 @@
 #include <boost/noncopyable.hpp>
 
 #include <libp2p/common/metrics/instance_count.hpp>
+#include <libp2p/connection/asio_stream.hpp>
 #include <libp2p/connection/secure_connection.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/peer/identity_manager.hpp>
@@ -25,27 +26,23 @@ namespace libp2p::connection {
                         public std::enable_shared_from_this<TlsConnection>,
                         private boost::noncopyable {
    public:
-    /// lower level socket type is TCP
-    using tcp_socket_t = boost::asio::ip::tcp::socket;
-
-    /// reference as a parameter here allows to upgrade established TCP
-    /// connection
-    using ssl_socket_t = boost::asio::ssl::stream<tcp_socket_t &>;
+    using ssl_socket_t = boost::asio::ssl::stream<AsioStream>;
 
     /// Upgraded connection passed to this callback
     using HandshakeCallback = std::function<void(
         outcome::result<std::shared_ptr<connection::SecureConnection>>)>;
 
     /// Ctor.
-    /// \param raw_connection TCP connection, established at the moment
+    /// \param raw_connection connection, established at the moment
     /// \param ssl_context Wrapper around SSL_CTX
     /// \param idmgr Identity manager, contains this host's keys
-    /// \param tcp_socket Raw socket extracted from raw connection
+    /// \param io_context Asio io context
     /// \param remote_peer Expected peer id of remote peer, has value for
     /// outbound connections
     TlsConnection(std::shared_ptr<RawConnection> raw_connection,
                   std::shared_ptr<boost::asio::ssl::context> ssl_context,
-                  const peer::IdentityManager &idmgr, tcp_socket_t &tcp_socket,
+                  const peer::IdentityManager &idmgr,
+                  boost::asio::io_context &io_context,
                   boost::optional<peer::PeerId> remote_peer);
 
     /// Performs async handshake and passes its result into callback. This fn is
@@ -118,7 +115,7 @@ namespace libp2p::connection {
     /// Local peer id
     const peer::PeerId local_peer_;
 
-    /// Raw TCP connection
+    /// Raw connection
     std::shared_ptr<RawConnection> raw_connection_;
 
     /// SSL context, shared among connections

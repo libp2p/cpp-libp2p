@@ -12,7 +12,6 @@ namespace libp2p::security {
 
   enum class TlsError : int {
     TLS_CTX_INIT_FAILED = 1,
-    TLS_INCOMPATIBLE_TRANSPORT,
     TLS_NO_CERTIFICATE,
     TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION,
     TLS_PEER_VERIFY_FAILED,

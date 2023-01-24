@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <libp2p/connection/asio_stream_impl.hpp>
+
 #include "tls_connection.hpp"
 #include "tls_details.hpp"
 
@@ -26,12 +28,12 @@ namespace libp2p::connection {
   TlsConnection::TlsConnection(
       std::shared_ptr<RawConnection> raw_connection,
       std::shared_ptr<boost::asio::ssl::context> ssl_context,
-      const peer::IdentityManager &idmgr, tcp_socket_t &tcp_socket,
+      const peer::IdentityManager &idmgr, boost::asio::io_context &io_context,
       boost::optional<peer::PeerId> remote_peer)
       : local_peer_(idmgr.getId()),
         raw_connection_(std::move(raw_connection)),
         ssl_context_(std::move(ssl_context)),
-        socket_(std::ref(tcp_socket), *ssl_context_),
+        socket_(AsioStream{raw_connection_, io_context}, *ssl_context_),
         remote_peer_(std::move(remote_peer)) {}
 
   void TlsConnection::asyncHandshake(
