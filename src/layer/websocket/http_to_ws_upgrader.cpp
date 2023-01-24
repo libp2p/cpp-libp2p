@@ -154,7 +154,7 @@ namespace libp2p::layer::websocket {
       host = fmt::format("{}:{}", h, p);
     }
 
-    std::array<uint8_t, 20> data{};
+    std::array<uint8_t, 16> data{};
     random_generator_->fillRandomly(data);
     key_.emplace(multi::detail::encodeBase64({data.begin(), data.end()}));
 
