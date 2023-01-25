@@ -6,6 +6,7 @@
 #include <libp2p/layer/websocket/ws_read_writer.hpp>
 
 #include <arpa/inet.h>
+#include <boost/endian/conversion.hpp>
 
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/common/hexutil.hpp>
@@ -219,7 +220,8 @@ namespace libp2p::connection::websocket {
     }
 
     if (need_to_send) {
-      code = htobe16(code);
+      boost::endian::native_to_big_inplace(code);
+
       outgoing_close_data_ =
           std::make_shared<common::ByteArray>(sizeof(code) + message.size());
       std::copy_n(reinterpret_cast<uint8_t *>(&code),  // NOLINT
@@ -360,7 +362,7 @@ namespace libp2p::connection::websocket {
       BOOST_ASSERT(read_bytes_ >= processed_bytes);
       std::copy_n(pos, sizeof(length),
                   reinterpret_cast<uint8_t *>(&length));  // NOLINT
-      ctx.length = be16toh(length);
+      ctx.length = boost::endian::big_to_native(length);
       pos = std::next(pos, sizeof(length));
     } else if (ctx.prelen == 127) {
       uint64_t length = 0;
@@ -368,7 +370,7 @@ namespace libp2p::connection::websocket {
       BOOST_ASSERT(read_bytes_ >= processed_bytes);
       std::copy_n(pos, sizeof(length),
                   reinterpret_cast<uint8_t *>(&length));  // NOLINT
-      ctx.length = be64toh(length);
+      ctx.length = boost::endian::big_to_native(length);
       pos = std::next(pos, sizeof(length));
     }
     SL_TRACE(log_, "R: size of frame data is {}", ctx.length);
@@ -828,13 +830,13 @@ namespace libp2p::connection::websocket {
     } else if (amount < 65536) {
       frame[1] |= (126 & 0b0111'1111);
       uint16_t length = amount;
-      length = htobe16(length);
+      boost::endian::native_to_big_inplace(length);
       std::copy_n(reinterpret_cast<uint8_t *>(&length),  // NOLINT
                   sizeof(length), std::back_inserter(frame));
     } else {
       frame[1] |= (127 & 0b0111'1111);
       uint64_t length = amount;
-      length = htobe64(length);
+      boost::endian::native_to_big_inplace(length);
       std::copy_n(reinterpret_cast<uint8_t *>(&length),  // NOLINT
                   sizeof(length), std::back_inserter(frame));
     }
