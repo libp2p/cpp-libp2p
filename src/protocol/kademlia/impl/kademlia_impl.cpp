@@ -131,7 +131,10 @@ namespace libp2p::protocol::kademlia {
       auto &[value, ts] = res.value();
       if (scheduler_->now() < ts) {
         if (handler) {
-          handler(std::move(value));
+          scheduler_->schedule(
+              [handler{std::move(handler)}, value{std::move(value)}]() mutable {
+                handler(std::move(value));
+              });
           return outcome::success();
         }
       }
@@ -312,7 +315,7 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    auto res = putValue(key, std::move(value));
+    auto res = putValue(key, value);
     if (!res) {
       log_.warn("incoming PutValue failed: {}", res.error().message());
       return;
