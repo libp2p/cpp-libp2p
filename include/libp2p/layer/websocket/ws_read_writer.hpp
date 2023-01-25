@@ -169,7 +169,7 @@ namespace libp2p::connection::websocket {
     ReadCallbackFunc read_data_handler_;
 
     ReadingState reading_state_ = ReadingState::WaitHeader;
-    Opcode last_frame_opcode_;
+    Opcode last_frame_opcode_ = Opcode::_undefined;
     common::ByteArray incoming_control_data_;
     std::shared_ptr<common::ByteArray> outgoing_ping_data_;
     std::shared_ptr<common::ByteArray> outgoing_pong_data_;

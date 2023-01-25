@@ -19,7 +19,8 @@
     cb((var).error());                         \
     return;                                    \
   }                                            \
-  auto && (val) = (var).value();
+  auto && (val) = (var).value();               \
+  void(0)
 
 #define IO_OUTCOME_TRY(name, res, cb) \
   IO_OUTCOME_TRY_NAME(UNIQUE_NAME(name), name, res, cb)
@@ -52,9 +53,12 @@ namespace libp2p::layer::websocket {
       bool headers_read = false;
       size_t headers_end = 0;
       if (read_bytes >= 4) {
-        gsl::span<const uint8_t> data(self->read_buffer_->data(), read_bytes);
+        gsl::span<const uint8_t> data(
+            self->read_buffer_->data(),
+            static_cast<gsl::span<const uint8_t>::index_type>(read_bytes));
         gsl::span<const uint8_t, 4> delimiter(
-            reinterpret_cast<const uint8_t *>("\r\n\r\n"), 4);  // NOLINT
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            reinterpret_cast<const uint8_t *>("\r\n\r\n"), 4);
 
         auto start_pos = self->read_bytes_ > delimiter.size()
             ? self->read_bytes_ - delimiter.size()
@@ -72,7 +76,8 @@ namespace libp2p::layer::websocket {
       if (headers_read) {
         auto headers_raw = std::make_shared<common::ByteArray>(
             self->read_buffer_->begin(),
-            std::next(self->read_buffer_->begin(), headers_end));
+            std::next(self->read_buffer_->begin(),
+                      static_cast<ssize_t>(headers_end)));
         self->processed_bytes_ = headers_raw->size();
         cb(headers_raw);
         return;
@@ -88,8 +93,9 @@ namespace libp2p::layer::websocket {
     };
 
     connection_->readSome(
-        gsl::make_span(std::next(read_buffer_->data(), read_bytes_),
-                       read_buffer_->size() - read_bytes_),
+        gsl::make_span(
+            std::next(read_buffer_->data(), static_cast<ssize_t>(read_bytes_)),
+            read_buffer_->size() - read_bytes_),
         kMaxMsgLen, std::move(read_cb));
   }
 

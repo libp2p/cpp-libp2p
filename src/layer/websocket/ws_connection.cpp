@@ -47,10 +47,10 @@ namespace libp2p::connection {
             if (auto self = wp.lock(); self and self->started_) {
               ++self->ping_counter_;
 
-              auto payload =
-                  gsl::make_span(reinterpret_cast<const uint8_t *>(  // NOLINT
-                                     &self->ping_counter_),
-                                 sizeof(self->ping_counter_));
+              auto payload = gsl::make_span(
+                  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+                  reinterpret_cast<const uint8_t *>(&self->ping_counter_),
+                  sizeof(self->ping_counter_));
               // Send ping
               self->ws_read_writer_->ping(payload);
 
@@ -81,7 +81,8 @@ namespace libp2p::connection {
 
   void WsConnection::onPong(gsl::span<const uint8_t> payload) {
     auto expected = gsl::make_span(
-        reinterpret_cast<const uint8_t *>(&ping_counter_),  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        reinterpret_cast<const uint8_t *>(&ping_counter_),
         sizeof(ping_counter_));
     if (payload == expected) {
       SL_DEBUG(log_, "Correct pong has received for ping");
@@ -178,8 +179,10 @@ namespace libp2p::connection {
         SL_TRACE(log_, "inner buffer: {} bytes", buffer.size());
 
         auto in_begin = buffer.begin();
-        auto in_end = std::next(in_begin, available_bytes);
-        auto out_begin = std::next(out.begin(), copied_bytes);
+        auto in_end =
+            std::next(in_begin, static_cast<ssize_t>(available_bytes));
+        auto out_begin =
+            std::next(out.begin(), static_cast<ssize_t>(copied_bytes));
 
         SL_TRACE(log_, "copy {} first bytes", available_bytes);
 

@@ -224,16 +224,18 @@ namespace libp2p::connection::websocket {
 
       outgoing_close_data_ =
           std::make_shared<common::ByteArray>(sizeof(code) + message.size());
-      std::copy_n(reinterpret_cast<uint8_t *>(&code),  // NOLINT
-                  sizeof(code), outgoing_close_data_->begin());
+      std::copy_n(
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          reinterpret_cast<uint8_t *>(&code), sizeof(code),
+          outgoing_close_data_->begin());
       std::copy_n(message.begin(), message.size(),
                   outgoing_close_data_->begin() + 2);
     }
   }
 
   void WsReadWriter::consume(size_t size) {
-    std::copy_n(std::next(read_buffer_->begin(), size), read_bytes_ - size,
-                read_buffer_->begin());
+    std::copy_n(std::next(read_buffer_->begin(), static_cast<ssize_t>(size)),
+                read_bytes_ - size, read_buffer_->begin());
     read_bytes_ -= size;
   }
 
@@ -256,8 +258,9 @@ namespace libp2p::connection::websocket {
     SL_TRACE(log_, "R: buffer does not have enough data (has {}, needed {})",
              read_bytes_, size);
 
-    auto in = gsl::make_span(std::next(read_buffer_->data(), read_bytes_),
-                             read_buffer_->size() - read_bytes_);
+    auto in = gsl::make_span(
+        std::next(read_buffer_->data(), static_cast<ssize_t>(read_bytes_)),
+        read_buffer_->size() - read_bytes_);
 
     SL_TRACE(log_, "R: try to read from connection upto {} bytes",
              read_buffer_->size() - read_bytes_);
@@ -361,7 +364,8 @@ namespace libp2p::connection::websocket {
       processed_bytes += sizeof(length);
       BOOST_ASSERT(read_bytes_ >= processed_bytes);
       std::copy_n(pos, sizeof(length),
-                  reinterpret_cast<uint8_t *>(&length));  // NOLINT
+                  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+                  reinterpret_cast<uint8_t *>(&length));
       ctx.length = boost::endian::big_to_native(length);
       pos = std::next(pos, sizeof(length));
     } else if (ctx.prelen == 127) {
@@ -369,7 +373,8 @@ namespace libp2p::connection::websocket {
       processed_bytes += sizeof(length);
       BOOST_ASSERT(read_bytes_ >= processed_bytes);
       std::copy_n(pos, sizeof(length),
-                  reinterpret_cast<uint8_t *>(&length));  // NOLINT
+                  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+                  reinterpret_cast<uint8_t *>(&length));
       ctx.length = boost::endian::big_to_native(length);
       pos = std::next(pos, sizeof(length));
     }
@@ -481,8 +486,9 @@ namespace libp2p::connection::websocket {
     // [buff:[consuming|extra|     ]]
 
     // copy extra data to new buffer
-    std::copy_n(std::next(buffer->begin(), consuming_data_size),
-                extra_data_size, read_buffer_->begin());
+    std::copy_n(
+        std::next(buffer->begin(), static_cast<ssize_t>(consuming_data_size)),
+        extra_data_size, read_buffer_->begin());
 
     // [read:[extra|               ]]
     // [buff:[consuming|extra|     ]]
@@ -501,6 +507,7 @@ namespace libp2p::connection::websocket {
 
     if (ctx.masked) {
       for (auto &byte : *buffer) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         byte ^= ctx.mask[ctx.mask_index++ % ctx.mask.size()];
       }
     }
@@ -583,13 +590,16 @@ namespace libp2p::connection::websocket {
 
       if (ctx.remaining_data == 0) {
         if (incoming_control_data_.size() >= 2) {
-          uint16_t code;
-          std::copy_n(incoming_control_data_.begin(), 2,
-                      reinterpret_cast<uint8_t *>(&code));  // NOLINT
+          uint16_t code;  // NOLINT(cppcoreguidelines-init-variables)
+          std::copy_n(
+              incoming_control_data_.begin(), 2,
+              // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+              reinterpret_cast<uint8_t *>(&code));
           if (incoming_control_data_.size() > 2) {
-            std::string_view msg(reinterpret_cast<char *>(  // NOLINT
-                                     incoming_control_data_.data()),
-                                 incoming_control_data_.size());
+            std::string_view msg(
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+                reinterpret_cast<char *>(incoming_control_data_.data()),
+                incoming_control_data_.size());
             SL_DEBUG(log_, "R: Close-frame is received; code: {}, message: {}",
                      code, msg);
           } else {
@@ -607,7 +617,7 @@ namespace libp2p::connection::websocket {
       }
     }
 
-    BOOST_UNREACHABLE_RETURN();
+    return BOOST_UNREACHABLE_RETURN();
   }
 
   bool WsReadWriter::hasOutgoingData() {
@@ -699,8 +709,10 @@ namespace libp2p::connection::websocket {
     std::array<uint8_t, 4> mask{0};
     if (masked) {
       uint32_t mask_int = std::rand();
-      std::copy_n(reinterpret_cast<uint8_t *>(&mask_int),  // NOLINT
-                  sizeof(mask_int), mask.begin());
+      std::copy_n(
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          reinterpret_cast<uint8_t *>(&mask_int), sizeof(mask_int),
+          mask.begin());
       SL_TRACE(log_, "W: mask of frame is {:02x}{:02x}{:02x}{:02x}", mask[0],
                mask[1], mask[2], mask[3]);
     } else {
@@ -729,6 +741,7 @@ namespace libp2p::connection::websocket {
       std::transform(payload->begin(), payload->end(),
                      std::back_inserter(frame),
                      [&, idx = 0u](uint8_t byte) mutable {
+                       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
                        return byte ^ mask[idx++ % mask.size()];
                      });
     } else {
@@ -798,8 +811,10 @@ namespace libp2p::connection::websocket {
     std::array<uint8_t, 4> mask{0};
     if (masked) {
       uint32_t mask_int = std::rand();
-      std::copy_n(reinterpret_cast<uint8_t *>(&mask_int),  // NOLINT
-                  sizeof(mask_int), mask.begin());
+      std::copy_n(
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          reinterpret_cast<uint8_t *>(&mask_int), sizeof(mask_int),
+          mask.begin());
       SL_TRACE(log_, "W: mask of frame is {:02x}{:02x}{:02x}{:02x}", mask[0],
                mask[1], mask[2], mask[3]);
     } else {
@@ -831,14 +846,18 @@ namespace libp2p::connection::websocket {
       frame[1] |= (126 & 0b0111'1111);
       uint16_t length = amount;
       boost::endian::native_to_big_inplace(length);
-      std::copy_n(reinterpret_cast<uint8_t *>(&length),  // NOLINT
-                  sizeof(length), std::back_inserter(frame));
+      std::copy_n(
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          reinterpret_cast<uint8_t *>(&length), sizeof(length),
+          std::back_inserter(frame));
     } else {
       frame[1] |= (127 & 0b0111'1111);
       uint64_t length = amount;
       boost::endian::native_to_big_inplace(length);
-      std::copy_n(reinterpret_cast<uint8_t *>(&length),  // NOLINT
-                  sizeof(length), std::back_inserter(frame));
+      std::copy_n(
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          reinterpret_cast<uint8_t *>(&length), sizeof(length),
+          std::back_inserter(frame));
     }
     // mask
     if (masked) {
@@ -863,6 +882,7 @@ namespace libp2p::connection::websocket {
       if (masked) {
         std::transform(chunk_begin, chunk_end, std::back_inserter(frame),
                        [&, idx = 0u](uint8_t byte) mutable {
+                         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
                          return byte ^ mask[idx++ % mask.size()];
                        });
       } else {

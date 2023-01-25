@@ -5,7 +5,6 @@
 
 #include <libp2p/layer/websocket/http_to_ws_upgrader.hpp>
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <memory>
 
 #include <libp2p/common/byteutil.hpp>
@@ -143,7 +142,8 @@ namespace libp2p::layer::websocket {
 
   namespace {
     gsl::span<const uint8_t> strToSpan(std::string_view str) {
-      return {reinterpret_cast<const uint8_t *>(str.data()),  // NOLINT
+      return {// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+              reinterpret_cast<const uint8_t *>(str.data()),
               static_cast<gsl::span<const uint8_t>::index_type>(str.size())};
     }
 
