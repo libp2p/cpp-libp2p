@@ -64,6 +64,7 @@ namespace libp2p::layer::websocket {
             ? self->read_bytes_ - delimiter.size()
             : 0;
         for (size_t i = start_pos; i <= read_bytes - delimiter.size(); ++i) {
+          // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
           if (data.subspan(i, delimiter.size()) == delimiter) {
             headers_read = true;
             headers_end = i + delimiter.size();
@@ -95,6 +96,7 @@ namespace libp2p::layer::websocket {
     connection_->readSome(
         gsl::make_span(
             std::next(read_buffer_->data(), static_cast<ssize_t>(read_bytes_)),
+            // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
             read_buffer_->size() - read_bytes_),
         kMaxMsgLen, std::move(read_cb));
   }

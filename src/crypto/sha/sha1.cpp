@@ -11,9 +11,7 @@
 #include <libp2p/crypto/error.hpp>
 
 namespace libp2p::crypto {
-  Sha1::Sha1() {  // NOLINT
-    initialized_ = 1 == SHA1_Init(&ctx_);
-  }
+  Sha1::Sha1() : initialized_(1 == SHA1_Init(&ctx_)) {}  // NOLINT
 
   Sha1::~Sha1() {
     sinkCtx();

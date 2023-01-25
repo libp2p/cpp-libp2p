@@ -315,8 +315,12 @@ namespace libp2p::connection {
                          read_frame_bytes);
                 IO_OUTCOME_TRY(mac_size, self->macSize(), cb)
                 const auto data_size{frame_len - mac_size};
-                auto data_span{gsl::make_span(buffer->data(), data_size)};
+                auto data_span{gsl::make_span(
+                    buffer->data(),
+                    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
+                    data_size)};
                 auto mac_span{
+                    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
                     gsl::make_span(*buffer).subspan(data_size, mac_size)};
                 IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb)
                 if (gsl::make_span(remote_mac) != mac_span) {

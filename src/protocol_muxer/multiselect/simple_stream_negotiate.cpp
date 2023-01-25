@@ -78,6 +78,8 @@ namespace libp2p::protocol_muxer::multiselect {
       size_t remaining_bytes = total_sz - kMaxVarintSize;
 
       gsl::span<uint8_t> span(buffers->read);
+
+      // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
       span = span.subspan(kMaxVarintSize, remaining_bytes);
 
       stream->read(

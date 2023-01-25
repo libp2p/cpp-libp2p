@@ -45,6 +45,8 @@ namespace libp2p::protocol {
     auto self{shared_from_this()};
 
     gsl::span<uint8_t> span = recv_buf_;
+
+    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
     span = span.subspan(bytes_read_);
 
     if (span.empty()) {
@@ -82,8 +84,9 @@ namespace libp2p::protocol {
                      (char)buf_[i], recv_buf_[i], (char)recv_buf_[i]);
           for (size_t i = 1; i < buf_.size() - 1; ++i) {
             if (buf_[i] != recv_buf_[i]) {
-              log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`", i, buf_[i],
-                         (char)buf_[i], recv_buf_[i], (char)recv_buf_[i]);
+              log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`", i,
+                         buf_[i], (char)buf_[i], recv_buf_[i],
+                         (char)recv_buf_[i]);
             }
           }
           i = buf_.size() - 1;
@@ -91,6 +94,7 @@ namespace libp2p::protocol {
                      (char)buf_[i], recv_buf_[i], (char)recv_buf_[i]);
         }
         auto begin = recv_buf_.begin();
+        // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
         then(std::string(begin, begin + recv_buf_.size()));
       }
     }

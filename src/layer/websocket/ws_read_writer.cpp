@@ -260,6 +260,7 @@ namespace libp2p::connection::websocket {
 
     auto in = gsl::make_span(
         std::next(read_buffer_->data(), static_cast<ssize_t>(read_bytes_)),
+        // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
         read_buffer_->size() - read_bytes_);
 
     SL_TRACE(log_, "R: try to read from connection upto {} bytes",
@@ -873,7 +874,9 @@ namespace libp2p::connection::websocket {
       }
       auto chunk_size =
           std::min(chunk.data.size() - chunk.written_bytes, remaining);
+      // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
       auto chunk_begin = std::next(chunk.data.begin(), chunk.written_bytes);
+      // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
       auto chunk_end = std::next(chunk_begin, chunk_size);
       if (chunk_begin == chunk_end) {  // empty or completely sent chunk
         continue;

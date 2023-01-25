@@ -19,7 +19,7 @@ namespace libp2p::transport {
     }
 
     inline std::error_code convert(boost::system::errc::errc_t ec) {
-      return std::error_code(static_cast<int>(ec), std::system_category());
+      return {static_cast<int>(ec), std::system_category()};
     }
 
     inline std::error_code convert(std::error_code ec) {

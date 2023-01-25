@@ -103,80 +103,83 @@ int main(int argc, char *argv[]) {
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
   auto sch = injector.create<std::shared_ptr<libp2p::basic::Scheduler>>();
 
-  context->post([log, host{std::move(host)}, &echo, &message, argv,
-                 sch] {  // NOLINT
-    auto server_ma_res =
-        libp2p::multi::Multiaddress::create(argv[1]);  // NOLINT
-    if (!server_ma_res) {
-      log->error("unable to create server multiaddress: {}",
-                 server_ma_res.error().message());
-      std::exit(EXIT_FAILURE);
-    }
-    const auto &server_ma = server_ma_res.value();
+  context->post(
+      [log, host{std::move(host)}, &echo, &message,
+       argv,  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+       sch] {
+        auto server_ma_res =
+            libp2p::multi::Multiaddress::create(argv[1]);  // NOLINT
+        if (!server_ma_res) {
+          log->error("unable to create server multiaddress: {}",
+                     server_ma_res.error().message());
+          std::exit(EXIT_FAILURE);
+        }
+        const auto &server_ma = server_ma_res.value();
 
-    auto server_peer_id_str = server_ma.getPeerId();
-    if (!server_peer_id_str) {
-      log->error("unable to get peer id");
-      std::exit(EXIT_FAILURE);
-    }
+        auto server_peer_id_str = server_ma.getPeerId();
+        if (!server_peer_id_str) {
+          log->error("unable to get peer id");
+          std::exit(EXIT_FAILURE);
+        }
 
-    auto server_peer_id_res =
-        libp2p::peer::PeerId::fromBase58(*server_peer_id_str);
-    if (!server_peer_id_res) {
-      log->error("Unable to decode peer id from base 58: {}",
-                 server_peer_id_res.error().message());
-      std::exit(EXIT_FAILURE);
-    }
+        auto server_peer_id_res =
+            libp2p::peer::PeerId::fromBase58(*server_peer_id_str);
+        if (!server_peer_id_res) {
+          log->error("Unable to decode peer id from base 58: {}",
+                     server_peer_id_res.error().message());
+          std::exit(EXIT_FAILURE);
+        }
 
-    const auto &server_peer_id = server_peer_id_res.value();
+        const auto &server_peer_id = server_peer_id_res.value();
 
-    auto peer_info = libp2p::peer::PeerInfo{server_peer_id, {server_ma}};
+        auto peer_info = libp2p::peer::PeerInfo{server_peer_id, {server_ma}};
 
-    // create Host object and open a stream through it
-    host->newStream(
-        peer_info, {echo.getProtocolId()},
-        [log, &echo, &message, sch](auto &&stream_res) {
-          if (!stream_res) {
-            log->error("Cannot connect to server: {}",
-                       stream_res.error().message());
-            std::exit(EXIT_FAILURE);
-          }
+        // create Host object and open a stream through it
+        host->newStream(
+            peer_info, {echo.getProtocolId()},
+            [log, &echo, &message, sch](auto &&stream_res) {
+              if (!stream_res) {
+                log->error("Cannot connect to server: {}",
+                           stream_res.error().message());
+                std::exit(EXIT_FAILURE);
+              }
 
-          auto stream_p = std::move(stream_res.value().stream);
+              auto stream_p = std::move(stream_res.value().stream);
 
-          auto echo_client = echo.createClient(stream_p);
+              auto echo_client = echo.createClient(stream_p);
 
-          if (message.size() < 120) {
-            log->info("SENDING {}", message);
-          } else {
-            log->info("SENDING {} bytes", message.size());
-          }
+              if (message.size() < 120) {
+                log->info("SENDING {}", message);
+              } else {
+                log->info("SENDING {} bytes", message.size());
+              }
 
-          sch->schedule(
-              [log, message, stream = std::move(stream_p), echo_client] {
-                echo_client->sendAnd(
-                    message,
-                    [log, stream = std::move(stream)](auto &&response_result) {
-                      if (response_result.has_error()) {
-                        log->info("Error happened: {}",
-                                  response_result.error().message());
-                        stream->close(
-                            [log](auto &&) { std::exit(EXIT_SUCCESS); });
-                        return;
-                      }
-                      auto &resp = response_result.value();
-                      if (resp.size() < 120) {
-                        log->info("RESPONSE {}", resp);
-                      } else {
-                        log->info("RESPONSE size={}", resp.size());
-                      }
-                      stream->close([](auto &&) { std::exit(EXIT_SUCCESS); });
-                    });
-              },
-              std::chrono::milliseconds(1000));
-        });
-
-  });
+              sch->schedule(
+                  [log, message, stream = std::move(stream_p), echo_client] {
+                    echo_client->sendAnd(
+                        message,
+                        [log,
+                         stream = std::move(stream)](auto &&response_result) {
+                          if (response_result.has_error()) {
+                            log->info("Error happened: {}",
+                                      response_result.error().message());
+                            stream->close(
+                                [log](auto &&) { std::exit(EXIT_SUCCESS); });
+                            return;
+                          }
+                          auto &resp = response_result.value();
+                          if (resp.size() < 120) {
+                            log->info("RESPONSE {}", resp);
+                          } else {
+                            log->info("RESPONSE size={}", resp.size());
+                          }
+                          stream->close(
+                              [](auto &&) { std::exit(EXIT_SUCCESS); });
+                        });
+                  },
+                  std::chrono::milliseconds(1000));
+            });
+      });
 
   // run the IO context
   context->run_for(run_duration);
