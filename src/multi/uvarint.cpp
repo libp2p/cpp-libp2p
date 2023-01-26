@@ -50,9 +50,10 @@ namespace libp2p::multi {
   }
 
   gsl::span<const uint8_t> UVarint::toBytes() const & {
-    return gsl::span(bytes_.data(),
-                     // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-                     bytes_.size());
+    return gsl::make_span(
+        bytes_.data(),
+        // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
+        bytes_.size());
   }
 
   const std::vector<uint8_t> &UVarint::toVector() const {
