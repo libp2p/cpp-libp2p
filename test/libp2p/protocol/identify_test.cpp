@@ -105,7 +105,7 @@ class IdentifyTest : public testing::Test {
   std::vector<uint8_t> identify_pb_msg_bytes_;
   std::shared_ptr<UVarint> pb_msg_len_varint_;
 
-  std::vector<peer::Protocol> protocols_{"/http/5.0.1", "/dogeproto/2.2.8"};
+  std::vector<peer::ProtocolName> protocols_{"/http/5.0.1", "/dogeproto/2.2.8"};
 
   std::vector<multi::Multiaddress> listen_addresses_{
       "/ip4/1.1.1.1/tcp/1001"_multiaddr, "/ip4/1.1.1.1/tcp/1002"_multiaddr};
@@ -245,7 +245,7 @@ TEST_F(IdentifyTest, Receive) {
       .WillOnce(ReturnRef(proto_repo_));
   EXPECT_CALL(
       proto_repo_,
-      addProtocols(kRemotePeerId, gsl::span<const peer::Protocol>(protocols_)))
+      addProtocols(kRemotePeerId, gsl::span<const peer::ProtocolName>(protocols_)))
       .WillOnce(Return(outcome::success()));
 
   // consumeObservedAddresses

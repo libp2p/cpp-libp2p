@@ -75,8 +75,8 @@ class IdentifyDeltaTest : public testing::Test {
 
   std::shared_ptr<IdentifyDelta> id_delta_;
 
-  std::vector<peer::Protocol> added_protos_{"/ping/1.0.0", "/ping/1.5.0"};
-  std::vector<peer::Protocol> removed_protos_{"/http/5.2.8"};
+  std::vector<peer::ProtocolName> added_protos_{"/ping/1.0.0", "/ping/1.5.0"};
+  std::vector<peer::ProtocolName> removed_protos_{"/http/5.2.8"};
 
   identify::pb::Identify msg_added_protos_;
   std::vector<uint8_t> msg_added_protos_bytes_;
@@ -164,11 +164,11 @@ TEST_F(IdentifyDeltaTest, Receive) {
       .WillOnce(ReturnRef(proto_repo_));
   EXPECT_CALL(proto_repo_,
               addProtocols(kRemotePeerId,
-                           gsl::span<const peer::Protocol>(added_protos_)))
+                           gsl::span<const peer::ProtocolName>(added_protos_)))
       .WillOnce(Return(outcome::success()));
   EXPECT_CALL(proto_repo_,
               removeProtocols(kRemotePeerId,
-                              gsl::span<const peer::Protocol>(removed_protos_)))
+                              gsl::span<const peer::ProtocolName>(removed_protos_)))
       .WillOnce(Return(outcome::success()));
 
   id_delta_->handle(StreamAndProtocol{stream_, {}});

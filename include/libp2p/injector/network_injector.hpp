@@ -9,6 +9,8 @@
 #include <boost/di.hpp>
 
 // implementations
+#include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
+#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
 #include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
@@ -19,10 +21,9 @@
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
+#include <libp2p/layer/websocket.hpp>
 #include <libp2p/muxer/mplex.hpp>
 #include <libp2p/muxer/yamux.hpp>
-#include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
-#include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/network/impl/connection_manager_impl.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
 #include <libp2p/network/impl/dnsaddr_resolver_impl.hpp>
@@ -182,6 +183,27 @@ namespace libp2p::injector {
   }
 
   /**
+   * @brief Bind layer adaptors by type. Can be used once. Technically many
+   * types can be specified, even the same type, but in the end only 1 instance
+   * for each type is created.
+   * @tparam LayerImpl one or many types of layer adaptors to be used
+   * @return injector binding
+   *
+   * @code
+   * struct SomeNewAdaptor : public LayerAdaptor {...};
+   *
+   * auto injector = makeNetworkInjector(
+   *   useLayerAdaptors<WsAdaptor>()
+   * );
+   * @endcode
+   */
+  template <typename... AdaptorImpl>
+  inline auto useLayerAdaptors() {
+    return boost::di::bind<layer::LayerAdaptor *[]>()  // NOLINT
+        .template to<AdaptorImpl...>()[boost::di::override];
+  }
+
+  /**
    * @brief Bind security adaptors by type. Can be used once. Technically many
    * types can be specified, even the same type, but in the end only 1 instance
    * for each type is created.
@@ -235,7 +257,7 @@ namespace libp2p::injector {
    * @return complete network injector
    */
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
-  inline auto makeNetworkInjector(Ts &&... args) {
+  inline auto makeNetworkInjector(Ts &&...args) {
     using namespace boost;  // NOLINT
 
     auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();
@@ -259,6 +281,8 @@ namespace libp2p::injector {
 
     // clang-format off
     return di::make_injector<InjectorConfig>(
+        di::bind<crypto::random::RandomGenerator>.template to<crypto::random::BoostRandomGenerator>(),
+
         di::bind<crypto::KeyPair>().template to(std::move(keypair)),
         di::bind<crypto::random::CSPRNG>().template to(std::move(csprng)),
         di::bind<crypto::ed25519::Ed25519Provider>().template to(std::move(ed25519_provider)),
@@ -292,6 +316,7 @@ namespace libp2p::injector {
 
         // default adaptors
         di::bind<muxer::MuxedConnectionConfig>.template to(muxer::MuxedConnectionConfig{}),
+        di::bind<layer::LayerAdaptor *[]>().template to<layer::WsAdaptor>(),  // NOLINT
         di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext, security::Secio, security::Noise, security::TlsAdaptor>(),  // NOLINT
         di::bind<muxer::MuxerAdaptor *[]>().template to<muxer::Yamux, muxer::Mplex>(),  // NOLINT
         di::bind<transport::TransportAdaptor *[]>().template to<transport::TcpTransport>(),  // NOLINT

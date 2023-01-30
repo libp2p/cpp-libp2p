@@ -36,7 +36,7 @@ namespace libp2p::protocol {
     return msg_processor_->getObservedAddresses().getAddressesFor(address);
   }
 
-  peer::Protocol Identify::getProtocolId() const {
+  peer::ProtocolName Identify::getProtocolId() const {
     return kIdentifyProto;
   }
 

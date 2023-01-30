@@ -10,7 +10,7 @@
 namespace libp2p::peer {
 
   outcome::result<void> InmemProtocolRepository::addProtocols(
-      const PeerId &p, gsl::span<const Protocol> ms) {
+      const PeerId &p, gsl::span<const ProtocolName> ms) {
     auto s = getOrAllocateProtocolSet(p);
     for (const auto &m : ms) {
       s->insert(m);
@@ -20,7 +20,7 @@ namespace libp2p::peer {
   }
 
   outcome::result<void> InmemProtocolRepository::removeProtocols(
-      const PeerId &p, gsl::span<const Protocol> ms) {
+      const PeerId &p, gsl::span<const ProtocolName> ms) {
     OUTCOME_TRY(s, getProtocolSet(p));
 
     for (const auto &m : ms) {
@@ -30,19 +30,19 @@ namespace libp2p::peer {
     return outcome::success();
   }
 
-  outcome::result<std::vector<Protocol>> InmemProtocolRepository::getProtocols(
+  outcome::result<std::vector<ProtocolName>> InmemProtocolRepository::getProtocols(
       const PeerId &p) const {
     OUTCOME_TRY(s, getProtocolSet(p));
-    return std::vector<Protocol>(s->begin(), s->end());
+    return std::vector<ProtocolName>(s->begin(), s->end());
   }
 
-  outcome::result<std::vector<Protocol>>
+  outcome::result<std::vector<ProtocolName>>
   InmemProtocolRepository::supportsProtocols(
-      const PeerId &p, const std::set<Protocol> &protocols) const {
+      const PeerId &p, const std::set<ProtocolName> &protocols) const {
     OUTCOME_TRY(s, getProtocolSet(p));
 
     size_t size = std::min(protocols.size(), s->size());
-    std::vector<Protocol> ret;
+    std::vector<ProtocolName> ret;
     ret.reserve(size);
 
     std::set_intersection(protocols.begin(), protocols.end(), s->begin(),

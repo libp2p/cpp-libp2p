@@ -67,7 +67,7 @@ namespace libp2p::protocol::gossip {
     using BannedPeers = std::set<std::pair<Time, PeerContextPtr>>;
 
     /// BaseProtocol override
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
     /// BaseProtocol override, on new inbound stream
     void handle(StreamAndProtocol stream) override;

@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
 #include <testutil/outcome.hpp>
-#include "mock/libp2p/connection/raw_connection_mock.hpp"
+#include "mock/libp2p/connection/layer_connection_mock.hpp"
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 
@@ -28,8 +28,8 @@ class PlaintextConnectionTest : public testing::Test {
   PublicKey local{{Key::Type::Secp256k1, {1}}};
   PublicKey remote{{Key::Type::Ed25519, {2}}};
 
-  std::shared_ptr<RawConnectionMock> connection_ =
-      std::make_shared<RawConnectionMock>();
+  std::shared_ptr<LayerConnectionMock> connection_ =
+      std::make_shared<LayerConnectionMock>();
 
   std::shared_ptr<marshaller::KeyMarshallerMock> key_marshaller_ =
       std::make_shared<marshaller::KeyMarshallerMock>();

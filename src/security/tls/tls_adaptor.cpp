@@ -29,18 +29,18 @@ namespace libp2p::security {
     assert(key_marshaller_);
   }
 
-  peer::Protocol TlsAdaptor::getProtocolId() const {
+  peer::ProtocolName TlsAdaptor::getProtocolId() const {
     return "/tls/1.0.0";
   }
 
   void TlsAdaptor::secureInbound(
-      std::shared_ptr<connection::RawConnection> inbound,
+      std::shared_ptr<connection::LayerConnection> inbound,
       SecConnCallbackFunc cb) {
     asyncHandshake(std::move(inbound), boost::none, std::move(cb));
   }
 
   void TlsAdaptor::secureOutbound(
-      std::shared_ptr<connection::RawConnection> outbound,
+      std::shared_ptr<connection::LayerConnection> outbound,
       const peer::PeerId &p, SecConnCallbackFunc cb) {
     asyncHandshake(std::move(outbound), p, std::move(cb));
   }
@@ -82,7 +82,7 @@ namespace libp2p::security {
   }
 
   void TlsAdaptor::asyncHandshake(
-      std::shared_ptr<connection::RawConnection> conn,
+      std::shared_ptr<connection::LayerConnection> conn,
       boost::optional<peer::PeerId> remote_peer, SecConnCallbackFunc cb) {
     bool is_client = conn->isInitiator();
 

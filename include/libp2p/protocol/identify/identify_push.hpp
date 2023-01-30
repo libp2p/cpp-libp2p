@@ -26,7 +26,7 @@ namespace libp2p::protocol {
     IdentifyPush(std::shared_ptr<IdentifyMessageProcessor> msg_processor,
                  event::Bus &bus);
 
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
     /**
      * In Identify-Push, handle means we accepted an Identify-Push stream and

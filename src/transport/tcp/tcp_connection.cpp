@@ -14,12 +14,12 @@ namespace libp2p::transport {
 
   namespace {
     auto &log() {
-      static auto logger = log::createLogger("tcp-conn");
+      static auto logger = log::createLogger("TcpConnection");
       return *logger;
     }
 
     inline std::error_code convert(boost::system::errc::errc_t ec) {
-      return std::error_code(static_cast<int>(ec), std::system_category());
+      return {static_cast<int>(ec), std::system_category()};
     }
 
     inline std::error_code convert(std::error_code ec) {

@@ -78,8 +78,6 @@ namespace libp2p::injector {
     return di::make_injector<InjectorConfig>(
         // clang-format off
 
-        di::bind<crypto::random::RandomGenerator>.template to<crypto::random::BoostRandomGenerator>(),
-
         di::bind<protocol::kademlia::Config>.template to<protocol::kademlia::Config>().in(di::singleton),
         di::bind<protocol::kademlia::ContentRoutingTable>.template to<protocol::kademlia::ContentRoutingTableImpl>(),
         di::bind<protocol::kademlia::PeerRoutingTable>.template to<protocol::kademlia::PeerRoutingTableImpl>(),

@@ -42,7 +42,7 @@ namespace libp2p::protocol {
          std::shared_ptr<crypto::random::RandomGenerator> rand_gen,
          PingConfig config = PingConfig{});
 
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
     void handle(StreamAndProtocol stream) override;
 

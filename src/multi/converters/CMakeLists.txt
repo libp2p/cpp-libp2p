@@ -16,6 +16,7 @@ libp2p_add_library(p2p_converters
 target_link_libraries(p2p_converters
     Boost::boost
     p2p_hexutil
+    p2p_byteutil
     p2p_uvarint
     p2p_multibase_codec
     )

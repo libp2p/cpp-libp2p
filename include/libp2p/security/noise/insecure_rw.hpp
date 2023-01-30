@@ -31,7 +31,7 @@ namespace libp2p::security::noise {
      * @param connection - raw connection
      * @param buffer - pointer to buffer where to store bytes from network
      */
-    InsecureReadWriter(std::shared_ptr<connection::RawConnection> connection,
+    InsecureReadWriter(std::shared_ptr<connection::LayerConnection> connection,
                        std::shared_ptr<common::ByteArray> buffer);
 
     /// read next message from the network
@@ -42,7 +42,7 @@ namespace libp2p::security::noise {
                basic::Writer::WriteCallbackFunc cb) override;
 
    private:
-    std::shared_ptr<connection::RawConnection> connection_;
+    std::shared_ptr<connection::LayerConnection> connection_;
     std::shared_ptr<common::ByteArray> buffer_;
     common::ByteArray outbuf_;
   };

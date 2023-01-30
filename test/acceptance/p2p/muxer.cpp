@@ -63,12 +63,23 @@ struct UpgraderSemiMock : public Upgrader {
                    std::shared_ptr<MuxerAdaptor> m)
       : security(std::move(s)), mux(std::move(m)) {}
 
-  void upgradeToSecureOutbound(RawSPtr conn, const peer::PeerId &remoteId,
+  void upgradeLayersOutbound(RawSPtr conn, ProtoAddrVec layers,
+                             OnLayerCallbackFunc cb) override {
+    cb(conn);
+  }
+
+  void upgradeLayersInbound(RawSPtr conn, ProtoAddrVec layers,
+                            OnLayerCallbackFunc cb) override {
+    cb(conn);
+  }
+
+  void upgradeToSecureOutbound(LayerSPtr conn, const peer::PeerId &remoteId,
                                OnSecuredCallbackFunc cb) override {
     security->secureOutbound(conn, remoteId, std::move(cb));
   }
 
-  void upgradeToSecureInbound(RawSPtr conn, OnSecuredCallbackFunc cb) override {
+  void upgradeToSecureInbound(LayerSPtr conn,
+                              OnSecuredCallbackFunc cb) override {
     security->secureInbound(conn, std::move(cb));
   }
 

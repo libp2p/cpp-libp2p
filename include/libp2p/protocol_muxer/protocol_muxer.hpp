@@ -31,7 +31,7 @@ namespace libp2p::protocol_muxer {
     };
 
     using ProtocolHandlerFunc =
-        std::function<void(outcome::result<peer::Protocol>)>;
+        std::function<void(outcome::result<peer::ProtocolName>)>;
     /**
      * Select a protocol for a given connection
      * @param protocols - set of protocols, one of which should be chosen during
@@ -44,7 +44,7 @@ namespace libp2p::protocol_muxer {
      * @param cb - callback for handling negotiated protocol
      * @return chosen protocol or error
      */
-    virtual void selectOneOf(gsl::span<const peer::Protocol> protocols,
+    virtual void selectOneOf(gsl::span<const peer::ProtocolName> protocols,
                              std::shared_ptr<basic::ReadWriter> connection,
                              bool is_initiator, bool negotiate_multistream,
                              ProtocolHandlerFunc cb) = 0;
@@ -58,7 +58,7 @@ namespace libp2p::protocol_muxer {
      */
     virtual void simpleStreamNegotiate(
         const std::shared_ptr<connection::Stream> &stream,
-        const peer::Protocol &protocol_id,
+        const peer::ProtocolName &protocol_id,
         std::function<
             void(outcome::result<std::shared_ptr<connection::Stream>>)>
             cb) = 0;

@@ -24,7 +24,7 @@ namespace libp2p::protocol {
     explicit Echo(EchoConfig config = EchoConfig{});
 
     // NOLINTNEXTLINE(modernize-use-nodiscard)
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
     // handle incoming stream
     void handle(StreamAndProtocol stream) override;

@@ -19,25 +19,33 @@ namespace libp2p::transport {
    */
   struct UpgraderSession
       : public std::enable_shared_from_this<UpgraderSession> {
+    using ProtoAddrVec = std::vector<std::pair<multi::Protocol, std::string>>;
     using ConnectionCallback =
         void(outcome::result<std::shared_ptr<connection::CapableConnection>>);
     using HandlerFunc = std::function<ConnectionCallback>;
 
     UpgraderSession(std::shared_ptr<transport::Upgrader> upgrader,
+                    ProtoAddrVec layers,
                     std::shared_ptr<connection::RawConnection> raw,
                     HandlerFunc handler);
 
-    void secureOutbound(const peer::PeerId &remoteId);
+    void upgradeInbound();
 
-    void secureInbound();
+    void upgradeOutbound(const peer::PeerId &remoteId);
 
    private:
     std::shared_ptr<transport::Upgrader> upgrader_;
+    ProtoAddrVec layers_;
     std::shared_ptr<connection::RawConnection> raw_;
     HandlerFunc handler_;
 
+    void secureOutbound(std::shared_ptr<connection::LayerConnection> conn,
+                        const peer::PeerId &remoteId);
+
+    void secureInbound(std::shared_ptr<connection::LayerConnection> conn);
+
     void onSecured(
-        outcome::result<std::shared_ptr<connection::SecureConnection>> rsecure);
+        outcome::result<std::shared_ptr<connection::SecureConnection>> res);
 
    public:
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(

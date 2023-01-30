@@ -16,7 +16,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
   namespace {
     const log::Logger &log() {
-      static log::Logger logger = log::createLogger("multiselect");
+      static log::Logger logger = log::createLogger("Multiselect");
       return logger;
     }
   }  // namespace
@@ -25,7 +25,7 @@ namespace libp2p::protocol_muxer::multiselect {
       : owner_(owner) {}
 
   void MultiselectInstance::selectOneOf(
-      gsl::span<const peer::Protocol> protocols,
+      gsl::span<const peer::ProtocolName> protocols,
       std::shared_ptr<basic::ReadWriter> connection, bool is_initiator,
       bool negotiate_multiselect, Multiselect::ProtocolHandlerFunc cb) {
     assert(!protocols.empty());

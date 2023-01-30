@@ -51,22 +51,36 @@ namespace {
 
   auto makeUpgrader() {
     auto upgrader = std::make_shared<NiceMock<UpgraderMock>>();
+    ON_CALL(*upgrader, upgradeLayersOutbound(_, _, _))
+        .WillByDefault(UpgradeLayersOutbound([](auto &&raw) {
+          std::shared_ptr<LayerConnection> layer_connection =
+              std::make_shared<CapableConnBasedOnLayerConnMock>(raw);
+          return layer_connection;
+        }));
+    ON_CALL(*upgrader, upgradeLayersInbound(_, _, _))
+        .WillByDefault(UpgradeLayersInbound([](auto &&raw) {
+          std::shared_ptr<LayerConnection> layer_connection =
+              std::make_shared<CapableConnBasedOnLayerConnMock>(raw);
+          return layer_connection;
+        }));
     ON_CALL(*upgrader, upgradeToSecureOutbound(_, _, _))
-        .WillByDefault(UpgradeToSecureOutbound([](auto &&raw) {
-          std::shared_ptr<SecureConnection> sec =
-              std::make_shared<CapableConnBasedOnRawConnMock>(raw);
-          return sec;
+        .WillByDefault(UpgradeToSecureOutbound([](auto &&layer_connection) {
+          std::shared_ptr<SecureConnection> secure_connection =
+              std::make_shared<CapableConnBasedOnLayerConnMock>(
+                  layer_connection);
+          return secure_connection;
         }));
     ON_CALL(*upgrader, upgradeToSecureInbound(_, _))
-        .WillByDefault(UpgradeToSecureInbound([](auto &&raw) {
-          std::shared_ptr<SecureConnection> sec =
-              std::make_shared<CapableConnBasedOnRawConnMock>(raw);
-          return sec;
+        .WillByDefault(UpgradeToSecureInbound([](auto &&layer_connection) {
+          std::shared_ptr<SecureConnection> secure_connection =
+              std::make_shared<CapableConnBasedOnLayerConnMock>(
+                  layer_connection);
+          return secure_connection;
         }));
     ON_CALL(*upgrader, upgradeToMuxed(_, _))
         .WillByDefault(UpgradeToMuxed([](auto &&sec) {
           std::shared_ptr<CapableConnection> cap =
-              std::make_shared<CapableConnBasedOnRawConnMock>(sec);
+              std::make_shared<CapableConnBasedOnLayerConnMock>(sec);
           return cap;
         }));
 
@@ -132,7 +146,7 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
                                    ASSERT_TRUE(res) << res.error().message();
                                    EXPECT_EQ(res.value(), buf->size());
                                    counter++;
-                                   if (counter >= kClients){
+                                   if (counter >= kClients) {
                                      context->stop();
                                    }
                                  });

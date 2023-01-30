@@ -17,14 +17,14 @@ namespace libp2p::network {
     MOCK_METHOD3(setProtocolHandler,
                  void(StreamProtocols, StreamAndProtocolCb, ProtocolPredicate));
 
-    MOCK_CONST_METHOD0(getSupportedProtocols, std::vector<peer::Protocol>());
+    MOCK_CONST_METHOD0(getSupportedProtocols, std::vector<peer::ProtocolName>());
 
-    MOCK_METHOD1(removeProtocolHandlers, void(const peer::Protocol &));
+    MOCK_METHOD1(removeProtocolHandlers, void(const peer::ProtocolName &));
 
     MOCK_METHOD0(removeAll, void());
 
     MOCK_METHOD2(handle,
-                 outcome::result<void>(const peer::Protocol &,
+                 outcome::result<void>(const peer::ProtocolName &,
                                        std::shared_ptr<connection::Stream>));
   };
 }  // namespace libp2p::network

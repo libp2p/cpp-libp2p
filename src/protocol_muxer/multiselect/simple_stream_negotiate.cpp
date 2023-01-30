@@ -14,7 +14,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
   namespace {
     const log::Logger &log() {
-      static log::Logger logger = log::createLogger("multiselect-simple");
+      static log::Logger logger = log::createLogger("Multiselect(simple)");
       return logger;
     }
 
@@ -78,6 +78,8 @@ namespace libp2p::protocol_muxer::multiselect {
       size_t remaining_bytes = total_sz - kMaxVarintSize;
 
       gsl::span<uint8_t> span(buffers->read);
+
+      // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
       span = span.subspan(kMaxVarintSize, remaining_bytes);
 
       stream->read(
@@ -112,7 +114,7 @@ namespace libp2p::protocol_muxer::multiselect {
   }  // namespace
 
   void simpleStreamNegotiateImpl(const StreamPtr &stream,
-                                 const peer::Protocol &protocol_id,
+                                 const peer::ProtocolName &protocol_id,
                                  Callback cb) {
     std::array<std::string_view, 2> a({kProtocolId, protocol_id});
     auto res = detail::createMessage(a, false);

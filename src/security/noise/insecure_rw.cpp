@@ -27,7 +27,7 @@
 
 namespace libp2p::security::noise {
   InsecureReadWriter::InsecureReadWriter(
-      std::shared_ptr<connection::RawConnection> connection,
+      std::shared_ptr<connection::LayerConnection> connection,
       std::shared_ptr<common::ByteArray> buffer)
       : connection_{std::move(connection)}, buffer_{std::move(buffer)} {}
 

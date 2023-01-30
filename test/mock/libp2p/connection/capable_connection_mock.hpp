@@ -54,12 +54,12 @@ namespace libp2p::connection {
     MOCK_METHOD0(remoteMultiaddr, outcome::result<multi::Multiaddress>());
   };
 
-  class CapableConnBasedOnRawConnMock : public CapableConnection {
+  class CapableConnBasedOnLayerConnMock : public CapableConnection {
    public:
-    explicit CapableConnBasedOnRawConnMock(std::shared_ptr<RawConnection> c)
+    explicit CapableConnBasedOnLayerConnMock(std::shared_ptr<LayerConnection> c)
         : real_(std::move(c)) {}
 
-    ~CapableConnBasedOnRawConnMock() override = default;
+    ~CapableConnBasedOnLayerConnMock() override = default;
 
     MOCK_METHOD0(newStream, outcome::result<std::shared_ptr<Stream>>());
     MOCK_METHOD1(newStream, void(StreamHandlerFunc));
@@ -126,7 +126,7 @@ namespace libp2p::connection {
     }
 
    private:
-    std::shared_ptr<RawConnection> real_;
+    std::shared_ptr<LayerConnection> real_;
   };
 }  // namespace libp2p::connection
 

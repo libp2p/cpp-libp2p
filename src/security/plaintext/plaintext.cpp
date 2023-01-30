@@ -68,13 +68,13 @@ namespace libp2p::security {
     BOOST_ASSERT(key_marshaller_);
   }
 
-  peer::Protocol Plaintext::getProtocolId() const {
+  peer::ProtocolName Plaintext::getProtocolId() const {
     // TODO(akvinikym) 29.05.19: think about creating SecurityProtocolRegister
     return "/plaintext/2.0.0";
   }
 
   void Plaintext::secureInbound(
-      std::shared_ptr<connection::RawConnection> inbound,
+      std::shared_ptr<connection::LayerConnection> inbound,
       SecConnCallbackFunc cb) {
     SL_DEBUG(log_, "securing inbound connection");
     auto rw = std::make_shared<basic::ProtobufMessageReadWriter>(inbound);
@@ -83,7 +83,7 @@ namespace libp2p::security {
   }
 
   void Plaintext::secureOutbound(
-      std::shared_ptr<connection::RawConnection> outbound,
+      std::shared_ptr<connection::LayerConnection> outbound,
       const peer::PeerId &p, SecConnCallbackFunc cb) {
     SL_DEBUG(log_, "securing outbound connection");
     auto rw = std::make_shared<basic::ProtobufMessageReadWriter>(outbound);
@@ -92,7 +92,7 @@ namespace libp2p::security {
   }
 
   void Plaintext::sendExchangeMsg(
-      const std::shared_ptr<connection::RawConnection> &conn,
+      const std::shared_ptr<connection::LayerConnection> &conn,
       const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
       SecConnCallbackFunc cb) const {
     plaintext::ExchangeMessage exchange_msg{
@@ -114,7 +114,7 @@ namespace libp2p::security {
   }
 
   void Plaintext::receiveExchangeMsg(
-      const std::shared_ptr<connection::RawConnection> &conn,
+      const std::shared_ptr<connection::LayerConnection> &conn,
       const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
       const MaybePeerId &p, SecConnCallbackFunc cb) const {
     auto remote_peer_exchange_bytes = std::make_shared<std::vector<uint8_t>>();
@@ -131,7 +131,7 @@ namespace libp2p::security {
   }
 
   void Plaintext::readCallback(
-      const std::shared_ptr<connection::RawConnection> &conn,
+      const std::shared_ptr<connection::LayerConnection> &conn,
       const MaybePeerId &p, const SecConnCallbackFunc &cb,
       const std::shared_ptr<std::vector<uint8_t>> &read_bytes,
       outcome::result<size_t> read_call_res) const {
@@ -179,7 +179,7 @@ namespace libp2p::security {
   }
 
   void Plaintext::closeConnection(
-      const std::shared_ptr<libp2p::connection::RawConnection> &conn,
+      const std::shared_ptr<libp2p::connection::LayerConnection> &conn,
       const std::error_code &err) const {
     log_->error("error happened while establishing a Plaintext session: {}",
                 err.message());

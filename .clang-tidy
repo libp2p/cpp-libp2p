@@ -242,6 +242,10 @@ CheckOptions:
     value:           '4294967295'
   - key:             readability-identifier-naming.IgnoreFailedSplit
     value:           '0'
+  - key:             readability-identifier-length.IgnoredParameterNames
+    value:           '^(ec|cb|in|wp|sp|e)$'
+  - key:             readability-identifier-length.IgnoredVariableNames
+    value:           '^(ec|cb|in|wp|sp)$'
   - key:             readability-implicit-bool-conversion.AllowIntegerConditions
     value:           '0'
   - key:             readability-implicit-bool-conversion.AllowPointerConditions
@@ -260,3 +264,4 @@ CheckOptions:
     value:           '3'
   - key:             cppcoreguidelines-macro-usage.CheckCapsOnly
     value:           '1'
+

@@ -13,7 +13,7 @@ namespace libp2p::protocol {
     session->start();
   }
 
-  peer::Protocol Echo::getProtocolId() const {
+  peer::ProtocolName Echo::getProtocolId() const {
     return "/echo/1.0.0";
   }
 

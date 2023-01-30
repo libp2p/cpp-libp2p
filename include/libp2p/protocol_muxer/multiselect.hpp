@@ -23,7 +23,7 @@ namespace libp2p::protocol_muxer::multiselect {
     ~Multiselect() override = default;
 
     /// Implements ProtocolMuxer API
-    void selectOneOf(gsl::span<const peer::Protocol> protocols,
+    void selectOneOf(gsl::span<const peer::ProtocolName> protocols,
                      std::shared_ptr<basic::ReadWriter> connection,
                      bool is_initiator, bool negotiate_multiselect,
                      ProtocolHandlerFunc cb) override;
@@ -31,14 +31,14 @@ namespace libp2p::protocol_muxer::multiselect {
     /// Simple single stream negotiate procedure
     void simpleStreamNegotiate(
         const std::shared_ptr<connection::Stream> &stream,
-        const peer::Protocol &protocol_id,
+        const peer::ProtocolName &protocol_id,
         std::function<
             void(outcome::result<std::shared_ptr<connection::Stream>>)>
             cb) override;
 
     /// Called from instance on close
     void instanceClosed(Instance instance, const ProtocolHandlerFunc &cb,
-                        outcome::result<peer::Protocol> result);
+                        outcome::result<peer::ProtocolName> result);
 
    private:
     /// Returns instance either from cache or creates a new one

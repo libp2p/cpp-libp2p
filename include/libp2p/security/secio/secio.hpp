@@ -49,37 +49,37 @@ namespace libp2p::security {
           std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
           std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider);
 
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
-    void secureInbound(std::shared_ptr<connection::RawConnection> inbound,
+    void secureInbound(std::shared_ptr<connection::LayerConnection> inbound,
                        SecConnCallbackFunc cb) override;
 
-    void secureOutbound(std::shared_ptr<connection::RawConnection> outbound,
+    void secureOutbound(std::shared_ptr<connection::LayerConnection> outbound,
                         const peer::PeerId &p, SecConnCallbackFunc cb) override;
 
    private:
     void sendProposeMessage(
-        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<connection::LayerConnection> &conn,
         const std::shared_ptr<secio::Dialer> &dialer,
         SecConnCallbackFunc cb) const;
 
     void receiveProposeMessage(
-        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<connection::LayerConnection> &conn,
         const std::shared_ptr<secio::Dialer> &dialer,
         SecConnCallbackFunc cb) const;
 
     void sendExchangeMessage(
-        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<connection::LayerConnection> &conn,
         const std::shared_ptr<secio::Dialer> &dialer,
         SecConnCallbackFunc cb) const;
 
     void receiveExchangeMessage(
-        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<connection::LayerConnection> &conn,
         const std::shared_ptr<secio::Dialer> &dialer,
         SecConnCallbackFunc cb) const;
 
     void closeConnection(
-        const std::shared_ptr<libp2p::connection::RawConnection> &conn,
+        const std::shared_ptr<libp2p::connection::LayerConnection> &conn,
         const std::error_code &err) const;
 
     std::shared_ptr<crypto::random::CSPRNG> csprng_;

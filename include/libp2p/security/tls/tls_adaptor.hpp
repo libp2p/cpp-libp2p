@@ -30,14 +30,14 @@ namespace libp2p::security {
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
     /// Returns "/tls/1.0.0"
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
     /// Performs async handshake for inbound connection
-    void secureInbound(std::shared_ptr<connection::RawConnection> inbound,
+    void secureInbound(std::shared_ptr<connection::LayerConnection> inbound,
                        SecConnCallbackFunc cb) override;
 
     /// Performs async handshake for outbound connection
-    void secureOutbound(std::shared_ptr<connection::RawConnection> outbound,
+    void secureOutbound(std::shared_ptr<connection::LayerConnection> outbound,
                         const peer::PeerId &p, SecConnCallbackFunc cb) override;
 
    private:
@@ -45,9 +45,9 @@ namespace libp2p::security {
     outcome::result<void> setupContext();
 
     /// Creates TLSConnection and starts handshake
-    void asyncHandshake(std::shared_ptr<connection::RawConnection> conn,
-                         boost::optional<peer::PeerId> remote_peer,
-                         SecConnCallbackFunc cb);
+    void asyncHandshake(std::shared_ptr<connection::LayerConnection> conn,
+                        boost::optional<peer::PeerId> remote_peer,
+                        SecConnCallbackFunc cb);
 
     /// Identity manager which contains this host's keys and peer id
     std::shared_ptr<peer::IdentityManager> idmgr_;

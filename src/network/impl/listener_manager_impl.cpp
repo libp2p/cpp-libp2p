@@ -214,7 +214,7 @@ namespace libp2p::network {
               this->router_->getSupportedProtocols(), stream,
               false /* not initiator */,
               true /* need to negotiate multistream itself - SPEC ???*/,
-              [this, stream](outcome::result<peer::Protocol> rproto) {
+              [this, stream](outcome::result<peer::ProtocolName> rproto) {
                 bool success = true;
 
                 if (!rproto) {

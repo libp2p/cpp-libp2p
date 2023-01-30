@@ -10,7 +10,7 @@
 #include <libp2p/peer/peer_id.hpp>
 #include <testutil/gmock_actions.hpp>
 #include <testutil/outcome.hpp>
-#include "mock/libp2p/connection/raw_connection_mock.hpp"
+#include "mock/libp2p/connection/layer_connection_mock.hpp"
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
 #include "mock/libp2p/security/exchange_message_marshaller_mock.hpp"
@@ -54,8 +54,8 @@ class PlaintextAdaptorTest : public testing::Test {
         .WillByDefault(Return(std::vector<uint8_t>(64, 1)));
   }
 
-  std::shared_ptr<NiceMock<RawConnectionMock>> conn =
-      std::make_shared<NiceMock<RawConnectionMock>>();
+  std::shared_ptr<NiceMock<LayerConnectionMock>> conn =
+      std::make_shared<NiceMock<LayerConnectionMock>>();
 
   constexpr static size_t ED25519_PUB_KEY_SIZE = 32;
   PublicKey remote_pubkey{

@@ -23,8 +23,8 @@ namespace libp2p::network {
     }
   }
 
-  std::vector<peer::Protocol> RouterImpl::getSupportedProtocols() const {
-    std::vector<peer::Protocol> protos;
+  std::vector<peer::ProtocolName> RouterImpl::getSupportedProtocols() const {
+    std::vector<peer::ProtocolName> protos;
     if (proto_handlers_.empty()) {
       return protos;
     }
@@ -38,7 +38,7 @@ namespace libp2p::network {
     return protos;
   }
 
-  void RouterImpl::removeProtocolHandlers(const peer::Protocol &protocol) {
+  void RouterImpl::removeProtocolHandlers(const peer::ProtocolName &protocol) {
     proto_handlers_.erase_prefix(protocol);
   }
 
@@ -47,7 +47,7 @@ namespace libp2p::network {
   }
 
   outcome::result<void> RouterImpl::handle(
-      const peer::Protocol &p, std::shared_ptr<connection::Stream> stream) {
+      const peer::ProtocolName &p, std::shared_ptr<connection::Stream> stream) {
     // firstly, try to find the longest prefix - even if it's not perfect match,
     // but a predicate one, it still will save the resources
     auto matched_proto = proto_handlers_.longest_prefix(p);

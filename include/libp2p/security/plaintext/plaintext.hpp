@@ -44,29 +44,29 @@ namespace libp2p::security {
         std::shared_ptr<peer::IdentityManager> idmgr,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
-    peer::Protocol getProtocolId() const override;
+    peer::ProtocolName getProtocolId() const override;
 
-    void secureInbound(std::shared_ptr<connection::RawConnection> inbound,
+    void secureInbound(std::shared_ptr<connection::LayerConnection> inbound,
                        SecConnCallbackFunc cb) override;
 
-    void secureOutbound(std::shared_ptr<connection::RawConnection> outbound,
+    void secureOutbound(std::shared_ptr<connection::LayerConnection> outbound,
                         const peer::PeerId &p, SecConnCallbackFunc cb) override;
 
    private:
     using MaybePeerId = boost::optional<peer::PeerId>;
 
     void sendExchangeMsg(
-        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<connection::LayerConnection> &conn,
         const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
         SecConnCallbackFunc cb) const;
 
     void receiveExchangeMsg(
-        const std::shared_ptr<connection::RawConnection> &conn,
+        const std::shared_ptr<connection::LayerConnection> &conn,
         const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
         const MaybePeerId &p, SecConnCallbackFunc cb) const;
 
     // the callback passed to an async read call in receiveExchangeMsg
-    void readCallback(const std::shared_ptr<connection::RawConnection> &conn,
+    void readCallback(const std::shared_ptr<connection::LayerConnection> &conn,
                       const MaybePeerId &p, const SecConnCallbackFunc &cb,
                       const std::shared_ptr<std::vector<uint8_t>> &read_bytes,
                       outcome::result<size_t> read_call_res) const;
@@ -75,7 +75,7 @@ namespace libp2p::security {
      * Close (\param conn) and report error in case of failure
      */
     void closeConnection(
-        const std::shared_ptr<libp2p::connection::RawConnection> &conn,
+        const std::shared_ptr<libp2p::connection::LayerConnection> &conn,
         const std::error_code &err) const;
 
     std::shared_ptr<plaintext::ExchangeMessageMarshaller> marshaller_;

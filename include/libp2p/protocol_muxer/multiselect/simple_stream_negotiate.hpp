@@ -15,7 +15,7 @@ namespace libp2p::protocol_muxer::multiselect {
   /// outbound stream
   void simpleStreamNegotiateImpl(
       const std::shared_ptr<connection::Stream> &stream,
-      const peer::Protocol &protocol_id,
+      const peer::ProtocolName &protocol_id,
       std::function<void(outcome::result<std::shared_ptr<connection::Stream>>)>
           cb);
 

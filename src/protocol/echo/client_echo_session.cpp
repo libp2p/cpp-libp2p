@@ -45,24 +45,25 @@ namespace libp2p::protocol {
     auto self{shared_from_this()};
 
     gsl::span<uint8_t> span = recv_buf_;
+
+    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
     span = span.subspan(bytes_read_);
 
     if (span.empty()) {
       completed();
     }
 
-    stream_->readSome(span, span.size(),
-                      [self](outcome::result<size_t> rr) {
-                        if (!rr && !self->ec_) {
-                          self->ec_ = rr.error();
-                          return self->completed();
-                        }
+    stream_->readSome(span, span.size(), [self](outcome::result<size_t> rr) {
+      if (!rr && !self->ec_) {
+        self->ec_ = rr.error();
+        return self->completed();
+      }
 
-                        if (rr) {
-                          self->bytes_read_ += rr.value();
-                          return self->doRead();
-                        }
-                      });
+      if (rr) {
+        self->bytes_read_ += rr.value();
+        return self->doRead();
+      }
+    });
   }
 
   void ClientEchoSession::completed() {
@@ -72,11 +73,28 @@ namespace libp2p::protocol {
       if (ec_) {
         then(ec_);
       } else {
-        if (recv_buf_ != buf_) {
+        if (not std::equal(recv_buf_.begin(), recv_buf_.end(), buf_.begin(),
+                           buf_.end())) {
           log::createLogger("Echo")->error(
               "ClientEchoSession: send and receive buffers mismatch");
+
+          auto log = log::createLogger("Echo");
+          size_t i = 0;
+          log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`", i, buf_[i],
+                     (char)buf_[i], recv_buf_[i], (char)recv_buf_[i]);
+          for (size_t i = 1; i < buf_.size() - 1; ++i) {
+            if (buf_[i] != recv_buf_[i]) {
+              log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`", i,
+                         buf_[i], (char)buf_[i], recv_buf_[i],
+                         (char)recv_buf_[i]);
+            }
+          }
+          i = buf_.size() - 1;
+          log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`", i, buf_[i],
+                     (char)buf_[i], recv_buf_[i], (char)recv_buf_[i]);
         }
         auto begin = recv_buf_.begin();
+        // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
         then(std::string(begin, begin + recv_buf_.size()));
       }
     }

@@ -6,11 +6,13 @@
 #include <libp2p/peer/peer_address.hpp>
 
 #include <gtest/gtest.h>
+#include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <testutil/outcome.hpp>
 
+using namespace libp2p::common;
 using namespace libp2p::multi;
 using namespace libp2p::peer;
 using namespace libp2p::common;
@@ -20,13 +22,12 @@ class PeerAddressTest : public ::testing::Test {
   std::shared_ptr<MultibaseCodec> codec_ =
       std::make_shared<MultibaseCodecImpl>();
 
-  const std::string_view hash_string =
-      "af85e416fa66390b3c834cb6b7aeafb8b4b484e7245fd9a9d81e7f3f5f95714f";
+  ByteArray hash =
+      unhex("af85e416fa66390b3c834cb6b7aeafb8b4b484e7245fd9a9d81e7f3f5f95714f")
+          .value();
 
   const Multihash kDefaultMultihash =
-      Multihash::create(HashType::sha256,
-                        ByteArray(hash_string.begin(), hash_string.end()))
-          .value();
+      Multihash::create(HashType::sha256, hash).value();
 
   const PeerId kDefaultPeerId = PeerId::fromHash(kDefaultMultihash).value();
 
@@ -35,7 +36,7 @@ class PeerAddressTest : public ::testing::Test {
   const Multiaddress kDefaultAddress =
       Multiaddress::create("/ip4/192.168.0.1/tcp/228").value();
 
-  const std::string kaddressString =
+  const std::string kAddressString =
       std::string{kDefaultAddress.getStringAddress()} + "/p2p/"
       + kEncodedDefaultPeerId;
 };
@@ -46,8 +47,8 @@ class PeerAddressTest : public ::testing::Test {
  * @then creation is successful
  */
 TEST_F(PeerAddressTest, FromStringSuccess) {
-  EXPECT_OUTCOME_TRUE(address, PeerAddress::create(kaddressString))
-  EXPECT_EQ(address.toString(), kaddressString);
+  ASSERT_OUTCOME_SUCCESS(address, PeerAddress::create(kAddressString))
+  EXPECT_EQ(address.toString(), kAddressString);
   EXPECT_EQ(address.getId(), kDefaultPeerId);
   EXPECT_EQ(address.getAddress(), kDefaultAddress);
 }
@@ -102,7 +103,7 @@ TEST_F(PeerAddressTest, FromStringIdNotSha256) {
 TEST_F(PeerAddressTest, FromInfoSuccess) {
   EXPECT_OUTCOME_TRUE(
       address, PeerAddress::create(PeerInfo{kDefaultPeerId, {kDefaultAddress}}))
-  EXPECT_EQ(address.toString(), kaddressString);
+  EXPECT_EQ(address.toString(), kAddressString);
   EXPECT_EQ(address.getId(), kDefaultPeerId);
   EXPECT_EQ(address.getAddress(), kDefaultAddress);
 }
@@ -124,7 +125,7 @@ TEST_F(PeerAddressTest, FromInfoNoAddresses) {
 TEST_F(PeerAddressTest, FromDistinctSuccess) {
   EXPECT_OUTCOME_TRUE(address,
                       PeerAddress::create(kDefaultPeerId, kDefaultAddress))
-  EXPECT_EQ(address.toString(), kaddressString);
+  EXPECT_EQ(address.toString(), kAddressString);
   EXPECT_EQ(address.getId(), kDefaultPeerId);
   EXPECT_EQ(address.getAddress(), kDefaultAddress);
 }

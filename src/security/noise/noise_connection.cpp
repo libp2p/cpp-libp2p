@@ -27,12 +27,12 @@
 
 namespace libp2p::connection {
   NoiseConnection::NoiseConnection(
-      std::shared_ptr<RawConnection> raw_connection,
+      std::shared_ptr<LayerConnection> original_connection,
       crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
       std::shared_ptr<security::noise::CipherState> encoder,
       std::shared_ptr<security::noise::CipherState> decoder)
-      : raw_connection_{std::move(raw_connection)},
+      : connection_{std::move(original_connection)},
         local_{std::move(localPubkey)},
         remote_{std::move(remotePubkey)},
         key_marshaller_{std::move(key_marshaller)},
@@ -41,8 +41,8 @@ namespace libp2p::connection {
         frame_buffer_{
             std::make_shared<common::ByteArray>(security::noise::kMaxMsgLen)},
         framer_{std::make_shared<security::noise::InsecureReadWriter>(
-            raw_connection_, frame_buffer_)} {
-    BOOST_ASSERT(raw_connection_);
+            connection_, frame_buffer_)} {
+    BOOST_ASSERT(connection_);
     BOOST_ASSERT(key_marshaller_);
     BOOST_ASSERT(encoder_cs_);
     BOOST_ASSERT(decoder_cs_);
@@ -52,11 +52,11 @@ namespace libp2p::connection {
   }
 
   bool NoiseConnection::isClosed() const {
-    return raw_connection_->isClosed();
+    return connection_->isClosed();
   }
 
   outcome::result<void> NoiseConnection::close() {
-    return raw_connection_->close();
+    return connection_->close();
   }
 
   void NoiseConnection::read(gsl::span<uint8_t> out, size_t bytes,
@@ -154,26 +154,26 @@ namespace libp2p::connection {
 
   void NoiseConnection::deferReadCallback(outcome::result<size_t> res,
                                           ReadCallbackFunc cb) {
-    raw_connection_->deferReadCallback(res, std::move(cb));
+    connection_->deferReadCallback(res, std::move(cb));
   }
 
   void NoiseConnection::deferWriteCallback(std::error_code ec,
                                            WriteCallbackFunc cb) {
-    raw_connection_->deferWriteCallback(ec, std::move(cb));
+    connection_->deferWriteCallback(ec, std::move(cb));
   }
 
   bool NoiseConnection::isInitiator() const noexcept {
-    return raw_connection_->isInitiator();
+    return connection_->isInitiator();
   }
 
   outcome::result<libp2p::multi::Multiaddress>
   NoiseConnection::localMultiaddr() {
-    return raw_connection_->localMultiaddr();
+    return connection_->localMultiaddr();
   }
 
   outcome::result<libp2p::multi::Multiaddress>
   NoiseConnection::remoteMultiaddr() {
-    return raw_connection_->remoteMultiaddr();
+    return connection_->remoteMultiaddr();
   }
 
   outcome::result<libp2p::peer::PeerId> NoiseConnection::localPeer() const {

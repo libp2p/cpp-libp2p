@@ -24,7 +24,7 @@ namespace libp2p {
    */
   struct StreamAndProtocol {
     std::shared_ptr<connection::Stream> stream;
-    peer::Protocol protocol;
+    peer::ProtocolName protocol;
   };
 
   using StreamAndProtocolOrError = outcome::result<StreamAndProtocol>;

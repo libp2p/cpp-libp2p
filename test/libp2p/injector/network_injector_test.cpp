@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 #include <set>
 
+#include "mock/libp2p/layer/layer_adaptor_mock.hpp"
 #include "mock/libp2p/muxer/muxer_adaptor_mock.hpp"
 #include "mock/libp2p/security/security_adaptor_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
@@ -117,11 +118,16 @@ TEST(NetworkBuilder, CustomAdaptorsBuilds) {
   using namespace boost;
 
   // hack for nice mocks.
+  struct LayerMock : public NiceMock<layer::LayerAdaptorMock> {};
   struct SecMock : public NiceMock<security::SecurityAdaptorMock> {};
   struct MuxMock : public NiceMock<muxer::MuxerAdaptorMock> {};
   struct TrMock : public NiceMock<transport::TransportMock> {};
 
   auto injector = makeNetworkInjector(
+      useLayerAdaptors<
+          layer::WsAdaptor,
+          LayerMock
+      >(),
       useSecurityAdaptors<
           security::Plaintext,
           SecMock

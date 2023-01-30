@@ -32,7 +32,7 @@ namespace libp2p::peer {
      * @return peer error, if no peer {@param p} found
      */
     virtual outcome::result<void> addProtocols(
-        const PeerId &p, gsl::span<const Protocol> ms) = 0;
+        const PeerId &p, gsl::span<const ProtocolName> ms) = 0;
 
     /**
      * @brief Removes protocols from a peer.
@@ -41,7 +41,7 @@ namespace libp2p::peer {
      * @return peer error, if no peer {@param p} found
      */
     virtual outcome::result<void> removeProtocols(
-        const PeerId &p, gsl::span<const Protocol> ms) = 0;
+        const PeerId &p, gsl::span<const ProtocolName> ms) = 0;
 
     /**
      * @brief Get all supported protocols by given peer {@param p}
@@ -49,7 +49,7 @@ namespace libp2p::peer {
      * @return list of protocols (may be empty) or peer error, if no peer
      * @param p} found
      */
-    virtual outcome::result<std::vector<Protocol>> getProtocols(
+    virtual outcome::result<std::vector<ProtocolName>> getProtocols(
         const PeerId &p) const = 0;
 
     /**
@@ -60,8 +60,8 @@ namespace libp2p::peer {
      * @return list of supported protocols (may be empty) or peer error, if no
      * peer {@param p} found
      */
-    virtual outcome::result<std::vector<Protocol>> supportsProtocols(
-        const PeerId &p, const std::set<Protocol> &protocols) const = 0;
+    virtual outcome::result<std::vector<ProtocolName>> supportsProtocols(
+        const PeerId &p, const std::set<ProtocolName> &protocols) const = 0;
 
     /**
      * @brief Remove all associated protocols for given peer

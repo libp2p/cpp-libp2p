@@ -11,6 +11,7 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
+#include <libp2p/layer/websocket.hpp>
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
@@ -22,28 +23,29 @@ namespace {
   const std::string logger_config(R"(
 # ----------------
 sinks:
-  - name: console
-    type: console
-    color: true
+ - name: console
+   type: console
+   color: true
 groups:
-  - name: main
-    sink: console
-    level: info
-    children:
-      - name: libp2p
+ - name: main
+   sink: console
+   level: info
+   children:
+     - name: libp2p
 # ----------------
-  )");
+ )");
 }  // namespace
 
 bool isInsecure(int argc, char **argv) {
-  if (2 == argc) {
-    const std::string insecure{"-insecure"};
-    auto args = gsl::multi_span<char *>(argv, argc);
-    if (insecure == args[1]) {
-      return true;
-    }
-  }
-  return false;
+  const std::string flag{"-insecure"};
+  auto args = gsl::multi_span<char *>(argv, argc);
+  return std::find(args.begin(), args.end(), flag) != args.end();
+}
+
+bool isWebsocket(int argc, char **argv) {
+  const std::string flag{"-websocket"};
+  auto args = gsl::multi_span<char *>(argv, argc);
+  return std::find(args.begin(), args.end(), flag) != args.end();
 }
 
 struct ServerContext {
@@ -53,6 +55,7 @@ struct ServerContext {
 
 ServerContext initSecureServer(const libp2p::crypto::KeyPair &keypair) {
   auto injector = libp2p::injector::makeHostInjector(
+      libp2p::injector::useLayerAdaptors<libp2p::layer::WsAdaptor>(),
       libp2p::injector::useKeyPair(keypair),
       libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>());
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
@@ -62,6 +65,7 @@ ServerContext initSecureServer(const libp2p::crypto::KeyPair &keypair) {
 
 ServerContext initInsecureServer(const libp2p::crypto::KeyPair &keypair) {
   auto injector = libp2p::injector::makeHostInjector(
+      libp2p::injector::useLayerAdaptors<libp2p::layer::WsAdaptor>(),
       libp2p::injector::useKeyPair(keypair),
       libp2p::injector::useSecurityAdaptors<libp2p::security::Plaintext>());
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
@@ -95,8 +99,10 @@ int main(int argc, char **argv) {
   if (std::getenv("TRACE_DEBUG") != nullptr) {
     libp2p::log::setLevelOfGroup("main", soralog::Level::TRACE);
   } else {
-    libp2p::log::setLevelOfGroup("main", soralog::Level::ERROR);
+    libp2p::log::setLevelOfGroup("main", soralog::Level::INFO);
   }
+
+  auto log = libp2p::log::createLogger("EchoServer");
 
   // resulting PeerId should be
   // 12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV
@@ -109,9 +115,14 @@ int main(int argc, char **argv) {
 
   bool insecure_mode{isInsecure(argc, argv)};
   if (insecure_mode) {
-    std::cout << "Starting in insecure mode" << std::endl;
+    log->info("Starting in insecure mode");
   } else {
-    std::cout << "Starting in secure mode" << std::endl;
+    log->info("Starting in secure mode");
+  }
+
+  bool ws_mode{isWebsocket(argc, argv)};
+  if (ws_mode) {
+    log->info("Using websocket layer");
   }
 
   // create a default Host via an injector, overriding a random-generated
@@ -130,31 +141,37 @@ int main(int argc, char **argv) {
                                     echo.handle(std::move(stream));
                                   });
 
+  auto ma =
+      libp2p::multi::Multiaddress::create(
+          ws_mode ? "/ip4/127.0.0.1/tcp/40010/ws" : "/ip4/127.0.0.1/tcp/40010")
+          .value();
+
   // launch a Listener part of the Host
-  server.io_context->post([host{std::move(server.host)}] {
-    auto ma =
-        libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40010").value();
+  server.io_context->post([host{std::move(server.host)}, &ma, &log] {
     auto listen_res = host->listen(ma);
     if (!listen_res) {
-      std::cerr << "host cannot listen the given multiaddress: "
-                << listen_res.error().message() << "\n";
+      log->error("host cannot listen the given multiaddress: {}",
+                 listen_res.error().message());
       std::exit(EXIT_FAILURE);
     }
 
     host->start();
-    std::cout << "Server started\nListening on: " << ma.getStringAddress()
-              << "\nPeer id: " << host->getPeerInfo().id.toBase58()
-              << std::endl;
-    std::cout << "Connection string: " << ma.getStringAddress() << "/ipfs/"
-              << host->getPeerInfo().id.toBase58() << std::endl;
+    log->info("Server started");
+    log->info("Listening on: {}", ma.getStringAddress());
+    log->info("Peer id: {}", host->getPeerInfo().id.toBase58());
+    log->info("Connection string: {}/p2p/{}", ma.getStringAddress(),
+              host->getPeerInfo().id.toBase58());
   });
 
   // run the IO context
   try {
     server.io_context->run();
+    std::exit(EXIT_SUCCESS);
   } catch (const boost::system::error_code &ec) {
-    std::cout << "Server cannot run: " << ec.message() << std::endl;
+    log->error("Server cannot run: {}", ec.message());
+    std::exit(EXIT_FAILURE);
   } catch (...) {
-    std::cout << "Unknown error happened" << std::endl;
+    log->error("Unknown error happened");
+    std::exit(EXIT_FAILURE);
   }
 }

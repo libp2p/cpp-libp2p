@@ -78,7 +78,7 @@ namespace {
 namespace libp2p::connection {
 
   SecioConnection::SecioConnection(
-      std::shared_ptr<RawConnection> raw_connection,
+      std::shared_ptr<LayerConnection> original_connection,
       std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
       crypto::PublicKey local_pubkey, crypto::PublicKey remote_pubkey,
@@ -86,7 +86,7 @@ namespace libp2p::connection {
       crypto::common::CipherType cipher_type,
       crypto::StretchedKey local_stretched_key,
       crypto::StretchedKey remote_stretched_key)
-      : raw_connection_{std::move(raw_connection)},
+      : original_connection_{std::move(original_connection)},
         hmac_provider_{std::move(hmac_provider)},
         key_marshaller_{std::move(key_marshaller)},
         local_{std::move(local_pubkey)},
@@ -97,7 +97,7 @@ namespace libp2p::connection {
         remote_stretched_key_{std::move(remote_stretched_key)},
         aes128_secrets_{boost::none},
         aes256_secrets_{boost::none} {
-    BOOST_ASSERT(raw_connection_);
+    BOOST_ASSERT(original_connection_);
     BOOST_ASSERT(hmac_provider_);
     BOOST_ASSERT(key_marshaller_);
   }
@@ -163,25 +163,25 @@ namespace libp2p::connection {
   }
 
   bool SecioConnection::isInitiator() const noexcept {
-    return raw_connection_->isInitiator();
+    return original_connection_->isInitiator();
   }
 
   outcome::result<multi::Multiaddress> SecioConnection::localMultiaddr() {
-    return raw_connection_->localMultiaddr();
+    return original_connection_->localMultiaddr();
   }
 
   outcome::result<multi::Multiaddress> SecioConnection::remoteMultiaddr() {
-    return raw_connection_->remoteMultiaddr();
+    return original_connection_->remoteMultiaddr();
   }
 
   void SecioConnection::deferReadCallback(outcome::result<size_t> res,
                                           ReadCallbackFunc cb) {
-    raw_connection_->deferReadCallback(res, std::move(cb));
+    original_connection_->deferReadCallback(res, std::move(cb));
   }
 
   void SecioConnection::deferWriteCallback(std::error_code ec,
                                            WriteCallbackFunc cb) {
-    raw_connection_->deferWriteCallback(ec, std::move(cb));
+    original_connection_->deferWriteCallback(ec, std::move(cb));
   }
 
   inline void SecioConnection::popUserData(gsl::span<uint8_t> out,
@@ -277,9 +277,9 @@ namespace libp2p::connection {
   }
 
   void SecioConnection::readNextMessage(ReadCallbackFunc cb) {
-    raw_connection_->read(
+    original_connection_->read(
         *read_buffer_, kLenMarkerSize,
-        [self{shared_from_this()}, buffer=read_buffer_,
+        [self{shared_from_this()}, buffer = read_buffer_,
          cb{std::move(cb)}](outcome::result<size_t> read_bytes_res) mutable {
           IO_OUTCOME_TRY(len_marker_size, read_bytes_res, cb)
           if (len_marker_size != kLenMarkerSize) {
@@ -298,7 +298,7 @@ namespace libp2p::connection {
             return;
           }
           SL_TRACE(self->log_, "Expecting frame of size {}.", frame_len);
-          self->raw_connection_->read(
+          self->original_connection_->read(
               *buffer, frame_len,
               [self, buffer, frame_len,
                cb{cb}](outcome::result<size_t> read_bytes) mutable {
@@ -312,11 +312,15 @@ namespace libp2p::connection {
                   return;
                 }
                 SL_TRACE(self->log_, "Received frame with len {}",
-                                  read_frame_bytes);
+                         read_frame_bytes);
                 IO_OUTCOME_TRY(mac_size, self->macSize(), cb)
                 const auto data_size{frame_len - mac_size};
-                auto data_span{gsl::make_span(buffer->data(), data_size)};
+                auto data_span{gsl::make_span(
+                    buffer->data(),
+                    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
+                    data_size)};
                 auto mac_span{
+                    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
                     gsl::make_span(*buffer).subspan(data_size, mac_size)};
                 IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb)
                 if (gsl::make_span(remote_mac) != mac_span) {
@@ -333,7 +337,7 @@ namespace libp2p::connection {
                   self->user_data_buffer_.emplace(std::forward<decltype(e)>(e));
                 }
                 SL_TRACE(self->log_, "Frame decrypted successfully {} -> {}",
-                                  frame_len, decrypted_bytes_len);
+                         frame_len, decrypted_bytes_len);
                 cb(decrypted_bytes_len);
               });
         });
@@ -372,7 +376,7 @@ namespace libp2p::connection {
           }
           user_cb(bytes);
         };
-    raw_connection_->write(frame_buffer, frame_buffer.size(), cb_wrapper);
+    original_connection_->write(frame_buffer, frame_buffer.size(), cb_wrapper);
   }
 
   void SecioConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
@@ -381,11 +385,11 @@ namespace libp2p::connection {
   }
 
   bool SecioConnection::isClosed() const {
-    return raw_connection_->isClosed();
+    return original_connection_->isClosed();
   }
 
   outcome::result<void> SecioConnection::close() {
-    return raw_connection_->close();
+    return original_connection_->close();
   }
 
   outcome::result<size_t> SecioConnection::macSize() const {

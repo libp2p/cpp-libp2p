@@ -23,20 +23,20 @@ struct InmemProtocolRepository_Test : public ::testing::Test {
     db = std::make_unique<InmemProtocolRepository>();
   }
 
-  const Protocol s1 = "/bittorrent.org/1.0";
-  const Protocol s2 = "/ipfs/1.0";
+  const ProtocolName s1 = "/bittorrent.org/1.0";
+  const ProtocolName s2 = "/ipfs/1.0";
 
   const PeerId p1 = PeerId::fromHash("12051203020304"_multihash).value();
   const PeerId p2 = PeerId::fromHash("12051203FFFFFF"_multihash).value();
 
   template <typename... T>
-  std::vector<Protocol> vec(T &&... arg) {
-    return std::vector<Protocol>{arg...};
+  std::vector<ProtocolName> vec(T &&... arg) {
+    return std::vector<ProtocolName>{arg...};
   }
 
   template <typename... T>
-  std::set<Protocol> set(T &&... arg) {
-    return std::set<Protocol>{arg...};
+  std::set<ProtocolName> set(T &&... arg) {
+    return std::set<ProtocolName>{arg...};
   }
 };
 

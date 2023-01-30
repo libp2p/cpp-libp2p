@@ -21,7 +21,7 @@ namespace libp2p::transport {
                           TransportAdaptor::HandlerFunc handler,
                           std::chrono::milliseconds timeout) {
     if (!canDial(address)) {
-      //TODO(107): Reentrancy
+      // TODO(107): Reentrancy
 
       return handler(std::errc::address_family_not_supported);
     }
@@ -30,25 +30,28 @@ namespace libp2p::transport {
 
     auto [host, port] = detail::getHostAndTcpPort(address);
 
+    auto layers = detail::getLayers(address);
+
     auto connect = [self{shared_from_this()}, conn, handler{std::move(handler)},
-                    remoteId, timeout](auto ec, auto r) mutable {
+                    remoteId, layers = std::move(layers),
+                    timeout](auto ec, auto r) mutable {
       if (ec) {
         return handler(ec);
       }
 
       conn->connect(
           r,
-          [self, conn, handler{std::move(handler)}, remoteId](auto ec,
-                                                              auto &e) mutable {
+          [self, conn, handler{std::move(handler)}, remoteId,
+           layers = std::move(layers)](auto ec, auto &e) mutable {
             if (ec) {
-              conn->close();
+              std::ignore = conn->close();
               return handler(ec);
             }
 
             auto session = std::make_shared<UpgraderSession>(
-                self->upgrader_, std::move(conn), handler);
+                self->upgrader_, std::move(layers), std::move(conn), handler);
 
-            session->secureOutbound(remoteId);
+            session->upgradeOutbound(remoteId);
           },
           timeout);
     };
@@ -79,7 +82,7 @@ namespace libp2p::transport {
                              std::shared_ptr<Upgrader> upgrader)
       : context_(std::move(context)), upgrader_(std::move(upgrader)) {}
 
-  peer::Protocol TcpTransport::getProtocolId() const {
+  peer::ProtocolName TcpTransport::getProtocolId() const {
     return "/tcp/1.0.0";
   }
 

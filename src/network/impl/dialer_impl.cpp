@@ -198,7 +198,7 @@ namespace libp2p::network {
     multiselect_->selectOneOf(
         protocols, std::move(stream_copy), true, true,
         [stream{std::move(stream)}, cb{std::move(cb)}](
-            outcome::result<peer::Protocol> protocol_res) mutable {
+            outcome::result<peer::ProtocolName> protocol_res) mutable {
           if (protocol_res.has_error()) {
             return cb(protocol_res.error());
           }

@@ -12,7 +12,7 @@ namespace libp2p::protocol_muxer::multiselect {
   namespace {
 #ifndef WITHOUT_TRACE_LOG_MESSAGE
     const log::Logger &log() {
-      static log::Logger logger = log::createLogger("multiselect");
+      static log::Logger logger = log::createLogger("Multiselect");
       return logger;
     }
 #endif
@@ -20,7 +20,7 @@ namespace libp2p::protocol_muxer::multiselect {
     constexpr size_t kMaxCacheSize = 8;
   }  // namespace
 
-  void Multiselect::selectOneOf(gsl::span<const peer::Protocol> protocols,
+  void Multiselect::selectOneOf(gsl::span<const peer::ProtocolName> protocols,
                                 std::shared_ptr<basic::ReadWriter> connection,
                                 bool is_initiator, bool negotiate_multiselect,
                                 ProtocolHandlerFunc cb) {
@@ -30,7 +30,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
   void Multiselect::simpleStreamNegotiate(
       const std::shared_ptr<connection::Stream> &stream,
-      const peer::Protocol &protocol_id,
+      const peer::ProtocolName &protocol_id,
       std::function<void(outcome::result<std::shared_ptr<connection::Stream>>)>
           cb) {
     assert(stream);
@@ -46,7 +46,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
   void Multiselect::instanceClosed(Instance instance,
                                    const ProtocolHandlerFunc &cb,
-                                   outcome::result<peer::Protocol> result) {
+                                   outcome::result<peer::ProtocolName> result) {
     active_instances_.erase(instance);
     if (cache_.size() < kMaxCacheSize) {
       cache_.emplace_back(std::move(instance));

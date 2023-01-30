@@ -5,6 +5,7 @@
 
 #include <libp2p/multi/converters/converter_utils.hpp>
 
+#include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/asio/ip/address_v6.hpp>
@@ -36,7 +37,7 @@ namespace libp2p::multi::converters {
 
     str.remove_prefix(1);
     if (str.empty()) {
-      return ConversionError::INVALID_ADDRESS;
+      return ConversionError::EMPTY_PROTOCOL;
     }
 
     if (str.back() == '/') {
@@ -44,7 +45,7 @@ namespace libp2p::multi::converters {
       str.remove_suffix(1);
     }
 
-    std::string processed;
+    ByteArray processed;
 
     enum class WordType { PROTOCOL, ADDRESS };
     WordType type = WordType::PROTOCOL;
@@ -56,40 +57,56 @@ namespace libp2p::multi::converters {
 
     for (auto &word : tokens) {
       if (type == WordType::PROTOCOL) {
+        if (word.empty()) {
+          return ConversionError::EMPTY_PROTOCOL;
+        }
         protx = ProtocolList::get(word);
         if (protx != nullptr) {
-          processed += UVarint(static_cast<uint64_t>(protx->code)).toHex();
-          type = WordType::ADDRESS;  // Since the next word will be an address
+          auto code = UVarint(static_cast<uint64_t>(protx->code)).toVector();
+          for (auto byte : code) {
+            processed.emplace_back(byte);
+          }
+          if (protx->size != 0) {
+            type = WordType::ADDRESS;  // Since the next word will be an address
+          }
         } else {
           return ConversionError::NO_SUCH_PROTOCOL;
         }
       } else {
-        OUTCOME_TRY(val, addressToHex(*protx, word));
-        processed += val;
+        if (word.empty()) {
+          return ConversionError::EMPTY_ADDRESS;
+        }
+        OUTCOME_TRY(bytes, addressToBytes(*protx, word));
+        for (auto byte : bytes) {
+          processed.emplace_back(byte);
+        }
         protx = nullptr;  // Since right now it doesn't need that
         // assignment anymore.
         type = WordType::PROTOCOL;  // Since the next word will be an protocol
       }
     }
 
-    // TODO(xDimon): Replace hex-unhex steps by using bytes directly
-    return unhex(processed);
+    if (type == WordType::ADDRESS) {
+      return ConversionError::EMPTY_ADDRESS;
+    }
+
+    return processed;
   }
 
-  outcome::result<std::string> addressToHex(const Protocol &protocol,
+  outcome::result<ByteArray> addressToBytes(const Protocol &protocol,
                                             std::string_view addr) {
     // TODO(Akvinikym) 25.02.19 PRE-49: add more protocols
     switch (protocol.code) {
       case Protocol::Code::IP4:
-        return IPv4Converter::addressToHex(addr);
+        return IPv4Converter::addressToBytes(addr);
       case Protocol::Code::IP6:
-        return IPv6Converter::addressToHex(addr);
+        return IPv6Converter::addressToBytes(addr);
       case Protocol::Code::TCP:
-        return TcpConverter::addressToHex(addr);
+        return TcpConverter::addressToBytes(addr);
       case Protocol::Code::UDP:
-        return UdpConverter::addressToHex(addr);
+        return UdpConverter::addressToBytes(addr);
       case Protocol::Code::P2P:
-        return IpfsConverter::addressToHex(addr);
+        return IpfsConverter::addressToBytes(addr);
 
       case Protocol::Code::DNS:
       case Protocol::Code::DNS4:
@@ -98,7 +115,7 @@ namespace libp2p::multi::converters {
       case Protocol::Code::UNIX:
       case Protocol::Code::X_PARITY_WS:
       case Protocol::Code::X_PARITY_WSS:
-        return DnsConverter::addressToHex(addr);
+        return DnsConverter::addressToBytes(addr);
 
       case Protocol::Code::IP6_ZONE:
       case Protocol::Code::ONION3:
@@ -116,6 +133,16 @@ namespace libp2p::multi::converters {
     }
   }
 
+  outcome::result<std::string> addressToHex(const Protocol &protocol,
+                                            std::string_view addr) {
+    OUTCOME_TRY(bytes, addressToBytes(protocol, addr));
+    std::string hex;
+    hex.reserve(bytes.size() * 2);
+    boost::algorithm::hex_lower(bytes.begin(), bytes.end(),
+                                std::back_inserter(hex));
+    return std::move(hex);
+  }
+
   outcome::result<std::string> bytesToMultiaddrString(
       gsl::span<const uint8_t> bytes) {
     std::string results;
@@ -127,7 +154,7 @@ namespace libp2p::multi::converters {
 
     // Process Hex String
     while (lastpos < bytes.size() * 2) {
-      gsl::span<const uint8_t, -1> pid_bytes{bytes};
+      gsl::span<const uint8_t> pid_bytes{bytes};
       auto protocol_int = UVarint(pid_bytes.subspan(lastpos / 2)).toUInt64();
       Protocol const *protocol =
           ProtocolList::get(static_cast<Protocol::Code>(protocol_int));

@@ -20,7 +20,7 @@ namespace libp2p::protocol {
         rand_gen_{std::move(rand_gen)},
         config_{config} {}
 
-  peer::Protocol Ping::getProtocolId() const {
+  peer::ProtocolName Ping::getProtocolId() const {
     return detail::kPingProto;
   }
 

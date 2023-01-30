@@ -15,7 +15,7 @@ namespace libp2p {
    * Protocol predicate.
    * Used by `Host::setProtocolHandler`, `Router::setProtocolHandler`.
    */
-  using ProtocolPredicate = std::function<bool(const peer::Protocol &)>;
+  using ProtocolPredicate = std::function<bool(const peer::ProtocolName &)>;
 }  // namespace libp2p
 
 #endif  // LIBP2P_PEER_PROTOCOL_PREDICATE_HPP

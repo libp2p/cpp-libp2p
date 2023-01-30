@@ -35,9 +35,9 @@ namespace libp2p::connection {
     MOCK_METHOD2(deferWriteCallback,
                  void(std::error_code, Writer::WriteCallbackFunc));
 
-    MOCK_CONST_METHOD0(isInitiatorMock, bool(void));
+    MOCK_CONST_METHOD0(isInitiator_hack, bool(void));
     bool isInitiator() const noexcept override {
-      return isInitiatorMock();
+      return isInitiator_hack();
     }
 
     MOCK_METHOD0(localMultiaddr, outcome::result<multi::Multiaddress>(void));
