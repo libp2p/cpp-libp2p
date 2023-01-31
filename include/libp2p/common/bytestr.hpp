@@ -11,7 +11,8 @@
 
 namespace libp2p {
   inline gsl::span<const uint8_t> bytestr(const gsl::span<const char> &s) {
-    return {(const uint8_t *)s.data(), s.size()};
+    // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<const uint8_t *>(s.data()), s.size()};
   }
 }  // namespace libp2p
 

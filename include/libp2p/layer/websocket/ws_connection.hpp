@@ -7,6 +7,7 @@
 #define LIBP2P_CONNECTION_WSCONNECTION
 
 #include <boost/beast/websocket.hpp>
+
 #include <libp2p/basic/scheduler.hpp>
 #include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/as_asio_read_write.hpp>

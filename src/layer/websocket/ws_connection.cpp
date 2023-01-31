@@ -18,7 +18,7 @@ namespace libp2p::connection {
       std::shared_ptr<boost::asio::io_context> io_context,
       std::shared_ptr<LayerConnection> connection,
       std::shared_ptr<basic::Scheduler> scheduler)
-      : config_(config),
+      : config_(std::move(config)),
         connection_(std::move(connection)),
         ws_(AsAsioReadWrite{std::move(io_context), connection_}),
         scheduler_(std::move(scheduler)) {
