@@ -80,9 +80,10 @@ namespace libp2p::transport {
                               std::move(cb));
   }
 
-  void UpgraderImpl::upgradeLayersOutbound(RawSPtr conn, ProtoAddrVec layers,
+  void UpgraderImpl::upgradeLayersOutbound(const multi::Multiaddress &address,
+                                           RawSPtr conn, ProtoAddrVec layers,
                                            OnLayerCallbackFunc cb) {
-    upgradeToNextLayerOutbound(std::move(conn), std::move(layers), 0,
+    upgradeToNextLayerOutbound(address, std::move(conn), std::move(layers), 0,
                                std::move(cb));
   }
 
@@ -115,10 +116,9 @@ namespace libp2p::transport {
         });
   }
 
-  void UpgraderImpl::upgradeToNextLayerOutbound(LayerSPtr conn,
-                                                ProtoAddrVec layers,
-                                                size_t layer_index,
-                                                OnLayerCallbackFunc cb) {
+  void UpgraderImpl::upgradeToNextLayerOutbound(
+      const multi::Multiaddress &address, LayerSPtr conn, ProtoAddrVec layers,
+      size_t layer_index, OnLayerCallbackFunc cb) {
     BOOST_ASSERT_MSG(conn->isInitiator(),
                      "connection is NOT initiator, and upgrade of outbound is "
                      "called (should be upgrade of inbound)");
@@ -141,15 +141,15 @@ namespace libp2p::transport {
     const auto &adaptor = *adaptor_it;
 
     return adaptor->upgradeOutbound(
-        conn,
-        [self{shared_from_this()}, layers = std::move(layers), layer_index,
+        address, conn,
+        [=, self{shared_from_this()}, layers = std::move(layers),
          cb{std::move(cb)}](
             outcome::result<LayerSPtr> next_layer_conn_res) mutable {
           if (next_layer_conn_res.has_error()) {
             return cb(next_layer_conn_res.error());
           }
           auto &next_layer_conn = next_layer_conn_res.value();
-          self->upgradeToNextLayerOutbound(std::move(next_layer_conn),
+          self->upgradeToNextLayerOutbound(address, std::move(next_layer_conn),
                                            std::move(layers), layer_index + 1,
                                            std::move(cb));
         });

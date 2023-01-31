@@ -44,7 +44,8 @@ namespace libp2p::transport {
     void upgradeLayersInbound(RawSPtr conn, ProtoAddrVec layers,
                               OnLayerCallbackFunc cb) override;
 
-    void upgradeLayersOutbound(RawSPtr conn, ProtoAddrVec layers,
+    void upgradeLayersOutbound(const multi::Multiaddress &address, RawSPtr conn,
+                               ProtoAddrVec layers,
                                OnLayerCallbackFunc cb) override;
 
     void upgradeToSecureInbound(LayerSPtr conn,
@@ -65,7 +66,8 @@ namespace libp2p::transport {
      * @param cb - callback, which is called, when a connection is upgraded or
      * error happens
      */
-    void upgradeToNextLayerOutbound(LayerSPtr conn, ProtoAddrVec layers,
+    void upgradeToNextLayerOutbound(const multi::Multiaddress &address,
+                                    LayerSPtr conn, ProtoAddrVec layers,
                                     size_t layer_index, OnLayerCallbackFunc cb);
 
     /**

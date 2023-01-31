@@ -71,7 +71,7 @@ ACTION_P(UpgradeLayersInbound, do_upgrade) {
 }
 
 ACTION_P(UpgradeLayersOutbound, do_upgrade) {
-  arg2(do_upgrade(arg0));
+  arg3(do_upgrade(arg1));
 }
 
 ACTION_P(UpgradeToSecureInbound, do_upgrade) {

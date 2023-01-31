@@ -33,7 +33,8 @@ namespace libp2p::transport {
                                     std::move(on_layers_upgraded));
   }
 
-  void UpgraderSession::upgradeOutbound(const peer::PeerId &remoteId) {
+  void UpgraderSession::upgradeOutbound(const multi::Multiaddress &address,
+                                        const peer::PeerId &remoteId) {
     if (layers_.empty()) {
       return secureOutbound(raw_, remoteId);
     }
@@ -46,7 +47,7 @@ namespace libp2p::transport {
       self->secureOutbound(std::move(conn), remoteId);
     };
 
-    upgrader_->upgradeLayersOutbound(raw_, layers_,
+    upgrader_->upgradeLayersOutbound(address, raw_, layers_,
                                      std::move(on_layers_upgraded));
   }
 
