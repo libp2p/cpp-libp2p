@@ -44,7 +44,8 @@ namespace libp2p::transport {
      * @param cb - callback, which is called, when a connection is upgraded or
      * error happens
      */
-    virtual void upgradeLayersOutbound(RawSPtr conn, ProtoAddrVec layers,
+    virtual void upgradeLayersOutbound(const multi::Multiaddress &address,
+                                       RawSPtr conn, ProtoAddrVec layers,
                                        OnLayerCallbackFunc cb) = 0;
 
     /**

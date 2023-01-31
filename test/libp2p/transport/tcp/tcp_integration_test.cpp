@@ -51,7 +51,7 @@ namespace {
 
   auto makeUpgrader() {
     auto upgrader = std::make_shared<NiceMock<UpgraderMock>>();
-    ON_CALL(*upgrader, upgradeLayersOutbound(_, _, _))
+    ON_CALL(*upgrader, upgradeLayersOutbound(_, _, _, _))
         .WillByDefault(UpgradeLayersOutbound([](auto &&raw) {
           std::shared_ptr<LayerConnection> layer_connection =
               std::make_shared<CapableConnBasedOnLayerConnMock>(raw);

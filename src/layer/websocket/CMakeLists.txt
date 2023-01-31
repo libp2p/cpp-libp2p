@@ -5,8 +5,6 @@
 
 libp2p_add_library(p2p_websocket
     ws_adaptor.cpp
-    http_to_ws_upgrader.cpp
-    http_read_writer.cpp
     )
 target_link_libraries(p2p_websocket
     p2p_websocket_connection
@@ -15,7 +13,6 @@ target_link_libraries(p2p_websocket
 
 libp2p_add_library(p2p_websocket_connection
     ws_connection.cpp
-    ws_read_writer.cpp
     )
 target_link_libraries(p2p_websocket_connection
     Boost::boost

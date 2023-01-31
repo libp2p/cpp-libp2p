@@ -39,6 +39,7 @@ namespace libp2p::layer {
      * @param cb - callback with an upgraded connection or error
      */
     virtual void upgradeOutbound(
+        const multi::Multiaddress &address,
         std::shared_ptr<connection::LayerConnection> conn,
         LayerConnCallbackFunc cb) const = 0;
   };

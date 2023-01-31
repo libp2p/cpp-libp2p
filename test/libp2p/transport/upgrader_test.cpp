@@ -134,18 +134,19 @@ TEST_F(UpgraderTest, UpgradeLayersInitiator) {
           "/p2p/12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV"));
   auto layers = detail::getLayers(address);
 
-  EXPECT_CALL(
-      *std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[0]),
-      upgradeOutbound(std::static_pointer_cast<LayerConnection>(raw_conn_), _))
-      .WillOnce(Arg1CallbackWithArg(layer1_conn_));
-
-  EXPECT_CALL(*std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[1]),
+  EXPECT_CALL(*std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[0]),
               upgradeOutbound(
-                  std::static_pointer_cast<LayerConnection>(layer1_conn_), _))
-      .WillOnce(Arg1CallbackWithArg(layer2_conn_));
+                  _, std::static_pointer_cast<LayerConnection>(raw_conn_), _))
+      .WillOnce(Arg2CallbackWithArg(layer1_conn_));
+
+  EXPECT_CALL(
+      *std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[1]),
+      upgradeOutbound(
+          _, std::static_pointer_cast<LayerConnection>(layer1_conn_), _))
+      .WillOnce(Arg2CallbackWithArg(layer2_conn_));
 
   upgrader_->upgradeLayersOutbound(
-      raw_conn_, layers, [this](auto &&upgraded_conn_res) {
+      address, raw_conn_, layers, [this](auto &&upgraded_conn_res) {
         ASSERT_OUTCOME_SUCCESS(upgraded_conn, upgraded_conn_res);
         ASSERT_EQ(upgraded_conn, layer2_conn_);
       });

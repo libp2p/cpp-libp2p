@@ -19,7 +19,9 @@ namespace libp2p::transport {
    public:
     ~UpgraderMock() override = default;
     MOCK_METHOD(void, upgradeLayersOutbound,
-                (RawSPtr, ProtoAddrVec, OnLayerCallbackFunc), (override));
+                (const multi::Multiaddress &, RawSPtr, ProtoAddrVec,
+                 OnLayerCallbackFunc),
+                (override));
 
     MOCK_METHOD(void, upgradeLayersInbound,
                 (RawSPtr, ProtoAddrVec, OnLayerCallbackFunc), (override));
