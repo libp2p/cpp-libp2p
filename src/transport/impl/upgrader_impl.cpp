@@ -95,10 +95,22 @@ namespace libp2p::transport {
                      "connection is initiator, and upgrade for inbound is "
                      "called (should be upgrade for outbound)");
 
-    if (layer_index >= layer_adaptors_.size()) {
+    if (layer_index >= layers.size()) {
       return cb(conn);
     }
-    const auto &adaptor = layer_adaptors_[layer_index];
+    const auto &protocol = layers[layer_index];
+
+    auto adaptor_it =
+        std::find_if(layer_adaptors_.begin(), layer_adaptors_.end(),
+                     [&](const auto &adaptor) {
+                       return adaptor->getProtocol() == protocol.first.code;
+                     });
+
+    if (adaptor_it == layer_adaptors_.end()) {
+      return cb(multi::converters::ConversionError::NOT_IMPLEMENTED);
+    }
+
+    const auto &adaptor = *adaptor_it;
 
     return adaptor->upgradeInbound(
         conn,
@@ -131,7 +143,7 @@ namespace libp2p::transport {
     auto adaptor_it =
         std::find_if(layer_adaptors_.begin(), layer_adaptors_.end(),
                      [&](const auto &adaptor) {
-                       return adaptor->getProtocolId() == protocol.first.name;
+                       return adaptor->getProtocol() == protocol.first.code;
                      });
 
     if (adaptor_it == layer_adaptors_.end()) {

@@ -12,13 +12,15 @@ namespace libp2p::layer {
 
   WsAdaptor::WsAdaptor(std::shared_ptr<basic::Scheduler> scheduler,
                        std::shared_ptr<boost::asio::io_context> io_context,
-                       std::shared_ptr<const WsConnectionConfig> config,
-                       bool tls_enabled)
+                       WsConnectionConfig config)
       : scheduler_(std::move(scheduler)),
         io_context_(std::move(io_context)),
-        config_(std::move(config)),
-        tls_enabled_(tls_enabled) {
+        config_(std::move(config)) {
     BOOST_ASSERT(scheduler_ != nullptr);
+  }
+
+  multi::Protocol::Code WsAdaptor::getProtocol() const {
+    return multi::Protocol::Code::WS;
   }
 
   void WsAdaptor::upgradeInbound(

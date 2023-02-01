@@ -5,6 +5,7 @@
 
 libp2p_add_library(p2p_websocket
     ws_adaptor.cpp
+    wss_adaptor.cpp
     )
 target_link_libraries(p2p_websocket
     p2p_websocket_connection
@@ -12,6 +13,7 @@ target_link_libraries(p2p_websocket
     )
 
 libp2p_add_library(p2p_websocket_connection
+    ssl_connection.cpp
     ws_connection.cpp
     )
 target_link_libraries(p2p_websocket_connection

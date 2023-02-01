@@ -8,7 +8,6 @@
 
 #include <memory>
 
-#include <libp2p/basic/adaptor.hpp>
 #include <libp2p/connection/layer_connection.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -16,11 +15,13 @@ namespace libp2p::layer {
   /**
    * Strategy to upgrade connections to next-layer
    */
-  struct LayerAdaptor : public basic::Adaptor {
+  struct LayerAdaptor {
     using LayerConnCallbackFunc = std::function<void(
         outcome::result<std::shared_ptr<connection::LayerConnection>>)>;
 
-    ~LayerAdaptor() override = default;
+    virtual ~LayerAdaptor() = default;
+
+    virtual multi::Protocol::Code getProtocol() const = 0;
 
     /**
      * Make a next-layer connection from the current-layer one, using this

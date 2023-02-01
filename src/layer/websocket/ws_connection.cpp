@@ -14,7 +14,7 @@
 
 namespace libp2p::connection {
   WsConnection::WsConnection(
-      std::shared_ptr<const layer::WsConnectionConfig> config,
+      layer::WsConnectionConfig config,
       std::shared_ptr<boost::asio::io_context> io_context,
       std::shared_ptr<LayerConnection> connection,
       std::shared_ptr<basic::Scheduler> scheduler)
@@ -22,7 +22,6 @@ namespace libp2p::connection {
         connection_(std::move(connection)),
         ws_(AsAsioReadWrite{std::move(io_context), connection_}),
         scheduler_(std::move(scheduler)) {
-    BOOST_ASSERT(config_ != nullptr);
     BOOST_ASSERT(connection_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
     ws_.binary(true);
@@ -35,7 +34,7 @@ namespace libp2p::connection {
     }
     started_ = true;
 
-    if (config_->ping_interval != std::chrono::milliseconds::zero()) {
+    if (config_.ping_interval != std::chrono::milliseconds::zero()) {
       // Set pong handler
       using boost::beast::websocket::frame_type;
       ws_.control_callback(
@@ -77,7 +76,7 @@ namespace libp2p::connection {
                   });
             }
           },
-          config_->ping_interval);
+          config_.ping_interval);
     }
   }
 
@@ -99,7 +98,7 @@ namespace libp2p::connection {
     if (payload == expected) {
       SL_DEBUG(log_, "Correct pong has received for ping");
       ping_timeout_handle_.cancel();
-      std::ignore = ping_handle_.reschedule(config_->ping_interval);
+      std::ignore = ping_handle_.reschedule(config_.ping_interval);
       return;
     }
     SL_DEBUG(log_, "Received unexpected pong. Ignoring");

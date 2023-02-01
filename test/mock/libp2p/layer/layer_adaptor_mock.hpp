@@ -15,7 +15,7 @@ namespace libp2p::layer {
    public:
     ~LayerAdaptorMock() override = default;
 
-    MOCK_METHOD(peer::ProtocolName, getProtocolId, (), (const, override));
+    MOCK_METHOD(multi::Protocol::Code, getProtocol, (), (const, override));
 
     MOCK_METHOD(void, upgradeInbound,
                 (std::shared_ptr<connection::LayerConnection>,

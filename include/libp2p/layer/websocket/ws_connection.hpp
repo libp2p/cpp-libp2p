@@ -42,11 +42,10 @@ namespace libp2p::connection {
      * Create a new WsConnection instance
      * @param connection to be wrapped to websocket by this instance
      */
-    explicit WsConnection(
-        std::shared_ptr<const layer::WsConnectionConfig> config,
-        std::shared_ptr<boost::asio::io_context> io_context,
-        std::shared_ptr<LayerConnection> connection,
-        std::shared_ptr<basic::Scheduler> scheduler);
+    explicit WsConnection(layer::WsConnectionConfig config,
+                          std::shared_ptr<boost::asio::io_context> io_context,
+                          std::shared_ptr<LayerConnection> connection,
+                          std::shared_ptr<basic::Scheduler> scheduler);
 
     bool isInitiator() const noexcept override;
 
@@ -82,7 +81,7 @@ namespace libp2p::connection {
     void onPong(gsl::span<const uint8_t> payload);
 
     /// Config
-    std::shared_ptr<const layer::WsConnectionConfig> config_;
+    layer::WsConnectionConfig config_;
 
     /// Underlying connection
     std::shared_ptr<LayerConnection> connection_;
