@@ -46,7 +46,7 @@ class UpgraderTest : public testing::Test {
   void SetUp() override {
     for (size_t i = 0; i < layer_adaptors_.size(); ++i) {
       ON_CALL(*std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[i]),
-              getProtocolId())
+              getProtocol())
           .WillByDefault(Return(layer_protos_[i]));
     }
     for (size_t i = 0; i < security_protos_.size(); ++i) {
@@ -74,13 +74,10 @@ class UpgraderTest : public testing::Test {
       std::make_shared<NiceMock<LayerAdaptorMock>>(),
       std::make_shared<NiceMock<LayerAdaptorMock>>()};
 
-  std::vector<ProtocolName> layer_protos_{
-      std::string(libp2p::multi::ProtocolList::get(
-                      libp2p::multi::Protocol::Code::_DUMMY_PROTO_1)
-                      ->name),
-      std::string(libp2p::multi::ProtocolList::get(
-                      libp2p::multi::Protocol::Code::_DUMMY_PROTO_2)
-                      ->name)};
+  std::vector<libp2p::multi::Protocol::Code> layer_protos_{
+      libp2p::multi::Protocol::Code::_DUMMY_PROTO_1,
+      libp2p::multi::Protocol::Code::_DUMMY_PROTO_2,
+  };
   std::vector<ProtocolName> security_protos_{"security_proto1",
                                              "security_proto2"};
   std::vector<std::shared_ptr<SecurityAdaptor>> security_adaptors_{

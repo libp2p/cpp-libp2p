@@ -152,6 +152,24 @@ namespace libp2p::injector {
   }
 
   /**
+   * @brief Instruct injector to use wss ssl server with key and certificates
+   * from pem. Can be used once.
+   */
+  inline auto useWssPem(std::string_view pem) {
+    layer::WssCertificate cert;
+    if (not pem.empty()) {
+      if (auto cert_res = layer::WssCertificate::make(pem)) {
+        cert = std::move(cert_res.value());
+      } else {
+        SL_WARN(log::createLogger("libp2p::injector::useWssPem"), "{}",
+                cert_res.error().message());
+      }
+    }
+    return boost::di::bind<layer::WssCertificate>.template to(
+        std::move(cert))[boost::di::override];
+  }
+
+  /**
    * @brief Instruct injector to use specific config type. Can be used many
    * times for different types.
    * @tparam C config type
@@ -298,6 +316,8 @@ namespace libp2p::injector {
         di::bind<security::plaintext::ExchangeMessageMarshaller>().template to<security::plaintext::ExchangeMessageMarshallerImpl>(),
         di::bind<security::secio::ProposeMessageMarshaller>().template to<security::secio::ProposeMessageMarshallerImpl>(),
         di::bind<security::secio::ExchangeMessageMarshaller>().template to<security::secio::ExchangeMessageMarshallerImpl>(),
+        di::bind<layer::WsConnectionConfig>.template to(layer::WsConnectionConfig{}),
+        di::bind<layer::WssCertificate>.template to(layer::WssCertificate{}),
 
         di::bind<basic::Scheduler::Config>.template to(basic::Scheduler::Config{}),
         di::bind<basic::SchedulerBackend>().template to<basic::AsioSchedulerBackend>(),
@@ -316,7 +336,7 @@ namespace libp2p::injector {
 
         // default adaptors
         di::bind<muxer::MuxedConnectionConfig>.template to(muxer::MuxedConnectionConfig{}),
-        di::bind<layer::LayerAdaptor *[]>().template to<layer::WsAdaptor>(),  // NOLINT
+        di::bind<layer::LayerAdaptor *[]>().template to<layer::WsAdaptor, layer::WssAdaptor>(),  // NOLINT
         di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext, security::Secio, security::Noise, security::TlsAdaptor>(),  // NOLINT
         di::bind<muxer::MuxerAdaptor *[]>().template to<muxer::Yamux, muxer::Mplex>(),  // NOLINT
         di::bind<transport::TransportAdaptor *[]>().template to<transport::TcpTransport>(),  // NOLINT

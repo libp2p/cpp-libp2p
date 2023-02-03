@@ -8,5 +8,6 @@
 
 #include <libp2p/layer/websocket/ws_adaptor.hpp>
 #include <libp2p/layer/websocket/ws_connection.hpp>
+#include <libp2p/layer/websocket/wss_adaptor.hpp>
 
 #endif  // LIBP2P_WEBSOCKET

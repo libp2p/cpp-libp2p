@@ -36,42 +36,25 @@ groups:
  )");
 }  // namespace
 
-bool isInsecure(int argc, char **argv) {
-  const std::string flag{"-insecure"};
-  auto args = gsl::multi_span<char *>(argv, argc);
-  return std::find(args.begin(), args.end(), flag) != args.end();
-}
+struct SecureAdaptorProxy : libp2p::security::SecurityAdaptor {
+  libp2p::peer::ProtocolName getProtocolId() const override {
+    return impl->getProtocolId();
+  }
 
-bool isWebsocket(int argc, char **argv) {
-  const std::string flag{"-websocket"};
-  auto args = gsl::multi_span<char *>(argv, argc);
-  return std::find(args.begin(), args.end(), flag) != args.end();
-}
+  void secureInbound(
+      std::shared_ptr<libp2p::connection::LayerConnection> inbound,
+      SecConnCallbackFunc cb) override {
+    return impl->secureInbound(inbound, cb);
+  }
 
-struct ServerContext {
-  std::shared_ptr<libp2p::Host> host;
-  std::shared_ptr<boost::asio::io_context> io_context;
+  void secureOutbound(
+      std::shared_ptr<libp2p::connection::LayerConnection> outbound,
+      const libp2p::peer::PeerId &p, SecConnCallbackFunc cb) override {
+    return impl->secureOutbound(outbound, p, cb);
+  }
+
+  std::shared_ptr<libp2p::security::SecurityAdaptor> impl;
 };
-
-ServerContext initSecureServer(const libp2p::crypto::KeyPair &keypair) {
-  auto injector = libp2p::injector::makeHostInjector(
-      libp2p::injector::useLayerAdaptors<libp2p::layer::WsAdaptor>(),
-      libp2p::injector::useKeyPair(keypair),
-      libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>());
-  auto host = injector.create<std::shared_ptr<libp2p::Host>>();
-  auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
-  return {.host = host, .io_context = context};
-}
-
-ServerContext initInsecureServer(const libp2p::crypto::KeyPair &keypair) {
-  auto injector = libp2p::injector::makeHostInjector(
-      libp2p::injector::useLayerAdaptors<libp2p::layer::WsAdaptor>(),
-      libp2p::injector::useKeyPair(keypair),
-      libp2p::injector::useSecurityAdaptors<libp2p::security::Plaintext>());
-  auto host = injector.create<std::shared_ptr<libp2p::Host>>();
-  auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
-  return {.host = host, .io_context = context};
-}
 
 int main(int argc, char **argv) {
   using libp2p::crypto::Key;
@@ -79,6 +62,24 @@ int main(int argc, char **argv) {
   using libp2p::crypto::PrivateKey;
   using libp2p::crypto::PublicKey;
   using libp2p::common::operator""_unhex;
+
+  auto has_arg = [&](std::string_view arg) {
+    auto args = gsl::make_span(argv, argc).subspan(1);
+    return std::find(args.begin(), args.end(), arg) != args.end();
+  };
+
+  if (has_arg("-h") or has_arg("--help")) {
+    fmt::print("Options:\n");
+    fmt::print("  -h, --help\n");
+    fmt::print("    Print help\n");
+    fmt::print("  -insecure\n");
+    fmt::print("    Use plaintext protocol instead of noise\n");
+    fmt::print("  --ws\n");
+    fmt::print("    Accept websocket connections instead of tcp\n");
+    fmt::print("  --wss\n");
+    fmt::print("    Accept secure websocket connections instead of tcp\n");
+    return 0;
+  }
 
   // prepare log system
   auto logging_system = std::make_shared<soralog::LoggingSystem>(
@@ -113,22 +114,43 @@ int main(int argc, char **argv) {
                               "4a9361c525840f7086b893d584ebbe475b4ec"
                               "7069951d2e897e8bceb0a3f35ce"_unhex}}};
 
-  bool insecure_mode{isInsecure(argc, argv)};
+  bool insecure_mode{has_arg("-insecure")};
   if (insecure_mode) {
     log->info("Starting in insecure mode");
   } else {
     log->info("Starting in secure mode");
   }
 
-  bool ws_mode{isWebsocket(argc, argv)};
-  if (ws_mode) {
-    log->info("Using websocket layer");
-  }
+  auto injector = libp2p::injector::makeHostInjector(
+      libp2p::injector::useKeyPair(keypair),
+      libp2p::injector::useSecurityAdaptors<SecureAdaptorProxy>(),
+      libp2p::injector::useWssPem(R"(
+-----BEGIN CERTIFICATE-----
+MIIBODCB3qADAgECAghv+C53VY1w3TAKBggqhkjOPQQDAjAUMRIwEAYDVQQDDAls
+b2NhbGhvc3QwIBcNNzUwMTAxMDAwMDAwWhgPNDA5NjAxMDEwMDAwMDBaMBQxEjAQ
+BgNVBAMMCWxvY2FsaG9zdDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABLNFvFLB
+kzZEhSjaSNnS5Q+364BqSLF0+2x7gZVEDazBtdxlfmIVWL9Xymgil1WuCfmIxp2R
+Cdh/0A9Ym4Zx5sqjGDAWMBQGA1UdEQQNMAuCCWxvY2FsaG9zdDAKBggqhkjOPQQD
+AgNJADBGAiEAnfqMaHg9KVCbg1OHmZ19f7ArfwNLj5fmTFB3OYeisycCIQCg2rDy
+MLbRdSECggJ2ae10PIutrY7c+78h1vHDfXRM7A==
+-----END CERTIFICATE-----
 
-  // create a default Host via an injector, overriding a random-generated
-  // keypair with ours
-  ServerContext server =
-      insecure_mode ? initInsecureServer(keypair) : initSecureServer(keypair);
+-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgdfUHplIKKrgBaZUd
+FVg0biAiKZmXu+iWX43vprg2c/ShRANCAASzRbxSwZM2RIUo2kjZ0uUPt+uAakix
+dPtse4GVRA2swbXcZX5iFVi/V8poIpdVrgn5iMadkQnYf9APWJuGcebK
+-----END PRIVATE KEY-----
+)"));
+  auto &secure_adaptor = injector.create<SecureAdaptorProxy &>();
+  if (insecure_mode) {
+    secure_adaptor.impl =
+        injector.create<std::shared_ptr<libp2p::security::Plaintext>>();
+  } else {
+    secure_adaptor.impl =
+        injector.create<std::shared_ptr<libp2p::security::Noise>>();
+  }
+  auto host = injector.create<std::shared_ptr<libp2p::Host>>();
+  auto io_context = injector.create<std::shared_ptr<boost::asio::io_context>>();
 
   // set a handler for Echo protocol
   libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{
@@ -136,18 +158,21 @@ int main(int argc, char **argv) {
           libp2p::protocol::EchoConfig::kInfiniteNumberOfRepeats,
       .max_recv_size =
           libp2p::muxer::MuxedConnectionConfig::kDefaultMaxWindowSize}};
-  server.host->setProtocolHandler({echo.getProtocolId()},
-                                  [&echo](libp2p::StreamAndProtocol stream) {
-                                    echo.handle(std::move(stream));
-                                  });
+  host->setProtocolHandler({echo.getProtocolId()},
+                           [&echo](libp2p::StreamAndProtocol stream) {
+                             echo.handle(std::move(stream));
+                           });
 
-  auto ma =
-      libp2p::multi::Multiaddress::create(
-          ws_mode ? "/ip4/127.0.0.1/tcp/40010/ws" : "/ip4/127.0.0.1/tcp/40010")
-          .value();
+  std::string _ma = "/ip4/127.0.0.1/tcp/40010";
+  if (has_arg("--wss")) {
+    _ma += "/wss";
+  } else if (has_arg("--ws")) {
+    _ma += "/ws";
+  }
+  auto ma = libp2p::multi::Multiaddress::create(_ma).value();
 
   // launch a Listener part of the Host
-  server.io_context->post([host{std::move(server.host)}, &ma, &log] {
+  io_context->post([&] {
     auto listen_res = host->listen(ma);
     if (!listen_res) {
       log->error("host cannot listen the given multiaddress: {}",
@@ -165,7 +190,7 @@ int main(int argc, char **argv) {
 
   // run the IO context
   try {
-    server.io_context->run();
+    io_context->run();
     std::exit(EXIT_SUCCESS);
   } catch (const boost::system::error_code &ec) {
     log->error("Server cannot run: {}", ec.message());

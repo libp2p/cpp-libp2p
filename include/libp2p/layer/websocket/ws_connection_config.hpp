@@ -6,13 +6,13 @@
 #ifndef LIBP2P_LAYER_WSCONNECTIONCONFIG
 #define LIBP2P_LAYER_WSCONNECTIONCONFIG
 
-#include <libp2p/layer/layer_connection_config.hpp>
+#include <chrono>
 
 namespace libp2p::layer {
   /**
    * Config of websocket layer connection
    */
-  struct WsConnectionConfig : public LayerConnectionConfig {
+  struct WsConnectionConfig {
     std::chrono::milliseconds ping_interval{60'000};
   };
 }  // namespace libp2p::layer
