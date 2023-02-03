@@ -158,7 +158,12 @@ namespace libp2p::injector {
   inline auto useWssPem(std::string_view pem) {
     layer::WssCertificate cert;
     if (not pem.empty()) {
-      cert = layer::WssCertificate::make(pem).value();
+      if (auto cert_res = layer::WssCertificate::make(pem)) {
+        cert = std::move(cert_res.value());
+      } else {
+        SL_WARN(log::createLogger("libp2p::injector::useWssPem"), "{}",
+                cert_res.error().message());
+      }
     }
     return boost::di::bind<layer::WssCertificate>.template to(
         std::move(cert))[boost::di::override];
