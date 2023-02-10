@@ -28,6 +28,9 @@ namespace libp2p {
   void async_teardown(boost::beast::role_type role, AsAsioReadWrite &stream,
                       Cb &&cb) {
     std::ignore = stream.impl->close();
+    boost::asio::post(*stream.io, [cb{std::move(cb)}]() mutable {
+      cb(boost::system::error_code{});
+    });
   }
 }  // namespace libp2p
 
