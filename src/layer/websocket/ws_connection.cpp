@@ -63,8 +63,8 @@ namespace libp2p::connection {
                   [](boost::system::error_code) {});
 
               // Start timer of pong waiting
-              self->ping_timeout_handle_ =
-                  self->scheduler_->scheduleWithHandle([wp] {
+              self->ping_timeout_handle_ = self->scheduler_->scheduleWithHandle(
+                  [wp] {
                     if (auto self = wp.lock()) {
                       self->ws_.async_close(
                           {
@@ -73,7 +73,8 @@ namespace libp2p::connection {
                           },
                           [](boost::system::error_code) {});
                     }
-                  });
+                  },
+                  self->config_.ping_timeout);
             }
           },
           config_.ping_interval);
