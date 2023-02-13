@@ -14,6 +14,7 @@ namespace libp2p::layer {
    */
   struct WsConnectionConfig {
     std::chrono::milliseconds ping_interval{60'000};
+    std::chrono::milliseconds ping_timeout{10'000};
   };
 }  // namespace libp2p::layer
 

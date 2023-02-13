@@ -20,11 +20,18 @@ namespace libp2p::layer {
 }  // namespace libp2p::layer
 
 namespace libp2p {
-  inline void beast_close_socket(AsAsioReadWrite &stream) {}
+  inline void beast_close_socket(AsAsioReadWrite &stream) {
+    std::ignore = stream.impl->close();
+  }
 
   template <typename Cb>
   void async_teardown(boost::beast::role_type role, AsAsioReadWrite &stream,
-                      Cb &&cb) {}
+                      Cb &&cb) {
+    std::ignore = stream.impl->close();
+    boost::asio::post(*stream.io, [cb{std::move(cb)}]() mutable {
+      cb(boost::system::error_code{});
+    });
+  }
 }  // namespace libp2p
 
 namespace libp2p::connection {
