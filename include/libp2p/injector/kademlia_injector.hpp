@@ -78,15 +78,15 @@ namespace libp2p::injector {
     return di::make_injector<InjectorConfig>(
         // clang-format off
 
-        di::bind<protocol::kademlia::Config>.template to<protocol::kademlia::Config>().in(di::singleton),
+        di::bind<protocol::kademlia::Config>.template to<protocol::kademlia::Config>(),
         di::bind<protocol::kademlia::ContentRoutingTable>.template to<protocol::kademlia::ContentRoutingTableImpl>(),
         di::bind<protocol::kademlia::PeerRoutingTable>.template to<protocol::kademlia::PeerRoutingTableImpl>(),
         di::bind<protocol::kademlia::StorageBackend>.template to<protocol::kademlia::StorageBackendDefault>(),
         di::bind<protocol::kademlia::Storage>.template to<protocol::kademlia::StorageImpl>(),
         di::bind<protocol::kademlia::Validator>.template to<protocol::kademlia::ValidatorDefault>(),
 
-        di::bind<protocol::kademlia::MessageObserver>.template to<protocol::kademlia::KademliaImpl>().in(di::singleton),
-        di::bind<protocol::kademlia::Kademlia>.template to<protocol::kademlia::KademliaImpl>().in(di::singleton),
+        di::bind<protocol::kademlia::MessageObserver>.template to<protocol::kademlia::KademliaImpl>(),
+        di::bind<protocol::kademlia::Kademlia>.template to<protocol::kademlia::KademliaImpl>(),
 
         // user-defined overrides...
         std::forward<decltype(args)>(args)...
