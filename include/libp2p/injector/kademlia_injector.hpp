@@ -74,7 +74,8 @@ namespace libp2p::injector {
   // clang-format off
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
   auto makeKademliaInjector(Ts &&... args) {
-    using namespace boost;  // NOLINT
+    namespace di = boost::di;
+    
     return di::make_injector<InjectorConfig>(
         // clang-format off
 
