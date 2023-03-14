@@ -276,7 +276,7 @@ namespace libp2p::injector {
    */
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
   inline auto makeNetworkInjector(Ts &&...args) {
-    using namespace boost;  // NOLINT
+    namespace di = boost::di;
 
     auto csprng = std::make_shared<crypto::random::BoostRandomGenerator>();
     auto ed25519_provider =
