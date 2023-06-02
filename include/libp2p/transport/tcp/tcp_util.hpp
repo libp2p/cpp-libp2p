@@ -17,7 +17,10 @@
 
 namespace libp2p::transport::detail {
   template <typename T>
-  inline outcome::result<multi::Multiaddress> makeAddress(T &&endpoint) {
+  inline outcome::result<multi::Multiaddress> makeAddress(
+      T &&endpoint,
+      const std::vector<std::pair<multi::Protocol, std::string>> *layers =
+          nullptr) {
     try {
       auto address = endpoint.address();
       auto port = endpoint.port();
@@ -31,6 +34,16 @@ namespace libp2p::transport::detail {
       }
 
       s << "/tcp/" << port;
+
+      if (layers != nullptr and not layers->empty()) {
+        auto &protocol = layers->at(0).first.code;
+        using P = multi::Protocol::Code;
+        if (protocol == P::WS) {
+          s << "/ws";
+        } else if (protocol == P::WSS) {
+          s << "/wss";
+        }
+      }
 
       return multi::Multiaddress::create(s.str());
     } catch (const boost::system::system_error &e) {

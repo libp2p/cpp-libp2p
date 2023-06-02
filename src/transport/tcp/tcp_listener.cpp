@@ -63,7 +63,7 @@ namespace libp2p::transport {
     if (ec) {
       return ec;
     }
-    return detail::makeAddress(endpoint);
+    return detail::makeAddress(endpoint, &layers_);
   }
 
   bool TcpListener::isClosed() const {

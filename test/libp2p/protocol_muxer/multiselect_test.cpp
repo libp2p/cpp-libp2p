@@ -20,7 +20,7 @@ TEST(Multiselect, TmpBufThrows) {
   using libp2p::protocol_muxer::multiselect::detail::TmpMsgBuf;
   TmpMsgBuf buf;
   buf.resize(kMaxMessageSize / 2);
-  EXPECT_THROW(buf.resize(buf.capacity() + 1), std::bad_alloc);
+  EXPECT_THROW(buf.resize(buf.capacity() + 1), boost::container::bad_alloc_t);
 }
 
 TEST(Multiselect, SingleValidMessages) {
