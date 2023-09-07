@@ -83,6 +83,7 @@ TEST_F(EventEmitterTest, Unsubscribe) {
  */
 TEST_F(EventEmitterTest, NonCopyableEvent) {
   struct NonCopyableEvent {
+    explicit NonCopyableEvent(int i) : value(i) {}
     NonCopyableEvent(const NonCopyableEvent &other) = delete;
     NonCopyableEvent &operator=(const NonCopyableEvent &other) = delete;
     NonCopyableEvent(NonCopyableEvent &&other) noexcept = default;
@@ -109,6 +110,7 @@ TEST_F(EventEmitterTest, NonCopyableEvent) {
  */
 TEST_F(EventEmitterTest, NonMovableEvent) {
   struct NonMovableEvent {
+    explicit NonMovableEvent(int v) : value(v) {}
     NonMovableEvent(const NonMovableEvent &other) = default;
     NonMovableEvent &operator=(const NonMovableEvent &other) = default;
     NonMovableEvent(NonMovableEvent &&other) noexcept = delete;
@@ -134,6 +136,7 @@ TEST_F(EventEmitterTest, NonMovableEvent) {
  */
 TEST_F(EventEmitterTest, NonCopyableOrMovableEvent) {
   struct NonCopyableOrMovableEvent {
+    explicit NonCopyableOrMovableEvent(int v) : value(v) {}
     NonCopyableOrMovableEvent(const NonCopyableOrMovableEvent &other) = delete;
     NonCopyableOrMovableEvent &operator=(
         const NonCopyableOrMovableEvent &other) = delete;
