@@ -7,7 +7,7 @@ if (CCACHE_FOUND)
 endif (CCACHE_FOUND)
 
 set(CMAKE_TOOLCHAIN_FILE
-    "${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx17.cmake"
+    "${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx20.cmake"
     CACHE
     FILEPATH
     "Default toolchain"

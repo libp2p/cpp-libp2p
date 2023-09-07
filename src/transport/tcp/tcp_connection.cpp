@@ -188,8 +188,8 @@ namespace libp2p::transport {
     }
     boost::asio::async_connect(
         socket_, iterator,
-        [wptr{weak_from_this()}, cb{std::move(cb)}](auto &&ec,
-                                                    auto &&endpoint) {
+        [wptr{weak_from_this()}, cb{std::move(cb)}](
+            auto &&ec, const Tcp::endpoint &endpoint) {
           auto self = wptr.lock();
           if (!self || self->closed_by_host_) {
             return;

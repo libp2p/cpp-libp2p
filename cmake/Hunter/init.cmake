@@ -22,7 +22,7 @@ set(
 
 set(
     HUNTER_CACHE_SERVERS
-    "https://github.com/soramitsu/hunter-binary-cache"
+    "https://github.com/qdrvm/hunter-binary-cache"
     CACHE
     STRING
     "Binary cache server"
@@ -31,7 +31,7 @@ set(
 include(${CMAKE_CURRENT_LIST_DIR}/HunterGate.cmake)
 
 HunterGate(
-    URL  "https://github.com/soramitsu/soramitsu-hunter/archive/v0.23.257-soramitsu42.tar.gz"
-    SHA1 "6f54ad82c2322ff0e234ab96a44a12da1478f1be"
+    URL  "https://github.com/qdrvm/hunter/archive/refs/tags/v0.23.257-qdrvm1.zip"
+    SHA1 "e6aee2a8086d749d19d31d587f1f19c750a820ea"
     LOCAL
 )

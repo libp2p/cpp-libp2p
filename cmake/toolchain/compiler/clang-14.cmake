@@ -11,15 +11,15 @@ if(XCODE_VERSION)
   fatal_error(${_err})
 endif()
 
-find_program(CMAKE_C_COMPILER clang-8)
-find_program(CMAKE_CXX_COMPILER clang++-8)
+find_program(CMAKE_C_COMPILER clang-14)
+find_program(CMAKE_CXX_COMPILER clang++-14)
 
 if(NOT CMAKE_C_COMPILER)
-  fatal_error("clang-8 not found")
+  fatal_error("clang-14 not found")
 endif()
 
 if(NOT CMAKE_CXX_COMPILER)
-  fatal_error("clang++-8 not found")
+  fatal_error("clang++-14 not found")
 endif()
 
 set(
