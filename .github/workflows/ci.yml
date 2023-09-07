@@ -37,21 +37,15 @@ jobs:
     - name: install dependencies
       run: |
         set -e
-        if [ "$RUNNER_OS" = "macOS" ]; then
-          brew install ninja
-        else
-          sudo apt-get update || true
-          sudo apt-get install -y ninja-build
-        fi
 
         sudo python3 -m pip install --upgrade pip
         sudo pip3 install scikit-build
-        sudo pip3 install cmake requests gitpython gcovr pyyaml
+        sudo pip3 install cmake=="3.25.0" requests gitpython gcovr pyyaml
     - name: cmake
       env:
         CC: ${{ matrix.compiler.cc }}
         CXX: ${{ matrix.compiler.cxx }}
-      run: cmake . -GNinja -Bbuild
+      run: cmake . -Bbuild
     - name: build
       run: cmake --build build -- -j4
     - name: test
