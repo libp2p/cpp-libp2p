@@ -12,6 +12,10 @@
 
 namespace libp2p::log {
 
+  namespace fmt {
+    using namespace soralog::fmt;
+  }  // namespace fmt
+
   /// Local logger with common prefix used to distinguish message source
   /// instances
   class SubLogger {
@@ -37,7 +41,7 @@ namespace libp2p::log {
           prefix_size_(prefix_.size()) {}
 
     template <typename... Args>
-    void log(soralog::Level level, std::string_view fmt, const Args &... args) {
+    void log(soralog::Level level, std::string_view fmt, const Args &...args) {
       if (log_->level() >= level) {
         prefix_.append(fmt.data(), fmt.size());
         log_->log(level, prefix_, args...);
@@ -46,47 +50,47 @@ namespace libp2p::log {
     }
 
     template <typename... Args>
-    void trace(std::string_view fmt, const Args &... args) {
+    void trace(std::string_view fmt, const Args &...args) {
       log(Level::TRACE, fmt, args...);
     }
 
     template <typename... Args>
-    void debug(std::string_view fmt, const Args &... args) {
+    void debug(std::string_view fmt, const Args &...args) {
       log(Level::DEBUG, fmt, args...);
     }
 
     template <typename... Args>
-    void verbose(std::string_view fmt, const Args &... args) {
+    void verbose(std::string_view fmt, const Args &...args) {
       log(Level::VERBOSE, fmt, args...);
     }
 
     template <typename... Args>
-    void info(std::string_view fmt, const Args &... args) {
+    void info(std::string_view fmt, const Args &...args) {
       log(Level::INFO, fmt, args...);
     }
 
     template <typename... Args>
-    void warn(std::string_view fmt, const Args &... args) {
+    void warn(std::string_view fmt, const Args &...args) {
       log(Level::WARN, fmt, args...);
     }
 
     template <typename... Args>
-    void error(std::string_view fmt, const Args &... args) {
+    void error(std::string_view fmt, const Args &...args) {
       log(Level::ERROR, fmt, args...);
     }
 
     template <typename... Args>
-    void critical(std::string_view fmt, const Args &... args) {
+    void critical(std::string_view fmt, const Args &...args) {
       log(Level::CRITICAL, fmt, args...);
     }
 
    private:
     template <typename T>
     auto makePrefix(std::string_view prefix, T instance) {
-      if constexpr (std::is_pointer_v<
-                        T> and not std::is_same_v<T, const char *>) {
-        return fmt::format("{}({:x}): ", prefix,
-                           reinterpret_cast<void *>(instance));  // NOLINT;
+      if constexpr (std::is_pointer_v<T>
+                    and not std::is_same_v<T, const char *>) {
+        auto ptr_as_int = reinterpret_cast<std::intptr_t>(instance);  // NOLINT
+        return fmt::format("{}({:x}): ", prefix, ptr_as_int);
       } else if constexpr (std::is_integral_v<T> and sizeof(T) > 1) {
         return fmt::format("{}#{}: ", prefix, instance);
       } else {

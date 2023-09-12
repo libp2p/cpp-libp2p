@@ -10,6 +10,8 @@
 #include <boost/outcome/success_failure.hpp>
 #include <boost/outcome/try.hpp>
 
+#include <soralog/common.hpp>
+
 // To define OUTCOME_TRY macro, we will need to create OUTCOME_TRY_1 and
 // OUTCOME_TRY_2 depending on number of arguments
 #define OUTCOME_TRY_1(...) BOOST_OUTCOME_TRY(__VA_ARGS__)
@@ -42,5 +44,65 @@ namespace libp2p::outcome {
 }  // namespace libp2p::outcome
 
 // @see /docs/result.md
+
+template <>
+struct fmt::formatter<std::error_code> {
+  // Parses format specifications. Must be empty
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) {
+    // Parse the presentation format and store it in the formatter:
+    auto it = ctx.begin(), end = ctx.end();
+
+    // Check if reached the end of the range:
+    if (it != end && *it != '}') {
+      throw format_error("invalid format");
+    }
+
+    // Return an iterator past the end of the parsed range:
+    return it;
+  }
+
+  // Formats the std::error_code
+  template <typename FormatContext>
+  auto format(const std::error_code &ec, FormatContext &ctx) const
+      -> decltype(ctx.out()) {
+    // ctx.out() is an output iterator to write to.
+
+    return soralog::fmt::format_to(ctx.out(), "{}", ec.message());
+  }
+};
+
+template <typename Result, typename Failure>
+struct fmt::formatter<libp2p::outcome::result<Result, Failure>> {
+  // Parses format specifications. Must be empty
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) {
+    // Parse the presentation format and store it in the formatter:
+    auto it = ctx.begin(), end = ctx.end();
+
+    // Check if reached the end of the range:
+    if (it != end && *it != '}') {
+      throw format_error("invalid format");
+    }
+
+    // Return an iterator past the end of the parsed range:
+    return it;
+  }
+
+  // Formats the outcome result
+  template <typename FormatContext>
+  auto format(const libp2p::outcome::result<Result, Failure> &res,
+              FormatContext &ctx) const -> decltype(ctx.out()) {
+    // ctx.out() is an output iterator to write to.
+
+    if (res.has_value()) {
+      if constexpr (not std::is_void_v<Result>) {
+        return soralog::fmt::format_to(ctx.out(), "{}", res.value());
+      } else {
+        return soralog::fmt::format_to(ctx.out(), "<success>");
+      }
+    } else {
+      return soralog::fmt::format_to(ctx.out(), "{}", res.error());
+    }
+  }
+};
 
 #endif  // LIBP2P_OUTCOME_HPP
