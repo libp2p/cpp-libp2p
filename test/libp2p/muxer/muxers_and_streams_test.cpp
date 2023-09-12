@@ -60,7 +60,43 @@ namespace libp2p::regression {
     }
     return os;
   }
+}  // namespace libp2p::regression
 
+template <>
+struct fmt::formatter<libp2p::regression::Stats::Event> {
+  // Parses format specifications. Must be empty
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) {
+    // Parse the presentation format and store it in the formatter:
+    auto it = ctx.begin(), end = ctx.end();
+
+    // Check if reached the end of the range:
+    if (it != end && *it != '}') {
+      throw format_error("invalid format");
+    }
+
+    // Return an iterator past the end of the parsed range:
+    return it;
+  }
+
+  // Formats the std::error_code
+  template <typename FormatContext>
+  auto format(const libp2p::regression::Stats::Event &ev,
+              FormatContext &ctx) const -> decltype(ctx.out()) {
+    // ctx.out() is an output iterator to write to.
+
+    switch (ev) {
+#define PRINT_EVENT(E)               \
+  case libp2p::regression::Stats::E: \
+    return soralog::fmt::format_to(ctx.out(), #E);
+      EVENTS(PRINT_EVENT)
+#undef PRINT_EVENT
+      default:
+        return soralog::fmt::format_to(ctx.out(), "<unknown>");
+    }
+  }
+};
+
+namespace libp2p::regression {
   class Node : public std::enable_shared_from_this<Node> {
    public:
     using Behavior = std::function<void(Node &node)>;

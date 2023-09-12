@@ -31,7 +31,7 @@ set(
 include(${CMAKE_CURRENT_LIST_DIR}/HunterGate.cmake)
 
 HunterGate(
-    URL  "https://github.com/qdrvm/hunter/archive/refs/tags/v0.23.257-qdrvm1.zip"
-    SHA1 "e6aee2a8086d749d19d31d587f1f19c750a820ea"
+    URL  https://github.com/qdrvm/hunter/archive/refs/tags/v0.23.257-qdrvm4.tar.gz
+    SHA1 da7f2ca25a1f79e809732175ab0b026f3ac89e39
     LOCAL
 )
