@@ -10,7 +10,7 @@
 #include <boost/outcome/success_failure.hpp>
 #include <boost/outcome/try.hpp>
 
-#include <soralog/common.hpp>
+#include <fmt/format.h>
 
 // To define OUTCOME_TRY macro, we will need to create OUTCOME_TRY_1 and
 // OUTCOME_TRY_2 depending on number of arguments
@@ -65,9 +65,73 @@ struct fmt::formatter<std::error_code> {
   template <typename FormatContext>
   auto format(const std::error_code &ec, FormatContext &ctx) const
       -> decltype(ctx.out()) {
-    // ctx.out() is an output iterator to write to.
+    const auto &message = ec.message();
+    return std::copy(message.begin(), message.end(), ctx.out());
+  }
+};
 
-    return soralog::fmt::format_to(ctx.out(), "{}", ec.message());
+template <>
+struct fmt::formatter<boost::system::error_code> {
+  // Parses format specifications. Must be empty
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) {
+    // Parse the presentation format and store it in the formatter:
+    auto it = ctx.begin(), end = ctx.end();
+
+    // Check if reached the end of the range:
+    if (it != end && *it != '}') {
+      throw format_error("invalid format");
+    }
+
+    // Return an iterator past the end of the parsed range:
+    return it;
+  }
+
+  // Formats the boost::system::error_code
+  template <typename FormatContext>
+  auto format(const boost::system::error_code &ec, FormatContext &ctx) const
+      -> decltype(ctx.out()) {
+    const auto &message = ec.message();
+    return std::copy(std::begin(message), std::end(message), ctx.out());
+  }
+};
+
+// Remove after it will be added to libp2p (will be happened compilation error)
+template <typename T>
+struct fmt::formatter<libp2p::outcome::success_type<T>> {
+  // Parses format specifications. Must be empty
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) {
+    // Parse the presentation format and store it in the formatter:
+    auto it = ctx.begin(), end = ctx.end();
+
+    // Check if reached the end of the range:
+    if (it != end && *it != '}') {
+      throw format_error("invalid format");
+    }
+
+    // Return an iterator past the end of the parsed range:
+    return it;
+  }
+
+  // Formats the success<non_void_type>
+  template <typename OutputIt>
+  typename std::enable_if_t<not std::is_void_v<T>, OutputIt> format_impl(
+      OutputIt out, const libp2p::outcome::success_type<T> &success) const {
+    return fmt::format_to(out, "{}", success.value());
+  }
+
+  // Formats the success<void>
+  template <typename OutputIt>
+  typename std::enable_if_t<std::is_void_v<T>, OutputIt> format_impl(
+      OutputIt out, const libp2p::outcome::success_type<void> &) const {
+    static constexpr string_view message("<success>");
+    return std::copy(std::begin(message), std::end(message), out);
+  }
+
+  // Formats the success<T>
+  template <typename FormatContext>
+  auto format(const libp2p::outcome::success_type<T> &success,
+              FormatContext &ctx) const -> decltype(ctx.out()) {
+    return format_impl(ctx.out(), success);
   }
 };
 
@@ -95,12 +159,13 @@ struct fmt::formatter<libp2p::outcome::result<Result, Failure>> {
 
     if (res.has_value()) {
       if constexpr (not std::is_void_v<Result>) {
-        return soralog::fmt::format_to(ctx.out(), "{}", res.value());
+        return fmt::format_to(ctx.out(), "{}", res.value());
       } else {
-        return soralog::fmt::format_to(ctx.out(), "<success>");
+        static constexpr string_view message("<success>");
+        return std::copy(std::begin(message), std::end(message), ctx.out());
       }
     } else {
-      return soralog::fmt::format_to(ctx.out(), "{}", res.error());
+      return fmt::format_to(ctx.out(), "{}", res.error());
     }
   }
 };

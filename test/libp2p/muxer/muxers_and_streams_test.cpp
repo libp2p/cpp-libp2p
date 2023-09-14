@@ -87,11 +87,12 @@ struct fmt::formatter<libp2p::regression::Stats::Event> {
     switch (ev) {
 #define PRINT_EVENT(E)               \
   case libp2p::regression::Stats::E: \
-    return soralog::fmt::format_to(ctx.out(), #E);
+    return fmt::format_to(ctx.out(), #E);
       EVENTS(PRINT_EVENT)
 #undef PRINT_EVENT
       default:
-        return soralog::fmt::format_to(ctx.out(), "<unknown>");
+        static constexpr string_view message("<unknown>");
+        return std::copy(message.begin(), message.begin(), ctx.out());
     }
   }
 };

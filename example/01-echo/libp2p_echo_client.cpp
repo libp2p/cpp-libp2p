@@ -51,7 +51,8 @@ int main(int argc, char *argv[]) {
       auto sz = static_cast<size_t>(n);
       jumbo_message.reserve(sz + 9);
       while (jumbo_message.size() < sz) {
-        jumbo_message.append(fmt::format("[{:08}]", jumbo_message.size() + 10));
+        jumbo_message.append(
+            fmt::format("[{:08}]", jumbo_message.size() + 10));
       }
       jumbo_message.resize(sz);
       message.swap(jumbo_message);

@@ -18,7 +18,7 @@ cmake_policy(SET CMP0135 NEW)
 
 include("cmake/Hunter/init.cmake")
 
-project(libp2p VERSION 0.1.14 LANGUAGES C CXX)
+project(libp2p VERSION 0.1.15 LANGUAGES C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

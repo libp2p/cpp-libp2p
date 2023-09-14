@@ -12,11 +12,7 @@
 
 namespace libp2p::log {
 
-  namespace fmt {
-    using namespace soralog::fmt;
-  }  // namespace fmt
-
-  /// Local logger with common prefix used to distinguish message source
+    /// Local logger with common prefix used to distinguish message source
   /// instances
   class SubLogger {
    public:
