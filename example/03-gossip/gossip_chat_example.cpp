@@ -97,8 +97,8 @@ int main(int argc, char *argv[]) {
 
   // make peer uri of local node
   auto local_address_str =
-      fmt::format("/ip4/{}/tcp/{}/p2p/{}", utility::getLocalIP(*io),
-                  options->port, host->getId().toBase58());
+      ::fmt::format("/ip4/{}/tcp/{}/p2p/{}", utility::getLocalIP(*io),
+                    options->port, host->getId().toBase58());
 
   // local address -> peer info
   auto peer_info = utility::str2peerInfo(local_address_str);

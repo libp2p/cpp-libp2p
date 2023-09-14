@@ -19,7 +19,7 @@ namespace {
 
   void forwardTestMessage(std::shared_ptr<g::LocalSubscriptions> subs,
                           g::TopicId topic, uint64_t seq) {
-    std::string body = fmt::format("{}:{}", seq, topic);
+    std::string body = ::fmt::format("{}:{}", seq, topic);
     auto msg = std::make_shared<g::TopicMessage>(testutil::randomPeerId(), seq,
                                                  g::fromString(body), topic);
     subs->forwardMessage(msg);

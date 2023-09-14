@@ -90,11 +90,11 @@ namespace libp2p::log {
       if constexpr (std::is_pointer_v<T>
                     and not std::is_same_v<T, const char *>) {
         auto ptr_as_int = reinterpret_cast<std::intptr_t>(instance);  // NOLINT
-        return fmt::format("{}({:x}): ", prefix, ptr_as_int);
+        return ::fmt::format("{}({:x}): ", prefix, ptr_as_int);
       } else if constexpr (std::is_integral_v<T> and sizeof(T) > 1) {
-        return fmt::format("{}#{}: ", prefix, instance);
+        return ::fmt::format("{}#{}: ", prefix, instance);
       } else {
-        return fmt::format("{}.{}: ", prefix, instance);
+        return ::fmt::format("{}.{}: ", prefix, instance);
       }
     }
 
