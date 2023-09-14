@@ -10,7 +10,7 @@
 #include <boost/outcome/success_failure.hpp>
 #include <boost/outcome/try.hpp>
 
-#include <soralog/common.hpp>
+#include <fmt/format.h>
 
 // To define OUTCOME_TRY macro, we will need to create OUTCOME_TRY_1 and
 // OUTCOME_TRY_2 depending on number of arguments
@@ -71,7 +71,7 @@ struct fmt::formatter<std::error_code> {
 };
 
 template <>
-struct ::fmt::formatter<boost::system::error_code> {
+struct fmt::formatter<boost::system::error_code> {
   // Parses format specifications. Must be empty
   constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) {
     // Parse the presentation format and store it in the formatter:
@@ -97,7 +97,7 @@ struct ::fmt::formatter<boost::system::error_code> {
 
 // Remove after it will be added to libp2p (will be happened compilation error)
 template <typename T>
-struct ::fmt::formatter<libp2p::outcome::success_type<T>> {
+struct fmt::formatter<libp2p::outcome::success_type<T>> {
   // Parses format specifications. Must be empty
   constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) {
     // Parse the presentation format and store it in the formatter:
@@ -116,7 +116,7 @@ struct ::fmt::formatter<libp2p::outcome::success_type<T>> {
   template <typename OutputIt>
   typename std::enable_if_t<not std::is_void_v<T>, OutputIt> format_impl(
       OutputIt out, const libp2p::outcome::success_type<T> &success) const {
-    return ::fmt::format_to(out, "{}", success.value());
+    return fmt::format_to(out, "{}", success.value());
   }
 
   // Formats the success<void>
@@ -159,13 +159,13 @@ struct fmt::formatter<libp2p::outcome::result<Result, Failure>> {
 
     if (res.has_value()) {
       if constexpr (not std::is_void_v<Result>) {
-        return soralog::fmt::format_to(ctx.out(), "{}", res.value());
+        return fmt::format_to(ctx.out(), "{}", res.value());
       } else {
         static constexpr string_view message("<success>");
         return std::copy(std::begin(message), std::end(message), ctx.out());
       }
     } else {
-      return soralog::fmt::format_to(ctx.out(), "{}", res.error());
+      return fmt::format_to(ctx.out(), "{}", res.error());
     }
   }
 };

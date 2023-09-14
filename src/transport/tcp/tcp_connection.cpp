@@ -298,7 +298,7 @@ namespace libp2p::transport {
       return convert(ec);
     }
 #ifndef NDEBUG
-    debug_str_ = ::fmt::format(
+    debug_str_ = fmt::format(
         "{} {} {}", local_multiaddress_->getStringAddress(),
         initiator_ ? "->" : "<-", remote_multiaddress_->getStringAddress());
 #endif

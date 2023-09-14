@@ -87,7 +87,7 @@ struct fmt::formatter<libp2p::regression::Stats::Event> {
     switch (ev) {
 #define PRINT_EVENT(E)               \
   case libp2p::regression::Stats::E: \
-    return soralog::fmt::format_to(ctx.out(), #E);
+    return fmt::format_to(ctx.out(), #E);
       EVENTS(PRINT_EVENT)
 #undef PRINT_EVENT
       default:
