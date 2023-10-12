@@ -136,7 +136,19 @@ namespace libp2p::connection {
                               libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     SL_TRACE(log_, "read some upto {} bytes", bytes);
-    ws_.async_read_some(asioBuffer(out), toAsioCbSize(std::move(cb)));
+    auto on_read = [weak{weak_from_this()}, out, cb{std::move(cb)}](
+                       boost::system::error_code ec, size_t n) mutable {
+      if (ec) {
+        cb(ec);
+      } else if (n != 0) {
+        cb(n);
+      } else if (auto self = weak.lock()) {
+        self->readSome(out, spanSize(out), std::move(cb));
+      } else {
+        cb(boost::system::errc::broken_pipe);
+      }
+    };
+    ws_.async_read_some(asioBuffer(out), std::move(on_read));
   }
 
   void WsConnection::write(gsl::span<const uint8_t> in,  //
