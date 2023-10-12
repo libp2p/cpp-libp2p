@@ -8,10 +8,9 @@
 
 #include <chrono>
 
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/peer_info.hpp>
-#include <libp2p/peer/protocol.hpp>
-#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/protocol/kademlia/content_id.hpp>
 #include <libp2p/protocol/kademlia/content_value.hpp>
 
@@ -21,7 +20,6 @@ namespace libp2p::protocol::kademlia {
 
   using peer::PeerId;
   using peer::PeerInfo;
-  using peer::ProtocolName;
 
   using Key = ContentId;
   using Value = ContentValue;

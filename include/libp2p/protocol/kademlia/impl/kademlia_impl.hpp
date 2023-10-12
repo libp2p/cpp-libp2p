@@ -128,7 +128,6 @@ namespace libp2p::protocol::kademlia {
 
     // --- Secondary ---
 
-    const ProtocolName &protocol_;
     const PeerId self_id_;
 
     // --- Auxiliary ---

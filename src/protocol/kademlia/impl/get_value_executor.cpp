@@ -145,7 +145,7 @@ namespace libp2p::protocol::kademlia {
           config_.connectionTimeout);
 
       host_->newStream(
-          peer_info, {config_.protocolId},
+          peer_info, config_.protocols,
           [holder](auto &&stream_res) {
             if (holder->first) {
               holder->second.cancel();
