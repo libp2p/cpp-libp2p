@@ -7,6 +7,7 @@
 #define LIBP2P_PROTOCOL_KADEMLIA_CONFIG
 
 #include <libp2p/outcome/outcome.hpp>
+#include <libp2p/peer/stream_protocols.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 
 namespace libp2p::protocol::kademlia {
@@ -51,10 +52,10 @@ namespace libp2p::protocol::kademlia {
     Config() = default;
 
     /**
-     * @returns kademlia protocol id
+     * @returns kademlia protocol ids
      * @note Default: "ipfs/kad/1.0"
      */
-    peer::ProtocolName protocolId = "/ipfs/kad/1.0.0";
+    StreamProtocols protocols = {"/ipfs/kad/1.0.0"};
 
     /**
      * True if application is not announce himself

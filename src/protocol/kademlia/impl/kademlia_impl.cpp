@@ -43,7 +43,6 @@ namespace libp2p::protocol::kademlia {
         scheduler_(std::move(scheduler)),
         bus_(std::move(bus)),
         random_generator_(std::move(random_generator)),
-        protocol_(config_.protocolId),
         self_id_(host_->getId()),
         log_("Kademlia", "kademlia") {
     BOOST_ASSERT(host_ != nullptr);
@@ -68,7 +67,7 @@ namespace libp2p::protocol::kademlia {
 
     // handle streams for observed protocol
     host_->setProtocolHandler(
-        {protocol_}, [wp = weak_from_this()](StreamAndProtocol stream) {
+        config_.protocols, [wp = weak_from_this()](StreamAndProtocol stream) {
           if (auto self = wp.lock()) {
             self->handleProtocol(std::move(stream));
           }
