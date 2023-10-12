@@ -5,6 +5,8 @@
 
 #include <libp2p/transport/tcp/tcp_connection.hpp>
 
+#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/transport/tcp/tcp_util.hpp>
 
 #define TRACE_ENABLED 0
@@ -218,9 +220,9 @@ namespace libp2p::transport {
 
   void TcpConnection::read(gsl::span<uint8_t> out, size_t bytes,
                            TcpConnection::ReadCallbackFunc cb) {
+    ambigousSize(out, bytes);
     TRACE("{} read {}", debug_str_, bytes);
-    boost::asio::async_read(socket_, detail::makeBuffer(out, bytes),
-                            closeOnError(*this, std::move(cb)));
+    readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
   void TcpConnection::readSome(gsl::span<uint8_t> out, size_t bytes,

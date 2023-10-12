@@ -17,7 +17,9 @@ namespace libp2p::layer {
 }  // namespace libp2p::layer
 
 namespace libp2p::connection {
-  class SslConnection final : public LayerConnection {
+  class SslConnection final
+      : public LayerConnection,
+        public std::enable_shared_from_this<SslConnection> {
    public:
     SslConnection(std::shared_ptr<boost::asio::io_context> io_context,
                   std::shared_ptr<LayerConnection> connection,
