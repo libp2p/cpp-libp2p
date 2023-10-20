@@ -48,7 +48,7 @@ namespace libp2p::protocol_muxer::multiselect {
       }
 
       SL_TRACE(log(), "received {}",
-               common::dumpBin(gsl::span<const uint8_t>(buffers.read)));
+               common::dumpBin(ConstSpanOfBytes(buffers.read)));
 
       completed(std::move(stream), cb, buffers);
     }
@@ -73,11 +73,11 @@ namespace libp2p::protocol_muxer::multiselect {
       assert(total_sz > kMaxVarintSize);
 
       SL_TRACE(log(), "read {}",
-               common::dumpBin(gsl::span<uint8_t>(buffers->read)));
+               common::dumpBin(MutSpanOfBytes(buffers->read)));
 
       size_t remaining_bytes = total_sz - kMaxVarintSize;
 
-      gsl::span<uint8_t> span(buffers->read);
+      MutSpanOfBytes span(buffers->read);
 
       // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
       span = span.subspan(kMaxVarintSize, remaining_bytes);
@@ -101,7 +101,7 @@ namespace libp2p::protocol_muxer::multiselect {
         return failed(stream, cb, ProtocolMuxer::Error::INTERNAL_ERROR);
       }
 
-      gsl::span<uint8_t> span(buffers->read);
+      MutSpanOfBytes span(buffers->read);
       span = span.first(kMaxVarintSize);
 
       stream->read(
@@ -129,7 +129,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
     assert(buffers->written.size() >= kMaxVarintSize);
 
-    gsl::span<const uint8_t> span(buffers->written);
+    ConstSpanOfBytes span(buffers->written);
 
     SL_TRACE(log(), "sending {}", common::dumpBin(span));
 

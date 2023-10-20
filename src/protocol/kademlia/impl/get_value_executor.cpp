@@ -9,11 +9,14 @@
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
 
+#include <libp2p/common/final_action.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/error.hpp>
 #include <libp2p/protocol/kademlia/impl/put_value_executor.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
+
+using libp2p::common::FinalAction;
 
 namespace libp2p::protocol::kademlia {
 
@@ -218,7 +221,7 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    gsl::final_action respawn([this] {
+    FinalAction respawn([this] {
       --requests_in_progress_;
       spawn();
     });
@@ -259,10 +262,8 @@ namespace libp2p::protocol::kademlia {
         auto add_addr_res =
             host_->getPeerRepository().getAddressRepository().upsertAddresses(
                 peer.info.id,
-                gsl::span(peer.info.addresses.data(),
-                          static_cast<
-                              gsl::span<const multi::Multiaddress>::index_type>(
-                              peer.info.addresses.size())),
+                std::span(peer.info.addresses.data(),
+                          peer.info.addresses.size()),
                 peer::ttl::kDay);
         if (not add_addr_res) {
           continue;

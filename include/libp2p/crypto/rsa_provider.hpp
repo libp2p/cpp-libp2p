@@ -6,7 +6,7 @@
 #ifndef LIBP2P_CRYPTO_RSA_PROVIDER_HPP
 #define LIBP2P_CRYPTO_RSA_PROVIDER_HPP
 
-#include <gsl/span>
+#include <libp2p/common/types.hpp>
 #include <libp2p/crypto/rsa_types.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -38,7 +38,7 @@ namespace libp2p::crypto::rsa {
      * @return signature as bytes sequence
      */
     virtual outcome::result<Signature> sign(
-        gsl::span<const uint8_t> message,
+        ConstSpanOfBytes message,
         const PrivateKey &private_key) const = 0;
 
     /**
@@ -48,7 +48,7 @@ namespace libp2p::crypto::rsa {
      * @param key - key for signature verifying
      * @return Result of the verification or error code
      */
-    virtual outcome::result<bool> verify(gsl::span<const uint8_t> message,
+    virtual outcome::result<bool> verify(ConstSpanOfBytes message,
                                          const Signature &signature,
                                          const PublicKey &key) const = 0;
 

@@ -72,17 +72,17 @@ namespace libp2p::connection {
     return outcome::success(own_peer_info_.addresses.front());
   }
 
-  void LoopbackStream::read(gsl::span<uint8_t> out, size_t bytes,
+  void LoopbackStream::read(MutSpanOfBytes out, size_t bytes,
                             libp2p::basic::Reader::ReadCallbackFunc cb) {
     read(out, bytes, std::move(cb), false);
   }
 
-  void LoopbackStream::readSome(gsl::span<uint8_t> out, size_t bytes,
+  void LoopbackStream::readSome(MutSpanOfBytes out, size_t bytes,
                                 libp2p::basic::Reader::ReadCallbackFunc cb) {
     read(out, bytes, std::move(cb), true);
   }
 
-  void LoopbackStream::write(gsl::span<const uint8_t> in, size_t bytes,
+  void LoopbackStream::write(ConstSpanOfBytes in, size_t bytes,
                              libp2p::basic::Writer::WriteCallbackFunc cb) {
     if (is_reset_) {
       return deferWriteCallback(Error::STREAM_RESET_BY_HOST, std::move(cb));
@@ -113,12 +113,12 @@ namespace libp2p::connection {
     }
   }
 
-  void LoopbackStream::writeSome(gsl::span<const uint8_t> in, size_t bytes,
+  void LoopbackStream::writeSome(ConstSpanOfBytes in, size_t bytes,
                                  libp2p::basic::Writer::WriteCallbackFunc cb) {
     write(in, bytes, std::move(cb));
   }
 
-  void LoopbackStream::read(gsl::span<uint8_t> out, size_t bytes,
+  void LoopbackStream::read(MutSpanOfBytes out, size_t bytes,
                             libp2p::basic::Reader::ReadCallbackFunc cb,
                             bool some) {
     if (is_reset_) {

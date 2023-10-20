@@ -179,7 +179,7 @@ namespace libp2p::basic {
   }
 
   void SchedulerImpl::DeferredCallbacks::processNonCancellableItems(
-      gsl::span<Item> items, const std::shared_ptr<Scheduler> &owner) {
+      std::span<Item> items, const std::shared_ptr<Scheduler> &owner) {
     for (const auto &item : items) {
       assert(item.cb);
       item.cb();
@@ -190,7 +190,7 @@ namespace libp2p::basic {
   }
 
   void SchedulerImpl::DeferredCallbacks::processCancellableItems(
-      gsl::span<uint64_t> items, const std::shared_ptr<Scheduler> &owner) {
+      std::span<uint64_t> items, const std::shared_ptr<Scheduler> &owner) {
     for (const auto &seq : items) {
       cancellable_.execute(seq);
 
@@ -221,7 +221,7 @@ namespace libp2p::basic {
         }
 
         if (++first_cursor >= current_nc_items_.size()) {
-          gsl::span<uint64_t> items(current_c_items_);
+          std::span<uint64_t> items(current_c_items_);
           processCancellableItems(items.subspan(ssize_t(second_cursor)), owner);
           break;
         }
@@ -233,7 +233,7 @@ namespace libp2p::basic {
         }
 
         if (++second_cursor >= current_c_items_.size()) {
-          gsl::span<Item> items(current_nc_items_);
+          std::span<Item> items(current_nc_items_);
           processNonCancellableItems(items.subspan(ssize_t(first_cursor)),
                                      owner);
           break;

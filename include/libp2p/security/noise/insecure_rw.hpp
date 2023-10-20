@@ -38,7 +38,7 @@ namespace libp2p::security::noise {
     void read(ReadCallbackFunc cb) override;
 
     /// write the given bytes to the network
-    void write(gsl::span<const uint8_t> buffer,
+    void write(ConstSpanOfBytes buffer,
                basic::Writer::WriteCallbackFunc cb) override;
 
    private:

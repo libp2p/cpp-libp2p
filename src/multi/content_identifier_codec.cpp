@@ -78,7 +78,7 @@ namespace libp2p::multi {
 
   std::vector<uint8_t> ContentIdentifierCodec::encodeCIDV0(
       const void *byte_buffer, size_t sz) {
-    auto digest_res = crypto::sha256(gsl::make_span(
+    auto digest_res = crypto::sha256(std::span(
         reinterpret_cast<const uint8_t *>(byte_buffer), sz));  // NOLINT
     BOOST_ASSERT(digest_res.has_value());
 
@@ -105,7 +105,7 @@ namespace libp2p::multi {
   }
 
   outcome::result<ContentIdentifier> ContentIdentifierCodec::decode(
-      gsl::span<const uint8_t> bytes) {
+      ConstSpanOfBytes bytes) {
     if (bytes.size() == 34 and bytes[0] == 0x12 and bytes[1] == 0x20) {
       OUTCOME_TRY(hash, Multihash::createFromBytes(bytes));
       return ContentIdentifier(ContentIdentifier::Version::V0,

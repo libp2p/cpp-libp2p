@@ -27,7 +27,8 @@
  * THE SOFTWARE.
  **/
 
-#include <gsl/span>
+#include <span>
+
 #include <libp2p/multi/multibase_codec/codecs/base32.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base_error.hpp>
 
@@ -66,10 +67,10 @@ namespace libp2p::multi::detail {
     return shift_right(byte, -offset);
   }
 
-  int encode_sequence(gsl::span<const uint8_t> plain, gsl::span<char> coded,
+  int encode_sequence(ConstSpanOfBytes plain, std::span<char> coded,
                       Base32Mode mode) {
     for (int block = 0; block < 8; block++) {
-      int byte = get_byte(block);
+      size_t byte = get_byte(block);
       int bit = get_bit(block);
 
       if (byte >= plain.size()) {
@@ -96,8 +97,8 @@ namespace libp2p::multi::detail {
 
     for (size_t i = 0, j = 0; i < bytes.size(); i += 5, j += 8) {
       int n = encode_sequence(
-          gsl::make_span(&bytes[i], std::min<size_t>(bytes.size() - i, 5)),
-          gsl::make_span(&result[j], 8), mode);
+          std::span(&bytes[i], std::min<size_t>(bytes.size() - i, 5)),
+          std::span(&result[j], 8), mode);
       if (n < 8) {
         result.erase(result.end() - (8 - n), result.end());
       }
@@ -130,11 +131,11 @@ namespace libp2p::multi::detail {
     return decoded_ch;
   }
 
-  outcome::result<int> decode_sequence(gsl::span<const char> coded,
-                                       gsl::span<uint8_t> plain,
+  outcome::result<int> decode_sequence(std::span<const char> coded,
+                                       MutSpanOfBytes plain,
                                        Base32Mode mode) {
     plain[0] = 0;
-    for (int block = 0; block < 8; block++) {
+    for (size_t block = 0; block < 8; block++) {
       int bit = get_bit(block);
       int byte = get_byte(block);
 
@@ -166,9 +167,9 @@ namespace libp2p::multi::detail {
     for (size_t i = 0, j = 0; i < string.size(); i += 8, j += 5) {
       OUTCOME_TRY(n,
                   decode_sequence(
-                      gsl::make_span(&string[i],
+                      std::span(&string[i],
                                      std::min<size_t>(string.size() - i, 8)),
-                      gsl::make_span(&result[j], 5), mode));
+                      std::span(&result[j], 5), mode));
       if (n < 5) {
         result.erase(result.end() - (5 - n), result.end());
       }

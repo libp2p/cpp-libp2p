@@ -46,13 +46,13 @@ namespace libp2p::security::noise {
     outcome::result<std::vector<uint8_t>> generateHandshakePayload(
         const DHKey &keypair);
 
-    void sendHandshakeMessage(gsl::span<const uint8_t> payload,
+    void sendHandshakeMessage(ConstSpanOfBytes payload,
                               basic::Writer::WriteCallbackFunc cb);
 
     void readHandshakeMessage(basic::MessageReadWriter::ReadCallbackFunc cb);
 
     outcome::result<void> handleRemoteHandshakePayload(
-        gsl::span<const uint8_t> payload);
+        ConstSpanOfBytes payload);
 
     outcome::result<void> runHandshake();
 

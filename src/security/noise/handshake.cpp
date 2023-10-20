@@ -106,7 +106,7 @@ namespace libp2p::security::noise {
     return noise_marshaller_->marshal(payload);
   }
 
-  void Handshake::sendHandshakeMessage(gsl::span<const uint8_t> payload,
+  void Handshake::sendHandshakeMessage(ConstSpanOfBytes payload,
                                        basic::Writer::WriteCallbackFunc cb) {
     IO_OUTCOME_TRY(write_result, handshake_state_->writeMessage({}, payload),
                    cb);
@@ -137,7 +137,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<void> Handshake::handleRemoteHandshakePayload(
-      gsl::span<const uint8_t> payload) {
+      ConstSpanOfBytes payload) {
     OUTCOME_TRY(remote_payload, noise_marshaller_->unmarshal(payload));
     OUTCOME_TRY(remote_id, peer::PeerId::fromPublicKey(remote_payload.second));
     auto &&handy_payload = remote_payload.first;

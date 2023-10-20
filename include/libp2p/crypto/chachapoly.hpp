@@ -8,7 +8,7 @@
 
 #include <array>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
@@ -31,8 +31,8 @@ namespace libp2p::crypto::chachapoly {
      * @return ciphertext bytes
      */
     virtual outcome::result<ByteArray> encrypt(
-        const Nonce &nonce, gsl::span<const uint8_t> plaintext,
-        gsl::span<const uint8_t> aad) = 0;
+        const Nonce &nonce, ConstSpanOfBytes plaintext,
+        ConstSpanOfBytes aad) = 0;
 
     /**
      * Does authenticated decryption with associated data (AEAD)
@@ -42,8 +42,8 @@ namespace libp2p::crypto::chachapoly {
      * @return plaintext bytes
      */
     virtual outcome::result<ByteArray> decrypt(
-        const Nonce &nonce, gsl::span<const uint8_t> ciphertext,
-        gsl::span<const uint8_t> aad) = 0;
+        const Nonce &nonce, ConstSpanOfBytes ciphertext,
+        ConstSpanOfBytes aad) = 0;
 
     /**
      * Convert 64-bit integer to 12-bit long byte sequence with four zero bytes

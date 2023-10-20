@@ -20,14 +20,14 @@ namespace libp2p::connection {
     MOCK_METHOD0(close, outcome::result<void>(void));
 
     MOCK_METHOD3(read,
-                 void(gsl::span<uint8_t>, size_t, Reader::ReadCallbackFunc));
+                 void(MutSpanOfBytes, size_t, Reader::ReadCallbackFunc));
     MOCK_METHOD3(readSome,
-                 void(gsl::span<uint8_t>, size_t, Reader::ReadCallbackFunc));
+                 void(MutSpanOfBytes, size_t, Reader::ReadCallbackFunc));
     MOCK_METHOD3(write,
-                 void(gsl::span<const uint8_t>, size_t,
+                 void(ConstSpanOfBytes, size_t,
                       Writer::WriteCallbackFunc));
     MOCK_METHOD3(writeSome,
-                 void(gsl::span<const uint8_t>, size_t,
+                 void(ConstSpanOfBytes, size_t,
                       Writer::WriteCallbackFunc));
 
     MOCK_METHOD2(deferReadCallback,

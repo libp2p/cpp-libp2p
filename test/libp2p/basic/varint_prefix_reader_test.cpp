@@ -6,7 +6,11 @@
 #include <gtest/gtest.h>
 
 #include <libp2p/basic/varint_prefix_reader.hpp>
+#include <libp2p/common/types.hpp>
 #include <libp2p/multi/uvarint.hpp>
+
+using libp2p::ConstSpanOfBytes;
+using libp2p::RangeOfBytes;
 
 TEST(VarintPrefixReader, VarintReadOneByOne) {
   using libp2p::multi::UVarint;
@@ -42,7 +46,7 @@ TEST(VarintPrefixReader, VarintReadFromBuffer) {
   using libp2p::multi::UVarint;
   using libp2p::basic::VarintPrefixReader;
 
-  auto test = [](uint64_t x, gsl::span<const uint8_t> &buffer) {
+  auto test = [](uint64_t x, ConstSpanOfBytes &buffer) {
     VarintPrefixReader reader;
     auto s = reader.consume(buffer);
     EXPECT_EQ(s, VarintPrefixReader::kReady);
@@ -61,7 +65,7 @@ TEST(VarintPrefixReader, VarintReadFromBuffer) {
     numbers.push_back(x);
   }
 
-  gsl::span<const uint8_t> span(buffer);
+  ConstSpanOfBytes span(buffer);
   for (auto n : numbers) {
     test(n, span);
   }
@@ -72,7 +76,7 @@ TEST(VarintPrefixReader, VarintReadPartial) {
   using libp2p::multi::UVarint;
   using libp2p::basic::VarintPrefixReader;
 
-  auto test = [](VarintPrefixReader &reader, gsl::span<const uint8_t> &buffer,
+  auto test = [](VarintPrefixReader &reader, ConstSpanOfBytes &buffer,
                  std::vector<uint64_t> &results) {
     if (reader.consume(buffer) == VarintPrefixReader::kReady) {
       results.push_back(reader.value());
@@ -95,8 +99,8 @@ TEST(VarintPrefixReader, VarintReadPartial) {
   results.reserve(numbers.size());
 
   VarintPrefixReader reader;
-  gsl::span<const uint8_t> whole_buffer(buffer);
-  static constexpr ssize_t kFragmentSize = 5;
+  ConstSpanOfBytes whole_buffer(buffer);
+  static constexpr size_t kFragmentSize = 5;
   while (reader.state() == VarintPrefixReader::kUnderflow
          && !whole_buffer.empty()) {
     auto fragment_size = kFragmentSize;

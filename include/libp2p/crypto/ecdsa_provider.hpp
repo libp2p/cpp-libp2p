@@ -6,7 +6,7 @@
 #ifndef LIBP2P_CRYPTO_ECDSA_PROVIDER_HPP
 #define LIBP2P_CRYPTO_ECDSA_PROVIDER_HPP
 
-#include <gsl/span>
+#include <libp2p/common/types.hpp>
 #include <libp2p/crypto/ecdsa_types.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -32,7 +32,7 @@ namespace libp2p::crypto::ecdsa {
      * @param privateKey - key for signing
      * @return ECDSA signature or error code
      */
-    virtual outcome::result<Signature> sign(gsl::span<const uint8_t> message,
+    virtual outcome::result<Signature> sign(ConstSpanOfBytes message,
                                             const PrivateKey &key) const = 0;
 
     /**
@@ -51,7 +51,7 @@ namespace libp2p::crypto::ecdsa {
      * @param publicKey - key for signature verifying
      * @return Result of the verification or error code
      */
-    virtual outcome::result<bool> verify(gsl::span<const uint8_t> message,
+    virtual outcome::result<bool> verify(ConstSpanOfBytes message,
                                          const Signature &signature,
                                          const PublicKey &public_key) const = 0;
 

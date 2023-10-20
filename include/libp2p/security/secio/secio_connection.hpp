@@ -95,19 +95,19 @@ namespace libp2p::connection {
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 
-    void read(gsl::span<uint8_t> out, size_t bytes,
+    void read(MutSpanOfBytes out, size_t bytes,
               ReadCallbackFunc cb) override;
 
-    void readSome(gsl::span<uint8_t> out, size_t bytes,
+    void readSome(MutSpanOfBytes out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(gsl::span<const uint8_t> in, size_t bytes,
+    void write(ConstSpanOfBytes in, size_t bytes,
                WriteCallbackFunc cb) override;
 
-    void writeSome(gsl::span<const uint8_t> in, size_t bytes,
+    void writeSome(ConstSpanOfBytes in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
@@ -128,7 +128,7 @@ namespace libp2p::connection {
      * @param out - buffer to be filled with decrypted bytes
      * @param bytes - amount of bytes to pop from internal buffer
      */
-    void popUserData(gsl::span<uint8_t> out, size_t bytes);
+    void popUserData(MutSpanOfBytes out, size_t bytes);
 
     /**
      * Computes MAC digest to sign a message using local peer key
@@ -136,7 +136,7 @@ namespace libp2p::connection {
      * @return signature bytes or an error if happened
      */
     outcome::result<common::ByteArray> macLocal(
-        gsl::span<const uint8_t> message) const;
+        ConstSpanOfBytes message) const;
 
     /**
      * Computes MAC digest to sign a message using remote peer key
@@ -144,7 +144,7 @@ namespace libp2p::connection {
      * @return signature bytes or an error if happened
      */
     outcome::result<common::ByteArray> macRemote(
-        gsl::span<const uint8_t> message) const;
+        ConstSpanOfBytes message) const;
 
     /// Returns MAC digest size in bytes for the chosen algorithm
     outcome::result<size_t> macSize() const;

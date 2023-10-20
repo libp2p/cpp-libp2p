@@ -6,10 +6,15 @@
 #include <libp2p/crypto/x25519_provider/x25519_provider_impl.hpp>
 
 #include <openssl/evp.h>
+
+#include <libp2p/common/final_action.hpp>
 #include <libp2p/crypto/common_functions.hpp>
 #include <libp2p/crypto/error.hpp>
 
 namespace libp2p::crypto::x25519 {
+
+  using libp2p::common::FinalAction;
+
   outcome::result<Keypair> X25519ProviderImpl::generate() const {
     constexpr auto FAILED{KeyGeneratorError::KEY_GENERATION_FAILED};
 
@@ -17,7 +22,7 @@ namespace libp2p::crypto::x25519 {
     if (nullptr == pctx) {
       return FAILED;
     }
-    auto free_pctx = gsl::finally([pctx] { EVP_PKEY_CTX_free(pctx); });
+    FinalAction free_pctx([pctx] { EVP_PKEY_CTX_free(pctx); });
 
     if (1 != EVP_PKEY_keygen_init(pctx)) {
       return FAILED;
@@ -27,7 +32,7 @@ namespace libp2p::crypto::x25519 {
     if (1 != EVP_PKEY_keygen(pctx, &pkey)) {
       return FAILED;
     }
-    auto free_pkey = gsl::finally([pkey] { EVP_PKEY_free(pkey); });
+    FinalAction free_pkey([pkey] { EVP_PKEY_free(pkey); });
 
     Keypair keypair{};
     size_t priv_len{keypair.private_key.size()};
@@ -75,7 +80,7 @@ namespace libp2p::crypto::x25519 {
     if (nullptr == pctx) {
       return FAILED;
     }
-    auto free_pctx = gsl::finally([pctx] { EVP_PKEY_CTX_free(pctx); });
+    FinalAction free_pctx([pctx] { EVP_PKEY_CTX_free(pctx); });
 
     if (1 != EVP_PKEY_derive_init(pctx)) {
       return FAILED;

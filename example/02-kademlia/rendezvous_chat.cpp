@@ -42,7 +42,7 @@ class Session : public std::enable_shared_from_this<Session> {
     }
 
     stream_->readSome(
-        gsl::span(incoming_->data(), static_cast<ssize_t>(incoming_->size())),
+        std::span(incoming_->data(), static_cast<ssize_t>(incoming_->size())),
         incoming_->size(),
         [self = shared_from_this()](libp2p::outcome::result<size_t> result) {
           if (not result) {
@@ -68,7 +68,7 @@ class Session : public std::enable_shared_from_this<Session> {
     }
 
     stream_->write(
-        gsl::span(buffer->data(), static_cast<ssize_t>(buffer->size())),
+        std::span(buffer->data(), static_cast<ssize_t>(buffer->size())),
         buffer->size(),
         [self = shared_from_this(),
          buffer](libp2p::outcome::result<size_t> result) {

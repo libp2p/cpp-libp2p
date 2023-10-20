@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/hash_type.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -49,7 +49,7 @@ namespace libp2p::multi {
      * @return result with the multihash in case of success
      */
     static outcome::result<Multihash> create(HashType type,
-                                             gsl::span<const uint8_t> hash);
+                                             ConstSpanOfBytes hash);
 
     /**
      * @brief Creates a multihash from a string, which represents a binary
@@ -70,7 +70,7 @@ namespace libp2p::multi {
      * @return result with the multihash in case of success
      */
     static outcome::result<Multihash> createFromBytes(
-        gsl::span<const uint8_t> b);
+        ConstSpanOfBytes b);
 
     /**
      * @return the info about hash type
@@ -80,7 +80,7 @@ namespace libp2p::multi {
     /**
      * @return the hash stored in this multihash
      */
-    gsl::span<const uint8_t> getHash() const;
+    ConstSpanOfBytes getHash() const;
 
     /**
      * @return a string with hexadecimal representation of the multihash
@@ -115,7 +115,7 @@ namespace libp2p::multi {
      * @param type - the info about the hash type
      * @param hash - a binary buffer with the hash
      */
-    Multihash(HashType type, gsl::span<const uint8_t> hash);
+    Multihash(HashType type, ConstSpanOfBytes hash);
 
     /**
      * Contains a one byte hash type, a one byte hash length, and the stored
@@ -129,7 +129,7 @@ namespace libp2p::multi {
       HashType type;
       size_t std_hash; ///< Hash for unordered containers
 
-      Data(HashType t, gsl::span<const uint8_t> h);
+      Data(HashType t, ConstSpanOfBytes h);
     };
 
     const Data& data() const;

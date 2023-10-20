@@ -23,7 +23,7 @@ namespace libp2p::protocol_muxer::multiselect {
     ~Multiselect() override = default;
 
     /// Implements ProtocolMuxer API
-    void selectOneOf(gsl::span<const peer::ProtocolName> protocols,
+    void selectOneOf(std::span<const peer::ProtocolName> protocols,
                      std::shared_ptr<basic::ReadWriter> connection,
                      bool is_initiator, bool negotiate_multiselect,
                      ProtocolHandlerFunc cb) override;

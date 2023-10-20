@@ -10,14 +10,13 @@
 #include <vector>
 
 #include <boost/optional.hpp>
-#include <gsl/span>
+
+#include <libp2p/common/types.hpp>
 
 namespace libp2p::basic {
 
   class ReadBuffer {
    public:
-    using BytesRef = gsl::span<uint8_t>;
-
     static constexpr size_t kDefaultAllocGranularity = 65536;
 
     ReadBuffer(const ReadBuffer &) = delete;
@@ -38,13 +37,21 @@ namespace libp2p::basic {
     }
 
     /// Adds new data to the buffer
-    void add(BytesRef bytes);
+    void add(ConstSpanOfBytes bytes);
+
+    void add(const RangeOfBytes auto &bytes) {
+      add(ConstSpanOfBytes(bytes));
+    }
 
     /// Returns # of bytes actually copied into out
-    size_t consume(BytesRef &out);
+    size_t consume(MutSpanOfBytes out);
 
     /// Returns # of bytes actually copied into out
-    size_t addAndConsume(BytesRef in, BytesRef &out);
+    size_t addAndConsume(ConstSpanOfBytes in, MutSpanOfBytes out);
+
+    size_t addAndConsume(const RangeOfBytes auto &in, MutSpanOfBytes out) {
+      return addAndConsume(ConstSpanOfBytes(in), out);
+    }
 
     /// Clears and deallocates
     void clear();
@@ -53,7 +60,7 @@ namespace libp2p::basic {
     using Fragment = std::vector<uint8_t>;
 
     /// Consumes all data into out
-    size_t consumeAll(BytesRef &out);
+    size_t consumeAll(MutSpanOfBytes out);
 
     /// Consumes the 1st fragment or part of it
     size_t consumePart(uint8_t *out, size_t n);
@@ -78,8 +85,6 @@ namespace libp2p::basic {
   /// data up to expected size
   class FixedBufferCollector {
    public:
-    using CBytesRef = gsl::span<const uint8_t>;
-    using BytesRef = gsl::span<uint8_t>;
     using Buffer = std::vector<uint8_t>;
 
     static constexpr size_t kDefaultMemoryThreshold = 65536;
@@ -96,8 +101,8 @@ namespace libp2p::basic {
     /// returns data if filled up to expected size or empty option if not,
     /// modifies data (cuts head)
     /// Data returned is valid until next expect() call && data is live
-    boost::optional<CBytesRef> add(CBytesRef &data);
-    boost::optional<BytesRef> add(BytesRef &data);
+    boost::optional<ConstSpanOfBytes> add(ConstSpanOfBytes &data);
+    boost::optional<MutSpanOfBytes> add(MutSpanOfBytes &data);
 
     /// Resets to initial state
     void reset();

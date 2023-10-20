@@ -184,7 +184,7 @@ namespace libp2p::connection {
     original_connection_->deferWriteCallback(ec, std::move(cb));
   }
 
-  inline void SecioConnection::popUserData(gsl::span<uint8_t> out,
+  inline void SecioConnection::popUserData(MutSpanOfBytes out,
                                            size_t bytes) {
     auto to{out.begin()};
     for (size_t read = 0; read < bytes; ++read) {
@@ -194,7 +194,7 @@ namespace libp2p::connection {
     }
   }
 
-  void SecioConnection::read(gsl::span<uint8_t> out, size_t bytes,
+  void SecioConnection::read(MutSpanOfBytes out, size_t bytes,
                              basic::Reader::ReadCallbackFunc cb) {
     // TODO(107): Reentrancy
 
@@ -204,7 +204,7 @@ namespace libp2p::connection {
       return;
     }
 
-    // the line below is due to gsl::span.size() has signed return type
+    // the line below is due to std::span.size() has signed return type
     size_t out_size{out.empty() ? 0u : static_cast<size_t>(out.size())};
     if (out_size < bytes) {
       log_->error(
@@ -240,7 +240,7 @@ namespace libp2p::connection {
     readNextMessage(cb_wrapper);
   }
 
-  void SecioConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
+  void SecioConnection::readSome(MutSpanOfBytes out, size_t bytes,
                                  basic::Reader::ReadCallbackFunc cb) {
     // TODO(107): Reentrancy
 
@@ -315,15 +315,15 @@ namespace libp2p::connection {
                          read_frame_bytes);
                 IO_OUTCOME_TRY(mac_size, self->macSize(), cb)
                 const auto data_size{frame_len - mac_size};
-                auto data_span{gsl::make_span(
+                auto data_span{std::span(
                     buffer->data(),
                     // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
                     data_size)};
                 auto mac_span{
                     // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-                    gsl::make_span(*buffer).subspan(data_size, mac_size)};
+                    std::span(*buffer).subspan(data_size, mac_size)};
                 IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb)
-                if (gsl::make_span(remote_mac) != mac_span) {
+                if (ConstSpanOfBytes(remote_mac) != ConstSpanOfBytes(mac_span)) {
                   self->log_->error(
                       "Signature does not validate for the received frame");
                   cb(Error::INVALID_MAC);
@@ -343,7 +343,7 @@ namespace libp2p::connection {
         });
   }
 
-  void SecioConnection::write(gsl::span<const uint8_t> in, size_t bytes,
+  void SecioConnection::write(ConstSpanOfBytes in, size_t bytes,
                               basic::Writer::WriteCallbackFunc cb) {
     // TODO(107): Reentrancy
 
@@ -379,7 +379,7 @@ namespace libp2p::connection {
     original_connection_->write(frame_buffer, frame_buffer.size(), cb_wrapper);
   }
 
-  void SecioConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
+  void SecioConnection::writeSome(ConstSpanOfBytes in, size_t bytes,
                                   basic::Writer::WriteCallbackFunc cb) {
     write(in, bytes, std::move(cb));
   }
@@ -405,13 +405,13 @@ namespace libp2p::connection {
   }
 
   outcome::result<common::ByteArray> SecioConnection::macLocal(
-      gsl::span<const uint8_t> message) const {
+      ConstSpanOfBytes message) const {
     return hmac_provider_->calculateDigest(
         hash_type_, local_stretched_key_.mac_key, message);
   }
 
   outcome::result<common::ByteArray> SecioConnection::macRemote(
-      gsl::span<const uint8_t> message) const {
+      ConstSpanOfBytes message) const {
     return hmac_provider_->calculateDigest(
         hash_type_, remote_stretched_key_.mac_key, message);
   }

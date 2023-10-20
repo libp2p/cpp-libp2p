@@ -11,7 +11,7 @@
 
 namespace libp2p::protocol::kademlia {
   ContentId makeKeySha256(std::string_view str) {
-    auto digest_res = crypto::sha256(gsl::make_span(
+    auto digest_res = crypto::sha256(std::span(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         reinterpret_cast<const uint8_t *>(str.data()),
         static_cast<ptrdiff_t>(str.size())));

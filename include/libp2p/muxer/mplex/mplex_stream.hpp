@@ -50,19 +50,19 @@ namespace libp2p::connection {
 
     ~MplexStream() override = default;
 
-    void read(gsl::span<uint8_t> out, size_t bytes,
+    void read(MutSpanOfBytes out, size_t bytes,
               ReadCallbackFunc cb) override;
 
-    void readSome(gsl::span<uint8_t> out, size_t bytes,
+    void readSome(MutSpanOfBytes out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(gsl::span<const uint8_t> in, size_t bytes,
+    void write(ConstSpanOfBytes in, size_t bytes,
                WriteCallbackFunc cb) override;
 
-    void writeSome(gsl::span<const uint8_t> in, size_t bytes,
+    void writeSome(ConstSpanOfBytes in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
@@ -89,7 +89,7 @@ namespace libp2p::connection {
 
    private:
     struct Reading {
-      gsl::span<uint8_t> out;
+      MutSpanOfBytes out;
       size_t bytes;
       ReadCallbackFunc cb;
       bool some;
@@ -97,7 +97,7 @@ namespace libp2p::connection {
 
     void readDone(outcome::result<size_t> res);
     bool readTry();
-    void read(gsl::span<uint8_t> out, size_t bytes, ReadCallbackFunc cb,
+    void read(MutSpanOfBytes out, size_t bytes, ReadCallbackFunc cb,
               bool some);
 
     std::weak_ptr<MplexedConnection> connection_;
@@ -138,7 +138,7 @@ namespace libp2p::connection {
      * @param data received
      * @param data_size - size of the received data
      */
-    outcome::result<void> commitData(gsl::span<const uint8_t> data,
+    outcome::result<void> commitData(ConstSpanOfBytes data,
                                      size_t data_size);
   };
 }  // namespace libp2p::connection

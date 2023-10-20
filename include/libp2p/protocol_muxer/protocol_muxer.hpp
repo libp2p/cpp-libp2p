@@ -8,7 +8,7 @@
 
 #include <memory>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/peer/protocol.hpp>
 
@@ -44,7 +44,7 @@ namespace libp2p::protocol_muxer {
      * @param cb - callback for handling negotiated protocol
      * @return chosen protocol or error
      */
-    virtual void selectOneOf(gsl::span<const peer::ProtocolName> protocols,
+    virtual void selectOneOf(std::span<const peer::ProtocolName> protocols,
                              std::shared_ptr<basic::ReadWriter> connection,
                              bool is_initiator, bool negotiate_multistream,
                              ProtocolHandlerFunc cb) = 0;

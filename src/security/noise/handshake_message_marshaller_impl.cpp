@@ -68,7 +68,7 @@ namespace libp2p::security::noise {
 
   outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>>
   HandshakeMessageMarshallerImpl::unmarshal(
-      gsl::span<const uint8_t> msg_bytes) const {
+      ConstSpanOfBytes msg_bytes) const {
     protobuf::NoiseHandshakePayload proto_msg;
     if (not proto_msg.ParseFromArray(msg_bytes.data(),
                                      static_cast<int>(msg_bytes.size()))) {

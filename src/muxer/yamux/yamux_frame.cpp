@@ -103,7 +103,7 @@ namespace libp2p::connection {
         YamuxFrame::Flag::NONE, stream_id, window_delta);
   }
 
-  boost::optional<YamuxFrame> parseFrame(gsl::span<const uint8_t> frame_bytes) {
+  boost::optional<YamuxFrame> parseFrame(ConstSpanOfBytes frame_bytes) {
     if (frame_bytes.size() < static_cast<int>(YamuxFrame::kHeaderLength)) {
       return {};
     }

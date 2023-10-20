@@ -55,7 +55,7 @@ namespace libp2p::security::noise {
     connection_->read(*buffer_, kLengthPrefixSize, std::move(read_cb));
   }
 
-  void InsecureReadWriter::write(gsl::span<const uint8_t> buffer,
+  void InsecureReadWriter::write(ConstSpanOfBytes buffer,
                                  basic::Writer::WriteCallbackFunc cb) {
     if (buffer.size() > static_cast<int64_t>(kMaxMsgLen)) {
       return cb(std::errc::message_size);

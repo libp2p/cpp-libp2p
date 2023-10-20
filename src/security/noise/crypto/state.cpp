@@ -42,7 +42,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::noise, Error, e) {
 
 namespace libp2p::security::noise {
 
-  outcome::result<Key32> bytesToKey32(gsl::span<const uint8_t> key) {
+  outcome::result<Key32> bytesToKey32(ConstSpanOfBytes key) {
     Key32 result;
     if (static_cast<size_t>(key.size()) != result.size()) {
       return Error::WRONG_KEY32_SIZE;
@@ -60,16 +60,16 @@ namespace libp2p::security::noise {
         nonce_{0} {}
 
   outcome::result<ByteArray> CipherState::encrypt(
-      gsl::span<const uint8_t> precompiled_out,
-      gsl::span<const uint8_t> plaintext, gsl::span<const uint8_t> aad) {
+      ConstSpanOfBytes precompiled_out,
+      ConstSpanOfBytes plaintext, ConstSpanOfBytes aad) {
     auto enc_res = cipher_->encrypt(precompiled_out, nonce_, plaintext, aad);
     ++nonce_;
     return enc_res;
   }
 
   outcome::result<ByteArray> CipherState::decrypt(
-      gsl::span<const uint8_t> precompiled_out,
-      gsl::span<const uint8_t> ciphertext, gsl::span<const uint8_t> aad) {
+      ConstSpanOfBytes precompiled_out,
+      ConstSpanOfBytes ciphertext, ConstSpanOfBytes aad) {
     auto dec_res = cipher_->decrypt(precompiled_out, nonce_, ciphertext, aad);
     ++nonce_;
     return dec_res;
@@ -97,7 +97,7 @@ namespace libp2p::security::noise {
       : CipherState(std::move(cipher_suite), Key32{}) {}
 
   outcome::result<void> SymmetricState::initializeSymmetric(
-      gsl::span<const uint8_t> handshake_name) {
+      ConstSpanOfBytes handshake_name) {
     if (handshake_name.empty()) {
       return Error::EMPTY_HANDSHAKE_NAME;
     }
@@ -116,7 +116,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<void> SymmetricState::mixKey(
-      gsl::span<const uint8_t> dh_output) {
+      ConstSpanOfBytes dh_output) {
     nonce_ = 0;
     has_key_ = true;
     OUTCOME_TRY(
@@ -129,7 +129,7 @@ namespace libp2p::security::noise {
     return outcome::success();
   }
 
-  outcome::result<void> SymmetricState::mixHash(gsl::span<const uint8_t> data) {
+  outcome::result<void> SymmetricState::mixHash(ConstSpanOfBytes data) {
     auto hasher = cipher_suite_->hash();
     OUTCOME_TRY(hasher->write(hash_));
     OUTCOME_TRY(hasher->write(data));
@@ -139,7 +139,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<void> SymmetricState::mixKeyAndHash(
-      gsl::span<const uint8_t> data) {
+      ConstSpanOfBytes data) {
     OUTCOME_TRY(
         hkdf_res,
         hkdf(cipher_suite_->hash()->hashType(), 3, chaining_key_, data));
@@ -154,8 +154,8 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<ByteArray> SymmetricState::encryptAndHash(
-      gsl::span<const uint8_t> precompiled_out,
-      gsl::span<const uint8_t> plaintext) {
+      ConstSpanOfBytes precompiled_out,
+      ConstSpanOfBytes plaintext) {
     if (not has_key_) {
       ByteArray result(precompiled_out.size() + plaintext.size());
       OUTCOME_TRY(mixHash(plaintext));
@@ -168,7 +168,7 @@ namespace libp2p::security::noise {
     OUTCOME_TRY(ciphertext, encrypt(precompiled_out, plaintext, hash_));
     auto ct_size = ciphertext.size();
     auto po_size = precompiled_out.size();
-    if (po_size > static_cast<int64_t>(ct_size)) {
+    if (po_size > ct_size) {
       // the same gonna happen in go-libp2p, moreover it is not anyhow checked
       // and handled there!
       return Error::INTERNAL_ERROR;
@@ -180,8 +180,8 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<ByteArray> SymmetricState::decryptAndHash(
-      gsl::span<const uint8_t> precompiled_out,
-      gsl::span<const uint8_t> ciphertext) {
+      ConstSpanOfBytes precompiled_out,
+      ConstSpanOfBytes ciphertext) {
     if (not has_key_) {
       ByteArray result(precompiled_out.size() + ciphertext.size());
       OUTCOME_TRY(mixHash(ciphertext));
@@ -237,14 +237,14 @@ namespace libp2p::security::noise {
         local_static_keypair_{std::move(local_static_keypair)} {}
 
   HandshakeStateConfig &HandshakeStateConfig::setPrologue(
-      gsl::span<const uint8_t> prologue) {
+      ConstSpanOfBytes prologue) {
     ByteArray data(prologue.begin(), prologue.end());
     prologue_ = std::move(data);
     return *this;
   }
 
   HandshakeStateConfig &HandshakeStateConfig::setPresharedKey(
-      gsl::span<const uint8_t> key, int placement) {
+      ConstSpanOfBytes key, int placement) {
     ByteArray data(key.begin(), key.end());
     preshared_key_ = std::move(data);
     preshared_key_placement_ = placement;
@@ -258,14 +258,14 @@ namespace libp2p::security::noise {
   }
 
   HandshakeStateConfig &HandshakeStateConfig::setRemoteStaticPubkey(
-      gsl::span<const uint8_t> key) {
+      ConstSpanOfBytes key) {
     ByteArray data(key.begin(), key.end());
     remote_static_pubkey_ = std::move(data);
     return *this;
   }
 
   HandshakeStateConfig &HandshakeStateConfig::setRemoteEphemeralPubkey(
-      gsl::span<const uint8_t> key) {
+      ConstSpanOfBytes key) {
     ByteArray data(key.begin(), key.end());
     remote_ephemeral_pubkey_ = std::move(data);
     return *this;
@@ -350,8 +350,8 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<HandshakeState::MessagingResult> HandshakeState::writeMessage(
-      gsl::span<const uint8_t> precompiled_out,
-      gsl::span<const uint8_t> payload) {
+      ConstSpanOfBytes precompiled_out,
+      ConstSpanOfBytes payload) {
     OUTCOME_TRY(isInitialized());
     if (not should_write_) {
       return Error::UNEXPECTED_WRITE_CALL;
@@ -476,8 +476,8 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<HandshakeState::MessagingResult> HandshakeState::readMessage(
-      gsl::span<const uint8_t> precompiled_out,
-      gsl::span<const uint8_t> message) {
+      ConstSpanOfBytes precompiled_out,
+      ConstSpanOfBytes message) {
     OUTCOME_TRY(isInitialized());
     if (should_write_) {
       return Error::UNEXPECTED_READ_CALL;
@@ -558,7 +558,7 @@ namespace libp2p::security::noise {
       return Error::REMOTE_KEY_ALREADY_SET;
     }
     auto decrypted = symmetric_state_->decryptAndHash(
-        {}, gsl::make_span(message.data(), expected));
+        {}, std::span(message.data(), expected));
     if (decrypted.has_error()) {
       symmetric_state_->rollback();
       return decrypted.error();

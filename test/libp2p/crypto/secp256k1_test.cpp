@@ -5,9 +5,11 @@
 #include <algorithm>
 
 #include <gtest/gtest.h>
+#include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include "libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp"
 #include "testutil/outcome.hpp"
 
+using libp2p::MutSpanOfBytes;
 using libp2p::crypto::secp256k1::PrivateKey;
 using libp2p::crypto::secp256k1::PublicKey;
 using libp2p::crypto::secp256k1::Secp256k1ProviderImpl;
@@ -49,7 +51,7 @@ class Secp256k1ProviderTest : public ::testing::Test {
   PrivateKey sample_private_key_{SAMPLE_PRIVATE_KEY_BYTES};
   Signature sample_signature_{SAMPLE_SIGNATURE_BYTES};
   std::vector<uint8_t> data_{SAMPLE_MESSAGE_BYTES};
-  gsl::span<uint8_t> message_{data_.data(), static_cast<int32_t>(data_.size())};
+  MutSpanOfBytes message_{data_};
   Secp256k1ProviderImpl provider_;
 };
 

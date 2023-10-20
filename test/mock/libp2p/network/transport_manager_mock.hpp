@@ -16,8 +16,8 @@ namespace libp2p::network {
     ~TransportManagerMock() override = default;
 
     MOCK_METHOD1(add, void(TransportSPtr));
-    MOCK_METHOD1(add, void(gsl::span<const TransportSPtr>));
-    MOCK_CONST_METHOD0(getAll, gsl::span<const TransportSPtr>());
+    MOCK_METHOD1(add, void(std::span<const TransportSPtr>));
+    MOCK_CONST_METHOD0(getAll, std::span<const TransportSPtr>());
     MOCK_METHOD0(clear, void());
     MOCK_METHOD1(findBest, TransportSPtr(const multi::Multiaddress &));
   };

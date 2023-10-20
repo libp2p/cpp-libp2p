@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/layer/layer_adaptor.hpp>
 #include <libp2p/muxer/muxer_adaptor.hpp>
 #include <libp2p/peer/peer_id.hpp>

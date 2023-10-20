@@ -8,7 +8,7 @@
 
 #include <array>
 
-#include <gsl/span>
+#include <libp2p/common/types.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto::ed25519 {
@@ -47,7 +47,7 @@ namespace libp2p::crypto::ed25519 {
      * @return signature as bytes sequence
      */
     virtual outcome::result<Signature> sign(
-        gsl::span<const uint8_t> message,
+        ConstSpanOfBytes message,
         const PrivateKey &private_key) const = 0;
 
     /**
@@ -57,7 +57,7 @@ namespace libp2p::crypto::ed25519 {
      * @param public_key - public key bytes
      * @return - true when signature is valid, false - otherwise
      */
-    virtual outcome::result<bool> verify(gsl::span<const uint8_t> message,
+    virtual outcome::result<bool> verify(ConstSpanOfBytes message,
                                          const Signature &signature,
                                          const PublicKey &public_key) const = 0;
 

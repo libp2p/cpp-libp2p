@@ -29,7 +29,7 @@ namespace libp2p::security::secio {
         const ProposeMessage &msg) const override;
 
     outcome::result<ProposeMessage> unmarshal(
-        gsl::span<const uint8_t> msg_bytes) const override;
+        ConstSpanOfBytes msg_bytes) const override;
   };
 
 }  // namespace libp2p::security::secio

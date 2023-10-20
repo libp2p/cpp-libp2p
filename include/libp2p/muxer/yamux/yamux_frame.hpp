@@ -7,7 +7,7 @@
 #define LIBP2P_YAMUX_FRAME_HPP
 
 #include <boost/optional.hpp>
-#include <gsl/span>
+#include <span>
 
 #include <libp2p/common/types.hpp>
 
@@ -139,7 +139,7 @@ namespace libp2p::connection {
    * @param frame_bytes to be converted
    * @return frame object, if convertation is successful, none otherwise
    */
-  boost::optional<YamuxFrame> parseFrame(gsl::span<const uint8_t> frame_bytes);
+  boost::optional<YamuxFrame> parseFrame(ConstSpanOfBytes frame_bytes);
 }  // namespace libp2p::connection
 
 #endif  // LIBP2P_YAMUX_FRAME_HPP

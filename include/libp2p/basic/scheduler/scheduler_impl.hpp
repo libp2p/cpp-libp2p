@@ -11,7 +11,7 @@
 #include <vector>
 
 #include <boost/optional.hpp>
-#include <gsl/span>
+#include <span>
 
 #include <libp2p/basic/scheduler.hpp>
 
@@ -137,11 +137,11 @@ namespace libp2p::basic {
       /// Processes non-cancellable current items, in absense of cancellable
       /// ones. Called from onTimer()
       static void processNonCancellableItems(
-          gsl::span<Item> items, const std::shared_ptr<Scheduler> &owner);
+          std::span<Item> items, const std::shared_ptr<Scheduler> &owner);
 
       /// Processes cancellable current items, in absense of non-cancellable
       /// ones. Called from onTimer()
-      void processCancellableItems(gsl::span<uint64_t> items,
+      void processCancellableItems(std::span<uint64_t> items,
                                    const std::shared_ptr<Scheduler> &owner);
 
       /// Processes both cancellable and non-cancellable items in proper order

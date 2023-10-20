@@ -20,7 +20,7 @@ namespace libp2p::protocol_muxer::multiselect {
     constexpr size_t kMaxCacheSize = 8;
   }  // namespace
 
-  void Multiselect::selectOneOf(gsl::span<const peer::ProtocolName> protocols,
+  void Multiselect::selectOneOf(std::span<const peer::ProtocolName> protocols,
                                 std::shared_ptr<basic::ReadWriter> connection,
                                 bool is_initiator, bool negotiate_multiselect,
                                 ProtocolHandlerFunc cb) {

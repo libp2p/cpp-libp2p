@@ -91,12 +91,12 @@ namespace libp2p::connection {
     ping_timeout_handle_.cancel();
   }
 
-  void WsConnection::onPong(gsl::span<const uint8_t> payload) {
-    auto expected = gsl::make_span(
+  void WsConnection::onPong(ConstSpanOfBytes payload) {
+    auto expected = ConstSpanOfBytes(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         reinterpret_cast<const uint8_t *>(&ping_counter_),
         sizeof(ping_counter_));
-    if (payload == expected) {
+    if (std::equal(payload.begin(), payload.end(), expected.begin())) {
       SL_DEBUG(log_, "Correct pong has received for ping");
       ping_timeout_handle_.cancel();
       std::ignore = ping_handle_.reschedule(config_.ping_interval);
@@ -125,14 +125,14 @@ namespace libp2p::connection {
     return connection_->close();
   }
 
-  void WsConnection::read(gsl::span<uint8_t> out, size_t bytes,
+  void WsConnection::read(MutSpanOfBytes out, size_t bytes,
                           libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     SL_TRACE(log_, "read {} bytes", bytes);
     readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
-  void WsConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
+  void WsConnection::readSome(MutSpanOfBytes out, size_t bytes,
                               libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     SL_TRACE(log_, "read some upto {} bytes", bytes);
@@ -143,7 +143,7 @@ namespace libp2p::connection {
       } else if (n != 0) {
         cb(n);
       } else if (auto self = weak.lock()) {
-        self->readSome(out, spanSize(out), std::move(cb));
+        self->readSome(out, out.size(), std::move(cb));
       } else {
         cb(boost::system::errc::broken_pipe);
       }
@@ -151,7 +151,7 @@ namespace libp2p::connection {
     ws_.async_read_some(asioBuffer(out), std::move(on_read));
   }
 
-  void WsConnection::write(gsl::span<const uint8_t> in,  //
+  void WsConnection::write(ConstSpanOfBytes in,  //
                            size_t bytes,                 //
                            libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
@@ -159,7 +159,7 @@ namespace libp2p::connection {
     ws_.async_write(asioBuffer(in), toAsioCbSize(std::move(cb)));
   }
 
-  void WsConnection::writeSome(gsl::span<const uint8_t> in,  //
+  void WsConnection::writeSome(ConstSpanOfBytes in,  //
                                size_t bytes,                 //
                                libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);

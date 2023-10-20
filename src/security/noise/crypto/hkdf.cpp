@@ -20,8 +20,8 @@ namespace libp2p::security::noise {
   using HMAC = crypto::hmac::HmacProviderCtrImpl;
 
   outcome::result<HKDFResult> hkdf(
-      HashType hash_type, size_t outputs, gsl::span<const uint8_t> chaining_key,
-      gsl::span<const uint8_t> input_key_material) {
+      HashType hash_type, size_t outputs, ConstSpanOfBytes chaining_key,
+      ConstSpanOfBytes input_key_material) {
     if (0 == outputs or outputs > 3) {
       return HKDFError::ILLEGAL_OUTPUTS_NUMBER;
     }

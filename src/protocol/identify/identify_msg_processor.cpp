@@ -9,12 +9,17 @@
 
 #include <generated/protocol/identify/protobuf/identify.pb.h>
 #include <boost/assert.hpp>
+
 #include <libp2p/basic/protobuf_message_read_writer.hpp>
+#include <libp2p/common/types.hpp>
 #include <libp2p/network/network.hpp>
 #include <libp2p/peer/address_repository.hpp>
 #include <libp2p/protocol/identify/utils.hpp>
 
+using libp2p::ConstSpanOfBytes;
+
 namespace {
+
   inline std::string fromMultiaddrToString(
       const libp2p::multi::Multiaddress &ma) {
     auto const &addr = ma.getBytesAddress();
@@ -23,7 +28,7 @@ namespace {
 
   inline libp2p::outcome::result<libp2p::multi::Multiaddress>
   fromStringToMultiaddr(const std::string &addr) {
-    return libp2p::multi::Multiaddress::create(gsl::span<const uint8_t>(
+    return libp2p::multi::Multiaddress::create(ConstSpanOfBytes(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-narrowing-conversions)
         reinterpret_cast<const uint8_t *>(addr.data()), addr.size()));
   }
@@ -316,7 +321,7 @@ namespace libp2p::protocol {
   }
 
   bool IdentifyMessageProcessor::hasConsistentTransport(
-      const multi::Multiaddress &ma, gsl::span<const multi::Multiaddress> mas) {
+      const multi::Multiaddress &ma, std::span<const multi::Multiaddress> mas) {
     auto ma_protos = ma.getProtocols();
     return std::any_of(mas.begin(), mas.end(),
                        [&ma_protos](const auto &ma_from_mas) {
@@ -325,7 +330,7 @@ namespace libp2p::protocol {
   }
 
   void IdentifyMessageProcessor::consumeListenAddresses(
-      gsl::span<const std::string> addresses_strings,
+      std::span<const std::string> addresses_strings,
       const peer::PeerId &peer_id) {
     if (addresses_strings.empty()) {
       return;

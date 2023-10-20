@@ -44,20 +44,20 @@ namespace libp2p::protocol::kademlia {
         return Message::Error::INVALID_CONNECTEDNESS;
       }
 
-      auto peer_id_res = PeerId::fromBytes(gsl::span<const uint8_t>(
+      auto peer_id_res = PeerId::fromBytes(ConstSpanOfBytes(
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
           reinterpret_cast<const uint8_t *>(src.id().data()),
-          gsl::narrow<ptrdiff_t>(src.id().size())));
+          src.id().size()));
       if (!peer_id_res) {
         return Message::Error::INVALID_PEER_ID;
       }
 
       std::vector<multi::Multiaddress> addresses;
       for (const auto &addr : src.addrs()) {
-        auto res = multi::Multiaddress::create(gsl::span<const uint8_t>(
+        auto res = multi::Multiaddress::create(ConstSpanOfBytes(
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
             reinterpret_cast<const uint8_t *>(addr.data()),
-            gsl::narrow<ptrdiff_t>(addr.size())));
+            addr.size()));
         if (!res) {
           return Message::Error::INVALID_ADDRESSES;
         }
@@ -107,7 +107,7 @@ namespace libp2p::protocol::kademlia {
   bool Message::deserialize(const void *data, size_t sz) {
     clear();
     pb::Message pb_msg;
-    if (!pb_msg.ParseFromArray(data, gsl::narrow<int>(sz))) {
+    if (!pb_msg.ParseFromArray(data, static_cast<int>(sz))) {
       error_message_ = "Invalid protobuf data";
       return false;
     }
@@ -177,7 +177,7 @@ namespace libp2p::protocol::kademlia {
     buffer.resize(prefix_sz + msg_sz);
     memcpy(buffer.data(), varint_vec.data(), prefix_sz);
     return pb_msg.SerializeToArray(buffer.data() + prefix_sz,  // NOLINT
-                                   gsl::narrow<int>(msg_sz));
+                                   static_cast<int>(msg_sz));
   }
 
   void Message::selfAnnounce(PeerInfo self) {

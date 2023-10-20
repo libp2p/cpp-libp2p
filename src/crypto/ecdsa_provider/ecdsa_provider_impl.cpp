@@ -8,11 +8,13 @@
 #include <openssl/err.h>
 #include <openssl/obj_mac.h>
 #include <openssl/x509.h>
-#include <gsl/gsl_util>
-#include <gsl/span>
+#include <libp2p/common/final_action.hpp>
+#include <span>
 #include "libp2p/crypto/common_functions.hpp"
 #include "libp2p/crypto/error.hpp"
 #include "libp2p/crypto/sha/sha256.hpp"
+
+using libp2p::common::FinalAction;
 
 namespace libp2p::crypto::ecdsa {
   outcome::result<KeyPair> EcdsaProviderImpl::generate() const {
@@ -34,8 +36,7 @@ namespace libp2p::crypto::ecdsa {
     OUTCOME_TRY(ec_key, convertBytesToEcKey(key, d2i_ECPrivateKey));
     const BIGNUM *private_num = EC_KEY_get0_private_key(ec_key.get());
     EC_POINT *ec_point = EC_POINT_new(EC_KEY_get0_group(ec_key.get()));
-    auto free_ec_point =
-        gsl::finally([ec_point]() { EC_POINT_free(ec_point); });
+    FinalAction free_ec_point([ec_point]() { EC_POINT_free(ec_point); });
     if (EC_POINT_mul(EC_KEY_get0_group(ec_key.get()), ec_point, private_num,
                      nullptr, nullptr, nullptr)
         != 1) {
@@ -50,7 +51,7 @@ namespace libp2p::crypto::ecdsa {
   }
 
   outcome::result<Signature> EcdsaProviderImpl::sign(
-      gsl::span<const uint8_t> message, const PrivateKey &key) const {
+      ConstSpanOfBytes message, const PrivateKey &key) const {
     OUTCOME_TRY(digest, sha256(message));
     return signPrehashed(digest, key);
   }
@@ -62,9 +63,9 @@ namespace libp2p::crypto::ecdsa {
     return std::move(signature);
   }
 
-  outcome::result<bool> EcdsaProviderImpl::verify(
-      gsl::span<const uint8_t> message, const Signature &signature,
-      const PublicKey &key) const {
+  outcome::result<bool> EcdsaProviderImpl::verify(ConstSpanOfBytes message,
+                                                  const Signature &signature,
+                                                  const PublicKey &key) const {
     OUTCOME_TRY(digest, sha256(message));
     return verifyPrehashed(digest, signature, key);
   }

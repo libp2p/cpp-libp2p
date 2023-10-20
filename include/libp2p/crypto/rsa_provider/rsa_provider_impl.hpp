@@ -25,10 +25,10 @@ namespace libp2p::crypto::rsa {
         const PrivateKey &private_key) const override;
 
     outcome::result<Signature> sign(
-        gsl::span<const uint8_t> message,
+        ConstSpanOfBytes message,
         const PrivateKey &private_key) const override;
 
-    outcome::result<bool> verify(gsl::span<const uint8_t> message,
+    outcome::result<bool> verify(ConstSpanOfBytes message,
                                  const Signature &signature,
                                  const PublicKey &key) const override;
 

@@ -9,7 +9,7 @@
 #include <functional>
 #include <vector>
 
-#include <gsl/span>
+#include <libp2p/common/types.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::basic {
@@ -32,7 +32,7 @@ namespace libp2p::basic {
      * pointer, or having buffer as part of some class/struct, and using
      * enable_shared_from_this()
      */
-    virtual void read(gsl::span<uint8_t> out, size_t bytes,
+    virtual void read(MutSpanOfBytes out, size_t bytes,
                       ReadCallbackFunc cb) = 0;
 
     /**
@@ -47,7 +47,7 @@ namespace libp2p::basic {
      * pointer, or having buffer as part of some class/struct, and using
      * enable_shared_from_this()
      */
-    virtual void readSome(gsl::span<uint8_t> out, size_t bytes,
+    virtual void readSome(MutSpanOfBytes out, size_t bytes,
                           ReadCallbackFunc cb) = 0;
 
     /**

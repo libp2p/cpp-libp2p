@@ -37,6 +37,7 @@ using namespace libp2p::multi;
 using testing::_;
 using testing::NiceMock;
 using testing::Return;
+using testing::Truly;
 
 using libp2p::outcome::failure;
 using libp2p::outcome::success;
@@ -179,8 +180,13 @@ TEST_F(UpgraderTest, UpgradeLayersNotInitiator) {
 TEST_F(UpgraderTest, UpgradeSecureInitiator) {
   setAllOutbound();
 
+  auto if_sec_proto = [&](std::span<const ProtocolName> actual) {
+    auto expected = std::span<const ProtocolName>(security_protos_);
+    return std::equal(actual.begin(), actual.end(), expected.begin());
+  };
+
   EXPECT_CALL(*muxer_,
-              selectOneOf(gsl::span<const ProtocolName>(security_protos_),
+              selectOneOf(Truly(if_sec_proto),
                           std::static_pointer_cast<ReadWriter>(layer2_conn_),
                           true, true, _))
       .WillOnce(Arg4CallbackWithArg(security_protos_[0]));
@@ -200,8 +206,13 @@ TEST_F(UpgraderTest, UpgradeSecureInitiator) {
 TEST_F(UpgraderTest, UpgradeSecureNotInitiator) {
   setAllInbound();
 
+  auto if_sec_proto = [&](std::span<const ProtocolName> actual) {
+    auto expected = std::span<const ProtocolName>(security_protos_);
+    return std::equal(actual.begin(), actual.end(), expected.begin());
+  };
+
   EXPECT_CALL(*muxer_,
-              selectOneOf(gsl::span<const ProtocolName>(security_protos_),
+              selectOneOf(Truly(if_sec_proto),
                           std::static_pointer_cast<ReadWriter>(layer2_conn_),
                           false, true, _))
       .WillOnce(Arg4CallbackWithArg(success(security_protos_[1])));
@@ -220,8 +231,13 @@ TEST_F(UpgraderTest, UpgradeSecureNotInitiator) {
 TEST_F(UpgraderTest, UpgradeSecureFail) {
   setAllInbound();
 
+  auto if_sec_proto = [&](std::span<const ProtocolName> actual) {
+    auto expected = std::span<const ProtocolName>(security_protos_);
+    return std::equal(actual.begin(), actual.end(), expected.begin());
+  };
+
   EXPECT_CALL(*muxer_,
-              selectOneOf(gsl::span<const ProtocolName>(security_protos_),
+              selectOneOf(Truly(if_sec_proto),
                           std::static_pointer_cast<ReadWriter>(layer2_conn_),
                           false, true, _))
       .WillOnce(Arg4CallbackWithArg(failure(std::error_code())));
@@ -234,8 +250,13 @@ TEST_F(UpgraderTest, UpgradeSecureFail) {
 TEST_F(UpgraderTest, UpgradeMux) {
   setAllOutbound();
 
+  auto if_muxer_proto = [&](std::span<const ProtocolName> actual) {
+    auto expected = std::span<const ProtocolName>(muxer_protos_);
+    return std::equal(actual.begin(), actual.end(), expected.begin());
+  };
+
   EXPECT_CALL(*muxer_,
-              selectOneOf(gsl::span<const ProtocolName>(muxer_protos_),
+              selectOneOf(Truly(if_muxer_proto),
                           std::static_pointer_cast<ReadWriter>(sec_conn_), true,
                           true, _))
       .WillOnce(Arg4CallbackWithArg(success(muxer_protos_[0])));
@@ -253,8 +274,13 @@ TEST_F(UpgraderTest, UpgradeMux) {
 TEST_F(UpgraderTest, UpgradeMuxFail) {
   setAllOutbound();
 
+  auto if_muxer_proto = [&](std::span<const ProtocolName> actual) {
+    auto expected = std::span<const ProtocolName>(muxer_protos_);
+    return std::equal(actual.begin(), actual.end(), expected.begin());
+  };
+
   EXPECT_CALL(*muxer_,
-              selectOneOf(gsl::span<const ProtocolName>(muxer_protos_),
+              selectOneOf(Truly(if_muxer_proto),
                           std::static_pointer_cast<ReadWriter>(sec_conn_), true,
                           true, _))
       .WillOnce(Arg4CallbackWithArg(failure(std::error_code())));

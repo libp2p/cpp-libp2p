@@ -15,7 +15,7 @@ namespace libp2p::basic {
 
   class WriteQueue {
    public:
-    using DataRef = gsl::span<const uint8_t>;
+    using DataRef = ConstSpanOfBytes;
 
     static constexpr size_t kDefaultSizeLimit = 64 * 1024 * 1024;
 
@@ -59,7 +59,7 @@ namespace libp2p::basic {
     /// Data item w/callback
     struct Data {
       // data reference
-      gsl::span<const uint8_t> data;
+      ConstSpanOfBytes data;
 
       // allow to send large messages partially
       size_t acknowledged;

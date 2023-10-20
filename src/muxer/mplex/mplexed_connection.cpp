@@ -122,22 +122,22 @@ namespace libp2p::connection {
     return !is_active_ || connection_->isClosed();
   }
 
-  void MplexedConnection::read(gsl::span<uint8_t> out, size_t bytes,
+  void MplexedConnection::read(MutSpanOfBytes out, size_t bytes,
                                ReadCallbackFunc cb) {
     connection_->read(out, bytes, std::move(cb));
   }
 
-  void MplexedConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
+  void MplexedConnection::readSome(MutSpanOfBytes out, size_t bytes,
                                    ReadCallbackFunc cb) {
     connection_->readSome(out, bytes, std::move(cb));
   }
 
-  void MplexedConnection::write(gsl::span<const uint8_t> in, size_t bytes,
+  void MplexedConnection::write(ConstSpanOfBytes in, size_t bytes,
                                 WriteCallbackFunc cb) {
     connection_->write(in, bytes, std::move(cb));
   }
 
-  void MplexedConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
+  void MplexedConnection::writeSome(ConstSpanOfBytes in, size_t bytes,
                                     WriteCallbackFunc cb) {
     connection_->writeSome(in, bytes, std::move(cb));
   }
@@ -336,7 +336,7 @@ namespace libp2p::connection {
   void MplexedConnection::closeSession() {
     for (auto &[_, stream] : streams_) {
       // all that stuff to be refactored
-      (void)stream->commitData(gsl::span<const uint8_t>{}, 0);
+      (void)stream->commitData(ConstSpanOfBytes{}, 0);
     }
 
     auto close_res = close();
@@ -347,7 +347,7 @@ namespace libp2p::connection {
   }
 
   void MplexedConnection::streamWrite(StreamId stream_id,
-                                      gsl::span<const uint8_t> in, size_t bytes,
+                                      ConstSpanOfBytes in, size_t bytes,
                                       basic::Writer::WriteCallbackFunc cb) {
     common::ByteArray data{in.begin(), in.begin() + bytes};
     auto data_frame = createFrameBytes(stream_id.initiator

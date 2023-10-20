@@ -143,18 +143,17 @@ namespace libp2p::multi::converters {
     return std::move(hex);
   }
 
-  outcome::result<std::string> bytesToMultiaddrString(
-      gsl::span<const uint8_t> bytes) {
+  outcome::result<std::string> bytesToMultiaddrString(ConstSpanOfBytes bytes) {
     std::string results;
 
-    ssize_t lastpos = 0;
+    size_t lastpos = 0;
 
     // set up variables
     const std::string hex = hex_upper(bytes);
 
     // Process Hex String
     while (lastpos < bytes.size() * 2) {
-      gsl::span<const uint8_t> pid_bytes{bytes};
+      ConstSpanOfBytes pid_bytes{bytes};
       auto protocol_int = UVarint(pid_bytes.subspan(lastpos / 2)).toUInt64();
       Protocol const *protocol =
           ProtocolList::get(static_cast<Protocol::Code>(protocol_int));
@@ -163,8 +162,7 @@ namespace libp2p::multi::converters {
       }
 
       if (protocol->code != Protocol::Code::P2P) {
-        lastpos += static_cast<ssize_t>(
-            UVarint::calculateSize(pid_bytes.subspan(lastpos / 2)) * 2);
+        lastpos += (UVarint::calculateSize(pid_bytes.subspan(lastpos / 2)) * 2);
         std::string address;
         address = hex.substr(lastpos, protocol->size / 4);
 
@@ -296,6 +294,6 @@ namespace libp2p::multi::converters {
   }
 
   outcome::result<std::string> bytesToMultiaddrString(const ByteArray &bytes) {
-    return bytesToMultiaddrString(gsl::span<const uint8_t>(bytes));
+    return bytesToMultiaddrString(ConstSpanOfBytes(bytes));
   }
 }  // namespace libp2p::multi::converters

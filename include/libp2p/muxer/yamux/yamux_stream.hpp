@@ -22,7 +22,7 @@ namespace libp2p::connection {
 
     /// Stream transfers data to connection
     virtual void writeStreamData(uint32_t stream_id,
-                                 gsl::span<const uint8_t> data, bool some) = 0;
+                                 ConstSpanOfBytes data, bool some) = 0;
 
     /// Stream acknowledges received bytes
     virtual void ackReceivedBytes(uint32_t stream_id, uint32_t bytes) = 0;
@@ -51,19 +51,19 @@ namespace libp2p::connection {
                 YamuxStreamFeedback &feedback, uint32_t stream_id,
                 size_t maximum_window_size, size_t write_queue_limit);
 
-    void read(gsl::span<uint8_t> out, size_t bytes,
+    void read(MutSpanOfBytes out, size_t bytes,
               ReadCallbackFunc cb) override;
 
-    void readSome(gsl::span<uint8_t> out, size_t bytes,
+    void readSome(MutSpanOfBytes out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(gsl::span<const uint8_t> in, size_t bytes,
+    void write(ConstSpanOfBytes in, size_t bytes,
                WriteCallbackFunc cb) override;
 
-    void writeSome(gsl::span<const uint8_t> in, size_t bytes,
+    void writeSome(ConstSpanOfBytes in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
@@ -99,7 +99,7 @@ namespace libp2p::connection {
 
     /// Called from Connection. New data received
     /// Returns kRemoveStreamAndSendRst on window overflow
-    DataFromConnectionResult onDataReceived(gsl::span<uint8_t> bytes);
+    DataFromConnectionResult onDataReceived(MutSpanOfBytes bytes);
 
     /// Called from Connection on FIN received
     /// Returns kRemoveStream if FIN was sent from this side
@@ -119,7 +119,7 @@ namespace libp2p::connection {
     void doClose(std::error_code ec, bool notify_read_side);
 
     /// Called by read*() functions
-    void doRead(gsl::span<uint8_t> out, size_t bytes, ReadCallbackFunc cb,
+    void doRead(MutSpanOfBytes out, size_t bytes, ReadCallbackFunc cb,
                 bool some);
 
     /// Completes the read operation if any, clears read state
@@ -130,7 +130,7 @@ namespace libp2p::connection {
     void doWrite();
 
     /// Called by write*() functions
-    void doWrite(gsl::span<const uint8_t> in, size_t bytes,
+    void doWrite(ConstSpanOfBytes in, size_t bytes,
                  WriteCallbackFunc cb, bool some);
 
     /// Clears close callback state
@@ -186,7 +186,7 @@ namespace libp2p::connection {
     ReadCallbackFunc read_cb_;
 
     /// TODO: get rid of this. client's read buffer
-    gsl::span<uint8_t> external_read_buffer_;
+    MutSpanOfBytes external_read_buffer_;
 
     /// Size of message being read
     size_t read_message_size_ = 0;

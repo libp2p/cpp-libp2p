@@ -20,18 +20,18 @@ namespace libp2p::multi {
     } while (number != 0);
   }
 
-  UVarint::UVarint(gsl::span<const uint8_t> varint_bytes)
+  UVarint::UVarint(ConstSpanOfBytes varint_bytes)
       : bytes_(varint_bytes.begin(),
                // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
                varint_bytes.begin() + calculateSize(varint_bytes)) {}
 
-  UVarint::UVarint(gsl::span<const uint8_t> varint_bytes, size_t varint_size)
+  UVarint::UVarint(ConstSpanOfBytes varint_bytes, size_t varint_size)
       : bytes_(varint_bytes.begin(),
                // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
                varint_bytes.begin() + varint_size) {}
 
   boost::optional<UVarint> UVarint::create(
-      gsl::span<const uint8_t> varint_bytes) {
+      ConstSpanOfBytes varint_bytes) {
     size_t size = calculateSize(varint_bytes);
     if (size > 0) {
       return UVarint{varint_bytes, size};
@@ -49,8 +49,8 @@ namespace libp2p::multi {
     return res;
   }
 
-  gsl::span<const uint8_t> UVarint::toBytes() const & {
-    return gsl::make_span(
+  ConstSpanOfBytes UVarint::toBytes() const & {
+    return std::span(
         bytes_.data(),
         // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
         bytes_.size());
@@ -86,7 +86,7 @@ namespace libp2p::multi {
     return toUInt64() < r.toUInt64();
   }
 
-  size_t UVarint::calculateSize(gsl::span<const uint8_t> varint_bytes) {
+  size_t UVarint::calculateSize(ConstSpanOfBytes varint_bytes) {
     size_t size = 0;
     size_t shift = 0;
     constexpr size_t capacity = sizeof(uint64_t) * 8;

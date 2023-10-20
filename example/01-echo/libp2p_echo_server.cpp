@@ -7,7 +7,6 @@
 #include <memory>
 #include <string>
 
-#include <gsl/multi_span>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/host/basic_host.hpp>
 #include <libp2p/injector/host_injector.hpp>
@@ -64,7 +63,7 @@ int main(int argc, char **argv) {
   using libp2p::common::operator""_unhex;
 
   auto has_arg = [&](std::string_view arg) {
-    auto args = gsl::make_span(argv, argc).subspan(1);
+    auto args = std::span(argv, argc).subspan(1);
     return std::find(args.begin(), args.end(), arg) != args.end();
   };
 

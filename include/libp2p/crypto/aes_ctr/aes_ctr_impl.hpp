@@ -9,7 +9,8 @@
 #include <libp2p/crypto/aes_ctr.hpp>
 
 #include <openssl/evp.h>
-#include <gsl/span>
+
+#include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -33,14 +34,12 @@ namespace libp2p::crypto::aes {
 
     ~AesCtrImpl() override;
 
-    outcome::result<ByteArray> crypt(
-        gsl::span<const uint8_t> data) const override;
+    outcome::result<ByteArray> crypt(ConstSpanOfBytes data) const override;
 
     outcome::result<ByteArray> finalize() override;
 
    private:
-    outcome::result<void> init(gsl::span<const uint8_t> key,
-                               gsl::span<const uint8_t> iv,
+    outcome::result<void> init(ConstSpanOfBytes key, ConstSpanOfBytes iv,
                                const EVP_CIPHER *cipher);
 
     const Mode mode_;

@@ -43,6 +43,7 @@ using testing::NiceMock;
 using testing::Ref;
 using testing::Return;
 using testing::ReturnRef;
+using testing::Truly;
 
 class IdentifyTest : public testing::Test {
  public:
@@ -144,7 +145,7 @@ class IdentifyTest : public testing::Test {
 
 ACTION_P2(Success, buf, res) {
   // better compare here, as this will show diff
-  ASSERT_EQ(arg0, buf);
+  ASSERT_TRUE(arg0 == buf);
   ASSERT_EQ(arg1, buf.size());
   arg2(std::move(res));
 }
@@ -182,7 +183,7 @@ TEST_F(IdentifyTest, Send) {
 
   // handle Identify request and check it
   EXPECT_CALL(*stream_, write(_, _, _))
-      .WillOnce(Success(gsl::span<const uint8_t>(identify_pb_msg_bytes_.data(),
+      .WillOnce(Success(ConstSpanOfBytes(identify_pb_msg_bytes_.data(),
                                                  identify_pb_msg_bytes_.size()),
                         outcome::success(identify_pb_msg_bytes_.size())));
 
@@ -213,9 +214,9 @@ TEST_F(IdentifyTest, Receive) {
       .WillOnce(InvokeArgument<2>(StreamAndProtocol{stream_, kIdentifyProto}));
 
   EXPECT_CALL(*stream_, read(_, 1, _))
-      .WillOnce(ReadPut(gsl::make_span(identify_pb_msg_bytes_.data(), 1)));
+      .WillOnce(ReadPut(std::span(identify_pb_msg_bytes_.data(), 1)));
   EXPECT_CALL(*stream_, read(_, pb_msg_len_varint_->toUInt64(), _))
-      .WillOnce(ReadPut(gsl::make_span(
+      .WillOnce(ReadPut(std::span(
           identify_pb_msg_bytes_.data() + pb_msg_len_varint_->size(),
           identify_pb_msg_bytes_.size() - pb_msg_len_varint_->size())));
 
@@ -243,9 +244,15 @@ TEST_F(IdentifyTest, Receive) {
 
   EXPECT_CALL(peer_repo_, getProtocolRepository())
       .WillOnce(ReturnRef(proto_repo_));
+
+  auto if_protocols = [&](std::span<const peer::ProtocolName> actual) {
+    auto expected = std::span<const peer::ProtocolName>(protocols_);
+    return std::equal(actual.begin(), actual.end(), expected.begin());
+  };
+
   EXPECT_CALL(
       proto_repo_,
-      addProtocols(kRemotePeerId, gsl::span<const peer::ProtocolName>(protocols_)))
+      addProtocols(kRemotePeerId, Truly(if_protocols)))
       .WillOnce(Return(outcome::success()));
 
   // consumeObservedAddresses
@@ -282,10 +289,16 @@ TEST_F(IdentifyTest, Receive) {
 
   EXPECT_CALL(conn_manager_, getBestConnectionForPeer(kRemotePeerId))
       .WillOnce(Return(connection_));
-  EXPECT_CALL(
+
+  auto if_listen_addrs = [&](std::span<const multi::Multiaddress> actual) {
+    auto expected = std::span<const multi::Multiaddress>(listen_addresses_);
+    return std::equal(actual.begin(), actual.end(), expected.begin());
+  };
+
+ EXPECT_CALL(
       addr_repo_,
       upsertAddresses(kRemotePeerId,
-                      gsl::span<const multi::Multiaddress>(listen_addresses_),
+                      Truly(if_listen_addrs),
                       peer::ttl::kPermanent))
       .WillOnce(Return(outcome::success()));
 

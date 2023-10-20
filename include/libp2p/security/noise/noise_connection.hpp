@@ -45,19 +45,19 @@ namespace libp2p::connection {
 
     outcome::result<void> close() override;
 
-    void read(gsl::span<uint8_t> out, size_t bytes,
+    void read(MutSpanOfBytes out, size_t bytes,
               ReadCallbackFunc cb) override;
 
-    void readSome(gsl::span<uint8_t> out, size_t bytes,
+    void readSome(MutSpanOfBytes out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(gsl::span<const uint8_t> in, size_t bytes,
+    void write(ConstSpanOfBytes in, size_t bytes,
                WriteCallbackFunc cb) override;
 
-    void writeSome(gsl::span<const uint8_t> in, size_t bytes,
+    void writeSome(ConstSpanOfBytes in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
@@ -75,13 +75,13 @@ namespace libp2p::connection {
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
    private:
-    void read(gsl::span<uint8_t> out, size_t bytes, OperationContext ctx,
+    void read(MutSpanOfBytes out, size_t bytes, OperationContext ctx,
               ReadCallbackFunc cb);
 
-    void readSome(gsl::span<uint8_t> out, size_t bytes, OperationContext ctx,
+    void readSome(MutSpanOfBytes out, size_t bytes, OperationContext ctx,
                   ReadCallbackFunc cb);
 
-    void write(gsl::span<const uint8_t> in, size_t bytes, OperationContext ctx,
+    void write(ConstSpanOfBytes in, size_t bytes, OperationContext ctx,
                WriteCallbackFunc cb);
 
     void eraseWriteBuffer(BufferList::iterator &iterator);

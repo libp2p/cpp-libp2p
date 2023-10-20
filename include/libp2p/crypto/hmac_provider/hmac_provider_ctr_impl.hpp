@@ -7,20 +7,20 @@
 #define LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_CTR_IMPL_HPP
 
 #include <openssl/evp.h>
-#include <gsl/span>
+#include <span>
 #include <libp2p/crypto/hmac_provider.hpp>
 
 namespace libp2p::crypto::hmac {
 
   class HmacProviderCtrImpl : public HmacProviderCtr {
    public:
-    HmacProviderCtrImpl(HashType hash_type, gsl::span<const uint8_t> key);
+    HmacProviderCtrImpl(HashType hash_type, ConstSpanOfBytes key);
 
     ~HmacProviderCtrImpl() override;
 
-    outcome::result<void> write(gsl::span<const uint8_t> data) override;
+    outcome::result<void> write(ConstSpanOfBytes data) override;
 
-    outcome::result<void> digestOut(gsl::span<uint8_t> out) const override;
+    outcome::result<void> digestOut(MutSpanOfBytes out) const override;
 
     outcome::result<void> reset() override;
 

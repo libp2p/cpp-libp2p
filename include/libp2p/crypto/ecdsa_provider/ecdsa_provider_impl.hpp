@@ -9,6 +9,7 @@
 #include <memory>
 
 #include <openssl/ec.h>
+
 #include <libp2p/crypto/ecdsa_provider.hpp>
 
 namespace libp2p::crypto::ecdsa {
@@ -19,13 +20,13 @@ namespace libp2p::crypto::ecdsa {
 
     outcome::result<PublicKey> derive(const PrivateKey &key) const override;
 
-    outcome::result<Signature> sign(gsl::span<const uint8_t> message,
+    outcome::result<Signature> sign(ConstSpanOfBytes message,
                                     const PrivateKey &key) const override;
 
     outcome::result<Signature> signPrehashed(
         const PrehashedMessage &message, const PrivateKey &key) const override;
 
-    outcome::result<bool> verify(gsl::span<const uint8_t> message,
+    outcome::result<bool> verify(ConstSpanOfBytes message,
                                  const Signature &signature,
                                  const PublicKey &key) const override;
 

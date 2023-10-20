@@ -53,7 +53,7 @@ namespace libp2p::basic {
   }
 
   VarintPrefixReader::State VarintPrefixReader::consume(
-      gsl::span<const uint8_t> &buffer) {
+      ConstSpanOfBytes &buffer) {
     size_t consumed = 0;
     State s(state_);
     for (auto byte : buffer) {

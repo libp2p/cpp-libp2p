@@ -96,7 +96,7 @@ namespace libp2p::protocol::gossip {
     }
 
     if (address.has_value()) {
-      gsl::span<const multi::Multiaddress> span(&address.value(), 1);
+      std::span<const multi::Multiaddress> span(&address.value(), 1);
       std::ignore =
           host_->getPeerRepository().getAddressRepository().upsertAddresses(
               id, span, config_.address_expiration_msec);

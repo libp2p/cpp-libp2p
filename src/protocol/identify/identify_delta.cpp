@@ -42,14 +42,14 @@ namespace libp2p::protocol {
             [self{weak_from_this()}](std::vector<peer::ProtocolName> new_protos) {
               if (auto s = self.lock()) {
                 return self.lock()->sendDelta(
-                    new_protos, gsl::span<const peer::ProtocolName>());
+                    new_protos, std::span<const peer::ProtocolName>());
               }
             });
     rm_protos_sub_ =
         bus_.getChannel<event::network::ProtocolsRemovedChannel>().subscribe(
             [self{weak_from_this()}](std::vector<peer::ProtocolName> rm_protos) {
               if (auto s = self.lock()) {
-                return self.lock()->sendDelta(gsl::span<const peer::ProtocolName>(),
+                return self.lock()->sendDelta(std::span<const peer::ProtocolName>(),
                                               rm_protos);
               }
             });
@@ -120,8 +120,8 @@ namespace libp2p::protocol {
     }
   }
 
-  void IdentifyDelta::sendDelta(gsl::span<const peer::ProtocolName> added,
-                                gsl::span<const peer::ProtocolName> removed) {
+  void IdentifyDelta::sendDelta(std::span<const peer::ProtocolName> added,
+                                std::span<const peer::ProtocolName> removed) {
     auto msg = std::make_shared<identify::pb::Identify>();
     for (const auto &proto : added) {
       msg->mutable_delta()->add_added_protocols(proto);

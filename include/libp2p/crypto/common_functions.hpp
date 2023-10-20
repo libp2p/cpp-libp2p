@@ -13,7 +13,8 @@
 
 #include <openssl/ec.h>
 #include <openssl/evp.h>
-#include <gsl/span>
+
+#include <libp2p/common/types.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto {
@@ -41,7 +42,7 @@ namespace libp2p::crypto {
    * @return shared pointer to EC_KEY with overridden destructor
    */
   outcome::result<std::shared_ptr<EC_KEY>> EcKeyFromPrivateKeyBytes(
-      int nid, gsl::span<const uint8_t> private_key);
+      int nid, ConstSpanOfBytes private_key);
 
   /**
    * Initializes EVP_PKEY structure from private or public key bytes
@@ -55,7 +56,7 @@ namespace libp2p::crypto {
    */
   template <typename ReaderFunc>
   outcome::result<std::shared_ptr<EVP_PKEY>> NewEvpPkeyFromBytes(
-      int type, gsl::span<const uint8_t> key_bytes, ReaderFunc *reader);
+      int type, ConstSpanOfBytes key_bytes, ReaderFunc *reader);
 
   /*
    * The following template instantiation serves for both -
@@ -63,7 +64,7 @@ namespace libp2p::crypto {
    * since their types are identical.
    */
   extern template outcome::result<std::shared_ptr<EVP_PKEY>>
-  NewEvpPkeyFromBytes(int, gsl::span<const uint8_t>,
+  NewEvpPkeyFromBytes(int, ConstSpanOfBytes,
                       decltype(EVP_PKEY_new_raw_public_key) *);
 
   /**
@@ -74,7 +75,7 @@ namespace libp2p::crypto {
    * @return EC signature or error code
    */
   outcome::result<std::vector<uint8_t>> GenerateEcSignature(
-      gsl::span<const uint8_t> digest, const std::shared_ptr<EC_KEY> &key);
+      ConstSpanOfBytes digest, const std::shared_ptr<EC_KEY> &key);
 
   /**
    * @brief Verify EC signature based on key type
@@ -83,8 +84,8 @@ namespace libp2p::crypto {
    * @param key - EC public key
    * @return signature status or error code
    */
-  outcome::result<bool> VerifyEcSignature(gsl::span<const uint8_t> digest,
-                                          gsl::span<const uint8_t> signature,
+  outcome::result<bool> VerifyEcSignature(ConstSpanOfBytes digest,
+                                          ConstSpanOfBytes signature,
                                           const std::shared_ptr<EC_KEY> &key);
 
 }  // namespace libp2p::crypto

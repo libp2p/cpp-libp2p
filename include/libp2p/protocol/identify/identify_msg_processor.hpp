@@ -10,7 +10,7 @@
 #include <optional>
 #include <string>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/host/host.hpp>
@@ -121,14 +121,14 @@ namespace libp2p::protocol {
      * @return true, if that address has common transports, false otherwise
      */
     bool hasConsistentTransport(const multi::Multiaddress &ma,
-                                gsl::span<const multi::Multiaddress> mas);
+                                std::span<const multi::Multiaddress> mas);
 
     /**
      * Process received addresses, which the other peer listens to
      * @param addresses_strings - stringified listen addresses
      * @param peer_id - ID of that peer
      */
-    void consumeListenAddresses(gsl::span<const std::string> addresses_strings,
+    void consumeListenAddresses(std::span<const std::string> addresses_strings,
                                 const peer::PeerId &peer_id);
 
     Host &host_;

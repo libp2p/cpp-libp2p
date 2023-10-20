@@ -93,7 +93,7 @@ namespace libp2p::peer {
     return hash_;
   }
 
-  PeerId::FactoryResult PeerId::fromBytes(gsl::span<const uint8_t> v) {
+  PeerId::FactoryResult PeerId::fromBytes(ConstSpanOfBytes v) {
     OUTCOME_TRY(mh, Multihash::createFromBytes(v));
     return fromHash(mh);
   }

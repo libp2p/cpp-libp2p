@@ -25,7 +25,7 @@ namespace libp2p::protocol_muxer::multiselect {
       : owner_(owner) {}
 
   void MultiselectInstance::selectOneOf(
-      gsl::span<const peer::ProtocolName> protocols,
+      std::span<const peer::ProtocolName> protocols,
       std::shared_ptr<basic::ReadWriter> connection, bool is_initiator,
       bool negotiate_multiselect, Multiselect::ProtocolHandlerFunc cb) {
     assert(!protocols.empty());
@@ -124,7 +124,7 @@ namespace libp2p::protocol_muxer::multiselect {
       return;
     }
 
-    auto span = gsl::span<const uint8_t>(*packet);
+    auto span = ConstSpanOfBytes(*packet);
 
     SL_TRACE(log(), "sending {}", common::dumpBin(span));
 
@@ -187,7 +187,7 @@ namespace libp2p::protocol_muxer::multiselect {
       return close(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
     }
 
-    gsl::span<uint8_t> span(*read_buffer_);
+    MutSpanOfBytes span(*read_buffer_);
     span = span.first(static_cast<Parser::IndexType>(bytes_needed));
 
     connection_->read(span, bytes_needed,
@@ -211,7 +211,7 @@ namespace libp2p::protocol_muxer::multiselect {
       return close(ProtocolMuxer::Error::INTERNAL_ERROR);
     }
 
-    gsl::span<const uint8_t> span(*read_buffer_);
+    ConstSpanOfBytes span(*read_buffer_);
     span = span.first(static_cast<Parser::IndexType>(bytes_read));
 
     SL_TRACE(log(), "received {}", common::dumpBin(span));

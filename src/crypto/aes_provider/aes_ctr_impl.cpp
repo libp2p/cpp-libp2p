@@ -7,7 +7,7 @@
 
 #include <openssl/aes.h>  // for AES_BLOCK_SIZE
 #include <openssl/evp.h>
-#include <gsl/span>
+
 #include <libp2p/crypto/error.hpp>
 
 namespace libp2p::crypto::aes {
@@ -18,16 +18,12 @@ namespace libp2p::crypto::aes {
 
   AesCtrImpl::AesCtrImpl(const Aes128Secret &secret, AesCtrImpl::Mode mode)
       : mode_{mode} {
-    auto key = gsl::make_span(secret.key);
-    auto iv = gsl::make_span(secret.iv);
-    initialization_error_ = init(key, iv, EVP_aes_128_ctr());
+    initialization_error_ = init(secret.key, secret.iv, EVP_aes_128_ctr());
   }
 
   AesCtrImpl::AesCtrImpl(const Aes256Secret &secret, AesCtrImpl::Mode mode)
       : mode_{mode} {
-    auto key = gsl::make_span(secret.key);
-    auto iv = gsl::make_span(secret.iv);
-    initialization_error_ = init(key, iv, EVP_aes_256_ctr());
+    initialization_error_ = init(secret.key, secret.iv, EVP_aes_256_ctr());
   }
 
   AesCtrImpl::~AesCtrImpl() {
@@ -37,8 +33,8 @@ namespace libp2p::crypto::aes {
     }
   }
 
-  outcome::result<void> AesCtrImpl::init(gsl::span<const uint8_t> key,
-                                         gsl::span<const uint8_t> iv,
+  outcome::result<void> AesCtrImpl::init(ConstSpanOfBytes key,
+                                         ConstSpanOfBytes iv,
                                          const EVP_CIPHER *cipher) {
     ctx_ = EVP_CIPHER_CTX_new();
     if (nullptr == ctx_) {
@@ -55,8 +51,7 @@ namespace libp2p::crypto::aes {
     return outcome::success();
   }
 
-  outcome::result<ByteArray> AesCtrImpl::crypt(
-      gsl::span<const uint8_t> data) const {
+  outcome::result<ByteArray> AesCtrImpl::crypt(ConstSpanOfBytes data) const {
     if (initialization_error_.has_error()) {
       return initialization_error_.error();
     }

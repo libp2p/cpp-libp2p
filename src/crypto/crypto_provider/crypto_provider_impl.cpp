@@ -12,9 +12,7 @@
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
-#include <gsl/gsl_util>
-#include <gsl/pointers>
-#include <gsl/span>
+#include <libp2p/common/final_action.hpp>
 #include <libp2p/crypto/ecdsa_provider.hpp>
 #include <libp2p/crypto/ed25519_provider.hpp>
 #include <libp2p/crypto/error.hpp>
@@ -22,6 +20,9 @@
 #include <libp2p/crypto/random_generator.hpp>
 #include <libp2p/crypto/rsa_provider.hpp>
 #include <libp2p/crypto/secp256k1_provider.hpp>
+#include <span>
+
+using libp2p::common::FinalAction;
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::crypto, CryptoProviderImpl::Error, e) {
   using E = libp2p::crypto::CryptoProviderImpl::Error;
@@ -191,7 +192,7 @@ namespace libp2p::crypto {
    * ################################################################### */
 
   outcome::result<Buffer> CryptoProviderImpl::sign(
-      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
+      ConstSpanOfBytes message, const PrivateKey &private_key) const {
     switch (private_key.type) {
       case Key::Type::RSA:
         return signRsa(message, private_key);
@@ -209,7 +210,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<Buffer> CryptoProviderImpl::signRsa(
-      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
+      ConstSpanOfBytes message, const PrivateKey &private_key) const {
     rsa::PrivateKey priv_key;
     priv_key.insert(priv_key.end(), private_key.data.begin(),
                     private_key.data.end());
@@ -219,7 +220,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<Buffer> CryptoProviderImpl::signEd25519(
-      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
+      ConstSpanOfBytes message, const PrivateKey &private_key) const {
     ed25519::PrivateKey priv_key;
     std::copy_n(private_key.data.begin(), priv_key.size(), priv_key.begin());
     OUTCOME_TRY(signature, ed25519_provider_->sign(message, priv_key));
@@ -227,7 +228,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<Buffer> CryptoProviderImpl::signSecp256k1(
-      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
+      ConstSpanOfBytes message, const PrivateKey &private_key) const {
     secp256k1::PrivateKey priv_key;
     std::copy_n(private_key.data.begin(), priv_key.size(), priv_key.begin());
     OUTCOME_TRY(signature, secp256k1_provider_->sign(message, priv_key));
@@ -235,7 +236,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<Buffer> CryptoProviderImpl::signEcdsa(
-      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
+      ConstSpanOfBytes message, const PrivateKey &private_key) const {
     ecdsa::PrivateKey priv_key;
     std::copy_n(private_key.data.begin(), priv_key.size(), priv_key.begin());
     OUTCOME_TRY(signature, ecdsa_provider_->sign(message, priv_key));
@@ -249,7 +250,7 @@ namespace libp2p::crypto {
    * ################################################################### */
 
   outcome::result<bool> CryptoProviderImpl::verify(
-      gsl::span<const uint8_t> message, gsl::span<const uint8_t> signature,
+      ConstSpanOfBytes message, ConstSpanOfBytes signature,
       const PublicKey &public_key) const {
     switch (public_key.type) {
       case Key::Type::RSA:
@@ -268,7 +269,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifyRsa(
-      gsl::span<const uint8_t> message, gsl::span<const uint8_t> signature,
+      ConstSpanOfBytes message, ConstSpanOfBytes signature,
       const PublicKey &public_key) const {
     rsa::PublicKey rsa_pub;
     rsa_pub.insert(rsa_pub.end(), public_key.data.begin(),
@@ -281,7 +282,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifyEd25519(
-      gsl::span<const uint8_t> message, gsl::span<const uint8_t> signature,
+      ConstSpanOfBytes message, ConstSpanOfBytes signature,
       const PublicKey &public_key) const {
     ed25519::PublicKey ed_pub;
     std::copy_n(public_key.data.begin(), ed_pub.size(), ed_pub.begin());
@@ -293,7 +294,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifySecp256k1(
-      gsl::span<const uint8_t> message, gsl::span<const uint8_t> signature,
+      ConstSpanOfBytes message, ConstSpanOfBytes signature,
       const PublicKey &public_key) const {
     secp256k1::PublicKey secp_pub;
     std::copy_n(public_key.data.begin(), secp_pub.size(), secp_pub.begin());
@@ -305,7 +306,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifyEcdsa(
-      gsl::span<const uint8_t> message, gsl::span<const uint8_t> signature,
+      ConstSpanOfBytes message, ConstSpanOfBytes signature,
       const PublicKey &public_key) const {
     ecdsa::PublicKey ecdsa_pub;
     std::copy_n(public_key.data.begin(), ecdsa_pub.size(), ecdsa_pub.begin());
@@ -349,15 +350,14 @@ namespace libp2p::crypto {
     if (nullptr == key) {
       return FAILED;
     }
-    auto free_private_key = gsl::finally([key] { EC_KEY_free(key); });
+    FinalAction free_private_key([key] { EC_KEY_free(key); });
 
     // create curve
     EC_GROUP *curve_group = EC_GROUP_new_by_curve_name(nid);
     if (nullptr == curve_group) {
       return FAILED;
     }
-    auto free_curve_group =
-        gsl::finally([curve_group] { EC_GROUP_free(curve_group); });
+    FinalAction free_curve_group([curve_group] { EC_GROUP_free(curve_group); });
 
     // assign curve to the key
     if (1 != EC_KEY_set_group(key, curve_group)) {
@@ -409,12 +409,11 @@ namespace libp2p::crypto {
     // marshall pubkey point to bytes buffer (uncompressed form)
     const EC_POINT *public_key{EC_KEY_get0_public_key(key)};
     uint8_t *pubkey_bytes_buffer{nullptr};
-    auto free_pubkey_bytes_buffer =
-        gsl::finally([pptr = &pubkey_bytes_buffer]() {
-          if (*pptr != nullptr) {
-            OPENSSL_free(*pptr);
-          }
-        });
+    FinalAction free_pubkey_bytes_buffer([pptr = &pubkey_bytes_buffer]() {
+      if (*pptr != nullptr) {
+        OPENSSL_free(*pptr);
+      }
+    });
 
     size_t pubkey_bytes_length{0};
     if (0
@@ -424,7 +423,7 @@ namespace libp2p::crypto {
       return FAILED;
     }
 
-    auto pubkey_span = gsl::span(pubkey_bytes_buffer, pubkey_bytes_length);
+    auto pubkey_span = std::span(pubkey_bytes_buffer, pubkey_bytes_length);
     Buffer pubkey_buffer(pubkey_span.begin(), pubkey_span.end());
 
     return EphemeralKeyPair{
@@ -444,16 +443,14 @@ namespace libp2p::crypto {
       if (nullptr == curve_group) {
         return FAILED;
       }
-      auto free_curve_group =
-          gsl::finally([curve_group] { EC_GROUP_free(curve_group); });
+      FinalAction free_curve_group([curve_group] { EC_GROUP_free(curve_group); });
 
       // create empty key
       EC_KEY *their_key = EC_KEY_new();
       if (nullptr == their_key) {
         return FAILED;
       }
-      auto free_their_key =
-          gsl::finally([their_key] { EC_KEY_free(their_key); });
+      FinalAction free_their_key([their_key] { EC_KEY_free(their_key); });
 
       // assign curve type to the key
       if (1 != EC_KEY_set_group(their_key, curve_group)) {
@@ -485,8 +482,8 @@ namespace libp2p::crypto {
         return FAILED;
       }
       // auto cleanup for bignum
-      auto free_private_bignum =
-          gsl::finally([private_bignum]() { BN_free(private_bignum); });
+      FinalAction free_private_bignum(
+          [private_bignum]() { BN_free(private_bignum); });
       // convert private key bytes to BIGNUM
       const unsigned char *private_key_buffer = private_bytes.data();
       if (nullptr
@@ -499,8 +496,8 @@ namespace libp2p::crypto {
       if (nullptr == our_private_key) {
         return FAILED;
       }
-      auto free_our_private_key =
-          gsl::finally([our_private_key] { EC_KEY_free(our_private_key); });
+      FinalAction free_our_private_key(
+          [our_private_key] { EC_KEY_free(our_private_key); });
 
       if (1 != EC_KEY_set_private_key(our_private_key, private_bignum)) {
         return FAILED;
@@ -525,7 +522,7 @@ namespace libp2p::crypto {
         return FAILED;
       }
 
-      auto secret_span = gsl::span(secret_buffer, secret_len);
+      auto secret_span = std::span(secret_buffer, secret_len);
       Buffer secret(secret_span.begin(), secret_span.end());
       OPENSSL_free(secret_buffer);
       return secret;

@@ -7,7 +7,7 @@
 #define LIBP2P_SHA256_HPP
 
 #include <openssl/sha.h>
-#include <gsl/span>
+#include <span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/hasher.hpp>
 
@@ -19,9 +19,9 @@ namespace libp2p::crypto {
 
     ~Sha256() override;
 
-    outcome::result<void> write(gsl::span<const uint8_t> data) override;
+    outcome::result<void> write(ConstSpanOfBytes data) override;
 
-    outcome::result<void> digestOut(gsl::span<uint8_t> out) const override;
+    outcome::result<void> digestOut(MutSpanOfBytes out) const override;
 
     outcome::result<void> reset() override;
 
@@ -44,7 +44,7 @@ namespace libp2p::crypto {
    * @return hashed bytes
    */
   outcome::result<libp2p::common::Hash256> sha256(
-      gsl::span<const uint8_t> input);
+      ConstSpanOfBytes input);
 }  // namespace libp2p::crypto
 
 #endif  // LIBP2P_SHA256_HPP

@@ -60,7 +60,7 @@ namespace libp2p::protocol::kademlia {
     ++writing_;
 
     // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-    stream_->write(gsl::span(buffer->data(), buffer->size()), buffer->size(),
+    stream_->write(std::span(buffer->data(), buffer->size()), buffer->size(),
                    [wp = weak_from_this(), buffer,
                     response_handler](outcome::result<size_t> result) {
                      if (auto self = wp.lock()) {
@@ -117,7 +117,7 @@ namespace libp2p::protocol::kademlia {
     inner_buffer_.resize(msg_len);
 
     // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-    stream_->read(gsl::span(inner_buffer_.data(), inner_buffer_.size()),
+    stream_->read(std::span(inner_buffer_.data(), inner_buffer_.size()),
                   msg_len, [wp = weak_from_this()](auto &&res) {
                     if (auto self = wp.lock()) {
                       self->onMessageRead(std::forward<decltype(res)>(res));

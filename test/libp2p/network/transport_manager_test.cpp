@@ -6,9 +6,11 @@
 #include "libp2p/network/impl/transport_manager_impl.hpp"
 
 #include <gtest/gtest.h>
+#include <libp2p/common/types.hpp>
 #include <libp2p/common/literals.hpp>
 #include "mock/libp2p/transport/transport_mock.hpp"
 
+using libp2p::ConstSpanOfBytes;
 using namespace libp2p::network;
 using namespace libp2p::multi;
 using namespace libp2p::transport;
@@ -31,7 +33,7 @@ class TransportManagerTest : public testing::Test {
 };
 
 #define ASSERT_SPAN_VECTOR_EQ(_span, vector) \
-  ASSERT_EQ(_span, gsl::span<const std::shared_ptr<TransportAdaptor>>(vector));
+  ASSERT_TRUE(_span == std::span<const std::shared_ptr<TransportAdaptor>>(vector));
 
 /**
  * @given transport manager, created from the transports vector
@@ -40,8 +42,9 @@ class TransportManagerTest : public testing::Test {
  */
 TEST_F(TransportManagerTest, CreateFromVector) {
   TransportManagerImpl manager{kTransports};
-
-  ASSERT_SPAN_VECTOR_EQ(manager.getAll(), kTransports)
+  auto actual = manager.getAll();
+  auto is_equal = std::equal(actual.begin(), actual.end(), kTransports.begin());
+  ASSERT_TRUE(is_equal);
 }
 
 /**
@@ -63,7 +66,9 @@ TEST_F(TransportManagerTest, AddTransport) {
  */
 TEST_F(TransportManagerTest, AddTransports) {
   TransportManagerImpl manager{kTransports};
-  ASSERT_SPAN_VECTOR_EQ(manager.getAll(), kTransports)
+  auto actual = manager.getAll();
+  auto is_equal = std::equal(actual.begin(), actual.end(), kTransports.begin());
+  ASSERT_TRUE(is_equal);
 }
 
 /**

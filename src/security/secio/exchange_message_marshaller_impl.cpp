@@ -51,7 +51,7 @@ namespace libp2p::security::secio {
   }
 
   outcome::result<ExchangeMessage> ExchangeMessageMarshallerImpl::unmarshal(
-      gsl::span<const uint8_t> msg_bytes) const {
+      ConstSpanOfBytes msg_bytes) const {
     protobuf::Exchange exchange_msg;
     if (!exchange_msg.ParseFromArray(msg_bytes.data(), msg_bytes.size())) {
       return Error::MESSAGE_DESERIALIZING_ERROR;

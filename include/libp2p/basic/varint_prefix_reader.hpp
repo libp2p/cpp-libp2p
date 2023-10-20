@@ -6,7 +6,10 @@
 #ifndef LIBP2P_VARINT_PREFIX_READER_HPP
 #define LIBP2P_VARINT_PREFIX_READER_HPP
 
-#include <gsl/span>
+#include <cstdint>
+#include <span>
+
+#include <libp2p/common/types.hpp>
 
 namespace libp2p::basic {
 
@@ -50,7 +53,7 @@ namespace libp2p::basic {
     /// On success, modifies buffer (cuts off first bytes which were consumed),
     /// returns reader's state
     /// (or kError if called when state() == kReady)
-    State consume(gsl::span<const uint8_t> &buffer);
+    State consume(ConstSpanOfBytes &buffer);
 
    private:
     /// Current value accumulated

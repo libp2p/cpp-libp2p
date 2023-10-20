@@ -5,16 +5,15 @@
 
 #include <gtest/gtest.h>
 
+#include <libp2p/common/types.hpp>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/multi/multihash.hpp>
 #include <libp2p/multi/uvarint.hpp>
 
-using namespace libp2p::common;
-
-using libp2p::multi::HashType;
-using libp2p::multi::Multihash;
-using libp2p::multi::UVarint;
+using namespace libp2p;
+using namespace common;
+using namespace multi;
 
 /**
  *   @given a buffer with a hash
@@ -27,7 +26,7 @@ TEST(Multihash, Create) {
   ASSERT_NO_THROW({
     auto m = Multihash::create(HashType::blake2s128, hash).value();
     ASSERT_EQ(m.getType(), HashType::blake2s128);
-    ASSERT_EQ(m.getHash(), gsl::span<const uint8_t>(hash));
+    ASSERT_TRUE(m.getHash() == ConstSpanOfBytes(hash));
   });
 
   auto h = ByteArray(200, 42);

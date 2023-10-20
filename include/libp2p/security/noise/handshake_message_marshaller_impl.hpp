@@ -32,7 +32,7 @@ namespace libp2p::security::noise {
         const HandshakeMessage &msg) const override;
 
     outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>> unmarshal(
-        gsl::span<const uint8_t> msg_bytes) const override;
+        ConstSpanOfBytes msg_bytes) const override;
 
    private:
     std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller_;

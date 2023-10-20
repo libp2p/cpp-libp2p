@@ -8,10 +8,10 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 using namespace libp2p::crypto;
 using namespace libp2p::common;
+using libp2p::ConstSpanOfBytes;
 
 class AesTest : public testing::Test {
  protected:
@@ -120,7 +120,7 @@ TEST_F(AesTest, Stream) {
   std::copy(key_256.begin(), key_256.end(), secret.key.begin());
   std::copy(iv.begin(), iv.end(), secret.iv.begin());
 
-  auto cipher_text = gsl::make_span(cipher_text_256);
+  auto cipher_text = ConstSpanOfBytes(cipher_text_256);
   const auto kDelimiter = 20;
   auto cipher_text_part_1 = cipher_text.subspan(0, kDelimiter);
   auto cipher_text_part_2 =

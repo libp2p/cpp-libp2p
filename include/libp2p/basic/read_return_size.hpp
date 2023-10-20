@@ -11,10 +11,10 @@
 namespace libp2p {
   /// Read exactly `out.size()` bytes
   inline void readReturnSize(const std::shared_ptr<basic::Reader> &reader,
-                             gsl::span<uint8_t> out,
+                             MutSpanOfBytes out,
                              basic::Reader::ReadCallbackFunc cb) {
     read(reader, out,
-         [n{spanSize(out)}, cb{std::move(cb)}](outcome::result<void> r) {
+         [n{out.size()}, cb{std::move(cb)}](outcome::result<void> r) {
            if (r.has_error()) {
              cb(r.error());
            } else {

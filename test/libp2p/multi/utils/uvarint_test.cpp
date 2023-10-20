@@ -6,7 +6,7 @@
 #include "libp2p/multi/uvarint.hpp"
 
 #include <gtest/gtest.h>
-#include <gsl/span>
+#include <span>
 
 #include <libp2p/common/hexutil.hpp>
 
@@ -56,10 +56,10 @@ TEST(UVarint, CorrectEncoding) {
  */
 TEST(UVarint, CalculateSize) {
   uint8_t bytes[] = {0x81, 0xA3, 0x75, 0x43, 0xAA};
-  ASSERT_EQ(UVarint::calculateSize(gsl::span(bytes, 5)), 3);
+  ASSERT_EQ(UVarint::calculateSize(std::span(bytes, 5)), 3);
 
   uint8_t another_bytes[] = {0x71, 0xA3, 0x75, 0x43, 0xAA};
-  ASSERT_EQ(UVarint::calculateSize(gsl::span(another_bytes, 5)), 1);
+  ASSERT_EQ(UVarint::calculateSize(std::span(another_bytes, 5)), 1);
 }
 
 /**

@@ -11,8 +11,8 @@ namespace libp2p::security::noise {
       : ccp_{std::make_unique<crypto::chachapoly::ChaCha20Poly1305Impl>(key)} {}
 
   outcome::result<ByteArray> NoiseCCP1305Impl::encrypt(
-      gsl::span<const uint8_t> precompiled_out, uint64_t nonce,
-      gsl::span<const uint8_t> plaintext, gsl::span<const uint8_t> aad) {
+      ConstSpanOfBytes precompiled_out, uint64_t nonce,
+      ConstSpanOfBytes plaintext, ConstSpanOfBytes aad) {
     auto n = ccp_->uint64toNonce(nonce);
     OUTCOME_TRY(enc, ccp_->encrypt(n, plaintext, aad));
     auto res = spanToVec(precompiled_out);
@@ -22,8 +22,8 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<ByteArray> NoiseCCP1305Impl::decrypt(
-      gsl::span<const uint8_t> precompiled_out, uint64_t nonce,
-      gsl::span<const uint8_t> ciphertext, gsl::span<const uint8_t> aad) {
+      ConstSpanOfBytes precompiled_out, uint64_t nonce,
+      ConstSpanOfBytes ciphertext, ConstSpanOfBytes aad) {
     auto n = ccp_->uint64toNonce(nonce);
     OUTCOME_TRY(dec, ccp_->decrypt(n, ciphertext, aad));
     auto res = spanToVec(precompiled_out);

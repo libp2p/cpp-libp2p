@@ -6,7 +6,7 @@
 #ifndef LIBP2P_SRC_CRYPTO_HASHER_HPP
 #define LIBP2P_SRC_CRYPTO_HASHER_HPP
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -19,14 +19,14 @@ namespace libp2p::crypto {
     virtual ~Hasher() = default;
 
     /// appends a new chunk of data
-    virtual outcome::result<void> write(gsl::span<const uint8_t> data) = 0;
+    virtual outcome::result<void> write(ConstSpanOfBytes data) = 0;
 
     /**
      * Calculates the current digest.
      * Does not affect the internal state.
      * New data still could be fed via write method.
      */
-    virtual outcome::result<void> digestOut(gsl::span<uint8_t> out) const = 0;
+    virtual outcome::result<void> digestOut(MutSpanOfBytes out) const = 0;
 
     /// resets the internal state
     virtual outcome::result<void> reset() = 0;

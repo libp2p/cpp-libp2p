@@ -7,13 +7,12 @@
 #define LIBP2P_COMMON_AMBIGOUS_SIZE_HPP
 
 #include <cstdint>
-#include <libp2p/common/span_size.hpp>
 
 namespace libp2p {
   // TODO(turuslan): https://github.com/libp2p/cpp-libp2p/issues/203
   template <typename T>
-  void ambigousSize(gsl::span<T> &s, size_t n) {
-    if (n > spanSize(s)) {
+  void ambigousSize(std::span<T> &s, size_t n) {
+    if (n > s.size()) {
       throw std::logic_error{"libp2p::ambigousSize"};
     }
     s = s.first(n);

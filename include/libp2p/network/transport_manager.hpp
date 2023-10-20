@@ -8,7 +8,7 @@
 
 #include <memory>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_info.hpp>
 #include <libp2p/transport/transport_adaptor.hpp>
@@ -30,7 +30,7 @@ namespace libp2p::network {
      * Get all transports, supported by this manager
      * @return transports
      */
-    virtual gsl::span<const TransportSPtr> getAll() const = 0;
+    virtual std::span<const TransportSPtr> getAll() const = 0;
 
     /**
      * Remove all transports from the manager

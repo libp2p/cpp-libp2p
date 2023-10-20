@@ -34,13 +34,13 @@ namespace libp2p::security::noise {
   };
 
   template <typename T>
-  std::vector<T> spanToVec(gsl::span<const T> data) {
+  std::vector<T> spanToVec(std::span<const T> data) {
     return std::vector<T>(data.begin(), data.end());
   }
 
   outcome::result<HKDFResult> hkdf(HashType hash_type, size_t outputs,
-                                   gsl::span<const uint8_t> chaining_key,
-                                   gsl::span<const uint8_t> input_key_material);
+                                   ConstSpanOfBytes chaining_key,
+                                   ConstSpanOfBytes input_key_material);
 
   struct DHKey {
     ByteArray priv;
@@ -80,12 +80,12 @@ namespace libp2p::security::noise {
     virtual ~AEADCipher() = default;
 
     virtual outcome::result<ByteArray> encrypt(
-        gsl::span<const uint8_t> precompiled_out, uint64_t nonce,
-        gsl::span<const uint8_t> plaintext, gsl::span<const uint8_t> aad) = 0;
+        ConstSpanOfBytes precompiled_out, uint64_t nonce,
+        ConstSpanOfBytes plaintext, ConstSpanOfBytes aad) = 0;
 
     virtual outcome::result<ByteArray> decrypt(
-        gsl::span<const uint8_t> precompiled_out, uint64_t nonce,
-        gsl::span<const uint8_t> ciphertext, gsl::span<const uint8_t> aad) = 0;
+        ConstSpanOfBytes precompiled_out, uint64_t nonce,
+        ConstSpanOfBytes ciphertext, ConstSpanOfBytes aad) = 0;
   };
 
   class NamedAEADCipher {

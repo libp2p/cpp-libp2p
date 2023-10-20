@@ -28,20 +28,20 @@ namespace libp2p::security::noise {
     REMOTE_KEY_ALREADY_SET,
   };
 
-  outcome::result<Key32> bytesToKey32(gsl::span<const uint8_t> key);
+  outcome::result<Key32> bytesToKey32(ConstSpanOfBytes key);
 
   /// Provides symmetric encryption and decryption after a successful handshake
   class CipherState {
    public:
     CipherState(std::shared_ptr<CipherSuite> cipher_suite, Key32 key);
 
-    outcome::result<ByteArray> encrypt(gsl::span<const uint8_t> precompiled_out,
-                                       gsl::span<const uint8_t> plaintext,
-                                       gsl::span<const uint8_t> aad);
+    outcome::result<ByteArray> encrypt(ConstSpanOfBytes precompiled_out,
+                                       ConstSpanOfBytes plaintext,
+                                       ConstSpanOfBytes aad);
 
-    outcome::result<ByteArray> decrypt(gsl::span<const uint8_t> precompiled_out,
-                                       gsl::span<const uint8_t> ciphertext,
-                                       gsl::span<const uint8_t> aad);
+    outcome::result<ByteArray> decrypt(ConstSpanOfBytes precompiled_out,
+                                       ConstSpanOfBytes ciphertext,
+                                       ConstSpanOfBytes aad);
 
     outcome::result<void> rekey();
 
@@ -64,21 +64,21 @@ namespace libp2p::security::noise {
     explicit SymmetricState(std::shared_ptr<CipherSuite> cipher_suite);
 
     outcome::result<void> initializeSymmetric(
-        gsl::span<const uint8_t> handshake_name);
+        ConstSpanOfBytes handshake_name);
 
-    outcome::result<void> mixKey(gsl::span<const uint8_t> dh_output);
+    outcome::result<void> mixKey(ConstSpanOfBytes dh_output);
 
-    outcome::result<void> mixHash(gsl::span<const uint8_t> data);
+    outcome::result<void> mixHash(ConstSpanOfBytes data);
 
-    outcome::result<void> mixKeyAndHash(gsl::span<const uint8_t> data);
+    outcome::result<void> mixKeyAndHash(ConstSpanOfBytes data);
 
     outcome::result<ByteArray> encryptAndHash(
-        gsl::span<const uint8_t> precompiled_out,
-        gsl::span<const uint8_t> plaintext);
+        ConstSpanOfBytes precompiled_out,
+        ConstSpanOfBytes plaintext);
 
     outcome::result<ByteArray> decryptAndHash(
-        gsl::span<const uint8_t> precompiled_out,
-        gsl::span<const uint8_t> ciphertext);
+        ConstSpanOfBytes precompiled_out,
+        ConstSpanOfBytes ciphertext);
 
     outcome::result<CSPair> split();
 
@@ -109,17 +109,17 @@ namespace libp2p::security::noise {
                          HandshakePattern pattern, bool is_initiator,
                          DHKey local_static_keypair);
 
-    HandshakeStateConfig &setPrologue(gsl::span<const uint8_t> prologue);
+    HandshakeStateConfig &setPrologue(ConstSpanOfBytes prologue);
 
-    HandshakeStateConfig &setPresharedKey(gsl::span<const uint8_t> key,
+    HandshakeStateConfig &setPresharedKey(ConstSpanOfBytes key,
                                           int placement);
 
     HandshakeStateConfig &setLocalEphemeralKeypair(DHKey keypair);
 
-    HandshakeStateConfig &setRemoteStaticPubkey(gsl::span<const uint8_t> key);
+    HandshakeStateConfig &setRemoteStaticPubkey(ConstSpanOfBytes key);
 
     HandshakeStateConfig &setRemoteEphemeralPubkey(
-        gsl::span<const uint8_t> key);
+        ConstSpanOfBytes key);
 
    private:
     template <typename T>
@@ -152,12 +152,12 @@ namespace libp2p::security::noise {
     outcome::result<void> init(HandshakeStateConfig config);
 
     outcome::result<MessagingResult> writeMessage(
-        gsl::span<const uint8_t> precompiled_out,
-        gsl::span<const uint8_t> payload);
+        ConstSpanOfBytes precompiled_out,
+        ConstSpanOfBytes payload);
 
     outcome::result<MessagingResult> readMessage(
-        gsl::span<const uint8_t> precompiled_out,
-        gsl::span<const uint8_t> message);
+        ConstSpanOfBytes precompiled_out,
+        ConstSpanOfBytes message);
 
     outcome::result<ByteArray> channelBinding() const;
 

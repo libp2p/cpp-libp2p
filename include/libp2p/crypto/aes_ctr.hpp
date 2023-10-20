@@ -6,7 +6,6 @@
 #ifndef LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP
 #define LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP
 
-#include <gsl/span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -29,7 +28,7 @@ namespace libp2p::crypto::aes {
      * @return processed data chunk or an error
      */
     virtual outcome::result<ByteArray> crypt(
-        gsl::span<const uint8_t> data) const = 0;
+        ConstSpanOfBytes data) const = 0;
 
     /**
      * Does stream data finalization

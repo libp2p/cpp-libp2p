@@ -73,7 +73,7 @@ namespace libp2p::peer {
   }
 
   outcome::result<bool> InmemAddressRepository::addAddresses(
-      const PeerId &p, gsl::span<const multi::Multiaddress> ma,
+      const PeerId &p, std::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
     bool added = false;
     auto peer_it = findOrInsert(p);
@@ -91,7 +91,7 @@ namespace libp2p::peer {
   }
 
   outcome::result<bool> InmemAddressRepository::upsertAddresses(
-      const PeerId &p, gsl::span<const multi::Multiaddress> ma,
+      const PeerId &p, std::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
     bool added = false;
     auto peer_it = findOrInsert(p);

@@ -5,18 +5,20 @@
 
 #include <libp2p/crypto/common_functions.hpp>
 
-#include <gsl/gsl_util>
+#include <libp2p/common/final_action.hpp>
 #include <libp2p/crypto/error.hpp>
+
+using libp2p::common::FinalAction;
 
 namespace libp2p::crypto {
 
   outcome::result<std::shared_ptr<EC_KEY>> EcKeyFromPrivateKeyBytes(
-      int nid, gsl::span<const uint8_t> private_key) {
+      int nid, ConstSpanOfBytes private_key) {
     auto FAILED = KeyGeneratorError::INTERNAL_ERROR;
 
     /*
      * Allocate the key.
-     * Here we use shared pointer instead of gsl::finally since this is going to
+     * Here we use shared pointer instead of FinalAction since this is going to
      * be used as a return value in case of success.
      */
     std::shared_ptr<EC_KEY> key{EC_KEY_new_by_curve_name(nid), EC_KEY_free};
@@ -30,8 +32,7 @@ namespace libp2p::crypto {
     if (nullptr == private_bignum) {
       return FAILED;
     }
-    auto free_private_bignum =
-        gsl::finally([private_bignum] { BN_free(private_bignum); });
+    FinalAction free_private_bignum([private_bignum] { BN_free(private_bignum); });
 
     // set private key to the resulting key structure
     if (1 != EC_KEY_set_private_key(key.get(), private_bignum)) {
@@ -45,8 +46,7 @@ namespace libp2p::crypto {
     if (nullptr == public_key_point) {
       return FAILED;
     }
-    auto free_public_key_point =
-        gsl::finally([public_key_point] { EC_POINT_free(public_key_point); });
+    FinalAction free_public_key_point([public_key_point] { EC_POINT_free(public_key_point); });
 
     // derive the public key
     if (1
@@ -77,7 +77,7 @@ namespace libp2p::crypto {
 
   template <typename ReaderFunc>
   outcome::result<std::shared_ptr<EVP_PKEY>> NewEvpPkeyFromBytes(
-      int type, gsl::span<const uint8_t> key_bytes, ReaderFunc *reader) {
+      int type, ConstSpanOfBytes key_bytes, ReaderFunc *reader) {
     std::shared_ptr<EVP_PKEY> key{
         reader(type, nullptr, key_bytes.data(), key_bytes.size()),
         EVP_PKEY_free};
@@ -89,10 +89,10 @@ namespace libp2p::crypto {
   }
 
   template outcome::result<std::shared_ptr<EVP_PKEY>> NewEvpPkeyFromBytes(
-      int, gsl::span<const uint8_t>, decltype(EVP_PKEY_new_raw_public_key) *);
+      int, ConstSpanOfBytes, decltype(EVP_PKEY_new_raw_public_key) *);
 
   outcome::result<std::vector<uint8_t>> GenerateEcSignature(
-      gsl::span<const uint8_t> digest, const std::shared_ptr<EC_KEY> &key) {
+      ConstSpanOfBytes digest, const std::shared_ptr<EC_KEY> &key) {
     std::shared_ptr<ECDSA_SIG> signature{
         ECDSA_do_sign(digest.data(), static_cast<int>(digest.size()),
                       key.get()),
@@ -111,8 +111,8 @@ namespace libp2p::crypto {
     return std::move(signature_bytes);
   }
 
-  outcome::result<bool> VerifyEcSignature(gsl::span<const uint8_t> digest,
-                                          gsl::span<const uint8_t> signature,
+  outcome::result<bool> VerifyEcSignature(ConstSpanOfBytes digest,
+                                          ConstSpanOfBytes signature,
                                           const std::shared_ptr<EC_KEY> &key) {
     int result = ECDSA_verify(0, digest.data(), static_cast<int>(digest.size()),
                               signature.data(),
