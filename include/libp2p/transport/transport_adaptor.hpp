@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TRANSPORT_ADAPTOR_HPP
-#define LIBP2P_TRANSPORT_ADAPTOR_HPP
+#pragma once
 
 #include <chrono>
 #include <functional>
@@ -77,5 +76,3 @@ namespace libp2p::transport {
     virtual bool canDial(const multi::Multiaddress &ma) const = 0;
   };
 }  // namespace libp2p::transport
-
-#endif  // LIBP2P_TRANSPORT_ADAPTOR_HPP

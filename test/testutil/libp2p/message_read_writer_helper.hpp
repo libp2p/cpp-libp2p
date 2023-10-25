@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MESSAGE_READ_WRITER_HELPER_HPP
-#define LIBP2P_MESSAGE_READ_WRITER_HELPER_HPP
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -41,5 +40,3 @@ namespace libp2p::basic {
       const std::shared_ptr<connection::StreamMock> &stream_mock,
       std::vector<uint8_t> msg);
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_MESSAGE_READ_WRITER_HELPER_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_GOSSIP_MESSAGE_RECEIVER_HPP
-#define LIBP2P_PROTOCOL_GOSSIP_MESSAGE_RECEIVER_HPP
+#pragma once
 
 #include "common.hpp"
 
@@ -46,5 +45,3 @@ namespace libp2p::protocol::gossip {
   };
 
 }  // namespace libp2p::protocol::gossip
-
-#endif  // LIBP2P_PROTOCOL_GOSSIP_MESSAGE_RECEIVER_HPP

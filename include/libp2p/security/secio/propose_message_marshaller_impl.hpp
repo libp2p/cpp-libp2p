@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECIO_PROPOSE_MESSAGE_MARSHALLER_IMPL_HPP
-#define LIBP2P_SECIO_PROPOSE_MESSAGE_MARSHALLER_IMPL_HPP
+#pragma once
 
 #include <libp2p/security/secio/propose_message_marshaller.hpp>
 
@@ -36,5 +35,3 @@ namespace libp2p::security::secio {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security::secio,
                           ProposeMessageMarshallerImpl::Error);
-
-#endif  // LIBP2P_SECIO_PROPOSE_MESSAGE_MARSHALLER_IMPL_HPP

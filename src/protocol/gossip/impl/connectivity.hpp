@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_GOSSIP_CONNECTIVITY_HPP
-#define LIBP2P_PROTOCOL_GOSSIP_CONNECTIVITY_HPP
+#pragma once
 
 #include <map>
 #include <unordered_map>
@@ -134,5 +133,3 @@ namespace libp2p::protocol::gossip {
   };
 
 }  // namespace libp2p::protocol::gossip
-
-#endif  // LIBP2P_PROTOCOL_GOSSIP_CONNECTIVITY_HPP

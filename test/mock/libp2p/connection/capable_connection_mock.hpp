@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CAPABLE_CONNECTION_MOCK_HPP
-#define LIBP2P_CAPABLE_CONNECTION_MOCK_HPP
+#pragma once
 
 #include <gmock/gmock.h>
 
@@ -130,5 +129,3 @@ namespace libp2p::connection {
     std::shared_ptr<LayerConnection> real_;
   };
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_CAPABLE_CONNECTION_MOCK_HPP

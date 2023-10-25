@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONNECTION_MANAGER_IMPL_HPP
-#define LIBP2P_CONNECTION_MANAGER_IMPL_HPP
+#pragma once
 
 #include <unordered_set>
 
@@ -50,5 +49,3 @@ namespace libp2p::network {
   };
 
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_CONNECTION_MANAGER_IMPL_HPP

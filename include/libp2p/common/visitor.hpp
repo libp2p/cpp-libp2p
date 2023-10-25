@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_VISITOR_HPP
-#define LIBP2P_VISITOR_HPP
+#pragma once
 
 #include <type_traits>  // for std::decay
 #include <utility>      // for std::forward
@@ -99,5 +98,3 @@ namespace libp2p {
     return match(std::forward<T>(t), make_visitor(std::forward<Fs>(fs)...));
   }
 }  // namespace kagome
-
-#endif  // LIBP2P_VISITOR_HPP

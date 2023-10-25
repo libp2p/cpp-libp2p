@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_LIBP2P_CRYPTO_KEY_HPP
-#define LIBP2P_LIBP2P_CRYPTO_KEY_HPP
+#pragma once
 
 #include <functional>
 
@@ -93,5 +92,3 @@ namespace std {
     size_t operator()(const libp2p::crypto::KeyPair &x) const;
   };
 }  // namespace std
-
-#endif  // LIBP2P_LIBP2P_CRYPTO_KEY_HPP

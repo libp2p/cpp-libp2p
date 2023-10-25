@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_KEY_REPOSITORY_MOCK_HPP
-#define LIBP2P_KEY_REPOSITORY_MOCK_HPP
+#pragma once
 
 #include <libp2p/peer/key_repository.hpp>
 
@@ -30,5 +29,3 @@ namespace libp2p::peer {
     MOCK_CONST_METHOD0(getPeers, std::unordered_set<PeerId>());
   };
 }  // namespace libp2p::peer
-
-#endif  // LIBP2P_KEY_REPOSITORY_MOCK_HPP

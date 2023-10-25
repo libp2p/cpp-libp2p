@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_COMMON_FUNCTIONS_HPP
-#define LIBP2P_COMMON_FUNCTIONS_HPP
+#pragma once
 
 #include <algorithm>
 #include <array>
@@ -89,5 +88,3 @@ namespace libp2p::crypto {
                                           const std::shared_ptr<EC_KEY> &key);
 
 }  // namespace libp2p::crypto
-
-#endif  // LIBP2P_COMMON_FUNCTIONS_HPP

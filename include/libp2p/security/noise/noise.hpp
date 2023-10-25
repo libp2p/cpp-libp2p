@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_NOISE_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_NOISE_HPP
+#pragma once
 
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/key.hpp>
@@ -42,5 +41,3 @@ namespace libp2p::security {
   };
 
 }  // namespace libp2p::security
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_NOISE_HPP

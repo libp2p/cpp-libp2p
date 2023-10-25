@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_GOSSIP_MESSAGE_BUILDER_HPP
-#define LIBP2P_PROTOCOL_GOSSIP_MESSAGE_BUILDER_HPP
+#pragma once
 
 #include <map>
 #include <unordered_set>
@@ -85,5 +84,3 @@ namespace libp2p::protocol::gossip {
     std::unordered_set<MessageId> messages_added_;
   };
 }  // namespace libp2p::protocol::gossip
-
-#endif  // LIBP2P_PROTOCOL_GOSSIP_MESSAGE_BUILDER_HPP

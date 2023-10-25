@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_PEERINFOWITHDISTANCE
-#define LIBP2P_PROTOCOL_KADEMLIA_PEERINFOWITHDISTANCE
+#pragma once
 
 #include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
@@ -39,5 +38,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_PEERINFOWITHDISTANCE

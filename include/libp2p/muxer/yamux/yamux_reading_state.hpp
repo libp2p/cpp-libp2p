@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_YAMUX_READING_STATE_HPP
-#define LIBP2P_YAMUX_READING_STATE_HPP
+#pragma once
 
 #include <libp2p/basic/read_buffer.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
@@ -70,5 +69,3 @@ namespace libp2p::connection {
   };
 
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_YAMUX_READING_STATE_HPP

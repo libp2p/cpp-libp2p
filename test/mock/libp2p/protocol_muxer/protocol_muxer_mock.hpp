@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_MUXER_MOCK_HPP
-#define LIBP2P_PROTOCOL_MUXER_MOCK_HPP
+#pragma once
 
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
 
@@ -30,5 +29,3 @@ namespace libp2p::protocol_muxer {
                  void(outcome::result<std::shared_ptr<connection::Stream>>)>));
   };
 }  // namespace libp2p::protocol_muxer
-
-#endif  // LIBP2P_PROTOCOL_MUXER_MOC_HPP

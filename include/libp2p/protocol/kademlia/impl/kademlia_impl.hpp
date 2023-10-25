@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_KADEMLIAIMPL
-#define LIBP2P_PROTOCOL_KADEMLIA_KADEMLIAIMPL
+#pragma once
 
 #include <libp2p/protocol/kademlia/impl/executors_factory.hpp>
 #include <libp2p/protocol/kademlia/impl/session_host.hpp>
@@ -168,5 +167,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_KADEMLIAIMPL

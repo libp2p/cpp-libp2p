@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ROUTER_MOCK_HPP
-#define LIBP2P_ROUTER_MOCK_HPP
+#pragma once
 
 #include <libp2p/network/router.hpp>
 
@@ -29,5 +28,3 @@ namespace libp2p::network {
                                        std::shared_ptr<connection::Stream>));
   };
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_ROUTER_MOCK_HPP

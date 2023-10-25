@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_READWRITECLOSER_MOCK_HPP
-#define LIBP2P_READWRITECLOSER_MOCK_HPP
+#pragma once
 
 #include <libp2p/basic/readwritecloser.hpp>
 
@@ -36,5 +35,3 @@ inline std::ostream &operator<<(std::ostream &s,
   s << kagome::common::hex_upper(v) << "\n";
   return s;
 }
-
-#endif  // LIBP2P_READWRITECLOSER_MOCK_HPP

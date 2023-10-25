@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PLAINTEXT_CONNECTION_HPP
-#define LIBP2P_PLAINTEXT_CONNECTION_HPP
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -65,5 +64,3 @@ namespace libp2p::connection {
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
   };
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_PLAINTEXT_CONNECTION_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_PEERROUTINGTABLEIMPL
-#define LIBP2P_PROTOCOL_KADEMLIA_PEERROUTINGTABLEIMPL
+#pragma once
 
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 
@@ -133,5 +132,3 @@ namespace libp2p::protocol::kademlia {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::kademlia,
                           PeerRoutingTableImpl::Error);
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_PEERROUTINGTABLEIMPL

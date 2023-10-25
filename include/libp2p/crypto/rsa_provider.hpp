@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_RSA_PROVIDER_HPP
-#define LIBP2P_CRYPTO_RSA_PROVIDER_HPP
+#pragma once
 
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/rsa_types.hpp>
@@ -56,5 +55,3 @@ namespace libp2p::crypto::rsa {
     virtual ~RsaProvider() = default;
   };
 };  // namespace libp2p::crypto::rsa
-
-#endif  // LIBP2P_CRYPTO_RSA_PROVIDER_HPP

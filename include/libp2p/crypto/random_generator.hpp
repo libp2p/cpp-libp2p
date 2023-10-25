@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_RANDOM_RANDOM_GENERATOR_HPP
-#define LIBP2P_CRYPTO_RANDOM_RANDOM_GENERATOR_HPP
+#pragma once
 
 #include <algorithm>
 #include <cstdint>
@@ -63,5 +62,3 @@ namespace libp2p::crypto::random {
    */
   class CSPRNG : public RandomGenerator {};
 }  // namespace libp2p::crypto::random
-
-#endif  // LIBP2P_CRYPTO_RANDOM_RANDOM_GENERATOR_HPP

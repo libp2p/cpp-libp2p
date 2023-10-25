@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_COMMON_METRICS_INSTANCE_COUNT_HPP
-#define LIBP2P_COMMON_METRICS_INSTANCE_COUNT_HPP
+#pragma once
 
 #include <atomic>
 #include <mutex>
@@ -54,5 +53,3 @@ namespace libp2p::metrics::instance {
     }
   };
 }  // namespace libp2p::metrics::instance
-
-#endif  // LIBP2P_COMMON_METRICS_INSTANCE_COUNT_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TEST_ACCEPTANCE_LIBP2P_HOST_PEER_TICK_COUNTER_HPP
-#define LIBP2P_TEST_ACCEPTANCE_LIBP2P_HOST_PEER_TICK_COUNTER_HPP
+#pragma once
 
 #include <atomic>
 
@@ -41,5 +40,3 @@ struct TickCounter {
   const size_t required_count;      ///< number of ticks to match
   std::atomic<size_t> ticks_count;  ///< current number of ticks
 };
-
-#endif  // LIBP2P_TEST_ACCEPTANCE_LIBP2P_HOST_PEER_TICK_COUNTER_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MULTIHASH_HPP
-#define LIBP2P_MULTIHASH_HPP
+#pragma once
 
 #include <cstdint>
 #include <string>
@@ -148,5 +147,3 @@ namespace std {
 }  // namespace std
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi, Multihash::Error);
-
-#endif  // LIBP2P_MULTIHASH_HPP

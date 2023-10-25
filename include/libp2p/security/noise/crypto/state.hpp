@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_STATE_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_STATE_HPP
+#pragma once
 
 #include <boost/optional.hpp>
 
@@ -217,5 +216,3 @@ namespace libp2p::security::noise {
 }  // namespace libp2p::security::noise
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security::noise, Error);
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_STATE_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_STORAGE
-#define LIBP2P_PROTOCOL_KADEMLIA_STORAGE
+#pragma once
 
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
@@ -30,5 +29,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_STORAGE

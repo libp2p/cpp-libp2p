@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_ERROR_HPP
-#define LIBP2P_CRYPTO_ERROR_HPP
+#pragma once
 
 #include <libp2p/outcome/outcome.hpp>
 
@@ -82,5 +81,3 @@ OUTCOME_HPP_DECLARE_ERROR(libp2p::crypto, HmacProviderError)
 OUTCOME_HPP_DECLARE_ERROR(libp2p::crypto, RandomProviderError)
 OUTCOME_HPP_DECLARE_ERROR(libp2p::crypto, KeyGeneratorError)
 OUTCOME_HPP_DECLARE_ERROR(libp2p::crypto, KeyValidatorError)
-
-#endif  // LIBP2P_CRYPTO_ERROR_HPP

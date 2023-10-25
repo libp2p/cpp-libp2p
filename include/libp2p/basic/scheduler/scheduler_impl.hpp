@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASIC_SCHEDULER_IMPL_HPP
-#define LIBP2P_BASIC_SCHEDULER_IMPL_HPP
+#pragma once
 
 #include <map>
 #include <unordered_map>
@@ -238,5 +237,3 @@ namespace libp2p::basic {
     TimedCallbacks timed_callbacks_;
   };
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_SCHEDULER_IMPL_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOBUF_MESSAGE_READ_WRITER_HPP
-#define LIBP2P_PROTOBUF_MESSAGE_READ_WRITER_HPP
+#pragma once
 
 #include <libp2p/basic/message_read_writer.hpp>
 
@@ -92,5 +91,3 @@ namespace libp2p::basic {
     std::shared_ptr<MessageReadWriter> read_writer_;
   };
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_PROTOBUF_MESSAGE_READ_WRITER_HPP

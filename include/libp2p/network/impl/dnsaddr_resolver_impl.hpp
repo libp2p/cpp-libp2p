@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_NETWORK_IMPL_DNSADDR_RESOLVER_IMPL_HPP
-#define LIBP2P_INCLUDE_LIBP2P_NETWORK_IMPL_DNSADDR_RESOLVER_IMPL_HPP
+#pragma once
 
 #include <libp2p/network/dnsaddr_resolver.hpp>
 
@@ -45,5 +44,3 @@ namespace libp2p::network {
 }  // namespace libp2p::network
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::network, DnsaddrResolverImpl::Error);
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_NETWORK_IMPL_DNSADDR_RESOLVER_IMPL_HPP

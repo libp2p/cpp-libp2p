@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_LAYER_LAYERADAPTORMOCK
-#define LIBP2P_LAYER_LAYERADAPTORMOCK
+#pragma once
 
 #include <gmock/gmock.h>
 #include <libp2p/layer/layer_adaptor.hpp>
@@ -31,5 +30,3 @@ namespace libp2p::layer {
   };
 
 }  // namespace libp2p::layer
-
-#endif  // LIBP2P_LAYER_LAYERADAPTORMOCK

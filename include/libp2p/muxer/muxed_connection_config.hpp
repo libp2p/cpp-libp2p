@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MUXED_CONNECTION_CONFIG_HPP
-#define LIBP2P_MUXED_CONNECTION_CONFIG_HPP
+#pragma once
 
 #include <chrono>
 #include <cstddef>
@@ -35,5 +34,3 @@ namespace libp2p::muxer {
     std::chrono::milliseconds no_streams_interval = kDefaultNoStreamsInterval;
   };
 }  // namespace libp2p::muxer
-
-#endif  // LIBP2P_MUXED_CONNECTION_CONFIG_HPP

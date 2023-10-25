@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP
-#define LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP
+#pragma once
 
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
@@ -36,5 +35,3 @@ namespace libp2p::crypto::aes {
     virtual outcome::result<Bytes> finalize() = 0;
   };
 }  // namespace libp2p::crypto::aes
-
-#endif  // LIBP2P_CRYPTO_IMPL_DETAIL_AES_CRYPT_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MESSAGE_READ_WRITER_BIGENDIAN_HPP
-#define LIBP2P_MESSAGE_READ_WRITER_BIGENDIAN_HPP
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -52,5 +51,3 @@ namespace libp2p::basic {
     std::shared_ptr<ReadWriter> conn_;
   };
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_MESSAGE_READ_WRITER_BIGENDIAN_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_LAYER_WSCONNECTIONCONFIG
-#define LIBP2P_LAYER_WSCONNECTIONCONFIG
+#pragma once
 
 #include <chrono>
 
@@ -18,5 +17,3 @@ namespace libp2p::layer {
     std::chrono::milliseconds ping_timeout{10'000};
   };
 }  // namespace libp2p::layer
-
-#endif  // LIBP2P_LAYER_WSCONNECTIONCONFIG

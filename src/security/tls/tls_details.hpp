@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECURITY_TLS_DETAILS_HPP
-#define LIBP2P_SECURITY_TLS_DETAILS_HPP
+#pragma once
 
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/log/logger.hpp>
@@ -56,5 +55,3 @@ namespace libp2p::security::tls_details {
       const crypto::marshaller::KeyMarshaller &key_marshaller);
 
 }  // namespace libp2p::security::tls_details
-
-#endif  // LIBP2P_SECURITY_TLS_DETAILS_HPP

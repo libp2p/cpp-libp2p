@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_MESSAGE
-#define LIBP2P_PROTOCOL_KADEMLIA_MESSAGE
+#pragma once
 
 #include <libp2p/host/host.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
@@ -84,5 +83,3 @@ namespace libp2p::protocol::kademlia {
 }  // namespace libp2p::protocol::kademlia
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::kademlia, Message::Error);
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_MESSAGE

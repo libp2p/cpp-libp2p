@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_GOSSIP_COMMON_HPP
-#define LIBP2P_PROTOCOL_GOSSIP_COMMON_HPP
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -101,5 +100,3 @@ namespace libp2p::protocol::gossip {
 }  // namespace libp2p::protocol::gossip
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::gossip, Error);
-
-#endif  // LIBP2P_PROTOCOL_GOSSIP_COMMON_HPP

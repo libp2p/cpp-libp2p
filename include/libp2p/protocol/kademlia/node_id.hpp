@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_NODEID
-#define LIBP2P_PROTOCOL_KADEMLIA_NODEID
+#pragma once
 
 #include <bitset>
 #include <climits>
@@ -111,5 +110,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_NODEID

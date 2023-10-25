@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASE64_HPP
-#define LIBP2P_BASE64_HPP
+#pragma once
 
 #include <optional>
 
@@ -34,5 +33,3 @@ namespace libp2p::multi::detail {
    */
   outcome::result<Bytes> decodeBase64(std::string_view string);
 }  // namespace libp2p::multi::detail
-
-#endif  // LIBP2P_BASE64_HPP

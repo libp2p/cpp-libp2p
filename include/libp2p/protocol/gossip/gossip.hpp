@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_GOSSIP_HPP
-#define LIBP2P_GOSSIP_HPP
+#pragma once
 
 #include <chrono>
 #include <functional>
@@ -161,5 +160,3 @@ namespace libp2p::protocol::gossip {
       Config config = Config{});
 
 }  // namespace libp2p::protocol::gossip
-
-#endif  // LIBP2P_GOSSIP_HPP

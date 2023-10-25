@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ED25519_PROVIDER_HPP
-#define LIBP2P_ED25519_PROVIDER_HPP
+#pragma once
 
 #include <array>
 
@@ -66,5 +65,3 @@ namespace libp2p::crypto::ed25519 {
   };
 
 }  // namespace libp2p::crypto::ed25519
-
-#endif  // LIBP2P_ED25519_PROVIDER_HPP

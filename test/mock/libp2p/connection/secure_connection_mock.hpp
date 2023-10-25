@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECURE_CONNECTION_MOCK_HPP
-#define LIBP2P_SECURE_CONNECTION_MOCK_HPP
+#pragma once
 
 #include <libp2p/connection/secure_connection.hpp>
 
@@ -53,5 +52,3 @@ namespace libp2p::connection {
                        outcome::result<crypto::PublicKey>(void));
   };
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_SECURE_CONNECTION_MOCK_HPP

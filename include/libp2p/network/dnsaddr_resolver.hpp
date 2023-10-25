@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_NETWORK_DNSADDR_RESOLVER_HPP
-#define LIBP2P_INCLUDE_LIBP2P_NETWORK_DNSADDR_RESOLVER_HPP
+#pragma once
 
 #include <functional>
 #include <vector>
@@ -40,5 +39,3 @@ namespace libp2p::network {
     virtual void load(multi::Multiaddress address, AddressesCallback callback) = 0;
   };
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_NETWORK_DNSADDR_RESOLVER_HPP

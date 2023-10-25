@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_UPGRADER_HPP
-#define LIBP2P_UPGRADER_HPP
+#pragma once
 
 #include <memory>
 
@@ -90,5 +89,3 @@ namespace libp2p::transport {
   };
 
 }  // namespace libp2p::transport
-
-#endif  // LIBP2P_UPGRADER_HPP

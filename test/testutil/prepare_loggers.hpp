@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef TESTUTIL_PREPARELOGGERS
-#define TESTUTIL_PREPARELOGGERS
+#pragma once
+
 
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/log/logger.hpp>
@@ -60,5 +60,3 @@ groups:
   }
 
 }  // namespace testutil
-
-#endif  // TESTUTIL_PREPARELOGGERS

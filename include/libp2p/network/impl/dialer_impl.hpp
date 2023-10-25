@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_DIALER_IMPL_HPP
-#define LIBP2P_DIALER_IMPL_HPP
+#pragma once
 
 #include <set>
 #include <unordered_map>
@@ -91,5 +90,3 @@ namespace libp2p::network {
   };
 
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_DIALER_IMPL_HPP

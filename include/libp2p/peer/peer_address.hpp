@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PEER_ADDRESS_HPP
-#define LIBP2P_PEER_ADDRESS_HPP
+#pragma once
 
 #include <memory>
 #include <string>
@@ -86,5 +85,3 @@ namespace libp2p::peer {
 }  // namespace libp2p::peer
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::peer, PeerAddress::FactoryError)
-
-#endif  // LIBP2P_PEER_ADDRESS_HPP

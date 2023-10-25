@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASIC_ASIO_SCHEDULER_BACKEND_HPP
-#define LIBP2P_BASIC_ASIO_SCHEDULER_BACKEND_HPP
+#pragma once
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -55,5 +54,3 @@ namespace libp2p::basic {
   };
 
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_BASIC_ASIO_SCHEDULER_BACKEND_HPP

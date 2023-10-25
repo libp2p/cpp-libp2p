@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_CONFIG
-#define LIBP2P_PROTOCOL_KADEMLIA_CONFIG
+#pragma once
 
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/stream_protocols.hpp>
@@ -147,5 +146,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_ROUTING

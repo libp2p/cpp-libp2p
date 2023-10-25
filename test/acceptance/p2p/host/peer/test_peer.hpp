@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_HOST_TEST_PEER_HPP
-#define LIBP2P_HOST_TEST_PEER_HPP
+#pragma once
 
 #include <future>
 #include <thread>
@@ -100,5 +99,3 @@ class Peer {
   sptr<Scheduler> scheduler_;                   ///< scheduler
   const bool secure_;                           ///< use SECIO or not
 };
-
-#endif  // LIBP2P_HOST_TEST_PEER_HPP

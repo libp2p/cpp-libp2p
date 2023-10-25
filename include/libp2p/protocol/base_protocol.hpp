@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASE_PROTOCOL_HPP
-#define LIBP2P_BASE_PROTOCOL_HPP
+#pragma once
 
 #include <libp2p/basic/adaptor.hpp>
 #include <libp2p/connection/stream.hpp>
@@ -43,5 +42,3 @@ namespace libp2p::protocol {
   };
 
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_BASE_PROTOCOL_HPP

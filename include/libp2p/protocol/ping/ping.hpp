@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PING_IMPL_HPP
-#define LIBP2P_PING_IMPL_HPP
+#pragma once
 
 #include <memory>
 
@@ -65,5 +64,3 @@ namespace libp2p::protocol {
     PingConfig config_;
   };
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_PING_IMPL_HPP

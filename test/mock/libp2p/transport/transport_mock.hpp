@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TRANSPORT_MOCK_HPP
-#define LIBP2P_TRANSPORT_MOCK_HPP
+#pragma once
 
 #include <libp2p/transport/transport_adaptor.hpp>
 
@@ -31,5 +30,3 @@ namespace libp2p::transport {
     MOCK_CONST_METHOD1(canDial, bool(const multi::Multiaddress &));
   };
 }  // namespace libp2p::transport
-
-#endif  // LIBP2P_TRANSPORT_MOCK_HPP

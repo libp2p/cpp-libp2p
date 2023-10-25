@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_YAMUX_FRAME_HPP
-#define LIBP2P_YAMUX_FRAME_HPP
+#pragma once
 
 #include <boost/optional.hpp>
 #include <span>
@@ -141,5 +140,3 @@ namespace libp2p::connection {
    */
   boost::optional<YamuxFrame> parseFrame(BytesIn frame_bytes);
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_YAMUX_FRAME_HPP

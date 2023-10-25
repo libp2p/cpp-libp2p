@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_EXECUTORSFACTORY
-#define LIBP2P_PROTOCOL_KADEMLIA_EXECUTORSFACTORY
+#pragma once
 
 #include <memory>
 #include <queue>
@@ -51,5 +50,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_EXECUTORSFACTORY

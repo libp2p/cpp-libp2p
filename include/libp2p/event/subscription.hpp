@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SUBSCRIPTION_HPP
-#define LIBP2P_SUBSCRIPTION_HPP
+#pragma once
 
 #include <boost/signals2.hpp>
 
@@ -31,5 +30,3 @@ namespace libp2p::event {
   };
 
 }  // namespace libp2p::event
-
-#endif  // LIBP2P_SUBSCRIPTION_HPP

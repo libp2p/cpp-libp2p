@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_KEY_MARSHALLER_MOCK_HPP
-#define LIBP2P_KEY_MARSHALLER_MOCK_HPP
+#pragma once
 
 #include <libp2p/crypto/key_marshaller.hpp>
 
@@ -30,5 +29,3 @@ namespace libp2p::crypto::marshaller {
   };
 
 }  // namespace libp2p::crypto::marshaller
-
-#endif  // LIBP2P_KEY_MARSHALLER_MOCK_HPP

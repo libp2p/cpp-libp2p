@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ROUTER_HPP
-#define LIBP2P_ROUTER_HPP
+#pragma once
 
 #include <functional>
 #include <vector>
@@ -85,5 +84,3 @@ namespace libp2p::network {
   };
 
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_ROUTER_HPP

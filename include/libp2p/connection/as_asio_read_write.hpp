@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONNECTION_AS_ASIO_READ_WRITE_HPP
-#define LIBP2P_CONNECTION_AS_ASIO_READ_WRITE_HPP
+#pragma once
 
 #include <boost/asio/detail/buffer_sequence_adapter.hpp>
 #include <boost/asio/io_context.hpp>
@@ -85,5 +84,3 @@ namespace libp2p {
     std::shared_ptr<connection::LayerConnection> impl;
   };
 }  // namespace libp2p
-
-#endif  // LIBP2P_CONNECTION_AS_ASIO_READ_WRITE_HPP

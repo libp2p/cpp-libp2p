@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONNECTION_LAYERCONNECTION
-#define LIBP2P_CONNECTION_LAYERCONNECTION
+#pragma once
 
 #include <libp2p/basic/readwritecloser.hpp>
 #include <libp2p/multi/multiaddress.hpp>
@@ -47,5 +46,3 @@ namespace libp2p::connection {
 }  // namespace libp2p::connection
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, LayerConnection::Error)
-
-#endif  // LIBP2P_CONNECTION_LAYERCONNECTION

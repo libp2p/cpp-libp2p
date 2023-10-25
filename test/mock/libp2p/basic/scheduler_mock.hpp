@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASIC_SCHEDULERMOCK
-#define LIBP2P_BASIC_SCHEDULERMOCK
+#pragma once
 
 #include <libp2p/basic/scheduler.hpp>
 
@@ -56,5 +55,3 @@ namespace libp2p::basic {
   };
 
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_BASIC_SCHEDULERMOCK

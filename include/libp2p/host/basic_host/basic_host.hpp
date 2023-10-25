@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASIC_HOST_HPP
-#define LIBP2P_BASIC_HOST_HPP
+#pragma once
 
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
@@ -94,5 +93,3 @@ namespace libp2p::host {
   };
 
 }  // namespace libp2p::host
-
-#endif  // LIBP2P_BASIC_HOST_HPP

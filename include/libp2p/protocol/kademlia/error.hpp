@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_ERROR
-#define LIBP2P_PROTOCOL_KADEMLIA_ERROR
+#pragma once
 
 #include <libp2p/outcome/outcome.hpp>
 
@@ -30,5 +29,3 @@ namespace libp2p::protocol::kademlia {
 }
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::kademlia, Error);
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_ERROR

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_HPP
-#define LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_HPP
+#pragma once
 
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/peer/peer_id.hpp>
@@ -24,5 +23,3 @@ namespace libp2p::security::plaintext {
   };
 
 }  // namespace libp2p::security::plaintext
-
-#endif  // LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_HPP

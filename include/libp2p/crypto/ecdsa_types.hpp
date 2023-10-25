@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_ECDSA_TYPES_HPP
-#define LIBP2P_CRYPTO_ECDSA_TYPES_HPP
+#pragma once
 
 #include <array>
 #include <vector>
@@ -45,5 +44,3 @@ namespace libp2p::crypto::ecdsa {
     }
   };
 };  // namespace libp2p::crypto::ecdsa
-
-#endif  // LIBP2P_CRYPTO_ECDSA_TYPES_HPP

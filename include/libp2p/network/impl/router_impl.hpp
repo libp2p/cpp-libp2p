@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ROUTER_IMPL_HPP
-#define LIBP2P_ROUTER_IMPL_HPP
+#pragma once
 
 #include <tsl/htrie_map.h>
 #include <libp2p/network/router.hpp>
@@ -42,5 +41,3 @@ namespace libp2p::network {
 }  // namespace libp2p::network
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::network, RouterImpl::Error)
-
-#endif  // LIBP2P_ROUTER_IMPL_HPP

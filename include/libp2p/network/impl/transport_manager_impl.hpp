@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TRANSPORT_MANAGER_IMPL_HPP
-#define LIBP2P_TRANSPORT_MANAGER_IMPL_HPP
+#pragma once
 
 #include <vector>
 
@@ -32,5 +31,3 @@ namespace libp2p::network {
     std::vector<TransportSPtr> transports_;
   };
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_TRANSPORT_MANAGER_IMPL_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BUS_HPP
-#define LIBP2P_BUS_HPP
+#pragma once
 
 #include <map>
 #include <memory>
@@ -237,5 +236,3 @@ namespace libp2p::event {
     std::map<std::type_index, erased_channel_ptr> channels_;
   };
 }  // namespace libp2p::event
-
-#endif  // LIBP2P_BUS_HPP

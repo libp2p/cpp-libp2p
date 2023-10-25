@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_CTR_IMPL_HPP
-#define LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_CTR_IMPL_HPP
+#pragma once
 
 #include <openssl/evp.h>
 #include <span>
@@ -42,5 +41,3 @@ namespace libp2p::crypto::hmac {
   };
 
 }  // namespace libp2p::crypto::hmac
-
-#endif  // LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_CTR_IMPL_HPP

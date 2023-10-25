@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASIC_READ_HPP
-#define LIBP2P_BASIC_READ_HPP
+#pragma once
 
 #include <libp2p/basic/reader.hpp>
 #include <memory>
@@ -56,5 +55,3 @@ namespace libp2p {
         });
   }
 }  // namespace libp2p
-
-#endif  // LIBP2P_BASIC_READ_HPP

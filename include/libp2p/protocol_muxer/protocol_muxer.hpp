@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_MUXER_HPP
-#define LIBP2P_PROTOCOL_MUXER_HPP
+#pragma once
 
 #include <memory>
 
@@ -69,5 +68,3 @@ namespace libp2p::protocol_muxer {
 }  // namespace libp2p::protocol_muxer
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol_muxer, ProtocolMuxer::Error)
-
-#endif  // LIBP2P_PROTOCOL_MUXER_HPP

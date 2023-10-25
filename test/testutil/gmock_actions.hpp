@@ -5,8 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_GMOCK_ACTIONS_HPP
-#define LIBP2P_GMOCK_ACTIONS_HPP
+#pragma once
 
 #include <gmock/gmock.h>
 #include <boost/system/error_code.hpp>
@@ -86,5 +85,3 @@ ACTION_P(UpgradeToSecureOutbound, do_upgrade) {
 ACTION_P(UpgradeToMuxed, do_upgrade) {
   arg1(do_upgrade(arg0));
 }
-
-#endif  // LIBP2P_GMOCK_ACTIONS_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONTENT_IDENTIFIER_HPP
-#define LIBP2P_CONTENT_IDENTIFIER_HPP
+#pragma once
 
 #include <vector>
 
@@ -50,5 +49,3 @@ namespace libp2p::multi {
   };
 
 }  // namespace libp2p::multi
-
-#endif  // LIBP2P_CONTENT_IDENTIFIER_HPP

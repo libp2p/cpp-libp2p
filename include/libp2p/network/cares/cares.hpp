@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_NETWORK_CARES_CARES_HPP
-#define LIBP2P_INCLUDE_LIBP2P_NETWORK_CARES_CARES_HPP
+#pragma once
 
 #include <atomic>
 #include <functional>
@@ -122,5 +121,3 @@ namespace libp2p::network::c_ares {
 }  // namespace libp2p::network::c_ares
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::network::c_ares, Ares::Error);
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_NETWORK_CARES_CARES_HPP

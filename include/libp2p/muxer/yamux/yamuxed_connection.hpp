@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_YAMUXED_CONNECTION_HPP
-#define LIBP2P_YAMUXED_CONNECTION_HPP
+#pragma once
 
 #include <unordered_map>
 
@@ -247,5 +246,3 @@ namespace libp2p::connection {
   };
 
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_YAMUX_IMPL_HPP

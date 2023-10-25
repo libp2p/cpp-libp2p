@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP
-#define LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP
+#pragma once
 
 #include <libp2p/basic/scheduler.hpp>
 #include <libp2p/log/sublogger.hpp>
@@ -70,5 +69,3 @@ namespace libp2p::protocol::gossip {
   };
 
 }  // namespace libp2p::protocol::gossip
-
-#endif  // LIBP2P_PROTOCOL_GOSSIP_REMOTE_SUBSCRIPTIONS_HPP

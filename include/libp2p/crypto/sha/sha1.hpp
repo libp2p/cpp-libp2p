@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_SHA1
-#define LIBP2P_CRYPTO_SHA1
+#pragma once
 
 #include <openssl/sha.h>
 #include <span>
@@ -47,5 +46,3 @@ namespace libp2p::crypto {
   outcome::result<libp2p::common::Hash160> sha1(BytesIn input);
 
 }  // namespace libp2p::crypto
-
-#endif  // LIBP2P_CRYPTO_SHA1

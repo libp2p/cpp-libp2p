@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_INSECURE_RW_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_INSECURE_RW_HPP
+#pragma once
 
 #include <memory>
 
@@ -49,5 +48,3 @@ namespace libp2p::security::noise {
   };
 
 }  // namespace libp2p::security::noise
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_INSECURE_RW_HPP

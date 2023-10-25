@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECURE_CONNECTION_HPP
-#define LIBP2P_SECURE_CONNECTION_HPP
+#pragma once
 
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/crypto/key.hpp>
@@ -43,5 +42,3 @@ namespace libp2p::connection {
   };
 
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_SECURE_CONNECTION_HPP

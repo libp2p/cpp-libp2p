@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ADDRESS_REPOSITORY_HPP
-#define LIBP2P_ADDRESS_REPOSITORY_HPP
+#pragma once
 
 #include <chrono>
 #include <unordered_set>
@@ -176,5 +175,3 @@ namespace libp2p::peer {
   };
 
 }  // namespace libp2p::peer
-
-#endif  // LIBP2P_ADDRESS_REPOSITORY_HPP

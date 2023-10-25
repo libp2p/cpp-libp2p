@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONNECTION_WSCONNECTION
-#define LIBP2P_CONNECTION_WSCONNECTION
+#pragma once
 
 #include <boost/beast/websocket.hpp>
 
@@ -118,5 +117,3 @@ namespace libp2p::connection {
   };
 
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_CONNECTION_WSCONNECTION

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_GOSSIP_LOCAL_SUBSCRIPTIONS_HPP
-#define LIBP2P_PROTOCOL_GOSSIP_LOCAL_SUBSCRIPTIONS_HPP
+#pragma once
 
 #include <map>
 
@@ -57,5 +56,3 @@ namespace libp2p::protocol::gossip {
   };
 
 }  // namespace libp2p::protocol::gossip
-
-#endif  // LIBP2P_PROTOCOL_GOSSIP_LOCAL_SUBSCRIPTIONS_HPP

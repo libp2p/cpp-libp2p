@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PEER_INFO_HPP
-#define LIBP2P_PEER_INFO_HPP
+#pragma once
 
 #include <vector>
 
@@ -49,5 +48,3 @@ namespace std {
     }
   };
 }  // namespace std
-
-#endif  // LIBP2P_PEER_INFO_HPP

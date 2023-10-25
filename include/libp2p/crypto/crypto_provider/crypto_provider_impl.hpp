@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_PROVIDER_CRYPTO_PROVIDER_IMPL_HPP
-#define LIBP2P_CRYPTO_PROVIDER_CRYPTO_PROVIDER_IMPL_HPP
+#pragma once
 
 #include <libp2p/crypto/crypto_provider.hpp>
 
@@ -112,5 +111,3 @@ namespace libp2p::crypto {
 }  // namespace libp2p::crypto
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::crypto, CryptoProviderImpl::Error)
-
-#endif  // LIBP2P_CRYPTO_PROVIDER_CRYPTO_PROVIDER_IMPL_HPP

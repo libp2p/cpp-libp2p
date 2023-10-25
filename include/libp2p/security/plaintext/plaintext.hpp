@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PLAINTEXT_ADAPTOR_HPP
-#define LIBP2P_PLAINTEXT_ADAPTOR_HPP
+#pragma once
 
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/log/logger.hpp>
@@ -87,5 +86,3 @@ namespace libp2p::security {
 }  // namespace libp2p::security
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security, Plaintext::Error);
-
-#endif  // LIBP2P_PLAINTEXT_ADAPTOR_HPP

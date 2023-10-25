@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_HPP
-#define LIBP2P_PROTOCOL_HPP
+#pragma once
 
 #include <string>
 
@@ -18,5 +17,3 @@ namespace libp2p::peer {
       std::string;
 
 }  // namespace libp2p::peer
-
-#endif  // LIBP2P_PROTOCOL_HPP

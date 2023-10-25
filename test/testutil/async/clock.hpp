@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TETSUTIL_ASYNC_CLOCK_HPP
-#define LIBP2P_TETSUTIL_ASYNC_CLOCK_HPP
+#pragma once
 
 #include <chrono>
 
@@ -48,5 +47,3 @@ namespace libp2p::clock {
   using SystemClock = Clock<std::chrono::system_clock>;
 
 }  // namespace libp2p::clock
-
-#endif  // LIBP2P_TETSUTIL_ASYNC_CLOCK_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECURITY_ADAPTOR_MOCK_HPP
-#define LIBP2P_SECURITY_ADAPTOR_MOCK_HPP
+#pragma once
 
 #include <gmock/gmock.h>
 #include <libp2p/security/security_adaptor.hpp>
@@ -26,5 +25,3 @@ namespace libp2p::security {
                       const peer::PeerId &, SecConnCallbackFunc));
   };
 }  // namespace libp2p::security
-
-#endif  // LIBP2P_SECURITY_ADAPTOR_MOCK_HPP

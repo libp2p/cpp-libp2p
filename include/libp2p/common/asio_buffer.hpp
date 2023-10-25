@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_COMMON_ASIO_BUFFER_HPP
-#define LIBP2P_COMMON_ASIO_BUFFER_HPP
+#pragma once
 
 #include <boost/asio/buffer.hpp>
 
@@ -30,5 +29,3 @@ namespace libp2p {
     return {reinterpret_cast<uint8_t *>(s.data()), s.size()};
   }
 }  // namespace libp2p
-
-#endif  // LIBP2P_COMMON_ASIO_BUFFER_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SHA512_HPP
-#define LIBP2P_SHA512_HPP
+#pragma once
 
 #include <string_view>
 
@@ -48,5 +47,3 @@ namespace libp2p::crypto {
    */
   outcome::result<libp2p::common::Hash512> sha512(BytesIn input);
 }  // namespace libp2p::crypto
-
-#endif  // LIBP2P_SHA512_HPP

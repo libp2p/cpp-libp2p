@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TLS_CONNECTION_HPP
-#define LIBP2P_TLS_CONNECTION_HPP
+#pragma once
 
 #include <memory>
 
@@ -138,5 +137,3 @@ namespace libp2p::connection {
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::connection::TlsConnection);
   };
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_TLS_CONNECTION_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_OUTCOME_REGISTER_HPP
-#define LIBP2P_OUTCOME_REGISTER_HPP
+#pragma once
 
 #include <boost/config.hpp>  // for BOOST_SYMBOL_EXPORT
 #include <string>
@@ -120,5 +119,3 @@ namespace __libp2p {
   __GET_MACRO_2(__VA_ARGS__, OUTCOME_HPP_DECLARE_ERROR_2, \
                 OUTCOME_HPP_DECLARE_ERROR_1)              \
   (__VA_ARGS__)
-
-#endif  // LIBP2P_OUTCOME_REGISTER_HPP

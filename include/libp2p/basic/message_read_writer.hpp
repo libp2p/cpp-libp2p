@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MESSAGE_READ_WRITER_HPP
-#define LIBP2P_MESSAGE_READ_WRITER_HPP
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -44,5 +43,3 @@ namespace libp2p::basic {
                        Writer::WriteCallbackFunc cb) = 0;
   };
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_MESSAGE_READ_WRITER_HPP

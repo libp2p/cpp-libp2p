@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TCP_CONNECTION_HPP
-#define LIBP2P_TCP_CONNECTION_HPP
+#pragma once
 
 #include <atomic>
 #include <chrono>
@@ -148,5 +147,3 @@ namespace libp2p::transport {
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::transport::TcpConnection);
   };
 }  // namespace libp2p::transport
-
-#endif  // LIBP2P_TCP_CONNECTION_HPP

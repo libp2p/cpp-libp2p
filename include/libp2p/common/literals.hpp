@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_LITERALS_HPP
-#define LIBP2P_LITERALS_HPP
+#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -42,5 +41,3 @@ namespace libp2p {
   }  // namespace common
 
 }  // namespace libp2p
-
-#endif  // LIBP2P_LITERALS_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_ECDSA_PROVIDER_IMPL_HPP
-#define LIBP2P_CRYPTO_ECDSA_PROVIDER_IMPL_HPP
+#pragma once
 
 #include <memory>
 
@@ -61,5 +60,3 @@ namespace libp2p::crypto::ecdsa {
         EC_KEY *(*converter)(EC_KEY **, const uint8_t **, long)) const;
   };
 }  // namespace libp2p::crypto::ecdsa
-
-#endif  // LIBP2P_CRYPTO_ECDSA_PROVIDER_IMPL_HPP

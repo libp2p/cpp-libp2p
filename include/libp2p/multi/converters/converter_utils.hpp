@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONVERTER_UTILS_HPP
-#define LIBP2P_CONVERTER_UTILS_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -58,5 +57,3 @@ namespace libp2p::multi::converters {
       -> outcome::result<std::string>;
 
 }  // namespace libp2p::multi::converters
-
-#endif  // LIBP2P_CONVERTER_UTILS_HPP

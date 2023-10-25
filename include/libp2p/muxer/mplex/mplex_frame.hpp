@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MPLEX_FRAME_HPP
-#define LIBP2P_MPLEX_FRAME_HPP
+#pragma once
 
 #include <cstdint>
 #include <functional>
@@ -71,5 +70,3 @@ namespace libp2p::connection {
   void readFrame(std::shared_ptr<basic::ReadWriter> reader,
                  std::function<void(outcome::result<MplexFrame>)> cb);
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_MPLEX_FRAME_HPP

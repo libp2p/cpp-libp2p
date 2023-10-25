@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SRC_CRYPTO_HASHER_HPP
-#define LIBP2P_SRC_CRYPTO_HASHER_HPP
+#pragma once
 
 #include <span>
 #include <libp2p/crypto/common.hpp>
@@ -49,5 +48,3 @@ namespace libp2p::crypto {
     }
   };
 }  // namespace libp2p::crypto
-
-#endif  // LIBP2P_SRC_CRYPTO_HASHER_HPP

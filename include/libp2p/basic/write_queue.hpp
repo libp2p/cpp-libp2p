@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASIC_WRITE_QUEUE_HPP
-#define LIBP2P_BASIC_WRITE_QUEUE_HPP
+#pragma once
 
 #include <deque>
 #include <vector>
@@ -85,5 +84,3 @@ namespace libp2p::basic {
   };
 
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_BASIC_WRITE_QUEUE_HPP

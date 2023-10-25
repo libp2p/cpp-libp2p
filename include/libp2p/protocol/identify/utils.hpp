@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ID_UTILS_HPP
-#define LIBP2P_ID_UTILS_HPP
+#pragma once
 
 #include <functional>
 #include <memory>
@@ -49,5 +48,3 @@ namespace libp2p::protocol::detail {
                                  StreamProtocols protocols,
                                  StreamAndProtocolOrErrorCb handler);
 }  // namespace libp2p::protocol::detail
-
-#endif  // LIBP2P_UTILS_HPP

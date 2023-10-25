@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_OUTCOME_HPP
-#define LIBP2P_OUTCOME_HPP
+#pragma once
 
 #include <boost/outcome/result.hpp>
 #include <boost/outcome/success_failure.hpp>
@@ -170,5 +169,3 @@ struct fmt::formatter<libp2p::outcome::result<Result, Failure>> {
     }
   }
 };
-
-#endif  // LIBP2P_OUTCOME_HPP

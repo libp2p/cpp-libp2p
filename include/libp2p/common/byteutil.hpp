@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BYTEUTIL_HPP
-#define LIBP2P_BYTEUTIL_HPP
+#pragma once
 
 #include <cstdint>
 #include <cstring>
@@ -73,5 +72,3 @@ namespace std {
     size_t operator()(const libp2p::Bytes &x) const;
   };
 }  // namespace std
-
-#endif  // LIBP2P_BYTEUTIL_HPP

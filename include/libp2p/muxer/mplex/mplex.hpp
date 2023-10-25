@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MPLEX_IMPL_HPP
-#define LIBP2P_MPLEX_IMPL_HPP
+#pragma once
 
 #include <libp2p/muxer/muxed_connection_config.hpp>
 #include <libp2p/muxer/muxer_adaptor.hpp>
@@ -24,5 +23,3 @@ namespace libp2p::muxer {
     MuxedConnectionConfig config_;
   };
 }  // namespace libp2p::muxer
-
-#endif  // LIBP2P_MPLEX_IMPL_HPP

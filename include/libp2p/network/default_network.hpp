@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_DEFAULT_NETWORK_HPP
-#define LIBP2P_DEFAULT_NETWORK_HPP
+#pragma once
 
 // implementations
 #include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
@@ -23,5 +22,3 @@
 #include <libp2p/security/plaintext.hpp>
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp.hpp>
-
-#endif  // LIBP2P_DEFAULT_NETWORK_HPP

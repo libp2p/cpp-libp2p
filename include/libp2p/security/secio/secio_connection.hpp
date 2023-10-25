@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECIO_CONNECTION_HPP
-#define LIBP2P_SECIO_CONNECTION_HPP
+#pragma once
 
 #include <atomic>
 #include <condition_variable>
@@ -179,5 +178,3 @@ namespace libp2p::connection {
 }  // namespace libp2p::connection
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, SecioConnection::Error);
-
-#endif  // LIBP2P_SECIO_CONNECTION_HPP

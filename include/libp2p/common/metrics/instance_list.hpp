@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_COMMON_METRICS_INSTANCE_LIST_HPP
-#define LIBP2P_COMMON_METRICS_INSTANCE_LIST_HPP
+#pragma once
 
 #include <list>
 #include <mutex>
@@ -50,5 +49,3 @@
 #else
 #define LIBP2P_METRICS_INSTANCE_LIST_IF_ENABLED(...)
 #endif
-
-#endif  // LIBP2P_COMMON_METRICS_INSTANCE_LIST_HPP

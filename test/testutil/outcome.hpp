@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_GTEST_OUTCOME_UTIL_HPP
-#define LIBP2P_GTEST_OUTCOME_UTIL_HPP
+#pragma once
 
 #include <gtest/gtest.h>
 #include <libp2p/outcome/outcome.hpp>
@@ -178,5 +177,3 @@
         << "  Actual:   Success\n"                                             \
         << "Expected:   Error '" << make_error_code(_error_).message() << "'"; \
   }
-
-#endif  // LIBP2P_GTEST_OUTCOME_UTIL_HPP

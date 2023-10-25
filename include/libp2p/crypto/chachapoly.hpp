@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_CRYPTO_CHACHAPOLY_HPP
-#define LIBP2P_INCLUDE_LIBP2P_CRYPTO_CHACHAPOLY_HPP
+#pragma once
 
 #include <array>
 
@@ -65,5 +64,3 @@ namespace libp2p::crypto::chachapoly {
   };
 
 }  // namespace libp2p::crypto::chachapoly
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_CRYPTO_CHACHAPOLY_HPP

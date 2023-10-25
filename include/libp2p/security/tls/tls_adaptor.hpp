@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECURITY_TLS_ADAPTOR_HPP
-#define LIBP2P_SECURITY_TLS_ADAPTOR_HPP
+#pragma once
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl.hpp>
@@ -63,5 +62,3 @@ namespace libp2p::security {
     std::shared_ptr<boost::asio::ssl::context> ssl_context_;
   };
 }  // namespace libp2p::security
-
-#endif  // LIBP2P_SECURITY_TLS_ADAPTOR_HPP

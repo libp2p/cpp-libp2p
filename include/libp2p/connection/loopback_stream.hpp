@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONNECTION_LOOPBACKSTREAM
-#define LIBP2P_CONNECTION_LOOPBACKSTREAM
+#pragma once
 
 #include <boost/asio.hpp>
 #include <libp2p/connection/stream.hpp>
@@ -86,5 +85,3 @@ namespace libp2p::connection {
   };
 
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_CONNECTION_LOOPBACKSTREAM

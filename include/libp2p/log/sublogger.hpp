@@ -8,8 +8,7 @@
 
 #include <libp2p/log/logger.hpp>
 
-#ifndef LIBP2P_PROTOCOL_COMMON_SUBLOGGER_HPP
-#define LIBP2P_PROTOCOL_COMMON_SUBLOGGER_HPP
+#pragma once
 
 namespace libp2p::log {
 
@@ -100,5 +99,3 @@ namespace libp2p::log {
     size_t prefix_size_ = 0;
   };
 }  // namespace libp2p::log
-
-#endif  // LIBP2P_PROTOCOL_COMMON_SUBLOGGER_HPP

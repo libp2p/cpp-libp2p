@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_INTERFACES_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_INTERFACES_HPP
+#pragma once
 
 #include <tuple>
 
@@ -111,5 +110,3 @@ namespace libp2p::security::noise {
 }  // namespace libp2p::security::noise
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security::noise, HKDFError);
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_INTERFACES_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_IDENTIFY_DELTA_HPP
-#define LIBP2P_IDENTIFY_DELTA_HPP
+#pragma once
 
 #include <vector>
 
@@ -89,5 +88,3 @@ namespace libp2p::protocol {
     libp2p::log::Logger log_ = libp2p::log::createLogger("IdentifyDelta");
   };
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_IDENTIFY_DELTA_HPP

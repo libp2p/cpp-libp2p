@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MPLEX_STREAM_HPP
-#define LIBP2P_MPLEX_STREAM_HPP
+#pragma once
 
 #include <deque>
 #include <mutex>
@@ -151,5 +150,3 @@ namespace std {
         const libp2p::connection::MplexStream::StreamId &id) const;
   };
 }  // namespace std
-
-#endif  // LIBP2P_MPLEX_STREAM_HPP

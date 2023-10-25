@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_LISTENER_MOCK_HPP
-#define LIBP2P_LISTENER_MOCK_HPP
+#pragma once
 
 #include <libp2p/network/listener_manager.hpp>
 
@@ -41,5 +40,3 @@ namespace libp2p::network {
         void(outcome::result<std::shared_ptr<connection::CapableConnection>>));
   };
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_LISTENER_MOCK_HPP

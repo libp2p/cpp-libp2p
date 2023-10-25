@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_UDP_CONVERTER_HPP
-#define LIBP2P_UDP_CONVERTER_HPP
+#pragma once
 
 #include <libp2p/common/types.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -26,5 +25,3 @@ namespace libp2p::multi::converters {
         std::string_view addr);
   };
 }  // namespace libp2p::multi::converters
-
-#endif  // LIBP2P_UDP_CONVERTER_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_EMITTER_HPP
-#define LIBP2P_EMITTER_HPP
+#pragma once
 
 #include <functional>
 
@@ -121,5 +120,3 @@ namespace libp2p::event {
   };
 
 }  // namespace libp2p::event
-
-#endif  // LIBP2P_EMITTER_HPP

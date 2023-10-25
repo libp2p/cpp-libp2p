@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_VARINT_READER_HPP
-#define LIBP2P_VARINT_READER_HPP
+#pragma once
 
 #include <functional>
 #include <memory>
@@ -41,5 +40,3 @@ namespace libp2p::basic {
 }  // namespace libp2p::basic
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::basic, VarintReader::Error);
-
-#endif  // LIBP2P_VARINT_READER_HPP

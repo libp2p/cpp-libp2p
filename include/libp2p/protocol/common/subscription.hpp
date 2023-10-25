@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_SUBSCRIPTION_HPP
-#define LIBP2P_PROTOCOL_SUBSCRIPTION_HPP
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -38,5 +37,3 @@ namespace libp2p::protocol {
   };
 
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_PROTOCOL_SUBSCRIPTION_HPP

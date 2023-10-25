@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONNECTION_WSCONNECTION
-#define LIBP2P_CONNECTION_WSCONNECTION
+#pragma once
 
 #include <boost/asio/ssl/stream.hpp>
 
@@ -57,5 +56,3 @@ namespace libp2p::connection {
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::connection::SslConnection);
   };
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_CONNECTION_WSCONNECTION

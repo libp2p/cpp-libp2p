@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASE_PROTOCOL_MOCK_HPP
-#define LIBP2P_BASE_PROTOCOL_MOCK_HPP
+#pragma once
 
 #include <libp2p/protocol/base_protocol.hpp>
 
@@ -21,5 +20,3 @@ namespace libp2p::protocol {
   };
 
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_BASE_PROTOCOL_MOCK_HPP

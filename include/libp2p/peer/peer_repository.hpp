@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PEER_REPOSITORY_HPP
-#define LIBP2P_PEER_REPOSITORY_HPP
+#pragma once
 
 #include <memory>
 
@@ -57,5 +56,3 @@ namespace libp2p::peer {
     virtual PeerInfo getPeerInfo(const PeerId &peer_id) const = 0;
   };
 }  // namespace libp2p::peer
-
-#endif  // LIBP2P_PEER_REPOSITORY_HPP

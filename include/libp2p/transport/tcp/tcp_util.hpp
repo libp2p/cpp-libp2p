@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TCP_CONNECTION_UTIL_HPP
-#define LIBP2P_TCP_CONNECTION_UTIL_HPP
+#pragma once
 
 #include <sstream>
 #include <system_error>  // for std::errc
@@ -144,5 +143,3 @@ namespace libp2p::transport::detail {
     }
   }
 }  // namespace libp2p::transport::detail
-
-#endif  // LIBP2P_TCP_CONNECTION_UTIL_HPP

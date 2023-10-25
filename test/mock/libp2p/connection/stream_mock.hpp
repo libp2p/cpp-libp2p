@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_STREAM_MOCK_HPP
-#define LIBP2P_STREAM_MOCK_HPP
+#pragma once
 
 #include <libp2p/connection/stream.hpp>
 
@@ -60,5 +59,3 @@ namespace libp2p::connection {
     MOCK_CONST_METHOD0(remoteMultiaddr, outcome::result<multi::Multiaddress>());
   };
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_STREAM_MOCK_HPP

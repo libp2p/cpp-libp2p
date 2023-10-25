@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECURITY_ADAPTOR_HPP
-#define LIBP2P_SECURITY_ADAPTOR_HPP
+#pragma once
 
 #include <memory>
 
@@ -49,5 +48,3 @@ namespace libp2p::security {
         const peer::PeerId &p, SecConnCallbackFunc cb) = 0;
   };
 }  // namespace libp2p::security
-
-#endif  // LIBP2P_SECURITY_ADAPTOR_HPP

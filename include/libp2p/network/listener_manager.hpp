@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_NETWORK_LISTENER_HPP
-#define LIBP2P_NETWORK_LISTENER_HPP
+#pragma once
 
 #include <vector>
 
@@ -105,5 +104,3 @@ namespace libp2p::network {
   };
 
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_NETWORK_LISTENER_HPP

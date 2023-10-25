@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_IDENTIFY_MSG_PROCESSOR_HPP
-#define LIBP2P_IDENTIFY_MSG_PROCESSOR_HPP
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -142,5 +141,3 @@ namespace libp2p::protocol {
     log::Logger log_ = log::createLogger("IdentifyMsgProcessor");
   };
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_IDENTIFY_MSG_PROCESSOR_HPP

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_READ_WRITER_MOCK_HPP
-#define LIBP2P_READ_WRITER_MOCK_HPP
+#pragma once
 
 #include <libp2p/basic/readwriter.hpp>
 
@@ -26,5 +25,3 @@ namespace libp2p::basic {
                       Writer::WriteCallbackFunc));
   };
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_READ_WRITER_MOCK_HPP

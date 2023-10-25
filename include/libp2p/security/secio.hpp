@@ -4,9 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECIO_HPP
-#define LIBP2P_SECIO_HPP
+#pragma once
 
 #include <libp2p/security/secio/secio.hpp>
-
-#endif  // LIBP2P_SECIO_HPP

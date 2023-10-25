@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP
-#define LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP
+#pragma once
 
 #include <span>
 #include <libp2p/common/types.hpp>
@@ -41,5 +40,3 @@ namespace libp2p::crypto::hmac {
         HashType hash_type, const Bytes &key, BytesIn message) const = 0;
   };
 }  // namespace libp2p::crypto::hmac
-
-#endif  // LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP

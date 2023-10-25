@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_UPGRADER_IMPL_HPP
-#define LIBP2P_UPGRADER_IMPL_HPP
+#pragma once
 
 #include <vector>
 
@@ -94,5 +93,3 @@ namespace libp2p::transport {
 }  // namespace libp2p::transport
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::transport, UpgraderImpl::Error)
-
-#endif  // LIBP2P_UPGRADER_IMPL_HPP

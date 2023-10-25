@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_COMMON_AMBIGOUS_SIZE_HPP
-#define LIBP2P_COMMON_AMBIGOUS_SIZE_HPP
+#pragma once
 
 #include <cstdint>
 
@@ -19,5 +18,3 @@ namespace libp2p {
     s = s.first(n);
   }
 }  // namespace libp2p
-
-#endif  // LIBP2P_COMMON_AMBIGOUS_SIZE_HPP

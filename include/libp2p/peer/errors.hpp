@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PEER_ERRORS_HPP
-#define LIBP2P_PEER_ERRORS_HPP
+#pragma once
 
 #include <libp2p/outcome/outcome.hpp>
 
@@ -16,5 +15,3 @@ namespace libp2p::peer {
 }
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::peer, PeerError)
-
-#endif  // LIBP2P_PEER_ERRORS_HPP

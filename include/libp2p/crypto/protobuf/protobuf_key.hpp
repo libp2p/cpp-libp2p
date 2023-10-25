@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_PROTOBUF_KEY_HPP
-#define KAGOME_PROTOBUF_KEY_HPP
+#pragma once
+
 
 #include <cstdint>
 #include <vector>
@@ -26,5 +26,3 @@ namespace libp2p::crypto {
     }
   };
 }  // namespace libp2p::crypto
-
-#endif  // KAGOME_PROTOBUF_KEY_HPP

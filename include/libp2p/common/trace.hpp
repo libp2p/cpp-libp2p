@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_COMMON_TRACE_HPP
-#define LIBP2P_COMMON_TRACE_HPP
+#pragma once
 
 #include <libp2p/log/logger.hpp>
 
@@ -19,5 +18,3 @@
 #else
 #define TRACE(...)
 #endif
-
-#endif  // LIBP2P_COMMON_TRACE_HPP

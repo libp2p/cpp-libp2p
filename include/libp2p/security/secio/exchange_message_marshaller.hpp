@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECIO_EXHANGE_MESSAGE_MARSHALLER_HPP
-#define LIBP2P_SECIO_EXHANGE_MESSAGE_MARSHALLER_HPP
+#pragma once
 
 #include <vector>
 
@@ -57,5 +56,3 @@ namespace libp2p::security::secio {
         BytesIn msg_bytes) const = 0;
   };
 }  // namespace libp2p::security::secio
-
-#endif  // LIBP2P_SECIO_EXHANGE_MESSAGE_MARSHALLER_HPP

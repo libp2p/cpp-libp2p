@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CLIENT_ECHO_SESSION_HPP
-#define LIBP2P_CLIENT_ECHO_SESSION_HPP
+#pragma once
 
 #include <vector>
 
@@ -43,5 +42,3 @@ namespace libp2p::protocol {
   };
 
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_CLIENT_ECHO_SESSION_HPP

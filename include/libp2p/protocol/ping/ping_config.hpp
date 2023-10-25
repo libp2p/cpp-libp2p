@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PING_CONFIG_HPP
-#define LIBP2P_PING_CONFIG_HPP
+#pragma once
 
 #include <cstdint>
 
@@ -19,5 +18,3 @@ namespace libp2p::protocol {
     uint32_t message_size = 32;
   };
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_PING_CONFIG_HPP

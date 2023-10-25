@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONNECTION_MANAGER_MOCK_HPP
-#define LIBP2P_CONNECTION_MANAGER_MOCK_HPP
+#pragma once
 
 #include <libp2p/network/connection_manager.hpp>
 
@@ -37,5 +36,3 @@ namespace libp2p::network {
   };
 
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_CONNECTION_MANAGER_MOCK_HPP

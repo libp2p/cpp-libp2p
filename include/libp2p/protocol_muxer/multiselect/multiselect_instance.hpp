@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_MUXER_MULTISELECT_INSTANCE_HPP
-#define LIBP2P_PROTOCOL_MUXER_MULTISELECT_INSTANCE_HPP
+#pragma once
 
 #include <libp2p/protocol_muxer/multiselect.hpp>
 #include "parser.hpp"
@@ -128,5 +127,3 @@ namespace libp2p::protocol_muxer::multiselect {
   };
 
 }  // namespace libp2p::protocol_muxer::multiselect
-
-#endif  // LIBP2P_PROTOCOL_MUXER_MULTISELECT_INSTANCE_HPP

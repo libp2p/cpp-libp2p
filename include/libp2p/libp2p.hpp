@@ -4,11 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_LIBP2P_HPP
-#define LIBP2P_LIBP2P_HPP
+#pragma once
 
 namespace libp2p {
   // intentionally empty
 }
-
-#endif //LIBP2P_LIBP2P_HPP

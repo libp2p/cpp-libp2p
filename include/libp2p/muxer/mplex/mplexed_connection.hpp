@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MPLEXED_CONNECTION_HPP
-#define LIBP2P_MPLEXED_CONNECTION_HPP
+#pragma once
 
 #include <queue>
 #include <unordered_map>
@@ -208,5 +207,3 @@ namespace libp2p::connection {
     void streamReset(MplexStream::StreamId stream_id);
   };
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_MPLEXED_CONNECTION_HPP

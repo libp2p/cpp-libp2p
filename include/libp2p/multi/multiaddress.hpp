@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MULTIADDRESS_HPP
-#define LIBP2P_MULTIADDRESS_HPP
+#pragma once
 
 #include <functional>
 #include <list>
@@ -203,5 +202,3 @@ namespace std {
 }  // namespace std
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi, Multiaddress::Error)
-
-#endif  // LIBP2P_MULTIADDRESS_HPP

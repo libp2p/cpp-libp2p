@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECIO_DIALER_HPP
-#define LIBP2P_SECIO_DIALER_HPP
+#pragma once
 
 #include <boost/optional.hpp>
 #include <libp2p/connection/raw_connection.hpp>
@@ -143,5 +142,3 @@ namespace libp2p::security::secio {
 }  // namespace libp2p::security::secio
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security::secio, Dialer::Error);
-
-#endif  // LIBP2P_SECIO_DIALER_HPP

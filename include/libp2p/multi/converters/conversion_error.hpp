@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MULTI_CONVERTERS_CONVERSION_ERROR_HPP_
-#define LIBP2P_MULTI_CONVERTERS_CONVERSION_ERROR_HPP_
+#pragma once
 
 #include <libp2p/outcome/outcome.hpp>
 
@@ -27,5 +26,3 @@ namespace libp2p::multi::converters {
 }  // namespace libp2p::multi::converters
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi::converters, ConversionError)
-
-#endif  // LIBP2P_MULTI_CONVERTERS_CONVERSION_ERROR_HPP_
