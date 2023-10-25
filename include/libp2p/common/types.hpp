@@ -6,6 +6,7 @@
 #ifndef LIBP2P_P2P_COMMON_TYPES_HPP
 #define LIBP2P_P2P_COMMON_TYPES_HPP
 
+#include <array>
 #include <cstdint>
 #include <span>
 #include <vector>
