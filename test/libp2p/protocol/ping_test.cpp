@@ -10,8 +10,8 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/optional.hpp>
 
-#include <libp2p/common/types.hpp>
 #include <libp2p/common/literals.hpp>
+#include <libp2p/common/types.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/ping/common.hpp>
@@ -82,10 +82,10 @@ TEST_F(PingTest, PingServer) {
 
   auto if_eq_buf = [&](ConstSpanOfBytes actual) {
     auto expected = ConstSpanOfBytes(buffer_);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
-  EXPECT_CALL(*stream_,
-              write(Truly(if_eq_buf), kPingMsgSize, _))
+  EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _))
       .WillOnce(InvokeArgument<2>(buffer_.size()));
 
   EXPECT_CALL(*stream_, isClosedForWrite()).WillOnce(Return(false));
@@ -113,10 +113,10 @@ TEST_F(PingTest, PingClient) {
       .WillRepeatedly(Return(buffer_));
   auto if_eq_buf = [&](ConstSpanOfBytes actual) {
     auto expected = ConstSpanOfBytes(buffer_);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
-  EXPECT_CALL(*stream_,
-              write(Truly(if_eq_buf), kPingMsgSize, _))
+  EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _))
       .WillOnce(InvokeArgument<2>(buffer_.size()))
       .WillOnce(  // no second write
           InvokeArgument<2>(outcome::failure(boost::system::error_code{
@@ -152,10 +152,10 @@ TEST_F(PingTest, PingClientTimeoutExpired) {
   EXPECT_CALL(*rand_gen_, randomBytes(kPingMsgSize)).WillOnce(Return(buffer_));
   auto if_eq_buf = [&](ConstSpanOfBytes actual) {
     auto expected = ConstSpanOfBytes(buffer_);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
-  EXPECT_CALL(*stream_,
-              write(Truly(if_eq_buf), kPingMsgSize, _));
+  EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _));
 
   EXPECT_CALL(*stream_, isClosedForWrite()).WillOnce(Return(false));
 

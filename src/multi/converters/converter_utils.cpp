@@ -185,8 +185,7 @@ namespace libp2p::multi::converters {
               auto prefixedvarint = hex.substr(lastpos, 2);
               OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
 
-              ssize_t addrsize =
-                  static_cast<ssize_t>(UVarint(prefixBytes).toUInt64());
+              auto addrsize = UVarint(prefixBytes).toUInt64();
 
               // get the ipfs address as hex values
               auto hex_domain_name = hex.substr(lastpos + 2, addrsize * 2);
@@ -214,8 +213,7 @@ namespace libp2p::multi::converters {
               auto prefixedvarint = hex.substr(lastpos, 2);
               OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
 
-              ssize_t addrsize =
-                  static_cast<ssize_t>(UVarint(prefixBytes).toUInt64());
+              auto addrsize = UVarint(prefixBytes).toUInt64();
 
               // get the ipfs address as hex values
               auto hex_domain_name = hex.substr(lastpos + 2, addrsize * 2);
@@ -274,8 +272,7 @@ namespace libp2p::multi::converters {
         auto prefixedvarint = hex.substr(lastpos, 2);
         OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
 
-        ssize_t addrsize =
-            static_cast<ssize_t>(UVarint(prefixBytes).toUInt64());
+        auto addrsize = UVarint(prefixBytes).toUInt64();
         // get the ipfs address as hex values
         auto ipfsAddr = hex.substr(lastpos + 2, addrsize * 2);
 

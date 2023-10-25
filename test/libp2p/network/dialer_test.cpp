@@ -287,11 +287,11 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
 
   auto if_protocols = [&](std::span<const peer::ProtocolName> actual) {
     auto expected = std::span<const peer::ProtocolName>(protocols);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
 
-  EXPECT_CALL(*proto_muxer,
-              selectOneOf(Truly(if_protocols), _, _, _, _))
+  EXPECT_CALL(*proto_muxer, selectOneOf(Truly(if_protocols), _, _, _, _))
       .WillOnce(InvokeArgument<4>(r));
 
   bool executed = false;
@@ -323,11 +323,11 @@ TEST_F(DialerTest, NewStreamSuccess) {
 
   auto if_protocols = [&](std::span<const peer::ProtocolName> actual) {
     auto expected = std::span<const peer::ProtocolName>(protocols);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
 
-  EXPECT_CALL(*proto_muxer,
-              selectOneOf(Truly(if_protocols), _, _, _, _))
+  EXPECT_CALL(*proto_muxer, selectOneOf(Truly(if_protocols), _, _, _, _))
       .WillOnce(InvokeArgument<4>(protocols[0]));
 
   bool executed = false;

@@ -205,11 +205,10 @@ namespace libp2p::connection {
     }
 
     // the line below is due to std::span.size() has signed return type
-    size_t out_size{out.empty() ? 0u : static_cast<size_t>(out.size())};
-    if (out_size < bytes) {
+    if (out.size() < bytes) {
       log_->error(
           "Provided buffer is too short. Buffer size is {} when {} required",
-          out_size, bytes);
+          out.size(), bytes);
       cb(Error::TOO_SHORT_BUFFER);
       return;
     }

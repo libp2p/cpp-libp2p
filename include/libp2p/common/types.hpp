@@ -54,7 +54,7 @@ namespace libp2p {
 
   inline bool operator==(const SpanOfBytes auto &lhs,
                          const SpanOfBytes auto &rhs) {
-    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
   }
 
   inline auto operator<=>(const SpanOfBytes auto &lhs,

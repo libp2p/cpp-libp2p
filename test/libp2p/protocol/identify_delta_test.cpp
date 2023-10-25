@@ -126,15 +126,14 @@ TEST_F(IdentifyDeltaTest, Send) {
       .WillOnce(InvokeArgument<2>(
           StreamAndProtocol{stream_, kIdentifyDeltaProtocol}));
 
-
   auto if_added = [&](ConstSpanOfBytes actual) {
     auto expected = ConstSpanOfBytes(msg_added_protos_bytes_);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
 
   EXPECT_CALL(*stream_,
-              write(Truly(if_added),
-                    msg_added_protos_bytes_.size(), _))
+              write(Truly(if_added), msg_added_protos_bytes_.size(), _))
       .WillOnce(InvokeArgument<2>(outcome::success()));
 
   id_delta_->start();
@@ -176,20 +175,20 @@ TEST_F(IdentifyDeltaTest, Receive) {
 
   auto if_added = [&](std::span<const peer::ProtocolName> actual) {
     auto expected = std::span<const peer::ProtocolName>(added_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
 
-  EXPECT_CALL(proto_repo_,
-              addProtocols(kRemotePeerId, Truly(if_added)))
+  EXPECT_CALL(proto_repo_, addProtocols(kRemotePeerId, Truly(if_added)))
       .WillOnce(Return(outcome::success()));
 
   auto if_removed = [&](std::span<const peer::ProtocolName> actual) {
     auto expected = std::span<const peer::ProtocolName>(removed_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
 
-  EXPECT_CALL(proto_repo_,
-              removeProtocols(kRemotePeerId, Truly(if_removed)))
+  EXPECT_CALL(proto_repo_, removeProtocols(kRemotePeerId, Truly(if_removed)))
       .WillOnce(Return(outcome::success()));
 
   id_delta_->handle(StreamAndProtocol{stream_, {}});

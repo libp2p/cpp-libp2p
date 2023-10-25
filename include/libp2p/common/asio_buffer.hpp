@@ -20,13 +20,13 @@ namespace libp2p {
   }
 
   inline ConstSpanOfBytes asioBuffer(const boost::asio::const_buffer &s) {
-    return {// NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-            reinterpret_cast<const uint8_t *>(s.data()), s.size()};
+    // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<const uint8_t *>(s.data()), s.size()};
   }
 
   inline MutSpanOfBytes asioBuffer(const boost::asio::mutable_buffer &s) {
-    return {// NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-            reinterpret_cast<uint8_t *>(s.data()), s.size()};
+    // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<uint8_t *>(s.data()), s.size()};
   }
 }  // namespace libp2p
 

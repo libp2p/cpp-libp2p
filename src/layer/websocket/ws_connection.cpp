@@ -96,7 +96,8 @@ namespace libp2p::connection {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         reinterpret_cast<const uint8_t *>(&ping_counter_),
         sizeof(ping_counter_));
-    if (std::equal(payload.begin(), payload.end(), expected.begin())) {
+    if (std::equal(payload.begin(), payload.end(), expected.begin(),
+                   expected.end())) {
       SL_DEBUG(log_, "Correct pong has received for ping");
       ping_timeout_handle_.cancel();
       std::ignore = ping_handle_.reschedule(config_.ping_interval);
@@ -152,7 +153,7 @@ namespace libp2p::connection {
   }
 
   void WsConnection::write(ConstSpanOfBytes in,  //
-                           size_t bytes,                 //
+                           size_t bytes,         //
                            libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
     SL_TRACE(log_, "write {} bytes", bytes);
@@ -160,7 +161,7 @@ namespace libp2p::connection {
   }
 
   void WsConnection::writeSome(ConstSpanOfBytes in,  //
-                               size_t bytes,                 //
+                               size_t bytes,         //
                                libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
     SL_TRACE(log_, "write some upto {} bytes", bytes);

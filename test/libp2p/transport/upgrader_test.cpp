@@ -182,7 +182,8 @@ TEST_F(UpgraderTest, UpgradeSecureInitiator) {
 
   auto if_sec_proto = [&](std::span<const ProtocolName> actual) {
     auto expected = std::span<const ProtocolName>(security_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
 
   EXPECT_CALL(*muxer_,
@@ -208,7 +209,8 @@ TEST_F(UpgraderTest, UpgradeSecureNotInitiator) {
 
   auto if_sec_proto = [&](std::span<const ProtocolName> actual) {
     auto expected = std::span<const ProtocolName>(security_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
 
   EXPECT_CALL(*muxer_,
@@ -233,7 +235,8 @@ TEST_F(UpgraderTest, UpgradeSecureFail) {
 
   auto if_sec_proto = [&](std::span<const ProtocolName> actual) {
     auto expected = std::span<const ProtocolName>(security_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
 
   EXPECT_CALL(*muxer_,
@@ -252,7 +255,8 @@ TEST_F(UpgraderTest, UpgradeMux) {
 
   auto if_muxer_proto = [&](std::span<const ProtocolName> actual) {
     auto expected = std::span<const ProtocolName>(muxer_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
 
   EXPECT_CALL(*muxer_,
@@ -276,7 +280,8 @@ TEST_F(UpgraderTest, UpgradeMuxFail) {
 
   auto if_muxer_proto = [&](std::span<const ProtocolName> actual) {
     auto expected = std::span<const ProtocolName>(muxer_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin());
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
   };
 
   EXPECT_CALL(*muxer_,
