@@ -29,7 +29,7 @@ namespace {
   inline libp2p::outcome::result<libp2p::multi::Multiaddress>
   fromStringToMultiaddr(const std::string &addr) {
     return libp2p::multi::Multiaddress::create(ConstSpanOfBytes(
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-narrowing-conversions)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         reinterpret_cast<const uint8_t *>(addr.data()), addr.size()));
   }
 }  // namespace

@@ -222,7 +222,7 @@ namespace libp2p::basic {
 
         if (++first_cursor >= current_nc_items_.size()) {
           std::span<uint64_t> items(current_c_items_);
-          processCancellableItems(items.subspan(ssize_t(second_cursor)), owner);
+          processCancellableItems(items.subspan(second_cursor), owner);
           break;
         }
       } else {
@@ -234,8 +234,7 @@ namespace libp2p::basic {
 
         if (++second_cursor >= current_c_items_.size()) {
           std::span<Item> items(current_nc_items_);
-          processNonCancellableItems(items.subspan(ssize_t(first_cursor)),
-                                     owner);
+          processNonCancellableItems(items.subspan(first_cursor), owner);
           break;
         }
       }

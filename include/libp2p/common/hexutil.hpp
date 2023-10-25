@@ -70,7 +70,8 @@ namespace libp2p::common {
    * @return Span
    */
   inline ConstSpanOfBytes sv2span(const std::string_view &str) {
-    return {(const uint8_t *)str.data(), (ssize_t)str.size()};  // NOLINT
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<const uint8_t *>(str.data()), str.size()};
   }
 
   /**

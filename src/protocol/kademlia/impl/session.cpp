@@ -60,7 +60,7 @@ namespace libp2p::protocol::kademlia {
     ++writing_;
 
     // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-    stream_->write(std::span(buffer->data(), buffer->size()), buffer->size(),
+    stream_->write(*buffer, buffer->size(),
                    [wp = weak_from_this(), buffer,
                     response_handler](outcome::result<size_t> result) {
                      if (auto self = wp.lock()) {
