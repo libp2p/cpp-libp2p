@@ -39,19 +39,11 @@ namespace libp2p::basic {
     /// Adds new data to the buffer
     void add(ConstSpanOfBytes bytes);
 
-    void add(const RangeOfBytes auto &bytes) {
-      add(ConstSpanOfBytes(bytes));
-    }
-
     /// Returns # of bytes actually copied into out
     size_t consume(MutSpanOfBytes out);
 
     /// Returns # of bytes actually copied into out
     size_t addAndConsume(ConstSpanOfBytes in, MutSpanOfBytes out);
-
-    size_t addAndConsume(const RangeOfBytes auto &in, MutSpanOfBytes out) {
-      return addAndConsume(ConstSpanOfBytes(in), out);
-    }
 
     /// Clears and deallocates
     void clear();

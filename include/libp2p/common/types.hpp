@@ -49,11 +49,6 @@ namespace libp2p {
   concept SpanOfBytes = std::is_same_v<std::decay_t<T>, ConstSpanOfBytes>
       or std::is_same_v<std::decay_t<T>, ConstSpanOfBytes>;
 
-  template <class T>
-  concept RangeOfBytes =
-      std::ranges::sized_range<T> and std::ranges::contiguous_range<T>
-      and std::is_same_v<std::ranges::range_value_t<std::decay_t<T>>, uint8_t>;
-
   inline bool operator==(const SpanOfBytes auto &lhs,
                          const SpanOfBytes auto &rhs) {
     return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());

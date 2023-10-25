@@ -10,11 +10,10 @@
 #include <libp2p/multi/uvarint.hpp>
 
 using libp2p::ConstSpanOfBytes;
-using libp2p::RangeOfBytes;
 
 TEST(VarintPrefixReader, VarintReadOneByOne) {
-  using libp2p::multi::UVarint;
   using libp2p::basic::VarintPrefixReader;
+  using libp2p::multi::UVarint;
 
   auto test = [](uint64_t x) {
     UVarint uvarint(x);
@@ -43,8 +42,8 @@ TEST(VarintPrefixReader, VarintReadOneByOne) {
 }
 
 TEST(VarintPrefixReader, VarintReadFromBuffer) {
-  using libp2p::multi::UVarint;
   using libp2p::basic::VarintPrefixReader;
+  using libp2p::multi::UVarint;
 
   auto test = [](uint64_t x, ConstSpanOfBytes &buffer) {
     VarintPrefixReader reader;
@@ -73,8 +72,8 @@ TEST(VarintPrefixReader, VarintReadFromBuffer) {
 }
 
 TEST(VarintPrefixReader, VarintReadPartial) {
-  using libp2p::multi::UVarint;
   using libp2p::basic::VarintPrefixReader;
+  using libp2p::multi::UVarint;
 
   auto test = [](VarintPrefixReader &reader, ConstSpanOfBytes &buffer,
                  std::vector<uint64_t> &results) {

@@ -32,7 +32,7 @@ namespace libp2p::common {
    * @param len length of bytes
    * @return hexstring
    */
-  std::string hex_upper(const RangeOfBytes auto &bytes) noexcept {
+  inline std::string hex_upper(ConstSpanOfBytes bytes) noexcept {
     std::string res(bytes.size() * 2, '\x00');
     boost::algorithm::hex(bytes.begin(), bytes.end(), res.begin());
     return res;
@@ -44,7 +44,7 @@ namespace libp2p::common {
    * @param len length of bytes
    * @return hexstring
    */
-  std::string hex_lower(const RangeOfBytes auto &bytes) noexcept {
+  inline std::string hex_lower(ConstSpanOfBytes bytes) noexcept {
     std::string res(bytes.size() * 2, '\x00');
     boost::algorithm::hex_lower(bytes.begin(), bytes.end(), res.begin());
     return res;
@@ -70,7 +70,7 @@ namespace libp2p::common {
    * @return Span
    */
   inline ConstSpanOfBytes sv2span(const std::string_view &str) {
-    return {(const uint8_t *)str.data(), (ssize_t)str.size()};         // NOLINT
+    return {(const uint8_t *)str.data(), (ssize_t)str.size()};  // NOLINT
   }
 
   /**
@@ -78,7 +78,7 @@ namespace libp2p::common {
    * @param s Span
    * @return s
    */
-  inline ConstSpanOfBytes sv2span(const RangeOfBytes auto &s) {
+  inline ConstSpanOfBytes sv2span(ConstSpanOfBytes s) {
     return s;
   }
 
