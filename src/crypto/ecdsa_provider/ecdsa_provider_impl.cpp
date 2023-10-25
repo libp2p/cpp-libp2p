@@ -51,7 +51,7 @@ namespace libp2p::crypto::ecdsa {
   }
 
   outcome::result<Signature> EcdsaProviderImpl::sign(
-      ConstSpanOfBytes message, const PrivateKey &key) const {
+      BytesIn message, const PrivateKey &key) const {
     OUTCOME_TRY(digest, sha256(message));
     return signPrehashed(digest, key);
   }
@@ -63,7 +63,7 @@ namespace libp2p::crypto::ecdsa {
     return std::move(signature);
   }
 
-  outcome::result<bool> EcdsaProviderImpl::verify(ConstSpanOfBytes message,
+  outcome::result<bool> EcdsaProviderImpl::verify(BytesIn message,
                                                   const Signature &signature,
                                                   const PublicKey &key) const {
     OUTCOME_TRY(digest, sha256(message));

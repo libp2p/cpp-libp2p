@@ -20,8 +20,8 @@ namespace libp2p::security::noise {
     return dh_->generate();
   }
 
-  outcome::result<ByteArray> CipherSuiteImpl::dh(const ByteArray &private_key,
-                                                 const ByteArray &public_key) {
+  outcome::result<Bytes> CipherSuiteImpl::dh(const Bytes &private_key,
+                                                 const Bytes &public_key) {
     return dh_->dh(private_key, public_key);
   }
 

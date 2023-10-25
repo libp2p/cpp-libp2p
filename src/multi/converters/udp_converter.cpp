@@ -30,7 +30,7 @@ namespace libp2p::multi::converters {
     return ConversionError::INVALID_ADDRESS;
   }
 
-  outcome::result<common::ByteArray> UdpConverter::addressToBytes(
+  outcome::result<Bytes> UdpConverter::addressToBytes(
       std::string_view addr) {
     for (auto c : addr) {
       if (std::isdigit(c) == 0) {
@@ -45,7 +45,7 @@ namespace libp2p::multi::converters {
     }
     if (port_int >= 0 and port_int <= 65535) {
       auto port_int16 = static_cast<uint16_t>(port_int);
-      common::ByteArray bytes;
+      Bytes bytes;
       common::putUint16BE(bytes, port_int16);
       return std::move(bytes);
     }

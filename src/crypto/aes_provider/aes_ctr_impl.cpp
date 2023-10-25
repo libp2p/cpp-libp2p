@@ -12,7 +12,7 @@
 
 namespace libp2p::crypto::aes {
 
-  using libp2p::common::ByteArray;
+  using libp2p::Bytes;
   using libp2p::crypto::common::Aes128Secret;
   using libp2p::crypto::common::Aes256Secret;
 
@@ -33,8 +33,7 @@ namespace libp2p::crypto::aes {
     }
   }
 
-  outcome::result<void> AesCtrImpl::init(ConstSpanOfBytes key,
-                                         ConstSpanOfBytes iv,
+  outcome::result<void> AesCtrImpl::init(BytesIn key, BytesIn iv,
                                          const EVP_CIPHER *cipher) {
     ctx_ = EVP_CIPHER_CTX_new();
     if (nullptr == ctx_) {
@@ -51,7 +50,7 @@ namespace libp2p::crypto::aes {
     return outcome::success();
   }
 
-  outcome::result<ByteArray> AesCtrImpl::crypt(ConstSpanOfBytes data) const {
+  outcome::result<Bytes> AesCtrImpl::crypt(BytesIn data) const {
     if (initialization_error_.has_error()) {
       return initialization_error_.error();
     }
@@ -75,7 +74,7 @@ namespace libp2p::crypto::aes {
     return out_buffer;
   }
 
-  outcome::result<ByteArray> AesCtrImpl::finalize() {
+  outcome::result<Bytes> AesCtrImpl::finalize() {
     if (initialization_error_.has_error()) {
       return initialization_error_.error();
     }

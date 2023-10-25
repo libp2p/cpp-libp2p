@@ -9,11 +9,10 @@
 #include <span>
 
 namespace libp2p::crypto::hmac {
-  using ByteArray = libp2p::common::ByteArray;
+  using ByteArray = libp2p::Bytes;
 
   outcome::result<ByteArray> HmacProviderImpl::calculateDigest(
-      HashType hash_type, const ByteArray &key,
-      ConstSpanOfBytes message) const {
+      HashType hash_type, const ByteArray &key, BytesIn message) const {
     HmacProviderCtrImpl hmac{hash_type, key};
     OUTCOME_TRY(hmac.write(message));
     return hmac.digest();

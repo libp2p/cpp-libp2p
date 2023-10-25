@@ -22,11 +22,11 @@ namespace libp2p::security::noise {
   using libp2p::crypto::asVector;
 
   using crypto::common::HashType;
-  using libp2p::common::ByteArray;
+  using libp2p::Bytes;
   struct HKDFResult {
-    ByteArray one;
-    ByteArray two;
-    ByteArray three;
+    Bytes one;
+    Bytes two;
+    Bytes three;
   };
 
   enum class HKDFError {
@@ -39,12 +39,12 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<HKDFResult> hkdf(HashType hash_type, size_t outputs,
-                                   ConstSpanOfBytes chaining_key,
-                                   ConstSpanOfBytes input_key_material);
+                                   BytesIn chaining_key,
+                                   BytesIn input_key_material);
 
   struct DHKey {
-    ByteArray priv;
-    ByteArray pub;
+    Bytes priv;
+    Bytes pub;
   };
 
   class DiffieHellman {
@@ -55,8 +55,8 @@ namespace libp2p::security::noise {
     virtual outcome::result<DHKey> generate() = 0;
 
     /// does a Diffie-Hellman calculation between the given keys
-    virtual outcome::result<ByteArray> dh(const ByteArray &private_key,
-                                          const ByteArray &public_key) = 0;
+    virtual outcome::result<Bytes> dh(const Bytes &private_key,
+                                          const Bytes &public_key) = 0;
 
     /// returns the size in bytes of the result of dh computation
     virtual int dhSize() const = 0;
@@ -79,13 +79,13 @@ namespace libp2p::security::noise {
    public:
     virtual ~AEADCipher() = default;
 
-    virtual outcome::result<ByteArray> encrypt(
-        ConstSpanOfBytes precompiled_out, uint64_t nonce,
-        ConstSpanOfBytes plaintext, ConstSpanOfBytes aad) = 0;
+    virtual outcome::result<Bytes> encrypt(BytesIn precompiled_out, uint64_t nonce,
+                                               BytesIn plaintext,
+                                               BytesIn aad) = 0;
 
-    virtual outcome::result<ByteArray> decrypt(
-        ConstSpanOfBytes precompiled_out, uint64_t nonce,
-        ConstSpanOfBytes ciphertext, ConstSpanOfBytes aad) = 0;
+    virtual outcome::result<Bytes> decrypt(BytesIn precompiled_out, uint64_t nonce,
+                                               BytesIn ciphertext,
+                                               BytesIn aad) = 0;
   };
 
   class NamedAEADCipher {

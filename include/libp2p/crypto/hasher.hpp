@@ -19,14 +19,14 @@ namespace libp2p::crypto {
     virtual ~Hasher() = default;
 
     /// appends a new chunk of data
-    virtual outcome::result<void> write(ConstSpanOfBytes data) = 0;
+    virtual outcome::result<void> write(BytesIn data) = 0;
 
     /**
      * Calculates the current digest.
      * Does not affect the internal state.
      * New data still could be fed via write method.
      */
-    virtual outcome::result<void> digestOut(MutSpanOfBytes out) const = 0;
+    virtual outcome::result<void> digestOut(BytesOut out) const = 0;
 
     /// resets the internal state
     virtual outcome::result<void> reset() = 0;
@@ -40,8 +40,8 @@ namespace libp2p::crypto {
     /// runtime identifiable hasher type
     virtual HashType hashType() const = 0;
 
-    outcome::result<libp2p::common::ByteArray> digest() const {
-      outcome::result<libp2p::common::ByteArray> result{outcome::success()};
+    outcome::result<libp2p::Bytes> digest() const {
+      outcome::result<libp2p::Bytes> result{outcome::success()};
       result.value().resize(digestSize());
       OUTCOME_TRY(digestOut(result.value()));
       return result;

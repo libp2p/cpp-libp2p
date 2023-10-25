@@ -37,13 +37,13 @@ namespace libp2p::basic {
     }
 
     /// Adds new data to the buffer
-    void add(ConstSpanOfBytes bytes);
+    void add(BytesIn bytes);
 
     /// Returns # of bytes actually copied into out
-    size_t consume(MutSpanOfBytes out);
+    size_t consume(BytesOut out);
 
     /// Returns # of bytes actually copied into out
-    size_t addAndConsume(ConstSpanOfBytes in, MutSpanOfBytes out);
+    size_t addAndConsume(BytesIn in, BytesOut out);
 
     /// Clears and deallocates
     void clear();
@@ -52,7 +52,7 @@ namespace libp2p::basic {
     using Fragment = std::vector<uint8_t>;
 
     /// Consumes all data into out
-    size_t consumeAll(MutSpanOfBytes out);
+    size_t consumeAll(BytesOut out);
 
     /// Consumes the 1st fragment or part of it
     size_t consumePart(uint8_t *out, size_t n);
@@ -93,8 +93,8 @@ namespace libp2p::basic {
     /// returns data if filled up to expected size or empty option if not,
     /// modifies data (cuts head)
     /// Data returned is valid until next expect() call && data is live
-    boost::optional<ConstSpanOfBytes> add(ConstSpanOfBytes &data);
-    boost::optional<MutSpanOfBytes> add(MutSpanOfBytes &data);
+    boost::optional<BytesIn> add(BytesIn &data);
+    boost::optional<BytesOut> add(BytesOut &data);
 
     /// Resets to initial state
     void reset();

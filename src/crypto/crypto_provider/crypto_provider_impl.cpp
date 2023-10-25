@@ -192,7 +192,7 @@ namespace libp2p::crypto {
    * ################################################################### */
 
   outcome::result<Buffer> CryptoProviderImpl::sign(
-      ConstSpanOfBytes message, const PrivateKey &private_key) const {
+      BytesIn message, const PrivateKey &private_key) const {
     switch (private_key.type) {
       case Key::Type::RSA:
         return signRsa(message, private_key);
@@ -210,7 +210,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<Buffer> CryptoProviderImpl::signRsa(
-      ConstSpanOfBytes message, const PrivateKey &private_key) const {
+      BytesIn message, const PrivateKey &private_key) const {
     rsa::PrivateKey priv_key;
     priv_key.insert(priv_key.end(), private_key.data.begin(),
                     private_key.data.end());
@@ -220,7 +220,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<Buffer> CryptoProviderImpl::signEd25519(
-      ConstSpanOfBytes message, const PrivateKey &private_key) const {
+      BytesIn message, const PrivateKey &private_key) const {
     ed25519::PrivateKey priv_key;
     std::copy_n(private_key.data.begin(), priv_key.size(), priv_key.begin());
     OUTCOME_TRY(signature, ed25519_provider_->sign(message, priv_key));
@@ -228,7 +228,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<Buffer> CryptoProviderImpl::signSecp256k1(
-      ConstSpanOfBytes message, const PrivateKey &private_key) const {
+      BytesIn message, const PrivateKey &private_key) const {
     secp256k1::PrivateKey priv_key;
     std::copy_n(private_key.data.begin(), priv_key.size(), priv_key.begin());
     OUTCOME_TRY(signature, secp256k1_provider_->sign(message, priv_key));
@@ -236,7 +236,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<Buffer> CryptoProviderImpl::signEcdsa(
-      ConstSpanOfBytes message, const PrivateKey &private_key) const {
+      BytesIn message, const PrivateKey &private_key) const {
     ecdsa::PrivateKey priv_key;
     std::copy_n(private_key.data.begin(), priv_key.size(), priv_key.begin());
     OUTCOME_TRY(signature, ecdsa_provider_->sign(message, priv_key));
@@ -250,7 +250,7 @@ namespace libp2p::crypto {
    * ################################################################### */
 
   outcome::result<bool> CryptoProviderImpl::verify(
-      ConstSpanOfBytes message, ConstSpanOfBytes signature,
+      BytesIn message, BytesIn signature,
       const PublicKey &public_key) const {
     switch (public_key.type) {
       case Key::Type::RSA:
@@ -269,7 +269,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifyRsa(
-      ConstSpanOfBytes message, ConstSpanOfBytes signature,
+      BytesIn message, BytesIn signature,
       const PublicKey &public_key) const {
     rsa::PublicKey rsa_pub;
     rsa_pub.insert(rsa_pub.end(), public_key.data.begin(),
@@ -282,7 +282,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifyEd25519(
-      ConstSpanOfBytes message, ConstSpanOfBytes signature,
+      BytesIn message, BytesIn signature,
       const PublicKey &public_key) const {
     ed25519::PublicKey ed_pub;
     std::copy_n(public_key.data.begin(), ed_pub.size(), ed_pub.begin());
@@ -294,7 +294,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifySecp256k1(
-      ConstSpanOfBytes message, ConstSpanOfBytes signature,
+      BytesIn message, BytesIn signature,
       const PublicKey &public_key) const {
     secp256k1::PublicKey secp_pub;
     std::copy_n(public_key.data.begin(), secp_pub.size(), secp_pub.begin());
@@ -306,7 +306,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifyEcdsa(
-      ConstSpanOfBytes message, ConstSpanOfBytes signature,
+      BytesIn message, BytesIn signature,
       const PublicKey &public_key) const {
     ecdsa::PublicKey ecdsa_pub;
     std::copy_n(public_key.data.begin(), ecdsa_pub.size(), ecdsa_pub.begin());

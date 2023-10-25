@@ -21,7 +21,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::peer, PeerId::FactoryError, e) {
 }
 
 namespace libp2p::peer {
-  using common::ByteArray;
+  using Bytes;
   using multi::Multihash;
   using multi::detail::decodeBase58;
   using multi::detail::encodeBase58;
@@ -93,7 +93,7 @@ namespace libp2p::peer {
     return hash_;
   }
 
-  PeerId::FactoryResult PeerId::fromBytes(ConstSpanOfBytes v) {
+  PeerId::FactoryResult PeerId::fromBytes(BytesIn v) {
     OUTCOME_TRY(mh, Multihash::createFromBytes(v));
     return fromHash(mh);
   }

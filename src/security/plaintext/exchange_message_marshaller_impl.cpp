@@ -80,8 +80,7 @@ namespace libp2p::security::plaintext {
   }
 
   outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>>
-  ExchangeMessageMarshallerImpl::unmarshal(
-      ConstSpanOfBytes msg_bytes) const {
+  ExchangeMessageMarshallerImpl::unmarshal(BytesIn msg_bytes) const {
     plaintext::protobuf::Exchange exchange_msg;
     if (!exchange_msg.ParseFromArray(msg_bytes.data(), msg_bytes.size())) {
       return Error::PUBLIC_KEY_DESERIALIZING_ERROR;

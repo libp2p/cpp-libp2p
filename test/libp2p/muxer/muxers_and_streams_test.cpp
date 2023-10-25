@@ -116,12 +116,12 @@ namespace libp2p::regression {
       host_ = injector.template create<std::shared_ptr<Host>>();
 
       if (!jumbo_msg) {
-        write_buf_ = std::make_shared<common::ByteArray>(getId().toVector());
+        write_buf_ = std::make_shared<Bytes>(getId().toVector());
       } else {
         static const size_t kJumboSize = 40 * 1024 * 1024;
-        write_buf_ = std::make_shared<common::ByteArray>(kJumboSize, 0x99);
+        write_buf_ = std::make_shared<Bytes>(kJumboSize, 0x99);
       }
-      read_buf_ = std::make_shared<common::ByteArray>();
+      read_buf_ = std::make_shared<Bytes>();
       read_buf_->resize(write_buf_->size());
     }
 
@@ -219,8 +219,8 @@ namespace libp2p::regression {
     std::shared_ptr<libp2p::Host> host_;
     std::shared_ptr<connection::Stream> accepted_stream_;
     std::shared_ptr<connection::Stream> connected_stream_;
-    std::shared_ptr<common::ByteArray> read_buf_;
-    std::shared_ptr<common::ByteArray> write_buf_;
+    std::shared_ptr<Bytes> read_buf_;
+    std::shared_ptr<Bytes> write_buf_;
     bool started_ = false;
 
     void start() {

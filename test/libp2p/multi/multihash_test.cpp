@@ -26,10 +26,10 @@ TEST(Multihash, Create) {
   ASSERT_NO_THROW({
     auto m = Multihash::create(HashType::blake2s128, hash).value();
     ASSERT_EQ(m.getType(), HashType::blake2s128);
-    ASSERT_TRUE(m.getHash() == ConstSpanOfBytes(hash));
+    ASSERT_TRUE(m.getHash() == BytesIn(hash));
   });
 
-  auto h = ByteArray(200, 42);
+  auto h = Bytes(200, 42);
   ASSERT_FALSE(Multihash::create(HashType::blake2s128, h))
       << "The multihash mustn't accept hashes of the size greater than 127";
 }
@@ -42,7 +42,7 @@ TEST(Multihash, Create) {
  *the given hash string
  **/
 TEST(Multihash, FromToHex) {
-  ByteArray hash{2, 3, 4};
+  Bytes hash{2, 3, 4};
 
   ASSERT_NO_THROW({
     auto m = Multihash::create(HashType::blake2s128, hash).value();
@@ -79,7 +79,7 @@ TEST(Multihash, FromToBuffer) {
     ASSERT_EQ(m.toBuffer(), hash);
   });
 
-  ByteArray v{2, 3, 1, 3};
+  Bytes v{2, 3, 1, 3};
   ASSERT_FALSE(Multihash::createFromBytes(v))
       << "Length in the header does not equal actual length";
 }

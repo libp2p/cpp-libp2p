@@ -20,13 +20,13 @@ namespace libp2p::crypto::ecdsa {
 
     outcome::result<PublicKey> derive(const PrivateKey &key) const override;
 
-    outcome::result<Signature> sign(ConstSpanOfBytes message,
+    outcome::result<Signature> sign(BytesIn message,
                                     const PrivateKey &key) const override;
 
     outcome::result<Signature> signPrehashed(
         const PrehashedMessage &message, const PrivateKey &key) const override;
 
-    outcome::result<bool> verify(ConstSpanOfBytes message,
+    outcome::result<bool> verify(BytesIn message,
                                  const Signature &signature,
                                  const PublicKey &key) const override;
 

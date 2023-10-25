@@ -42,7 +42,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::noise, Error, e) {
 
 namespace libp2p::security::noise {
 
-  outcome::result<Key32> bytesToKey32(ConstSpanOfBytes key) {
+  outcome::result<Key32> bytesToKey32(BytesIn key) {
     Key32 result;
     if (static_cast<size_t>(key.size()) != result.size()) {
       return Error::WRONG_KEY32_SIZE;
@@ -59,17 +59,17 @@ namespace libp2p::security::noise {
         cipher_{cipher_suite_->cipher(key_)},
         nonce_{0} {}
 
-  outcome::result<ByteArray> CipherState::encrypt(
-      ConstSpanOfBytes precompiled_out,
-      ConstSpanOfBytes plaintext, ConstSpanOfBytes aad) {
+  outcome::result<Bytes> CipherState::encrypt(BytesIn precompiled_out,
+                                                  BytesIn plaintext,
+                                                  BytesIn aad) {
     auto enc_res = cipher_->encrypt(precompiled_out, nonce_, plaintext, aad);
     ++nonce_;
     return enc_res;
   }
 
-  outcome::result<ByteArray> CipherState::decrypt(
-      ConstSpanOfBytes precompiled_out,
-      ConstSpanOfBytes ciphertext, ConstSpanOfBytes aad) {
+  outcome::result<Bytes> CipherState::decrypt(BytesIn precompiled_out,
+                                                  BytesIn ciphertext,
+                                                  BytesIn aad) {
     auto dec_res = cipher_->decrypt(precompiled_out, nonce_, ciphertext, aad);
     ++nonce_;
     return dec_res;
@@ -78,7 +78,7 @@ namespace libp2p::security::noise {
   outcome::result<void> CipherState::rekey() {
     Key32 zeroed;
     memset(zeroed.data(), 0u, zeroed.size());
-    ByteArray empty;
+    Bytes empty;
     OUTCOME_TRY(out_res,
                 cipher_->encrypt({}, std::numeric_limits<uint64_t>::max(),
                                  zeroed, empty));
@@ -97,7 +97,7 @@ namespace libp2p::security::noise {
       : CipherState(std::move(cipher_suite), Key32{}) {}
 
   outcome::result<void> SymmetricState::initializeSymmetric(
-      ConstSpanOfBytes handshake_name) {
+      BytesIn handshake_name) {
     if (handshake_name.empty()) {
       return Error::EMPTY_HANDSHAKE_NAME;
     }
@@ -115,8 +115,7 @@ namespace libp2p::security::noise {
     return outcome::success();
   }
 
-  outcome::result<void> SymmetricState::mixKey(
-      ConstSpanOfBytes dh_output) {
+  outcome::result<void> SymmetricState::mixKey(BytesIn dh_output) {
     nonce_ = 0;
     has_key_ = true;
     OUTCOME_TRY(
@@ -129,7 +128,7 @@ namespace libp2p::security::noise {
     return outcome::success();
   }
 
-  outcome::result<void> SymmetricState::mixHash(ConstSpanOfBytes data) {
+  outcome::result<void> SymmetricState::mixHash(BytesIn data) {
     auto hasher = cipher_suite_->hash();
     OUTCOME_TRY(hasher->write(hash_));
     OUTCOME_TRY(hasher->write(data));
@@ -138,8 +137,7 @@ namespace libp2p::security::noise {
     return outcome::success();
   }
 
-  outcome::result<void> SymmetricState::mixKeyAndHash(
-      ConstSpanOfBytes data) {
+  outcome::result<void> SymmetricState::mixKeyAndHash(BytesIn data) {
     OUTCOME_TRY(
         hkdf_res,
         hkdf(cipher_suite_->hash()->hashType(), 3, chaining_key_, data));
@@ -153,11 +151,10 @@ namespace libp2p::security::noise {
     return outcome::success();
   }
 
-  outcome::result<ByteArray> SymmetricState::encryptAndHash(
-      ConstSpanOfBytes precompiled_out,
-      ConstSpanOfBytes plaintext) {
+  outcome::result<Bytes> SymmetricState::encryptAndHash(
+      BytesIn precompiled_out, BytesIn plaintext) {
     if (not has_key_) {
-      ByteArray result(precompiled_out.size() + plaintext.size());
+      Bytes result(precompiled_out.size() + plaintext.size());
       OUTCOME_TRY(mixHash(plaintext));
       std::copy_n(precompiled_out.begin(), precompiled_out.size(),
                   result.begin());
@@ -173,17 +170,16 @@ namespace libp2p::security::noise {
       // and handled there!
       return Error::INTERNAL_ERROR;
     }
-    ByteArray seed(ct_size - po_size);
+    Bytes seed(ct_size - po_size);
     std::copy_n(ciphertext.begin() + po_size, seed.size(), seed.begin());
     OUTCOME_TRY(mixHash(seed));
     return std::move(ciphertext);
   }
 
-  outcome::result<ByteArray> SymmetricState::decryptAndHash(
-      ConstSpanOfBytes precompiled_out,
-      ConstSpanOfBytes ciphertext) {
+  outcome::result<Bytes> SymmetricState::decryptAndHash(
+      BytesIn precompiled_out, BytesIn ciphertext) {
     if (not has_key_) {
-      ByteArray result(precompiled_out.size() + ciphertext.size());
+      Bytes result(precompiled_out.size() + ciphertext.size());
       OUTCOME_TRY(mixHash(ciphertext));
       std::copy_n(precompiled_out.begin(), precompiled_out.size(),
                   result.begin());
@@ -218,7 +214,7 @@ namespace libp2p::security::noise {
     hash_ = prev_hash_;
   }
 
-  ByteArray SymmetricState::hash() const {
+  Bytes SymmetricState::hash() const {
     return hash_;
   }
 
@@ -236,16 +232,14 @@ namespace libp2p::security::noise {
         is_initiator_{is_initiator},
         local_static_keypair_{std::move(local_static_keypair)} {}
 
-  HandshakeStateConfig &HandshakeStateConfig::setPrologue(
-      ConstSpanOfBytes prologue) {
-    ByteArray data(prologue.begin(), prologue.end());
+  HandshakeStateConfig &HandshakeStateConfig::setPrologue(BytesIn prologue) {
+    Bytes data(prologue.begin(), prologue.end());
     prologue_ = std::move(data);
     return *this;
   }
 
-  HandshakeStateConfig &HandshakeStateConfig::setPresharedKey(
-      ConstSpanOfBytes key, int placement) {
-    ByteArray data(key.begin(), key.end());
+  HandshakeStateConfig &HandshakeStateConfig::setPresharedKey(BytesIn key, int placement) {
+    Bytes data(key.begin(), key.end());
     preshared_key_ = std::move(data);
     preshared_key_placement_ = placement;
     return *this;
@@ -258,15 +252,15 @@ namespace libp2p::security::noise {
   }
 
   HandshakeStateConfig &HandshakeStateConfig::setRemoteStaticPubkey(
-      ConstSpanOfBytes key) {
-    ByteArray data(key.begin(), key.end());
+      BytesIn key) {
+    Bytes data(key.begin(), key.end());
     remote_static_pubkey_ = std::move(data);
     return *this;
   }
 
   HandshakeStateConfig &HandshakeStateConfig::setRemoteEphemeralPubkey(
-      ConstSpanOfBytes key) {
-    ByteArray data(key.begin(), key.end());
+      BytesIn key) {
+    Bytes data(key.begin(), key.end());
     remote_ephemeral_pubkey_ = std::move(data);
     return *this;
   }
@@ -315,10 +309,10 @@ namespace libp2p::security::noise {
     ss << "Noise_" << config.pattern_.name << psk_modifier << "_"
        << symmetric_state_->cipherSuite()->name();
     auto handshake_name_str = ss.str();
-    ByteArray handshake_name_bytes(handshake_name_str.begin(),
+    Bytes handshake_name_bytes(handshake_name_str.begin(),
                                    handshake_name_str.end());
     OUTCOME_TRY(symmetric_state_->initializeSymmetric(handshake_name_bytes));
-    ByteArray prologue;
+    Bytes prologue;
     if (config.prologue_) {
       prologue = std::move(config.prologue_.value());
     }
@@ -350,8 +344,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<HandshakeState::MessagingResult> HandshakeState::writeMessage(
-      ConstSpanOfBytes precompiled_out,
-      ConstSpanOfBytes payload) {
+      BytesIn precompiled_out, BytesIn payload) {
     OUTCOME_TRY(isInitialized());
     if (not should_write_) {
       return Error::UNEXPECTED_WRITE_CALL;
@@ -403,7 +396,7 @@ namespace libp2p::security::noise {
     return result;
   }
 
-  outcome::result<void> HandshakeState::writeMessageE(ByteArray &out) {
+  outcome::result<void> HandshakeState::writeMessageE(Bytes &out) {
     OUTCOME_TRY(ephemeral_kp, symmetric_state_->cipherSuite()->generate());
     local_ephemeral_kp_ = std::move(ephemeral_kp);
     out.insert(out.end(), local_ephemeral_kp_.pub.begin(),
@@ -415,7 +408,7 @@ namespace libp2p::security::noise {
     return outcome::success();
   }
 
-  outcome::result<void> HandshakeState::writeMessageS(ByteArray &out) {
+  outcome::result<void> HandshakeState::writeMessageS(Bytes &out) {
     if (local_static_kp_.pub.empty()) {
       return Error::NO_PUBLIC_KEY;
     }
@@ -433,7 +426,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<void> HandshakeState::writeMessageDHES() {
-    ByteArray key_bytes;
+    Bytes key_bytes;
     if (is_initiator_) {
       OUTCOME_TRY(key,
                   symmetric_state_->cipherSuite()->dh(local_ephemeral_kp_.priv,
@@ -449,7 +442,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<void> HandshakeState::writeMessageDHSE() {
-    ByteArray key_bytes;
+    Bytes key_bytes;
     if (is_initiator_) {
       OUTCOME_TRY(key,
                   symmetric_state_->cipherSuite()->dh(
@@ -476,8 +469,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<HandshakeState::MessagingResult> HandshakeState::readMessage(
-      ConstSpanOfBytes precompiled_out,
-      ConstSpanOfBytes message) {
+      BytesIn precompiled_out, BytesIn message) {
     OUTCOME_TRY(isInitialized());
     if (should_write_) {
       return Error::UNEXPECTED_READ_CALL;
@@ -531,22 +523,22 @@ namespace libp2p::security::noise {
     return result;
   }
 
-  outcome::result<void> HandshakeState::readMessageE(ByteArray &message) {
+  outcome::result<void> HandshakeState::readMessageE(Bytes &message) {
     auto expected = symmetric_state_->cipherSuite()->dhSize();
     if (static_cast<int64_t>(message.size()) < expected) {
       return Error::MESSAGE_TOO_SHORT;
     }
     remote_ephemeral_pubkey_ =
-        ByteArray{message.begin(), message.begin() + expected};
+        Bytes{message.begin(), message.begin() + expected};
     OUTCOME_TRY(symmetric_state_->mixHash(remote_ephemeral_pubkey_));
     if (not preshared_key_.empty()) {
       OUTCOME_TRY(symmetric_state_->mixKey(remote_ephemeral_pubkey_));
     }
-    ByteArray(message.begin() + expected, message.end()).swap(message);
+    Bytes(message.begin() + expected, message.end()).swap(message);
     return outcome::success();
   }
 
-  outcome::result<void> HandshakeState::readMessageS(ByteArray &message) {
+  outcome::result<void> HandshakeState::readMessageS(Bytes &message) {
     auto expected = symmetric_state_->cipherSuite()->dhSize();
     if (symmetric_state_->hasKey()) {
       expected += 16;
@@ -564,7 +556,7 @@ namespace libp2p::security::noise {
       return decrypted.error();
     }
     remote_static_pubkey_ = std::move(decrypted.value());
-    ByteArray(message.begin() + expected, message.end()).swap(message);
+    Bytes(message.begin() + expected, message.end()).swap(message);
     return outcome::success();
   }
 
@@ -576,7 +568,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<void> HandshakeState::readMessageDHES() {
-    ByteArray data;
+    Bytes data;
     if (is_initiator_) {
       OUTCOME_TRY(dh,
                   symmetric_state_->cipherSuite()->dh(local_ephemeral_kp_.priv,
@@ -592,7 +584,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<void> HandshakeState::readMessageDHSE() {
-    ByteArray data;
+    Bytes data;
     if (is_initiator_) {
       OUTCOME_TRY(dh,
                   symmetric_state_->cipherSuite()->dh(
@@ -618,17 +610,17 @@ namespace libp2p::security::noise {
     return symmetric_state_->mixKeyAndHash(preshared_key_);
   }
 
-  outcome::result<ByteArray> HandshakeState::channelBinding() const {
+  outcome::result<Bytes> HandshakeState::channelBinding() const {
     OUTCOME_TRY(isInitialized());
     return symmetric_state_->hash();
   }
 
-  outcome::result<ByteArray> HandshakeState::remotePeerStaticPubkey() const {
+  outcome::result<Bytes> HandshakeState::remotePeerStaticPubkey() const {
     OUTCOME_TRY(isInitialized());
     return remote_static_pubkey_;
   }
 
-  outcome::result<ByteArray> HandshakeState::remotePeerEphemeralPubkey() const {
+  outcome::result<Bytes> HandshakeState::remotePeerEphemeralPubkey() const {
     OUTCOME_TRY(isInitialized());
     return remote_ephemeral_pubkey_;
   }

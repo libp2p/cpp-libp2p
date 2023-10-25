@@ -15,7 +15,7 @@
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto::chachapoly {
-  using libp2p::common::ByteArray;
+  using libp2p::Bytes;
   using Key = std::array<uint8_t, 32>;
   using Nonce = std::array<uint8_t, 12>;
 
@@ -30,9 +30,10 @@ namespace libp2p::crypto::chachapoly {
      * @param associated_data - data for message authentication
      * @return ciphertext bytes
      */
-    virtual outcome::result<ByteArray> encrypt(
-        const Nonce &nonce, ConstSpanOfBytes plaintext,
-        ConstSpanOfBytes aad) = 0;
+    virtual outcome::result<Bytes> encrypt(
+        const Nonce &nonce,
+                                               BytesIn plaintext,
+                                               BytesIn aad) = 0;
 
     /**
      * Does authenticated decryption with associated data (AEAD)
@@ -41,9 +42,10 @@ namespace libp2p::crypto::chachapoly {
      * @param associated_data - data for message authentication
      * @return plaintext bytes
      */
-    virtual outcome::result<ByteArray> decrypt(
-        const Nonce &nonce, ConstSpanOfBytes ciphertext,
-        ConstSpanOfBytes aad) = 0;
+    virtual outcome::result<Bytes> decrypt(
+        const Nonce &nonce,
+                                               BytesIn ciphertext,
+                                               BytesIn aad) = 0;
 
     /**
      * Convert 64-bit integer to 12-bit long byte sequence with four zero bytes
@@ -52,7 +54,7 @@ namespace libp2p::crypto::chachapoly {
      * @return - bytes vector
      */
     inline Nonce uint64toNonce(uint64_t n) const {
-      ByteArray result(4, 0);
+      Bytes result(4, 0);
       result.reserve(12);
       libp2p::common::putUint64LE(result, n);
       Nonce nonce;

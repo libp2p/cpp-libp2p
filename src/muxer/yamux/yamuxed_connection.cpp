@@ -38,7 +38,7 @@ namespace libp2p::connection {
             [this](boost::optional<YamuxFrame> header) {
               return processHeader(std::move(header));
             },
-            [this](MutSpanOfBytes segment, StreamId stream_id, bool rst,
+            [this](BytesOut segment, StreamId stream_id, bool rst,
                    bool fin) {
               if (!segment.empty()) {
                 processData(segment, stream_id);
@@ -193,25 +193,25 @@ namespace libp2p::connection {
     return !started_ || connection_->isClosed();
   }
 
-  void YamuxedConnection::read(MutSpanOfBytes out, size_t bytes,
+  void YamuxedConnection::read(BytesOut out, size_t bytes,
                                ReadCallbackFunc cb) {
     log()->error("YamuxedConnection::read : invalid direct call");
     deferReadCallback(Error::CONNECTION_DIRECT_IO_FORBIDDEN, std::move(cb));
   }
 
-  void YamuxedConnection::readSome(MutSpanOfBytes out, size_t bytes,
+  void YamuxedConnection::readSome(BytesOut out, size_t bytes,
                                    ReadCallbackFunc cb) {
     log()->error("YamuxedConnection::readSome : invalid direct call");
     deferReadCallback(Error::CONNECTION_DIRECT_IO_FORBIDDEN, std::move(cb));
   }
 
-  void YamuxedConnection::write(ConstSpanOfBytes in, size_t bytes,
+  void YamuxedConnection::write(BytesIn in, size_t bytes,
                                 WriteCallbackFunc cb) {
     log()->error("YamuxedConnection::write : invalid direct call");
     deferWriteCallback(Error::CONNECTION_DIRECT_IO_FORBIDDEN, std::move(cb));
   }
 
-  void YamuxedConnection::writeSome(ConstSpanOfBytes in, size_t bytes,
+  void YamuxedConnection::writeSome(BytesIn in, size_t bytes,
                                     WriteCallbackFunc cb) {
     log()->error("YamuxedConnection::writeSome : invalid direct call");
     deferWriteCallback(Error::CONNECTION_DIRECT_IO_FORBIDDEN, std::move(cb));
@@ -254,7 +254,7 @@ namespace libp2p::connection {
     }
 
     auto n = res.value();
-    MutSpanOfBytes bytes_read(*raw_read_buffer_);
+    BytesOut bytes_read(*raw_read_buffer_);
 
     SL_TRACE(log(), "read {} bytes", n);
 
@@ -351,7 +351,7 @@ namespace libp2p::connection {
     return true;
   }
 
-  void YamuxedConnection::processData(MutSpanOfBytes segment,
+  void YamuxedConnection::processData(BytesOut segment,
                                       StreamId stream_id) {
     assert(stream_id != 0);
     assert(!segment.empty());
@@ -594,8 +594,7 @@ namespace libp2p::connection {
     }
   }
 
-  void YamuxedConnection::writeStreamData(uint32_t stream_id,
-                                          ConstSpanOfBytes data,
+  void YamuxedConnection::writeStreamData(uint32_t stream_id, BytesIn data,
                                           bool some) {
     if (some) {
       // header must be written not partially, even some == true
@@ -663,7 +662,7 @@ namespace libp2p::connection {
 
     auto write_func =
         packet.some ? &CapableConnection::writeSome : &CapableConnection::write;
-    auto span = ConstSpanOfBytes(packet.packet);
+    auto span = BytesIn(packet.packet);
     auto sz = packet.packet.size();
     auto cb = [wptr{weak_from_this()},
                packet = std::move(packet)](outcome::result<size_t> res) {

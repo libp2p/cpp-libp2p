@@ -10,13 +10,13 @@ namespace libp2p::security::noise {
 
   outcome::result<DHKey> NoiseDiffieHellmanImpl::generate() {
     OUTCOME_TRY(keypair, x25519.generate());
-    ByteArray priv{keypair.private_key.begin(), keypair.private_key.end()};
-    ByteArray pub{keypair.public_key.begin(), keypair.public_key.end()};
+    Bytes priv{keypair.private_key.begin(), keypair.private_key.end()};
+    Bytes pub{keypair.public_key.begin(), keypair.public_key.end()};
     return DHKey{.priv = std::move(priv), .pub = std::move(pub)};
   }
 
-  outcome::result<ByteArray> NoiseDiffieHellmanImpl::dh(
-      const ByteArray &private_key, const ByteArray &public_key) {
+  outcome::result<Bytes> NoiseDiffieHellmanImpl::dh(
+      const Bytes &private_key, const Bytes &public_key) {
     crypto::x25519::PrivateKey priv;
     crypto::x25519::PublicKey pub;
     if (private_key.size() != priv.size() or public_key.size() != pub.size()) {

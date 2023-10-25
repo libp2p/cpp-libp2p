@@ -28,8 +28,7 @@ namespace libp2p::security::secio {
     outcome::result<std::vector<uint8_t>> marshal(
         const ProposeMessage &msg) const override;
 
-    outcome::result<ProposeMessage> unmarshal(
-        ConstSpanOfBytes msg_bytes) const override;
+    outcome::result<ProposeMessage> unmarshal(BytesIn msg_bytes) const override;
   };
 
 }  // namespace libp2p::security::secio

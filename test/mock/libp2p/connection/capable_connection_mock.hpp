@@ -88,22 +88,22 @@ namespace libp2p::connection {
       return real_->remoteMultiaddr();
     };
 
-    void read(MutSpanOfBytes in, size_t bytes,
+    void read(BytesOut in, size_t bytes,
               Reader::ReadCallbackFunc f) override {
       return real_->read(in, bytes, f);
     };
 
-    void readSome(MutSpanOfBytes in, size_t bytes,
+    void readSome(BytesOut in, size_t bytes,
                   Reader::ReadCallbackFunc f) override {
       return real_->readSome(in, bytes, f);
     };
 
-    void write(ConstSpanOfBytes in, size_t bytes,
+    void write(BytesIn in, size_t bytes,
                Writer::WriteCallbackFunc f) override {
       return real_->write(in, bytes, f);
     }
 
-    void writeSome(ConstSpanOfBytes in, size_t bytes,
+    void writeSome(BytesIn in, size_t bytes,
                    Writer::WriteCallbackFunc f) override {
       return real_->writeSome(in, bytes, f);
     }

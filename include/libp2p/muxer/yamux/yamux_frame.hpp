@@ -16,7 +16,7 @@ namespace libp2p::connection {
    * Header which is sent and accepted with Yamux protocol
    */
   struct YamuxFrame {
-    using ByteArray = common::ByteArray;
+    using ByteArray = Bytes;
     using StreamId = uint32_t;
     static constexpr uint32_t kHeaderLength = 12;
 
@@ -71,42 +71,42 @@ namespace libp2p::connection {
    * @param stream_id to be put into the message
    * @return bytes of the message
    */
-  common::ByteArray newStreamMsg(YamuxFrame::StreamId stream_id);
+  Bytes newStreamMsg(YamuxFrame::StreamId stream_id);
 
   /**
    * Create a message, which acknowledges a new stream creation
    * @param stream_id to be put into the message
    * @return bytes of the message
    */
-  common::ByteArray ackStreamMsg(YamuxFrame::StreamId stream_id);
+  Bytes ackStreamMsg(YamuxFrame::StreamId stream_id);
 
   /**
    * Create a message, which closes a stream for writes
    * @param stream_id to be put into the message
    * @return bytes of the message
    */
-  common::ByteArray closeStreamMsg(YamuxFrame::StreamId stream_id);
+  Bytes closeStreamMsg(YamuxFrame::StreamId stream_id);
 
   /**
    * Create a message, which resets a stream
    * @param stream_id to be put into the message
    * @return bytes of the message
    */
-  common::ByteArray resetStreamMsg(YamuxFrame::StreamId stream_id);
+  Bytes resetStreamMsg(YamuxFrame::StreamId stream_id);
 
   /**
    * Create a message with an outcoming ping
    * @param value - ping value to be put into the message
    * @return bytes of the message
    */
-  common::ByteArray pingOutMsg(uint32_t value);
+  Bytes pingOutMsg(uint32_t value);
 
   /**
    * Create a message, which responses to a ping
    * @param value - ping value to be put into the message
    * @return bytes of the message
    */
-  common::ByteArray pingResponseMsg(uint32_t value);
+  Bytes pingResponseMsg(uint32_t value);
 
   /**
    * Create a message with some data inside
@@ -115,7 +115,7 @@ namespace libp2p::connection {
    * @param reserve_space whether to allocate space for message
    * @return bytes of the message
    */
-  common::ByteArray dataMsg(YamuxFrame::StreamId stream_id,
+  Bytes dataMsg(YamuxFrame::StreamId stream_id,
                             uint32_t data_length, bool reserve_space = true);
 
   /**
@@ -123,7 +123,7 @@ namespace libp2p::connection {
    * @param error to be put into the message
    * @return bytes of the message
    */
-  common::ByteArray goAwayMsg(YamuxFrame::GoAwayError error);
+  Bytes goAwayMsg(YamuxFrame::GoAwayError error);
 
   /**
    * Create a window update message
@@ -131,7 +131,7 @@ namespace libp2p::connection {
    * @param window_delta to be put into the message
    * @return bytes of the message
    */
-  common::ByteArray windowUpdateMsg(YamuxFrame::StreamId stream_id,
+  Bytes windowUpdateMsg(YamuxFrame::StreamId stream_id,
                                     uint32_t window_delta);
 
   /**
@@ -139,7 +139,7 @@ namespace libp2p::connection {
    * @param frame_bytes to be converted
    * @return frame object, if convertation is successful, none otherwise
    */
-  boost::optional<YamuxFrame> parseFrame(ConstSpanOfBytes frame_bytes);
+  boost::optional<YamuxFrame> parseFrame(BytesIn frame_bytes);
 }  // namespace libp2p::connection
 
 #endif  // LIBP2P_YAMUX_FRAME_HPP

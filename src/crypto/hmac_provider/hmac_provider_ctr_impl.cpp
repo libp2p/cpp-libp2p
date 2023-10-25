@@ -16,10 +16,9 @@
 using libp2p::common::FinalAction;
 
 namespace libp2p::crypto::hmac {
-  using ByteArray = libp2p::common::ByteArray;
+  using ByteArray = libp2p::Bytes;
 
-  HmacProviderCtrImpl::HmacProviderCtrImpl(HashType hash_type,
-                                           ConstSpanOfBytes key)
+  HmacProviderCtrImpl::HmacProviderCtrImpl(HashType hash_type, BytesIn key)
       : hash_type_{hash_type},
         key_(key.begin(), key.end()),
         hash_st_{hash_type_ == HashType::SHA1
@@ -50,7 +49,7 @@ namespace libp2p::crypto::hmac {
     sinkCtx(HmacProviderCtrImpl::digestSize());
   }
 
-  outcome::result<void> HmacProviderCtrImpl::write(ConstSpanOfBytes data) {
+  outcome::result<void> HmacProviderCtrImpl::write(BytesIn data) {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
@@ -60,8 +59,7 @@ namespace libp2p::crypto::hmac {
     return outcome::success();
   }
 
-  outcome::result<void> HmacProviderCtrImpl::digestOut(
-      MutSpanOfBytes out) const {
+  outcome::result<void> HmacProviderCtrImpl::digestOut(BytesOut out) const {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }

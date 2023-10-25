@@ -14,15 +14,14 @@ namespace libp2p::security::noise {
    public:
     NoiseCCP1305Impl(Key32 key);
 
-    outcome::result<ByteArray> encrypt(ConstSpanOfBytes precompiled_out,
+    outcome::result<Bytes> encrypt(BytesIn precompiled_out,
                                        uint64_t nonce,
-                                       ConstSpanOfBytes plaintext,
-                                       ConstSpanOfBytes aad) override;
+                                       BytesIn plaintext, BytesIn aad) override;
 
-    outcome::result<ByteArray> decrypt(ConstSpanOfBytes precompiled_out,
+    outcome::result<Bytes> decrypt(BytesIn precompiled_out,
                                        uint64_t nonce,
-                                       ConstSpanOfBytes ciphertext,
-                                       ConstSpanOfBytes aad) override;
+                                       BytesIn ciphertext,
+                                       BytesIn aad) override;
 
    private:
     std::unique_ptr<crypto::chachapoly::ChaCha20Poly1305> ccp_;

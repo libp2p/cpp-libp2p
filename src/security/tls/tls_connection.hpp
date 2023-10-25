@@ -80,11 +80,11 @@ namespace libp2p::connection {
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 
     /// Async reads exactly the # of bytes given
-    void read(MutSpanOfBytes out, size_t bytes,
+    void read(BytesOut out, size_t bytes,
               ReadCallbackFunc cb) override;
 
     /// Async reads up to the # of bytes given
-    void readSome(MutSpanOfBytes out, size_t bytes,
+    void readSome(BytesOut out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
     /// Defers read callback to avoid reentrancy in async calls
@@ -92,11 +92,11 @@ namespace libp2p::connection {
                            ReadCallbackFunc cb) override;
 
     /// Async writes exactly the # of bytes given
-    void write(ConstSpanOfBytes in, size_t bytes,
+    void write(BytesIn in, size_t bytes,
                WriteCallbackFunc cb) override;
 
     /// Async writes up to the # of bytes given
-    void writeSome(ConstSpanOfBytes in, size_t bytes,
+    void writeSome(BytesIn in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
     /// Defers error callback to avoid reentrancy in async calls

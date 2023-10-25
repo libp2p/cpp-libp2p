@@ -13,7 +13,7 @@ namespace libp2p::protocol::gossip {
 
   namespace {
     // helper needed since protobuf doesn't have a blob type
-    inline const char *toString(const ByteArray &bytes) {
+    inline const char *toString(const Bytes &bytes) {
       // NOLINTNEXTLINE
       return reinterpret_cast<const char *>(bytes.data());
     }
@@ -82,7 +82,7 @@ namespace libp2p::protocol::gossip {
     auto varint_vec = varint_len.toVector();
     size_t prefix_sz = varint_vec.size();
 
-    auto buffer = std::make_shared<ByteArray>();
+    auto buffer = std::make_shared<Bytes>();
     buffer->resize(prefix_sz + msg_sz);
     memcpy(buffer->data(), varint_vec.data(), prefix_sz);
 
@@ -169,7 +169,7 @@ namespace libp2p::protocol::gossip {
     empty_ = false;
   }
 
-  outcome::result<ByteArray> MessageBuilder::signableMessage(
+  outcome::result<Bytes> MessageBuilder::signableMessage(
       const TopicMessage &msg) {
     pubsub::pb::Message pb_msg;
     pb_msg.set_from(msg.from.data(), msg.from.size());
@@ -178,7 +178,7 @@ namespace libp2p::protocol::gossip {
     pb_msg.set_topic(msg.topic);
     constexpr std::string_view kPrefix{"libp2p-pubsub:"};
     auto size = pb_msg.ByteSizeLong();
-    ByteArray signable;
+    Bytes signable;
     signable.resize(kPrefix.size() + size);
     std::copy(kPrefix.begin(), kPrefix.end(), signable.begin());
     if (!pb_msg.SerializeToArray(&signable[kPrefix.size()],

@@ -38,7 +38,7 @@ namespace libp2p::crypto::rsa {
      * @return signature as bytes sequence
      */
     virtual outcome::result<Signature> sign(
-        ConstSpanOfBytes message,
+        BytesIn message,
         const PrivateKey &private_key) const = 0;
 
     /**
@@ -48,7 +48,7 @@ namespace libp2p::crypto::rsa {
      * @param key - key for signature verifying
      * @return Result of the verification or error code
      */
-    virtual outcome::result<bool> verify(ConstSpanOfBytes message,
+    virtual outcome::result<bool> verify(BytesIn message,
                                          const Signature &signature,
                                          const PublicKey &key) const = 0;
 

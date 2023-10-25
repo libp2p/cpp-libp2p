@@ -23,14 +23,14 @@ namespace libp2p::connection {
 
     /// Callback on data segments
     using DataCallback = std::function<void(
-        MutSpanOfBytes segment, StreamId stream_id, bool rst, bool fin)>;
+        BytesOut segment, StreamId stream_id, bool rst, bool fin)>;
 
 
     YamuxReadingState(HeaderCallback on_header, DataCallback on_data);
 
     /// Data received from wire, collect it and segment into frames.
     /// NOTE: cuts bytes from the head of bytes_read
-    void onDataReceived(MutSpanOfBytes &bytes_read);
+    void onDataReceived(BytesOut &bytes_read);
 
     /// Discards data for current message being read.
     /// Reentrant function, called from callbacks
@@ -41,10 +41,10 @@ namespace libp2p::connection {
 
    private:
     /// Processes header segmented from incoming data stream
-    bool processHeader(MutSpanOfBytes &bytes_read);
+    bool processHeader(BytesOut &bytes_read);
 
     /// Processes data message fragment from incoming data stream
-    void processData(MutSpanOfBytes &bytes_read);
+    void processData(BytesOut &bytes_read);
 
     /// Header cb
     HeaderCallback on_header_;

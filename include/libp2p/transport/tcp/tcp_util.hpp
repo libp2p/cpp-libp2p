@@ -51,19 +51,19 @@ namespace libp2p::transport::detail {
     }
   }
 
-  inline auto makeBuffer(MutSpanOfBytes s) {
+  inline auto makeBuffer(BytesOut s) {
     return boost::asio::buffer(s.data(), s.size());
   }
 
-  inline auto makeBuffer(MutSpanOfBytes s, size_t size) {
+  inline auto makeBuffer(BytesOut s, size_t size) {
     return boost::asio::buffer(s.data(), size);
   }
 
-  inline auto makeBuffer(ConstSpanOfBytes s) {
+  inline auto makeBuffer(BytesIn s) {
     return boost::asio::buffer(s.data(), s.size());
   }
 
-  inline auto makeBuffer(ConstSpanOfBytes s, size_t size) {
+  inline auto makeBuffer(BytesIn s, size_t size) {
     return boost::asio::buffer(s.data(), size);
   }
 

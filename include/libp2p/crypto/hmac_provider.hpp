@@ -14,7 +14,7 @@
 
 namespace libp2p::crypto::hmac {
 
-  using ByteArray = libp2p::common::ByteArray;
+  using ByteArray = libp2p::Bytes;
   using HashType = common::HashType;
 
   /// HMAC that supports stream data feeding interface
@@ -38,8 +38,7 @@ namespace libp2p::crypto::hmac {
      * @return message digest if calculation was successful, error otherwise
      */
     virtual outcome::result<ByteArray> calculateDigest(
-        HashType hash_type, const ByteArray &key,
-        ConstSpanOfBytes message) const = 0;
+        HashType hash_type, const ByteArray &key, BytesIn message) const = 0;
   };
 }  // namespace libp2p::crypto::hmac
 

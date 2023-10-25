@@ -30,7 +30,7 @@ namespace libp2p::multi {
     Multihash &operator=(Multihash &&other) noexcept = default;
     ~Multihash() = default;
 
-    using Buffer = common::ByteArray;
+    using Buffer = Bytes;
 
     static constexpr uint8_t kMaxHashLength = 127;
 
@@ -48,8 +48,7 @@ namespace libp2p::multi {
      * @param hash - binary buffer with the hash
      * @return result with the multihash in case of success
      */
-    static outcome::result<Multihash> create(HashType type,
-                                             ConstSpanOfBytes hash);
+    static outcome::result<Multihash> create(HashType type, BytesIn hash);
 
     /**
      * @brief Creates a multihash from a string, which represents a binary
@@ -69,8 +68,7 @@ namespace libp2p::multi {
      * @param b - the buffer with the multihash
      * @return result with the multihash in case of success
      */
-    static outcome::result<Multihash> createFromBytes(
-        ConstSpanOfBytes b);
+    static outcome::result<Multihash> createFromBytes(BytesIn b);
 
     /**
      * @return the info about hash type
@@ -80,7 +78,7 @@ namespace libp2p::multi {
     /**
      * @return the hash stored in this multihash
      */
-    ConstSpanOfBytes getHash() const;
+    BytesIn getHash() const;
 
     /**
      * @return a string with hexadecimal representation of the multihash
@@ -115,7 +113,7 @@ namespace libp2p::multi {
      * @param type - the info about the hash type
      * @param hash - a binary buffer with the hash
      */
-    Multihash(HashType type, ConstSpanOfBytes hash);
+    Multihash(HashType type, BytesIn hash);
 
     /**
      * Contains a one byte hash type, a one byte hash length, and the stored
@@ -129,7 +127,7 @@ namespace libp2p::multi {
       HashType type;
       size_t std_hash; ///< Hash for unordered containers
 
-      Data(HashType t, ConstSpanOfBytes h);
+      Data(HashType t, BytesIn h);
     };
 
     const Data& data() const;

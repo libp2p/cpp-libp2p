@@ -28,9 +28,9 @@ using libp2p::common::unhex;
 
 namespace libp2p::multi::converters {
 
-  using common::ByteArray;
+  using Bytes;
 
-  outcome::result<ByteArray> multiaddrToBytes(std::string_view str) {
+  outcome::result<Bytes> multiaddrToBytes(std::string_view str) {
     if (str.empty() || str[0] != '/') {
       return ConversionError::ADDRESS_DOES_NOT_BEGIN_WITH_SLASH;
     }
@@ -45,7 +45,7 @@ namespace libp2p::multi::converters {
       str.remove_suffix(1);
     }
 
-    ByteArray processed;
+    Bytes processed;
 
     enum class WordType { PROTOCOL, ADDRESS };
     WordType type = WordType::PROTOCOL;
@@ -93,7 +93,7 @@ namespace libp2p::multi::converters {
     return processed;
   }
 
-  outcome::result<ByteArray> addressToBytes(const Protocol &protocol,
+  outcome::result<Bytes> addressToBytes(const Protocol &protocol,
                                             std::string_view addr) {
     // TODO(Akvinikym) 25.02.19 PRE-49: add more protocols
     switch (protocol.code) {
@@ -143,7 +143,7 @@ namespace libp2p::multi::converters {
     return std::move(hex);
   }
 
-  outcome::result<std::string> bytesToMultiaddrString(ConstSpanOfBytes bytes) {
+  outcome::result<std::string> bytesToMultiaddrString(BytesIn bytes) {
     std::string results;
 
     size_t lastpos = 0;
@@ -153,7 +153,7 @@ namespace libp2p::multi::converters {
 
     // Process Hex String
     while (lastpos < bytes.size() * 2) {
-      ConstSpanOfBytes pid_bytes{bytes};
+      BytesIn pid_bytes{bytes};
       auto protocol_int = UVarint(pid_bytes.subspan(lastpos / 2)).toUInt64();
       Protocol const *protocol =
           ProtocolList::get(static_cast<Protocol::Code>(protocol_int));
@@ -290,7 +290,7 @@ namespace libp2p::multi::converters {
     return results;
   }
 
-  outcome::result<std::string> bytesToMultiaddrString(const ByteArray &bytes) {
-    return bytesToMultiaddrString(ConstSpanOfBytes(bytes));
+  outcome::result<std::string> bytesToMultiaddrString(const Bytes &bytes) {
+    return bytesToMultiaddrString(BytesIn(bytes));
   }
 }  // namespace libp2p::multi::converters

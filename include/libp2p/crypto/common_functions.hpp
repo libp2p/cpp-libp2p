@@ -42,7 +42,7 @@ namespace libp2p::crypto {
    * @return shared pointer to EC_KEY with overridden destructor
    */
   outcome::result<std::shared_ptr<EC_KEY>> EcKeyFromPrivateKeyBytes(
-      int nid, ConstSpanOfBytes private_key);
+      int nid, BytesIn private_key);
 
   /**
    * Initializes EVP_PKEY structure from private or public key bytes
@@ -56,7 +56,7 @@ namespace libp2p::crypto {
    */
   template <typename ReaderFunc>
   outcome::result<std::shared_ptr<EVP_PKEY>> NewEvpPkeyFromBytes(
-      int type, ConstSpanOfBytes key_bytes, ReaderFunc *reader);
+      int type, BytesIn key_bytes, ReaderFunc *reader);
 
   /*
    * The following template instantiation serves for both -
@@ -64,7 +64,7 @@ namespace libp2p::crypto {
    * since their types are identical.
    */
   extern template outcome::result<std::shared_ptr<EVP_PKEY>>
-  NewEvpPkeyFromBytes(int, ConstSpanOfBytes,
+  NewEvpPkeyFromBytes(int, BytesIn,
                       decltype(EVP_PKEY_new_raw_public_key) *);
 
   /**
@@ -75,7 +75,7 @@ namespace libp2p::crypto {
    * @return EC signature or error code
    */
   outcome::result<std::vector<uint8_t>> GenerateEcSignature(
-      ConstSpanOfBytes digest, const std::shared_ptr<EC_KEY> &key);
+      BytesIn digest, const std::shared_ptr<EC_KEY> &key);
 
   /**
    * @brief Verify EC signature based on key type
@@ -84,8 +84,7 @@ namespace libp2p::crypto {
    * @param key - EC public key
    * @return signature status or error code
    */
-  outcome::result<bool> VerifyEcSignature(ConstSpanOfBytes digest,
-                                          ConstSpanOfBytes signature,
+  outcome::result<bool> VerifyEcSignature(BytesIn digest, BytesIn signature,
                                           const std::shared_ptr<EC_KEY> &key);
 
 }  // namespace libp2p::crypto

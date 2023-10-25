@@ -11,7 +11,7 @@
 namespace libp2p {
   /// Read exactly `out.size()` bytes
   inline void readReturnSize(const std::shared_ptr<basic::Reader> &reader,
-                             MutSpanOfBytes out,
+                             BytesOut out,
                              basic::Reader::ReadCallbackFunc cb) {
     read(reader, out,
          [n{out.size()}, cb{std::move(cb)}](outcome::result<void> r) {

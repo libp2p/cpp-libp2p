@@ -52,8 +52,7 @@ namespace libp2p::basic {
     return state_;
   }
 
-  VarintPrefixReader::State VarintPrefixReader::consume(
-      ConstSpanOfBytes &buffer) {
+  VarintPrefixReader::State VarintPrefixReader::consume(BytesIn &buffer) {
     size_t consumed = 0;
     State s(state_);
     for (auto byte : buffer) {

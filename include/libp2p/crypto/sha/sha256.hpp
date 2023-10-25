@@ -19,9 +19,9 @@ namespace libp2p::crypto {
 
     ~Sha256() override;
 
-    outcome::result<void> write(ConstSpanOfBytes data) override;
+    outcome::result<void> write(BytesIn data) override;
 
-    outcome::result<void> digestOut(MutSpanOfBytes out) const override;
+    outcome::result<void> digestOut(BytesOut out) const override;
 
     outcome::result<void> reset() override;
 
@@ -43,8 +43,7 @@ namespace libp2p::crypto {
    * @param input to be hashed
    * @return hashed bytes
    */
-  outcome::result<libp2p::common::Hash256> sha256(
-      ConstSpanOfBytes input);
+  outcome::result<libp2p::common::Hash256> sha256(BytesIn input);
 }  // namespace libp2p::crypto
 
 #endif  // LIBP2P_SHA256_HPP

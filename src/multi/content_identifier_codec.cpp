@@ -106,7 +106,7 @@ namespace libp2p::multi {
   }
 
   outcome::result<ContentIdentifier> ContentIdentifierCodec::decode(
-      ConstSpanOfBytes bytes) {
+      BytesIn bytes) {
     if (bytes.size() == 34 and bytes[0] == 0x12 and bytes[1] == 0x20) {
       OUTCOME_TRY(hash, Multihash::createFromBytes(bytes));
       return ContentIdentifier(ContentIdentifier::Version::V0,

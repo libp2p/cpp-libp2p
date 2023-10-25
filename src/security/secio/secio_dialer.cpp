@@ -255,8 +255,7 @@ namespace libp2p::security::secio {
   }
 
   outcome::result<std::vector<uint8_t>> Dialer::getCorpus(
-      bool for_local_peer,
-      ConstSpanOfBytes ephemeral_public_key) const {
+      bool for_local_peer, BytesIn ephemeral_public_key) const {
     if (!(local_peer_proposal_bytes_ && remote_peer_proposal_bytes_)) {
       return Error::INTERNAL_FAILURE;
     }

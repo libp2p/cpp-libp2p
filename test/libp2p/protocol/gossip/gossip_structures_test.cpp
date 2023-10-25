@@ -30,7 +30,7 @@ TEST(Gossip, TopicMessageHasValidFields) {
 
   // seq_no is encoded properly
   ASSERT_EQ(msg->seq_no,
-            g::ByteArray({0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99}));
+            g::Bytes({0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99}));
 
   // id is created from proper fields
   g::MessageId id = g::createMessageId(msg->from, msg->seq_no, msg->data);

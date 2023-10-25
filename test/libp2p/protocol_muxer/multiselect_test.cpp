@@ -10,7 +10,7 @@
 #include <libp2p/protocol_muxer/multiselect/parser.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 
-using libp2p::ConstSpanOfBytes;
+using libp2p::BytesIn;
 
 /**
  * @given static vector
@@ -41,7 +41,7 @@ TEST(Multiselect, SingleValidMessages) {
   for (const auto &m : messages) {
     auto buf = detail::createMessage(m.content).value();
     EXPECT_GT(buf.size(), m.content.size());
-    ConstSpanOfBytes span(buf);
+    BytesIn span(buf);
     auto s = reader.consume(span);
     EXPECT_EQ(s, detail::Parser::kReady);
     EXPECT_EQ(reader.messages().size(), 1);
@@ -64,7 +64,7 @@ TEST(Multiselect, SingleValidMessagesPartialRead) {
       {Message::kNAMessage, "na"},
   });
 
-  using Span = ConstSpanOfBytes;
+  using Span = BytesIn;
 
   auto split_span = [](Span span, size_t first_split,
                        size_t second_split) -> std::tuple<Span, Span, Span> {
@@ -78,7 +78,7 @@ TEST(Multiselect, SingleValidMessagesPartialRead) {
     for (const auto &m : messages) {
       auto buf = detail::createMessage(m.content).value();
       EXPECT_GT(buf.size(), m.content.size());
-      ConstSpanOfBytes span(buf);
+      BytesIn span(buf);
       auto [s1, s2, s3] = split_span(span, first_split, second_split);
       auto s = reader.consume(s1);
       EXPECT_EQ(s, detail::Parser::kUnderflow);

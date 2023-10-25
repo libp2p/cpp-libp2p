@@ -32,7 +32,7 @@ namespace libp2p::basic {
      * pointer, or having buffer as part of some class/struct, and using
      * enable_shared_from_this()
      */
-    virtual void write(ConstSpanOfBytes in, size_t bytes,
+    virtual void write(BytesIn in, size_t bytes,
                        WriteCallbackFunc cb) = 0;
 
     /**
@@ -48,7 +48,7 @@ namespace libp2p::basic {
      * pointer, or having buffer as part of some class/struct, and using
      * enable_shared_from_this()
      */
-    virtual void writeSome(ConstSpanOfBytes in, size_t bytes,
+    virtual void writeSome(BytesIn in, size_t bytes,
                            WriteCallbackFunc cb) = 0;
 
     /**

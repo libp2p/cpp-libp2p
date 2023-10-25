@@ -34,12 +34,12 @@ namespace libp2p::crypto::aes {
 
     ~AesCtrImpl() override;
 
-    outcome::result<ByteArray> crypt(ConstSpanOfBytes data) const override;
+    outcome::result<ByteArray> crypt(BytesIn data) const override;
 
     outcome::result<ByteArray> finalize() override;
 
    private:
-    outcome::result<void> init(ConstSpanOfBytes key, ConstSpanOfBytes iv,
+    outcome::result<void> init(BytesIn key, BytesIn iv,
                                const EVP_CIPHER *cipher);
 
     const Mode mode_;

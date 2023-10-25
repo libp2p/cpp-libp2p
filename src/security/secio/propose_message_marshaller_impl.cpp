@@ -56,7 +56,7 @@ namespace libp2p::security::secio {
   }
 
   outcome::result<ProposeMessage> ProposeMessageMarshallerImpl::unmarshal(
-      ConstSpanOfBytes msg_bytes) const {
+      BytesIn msg_bytes) const {
     protobuf::Propose propose_msg;
     if (!propose_msg.ParseFromArray(msg_bytes.data(), msg_bytes.size())) {
       return Error::MESSAGE_DESERIALIZING_ERROR;

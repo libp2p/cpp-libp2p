@@ -17,7 +17,7 @@ namespace libp2p::crypto {
     sinkCtx();
   }
 
-  outcome::result<void> Sha1::write(ConstSpanOfBytes data) {
+  outcome::result<void> Sha1::write(BytesIn data) {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
@@ -27,7 +27,7 @@ namespace libp2p::crypto {
     return outcome::success();
   }
 
-  outcome::result<void> Sha1::digestOut(MutSpanOfBytes out) const {
+  outcome::result<void> Sha1::digestOut(BytesOut out) const {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
@@ -71,8 +71,7 @@ namespace libp2p::crypto {
     return HashType::SHA1;
   }
 
-  outcome::result<libp2p::common::Hash160> sha1(
-      ConstSpanOfBytes input) {
+  outcome::result<libp2p::common::Hash160> sha1(BytesIn input) {
     Sha1 sha;
     OUTCOME_TRY(sha.write(input));
     outcome::result<libp2p::common::Hash160> result{outcome::success()};

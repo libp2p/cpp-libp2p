@@ -53,7 +53,7 @@ namespace libp2p::security::secio {
      * @returns deserealized handy Exchange message
      */
     virtual outcome::result<ExchangeMessage> unmarshal(
-        ConstSpanOfBytes msg_bytes) const = 0;
+        BytesIn msg_bytes) const = 0;
   };
 }  // namespace libp2p::security::secio
 

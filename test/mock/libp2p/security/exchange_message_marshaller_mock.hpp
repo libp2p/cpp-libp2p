@@ -33,7 +33,7 @@ namespace libp2p::security::plaintext {
     MOCK_CONST_METHOD1(
         unmarshal,
         outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>>(
-            ConstSpanOfBytes));
+            BytesIn));
   };
 }  // namespace libp2p::security::plaintext
 #endif  // LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP

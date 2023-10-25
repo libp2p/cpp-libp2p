@@ -15,7 +15,7 @@ namespace libp2p::crypto::hmac {
    public:
     outcome::result<ByteArray> calculateDigest(
         HashType hash_type, const ByteArray &key,
-        ConstSpanOfBytes message) const override;
+                                               BytesIn message) const override;
   };
 }  // namespace libp2p::crypto::hmac
 

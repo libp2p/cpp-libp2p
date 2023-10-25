@@ -40,7 +40,7 @@ namespace libp2p::multi::converters {
     return std::move(hex);
   }
 
-  outcome::result<common::ByteArray> IpfsConverter::addressToBytes(
+  outcome::result<Bytes> IpfsConverter::addressToBytes(
       std::string_view addr) {
     std::string encoded =
         static_cast<char>(MultibaseCodecImpl::Encoding::BASE58)

@@ -28,7 +28,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     expected_msg_size_ = 0;
   }
 
-  Parser::State Parser::consume(ConstSpanOfBytes &data) {
+  Parser::State Parser::consume(BytesIn &data) {
     static constexpr size_t kMaybeAverageMessageLength = 17;
 
     if (state_ == kReady) {
@@ -65,7 +65,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     return state_;
   }
 
-  void Parser::consumeData(ConstSpanOfBytes &data) {
+  void Parser::consumeData(BytesIn &data) {
     assert(varint_reader_.state() == VarintPrefixReader::kReady);
     assert(expected_msg_size_ > 0);
 
@@ -75,11 +75,11 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     }
   }
 
-  void Parser::readFinished(ConstSpanOfBytes msg) {
+  void Parser::readFinished(BytesIn msg) {
     assert(expected_msg_size_ == msg.size());
     assert(expected_msg_size_ != 0);
 
-    auto span2sv = [](ConstSpanOfBytes span) -> std::string_view {
+    auto span2sv = [](BytesIn span) -> std::string_view {
       if (span.empty()) {
         return {};
       }
@@ -121,7 +121,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     assert(state_ != kUnderflow);
   }
 
-  void Parser::parseNestedMessages(ConstSpanOfBytes &data) {
+  void Parser::parseNestedMessages(BytesIn &data) {
     if (recursion_depth_ == kMaxRecursionDepth) {
       state_ = kOverflow;
       return;

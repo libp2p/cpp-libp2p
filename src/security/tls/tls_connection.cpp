@@ -140,14 +140,14 @@ namespace libp2p::connection {
     };
   }
 
-  void TlsConnection::read(MutSpanOfBytes out, size_t bytes,
+  void TlsConnection::read(BytesOut out, size_t bytes,
                            Reader::ReadCallbackFunc f) {
     ambigousSize(out, bytes);
     SL_TRACE(log(), "reading {} bytes", bytes);
     readReturnSize(shared_from_this(), out, std::move(f));
   }
 
-  void TlsConnection::readSome(MutSpanOfBytes out, size_t bytes,
+  void TlsConnection::readSome(BytesOut out, size_t bytes,
                                Reader::ReadCallbackFunc cb) {
     SL_TRACE(log(), "reading some up to {} bytes", bytes);
     socket_.async_read_some(makeBuffer(out, bytes),
@@ -159,14 +159,14 @@ namespace libp2p::connection {
     original_connection_->deferReadCallback(res, std::move(cb));
   }
 
-  void TlsConnection::write(ConstSpanOfBytes in, size_t bytes,
+  void TlsConnection::write(BytesIn in, size_t bytes,
                             Writer::WriteCallbackFunc cb) {
     SL_TRACE(log(), "writing {} bytes", bytes);
     boost::asio::async_write(socket_, makeBuffer(in, bytes),
                              closeOnError(*this, std::move(cb)));
   }
 
-  void TlsConnection::writeSome(ConstSpanOfBytes in, size_t bytes,
+  void TlsConnection::writeSome(BytesIn in, size_t bytes,
                                 Writer::WriteCallbackFunc cb) {
     SL_TRACE(log(), "writing some up to {} bytes", bytes);
     socket_.async_write_some(makeBuffer(in, bytes),

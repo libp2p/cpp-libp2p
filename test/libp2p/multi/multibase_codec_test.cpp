@@ -23,7 +23,7 @@ class MultibaseCodecTest : public ::testing::Test {
    * be valid encoded string
    * @return resulting Multibase
    */
-  ByteArray decodeCorrect(std::string_view encoded) {
+  Bytes decodeCorrect(std::string_view encoded) {
     auto multibase_opt = multibase->decode(encoded);
     EXPECT_TRUE(multibase_opt.has_value())
         << "failed to decode string: " + std::string{encoded};
@@ -33,7 +33,7 @@ class MultibaseCodecTest : public ::testing::Test {
 
 TEST_F(MultibaseCodecTest, EncodeEmptyBytes) {
   auto encoded_str =
-      multibase->encode(ByteArray{}, MultibaseCodec::Encoding::BASE16_LOWER);
+      multibase->encode(Bytes{}, MultibaseCodec::Encoding::BASE16_LOWER);
   ASSERT_TRUE(encoded_str.empty());
 }
 
@@ -63,7 +63,7 @@ class Base16EncodingUpper : public MultibaseCodecTest {
   MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE16_UPPER;
 
   std::string_view encoded_correct{"F00010204081020FF"};
-  ByteArray decoded_correct{0, 1, 2, 4, 8, 16, 32, 255};
+  Bytes decoded_correct{0, 1, 2, 4, 8, 16, 32, 255};
 
   std::string_view encoded_incorrect_prefix{"fAA"};
   std::string_view encoded_incorrect_body{"F10A"};
@@ -114,7 +114,7 @@ class Base16EncodingLower : public MultibaseCodecTest {
   MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE16_LOWER;
 
   std::string_view encoded_correct{"f00010204081020ff"};
-  ByteArray decoded_correct{0, 1, 2, 4, 8, 16, 32, 255};
+  Bytes decoded_correct{0, 1, 2, 4, 8, 16, 32, 255};
 
   std::string_view encoded_incorrect_prefix{"Faa"};
   std::string_view encoded_incorrect_body{"f10a"};
@@ -164,7 +164,7 @@ class Base32EncodingLower : public MultibaseCodecTest {
  public:
   MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE32_LOWER;
 
-  const std::vector<std::pair<ByteArray, std::string_view>> decode_encode_table{
+  const std::vector<std::pair<Bytes, std::string_view>> decode_encode_table{
       {"61"_unhex, "bme"},
       {"626262"_unhex, "bmjrge"},
       {"636363"_unhex, "bmnrwg"},
@@ -229,7 +229,7 @@ class Base32EncodingUpper : public MultibaseCodecTest {
  public:
   MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE32_UPPER;
 
-  const std::vector<std::pair<ByteArray, std::string_view>> decode_encode_table{
+  const std::vector<std::pair<Bytes, std::string_view>> decode_encode_table{
       {"61"_unhex, "BME"},
       {"626262"_unhex, "BMJRGE"},
       {"636363"_unhex, "BMNRWG"},
@@ -294,7 +294,7 @@ class Base58Encoding : public MultibaseCodecTest {
  public:
   MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE58;
 
-  const std::vector<std::pair<ByteArray, std::string_view>> decode_encode_table{
+  const std::vector<std::pair<Bytes, std::string_view>> decode_encode_table{
       {"61"_unhex, "z2g"},
       {"626262"_unhex, "za3gV"},
       {"636363"_unhex, "zaPEr"},
@@ -392,7 +392,7 @@ class Base64Encoding : public MultibaseCodecTest {
  public:
   MultibaseCodec::Encoding encoding = MultibaseCodec::Encoding::BASE64;
 
-  const std::vector<std::pair<ByteArray, std::string_view>> decode_encode_table{
+  const std::vector<std::pair<Bytes, std::string_view>> decode_encode_table{
       {"66"_unhex, "mZg=="},
       {"666f"_unhex, "mZm8="},
       {"666f6f"_unhex, "mZm9v"},

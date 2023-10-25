@@ -18,7 +18,7 @@
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
 #include <testutil/outcome.hpp>
 
-using libp2p::common::ByteArray;
+using libp2p::Bytes;
 using libp2p::crypto::CryptoProvider;
 using libp2p::crypto::CryptoProviderImpl;
 using libp2p::crypto::Key;

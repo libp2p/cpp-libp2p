@@ -11,7 +11,7 @@
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
 #include "testutil/outcome.hpp"
 
-using libp2p::common::ByteArray;
+using libp2p::Bytes;
 using libp2p::common::unhex;
 using libp2p::multi::converters::bytesToMultiaddrString;
 using libp2p::multi::converters::ConversionError;

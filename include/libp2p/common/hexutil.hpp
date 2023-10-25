@@ -32,7 +32,7 @@ namespace libp2p::common {
    * @param len length of bytes
    * @return hexstring
    */
-  inline std::string hex_upper(ConstSpanOfBytes bytes) noexcept {
+  inline std::string hex_upper(BytesIn bytes) noexcept {
     std::string res(bytes.size() * 2, '\x00');
     boost::algorithm::hex(bytes.begin(), bytes.end(), res.begin());
     return res;
@@ -44,7 +44,7 @@ namespace libp2p::common {
    * @param len length of bytes
    * @return hexstring
    */
-  inline std::string hex_lower(ConstSpanOfBytes bytes) noexcept {
+  inline std::string hex_lower(BytesIn bytes) noexcept {
     std::string res(bytes.size() * 2, '\x00');
     boost::algorithm::hex_lower(bytes.begin(), bytes.end(), res.begin());
     return res;
@@ -69,7 +69,7 @@ namespace libp2p::common {
    * @param str String
    * @return Span
    */
-  inline ConstSpanOfBytes sv2span(const std::string_view &str) {
+  inline BytesIn sv2span(const std::string_view &str) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uint8_t *>(str.data()), str.size()};
   }
@@ -79,7 +79,7 @@ namespace libp2p::common {
    * @param s Span
    * @return s
    */
-  inline ConstSpanOfBytes sv2span(ConstSpanOfBytes s) {
+  inline BytesIn sv2span(BytesIn s) {
     return s;
   }
 

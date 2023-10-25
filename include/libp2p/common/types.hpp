@@ -6,18 +6,13 @@
 #ifndef LIBP2P_P2P_COMMON_TYPES_HPP
 #define LIBP2P_P2P_COMMON_TYPES_HPP
 
-#include <array>
 #include <cstdint>
-#include <ranges>
 #include <span>
 #include <vector>
 
 #include <libp2p/cxx20/lexicographical_compare_three_way.hpp>
 
 namespace libp2p::common {
-
-  /// @brief convenience alias for arrays of bytes
-  using ByteArray = std::vector<uint8_t>;
 
   template <typename Collection, typename Item>
   void append(Collection &c, Item &&g) {
@@ -39,15 +34,18 @@ namespace libp2p::common {
 
 namespace libp2p {
 
+  /// @brief convenience alias for arrays of bytes
+  using Bytes = std::vector<uint8_t>;
+
   /// @brief convenience alias for immutable span of bytes
-  using ConstSpanOfBytes = std::span<const uint8_t>;
+  using BytesIn = std::span<const uint8_t>;
 
   /// @brief convenience alias for mutable span of bytes
-  using MutSpanOfBytes = std::span<uint8_t>;
+  using BytesOut = std::span<uint8_t>;
 
   template <class T>
-  concept SpanOfBytes = std::is_same_v<std::decay_t<T>, ConstSpanOfBytes>
-      or std::is_same_v<std::decay_t<T>, ConstSpanOfBytes>;
+  concept SpanOfBytes = std::is_same_v<std::decay_t<T>, BytesIn>
+      or std::is_same_v<std::decay_t<T>, BytesIn>;
 
   inline bool operator==(const SpanOfBytes auto &lhs,
                          const SpanOfBytes auto &rhs) {

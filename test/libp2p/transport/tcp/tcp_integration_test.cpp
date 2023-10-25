@@ -26,7 +26,7 @@ using namespace libp2p::common;
 using namespace libp2p::connection;
 using std::chrono_literals::operator""s;
 using std::chrono_literals::operator""ms;
-using libp2p::common::ByteArray;
+using libp2p::Bytes;
 
 using ::testing::_;
 using ::testing::AnyNumber;
@@ -166,8 +166,8 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
       transport->dial(testutil::randomPeerId(), ma, [context](auto &&rconn) {
         auto conn = expectConnectionValid(rconn);
 
-        auto readback = std::make_shared<ByteArray>(kSize, 0);
-        auto buf = std::make_shared<ByteArray>(kSize, 0);
+        auto readback = std::make_shared<Bytes>(kSize, 0);
+        auto buf = std::make_shared<Bytes>(kSize, 0);
         std::generate(buf->begin(), buf->end(), []() {
           return rand();  // NOLINT
         });
@@ -323,8 +323,8 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
       ma, [kSize](auto &&rconn) {
         auto conn = expectConnectionValid(rconn);
 
-        auto readback = std::make_shared<ByteArray>(kSize, 0);
-        auto buf = std::make_shared<ByteArray>(kSize, 0);
+        auto readback = std::make_shared<Bytes>(kSize, 0);
+        auto buf = std::make_shared<Bytes>(kSize, 0);
         std::generate(buf->begin(), buf->end(), []() {
           return rand();  // NOLINT
         });

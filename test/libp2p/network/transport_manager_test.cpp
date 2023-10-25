@@ -10,7 +10,7 @@
 #include <libp2p/common/types.hpp>
 #include "mock/libp2p/transport/transport_mock.hpp"
 
-using libp2p::ConstSpanOfBytes;
+using libp2p::BytesIn;
 using namespace libp2p::network;
 using namespace libp2p::multi;
 using namespace libp2p::transport;

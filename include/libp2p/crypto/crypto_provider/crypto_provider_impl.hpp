@@ -51,11 +51,10 @@ namespace libp2p::crypto {
     outcome::result<PublicKey> derivePublicKey(
         const PrivateKey &private_key) const override;
 
-    outcome::result<Buffer> sign(ConstSpanOfBytes message,
+    outcome::result<Buffer> sign(BytesIn message,
                                  const PrivateKey &private_key) const override;
 
-    outcome::result<bool> verify(ConstSpanOfBytes message,
-                                 ConstSpanOfBytes signature,
+    outcome::result<bool> verify(BytesIn message, BytesIn signature,
                                  const PublicKey &public_key) const override;
 
     outcome::result<EphemeralKeyPair> generateEphemeralKeyPair(
@@ -73,37 +72,33 @@ namespace libp2p::crypto {
     // RSA
     outcome::result<KeyPair> generateRsa(common::RSAKeyType rsa_bitness) const;
     outcome::result<PublicKey> deriveRsa(const PrivateKey &key) const;
-    outcome::result<Buffer> signRsa(ConstSpanOfBytes message,
+    outcome::result<Buffer> signRsa(BytesIn message,
                                     const PrivateKey &private_key) const;
-    outcome::result<bool> verifyRsa(ConstSpanOfBytes message,
-                                    ConstSpanOfBytes signature,
+    outcome::result<bool> verifyRsa(BytesIn message, BytesIn signature,
                                     const PublicKey &public_key) const;
 
     // Ed25519
     outcome::result<KeyPair> generateEd25519() const;
     outcome::result<PublicKey> deriveEd25519(const PrivateKey &key) const;
-    outcome::result<Buffer> signEd25519(ConstSpanOfBytes message,
+    outcome::result<Buffer> signEd25519(BytesIn message,
                                         const PrivateKey &private_key) const;
-    outcome::result<bool> verifyEd25519(ConstSpanOfBytes message,
-                                        ConstSpanOfBytes signature,
+    outcome::result<bool> verifyEd25519(BytesIn message, BytesIn signature,
                                         const PublicKey &public_key) const;
 
     // Secp256k1
     outcome::result<KeyPair> generateSecp256k1() const;
     outcome::result<PublicKey> deriveSecp256k1(const PrivateKey &key) const;
-    outcome::result<Buffer> signSecp256k1(ConstSpanOfBytes message,
+    outcome::result<Buffer> signSecp256k1(BytesIn message,
                                           const PrivateKey &private_key) const;
-    outcome::result<bool> verifySecp256k1(ConstSpanOfBytes message,
-                                          ConstSpanOfBytes signature,
+    outcome::result<bool> verifySecp256k1(BytesIn message, BytesIn signature,
                                           const PublicKey &public_key) const;
 
     // ECDSA
     outcome::result<KeyPair> generateEcdsa() const;
     outcome::result<PublicKey> deriveEcdsa(const PrivateKey &key) const;
-    outcome::result<Buffer> signEcdsa(ConstSpanOfBytes message,
+    outcome::result<Buffer> signEcdsa(BytesIn message,
                                       const PrivateKey &private_key) const;
-    outcome::result<bool> verifyEcdsa(ConstSpanOfBytes message,
-                                      ConstSpanOfBytes signature,
+    outcome::result<bool> verifyEcdsa(BytesIn message, BytesIn signature,
                                       const PublicKey &public_key) const;
 
     std::shared_ptr<random::CSPRNG> random_provider_;

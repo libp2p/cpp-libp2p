@@ -24,7 +24,7 @@ namespace libp2p::multi::converters {
     return hex;
   }
 
-  outcome::result<common::ByteArray> IPv4Converter::addressToBytes(
+  outcome::result<Bytes> IPv4Converter::addressToBytes(
       std::string_view addr) {
     boost::system::error_code ec;
     auto address = boost::asio::ip::make_address_v4(addr, ec);
@@ -32,7 +32,7 @@ namespace libp2p::multi::converters {
       return ConversionError::INVALID_ADDRESS;
     }
     auto ip_bytes = address.to_bytes();
-    return common::ByteArray(ip_bytes.begin(), ip_bytes.end());
+    return Bytes(ip_bytes.begin(), ip_bytes.end());
   }
 
 }  // namespace libp2p::multi::converters

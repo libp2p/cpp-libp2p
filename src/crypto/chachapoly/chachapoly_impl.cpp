@@ -23,8 +23,10 @@ namespace libp2p::crypto::chachapoly {
         cipher_{EVP_chacha20_poly1305()},
         block_size_{EVP_CIPHER_block_size(cipher_)} {}
 
-  outcome::result<ByteArray> ChaCha20Poly1305Impl::encrypt(
-      const Nonce &nonce, ConstSpanOfBytes plaintext, ConstSpanOfBytes aad) {
+  outcome::result<Bytes> ChaCha20Poly1305Impl::encrypt(
+      const Nonce &nonce,
+                                                           BytesIn plaintext,
+                                                           BytesIn aad) {
     const auto init_failure = OpenSslError::FAILED_INITIALIZE_OPERATION;
     std::vector<uint8_t> result;
     // just reserving the space, possibly without actual memory allocation:
@@ -77,9 +79,11 @@ namespace libp2p::crypto::chachapoly {
     return result;
   }
 
-  outcome::result<ByteArray> ChaCha20Poly1305Impl::decrypt(
-      const Nonce &nonce, ConstSpanOfBytes ciphertext, ConstSpanOfBytes aad) {
-    ByteArray result;
+  outcome::result<Bytes> ChaCha20Poly1305Impl::decrypt(
+      const Nonce &nonce,
+                                                           BytesIn ciphertext,
+                                                           BytesIn aad) {
+    Bytes result;
     // plain text should take less bytes than cipher text,
     // at least it would not contain tag-length bytes (16).
     // single block size for the case when len(in) == len(out)

@@ -183,7 +183,8 @@ TEST_F(IdentifyTest, Send) {
 
   // handle Identify request and check it
   EXPECT_CALL(*stream_, write(_, _, _))
-      .WillOnce(Success(ConstSpanOfBytes(identify_pb_msg_bytes_.data(),
+      .WillOnce(Success(
+          BytesIn(identify_pb_msg_bytes_.data(),
                                          identify_pb_msg_bytes_.size()),
                         outcome::success(identify_pb_msg_bytes_.size())));
 

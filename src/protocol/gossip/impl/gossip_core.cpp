@@ -39,8 +39,8 @@ namespace libp2p::protocol::gossip {
                          std::shared_ptr<crypto::CryptoProvider> crypto_provider,
                          std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller)
       : config_(std::move(config)),
-        create_message_id_([](const ByteArray &from, const ByteArray &seq,
-                              const ByteArray &data){
+        create_message_id_([](const Bytes &from, const Bytes &seq,
+                              const Bytes &data){
           return createMessageId(from, seq, data);
         }),
         scheduler_(std::move(scheduler)),
@@ -157,7 +157,7 @@ namespace libp2p::protocol::gossip {
                                            std::move(callback));
   }
 
-  bool GossipCore::publish(TopicId topic, ByteArray data) {
+  bool GossipCore::publish(TopicId topic, Bytes data) {
     if (!started_) {
       return false;
     }

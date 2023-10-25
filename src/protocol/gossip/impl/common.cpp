@@ -61,7 +61,7 @@ namespace libp2p::protocol::gossip {
     return peer::PeerId::fromBytes(msg.from);
   }
 
-  ByteArray createSeqNo(uint64_t seq) {
+  Bytes createSeqNo(uint64_t seq) {
     // NOLINTNEXTLINE
     union {
       uint64_t number;
@@ -75,11 +75,11 @@ namespace libp2p::protocol::gossip {
     boost::endian::native_to_big_inplace(seq_buf.number);
 
     // NOLINTNEXTLINE
-    return ByteArray(seq_buf.bytes.begin(), seq_buf.bytes.end());
+    return Bytes(seq_buf.bytes.begin(), seq_buf.bytes.end());
   }
 
-  ByteArray fromString(const std::string &s) {
-    ByteArray ret{};
+  Bytes fromString(const std::string &s) {
+    Bytes ret{};
     auto sz = s.size();
     if (sz > 0) {
       ret.reserve(sz);
@@ -88,21 +88,21 @@ namespace libp2p::protocol::gossip {
     return ret;
   }
 
-  MessageId createMessageId(const ByteArray &from, const ByteArray &seq,
-                            const ByteArray &data) {
+  MessageId createMessageId(const Bytes &from, const Bytes &seq,
+                            const Bytes &data) {
     MessageId msg_id(from);
     msg_id.reserve(seq.size() + from.size());
     msg_id.insert(msg_id.end(), seq.begin(), seq.end());
     return msg_id;
   }
 
-  TopicMessage::TopicMessage(ByteArray _from, ByteArray _seq, ByteArray _data)
+  TopicMessage::TopicMessage(Bytes _from, Bytes _seq, Bytes _data)
       : from(std::move(_from)),
         seq_no(std::move(_seq)),
         data(std::move(_data)) {}
 
   TopicMessage::TopicMessage(const peer::PeerId &_from, uint64_t _seq,
-                             ByteArray _data, TopicId _topic)
+                             Bytes _data, TopicId _topic)
       : from(_from.toVector()),
         seq_no(createSeqNo(_seq)),
         data(std::move(_data)),

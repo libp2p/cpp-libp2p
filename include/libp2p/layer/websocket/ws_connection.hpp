@@ -67,25 +67,25 @@ namespace libp2p::connection {
 
     bool isClosed() const override;
 
-    void read(MutSpanOfBytes out, size_t bytes,
+    void read(BytesOut out, size_t bytes,
               ReadCallbackFunc cb) override;
 
-    void readSome(MutSpanOfBytes out, size_t bytes,
+    void readSome(BytesOut out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(ConstSpanOfBytes in, size_t bytes,
+    void write(BytesIn in, size_t bytes,
                WriteCallbackFunc cb) override;
 
-    void writeSome(ConstSpanOfBytes in, size_t bytes,
+    void writeSome(BytesIn in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
    private:
-    void onPong(ConstSpanOfBytes payload);
+    void onPong(BytesIn payload);
 
     /// Config
     layer::WsConnectionConfig config_;

@@ -36,7 +36,7 @@ namespace libp2p::crypto::secp256k1 {
      * @param key - private key for signing
      * @return Secp256k1 signature or error code
      */
-    virtual outcome::result<Signature> sign(ConstSpanOfBytes message,
+    virtual outcome::result<Signature> sign(BytesIn message,
                                             const PrivateKey &key) const = 0;
 
     /**
@@ -46,7 +46,7 @@ namespace libp2p::crypto::secp256k1 {
      * @param key - public key for signature verifying
      * @return Result of the verification or error code
      */
-    virtual outcome::result<bool> verify(ConstSpanOfBytes message,
+    virtual outcome::result<bool> verify(BytesIn message,
                                          const Signature &signature,
                                          const PublicKey &key) const = 0;
 

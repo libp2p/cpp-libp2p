@@ -39,7 +39,7 @@ namespace libp2p::basic {
      * @param cb is called when the message is written or an error happened.
      * Quantity of bytes written is passed as an argument in case of success
      */
-    virtual void write(ConstSpanOfBytes buffer,
+    virtual void write(BytesIn buffer,
                        Writer::WriteCallbackFunc cb) = 0;
   };
 }  // namespace libp2p::basic

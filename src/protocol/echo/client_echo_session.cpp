@@ -44,7 +44,7 @@ namespace libp2p::protocol {
   void ClientEchoSession::doRead() {
     auto self{shared_from_this()};
 
-    MutSpanOfBytes span = recv_buf_;
+    BytesOut span = recv_buf_;
 
     // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
     span = span.subspan(bytes_read_);

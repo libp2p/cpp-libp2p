@@ -124,7 +124,7 @@ namespace libp2p::protocol_muxer::multiselect {
       return;
     }
 
-    auto span = ConstSpanOfBytes(*packet);
+    auto span = BytesIn(*packet);
 
     SL_TRACE(log(), "sending {}", common::dumpBin(span));
 
@@ -187,7 +187,7 @@ namespace libp2p::protocol_muxer::multiselect {
       return close(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
     }
 
-    MutSpanOfBytes span(*read_buffer_);
+    BytesOut span(*read_buffer_);
     span = span.first(static_cast<Parser::IndexType>(bytes_needed));
 
     connection_->read(span, bytes_needed,
@@ -211,7 +211,7 @@ namespace libp2p::protocol_muxer::multiselect {
       return close(ProtocolMuxer::Error::INTERNAL_ERROR);
     }
 
-    ConstSpanOfBytes span(*read_buffer_);
+    BytesIn span(*read_buffer_);
     span = span.first(static_cast<Parser::IndexType>(bytes_read));
 
     SL_TRACE(log(), "received {}", common::dumpBin(span));

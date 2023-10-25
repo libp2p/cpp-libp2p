@@ -91,8 +91,8 @@ namespace libp2p::connection {
     ping_timeout_handle_.cancel();
   }
 
-  void WsConnection::onPong(ConstSpanOfBytes payload) {
-    auto expected = ConstSpanOfBytes(
+  void WsConnection::onPong(BytesIn payload) {
+    auto expected = BytesIn(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         reinterpret_cast<const uint8_t *>(&ping_counter_),
         sizeof(ping_counter_));
@@ -126,14 +126,14 @@ namespace libp2p::connection {
     return connection_->close();
   }
 
-  void WsConnection::read(MutSpanOfBytes out, size_t bytes,
+  void WsConnection::read(BytesOut out, size_t bytes,
                           libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     SL_TRACE(log_, "read {} bytes", bytes);
     readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
-  void WsConnection::readSome(MutSpanOfBytes out, size_t bytes,
+  void WsConnection::readSome(BytesOut out, size_t bytes,
                               libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     SL_TRACE(log_, "read some upto {} bytes", bytes);
@@ -152,7 +152,7 @@ namespace libp2p::connection {
     ws_.async_read_some(asioBuffer(out), std::move(on_read));
   }
 
-  void WsConnection::write(ConstSpanOfBytes in,  //
+  void WsConnection::write(BytesIn in,  //
                            size_t bytes,         //
                            libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
@@ -160,7 +160,7 @@ namespace libp2p::connection {
     ws_.async_write(asioBuffer(in), toAsioCbSize(std::move(cb)));
   }
 
-  void WsConnection::writeSome(ConstSpanOfBytes in,  //
+  void WsConnection::writeSome(BytesIn in,  //
                                size_t bytes,         //
                                libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);

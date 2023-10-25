@@ -145,7 +145,7 @@ namespace libp2p::security::tls_details {
 
       return crypto::ed25519::Ed25519ProviderImpl{}
           // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-          .sign(ConstSpanOfBytes(buf, msg_len), pk_data)
+          .sign(BytesIn(buf, msg_len), pk_data)
           .value();
     }
 
@@ -288,8 +288,7 @@ namespace libp2p::security::tls_details {
     };
 
     // extracts peer's pubkey and extension signature from ASN1 sequence
-    boost::optional<KeyAndSignature> unmarshalExtensionData(
-        ConstSpanOfBytes data) {
+    boost::optional<KeyAndSignature> unmarshalExtensionData(BytesIn data) {
       KeyAndSignature result;
 
       bool ok = (data.size() == kExtensionDataSize) && (data[0] == kSequenceTag)
@@ -329,8 +328,7 @@ namespace libp2p::security::tls_details {
       ASN1_OCTET_STRING *os = X509_EXTENSION_get_data(ext);
       assert(os);
 
-      auto ks_binary = unmarshalExtensionData(
-          ConstSpanOfBytes(os->data,
+      auto ks_binary = unmarshalExtensionData(BytesIn(os->data,
                            os->data + os->length));  // NOLINT
       if (!ks_binary) {
         log()->info("cannot unmarshal libp2p certificate extension");
@@ -362,7 +360,7 @@ namespace libp2p::security::tls_details {
       i2d_PUBKEY(cert_pubkey, &b);
 
       auto verify_res = crypto::ed25519::Ed25519ProviderImpl{}.verify(
-          ConstSpanOfBytes(buf, buf + msg_len),  // NOLINT
+          BytesIn(buf, buf + msg_len),  // NOLINT
           signature, ed25519pkey);
 
       if (!verify_res) {

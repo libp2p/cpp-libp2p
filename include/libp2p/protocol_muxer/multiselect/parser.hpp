@@ -24,7 +24,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     /// Number of messages in a packet will rarely exceed 4
     using Messages = boost::container::small_vector<Message, 4>;
 
-    using IndexType = ConstSpanOfBytes::size_type;
+    using IndexType = BytesIn::size_type;
 
     /// State similar to that of VarintPrefixReader
     enum State {
@@ -53,17 +53,17 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     void reset();
 
     /// Consumes incoming data from wire and returns state
-    State consume(ConstSpanOfBytes &data);
+    State consume(BytesIn &data);
 
    private:
     /// Called from consume() when length prefix is read
-    void consumeData(ConstSpanOfBytes &data);
+    void consumeData(BytesIn &data);
 
     /// Processes received packet, which can contain nested messages
-    void readFinished(ConstSpanOfBytes msg);
+    void readFinished(BytesIn msg);
 
     /// Parses nested messages (also varint prefixed)
-    void parseNestedMessages(ConstSpanOfBytes &data);
+    void parseNestedMessages(BytesIn &data);
 
     /// Processes received messages: assigns their types
     void processReceivedMessages();

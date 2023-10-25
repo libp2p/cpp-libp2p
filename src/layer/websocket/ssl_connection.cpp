@@ -42,25 +42,25 @@ namespace libp2p::connection {
     return connection_->close();
   }
 
-  void SslConnection::read(MutSpanOfBytes out, size_t bytes,
+  void SslConnection::read(BytesOut out, size_t bytes,
                            libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
-  void SslConnection::readSome(MutSpanOfBytes out, size_t bytes,
+  void SslConnection::readSome(BytesOut out, size_t bytes,
                                libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     ssl_.async_read_some(asioBuffer(out), toAsioCbSize(std::move(cb)));
   }
 
-  void SslConnection::write(ConstSpanOfBytes in, size_t bytes,
+  void SslConnection::write(BytesIn in, size_t bytes,
                             libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
     boost::asio::async_write(ssl_, asioBuffer(in), toAsioCbSize(std::move(cb)));
   }
 
-  void SslConnection::writeSome(ConstSpanOfBytes in, size_t bytes,
+  void SslConnection::writeSome(BytesIn in, size_t bytes,
                                 libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
     ssl_.async_write_some(asioBuffer(in), toAsioCbSize(std::move(cb)));

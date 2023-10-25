@@ -11,7 +11,7 @@
 
 using namespace libp2p::crypto;
 using namespace libp2p::common;
-using libp2p::ConstSpanOfBytes;
+using libp2p::BytesIn;
 
 class AesTest : public testing::Test {
  protected:
@@ -25,20 +25,20 @@ class AesTest : public testing::Test {
     plain_text_256.insert(plain_text_256.end(), msg2.begin(), msg2.end());
   }
 
-  ByteArray iv{"3dafba429d9eb430b422da802c9fac41"_unhex};
+  Bytes iv{"3dafba429d9eb430b422da802c9fac41"_unhex};
 
-  ByteArray key_128{"06a9214036b8a15b512e03d534120006"_unhex};
+  Bytes key_128{"06a9214036b8a15b512e03d534120006"_unhex};
 
-  ByteArray key_256{
+  Bytes key_256{
       "78dae34bc0eba813c09cec5c871f3ccb39dcbbe04a2fe1837e169fee896aa208"_unhex};
 
-  ByteArray cipher_text_128{"d43130f652c4c81be62fdf5e72e48cbc"_unhex};
+  Bytes cipher_text_128{"d43130f652c4c81be62fdf5e72e48cbc"_unhex};
 
-  ByteArray cipher_text_256{
+  Bytes cipher_text_256{
       "586a49b4ba0336ffe130c5f27b80d3c9910d7f422687a60b1b833cff3d9ecbe03e4db5653a671fb1a7b2"_unhex};
 
-  ByteArray plain_text_128;
-  ByteArray plain_text_256;
+  Bytes plain_text_128;
+  Bytes plain_text_256;
 };
 
 /**
@@ -120,7 +120,7 @@ TEST_F(AesTest, Stream) {
   std::copy(key_256.begin(), key_256.end(), secret.key.begin());
   std::copy(iv.begin(), iv.end(), secret.iv.begin());
 
-  auto cipher_text = ConstSpanOfBytes(cipher_text_256);
+  auto cipher_text = BytesIn(cipher_text_256);
   const auto kDelimiter = 20;
   auto cipher_text_part_1 = cipher_text.subspan(0, kDelimiter);
   auto cipher_text_part_2 =
@@ -138,7 +138,7 @@ TEST_F(AesTest, Stream) {
   ASSERT_TRUE(result_part_2);
   ASSERT_EQ(plain_text_256.size(),
             result_part_1.value().size() + result_part_2.value().size());
-  ByteArray out;
+  Bytes out;
   out.insert(out.end(), result_part_1.value().begin(),
              result_part_1.value().end());
   out.insert(out.end(), result_part_2.value().begin(),

@@ -239,7 +239,7 @@ namespace libp2p::security {
                   return cb(Error::INITIAL_PACKET_VERIFICATION_FAILED);
                 }
                 const auto kToRead{self->propose_message_.rand.size()};
-                auto buffer = std::make_shared<common::ByteArray>(kToRead);
+                auto buffer = std::make_shared<Bytes>(kToRead);
                 secio_conn->read(
                     *buffer, kToRead,
                     [self, cb, conn, secio_conn, buffer](auto &&read_res) {

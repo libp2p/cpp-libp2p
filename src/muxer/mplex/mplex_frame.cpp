@@ -10,8 +10,8 @@
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 namespace libp2p::connection {
-  common::ByteArray MplexFrame::toBytes() const {
-    common::ByteArray result;
+  Bytes MplexFrame::toBytes() const {
+    Bytes result;
 
     uint64_t id_and_flag = (stream_number << 3) | static_cast<uint8_t>(flag);
     multi::UVarint id_and_flag_varint{id_and_flag};
@@ -25,15 +25,15 @@ namespace libp2p::connection {
     return result;
   }
 
-  common::ByteArray createFrameBytes(MplexFrame::Flag flag,
+  Bytes createFrameBytes(MplexFrame::Flag flag,
                                      MplexStream::StreamNumber stream_number,
-                                     common::ByteArray data) {
+                                     Bytes data) {
     return MplexFrame{flag, stream_number, data.size(), std::move(data)}
         .toBytes();
   }
 
   outcome::result<MplexFrame> createFrame(uint64_t id_flag,
-                                          common::ByteArray data) {
+                                          Bytes data) {
     using Flag = MplexFrame::Flag;
 
     Flag flag;
@@ -94,8 +94,8 @@ namespace libp2p::connection {
                 }
 
                 // read data
-                std::shared_ptr<common::ByteArray> data =
-                    std::make_shared<common::ByteArray>(length, 0);
+                std::shared_ptr<Bytes> data =
+                    std::make_shared<Bytes>(length, 0);
                 reader->read(*data, length,
                              [id_flag, data,
                               cb{std::move(cb)}](auto &&read_res) mutable {

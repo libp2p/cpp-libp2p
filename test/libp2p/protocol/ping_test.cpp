@@ -80,8 +80,8 @@ TEST_F(PingTest, PingServer) {
       .WillOnce(  // no second read
           InvokeArgument<2>(outcome::failure(boost::system::error_code{})));
 
-  auto if_eq_buf = [&](ConstSpanOfBytes actual) {
-    auto expected = ConstSpanOfBytes(buffer_);
+  auto if_eq_buf = [&](BytesIn actual) {
+    auto expected = BytesIn(buffer_);
     return std::equal(actual.begin(), actual.end(), expected.begin(),
                       expected.end());
   };
@@ -111,8 +111,8 @@ TEST_F(PingTest, PingClient) {
   EXPECT_CALL(*rand_gen_, randomBytes(kPingMsgSize))
       .Times(2)
       .WillRepeatedly(Return(buffer_));
-  auto if_eq_buf = [&](ConstSpanOfBytes actual) {
-    auto expected = ConstSpanOfBytes(buffer_);
+  auto if_eq_buf = [&](BytesIn actual) {
+    auto expected = BytesIn(buffer_);
     return std::equal(actual.begin(), actual.end(), expected.begin(),
                       expected.end());
   };
@@ -150,8 +150,8 @@ TEST_F(PingTest, PingClientTimeoutExpired) {
       .WillOnce(InvokeArgument<2>(StreamAndProtocol{stream_, kPingProto}));
 
   EXPECT_CALL(*rand_gen_, randomBytes(kPingMsgSize)).WillOnce(Return(buffer_));
-  auto if_eq_buf = [&](ConstSpanOfBytes actual) {
-    auto expected = ConstSpanOfBytes(buffer_);
+  auto if_eq_buf = [&](BytesIn actual) {
+    auto expected = BytesIn(buffer_);
     return std::equal(actual.begin(), actual.end(), expected.begin(),
                       expected.end());
   };

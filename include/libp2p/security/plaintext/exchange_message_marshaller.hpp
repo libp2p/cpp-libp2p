@@ -59,7 +59,7 @@ namespace libp2p::security::plaintext {
      * the public key
      */
     virtual outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>>
-    unmarshal(ConstSpanOfBytes msg_bytes) const = 0;
+    unmarshal(BytesIn msg_bytes) const = 0;
   };
 
 }  // namespace libp2p::security::plaintext

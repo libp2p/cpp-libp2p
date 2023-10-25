@@ -19,7 +19,7 @@ class YamuxFrameTest : public ::testing::Test {
   static constexpr YamuxFrame::StreamId default_stream_id = 1;
   static constexpr uint32_t default_ping_value = 337;
 
-  ByteArray data{"1234456789AB"_unhex};
+  Bytes data{"1234456789AB"_unhex};
 
   /**
    * Check that all frame's fields are as expected
@@ -43,7 +43,7 @@ class YamuxFrameTest : public ::testing::Test {
  * @then the frame is parsed successfully
  */
 TEST_F(YamuxFrameTest, ParseFrameSuccess) {
-  ByteArray data_frame_bytes = dataMsg(default_stream_id, data.size());
+  Bytes data_frame_bytes = dataMsg(default_stream_id, data.size());
   auto frame_opt = parseFrame(data_frame_bytes);
 
   SCOPED_TRACE("ParseFrameSuccess");

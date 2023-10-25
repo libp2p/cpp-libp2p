@@ -38,7 +38,7 @@ namespace {
 
   // per-subscription context
   struct SubscrCtx {
-    std::set<g::ByteArray> received;
+    std::set<g::Bytes> received;
     size_t expected_count = 0;
     g::TopicSet topics;
     libp2p::protocol::Subscription subscr;

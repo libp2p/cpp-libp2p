@@ -67,8 +67,7 @@ namespace libp2p::multi::detail {
     return shift_right(byte, -offset);
   }
 
-  int encode_sequence(ConstSpanOfBytes plain, std::span<char> coded,
-                      Base32Mode mode) {
+  int encode_sequence(BytesIn plain, std::span<char> coded, Base32Mode mode) {
     for (int block = 0; block < 8; block++) {
       size_t byte = get_byte(block);
       int bit = get_bit(block);
@@ -87,7 +86,7 @@ namespace libp2p::multi::detail {
     return 8;
   }
 
-  std::string encodeBase32(const common::ByteArray &bytes, Base32Mode mode) {
+  std::string encodeBase32(const Bytes &bytes, Base32Mode mode) {
     std::string result;
     if (bytes.size() % 5 == 0) {
       result = std::string(bytes.size() / 5 * 8, ' ');
@@ -107,11 +106,11 @@ namespace libp2p::multi::detail {
     return result;
   }
 
-  std::string encodeBase32Upper(const common::ByteArray &bytes) {
+  std::string encodeBase32Upper(const Bytes &bytes) {
     return encodeBase32(bytes, Base32Mode::UPPER);
   }
 
-  std::string encodeBase32Lower(const common::ByteArray &bytes) {
+  std::string encodeBase32Lower(const Bytes &bytes) {
     return encodeBase32(bytes, Base32Mode::LOWER);
   }
 
@@ -132,8 +131,7 @@ namespace libp2p::multi::detail {
   }
 
   outcome::result<int> decode_sequence(std::span<const char> coded,
-                                       MutSpanOfBytes plain,
-                                       Base32Mode mode) {
+                                       BytesOut plain, Base32Mode mode) {
     plain[0] = 0;
     for (size_t block = 0; block < 8; block++) {
       int bit = get_bit(block);
@@ -155,21 +153,21 @@ namespace libp2p::multi::detail {
     return 5;
   }
 
-  outcome::result<common::ByteArray> decodeBase32(std::string_view string,
-                                                  Base32Mode mode) {
-    common::ByteArray result;
+  outcome::result<Bytes> decodeBase32(std::string_view string,
+                                      Base32Mode mode) {
+    Bytes result;
     if (string.size() % 8 == 0) {
-      result = common::ByteArray(string.size() / 8 * 5);
+      result = Bytes(string.size() / 8 * 5);
     } else {
-      result = common::ByteArray((string.size() / 8 + 1) * 5);
+      result = Bytes((string.size() / 8 + 1) * 5);
     }
 
     for (size_t i = 0, j = 0; i < string.size(); i += 8, j += 5) {
-      OUTCOME_TRY(n,
-                  decode_sequence(
-                      std::span(&string[i],
-                                     std::min<size_t>(string.size() - i, 8)),
-                      std::span(&result[j], 5), mode));
+      OUTCOME_TRY(
+          n,
+          decode_sequence(
+              std::span(&string[i], std::min<size_t>(string.size() - i, 8)),
+              std::span(&result[j], 5), mode));
       if (n < 5) {
         result.erase(result.end() - (5 - n), result.end());
       }
@@ -177,13 +175,11 @@ namespace libp2p::multi::detail {
     return result;
   }
 
-  outcome::result<common::ByteArray> decodeBase32Upper(
-      std::string_view string) {
+  outcome::result<Bytes> decodeBase32Upper(std::string_view string) {
     return decodeBase32(string, Base32Mode::UPPER);
   }
 
-  outcome::result<common::ByteArray> decodeBase32Lower(
-      std::string_view string) {
+  outcome::result<Bytes> decodeBase32Lower(std::string_view string) {
     return decodeBase32(string, Base32Mode::LOWER);
   }
 

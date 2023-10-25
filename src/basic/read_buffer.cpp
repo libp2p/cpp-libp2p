@@ -18,7 +18,7 @@ namespace libp2p::basic {
     assert(alloc_granularity > 0);
   }
 
-  void ReadBuffer::add(ConstSpanOfBytes bytes) {
+  void ReadBuffer::add(BytesIn bytes) {
     size_t sz = bytes.size();
     if (sz == 0) {
       return;
@@ -54,7 +54,7 @@ namespace libp2p::basic {
     total_size_ += sz;
   }
 
-  size_t ReadBuffer::consume(MutSpanOfBytes out) {
+  size_t ReadBuffer::consume(BytesOut out) {
     if (empty()) {
       return 0;
     }
@@ -80,7 +80,7 @@ namespace libp2p::basic {
     return n_bytes;
   }
 
-  size_t ReadBuffer::addAndConsume(ConstSpanOfBytes in, MutSpanOfBytes out) {
+  size_t ReadBuffer::addAndConsume(BytesIn in, BytesOut out) {
     if (in.empty()) {
       return consume(out);
     }
@@ -122,7 +122,7 @@ namespace libp2p::basic {
     std::deque<Fragment>{}.swap(fragments_);
   }
 
-  size_t ReadBuffer::consumeAll(MutSpanOfBytes out) {
+  size_t ReadBuffer::consumeAll(BytesOut out) {
     assert(!fragments_.empty());
     auto *p = out.data();
     auto n = fragments_.front().size() - first_byte_offset_;
@@ -206,8 +206,7 @@ namespace libp2p::basic {
     }
   }
 
-  boost::optional<ConstSpanOfBytes> FixedBufferCollector::add(
-      ConstSpanOfBytes &data) {
+  boost::optional<BytesIn> FixedBufferCollector::add(BytesIn &data) {
     assert(expected_size_ >= buffer_.size());
 
     auto appending = static_cast<size_t>(data.size());
@@ -216,7 +215,7 @@ namespace libp2p::basic {
     if (buffered == 0) {
       if (appending >= expected_size_) {
         // dont buffer, just split
-        ConstSpanOfBytes ret = data.subspan(0, expected_size_);
+        BytesIn ret = data.subspan(0, expected_size_);
         data = data.subspan(expected_size_);
         expected_size_ = 0;
         return ret;
@@ -240,19 +239,18 @@ namespace libp2p::basic {
     data = data.subspan(appending);
 
     if (filled) {
-      return ConstSpanOfBytes(buffer_);
+      return BytesIn(buffer_);
     }
 
     return boost::none;
   }
 
-  boost::optional<MutSpanOfBytes> FixedBufferCollector::add(
-      MutSpanOfBytes &data) {
-    auto &span = (ConstSpanOfBytes &)(data);  // NOLINT
+  boost::optional<BytesOut> FixedBufferCollector::add(BytesOut &data) {
+    auto &span = (BytesIn &)(data);  // NOLINT
     auto ret = add(span);
     if (ret.has_value()) {
       auto &v = ret.value();
-      return MutSpanOfBytes((uint8_t *)v.data(), v.size());  // NOLINT
+      return BytesOut((uint8_t *)v.data(), v.size());  // NOLINT
     }
     return boost::none;
   }

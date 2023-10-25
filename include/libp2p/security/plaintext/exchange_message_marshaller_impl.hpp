@@ -43,7 +43,7 @@ namespace libp2p::security::plaintext {
         const ExchangeMessage &msg) const override;
 
     outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>> unmarshal(
-        ConstSpanOfBytes msg_bytes) const override;
+        BytesIn msg_bytes) const override;
 
    private:
     std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller_;

@@ -95,19 +95,19 @@ namespace libp2p::connection {
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 
-    void read(MutSpanOfBytes out, size_t bytes,
+    void read(BytesOut out, size_t bytes,
               ReadCallbackFunc cb) override;
 
-    void readSome(MutSpanOfBytes out, size_t bytes,
+    void readSome(BytesOut out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(ConstSpanOfBytes in, size_t bytes,
+    void write(BytesIn in, size_t bytes,
                WriteCallbackFunc cb) override;
 
-    void writeSome(ConstSpanOfBytes in, size_t bytes,
+    void writeSome(BytesIn in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
@@ -128,23 +128,21 @@ namespace libp2p::connection {
      * @param out - buffer to be filled with decrypted bytes
      * @param bytes - amount of bytes to pop from internal buffer
      */
-    void popUserData(MutSpanOfBytes out, size_t bytes);
+    void popUserData(BytesOut out, size_t bytes);
 
     /**
      * Computes MAC digest to sign a message using local peer key
      * @param message bytes to be signed
      * @return signature bytes or an error if happened
      */
-    outcome::result<common::ByteArray> macLocal(
-        ConstSpanOfBytes message) const;
+    outcome::result<Bytes> macLocal(BytesIn message) const;
 
     /**
      * Computes MAC digest to sign a message using remote peer key
      * @param message bytes to be signed
      * @return signature bytes or an error if happened
      */
-    outcome::result<common::ByteArray> macRemote(
-        ConstSpanOfBytes message) const;
+    outcome::result<Bytes> macRemote(BytesIn message) const;
 
     /// Returns MAC digest size in bytes for the chosen algorithm
     outcome::result<size_t> macSize() const;
@@ -169,7 +167,7 @@ namespace libp2p::connection {
 
     std::queue<uint8_t> user_data_buffer_;
 
-    std::shared_ptr<common::ByteArray> read_buffer_;
+    std::shared_ptr<Bytes> read_buffer_;
 
     log::Logger log_ = log::createLogger("SecIoConnection");
 

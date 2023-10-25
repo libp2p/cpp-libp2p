@@ -126,8 +126,8 @@ TEST_F(IdentifyDeltaTest, Send) {
       .WillOnce(InvokeArgument<2>(
           StreamAndProtocol{stream_, kIdentifyDeltaProtocol}));
 
-  auto if_added = [&](ConstSpanOfBytes actual) {
-    auto expected = ConstSpanOfBytes(msg_added_protos_bytes_);
+  auto if_added = [&](BytesIn actual) {
+    auto expected = BytesIn(msg_added_protos_bytes_);
     return std::equal(actual.begin(), actual.end(), expected.begin(),
                       expected.end());
   };

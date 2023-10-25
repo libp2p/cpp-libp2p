@@ -14,13 +14,13 @@ namespace libp2p::crypto::hmac {
 
   class HmacProviderCtrImpl : public HmacProviderCtr {
    public:
-    HmacProviderCtrImpl(HashType hash_type, ConstSpanOfBytes key);
+    HmacProviderCtrImpl(HashType hash_type, BytesIn key);
 
     ~HmacProviderCtrImpl() override;
 
-    outcome::result<void> write(ConstSpanOfBytes data) override;
+    outcome::result<void> write(BytesIn data) override;
 
-    outcome::result<void> digestOut(MutSpanOfBytes out) const override;
+    outcome::result<void> digestOut(BytesOut out) const override;
 
     outcome::result<void> reset() override;
 

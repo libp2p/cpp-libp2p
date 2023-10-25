@@ -60,8 +60,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, SecioConnection::Error, e) {
 namespace {
   template <typename AesSecretType>
   libp2p::outcome::result<AesSecretType> initAesSecret(
-      const libp2p::common::ByteArray &key,
-      const libp2p::common::ByteArray &iv) {
+      const libp2p::Bytes &key,
+      const libp2p::Bytes &iv) {
     AesSecretType secret{};
     if (key.size() != secret.key.size()) {
       return libp2p::crypto::OpenSslError::WRONG_KEY_SIZE;
@@ -139,7 +139,7 @@ namespace libp2p::connection {
       return Error::UNSUPPORTED_CIPHER;
     }
 
-    read_buffer_ = std::make_shared<common::ByteArray>(kMaxFrameSize);
+    read_buffer_ = std::make_shared<Bytes>(kMaxFrameSize);
 
     return outcome::success();
   }
@@ -184,7 +184,7 @@ namespace libp2p::connection {
     original_connection_->deferWriteCallback(ec, std::move(cb));
   }
 
-  inline void SecioConnection::popUserData(MutSpanOfBytes out, size_t bytes) {
+  inline void SecioConnection::popUserData(BytesOut out, size_t bytes) {
     auto to{out.begin()};
     for (size_t read = 0; read < bytes; ++read) {
       *to = user_data_buffer_.front();
@@ -193,7 +193,7 @@ namespace libp2p::connection {
     }
   }
 
-  void SecioConnection::read(MutSpanOfBytes out, size_t bytes,
+  void SecioConnection::read(BytesOut out, size_t bytes,
                              basic::Reader::ReadCallbackFunc cb) {
     // TODO(107): Reentrancy
 
@@ -238,7 +238,7 @@ namespace libp2p::connection {
     readNextMessage(cb_wrapper);
   }
 
-  void SecioConnection::readSome(MutSpanOfBytes out, size_t bytes,
+  void SecioConnection::readSome(BytesOut out, size_t bytes,
                                  basic::Reader::ReadCallbackFunc cb) {
     // TODO(107): Reentrancy
 
@@ -316,8 +316,8 @@ namespace libp2p::connection {
                 auto data_span{std::span(buffer->data(), data_size)};
                 auto mac_span{std::span(*buffer).subspan(data_size, mac_size)};
                 IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb)
-                if (ConstSpanOfBytes(remote_mac)
-                    != ConstSpanOfBytes(mac_span)) {
+                if (BytesIn(remote_mac)
+                    != BytesIn(mac_span)) {
                   self->log_->error(
                       "Signature does not validate for the received frame");
                   cb(Error::INVALID_MAC);
@@ -337,7 +337,7 @@ namespace libp2p::connection {
         });
   }
 
-  void SecioConnection::write(ConstSpanOfBytes in, size_t bytes,
+  void SecioConnection::write(BytesIn in, size_t bytes,
                               basic::Writer::WriteCallbackFunc cb) {
     // TODO(107): Reentrancy
 
@@ -346,7 +346,7 @@ namespace libp2p::connection {
     }
     IO_OUTCOME_TRY(mac_size, macSize(), cb);
     size_t frame_len{bytes + mac_size};
-    common::ByteArray frame_buffer;
+    Bytes frame_buffer;
     constexpr size_t len_field_size{kLenMarkerSize};
     frame_buffer.reserve(len_field_size + frame_len);
 
@@ -373,7 +373,7 @@ namespace libp2p::connection {
     original_connection_->write(frame_buffer, frame_buffer.size(), cb_wrapper);
   }
 
-  void SecioConnection::writeSome(ConstSpanOfBytes in, size_t bytes,
+  void SecioConnection::writeSome(BytesIn in, size_t bytes,
                                   basic::Writer::WriteCallbackFunc cb) {
     write(in, bytes, std::move(cb));
   }
@@ -398,14 +398,14 @@ namespace libp2p::connection {
     }
   }
 
-  outcome::result<common::ByteArray> SecioConnection::macLocal(
-      ConstSpanOfBytes message) const {
+  outcome::result<Bytes> SecioConnection::macLocal(
+      BytesIn message) const {
     return hmac_provider_->calculateDigest(
         hash_type_, local_stretched_key_.mac_key, message);
   }
 
-  outcome::result<common::ByteArray> SecioConnection::macRemote(
-      ConstSpanOfBytes message) const {
+  outcome::result<Bytes> SecioConnection::macRemote(
+      BytesIn message) const {
     return hmac_provider_->calculateDigest(
         hash_type_, remote_stretched_key_.mac_key, message);
   }
