@@ -38,6 +38,9 @@ namespace libp2p::common {
   };
 
   template <typename F>
+  FinalAction(F &&) -> FinalAction<F>;
+
+  template <typename F>
   struct MovableFinalAction {
     MovableFinalAction() = delete;
     MovableFinalAction(MovableFinalAction &&func) = default;
@@ -56,5 +59,8 @@ namespace libp2p::common {
    private:
     std::optional<F> func;
   };
+
+  template <typename F>
+  MovableFinalAction(F &&) -> MovableFinalAction<F>;
 
 }  // namespace libp2p::common
