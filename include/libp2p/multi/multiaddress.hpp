@@ -26,7 +26,7 @@ namespace libp2p::multi {
    */
   class Multiaddress {
    private:
-    using ByteBuffer = common::ByteArray;
+    using ByteBuffer = Bytes;
     using FactoryResult = outcome::result<Multiaddress>;
 
    public:
@@ -60,7 +60,7 @@ namespace libp2p::multi {
      * @return pointer to Multiaddress, if creation is successful, error
      * otherwise
      */
-    static FactoryResult create(ConstSpanOfBytes bytes);
+    static FactoryResult create(BytesIn bytes);
 
     /**
      * Encapsulate a multiaddress to this one, such that:

@@ -93,8 +93,6 @@ namespace libp2p::protocol::gossip {
     bool sign_messages = false;
   };
 
-  using common::ByteArray;
-
   using TopicId = std::string;
   using TopicList = std::vector<TopicId>;
   using TopicSet = std::set<TopicId>;
@@ -122,21 +120,21 @@ namespace libp2p::protocol::gossip {
     /// Message received on subscription.
     /// Temporary struct of fields the subscriber may store if they want
     struct Message {
-      const ByteArray &from;
+      const Bytes &from;
       const TopicId &topic;
-      const ByteArray &data;
+      const Bytes &data;
     };
 
     /// Validator of messages arriving from the wire
     using Validator =
-        std::function<bool(const ByteArray &from, const ByteArray &data)>;
+        std::function<bool(const Bytes &from, const Bytes &data)>;
 
     /// Sets message validator for topic
     virtual void setValidator(const TopicId &topic, Validator validator) = 0;
 
     /// Creates unique message ID out of message fields
-    using MessageIdFn = std::function<ByteArray(
-        const ByteArray &from, const ByteArray &seq, const ByteArray &data)>;
+    using MessageIdFn = std::function<Bytes(
+        const Bytes &from, const Bytes &seq, const Bytes &data)>;
 
     /// Sets message ID funtion that differs from default (from+sec_no)
     virtual void setMessageIdFn(MessageIdFn fn) = 0;
@@ -150,7 +148,7 @@ namespace libp2p::protocol::gossip {
                                    SubscriptionCallback callback) = 0;
 
     /// Publishes to topics. Returns false if validation fails or not started
-    virtual bool publish(TopicId topic, ByteArray data) = 0;
+    virtual bool publish(TopicId topic, Bytes data) = 0;
   };
 
   // Creates Gossip object

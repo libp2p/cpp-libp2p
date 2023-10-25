@@ -50,7 +50,7 @@ namespace libp2p::crypto {
      * @return signature bytes
      */
     virtual outcome::result<Buffer> sign(
-        ConstSpanOfBytes message,
+        BytesIn message,
         const PrivateKey &private_key) const = 0;
 
     /**
@@ -61,8 +61,8 @@ namespace libp2p::crypto {
      * @param public_key to validate against
      * @return true - if the signature matches the message and the public key
      */
-    virtual outcome::result<bool> verify(ConstSpanOfBytes message,
-                                         ConstSpanOfBytes signature,
+    virtual outcome::result<bool> verify(BytesIn message,
+                                         BytesIn signature,
                                          const PublicKey &public_key) const = 0;
     /**
      * Generate an ephemeral public key and return a function that will

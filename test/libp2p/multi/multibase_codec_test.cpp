@@ -9,6 +9,7 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
 
+using libp2p::Bytes;
 using namespace libp2p::multi;
 using namespace libp2p::common;
 

@@ -34,7 +34,7 @@ namespace libp2p::crypto::hmac {
     void sinkCtx(size_t digest_size);
 
     HashType hash_type_;
-    ByteArray key_;
+    Bytes key_;
     const EVP_MD *hash_st_;
     HMAC_CTX *hmac_ctx_;
     bool initialized_;

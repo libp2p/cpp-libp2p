@@ -64,13 +64,13 @@ namespace libp2p::connection {
 
     /// usage of these four methods is highly not recommended or even forbidden:
     /// use stream over this connection instead
-    void read(MutSpanOfBytes out, size_t bytes,
+    void read(BytesOut out, size_t bytes,
               ReadCallbackFunc cb) override;
-    void readSome(MutSpanOfBytes out, size_t bytes,
+    void readSome(BytesOut out, size_t bytes,
                   ReadCallbackFunc cb) override;
-    void write(ConstSpanOfBytes in, size_t bytes,
+    void write(BytesIn in, size_t bytes,
                WriteCallbackFunc cb) override;
-    void writeSome(ConstSpanOfBytes in, size_t bytes,
+    void writeSome(BytesIn in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
@@ -79,7 +79,7 @@ namespace libp2p::connection {
 
    private:
     struct WriteData {
-      common::ByteArray data;
+      Bytes data;
       WriteCallbackFunc cb;
     };
     std::queue<WriteData> write_queue_;
@@ -187,7 +187,7 @@ namespace libp2p::connection {
      * bytes written or error
      */
     void streamWrite(MplexStream::StreamId stream_id,
-                     ConstSpanOfBytes in, size_t bytes,
+                     BytesIn in, size_t bytes,
                      basic::Writer::WriteCallbackFunc cb);
 
     /**

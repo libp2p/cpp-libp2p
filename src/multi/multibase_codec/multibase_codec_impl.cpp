@@ -77,8 +77,6 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, MultibaseCodecImpl::Error, e) {
 }
 
 namespace libp2p::multi {
-  using Bytes;
-
   std::string MultibaseCodecImpl::encode(const Bytes &bytes,
                                          Encoding encoding) const {
     if (bytes.empty()) {

@@ -18,8 +18,8 @@ namespace libp2p::security::noise {
 
     outcome::result<DHKey> generate() override;
 
-    outcome::result<ByteArray> dh(const ByteArray &private_key,
-                                  const ByteArray &public_key) override;
+    outcome::result<Bytes> dh(const Bytes &private_key,
+                                  const Bytes &public_key) override;
 
     int dhSize() const override;
 

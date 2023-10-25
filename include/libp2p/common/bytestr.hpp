@@ -12,7 +12,7 @@
 
 namespace libp2p {
 
-  inline ConstSpanOfBytes bytestr(const std::span<const char> &s) {
+  inline BytesIn bytestr(const std::span<const char> &s) {
     // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uint8_t *>(s.data()), s.size()};
   }

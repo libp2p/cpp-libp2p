@@ -26,7 +26,7 @@ namespace libp2p::protocol::gossip {
 
 
     /// Parses RPC protobuf message received from wire
-    bool parse(ConstSpanOfBytes bytes);
+    bool parse(BytesIn bytes);
 
     /// Dispatches parts of parsed aggregate message to receiver
     void dispatch(const PeerContextPtr &from, MessageReceiver &receiver);

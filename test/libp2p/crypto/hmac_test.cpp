@@ -10,9 +10,8 @@
 #include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
-#include <libp2p/crypto/error.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
+using libp2p::Bytes;
 using namespace libp2p::crypto;
 using namespace libp2p::common;
 
@@ -29,8 +28,7 @@ class HmacTest : public testing::Test {
   /// message to be hashed
   Bytes message;
 
-  Bytes sha1_key{
-      "55cd433be9568ee79525a0919cf4b31c28108cee"_unhex};  // 20 bytes
+  Bytes sha1_key{"55cd433be9568ee79525a0919cf4b31c28108cee"_unhex};  // 20 bytes
 
   Bytes sha256_key{
       "a1990aeb68efb1b59d3165795f6338960aa7238ba74779ea5df3a435fdbb8d4c"_unhex};  // 32 bytes

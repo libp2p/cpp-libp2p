@@ -40,7 +40,7 @@ namespace libp2p::basic {
      * @param buffer - the message to be written
      * @param cb, which is called, when the message is read or error happens
      */
-    void write(ConstSpanOfBytes buffer,
+    void write(BytesIn buffer,
                Writer::WriteCallbackFunc cb) override;
 
    private:

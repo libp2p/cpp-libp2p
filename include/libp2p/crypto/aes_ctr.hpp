@@ -18,8 +18,6 @@ namespace libp2p::crypto::aes {
    */
   class AesCtr {
    public:
-    using ByteArray = libp2p::Bytes;
-
     virtual ~AesCtr() = default;
 
     /**
@@ -27,14 +25,14 @@ namespace libp2p::crypto::aes {
      * @param data to be processed
      * @return processed data chunk or an error
      */
-    virtual outcome::result<ByteArray> crypt(BytesIn data) const = 0;
+    virtual outcome::result<Bytes> crypt(BytesIn data) const = 0;
 
     /**
      * Does stream data finalization
      * @return bytes buffer to correctly pad all the previously processed
      * data or an error
      */
-    virtual outcome::result<ByteArray> finalize() = 0;
+    virtual outcome::result<Bytes> finalize() = 0;
   };
 }  // namespace libp2p::crypto::aes
 

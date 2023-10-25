@@ -24,7 +24,7 @@ namespace libp2p::connection {
   class NoiseConnection : public SecureConnection,
                           public std::enable_shared_from_this<NoiseConnection> {
    public:
-    using BufferList = std::list<common::ByteArray>;
+    using BufferList = std::list<Bytes>;
 
     struct OperationContext {
       size_t bytes_served;                /// written or read bytes count
@@ -45,19 +45,19 @@ namespace libp2p::connection {
 
     outcome::result<void> close() override;
 
-    void read(MutSpanOfBytes out, size_t bytes,
+    void read(BytesOut out, size_t bytes,
               ReadCallbackFunc cb) override;
 
-    void readSome(MutSpanOfBytes out, size_t bytes,
+    void readSome(BytesOut out, size_t bytes,
                   ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(ConstSpanOfBytes in, size_t bytes,
+    void write(BytesIn in, size_t bytes,
                WriteCallbackFunc cb) override;
 
-    void writeSome(ConstSpanOfBytes in, size_t bytes,
+    void writeSome(BytesIn in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
@@ -75,13 +75,13 @@ namespace libp2p::connection {
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
    private:
-    void read(MutSpanOfBytes out, size_t bytes, OperationContext ctx,
+    void read(BytesOut out, size_t bytes, OperationContext ctx,
               ReadCallbackFunc cb);
 
-    void readSome(MutSpanOfBytes out, size_t bytes, OperationContext ctx,
+    void readSome(BytesOut out, size_t bytes, OperationContext ctx,
                   ReadCallbackFunc cb);
 
-    void write(ConstSpanOfBytes in, size_t bytes, OperationContext ctx,
+    void write(BytesIn in, size_t bytes, OperationContext ctx,
                WriteCallbackFunc cb);
 
     void eraseWriteBuffer(BufferList::iterator &iterator);
@@ -92,7 +92,7 @@ namespace libp2p::connection {
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
     std::shared_ptr<security::noise::CipherState> encoder_cs_;
     std::shared_ptr<security::noise::CipherState> decoder_cs_;
-    std::shared_ptr<common::ByteArray> frame_buffer_;
+    std::shared_ptr<Bytes> frame_buffer_;
     std::shared_ptr<security::noise::InsecureReadWriter> framer_;
     BufferList write_buffers_;
     log::Logger log_ = log::createLogger("NoiseConnection");

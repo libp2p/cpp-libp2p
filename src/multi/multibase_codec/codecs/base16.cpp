@@ -27,7 +27,6 @@ namespace {
 
 namespace libp2p::multi::detail {
 
-  using Bytes;
   using common::hex_lower;
   using common::hex_upper;
   using common::unhex;

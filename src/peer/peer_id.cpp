@@ -21,7 +21,6 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::peer, PeerId::FactoryError, e) {
 }
 
 namespace libp2p::peer {
-  using Bytes;
   using multi::Multihash;
   using multi::detail::decodeBase58;
   using multi::detail::encodeBase58;

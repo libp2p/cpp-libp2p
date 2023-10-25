@@ -16,8 +16,8 @@ namespace libp2p::security::secio {
    * @see secio::ProposeMessageMarshaller
    */
   struct ProposeMessage {
-    common::ByteArray rand;
-    common::ByteArray pubkey;
+    Bytes rand;
+    Bytes pubkey;
     std::string exchanges;
     std::string ciphers;
     std::string hashes;

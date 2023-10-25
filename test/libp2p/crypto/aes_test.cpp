@@ -12,6 +12,7 @@
 using namespace libp2p::crypto;
 using namespace libp2p::common;
 using libp2p::BytesIn;
+using libp2p::Bytes;
 
 class AesTest : public testing::Test {
  protected:

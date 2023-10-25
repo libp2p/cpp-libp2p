@@ -16,7 +16,6 @@ namespace libp2p::connection {
    * Header which is sent and accepted with Yamux protocol
    */
   struct YamuxFrame {
-    using ByteArray = Bytes;
     using StreamId = uint32_t;
     static constexpr uint32_t kHeaderLength = 12;
 
@@ -55,7 +54,7 @@ namespace libp2p::connection {
      * not send messages with more than one flag set, so enum can be accepted as
      * well
      */
-    static ByteArray frameBytes(
+    static Bytes frameBytes(
         uint8_t version, FrameType type, Flag flag, uint32_t stream_id,
         uint32_t length, bool reserve_space = true);
 

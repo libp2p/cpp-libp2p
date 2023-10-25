@@ -8,7 +8,6 @@
 #include <libp2p/crypto/hmac_provider/hmac_provider_ctr_impl.hpp>
 
 #include <openssl/hmac.h>
-#include <openssl/sha.h>
 #include <libp2p/common/final_action.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <span>
@@ -16,7 +15,6 @@
 using libp2p::common::FinalAction;
 
 namespace libp2p::crypto::hmac {
-  using ByteArray = libp2p::Bytes;
 
   HmacProviderCtrImpl::HmacProviderCtrImpl(HashType hash_type, BytesIn key)
       : hash_type_{hash_type},

@@ -14,6 +14,7 @@
 #define VERBOSE 0
 
 namespace g = libp2p::protocol::gossip;
+using libp2p::Bytes;
 
 namespace {
 
@@ -38,7 +39,7 @@ namespace {
 
   // per-subscription context
   struct SubscrCtx {
-    std::set<g::Bytes> received;
+    std::set<Bytes> received;
     size_t expected_count = 0;
     g::TopicSet topics;
     libp2p::protocol::Subscription subscr;

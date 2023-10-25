@@ -34,9 +34,9 @@ namespace libp2p::crypto::aes {
 
     ~AesCtrImpl() override;
 
-    outcome::result<ByteArray> crypt(BytesIn data) const override;
+    outcome::result<Bytes> crypt(BytesIn data) const override;
 
-    outcome::result<ByteArray> finalize() override;
+    outcome::result<Bytes> finalize() override;
 
    private:
     outcome::result<void> init(BytesIn key, BytesIn iv,

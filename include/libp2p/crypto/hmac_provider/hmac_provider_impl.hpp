@@ -13,8 +13,8 @@ namespace libp2p::crypto::hmac {
 
   class HmacProviderImpl : public HmacProvider {
    public:
-    outcome::result<ByteArray> calculateDigest(
-        HashType hash_type, const ByteArray &key,
+    outcome::result<Bytes> calculateDigest(
+        HashType hash_type, const Bytes &key,
                                                BytesIn message) const override;
   };
 }  // namespace libp2p::crypto::hmac

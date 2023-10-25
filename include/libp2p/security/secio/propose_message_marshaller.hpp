@@ -52,7 +52,7 @@ namespace libp2p::security::secio {
      * @returns deserealized handy Propose message
      */
     virtual outcome::result<ProposeMessage> unmarshal(
-        ConstSpanOfBytes msg_bytes) const = 0;
+        BytesIn msg_bytes) const = 0;
   };
 
 }  // namespace libp2p::security::secio

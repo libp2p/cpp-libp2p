@@ -45,7 +45,7 @@ namespace libp2p::multi {
                                             const Multihash &mhash);
 
     static outcome::result<ContentIdentifier> decode(
-        ConstSpanOfBytes bytes);
+        BytesIn bytes);
 
     /**
      * @brief Encode CID to string representation

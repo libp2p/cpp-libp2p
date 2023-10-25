@@ -25,10 +25,10 @@ namespace libp2p::crypto::rsa {
         const PrivateKey &private_key) const override;
 
     outcome::result<Signature> sign(
-        ConstSpanOfBytes message,
+        BytesIn message,
         const PrivateKey &private_key) const override;
 
-    outcome::result<bool> verify(ConstSpanOfBytes message,
+    outcome::result<bool> verify(BytesIn message,
                                  const Signature &signature,
                                  const PublicKey &key) const override;
 

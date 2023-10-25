@@ -12,6 +12,7 @@
 #include <libp2p/peer/peer_id.hpp>
 #include <testutil/outcome.hpp>
 
+using libp2p::Bytes;
 using namespace libp2p::common;
 using namespace libp2p::multi;
 using namespace libp2p::peer;

@@ -10,8 +10,9 @@
 #include <cstring>
 #include <vector>
 
+#include <libp2p/common/types.hpp>
+
 namespace libp2p::common {
-  using Bytes = std::vector<uint8_t>;
 
   /**
    * Put an 8-bit number into the byte array

@@ -16,8 +16,8 @@ namespace libp2p::security::secio {
    * @see secio::ExchangeMessageMarshaller
    */
   struct ExchangeMessage {
-    common::ByteArray epubkey;
-    common::ByteArray signature;
+    Bytes epubkey;
+    Bytes signature;
   };
 }  // namespace libp2p::security::secio
 

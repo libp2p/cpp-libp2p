@@ -53,7 +53,7 @@ namespace libp2p::basic {
     /// On success, modifies buffer (cuts off first bytes which were consumed),
     /// returns reader's state
     /// (or kError if called when state() == kReady)
-    State consume(ConstSpanOfBytes &buffer);
+    State consume(BytesIn &buffer);
 
    private:
     /// Current value accumulated

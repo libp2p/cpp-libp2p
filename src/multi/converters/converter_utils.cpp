@@ -28,8 +28,6 @@ using libp2p::common::unhex;
 
 namespace libp2p::multi::converters {
 
-  using Bytes;
-
   outcome::result<Bytes> multiaddrToBytes(std::string_view str) {
     if (str.empty() || str[0] != '/') {
       return ConversionError::ADDRESS_DOES_NOT_BEGIN_WITH_SLASH;

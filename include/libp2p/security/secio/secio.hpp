@@ -92,7 +92,7 @@ namespace libp2p::security {
     std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider_;
     //
     secio::ProposeMessage propose_message_;
-    mutable common::ByteArray remote_peer_rand_;
+    mutable Bytes remote_peer_rand_;
     log::Logger log_ = log::createLogger("SecIO");
   };
 }  // namespace libp2p::security

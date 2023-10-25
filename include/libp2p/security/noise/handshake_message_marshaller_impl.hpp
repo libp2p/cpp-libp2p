@@ -28,11 +28,11 @@ namespace libp2p::security::noise {
     outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>> protoToHandy(
         const protobuf::NoiseHandshakePayload &proto_msg) const override;
 
-    outcome::result<common::ByteArray> marshal(
+    outcome::result<Bytes> marshal(
         const HandshakeMessage &msg) const override;
 
     outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>> unmarshal(
-        ConstSpanOfBytes msg_bytes) const override;
+        BytesIn msg_bytes) const override;
 
    private:
     std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller_;

@@ -24,14 +24,14 @@ namespace libp2p::multi::detail {
    * @param bytes to be encoded
    * @return encoded string
    */
-  std::string encodeBase64(const common::ByteArray &bytes);
+  std::string encodeBase64(const Bytes &bytes);
 
   /**
    * Decode base64 string to bytes
    * @param string to be decoded
    * @return decoded bytes in case of success
    */
-  outcome::result<common::ByteArray> decodeBase64(std::string_view string);
+  outcome::result<Bytes> decodeBase64(std::string_view string);
 }  // namespace libp2p::multi::detail
 
 #endif  // LIBP2P_BASE64_HPP

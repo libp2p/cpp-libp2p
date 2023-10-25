@@ -55,7 +55,7 @@ namespace libp2p::crypto::aes {
       return initialization_error_.error();
     }
 
-    ByteArray out_buffer;
+    Bytes out_buffer;
     out_buffer.resize(data.size() + AES_BLOCK_SIZE);
     std::fill(out_buffer.begin(), out_buffer.end(), 0u);
     int out_len{0};
@@ -80,7 +80,7 @@ namespace libp2p::crypto::aes {
     }
     initialization_error_ = OpenSslError::STREAM_FINALIZED;
 
-    ByteArray out_buffer;
+    Bytes out_buffer;
     out_buffer.resize(AES_BLOCK_SIZE);
     std::fill(out_buffer.begin(), out_buffer.end(), 0u);
     int out_len{0};
@@ -94,7 +94,7 @@ namespace libp2p::crypto::aes {
     }
 
     out_buffer.resize(out_len);
-    return ByteArray(std::move(out_buffer));
+    return Bytes(std::move(out_buffer));
   }
 
 }  // namespace libp2p::crypto::aes

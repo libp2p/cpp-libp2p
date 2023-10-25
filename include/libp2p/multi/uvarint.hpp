@@ -33,7 +33,7 @@ namespace libp2p::multi {
      * meant to be an already encoded unsigned varint
      * @param varint_bytes an array of bytes representing an unsigned varint
      */
-    explicit UVarint(ConstSpanOfBytes varint_bytes);
+    explicit UVarint(BytesIn varint_bytes);
 
     /**
      * Constructs a varint from an array of raw bytes, which beginning may or
@@ -42,7 +42,7 @@ namespace libp2p::multi {
      * varint
      */
     static boost::optional<UVarint> create(
-        ConstSpanOfBytes varint_bytes);
+        BytesIn varint_bytes);
 
     /**
      * Converts a varint back to a usual unsigned integer.
@@ -53,10 +53,10 @@ namespace libp2p::multi {
     /**
      * @return an array view to raw bytes of the stored varint
      */
-    ConstSpanOfBytes toBytes() const &;
+    BytesIn toBytes() const &;
 
     /// Disable to return span to inner data of temporary object
-    ConstSpanOfBytes toBytes() const && = delete;
+    BytesIn toBytes() const && = delete;
 
     const std::vector<uint8_t> &toVector() const;
 
@@ -83,11 +83,11 @@ namespace libp2p::multi {
      * @return the size of the varint stored in the array, if its content is a
      * valid varint. Otherwise, the result is undefined
      */
-    static size_t calculateSize(ConstSpanOfBytes varint_bytes);
+    static size_t calculateSize(BytesIn varint_bytes);
 
    private:
     /// private ctor for unsafe creation
-    UVarint(ConstSpanOfBytes varint_bytes, size_t varint_size);
+    UVarint(BytesIn varint_bytes, size_t varint_size);
 
     std::vector<uint8_t> bytes_{};
   };

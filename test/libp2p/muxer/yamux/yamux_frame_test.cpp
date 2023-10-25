@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
 
+using libp2p::Bytes;
 using namespace libp2p::connection;
 using namespace libp2p::common;
 
