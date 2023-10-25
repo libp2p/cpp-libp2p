@@ -94,6 +94,7 @@ if (CLANG_TIDY)
   include(cmake/clang-tidy.cmake)
 endif ()
 if (CLANG_FORMAT)
+    set(RECOMMENDED_CLANG_FORMAT_VERSION 15)
   include(cmake/clang-format.cmake)
 endif ()
 
