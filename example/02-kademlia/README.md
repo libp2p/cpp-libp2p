@@ -39,7 +39,7 @@ After connection was established you can start chatting by typing a message in t
 ```log
 Hello! Where are you from?
 12D3KooWN4U92XG49kSjJ6p5TUEWxj76V432HfbmQAXwryLApkue < Hello! Where are you from?
-12D3KooWN4U92XG49kSjJ6p5TUEWxj76V432HfbmQAXwryLApkue > Hi! I'm from Soramitsu.
+12D3KooWN4U92XG49kSjJ6p5TUEWxj76V432HfbmQAXwryLApkue > Hi! I'm from Mars.
 ```
 
 ### Note

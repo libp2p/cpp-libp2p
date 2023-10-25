@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -75,7 +76,7 @@ namespace libp2p::injector {
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
   auto makeKademliaInjector(Ts &&... args) {
     namespace di = boost::di;
-    
+
     return di::make_injector<InjectorConfig>(
         // clang-format off
 
