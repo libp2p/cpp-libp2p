@@ -184,8 +184,7 @@ namespace libp2p::connection {
     original_connection_->deferWriteCallback(ec, std::move(cb));
   }
 
-  inline void SecioConnection::popUserData(MutSpanOfBytes out,
-                                           size_t bytes) {
+  inline void SecioConnection::popUserData(MutSpanOfBytes out, size_t bytes) {
     auto to{out.begin()};
     for (size_t read = 0; read < bytes; ++read) {
       *to = user_data_buffer_.front();
@@ -314,15 +313,11 @@ namespace libp2p::connection {
                          read_frame_bytes);
                 IO_OUTCOME_TRY(mac_size, self->macSize(), cb)
                 const auto data_size{frame_len - mac_size};
-                auto data_span{std::span(
-                    buffer->data(),
-                    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-                    data_size)};
-                auto mac_span{
-                    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-                    std::span(*buffer).subspan(data_size, mac_size)};
+                auto data_span{std::span(buffer->data(), data_size)};
+                auto mac_span{std::span(*buffer).subspan(data_size, mac_size)};
                 IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb)
-                if (ConstSpanOfBytes(remote_mac) != ConstSpanOfBytes(mac_span)) {
+                if (ConstSpanOfBytes(remote_mac)
+                    != ConstSpanOfBytes(mac_span)) {
                   self->log_->error(
                       "Signature does not validate for the received frame");
                   cb(Error::INVALID_MAC);
