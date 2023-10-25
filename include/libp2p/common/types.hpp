@@ -12,6 +12,8 @@
 #include <span>
 #include <vector>
 
+#include <libp2p/cxx20/lexicographical_compare_three_way.hpp>
+
 namespace libp2p::common {
 
   /// @brief convenience alias for arrays of bytes
@@ -59,8 +61,8 @@ namespace libp2p {
 
   inline auto operator<=>(const SpanOfBytes auto &lhs,
                           const SpanOfBytes auto &rhs) {
-    return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
-                                                  rhs.begin(), rhs.end());
+    return cxx20::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
+                                                    rhs.begin(), rhs.end());
   }
 
 }  // namespace libp2p
