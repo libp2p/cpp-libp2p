@@ -6,13 +6,21 @@
 
 #pragma once
 
-#include <functional>
+#include <cstdint>
+#include <optional>
+#include <utility>
 
 namespace libp2p::common {
 
+  template <typename F>
   struct FinalAction {
-    FinalAction(std::function<void()> &&func)
-        : func(std::forward<std::function<void()>>(func)) {}
+    FinalAction() = delete;
+    FinalAction(FinalAction &&func) = delete;
+    FinalAction(const FinalAction &func) = delete;
+    FinalAction &operator=(FinalAction &&func) = delete;
+    FinalAction &operator=(const FinalAction &func) = delete;
+
+    FinalAction(F &&func) : func(std::forward<F>(func)) {}
 
     ~FinalAction() {
       func();
@@ -20,13 +28,33 @@ namespace libp2p::common {
 
    public:
     // To prevent an object being created on the heap
-    void *operator new(size_t) = delete;            // standard new
-    void *operator new(size_t, void *) = delete;    // placement new
-    void *operator new[](size_t) = delete;          // array new
-    void *operator new[](size_t, void *) = delete;  // placement array new
+    void *operator new(std::size_t) = delete;            // standard new
+    void *operator new(std::size_t, void *) = delete;    // placement new
+    void *operator new[](std::size_t) = delete;          // array new
+    void *operator new[](std::size_t, void *) = delete;  // placement array new
 
    private:
-    std::function<void()> func;
+    F func;
+  };
+
+  template <typename F>
+  struct MovableFinalAction {
+    MovableFinalAction() = delete;
+    MovableFinalAction(MovableFinalAction &&func) = default;
+    MovableFinalAction(const MovableFinalAction &func) = delete;
+    MovableFinalAction &operator=(MovableFinalAction &&func) = default;
+    MovableFinalAction &operator=(const MovableFinalAction &func) = delete;
+
+    MovableFinalAction(F &&func) : func(std::forward<F>(func)) {}
+
+    ~MovableFinalAction() {
+      if (func.has_value()) {
+        func->operator()();
+      }
+    }
+
+   private:
+    std::optional<F> func;
   };
 
 }  // namespace libp2p::common
