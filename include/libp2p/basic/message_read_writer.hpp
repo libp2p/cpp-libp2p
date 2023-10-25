@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -39,7 +39,7 @@ namespace libp2p::basic {
      * @param cb is called when the message is written or an error happened.
      * Quantity of bytes written is passed as an argument in case of success
      */
-    virtual void write(gsl::span<const uint8_t> buffer,
+    virtual void write(BytesIn buffer,
                        Writer::WriteCallbackFunc cb) = 0;
   };
 }  // namespace libp2p::basic

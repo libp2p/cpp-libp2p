@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/basic/message_read_writer.hpp>
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -40,7 +40,7 @@ namespace libp2p::basic {
      * @param buffer - the message to be written
      * @param cb, which is called, when the message is read or error happens
      */
-    void write(gsl::span<const uint8_t> buffer,
+    void write(BytesIn buffer,
                Writer::WriteCallbackFunc cb) override;
 
    private:

@@ -46,13 +46,12 @@ namespace libp2p::security::noise {
     outcome::result<std::vector<uint8_t>> generateHandshakePayload(
         const DHKey &keypair);
 
-    void sendHandshakeMessage(gsl::span<const uint8_t> payload,
+    void sendHandshakeMessage(BytesIn payload,
                               basic::Writer::WriteCallbackFunc cb);
 
     void readHandshakeMessage(basic::MessageReadWriter::ReadCallbackFunc cb);
 
-    outcome::result<void> handleRemoteHandshakePayload(
-        gsl::span<const uint8_t> payload);
+    outcome::result<void> handleRemoteHandshakePayload(BytesIn payload);
 
     outcome::result<void> runHandshake();
 
@@ -69,7 +68,7 @@ namespace libp2p::security::noise {
     SecurityAdaptor::SecConnCallbackFunc connection_cb_;
 
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
-    std::shared_ptr<ByteArray> read_buffer_;
+    std::shared_ptr<Bytes> read_buffer_;
     std::shared_ptr<InsecureReadWriter> rw_;
 
     // other params

@@ -12,6 +12,8 @@
 
 namespace g = libp2p::protocol::gossip;
 
+using libp2p::Bytes;
+
 /**
  * @given An arbitrary TopicMessage
  * @when Decoding its fields
@@ -28,9 +30,11 @@ TEST(Gossip, TopicMessageHasValidFields) {
   ASSERT_TRUE(peer_res);
   ASSERT_EQ(peer, peer_res.value());
 
+  ;
+
   // seq_no is encoded properly
   ASSERT_EQ(msg->seq_no,
-            g::ByteArray({0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99}));
+            Bytes({0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99}));
 
   // id is created from proper fields
   g::MessageId id = g::createMessageId(msg->from, msg->seq_no, msg->data);

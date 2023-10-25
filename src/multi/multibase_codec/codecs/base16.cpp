@@ -27,37 +27,36 @@ namespace {
 
 namespace libp2p::multi::detail {
 
-  using common::ByteArray;
   using common::hex_lower;
   using common::hex_upper;
   using common::unhex;
 
-  std::string encodeBase16Upper(const ByteArray &bytes) {
+  std::string encodeBase16Upper(const Bytes &bytes) {
     return hex_upper(bytes);
   }
 
-  std::string encodeBase16Lower(const ByteArray &bytes) {
+  std::string encodeBase16Lower(const Bytes &bytes) {
     return hex_lower(bytes);
   }
 
-  outcome::result<ByteArray> decodeBase16Upper(std::string_view string) {
+  outcome::result<Bytes> decodeBase16Upper(std::string_view string) {
     // we need this check, because Boost can unhex any kind of base16 with one
     // func, but the base must be specified correctly
     if (!encodingCaseIsUpper(string)) {
       return BaseError::NON_UPPERCASE_INPUT;
     }
     OUTCOME_TRY(bytes, unhex(string));
-    return ByteArray{std::move(bytes)};
+    return Bytes{std::move(bytes)};
   }
 
-  outcome::result<ByteArray> decodeBase16Lower(std::string_view string) {
+  outcome::result<Bytes> decodeBase16Lower(std::string_view string) {
     // we need this check, because Boost can unhex any kind of base16 with one
     // func, but the base must be specified correctly
     if (encodingCaseIsUpper(string)) {
       return BaseError::NON_LOWERCASE_INPUT;
     }
     OUTCOME_TRY(bytes, unhex(string));
-    return ByteArray{std::move(bytes)};
+    return Bytes{std::move(bytes)};
   }
 
 }  // namespace libp2p::multi::detail

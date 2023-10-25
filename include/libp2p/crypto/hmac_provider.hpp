@@ -6,7 +6,7 @@
 #ifndef LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP
 #define LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/hasher.hpp>
@@ -14,7 +14,6 @@
 
 namespace libp2p::crypto::hmac {
 
-  using ByteArray = libp2p::common::ByteArray;
   using HashType = common::HashType;
 
   /// HMAC that supports stream data feeding interface
@@ -37,9 +36,8 @@ namespace libp2p::crypto::hmac {
      * @param message source message
      * @return message digest if calculation was successful, error otherwise
      */
-    virtual outcome::result<ByteArray> calculateDigest(
-        HashType hash_type, const ByteArray &key,
-        gsl::span<const uint8_t> message) const = 0;
+    virtual outcome::result<Bytes> calculateDigest(
+        HashType hash_type, const Bytes &key, BytesIn message) const = 0;
   };
 }  // namespace libp2p::crypto::hmac
 

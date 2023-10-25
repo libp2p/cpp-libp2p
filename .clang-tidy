@@ -58,8 +58,6 @@ CheckOptions:
     value:           '::free;::realloc;::freopen;::fclose'
   - key:             cppcoreguidelines-owning-memory.LegacyResourceProducers
     value:           '::malloc;::aligned_alloc;::realloc;::calloc;::fopen;::freopen;::tmpfile'
-  - key:             cppcoreguidelines-pro-bounds-constant-array-index.GslHeader
-    value:           ''
   - key:             cppcoreguidelines-pro-bounds-constant-array-index.IncludeStyle
     value:           google
   - key:             cppcoreguidelines-pro-type-member-init.IgnoreArrays

@@ -249,7 +249,7 @@ TEST_P(CidEncodeTest, Encode) {
     auto bytes_value = bytes.value();
     auto expectation_value = expectation.value();
     ASSERT_TRUE(std::equal(bytes_value.begin(), bytes_value.end(),
-                           expectation_value.begin()))
+                           expectation_value.begin(), expectation_value.end()))
         << libp2p::common::hex_lower(bytes_value);
   } else {
     ASSERT_EQ(bytes.error(), expectation.error()) << bytes.error().message();

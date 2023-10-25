@@ -78,7 +78,7 @@ namespace libp2p::protocol {
         buf_.begin(),
         // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
         buf_.begin() + size);
-    gsl::span<const uint8_t> span = write_buf;
+    BytesIn span = write_buf;
     stream_->write(
         span, size,
         [self{shared_from_this()}, write_buf{std::move(write_buf)}](

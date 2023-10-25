@@ -64,7 +64,7 @@ namespace libp2p::transport {
         OUTCOME_TRY(addr, parseIp(it->second));
         it++;
         OUTCOME_TRY(port, parseTcp(it->second));
-        if (entry_idx == 0) { // ipv4
+        if (entry_idx == 0) {  // ipv4
           return ParseResult{*entry, std::make_pair(addr.to_v4(), port)};
         }
         // ipv6

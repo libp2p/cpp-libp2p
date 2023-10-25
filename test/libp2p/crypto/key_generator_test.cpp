@@ -8,7 +8,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
-#include <gsl/gsl_util>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
@@ -19,7 +18,7 @@
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
 #include <testutil/outcome.hpp>
 
-using libp2p::common::ByteArray;
+using libp2p::Bytes;
 using libp2p::crypto::CryptoProvider;
 using libp2p::crypto::CryptoProviderImpl;
 using libp2p::crypto::Key;
@@ -192,7 +191,7 @@ TEST_F(KeyGoCompatibility, Ed25519) {
   const size_t message_len{21};  // here we do not count terminating null char
   ASSERT_EQ(message.size(), message_len);
 
-  auto msg_span = gsl::make_span(message.data(), message_len);
+  auto msg_span = std::span(message.data(), message_len);
   auto signature = crypto_provider_->sign(msg_span, private_key).value();
   ASSERT_EQ(signature.size(), 64);
   EXPECT_EQ(
@@ -265,7 +264,7 @@ TEST_F(KeyGoCompatibility, RSA) {
   const size_t message_len{21};  // here we do not count terminating null char
   ASSERT_EQ(message.size(), message_len);
 
-  auto msg_span = gsl::make_span(message.data(), message_len);
+  auto msg_span = std::span(message.data(), message_len);
   auto signature = crypto_provider_->sign(msg_span, private_key).value();
   EXPECT_EQ(signature,
             "23127a1173417488c13366c5af09a66699eae8c36a8ce6d2a355b9cadaf35cf02a"
@@ -305,7 +304,7 @@ TEST_F(KeyGoCompatibility, ECDSA) {
   const size_t message_len{21};  // here we do not count terminating null char
   ASSERT_EQ(message.size(), message_len);
 
-  auto msg_span = gsl::make_span(message.data(), message_len);
+  auto msg_span = std::span(message.data(), message_len);
   auto signature = crypto_provider_->sign(msg_span, private_key).value();
 
   auto verify_own_result =
@@ -341,7 +340,7 @@ TEST_F(KeyGoCompatibility, Secp256k1) {
   const size_t message_len{21};  // here we do not count terminating null char
   ASSERT_EQ(message.size(), message_len);
 
-  auto msg_span = gsl::make_span(message.data(), message_len);
+  auto msg_span = std::span(message.data(), message_len);
   auto signature = crypto_provider_->sign(msg_span, private_key).value();
 
   auto verify_own_result =

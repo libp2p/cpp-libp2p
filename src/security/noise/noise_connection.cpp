@@ -39,7 +39,7 @@ namespace libp2p::connection {
         encoder_cs_{std::move(encoder)},
         decoder_cs_{std::move(decoder)},
         frame_buffer_{
-            std::make_shared<common::ByteArray>(security::noise::kMaxMsgLen)},
+            std::make_shared<Bytes>(security::noise::kMaxMsgLen)},
         framer_{std::make_shared<security::noise::InsecureReadWriter>(
             connection_, frame_buffer_)} {
     BOOST_ASSERT(connection_);
@@ -59,7 +59,7 @@ namespace libp2p::connection {
     return connection_->close();
   }
 
-  void NoiseConnection::read(gsl::span<uint8_t> out, size_t bytes,
+  void NoiseConnection::read(BytesOut out, size_t bytes,
                              libp2p::basic::Reader::ReadCallbackFunc cb) {
     OperationContext context{.bytes_served = 0,
                              .total_bytes = bytes,
@@ -67,10 +67,9 @@ namespace libp2p::connection {
     read(out, bytes, context, std::move(cb));
   }
 
-  void NoiseConnection::read(gsl::span<uint8_t> out, size_t bytes,
+  void NoiseConnection::read(BytesOut out, size_t bytes,
                              OperationContext ctx, ReadCallbackFunc cb) {
-    size_t out_size{out.empty() ? 0u : static_cast<size_t>(out.size())};
-    BOOST_ASSERT(out_size >= bytes);
+    BOOST_ASSERT(out.size() >= bytes);
     if (0 == bytes) {
       BOOST_ASSERT(ctx.bytes_served == ctx.total_bytes);
       return cb(ctx.bytes_served);
@@ -84,7 +83,7 @@ namespace libp2p::connection {
              });
   }
 
-  void NoiseConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
+  void NoiseConnection::readSome(BytesOut out, size_t bytes,
                                  libp2p::basic::Reader::ReadCallbackFunc cb) {
     OperationContext context{.bytes_served = 0,
                              .total_bytes = bytes,
@@ -92,7 +91,7 @@ namespace libp2p::connection {
     readSome(out, bytes, context, std::move(cb));
   }
 
-  void NoiseConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
+  void NoiseConnection::readSome(BytesOut out, size_t bytes,
                                  OperationContext ctx, ReadCallbackFunc cb) {
     if (not frame_buffer_->empty()) {
       auto n{std::min(bytes, frame_buffer_->size())};
@@ -111,7 +110,7 @@ namespace libp2p::connection {
     });
   }
 
-  void NoiseConnection::write(gsl::span<const uint8_t> in, size_t bytes,
+  void NoiseConnection::write(BytesIn in, size_t bytes,
                               libp2p::basic::Writer::WriteCallbackFunc cb) {
     OperationContext context{.bytes_served = 0,
                              .total_bytes = bytes,
@@ -119,7 +118,7 @@ namespace libp2p::connection {
     write(in, bytes, context, std::move(cb));
   }
 
-  void NoiseConnection::write(gsl::span<const uint8_t> in, size_t bytes,
+  void NoiseConnection::write(BytesIn in, size_t bytes,
                               NoiseConnection::OperationContext ctx,
                               basic::Writer::WriteCallbackFunc cb) {
     auto *self{this};  // for OUTCOME_CB
@@ -147,7 +146,7 @@ namespace libp2p::connection {
         });
   }
 
-  void NoiseConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
+  void NoiseConnection::writeSome(BytesIn in, size_t bytes,
                                   libp2p::basic::Writer::WriteCallbackFunc cb) {
     write(in, bytes, std::move(cb));
   }

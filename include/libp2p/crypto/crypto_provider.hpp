@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <boost/filesystem.hpp>
-#include <gsl/span>
+#include <span>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -50,7 +50,7 @@ namespace libp2p::crypto {
      * @return signature bytes
      */
     virtual outcome::result<Buffer> sign(
-        gsl::span<const uint8_t> message,
+        BytesIn message,
         const PrivateKey &private_key) const = 0;
 
     /**
@@ -61,8 +61,8 @@ namespace libp2p::crypto {
      * @param public_key to validate against
      * @return true - if the signature matches the message and the public key
      */
-    virtual outcome::result<bool> verify(gsl::span<const uint8_t> message,
-                                         gsl::span<const uint8_t> signature,
+    virtual outcome::result<bool> verify(BytesIn message,
+                                         BytesIn signature,
                                          const PublicKey &public_key) const = 0;
     /**
      * Generate an ephemeral public key and return a function that will

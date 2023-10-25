@@ -218,28 +218,28 @@ namespace libp2p::transport {
         });
   }
 
-  void TcpConnection::read(gsl::span<uint8_t> out, size_t bytes,
+  void TcpConnection::read(BytesOut out, size_t bytes,
                            TcpConnection::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     TRACE("{} read {}", debug_str_, bytes);
     readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
-  void TcpConnection::readSome(gsl::span<uint8_t> out, size_t bytes,
+  void TcpConnection::readSome(BytesOut out, size_t bytes,
                                TcpConnection::ReadCallbackFunc cb) {
     TRACE("{} read some up to {}", debug_str_, bytes);
     socket_.async_read_some(detail::makeBuffer(out, bytes),
                             closeOnError(*this, std::move(cb)));
   }
 
-  void TcpConnection::write(gsl::span<const uint8_t> in, size_t bytes,
+  void TcpConnection::write(BytesIn in, size_t bytes,
                             TcpConnection::WriteCallbackFunc cb) {
     TRACE("{} write {}", debug_str_, bytes);
     boost::asio::async_write(socket_, detail::makeBuffer(in, bytes),
                              closeOnError(*this, std::move(cb)));
   }
 
-  void TcpConnection::writeSome(gsl::span<const uint8_t> in, size_t bytes,
+  void TcpConnection::writeSome(BytesIn in, size_t bytes,
                                 TcpConnection::WriteCallbackFunc cb) {
     TRACE("{} write some up to {}", debug_str_, bytes);
     socket_.async_write_some(detail::makeBuffer(in, bytes),

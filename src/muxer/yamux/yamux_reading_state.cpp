@@ -17,12 +17,11 @@ namespace libp2p::connection {
       return logger.get();
     }
 
-    inline size_t size(const gsl::span<uint8_t> &span) {
+    inline size_t size(const BytesOut &span) {
       return static_cast<size_t>(span.size());
     }
 
-    inline std::tuple<gsl::span<uint8_t>, gsl::span<uint8_t>> split(
-        gsl::span<uint8_t> span, size_t n) {
+    inline std::tuple<BytesOut, BytesOut> split(BytesOut span, size_t n) {
       return {span.subspan(0, ssize_t(n)), span.subspan(ssize_t(n))};
     }
 
@@ -37,7 +36,7 @@ namespace libp2p::connection {
     assert(on_data_);
   }
 
-  void YamuxReadingState::onDataReceived(gsl::span<uint8_t> &bytes_read) {
+  void YamuxReadingState::onDataReceived(BytesOut &bytes_read) {
     bool proceed = true;
     while (!bytes_read.empty() && proceed) {
       if (data_bytes_unread_ == 0) {
@@ -48,7 +47,7 @@ namespace libp2p::connection {
     }
   }
 
-  void YamuxReadingState::processData(gsl::span<uint8_t> &bytes_read) {
+  void YamuxReadingState::processData(BytesOut &bytes_read) {
     assert(data_bytes_unread_ > 0);
 
     auto bytes_available = size(bytes_read);
@@ -81,7 +80,7 @@ namespace libp2p::connection {
     on_data_(head, stream_id, rst, fin);
   }
 
-  bool YamuxReadingState::processHeader(gsl::span<uint8_t> &bytes_read) {
+  bool YamuxReadingState::processHeader(BytesOut &bytes_read) {
     assert(data_bytes_unread_ == 0);
 
     auto maybe_header = header_.add(bytes_read);

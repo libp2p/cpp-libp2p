@@ -20,7 +20,7 @@ namespace libp2p::multi {
    */
   class MultibaseCodec {
    public:
-    using ByteBuffer = common::ByteArray;
+    using ByteBuffer = Bytes;
     using FactoryResult = outcome::result<ByteBuffer>;
 
     virtual ~MultibaseCodec() = default;

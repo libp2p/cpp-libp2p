@@ -3,13 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <gtest/gtest.h>
+
+#include <libp2p/common/types.hpp>
 #include <libp2p/protocol_muxer/multiselect.hpp>
 #include <libp2p/protocol_muxer/multiselect/parser.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 
-#include <gtest/gtest.h>
+using libp2p::BytesIn;
 
-#include "testutil/prepare_loggers.hpp"
 /**
  * @given static vector
  * @when resizing it over static capacity
@@ -39,7 +41,7 @@ TEST(Multiselect, SingleValidMessages) {
   for (const auto &m : messages) {
     auto buf = detail::createMessage(m.content).value();
     EXPECT_GT(buf.size(), m.content.size());
-    gsl::span<const uint8_t> span(buf);
+    BytesIn span(buf);
     auto s = reader.consume(span);
     EXPECT_EQ(s, detail::Parser::kReady);
     EXPECT_EQ(reader.messages().size(), 1);
@@ -62,7 +64,7 @@ TEST(Multiselect, SingleValidMessagesPartialRead) {
       {Message::kNAMessage, "na"},
   });
 
-  using Span = gsl::span<const uint8_t>;
+  using Span = BytesIn;
 
   auto split_span = [](Span span, size_t first_split,
                        size_t second_split) -> std::tuple<Span, Span, Span> {
@@ -76,7 +78,7 @@ TEST(Multiselect, SingleValidMessagesPartialRead) {
     for (const auto &m : messages) {
       auto buf = detail::createMessage(m.content).value();
       EXPECT_GT(buf.size(), m.content.size());
-      gsl::span<const uint8_t> span(buf);
+      BytesIn span(buf);
       auto [s1, s2, s3] = split_span(span, first_split, second_split);
       auto s = reader.consume(s1);
       EXPECT_EQ(s, detail::Parser::kUnderflow);

@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/secio/propose_message.hpp>
 
@@ -52,7 +52,7 @@ namespace libp2p::security::secio {
      * @returns deserealized handy Propose message
      */
     virtual outcome::result<ProposeMessage> unmarshal(
-        gsl::span<const uint8_t> msg_bytes) const = 0;
+        BytesIn msg_bytes) const = 0;
   };
 
 }  // namespace libp2p::security::secio

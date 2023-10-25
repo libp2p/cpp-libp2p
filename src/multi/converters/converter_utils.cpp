@@ -28,9 +28,7 @@ using libp2p::common::unhex;
 
 namespace libp2p::multi::converters {
 
-  using common::ByteArray;
-
-  outcome::result<ByteArray> multiaddrToBytes(std::string_view str) {
+  outcome::result<Bytes> multiaddrToBytes(std::string_view str) {
     if (str.empty() || str[0] != '/') {
       return ConversionError::ADDRESS_DOES_NOT_BEGIN_WITH_SLASH;
     }
@@ -45,7 +43,7 @@ namespace libp2p::multi::converters {
       str.remove_suffix(1);
     }
 
-    ByteArray processed;
+    Bytes processed;
 
     enum class WordType { PROTOCOL, ADDRESS };
     WordType type = WordType::PROTOCOL;
@@ -93,7 +91,7 @@ namespace libp2p::multi::converters {
     return processed;
   }
 
-  outcome::result<ByteArray> addressToBytes(const Protocol &protocol,
+  outcome::result<Bytes> addressToBytes(const Protocol &protocol,
                                             std::string_view addr) {
     // TODO(Akvinikym) 25.02.19 PRE-49: add more protocols
     switch (protocol.code) {
@@ -143,18 +141,17 @@ namespace libp2p::multi::converters {
     return std::move(hex);
   }
 
-  outcome::result<std::string> bytesToMultiaddrString(
-      gsl::span<const uint8_t> bytes) {
+  outcome::result<std::string> bytesToMultiaddrString(BytesIn bytes) {
     std::string results;
 
-    ssize_t lastpos = 0;
+    size_t lastpos = 0;
 
     // set up variables
     const std::string hex = hex_upper(bytes);
 
     // Process Hex String
     while (lastpos < bytes.size() * 2) {
-      gsl::span<const uint8_t> pid_bytes{bytes};
+      BytesIn pid_bytes{bytes};
       auto protocol_int = UVarint(pid_bytes.subspan(lastpos / 2)).toUInt64();
       Protocol const *protocol =
           ProtocolList::get(static_cast<Protocol::Code>(protocol_int));
@@ -163,8 +160,7 @@ namespace libp2p::multi::converters {
       }
 
       if (protocol->code != Protocol::Code::P2P) {
-        lastpos += static_cast<ssize_t>(
-            UVarint::calculateSize(pid_bytes.subspan(lastpos / 2)) * 2);
+        lastpos += (UVarint::calculateSize(pid_bytes.subspan(lastpos / 2)) * 2);
         std::string address;
         address = hex.substr(lastpos, protocol->size / 4);
 
@@ -187,8 +183,7 @@ namespace libp2p::multi::converters {
               auto prefixedvarint = hex.substr(lastpos, 2);
               OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
 
-              ssize_t addrsize =
-                  static_cast<ssize_t>(UVarint(prefixBytes).toUInt64());
+              auto addrsize = UVarint(prefixBytes).toUInt64();
 
               // get the ipfs address as hex values
               auto hex_domain_name = hex.substr(lastpos + 2, addrsize * 2);
@@ -216,8 +211,7 @@ namespace libp2p::multi::converters {
               auto prefixedvarint = hex.substr(lastpos, 2);
               OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
 
-              ssize_t addrsize =
-                  static_cast<ssize_t>(UVarint(prefixBytes).toUInt64());
+              auto addrsize = UVarint(prefixBytes).toUInt64();
 
               // get the ipfs address as hex values
               auto hex_domain_name = hex.substr(lastpos + 2, addrsize * 2);
@@ -276,8 +270,7 @@ namespace libp2p::multi::converters {
         auto prefixedvarint = hex.substr(lastpos, 2);
         OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
 
-        ssize_t addrsize =
-            static_cast<ssize_t>(UVarint(prefixBytes).toUInt64());
+        auto addrsize = UVarint(prefixBytes).toUInt64();
         // get the ipfs address as hex values
         auto ipfsAddr = hex.substr(lastpos + 2, addrsize * 2);
 
@@ -295,7 +288,7 @@ namespace libp2p::multi::converters {
     return results;
   }
 
-  outcome::result<std::string> bytesToMultiaddrString(const ByteArray &bytes) {
-    return bytesToMultiaddrString(gsl::span<const uint8_t>(bytes));
+  outcome::result<std::string> bytesToMultiaddrString(const Bytes &bytes) {
+    return bytesToMultiaddrString(BytesIn(bytes));
   }
 }  // namespace libp2p::multi::converters

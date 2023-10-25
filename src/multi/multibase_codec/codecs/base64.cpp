@@ -90,7 +90,7 @@ namespace libp2p::multi::detail {
    * @param bytes to be encoded
    * @return how much chars are in the resulting string
    */
-  size_t encodeImpl(std::string &out, const common::ByteArray &bytes) {
+  size_t encodeImpl(std::string &out, const Bytes &bytes) {
     auto len = bytes.size();
     const auto tab = alphabet;
     size_t bytes_pos = 0u;
@@ -182,13 +182,13 @@ namespace libp2p::multi::detail {
     return out;
   }
 
-  std::string encodeBase64(const common::ByteArray &bytes) {
+  std::string encodeBase64(const Bytes &bytes) {
     std::string dest;
     dest.resize(encodeImpl(dest, bytes));
     return dest;
   }
 
-  outcome::result<common::ByteArray> decodeBase64(std::string_view string) {
+  outcome::result<Bytes> decodeBase64(std::string_view string) {
     if (!isValidBase64(string)) {
       return BaseError::INVALID_BASE64_INPUT;
     }
@@ -198,6 +198,6 @@ namespace libp2p::multi::detail {
     if (!decoded_bytes) {
       return BaseError::INVALID_BASE64_INPUT;
     }
-    return common::ByteArray{std::move(*decoded_bytes)};
+    return Bytes{std::move(*decoded_bytes)};
   }
 }  // namespace libp2p::multi::detail

@@ -11,7 +11,7 @@
 #include <libp2p/common/types.hpp>
 #include <libp2p/log/logger.hpp>
 
-using libp2p::common::ByteArray;
+using libp2p::Bytes;
 using libp2p::common::hex_upper;
 using libp2p::common::unhex;
 
@@ -36,7 +36,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, Multihash::Error, e) {
 
 namespace libp2p::multi {
 
-  Multihash::Multihash(HashType type, gsl::span<const uint8_t> hash)
+  Multihash::Multihash(HashType type, BytesIn hash)
       : data_(std::make_shared<const Data>(type, hash)) {}
 
   namespace {
@@ -53,7 +53,7 @@ namespace libp2p::multi {
     }
   }  // namespace
 
-  Multihash::Data::Data(HashType t, gsl::span<const uint8_t> h) : type(t) {
+  Multihash::Data::Data(HashType t, BytesIn h) : type(t) {
     bytes.reserve(h.size() + 4);
     appendVarint(bytes, type);
     BOOST_ASSERT(h.size() <= std::numeric_limits<uint8_t>::max());
@@ -79,8 +79,7 @@ namespace libp2p::multi {
     return data().std_hash;
   }
 
-  outcome::result<Multihash> Multihash::create(HashType type,
-                                               gsl::span<const uint8_t> hash) {
+  outcome::result<Multihash> Multihash::create(HashType type, BytesIn hash) {
     if (hash.size() > kMaxHashLength) {
       return Error::INPUT_TOO_LONG;
     }
@@ -93,8 +92,7 @@ namespace libp2p::multi {
     return Multihash::createFromBytes(buf);
   }
 
-  outcome::result<Multihash> Multihash::createFromBytes(
-      gsl::span<const uint8_t> b) {
+  outcome::result<Multihash> Multihash::createFromBytes(BytesIn b) {
     if (b.size() < kHeaderSize) {
       return Error::INPUT_TOO_SHORT;
     }
@@ -110,7 +108,7 @@ namespace libp2p::multi {
     }
 
     const uint8_t length = b[0];
-    gsl::span<const uint8_t> hash = b.subspan(1);
+    BytesIn hash = b.subspan(1);
 
     if (length == 0) {
       return Error::ZERO_INPUT_LENGTH;
@@ -127,16 +125,16 @@ namespace libp2p::multi {
     return data().type;
   }
 
-  gsl::span<const uint8_t> Multihash::getHash() const {
+  BytesIn Multihash::getHash() const {
     const auto &d = data();
-    return gsl::span<const uint8_t>(d.bytes).subspan(d.hash_offset);
+    return BytesIn(d.bytes).subspan(d.hash_offset);
   }
 
   std::string Multihash::toHex() const {
     return hex_upper(data().bytes);
   }
 
-  const common::ByteArray &Multihash::toBuffer() const {
+  const Bytes &Multihash::toBuffer() const {
     return data().bytes;
   }
 

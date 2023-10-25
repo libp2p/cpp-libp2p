@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <gsl/gsl_util>
+#include <libp2p/common/final_action.hpp>
 #include <libp2p/crypto/chachapoly/chachapoly_impl.hpp>
 #include <libp2p/crypto/common_functions.hpp>
 #include <libp2p/crypto/error.hpp>
+
+using libp2p::common::FinalAction;
 
 namespace libp2p::crypto::chachapoly {
 
@@ -21,9 +23,10 @@ namespace libp2p::crypto::chachapoly {
         cipher_{EVP_chacha20_poly1305()},
         block_size_{EVP_CIPHER_block_size(cipher_)} {}
 
-  outcome::result<ByteArray> ChaCha20Poly1305Impl::encrypt(
-      const Nonce &nonce, gsl::span<const uint8_t> plaintext,
-      gsl::span<const uint8_t> aad) {
+  outcome::result<Bytes> ChaCha20Poly1305Impl::encrypt(
+      const Nonce &nonce,
+                                                           BytesIn plaintext,
+                                                           BytesIn aad) {
     const auto init_failure = OpenSslError::FAILED_INITIALIZE_OPERATION;
     std::vector<uint8_t> result;
     // just reserving the space, possibly without actual memory allocation:
@@ -35,7 +38,7 @@ namespace libp2p::crypto::chachapoly {
     if (nullptr == ctx) {
       return OpenSslError::FAILED_INITIALIZE_CONTEXT;
     }
-    auto free_ctx = gsl::finally([ctx] { EVP_CIPHER_CTX_free(ctx); });
+    FinalAction free_ctx([ctx] { EVP_CIPHER_CTX_free(ctx); });
 
     IF1(EVP_EncryptInit_ex(ctx, cipher_, nullptr, nullptr, nullptr),
         "Failed to initialize EVP encryption.", init_failure)
@@ -76,16 +79,17 @@ namespace libp2p::crypto::chachapoly {
     return result;
   }
 
-  outcome::result<ByteArray> ChaCha20Poly1305Impl::decrypt(
-      const Nonce &nonce, gsl::span<const uint8_t> ciphertext,
-      gsl::span<const uint8_t> aad) {
-    ByteArray result;
+  outcome::result<Bytes> ChaCha20Poly1305Impl::decrypt(
+      const Nonce &nonce,
+                                                           BytesIn ciphertext,
+                                                           BytesIn aad) {
+    Bytes result;
     // plain text should take less bytes than cipher text,
     // at least it would not contain tag-length bytes (16).
     // single block size for the case when len(in) == len(out)
     result.resize(ciphertext.size() + block_size_, 0u);
     auto *ctx = EVP_CIPHER_CTX_new();
-    auto free_ctx = gsl::finally([ctx] { EVP_CIPHER_CTX_free(ctx); });
+    FinalAction free_ctx([ctx] { EVP_CIPHER_CTX_free(ctx); });
 
     IF1(EVP_DecryptInit_ex(ctx, cipher_, nullptr, nullptr, nullptr),
         "Failed to initialize decryption engine.",

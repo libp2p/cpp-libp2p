@@ -7,13 +7,16 @@
 #define LIBP2P_COMMON_BYTESTR_HPP
 
 #include <cstdint>
-#include <gsl/span>
+
+#include <libp2p/common/types.hpp>
 
 namespace libp2p {
-  inline gsl::span<const uint8_t> bytestr(const gsl::span<const char> &s) {
+
+  inline BytesIn bytestr(const std::span<const char> &s) {
     // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const uint8_t *>(s.data()), s.size()};
   }
+
 }  // namespace libp2p
 
 #endif  // LIBP2P_COMMON_BYTESTR_HPP

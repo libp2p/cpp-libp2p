@@ -8,13 +8,12 @@
 
 #include <array>
 #include <cstdint>
+#include <span>
 #include <vector>
 
+#include <libp2p/cxx20/lexicographical_compare_three_way.hpp>
+
 namespace libp2p::common {
-  /**
-   * Sequence of bytes
-   */
-  using ByteArray = std::vector<uint8_t>;
 
   template <typename Collection, typename Item>
   void append(Collection &c, Item &&g) {
@@ -33,5 +32,33 @@ namespace libp2p::common {
   /// Hash512 as a sequence of 64 bytes
   using Hash512 = std::array<uint8_t, 64u>;
 }  // namespace libp2p::common
+
+namespace libp2p {
+
+  /// @brief convenience alias for arrays of bytes
+  using Bytes = std::vector<uint8_t>;
+
+  /// @brief convenience alias for immutable span of bytes
+  using BytesIn = std::span<const uint8_t>;
+
+  /// @brief convenience alias for mutable span of bytes
+  using BytesOut = std::span<uint8_t>;
+
+  template <class T>
+  concept SpanOfBytes = std::is_same_v<std::decay_t<T>, BytesIn>
+      or std::is_same_v<std::decay_t<T>, BytesIn>;
+
+  inline bool operator==(const SpanOfBytes auto &lhs,
+                         const SpanOfBytes auto &rhs) {
+    return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+  }
+
+  inline auto operator<=>(const SpanOfBytes auto &lhs,
+                          const SpanOfBytes auto &rhs) {
+    return cxx20::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
+                                                    rhs.begin(), rhs.end());
+  }
+
+}  // namespace libp2p
 
 #endif  // LIBP2P_P2P_COMMON_TYPES_HPP

@@ -21,12 +21,12 @@ namespace libp2p::basic {
 
     MOCK_METHOD0(close, outcome::result<void>(void));
 
-    MOCK_METHOD2(read, void(gsl::span<uint8_t>, Reader::ReadCallbackFunc));
-    MOCK_METHOD2(readSome, void(gsl::span<uint8_t>, Reader::ReadCallbackFunc));
+    MOCK_METHOD2(read, void(BytesOut, Reader::ReadCallbackFunc));
+    MOCK_METHOD2(readSome, void(BytesOut, Reader::ReadCallbackFunc));
     MOCK_METHOD2(write,
-                 void(gsl::span<const uint8_t>, Writer::WriteCallbackFunc));
+                 void(BytesIn, Writer::WriteCallbackFunc));
     MOCK_METHOD2(writeSome,
-                 void(gsl::span<const uint8_t>, Writer::WriteCallbackFunc));
+                 void(BytesIn, Writer::WriteCallbackFunc));
   };
 }  // namespace libp2p::basic
 

@@ -32,19 +32,19 @@ namespace libp2p::security::noise {
      * @param buffer - pointer to buffer where to store bytes from network
      */
     InsecureReadWriter(std::shared_ptr<connection::LayerConnection> connection,
-                       std::shared_ptr<common::ByteArray> buffer);
+                       std::shared_ptr<Bytes> buffer);
 
     /// read next message from the network
     void read(ReadCallbackFunc cb) override;
 
     /// write the given bytes to the network
-    void write(gsl::span<const uint8_t> buffer,
+    void write(BytesIn buffer,
                basic::Writer::WriteCallbackFunc cb) override;
 
    private:
     std::shared_ptr<connection::LayerConnection> connection_;
-    std::shared_ptr<common::ByteArray> buffer_;
-    common::ByteArray outbuf_;
+    std::shared_ptr<Bytes> buffer_;
+    Bytes outbuf_;
   };
 
 }  // namespace libp2p::security::noise

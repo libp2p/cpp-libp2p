@@ -7,13 +7,11 @@
 #define LIBP2P_BASIC_READ_HPP
 
 #include <libp2p/basic/reader.hpp>
-#include <libp2p/common/span_size.hpp>
 #include <memory>
 
 namespace libp2p {
   /// Read exactly `out.size()` bytes
-  inline void read(const std::shared_ptr<basic::Reader> &reader,
-                   gsl::span<uint8_t> out,
+  inline void read(const std::shared_ptr<basic::Reader> &reader, BytesOut out,
                    std::function<void(outcome::result<void>)> cb) {
     auto post_cb = [](decltype(reader) reader, decltype(cb) &&cb,
                       outcome::result<size_t> r) {
@@ -31,7 +29,7 @@ namespace libp2p {
     }
     // read some bytes
     reader->readSome(
-        out, spanSize(out),
+        out, out.size(),
         [weak{std::weak_ptr{reader}}, out, cb{std::move(cb)},
          post_cb](outcome::result<size_t> n_res) mutable {
           auto reader = weak.lock();
@@ -45,10 +43,10 @@ namespace libp2p {
           if (n == 0) {
             throw std::logic_error{"libp2p::read zero bytes read"};
           }
-          if (n > spanSize(out)) {
+          if (n > out.size()) {
             throw std::logic_error{"libp2p::read too much bytes read"};
           }
-          if (n == spanSize(out)) {
+          if (n == out.size()) {
             // successfully read last bytes
             return post_cb(reader, std::move(cb), outcome::success());
           }

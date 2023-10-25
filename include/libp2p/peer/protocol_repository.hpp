@@ -10,7 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/basic/garbage_collectable.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/protocol.hpp>
@@ -32,7 +32,7 @@ namespace libp2p::peer {
      * @return peer error, if no peer {@param p} found
      */
     virtual outcome::result<void> addProtocols(
-        const PeerId &p, gsl::span<const ProtocolName> ms) = 0;
+        const PeerId &p, std::span<const ProtocolName> ms) = 0;
 
     /**
      * @brief Removes protocols from a peer.
@@ -41,7 +41,7 @@ namespace libp2p::peer {
      * @return peer error, if no peer {@param p} found
      */
     virtual outcome::result<void> removeProtocols(
-        const PeerId &p, gsl::span<const ProtocolName> ms) = 0;
+        const PeerId &p, std::span<const ProtocolName> ms) = 0;
 
     /**
      * @brief Get all supported protocols by given peer {@param p}

@@ -9,7 +9,7 @@
 #include <array>
 #include <vector>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto::x25519 {

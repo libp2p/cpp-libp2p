@@ -6,9 +6,11 @@
 #include <libp2p/crypto/key_validator/key_validator_impl.hpp>
 
 #include <openssl/x509.h>
-#include <gsl/gsl_util>
+#include <libp2p/common/final_action.hpp>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/crypto/error.hpp>
+
+using libp2p::common::FinalAction;
 
 namespace libp2p::crypto::validator {
 
@@ -96,7 +98,7 @@ namespace libp2p::crypto::validator {
     if (nullptr == rsa) {
       return KeyValidatorError::INVALID_PRIVATE_KEY;
     }
-    auto cleanup_rsa = gsl::finally([rsa]() { RSA_free(rsa); });
+    FinalAction cleanup_rsa([rsa]() { RSA_free(rsa); });
     int bits = RSA_bits(rsa);
     if (bits < kMinimumRSABitsCount) {
       return KeyValidatorError::INVALID_PRIVATE_KEY;
@@ -112,7 +114,7 @@ namespace libp2p::crypto::validator {
     if (nullptr == rsa) {
       return KeyValidatorError::INVALID_PUBLIC_KEY;
     }
-    auto cleanup_rsa = gsl::finally([rsa]() { RSA_free(rsa); });
+    FinalAction cleanup_rsa([rsa]() { RSA_free(rsa); });
     int bits = RSA_bits(rsa);
     if (bits < kMinimumRSABitsCount) {
       return KeyValidatorError::INVALID_PUBLIC_KEY;

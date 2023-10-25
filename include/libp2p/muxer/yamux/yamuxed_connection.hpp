@@ -84,7 +84,7 @@ namespace libp2p::connection {
     using PendingOutboundStreams =
         std::unordered_map<StreamId, StreamHandlerFunc>;
 
-    using Buffer = common::ByteArray;
+    using Buffer = Bytes;
 
     struct WriteQueueItem {
       // TODO(artem): reform in buffers (shared + vector writes)
@@ -97,7 +97,7 @@ namespace libp2p::connection {
     // YamuxStreamFeedback interface overrides
 
     /// Stream transfers data to connection
-    void writeStreamData(uint32_t stream_id, gsl::span<const uint8_t> data,
+    void writeStreamData(uint32_t stream_id, BytesIn data,
                          bool some) override;
 
     /// Stream acknowledges received bytes
@@ -113,13 +113,13 @@ namespace libp2p::connection {
 
     /// usage of these four methods is highly not recommended or even forbidden:
     /// use stream over this connection instead
-    void read(gsl::span<uint8_t> out, size_t bytes,
+    void read(BytesOut out, size_t bytes,
               ReadCallbackFunc cb) override;
-    void readSome(gsl::span<uint8_t> out, size_t bytes,
+    void readSome(BytesOut out, size_t bytes,
                   ReadCallbackFunc cb) override;
-    void write(gsl::span<const uint8_t> in, size_t bytes,
+    void write(BytesIn in, size_t bytes,
                WriteCallbackFunc cb) override;
-    void writeSome(gsl::span<const uint8_t> in, size_t bytes,
+    void writeSome(BytesIn in, size_t bytes,
                    WriteCallbackFunc cb) override;
 
     /// Initiates async readSome on connection
@@ -132,7 +132,7 @@ namespace libp2p::connection {
     bool processHeader(boost::optional<YamuxFrame> header);
 
     /// Processes incoming data, called from YamuxReadingState
-    void processData(gsl::span<uint8_t> segment, StreamId stream_id);
+    void processData(BytesOut segment, StreamId stream_id);
 
     /// FIN received from peer to stream (either in header or with last data
     /// segment)

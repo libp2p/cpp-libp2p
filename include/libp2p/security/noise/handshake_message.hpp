@@ -13,8 +13,8 @@ namespace libp2p::security::noise {
 
   struct HandshakeMessage {
     crypto::PublicKey identity_key;
-    common::ByteArray identity_sig;
-    common::ByteArray data;
+    Bytes identity_sig;
+    Bytes data;
   };
 }  // namespace libp2p::security::noise
 

@@ -8,16 +8,15 @@
 #include <libp2p/crypto/hmac_provider/hmac_provider_ctr_impl.hpp>
 
 #include <openssl/hmac.h>
-#include <openssl/sha.h>
-#include <gsl/gsl_util>
-#include <gsl/span>
+#include <libp2p/common/final_action.hpp>
 #include <libp2p/crypto/error.hpp>
+#include <span>
+
+using libp2p::common::FinalAction;
 
 namespace libp2p::crypto::hmac {
-  using ByteArray = libp2p::common::ByteArray;
 
-  HmacProviderCtrImpl::HmacProviderCtrImpl(HashType hash_type,
-                                           gsl::span<const uint8_t> key)
+  HmacProviderCtrImpl::HmacProviderCtrImpl(HashType hash_type, BytesIn key)
       : hash_type_{hash_type},
         key_(key.begin(), key.end()),
         hash_st_{hash_type_ == HashType::SHA1
@@ -48,8 +47,7 @@ namespace libp2p::crypto::hmac {
     sinkCtx(HmacProviderCtrImpl::digestSize());
   }
 
-  outcome::result<void> HmacProviderCtrImpl::write(
-      gsl::span<const uint8_t> data) {
+  outcome::result<void> HmacProviderCtrImpl::write(BytesIn data) {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
@@ -59,12 +57,11 @@ namespace libp2p::crypto::hmac {
     return outcome::success();
   }
 
-  outcome::result<void> HmacProviderCtrImpl::digestOut(
-      gsl::span<uint8_t> out) const {
+  outcome::result<void> HmacProviderCtrImpl::digestOut(BytesOut out) const {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
-    if (out.size() != static_cast<ptrdiff_t>(digestSize())) {
+    if (out.size() != digestSize()) {
       return HmacProviderError::WRONG_DIGEST_SIZE;
     }
     HMAC_CTX *ctx_copy = HMAC_CTX_new();
@@ -74,7 +71,7 @@ namespace libp2p::crypto::hmac {
     if (1 != HMAC_CTX_copy(ctx_copy, hmac_ctx_)) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
-    auto free_ctx_copy = gsl::finally([ctx_copy] { HMAC_CTX_free(ctx_copy); });
+    FinalAction free_ctx_copy([ctx_copy] { HMAC_CTX_free(ctx_copy); });
     unsigned len{0};
     if (1 != HMAC_Final(ctx_copy, out.data(), &len)) {
       return HmacProviderError::FAILED_FINALIZE_DIGEST;

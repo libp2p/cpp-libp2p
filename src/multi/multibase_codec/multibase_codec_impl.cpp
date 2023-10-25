@@ -77,9 +77,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, MultibaseCodecImpl::Error, e) {
 }
 
 namespace libp2p::multi {
-  using common::ByteArray;
-
-  std::string MultibaseCodecImpl::encode(const ByteArray &bytes,
+  std::string MultibaseCodecImpl::encode(const Bytes &bytes,
                                          Encoding encoding) const {
     if (bytes.empty()) {
       return "";
@@ -88,7 +86,7 @@ namespace libp2p::multi {
     return static_cast<char>(encoding) + codecs.at(encoding).encode(bytes);
   }
 
-  outcome::result<ByteArray> MultibaseCodecImpl::decode(
+  outcome::result<Bytes> MultibaseCodecImpl::decode(
       std::string_view string) const {
     if (string.length() < 2) {
       return Error::INPUT_TOO_SHORT;

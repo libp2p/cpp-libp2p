@@ -3,12 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <gtest/gtest.h>
+
 #include <libp2p/protocol/identify/identify_delta.hpp>
 
 #include <generated/protocol/identify/protobuf/identify.pb.h>
-#include <gtest/gtest.h>
+
 #include <libp2p/common/literals.hpp>
 #include <libp2p/multi/uvarint.hpp>
+
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/host/host_mock.hpp"
@@ -33,6 +36,7 @@ using testing::InvokeArgument;
 using testing::Ref;
 using testing::Return;
 using testing::ReturnRef;
+using testing::Truly;
 
 class IdentifyDeltaTest : public testing::Test {
  public:
@@ -121,9 +125,15 @@ TEST_F(IdentifyDeltaTest, Send) {
       newStream(kPeerInfo, StreamProtocols{kIdentifyDeltaProtocol}, _, _))
       .WillOnce(InvokeArgument<2>(
           StreamAndProtocol{stream_, kIdentifyDeltaProtocol}));
+
+  auto if_added = [&](BytesIn actual) {
+    auto expected = BytesIn(msg_added_protos_bytes_);
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
+  };
+
   EXPECT_CALL(*stream_,
-              write(gsl::span<const uint8_t>(msg_added_protos_bytes_),
-                    msg_added_protos_bytes_.size(), _))
+              write(Truly(if_added), msg_added_protos_bytes_.size(), _))
       .WillOnce(InvokeArgument<2>(outcome::success()));
 
   id_delta_->start();
@@ -144,9 +154,9 @@ ACTION_P(ReadPut, buf) {
 TEST_F(IdentifyDeltaTest, Receive) {
   // handle
   EXPECT_CALL(*stream_, read(_, 1, _))
-      .WillOnce(ReadPut(gsl::make_span(msg_added_rm_protos_bytes_.data(), 1)));
+      .WillOnce(ReadPut(std::span(msg_added_rm_protos_bytes_.data(), 1)));
   EXPECT_CALL(*stream_, read(_, added_rm_proto_len_.toUInt64(), _))
-      .WillOnce(ReadPut(gsl::make_span(
+      .WillOnce(ReadPut(std::span(
           msg_added_rm_protos_bytes_.data() + added_proto_len_.size(),
           msg_added_rm_protos_bytes_.size() - added_proto_len_.size())));
 
@@ -162,13 +172,23 @@ TEST_F(IdentifyDeltaTest, Receive) {
   EXPECT_CALL(host_, getPeerRepository()).WillOnce(ReturnRef(peer_repo_));
   EXPECT_CALL(peer_repo_, getProtocolRepository())
       .WillOnce(ReturnRef(proto_repo_));
-  EXPECT_CALL(proto_repo_,
-              addProtocols(kRemotePeerId,
-                           gsl::span<const peer::ProtocolName>(added_protos_)))
+
+  auto if_added = [&](std::span<const peer::ProtocolName> actual) {
+    auto expected = std::span<const peer::ProtocolName>(added_protos_);
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
+  };
+
+  EXPECT_CALL(proto_repo_, addProtocols(kRemotePeerId, Truly(if_added)))
       .WillOnce(Return(outcome::success()));
-  EXPECT_CALL(proto_repo_,
-              removeProtocols(kRemotePeerId,
-                              gsl::span<const peer::ProtocolName>(removed_protos_)))
+
+  auto if_removed = [&](std::span<const peer::ProtocolName> actual) {
+    auto expected = std::span<const peer::ProtocolName>(removed_protos_);
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
+  };
+
+  EXPECT_CALL(proto_repo_, removeProtocols(kRemotePeerId, Truly(if_removed)))
       .WillOnce(Return(outcome::success()));
 
   id_delta_->handle(StreamAndProtocol{stream_, {}});

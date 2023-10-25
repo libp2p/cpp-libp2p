@@ -6,11 +6,14 @@
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 
 #include <openssl/evp.h>
+
+#include <libp2p/common/final_action.hpp>
 #include <libp2p/crypto/common_functions.hpp>
 #include <libp2p/crypto/error.hpp>
-#include <libp2p/crypto/sha/sha512.hpp>
 
 namespace libp2p::crypto::ed25519 {
+
+  using libp2p::common::FinalAction;
 
   outcome::result<Keypair> Ed25519ProviderImpl::generate() const {
     constexpr auto FAILED{KeyGeneratorError::KEY_GENERATION_FAILED};
@@ -19,7 +22,7 @@ namespace libp2p::crypto::ed25519 {
     if (nullptr == pctx) {
       return FAILED;
     }
-    auto free_pctx = gsl::finally([pctx] { EVP_PKEY_CTX_free(pctx); });
+    FinalAction free_pctx([pctx] { EVP_PKEY_CTX_free(pctx); });
 
     if (1 != EVP_PKEY_keygen_init(pctx)) {
       return FAILED;
@@ -29,7 +32,7 @@ namespace libp2p::crypto::ed25519 {
     if (1 != EVP_PKEY_keygen(pctx, &pkey)) {
       return FAILED;
     }
-    auto free_pkey = gsl::finally([pkey] { EVP_PKEY_free(pkey); });
+    FinalAction free_pkey([pkey] { EVP_PKEY_free(pkey); });
 
     Keypair keypair{};
     size_t priv_len{keypair.private_key.size()};
@@ -65,7 +68,7 @@ namespace libp2p::crypto::ed25519 {
   }
 
   outcome::result<Signature> Ed25519ProviderImpl::sign(
-      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
+      BytesIn message, const PrivateKey &private_key) const {
     OUTCOME_TRY(evp_pkey,
                 NewEvpPkeyFromBytes(EVP_PKEY_ED25519, private_key,
                                     EVP_PKEY_new_raw_private_key));
@@ -93,7 +96,7 @@ namespace libp2p::crypto::ed25519 {
   }
 
   outcome::result<bool> Ed25519ProviderImpl::verify(
-      gsl::span<const uint8_t> message, const Signature &signature,
+      BytesIn message, const Signature &signature,
       const PublicKey &public_key) const {
     OUTCOME_TRY(evp_pkey,
                 NewEvpPkeyFromBytes(EVP_PKEY_ED25519, public_key,

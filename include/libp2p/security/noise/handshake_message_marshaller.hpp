@@ -8,7 +8,7 @@
 
 #include <tuple>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/noise/handshake_message.hpp>
@@ -47,7 +47,7 @@ namespace libp2p::security::noise {
      * @param msg handy handshake message to be serialized
      * @return a byte array with protobuf representation of the message
      */
-    virtual outcome::result<common::ByteArray> marshal(
+    virtual outcome::result<Bytes> marshal(
         const HandshakeMessage &msg) const = 0;
 
     /**
@@ -55,7 +55,7 @@ namespace libp2p::security::noise {
      * @return deserialized handy handshake message
      */
     virtual outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>>
-    unmarshal(gsl::span<const uint8_t> msg_bytes) const = 0;
+    unmarshal(BytesIn msg_bytes) const = 0;
   };
 }  // namespace libp2p::security::noise
 

@@ -17,8 +17,8 @@ namespace libp2p::basic {
    public:
     ~ReaderMock() override = default;
 
-    MOCK_METHOD2(read, void(gsl::span<uint8_t>, Reader::ReadCallbackFunc));
-    MOCK_METHOD2(readSome, void(gsl::span<uint8_t>, Reader::ReadCallbackFunc));
+    MOCK_METHOD2(read, void(BytesOut, Reader::ReadCallbackFunc));
+    MOCK_METHOD2(readSome, void(BytesOut, Reader::ReadCallbackFunc));
   };
 }  // namespace libp2p::basic
 

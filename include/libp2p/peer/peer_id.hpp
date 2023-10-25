@@ -41,7 +41,7 @@ namespace libp2p::peer {
      * @param v buffer
      * @return instance of PeerId
      */
-    static FactoryResult fromBytes(gsl::span<const uint8_t> v);
+    static FactoryResult fromBytes(BytesIn v);
 
     /**
      * Create a PeerId from base58-encoded string (not Multibase58!) with its

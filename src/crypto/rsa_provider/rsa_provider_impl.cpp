@@ -10,9 +10,11 @@
 #include <openssl/err.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
+#include <libp2p/common/final_action.hpp>
 #include <libp2p/crypto/sha/sha256.hpp>
 
 using Hash256 = libp2p::common::Hash256;
+using libp2p::common::FinalAction;
 
 namespace {
   /// encode cryptographic key in `ASN.1 DER` format
@@ -20,7 +22,7 @@ namespace {
   libp2p::outcome::result<std::vector<uint8_t>> encodeKeyDer(
       KeyStructure *ks, Function *function) {
     unsigned char *buffer = nullptr;
-    auto cleanup = gsl::finally([pptr = &buffer]() {
+    FinalAction cleanup([pptr = &buffer] {
       if (*pptr != nullptr) {
         OPENSSL_free(*pptr);
       }
@@ -31,7 +33,7 @@ namespace {
       return libp2p::crypto::KeyGeneratorError::KEY_GENERATION_FAILED;
     }
 
-    auto span = gsl::make_span(buffer, length);
+    auto span = std::span(buffer, length);
     return std::vector<uint8_t>{span.begin(), span.end()};
   }
 }  // namespace
@@ -70,7 +72,7 @@ namespace libp2p::crypto::rsa {
     RSA *rsa{nullptr};
     BIGNUM *bne{nullptr};
     // clean up automatically
-    auto cleanup = gsl::finally([&]() {
+    FinalAction cleanup([&] {
       if (nullptr != rsa) {
         RSA_free(rsa);
       }
@@ -109,7 +111,7 @@ namespace libp2p::crypto::rsa {
     if (nullptr == rsa) {
       return KeyGeneratorError::KEY_DERIVATION_FAILED;
     }
-    auto cleanup_rsa = gsl::finally([rsa]() { RSA_free(rsa); });
+    FinalAction cleanup_rsa([rsa]() { RSA_free(rsa); });
 
     OUTCOME_TRY(public_bytes, encodeKeyDer(rsa, i2d_RSA_PUBKEY));
 
@@ -130,7 +132,7 @@ namespace libp2p::crypto::rsa {
   }
 
   outcome::result<Signature> RsaProviderImpl::sign(
-      gsl::span<const uint8_t> message, const PrivateKey &private_key) const {
+      BytesIn message, const PrivateKey &private_key) const {
     OUTCOME_TRY(rsa, rsaFromPrivateKey(private_key));
     OUTCOME_TRY(digest, sha256(message));
     Signature signature(RSA_size(rsa.get()));
@@ -145,7 +147,7 @@ namespace libp2p::crypto::rsa {
   }
 
   outcome::result<bool> RsaProviderImpl::verify(
-      gsl::span<const uint8_t> message, const Signature &signature,
+      BytesIn message, const Signature &signature,
       const PublicKey &public_key) const {
     OUTCOME_TRY(x509_key, RsaProviderImpl::getPublicKeyFromBytes(public_key));
     EVP_PKEY *key = X509_PUBKEY_get0(x509_key.get());

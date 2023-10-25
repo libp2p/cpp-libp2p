@@ -11,7 +11,8 @@
 #include <vector>
 
 #include <boost/optional.hpp>
-#include <gsl/span>
+
+#include <libp2p/common/types.hpp>
 
 namespace libp2p::multi {
 
@@ -32,7 +33,7 @@ namespace libp2p::multi {
      * meant to be an already encoded unsigned varint
      * @param varint_bytes an array of bytes representing an unsigned varint
      */
-    explicit UVarint(gsl::span<const uint8_t> varint_bytes);
+    explicit UVarint(BytesIn varint_bytes);
 
     /**
      * Constructs a varint from an array of raw bytes, which beginning may or
@@ -41,7 +42,7 @@ namespace libp2p::multi {
      * varint
      */
     static boost::optional<UVarint> create(
-        gsl::span<const uint8_t> varint_bytes);
+        BytesIn varint_bytes);
 
     /**
      * Converts a varint back to a usual unsigned integer.
@@ -52,10 +53,10 @@ namespace libp2p::multi {
     /**
      * @return an array view to raw bytes of the stored varint
      */
-    gsl::span<const uint8_t> toBytes() const &;
+    BytesIn toBytes() const &;
 
     /// Disable to return span to inner data of temporary object
-    gsl::span<const uint8_t> toBytes() const && = delete;
+    BytesIn toBytes() const && = delete;
 
     const std::vector<uint8_t> &toVector() const;
 
@@ -82,11 +83,11 @@ namespace libp2p::multi {
      * @return the size of the varint stored in the array, if its content is a
      * valid varint. Otherwise, the result is undefined
      */
-    static size_t calculateSize(gsl::span<const uint8_t> varint_bytes);
+    static size_t calculateSize(BytesIn varint_bytes);
 
    private:
     /// private ctor for unsafe creation
-    UVarint(gsl::span<const uint8_t> varint_bytes, size_t varint_size);
+    UVarint(BytesIn varint_bytes, size_t varint_size);
 
     std::vector<uint8_t> bytes_{};
   };

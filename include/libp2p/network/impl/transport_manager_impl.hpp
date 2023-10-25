@@ -21,7 +21,7 @@ namespace libp2p::network {
 
     ~TransportManagerImpl() override = default;
 
-    gsl::span<const TransportSPtr> getAll() const override;
+    std::span<const TransportSPtr> getAll() const override;
 
     void clear() override;
 

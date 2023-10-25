@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/crypto/random_generator/boost_generator.hpp>
+#include <gtest/gtest.h>
 
 #include <cmath>
 
-#include <gtest/gtest.h>
-#include <gsl/span>
+#include <libp2p/common/types.hpp>
+#include <libp2p/crypto/random_generator/boost_generator.hpp>
 
+using libp2p::BytesOut;
 using libp2p::crypto::random::BoostRandomGenerator;
 using libp2p::crypto::random::RandomGenerator;
 
@@ -39,7 +40,7 @@ namespace {
    * @param sequence  source byte sequence
    * @return entropy value
    */
-  double entropy(gsl::span<uint8_t> sequence) {
+  double entropy(BytesOut sequence) {
     std::vector<uint8_t> freqs(256, 0);
 
     // calculate frequencies

@@ -27,7 +27,8 @@
  * THE SOFTWARE.
  **/
 
-#include <gsl/span>
+#include <span>
+
 #include <libp2p/multi/multibase_codec/codecs/base32.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base_error.hpp>
 
@@ -66,10 +67,9 @@ namespace libp2p::multi::detail {
     return shift_right(byte, -offset);
   }
 
-  int encode_sequence(gsl::span<const uint8_t> plain, gsl::span<char> coded,
-                      Base32Mode mode) {
+  int encode_sequence(BytesIn plain, std::span<char> coded, Base32Mode mode) {
     for (int block = 0; block < 8; block++) {
-      int byte = get_byte(block);
+      size_t byte = get_byte(block);
       int bit = get_bit(block);
 
       if (byte >= plain.size()) {
@@ -86,7 +86,7 @@ namespace libp2p::multi::detail {
     return 8;
   }
 
-  std::string encodeBase32(const common::ByteArray &bytes, Base32Mode mode) {
+  std::string encodeBase32(const Bytes &bytes, Base32Mode mode) {
     std::string result;
     if (bytes.size() % 5 == 0) {
       result = std::string(bytes.size() / 5 * 8, ' ');
@@ -96,8 +96,8 @@ namespace libp2p::multi::detail {
 
     for (size_t i = 0, j = 0; i < bytes.size(); i += 5, j += 8) {
       int n = encode_sequence(
-          gsl::make_span(&bytes[i], std::min<size_t>(bytes.size() - i, 5)),
-          gsl::make_span(&result[j], 8), mode);
+          std::span(&bytes[i], std::min<size_t>(bytes.size() - i, 5)),
+          std::span(&result[j], 8), mode);
       if (n < 8) {
         result.erase(result.end() - (8 - n), result.end());
       }
@@ -106,11 +106,11 @@ namespace libp2p::multi::detail {
     return result;
   }
 
-  std::string encodeBase32Upper(const common::ByteArray &bytes) {
+  std::string encodeBase32Upper(const Bytes &bytes) {
     return encodeBase32(bytes, Base32Mode::UPPER);
   }
 
-  std::string encodeBase32Lower(const common::ByteArray &bytes) {
+  std::string encodeBase32Lower(const Bytes &bytes) {
     return encodeBase32(bytes, Base32Mode::LOWER);
   }
 
@@ -130,11 +130,10 @@ namespace libp2p::multi::detail {
     return decoded_ch;
   }
 
-  outcome::result<int> decode_sequence(gsl::span<const char> coded,
-                                       gsl::span<uint8_t> plain,
-                                       Base32Mode mode) {
+  outcome::result<int> decode_sequence(std::span<const char> coded,
+                                       BytesOut plain, Base32Mode mode) {
     plain[0] = 0;
-    for (int block = 0; block < 8; block++) {
+    for (size_t block = 0; block < 8; block++) {
       int bit = get_bit(block);
       int byte = get_byte(block);
 
@@ -154,21 +153,21 @@ namespace libp2p::multi::detail {
     return 5;
   }
 
-  outcome::result<common::ByteArray> decodeBase32(std::string_view string,
-                                                  Base32Mode mode) {
-    common::ByteArray result;
+  outcome::result<Bytes> decodeBase32(std::string_view string,
+                                      Base32Mode mode) {
+    Bytes result;
     if (string.size() % 8 == 0) {
-      result = common::ByteArray(string.size() / 8 * 5);
+      result = Bytes(string.size() / 8 * 5);
     } else {
-      result = common::ByteArray((string.size() / 8 + 1) * 5);
+      result = Bytes((string.size() / 8 + 1) * 5);
     }
 
     for (size_t i = 0, j = 0; i < string.size(); i += 8, j += 5) {
-      OUTCOME_TRY(n,
-                  decode_sequence(
-                      gsl::make_span(&string[i],
-                                     std::min<size_t>(string.size() - i, 8)),
-                      gsl::make_span(&result[j], 5), mode));
+      OUTCOME_TRY(
+          n,
+          decode_sequence(
+              std::span(&string[i], std::min<size_t>(string.size() - i, 8)),
+              std::span(&result[j], 5), mode));
       if (n < 5) {
         result.erase(result.end() - (5 - n), result.end());
       }
@@ -176,13 +175,11 @@ namespace libp2p::multi::detail {
     return result;
   }
 
-  outcome::result<common::ByteArray> decodeBase32Upper(
-      std::string_view string) {
+  outcome::result<Bytes> decodeBase32Upper(std::string_view string) {
     return decodeBase32(string, Base32Mode::UPPER);
   }
 
-  outcome::result<common::ByteArray> decodeBase32Lower(
-      std::string_view string) {
+  outcome::result<Bytes> decodeBase32Lower(std::string_view string) {
     return decodeBase32(string, Base32Mode::LOWER);
   }
 

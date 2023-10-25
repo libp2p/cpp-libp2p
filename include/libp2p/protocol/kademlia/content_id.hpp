@@ -11,7 +11,7 @@
 
 namespace libp2p::protocol::kademlia {
   /// DHT key. Arbitrary bytes.
-  using ContentId = common::ByteArray;
+  using ContentId = Bytes;
 
   ContentId makeKeySha256(std::string_view str);
 }  // namespace libp2p::protocol::kademlia

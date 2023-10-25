@@ -166,14 +166,14 @@ namespace libp2p::multi::detail {
     return vch;
   }
 
-  std::string encodeBase58(const common::ByteArray &bytes) {
+  std::string encodeBase58(const Bytes &bytes) {
     return encodeImpl(bytes.begin().base(), bytes.end().base());
   }
 
-  outcome::result<common::ByteArray> decodeBase58(std::string_view string) {
+  outcome::result<Bytes> decodeBase58(std::string_view string) {
     auto decoded_bytes = decodeImpl(string.data());
     if (decoded_bytes) {
-      return common::ByteArray{*decoded_bytes};
+      return Bytes{*decoded_bytes};
     }
     return BaseError::INVALID_BASE58_INPUT;
   }

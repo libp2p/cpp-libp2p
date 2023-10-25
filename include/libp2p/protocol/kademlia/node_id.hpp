@@ -9,7 +9,7 @@
 #include <bitset>
 #include <climits>
 #include <cstring>
-#include <gsl/span>
+#include <span>
 #include <memory>
 #include <vector>
 

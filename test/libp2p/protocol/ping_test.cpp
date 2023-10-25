@@ -3,15 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/protocol/ping.hpp"
-
 #include <gtest/gtest.h>
+
+#include <libp2p/protocol/ping.hpp>
+
 #include <boost/asio/io_service.hpp>
 #include <boost/optional.hpp>
+
 #include <libp2p/common/literals.hpp>
-#include "libp2p/event/bus.hpp"
-#include "libp2p/peer/peer_id.hpp"
-#include "libp2p/protocol/ping/common.hpp"
+#include <libp2p/common/types.hpp>
+#include <libp2p/event/bus.hpp>
+#include <libp2p/peer/peer_id.hpp>
+#include <libp2p/protocol/ping/common.hpp>
+
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/crypto/random_generator_mock.hpp"
@@ -19,17 +23,18 @@
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 
 using namespace libp2p;
+using namespace common;
 using namespace protocol;
 using namespace crypto::random;
 using namespace connection;
 using namespace protocol::detail;
 using namespace peer;
-using namespace common;
 
 using testing::_;
 using testing::InvokeArgument;
 using testing::Return;
 using testing::ReturnRef;
+using testing::Truly;
 
 using std::chrono_literals::operator""ms;
 
@@ -74,8 +79,13 @@ TEST_F(PingTest, PingServer) {
       .WillOnce(ReadPut(buffer_))
       .WillOnce(  // no second read
           InvokeArgument<2>(outcome::failure(boost::system::error_code{})));
-  EXPECT_CALL(*stream_,
-              write(gsl::span<const uint8_t>(buffer_), kPingMsgSize, _))
+
+  auto if_eq_buf = [&](BytesIn actual) {
+    auto expected = BytesIn(buffer_);
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
+  };
+  EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _))
       .WillOnce(InvokeArgument<2>(buffer_.size()));
 
   EXPECT_CALL(*stream_, isClosedForWrite()).WillOnce(Return(false));
@@ -101,8 +111,12 @@ TEST_F(PingTest, PingClient) {
   EXPECT_CALL(*rand_gen_, randomBytes(kPingMsgSize))
       .Times(2)
       .WillRepeatedly(Return(buffer_));
-  EXPECT_CALL(*stream_,
-              write(gsl::span<const uint8_t>(buffer_), kPingMsgSize, _))
+  auto if_eq_buf = [&](BytesIn actual) {
+    auto expected = BytesIn(buffer_);
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
+  };
+  EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _))
       .WillOnce(InvokeArgument<2>(buffer_.size()))
       .WillOnce(  // no second write
           InvokeArgument<2>(outcome::failure(boost::system::error_code{
@@ -136,8 +150,12 @@ TEST_F(PingTest, PingClientTimeoutExpired) {
       .WillOnce(InvokeArgument<2>(StreamAndProtocol{stream_, kPingProto}));
 
   EXPECT_CALL(*rand_gen_, randomBytes(kPingMsgSize)).WillOnce(Return(buffer_));
-  EXPECT_CALL(*stream_,
-              write(gsl::span<const uint8_t>(buffer_), kPingMsgSize, _));
+  auto if_eq_buf = [&](BytesIn actual) {
+    auto expected = BytesIn(buffer_);
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
+  };
+  EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _));
 
   EXPECT_CALL(*stream_, isClosedForWrite()).WillOnce(Return(false));
 

@@ -28,7 +28,7 @@
 namespace libp2p::security::noise {
   InsecureReadWriter::InsecureReadWriter(
       std::shared_ptr<connection::LayerConnection> connection,
-      std::shared_ptr<common::ByteArray> buffer)
+      std::shared_ptr<Bytes> buffer)
       : connection_{std::move(connection)}, buffer_{std::move(buffer)} {}
 
   void InsecureReadWriter::read(basic::MessageReadWriter::ReadCallbackFunc cb) {
@@ -55,7 +55,7 @@ namespace libp2p::security::noise {
     connection_->read(*buffer_, kLengthPrefixSize, std::move(read_cb));
   }
 
-  void InsecureReadWriter::write(gsl::span<const uint8_t> buffer,
+  void InsecureReadWriter::write(BytesIn buffer,
                                  basic::Writer::WriteCallbackFunc cb) {
     if (buffer.size() > static_cast<int64_t>(kMaxMsgLen)) {
       return cb(std::errc::message_size);

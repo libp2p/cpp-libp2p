@@ -22,9 +22,9 @@ namespace libp2p::multi::converters {
     return res;
   }
 
-  outcome::result<common::ByteArray> DnsConverter::addressToBytes(
+  outcome::result<Bytes> DnsConverter::addressToBytes(
       std::string_view addr) {
-    outcome::result<common::ByteArray> res = outcome::success();  // NRVO
+    outcome::result<Bytes> res = outcome::success();  // NRVO
     auto &bytes = res.value();
     bytes = UVarint(addr.size()).toVector();
     bytes.reserve(bytes.size() + addr.size());

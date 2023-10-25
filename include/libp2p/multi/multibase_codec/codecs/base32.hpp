@@ -21,27 +21,27 @@ namespace libp2p::multi::detail {
    * @param bytes to be encoded
    * @return encoded string
    */
-  std::string encodeBase32Upper(const common::ByteArray &bytes);
+  std::string encodeBase32Upper(const Bytes &bytes);
   /**
    * Encode bytes to base32 lowercase string
    * @param bytes to be encoded
    * @return encoded string
    */
-  std::string encodeBase32Lower(const common::ByteArray &bytes);
+  std::string encodeBase32Lower(const Bytes &bytes);
 
   /**
    * Decode base32 uppercase to bytes
    * @param string to be decoded
    * @return decoded bytes in case of success
    */
-  outcome::result<common::ByteArray> decodeBase32Upper(std::string_view string);
+  outcome::result<Bytes> decodeBase32Upper(std::string_view string);
 
   /**
    * Decode base32 lowercase string to bytes
    * @param string to be decoded
    * @return decoded bytes in case of success
    */
-  outcome::result<common::ByteArray> decodeBase32Lower(std::string_view string);
+  outcome::result<Bytes> decodeBase32Lower(std::string_view string);
 
 }  // namespace libp2p::multi::detail
 

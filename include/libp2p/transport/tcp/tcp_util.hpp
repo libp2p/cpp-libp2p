@@ -11,7 +11,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
-#include <gsl/span>
+#include <span>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -51,19 +51,19 @@ namespace libp2p::transport::detail {
     }
   }
 
-  inline auto makeBuffer(gsl::span<uint8_t> s) {
+  inline auto makeBuffer(BytesOut s) {
     return boost::asio::buffer(s.data(), s.size());
   }
 
-  inline auto makeBuffer(gsl::span<uint8_t> s, size_t size) {
+  inline auto makeBuffer(BytesOut s, size_t size) {
     return boost::asio::buffer(s.data(), size);
   }
 
-  inline auto makeBuffer(gsl::span<const uint8_t> s) {
+  inline auto makeBuffer(BytesIn s) {
     return boost::asio::buffer(s.data(), s.size());
   }
 
-  inline auto makeBuffer(gsl::span<const uint8_t> s, size_t size) {
+  inline auto makeBuffer(BytesIn s, size_t size) {
     return boost::asio::buffer(s.data(), size);
   }
 

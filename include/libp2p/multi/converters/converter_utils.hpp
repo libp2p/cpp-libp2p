@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
 #include <libp2p/outcome/outcome.hpp>
@@ -21,7 +21,7 @@ namespace libp2p::multi::converters {
    * to a byte sequence that represents the address, if both
    * address and protocol were valid
    */
-  outcome::result<common::ByteArray> addressToBytes(const Protocol &protocol,
+  outcome::result<Bytes> addressToBytes(const Protocol &protocol,
                                                     std::string_view addr);
 
   /**
@@ -38,14 +38,14 @@ namespace libp2p::multi::converters {
    * the multiaddr, if provided multiaddr was valid
    */
   auto multiaddrToBytes(std::string_view multiaddr_str)
-      -> outcome::result<common::ByteArray>;
+      -> outcome::result<Bytes>;
 
   /**
    * Converts the given byte sequence representing
    * a multiaddr to a string containing the multiaddr in a human-readable
    * format, if the provided byte sequence was a valid multiaddr
    */
-  auto bytesToMultiaddrString(const common::ByteArray &bytes)
+  auto bytesToMultiaddrString(const Bytes &bytes)
       -> outcome::result<std::string>;
 
   /**
@@ -53,7 +53,7 @@ namespace libp2p::multi::converters {
    * a multiaddr to a string containing the multiaddr in a human-readable
    * format, if the provided byte sequence was a valid multiaddr
    */
-  auto bytesToMultiaddrString(gsl::span<const uint8_t> bytes)
+  auto bytesToMultiaddrString(BytesIn bytes)
       -> outcome::result<std::string>;
 
 }  // namespace libp2p::multi::converters

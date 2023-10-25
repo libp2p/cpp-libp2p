@@ -39,11 +39,11 @@ namespace libp2p::peer {
                    std::function<BootstrapCallback> cb) override;
 
     outcome::result<bool> addAddresses(const PeerId &p,
-                                       gsl::span<const multi::Multiaddress> ma,
+                                       std::span<const multi::Multiaddress> ma,
                                        Milliseconds ttl) override;
 
     outcome::result<bool> upsertAddresses(
-        const PeerId &p, gsl::span<const multi::Multiaddress> ma,
+        const PeerId &p, std::span<const multi::Multiaddress> ma,
         Milliseconds ttl) override;
 
     outcome::result<void> updateAddresses(const PeerId &p,

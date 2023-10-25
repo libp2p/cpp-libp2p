@@ -11,7 +11,7 @@
 
 namespace libp2p::multi::converters {
 
-  outcome::result<common::ByteArray> IPv6Converter::addressToBytes(
+  outcome::result<Bytes> IPv6Converter::addressToBytes(
       std::string_view addr) {
     boost::system::error_code ec;
     auto address = boost::asio::ip::make_address_v6(addr, ec);
@@ -19,7 +19,7 @@ namespace libp2p::multi::converters {
       return ConversionError::INVALID_ADDRESS;
     }
     auto ip_bytes = address.to_bytes();
-    return common::ByteArray(ip_bytes.begin(), ip_bytes.end());
+    return Bytes(ip_bytes.begin(), ip_bytes.end());
   }
 
 }  // namespace libp2p::multi::converters

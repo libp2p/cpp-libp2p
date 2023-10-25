@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <ios>
-
 #include <libp2p/common/hexutil.hpp>
 
+#include <ios>
+
 #include <boost/algorithm/hex.hpp>
-#include <gsl/span>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::common, UnhexError, e) {
   using libp2p::common::UnhexError;
@@ -38,18 +37,6 @@ namespace libp2p::common {
       str[0] = '0';
     }
     return str;
-  }
-
-  std::string hex_upper(const gsl::span<const uint8_t> bytes) noexcept {
-    std::string res(bytes.size() * 2, '\x00');
-    boost::algorithm::hex(bytes.begin(), bytes.end(), res.begin());
-    return res;
-  }
-
-  std::string hex_lower(const gsl::span<const uint8_t> bytes) noexcept {
-    std::string res(bytes.size() * 2, '\x00');
-    boost::algorithm::hex_lower(bytes.begin(), bytes.end(), res.begin());
-    return res;
   }
 
   outcome::result<std::vector<uint8_t>> unhex(std::string_view hex) {

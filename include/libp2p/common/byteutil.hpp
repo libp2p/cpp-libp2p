@@ -10,43 +10,44 @@
 #include <cstring>
 #include <vector>
 
+#include <libp2p/common/types.hpp>
+
 namespace libp2p::common {
-  using ByteArray = std::vector<uint8_t>;
 
   /**
    * Put an 8-bit number into the byte array
    */
-  ByteArray &putUint8(ByteArray &bytes, uint8_t n);
+  Bytes &putUint8(Bytes &bytes, uint8_t n);
 
   /**
    * Put a 16-bit number into the byte array in Big Endian encoding
    */
-  ByteArray &putUint16BE(ByteArray &bytes, uint16_t n);
+  Bytes &putUint16BE(Bytes &bytes, uint16_t n);
 
   /**
    * Put a 16-bit number into the byte array in Little Endian encoding
    */
-  ByteArray &putUint16LE(ByteArray &bytes, uint16_t n);
+  Bytes &putUint16LE(Bytes &bytes, uint16_t n);
 
   /**
    * Put an 32-bit number into the byte array in Big Endian encoding
    */
-  ByteArray &putUint32BE(ByteArray &bytes, uint32_t n);
+  Bytes &putUint32BE(Bytes &bytes, uint32_t n);
 
   /**
    * Put a 32-bit number into the byte array in Little Endian encoding
    */
-  ByteArray &putUint32LE(ByteArray &bytes, uint32_t n);
+  Bytes &putUint32LE(Bytes &bytes, uint32_t n);
 
   /**
    * Put an 64-bit number into the byte array in Big Endian encoding
    */
-  ByteArray &putUint64BE(ByteArray &bytes, uint64_t n);
+  Bytes &putUint64BE(Bytes &bytes, uint64_t n);
 
   /**
    * Put a 64-bit number into the byte array in Little Endian encoding
    */
-  ByteArray &putUint64LE(ByteArray &bytes, uint64_t n);
+  Bytes &putUint64LE(Bytes &bytes, uint64_t n);
 
   /**
    * Convert value, to which the pointer (\param v) references, to the value of
@@ -67,8 +68,8 @@ namespace libp2p::common {
 
 namespace std {
   template <>
-  struct hash<libp2p::common::ByteArray> {
-    size_t operator()(const libp2p::common::ByteArray &x) const;
+  struct hash<libp2p::Bytes> {
+    size_t operator()(const libp2p::Bytes &x) const;
   };
 }  // namespace std
 

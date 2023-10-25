@@ -12,6 +12,7 @@
 #include <libp2p/peer/peer_id.hpp>
 #include <testutil/outcome.hpp>
 
+using libp2p::Bytes;
 using namespace libp2p::common;
 using namespace libp2p::multi;
 using namespace libp2p::peer;
@@ -22,7 +23,7 @@ class PeerAddressTest : public ::testing::Test {
   std::shared_ptr<MultibaseCodec> codec_ =
       std::make_shared<MultibaseCodecImpl>();
 
-  ByteArray hash =
+  Bytes hash =
       unhex("af85e416fa66390b3c834cb6b7aeafb8b4b484e7245fd9a9d81e7f3f5f95714f")
           .value();
 
@@ -89,7 +90,7 @@ TEST_F(PeerAddressTest, FromStringIdNotB58) {
  */
 TEST_F(PeerAddressTest, FromStringIdNotSha256) {
   auto some_str_b58 =
-      codec_->encode(ByteArray{0x11, 0x22}, MultibaseCodec::Encoding::BASE58);
+      codec_->encode(Bytes{0x11, 0x22}, MultibaseCodec::Encoding::BASE58);
   EXPECT_FALSE(
       PeerAddress::create(std::string{kDefaultAddress.getStringAddress()}
                           + "/ipfs/" + some_str_b58));

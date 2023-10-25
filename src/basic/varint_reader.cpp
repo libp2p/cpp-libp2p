@@ -41,7 +41,7 @@ namespace libp2p::basic {
     }
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    conn->read(gsl::make_span(varint_buf->data() + current_length, 1), 1,
+    conn->read(std::span(varint_buf->data() + current_length, 1), 1,
                [c = std::move(conn), cb = std::move(cb), current_length,
                 varint_buf](auto &&res) mutable {
                  if (not res.has_value()) {
@@ -49,7 +49,7 @@ namespace libp2p::basic {
                  }
 
                  auto varint_opt = multi::UVarint::create(
-                     gsl::make_span(varint_buf->data(), current_length + 1));
+                     std::span(varint_buf->data(), current_length + 1));
                  if (varint_opt) {
                    return cb(*varint_opt);
                  }

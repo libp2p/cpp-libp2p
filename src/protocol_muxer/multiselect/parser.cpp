@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <limits>
+
 #include <libp2p/protocol_muxer/multiselect/parser.hpp>
 
 namespace libp2p::protocol_muxer::multiselect::detail {
@@ -26,7 +28,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     expected_msg_size_ = 0;
   }
 
-  Parser::State Parser::consume(gsl::span<const uint8_t> &data) {
+  Parser::State Parser::consume(BytesIn &data) {
     static constexpr size_t kMaybeAverageMessageLength = 17;
 
     if (state_ == kReady) {
@@ -47,11 +49,6 @@ namespace libp2p::protocol_muxer::multiselect::detail {
           state_ = kOverflow;
           break;
         }
-        if (varint_reader_.value()
-            > std::numeric_limits<decltype(expected_msg_size_)>::max()) {
-          state_ = kError;
-          break;
-        }
         expected_msg_size_ = static_cast<IndexType>(varint_reader_.value());
         if (expected_msg_size_ == 0) {
           // zero varint received, not acceptable, but not fatal
@@ -68,7 +65,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     return state_;
   }
 
-  void Parser::consumeData(gsl::span<const uint8_t> &data) {
+  void Parser::consumeData(BytesIn &data) {
     assert(varint_reader_.state() == VarintPrefixReader::kReady);
     assert(expected_msg_size_ > 0);
 
@@ -78,11 +75,11 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     }
   }
 
-  void Parser::readFinished(gsl::span<const uint8_t> msg) {
+  void Parser::readFinished(BytesIn msg) {
     assert(expected_msg_size_ == msg.size());
     assert(expected_msg_size_ != 0);
 
-    auto span2sv = [](gsl::span<const uint8_t> span) -> std::string_view {
+    auto span2sv = [](BytesIn span) -> std::string_view {
       if (span.empty()) {
         return {};
       }
@@ -124,7 +121,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     assert(state_ != kUnderflow);
   }
 
-  void Parser::parseNestedMessages(gsl::span<const uint8_t> &data) {
+  void Parser::parseNestedMessages(BytesIn &data) {
     if (recursion_depth_ == kMaxRecursionDepth) {
       state_ = kOverflow;
       return;

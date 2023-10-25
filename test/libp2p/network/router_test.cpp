@@ -6,7 +6,7 @@
 #include "libp2p/network/impl/router_impl.hpp"
 
 #include <gtest/gtest.h>
-#include <gsl/span>
+#include <span>
 #include "mock/libp2p/connection/stream_mock.hpp"
 
 using namespace libp2p::network;
@@ -49,7 +49,7 @@ class RouterTest : public ::testing::Test, public RouterImpl {
    * called
    * @param protocols, for which the handlers are to be set
    */
-  void setHandlersWithFail(gsl::span<const ProtocolName> protocols) {
+  void setHandlersWithFail(std::span<const ProtocolName> protocols) {
     for (const auto &proto : protocols) {
       setHandlerWithFail(proto);
     }

@@ -22,10 +22,10 @@ namespace libp2p::peer {
     ~InmemProtocolRepository() override = default;
 
     outcome::result<void> addProtocols(const PeerId &p,
-                                       gsl::span<const ProtocolName> ms) override;
+                                       std::span<const ProtocolName> ms) override;
 
     outcome::result<void> removeProtocols(
-        const PeerId &p, gsl::span<const ProtocolName> ms) override;
+        const PeerId &p, std::span<const ProtocolName> ms) override;
 
     outcome::result<std::vector<ProtocolName>> getProtocols(
         const PeerId &p) const override;

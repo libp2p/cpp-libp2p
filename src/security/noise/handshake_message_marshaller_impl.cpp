@@ -41,7 +41,7 @@ namespace libp2p::security::noise {
   outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>>
   HandshakeMessageMarshallerImpl::protoToHandy(
       const protobuf::NoiseHandshakePayload &proto_msg) const {
-    common::ByteArray key_bytes{proto_msg.identity_key().begin(),
+    Bytes key_bytes{proto_msg.identity_key().begin(),
                                 proto_msg.identity_key().end()};
     crypto::ProtobufKey proto_key{std::move(key_bytes)};
     OUTCOME_TRY(pubkey, marshaller_->unmarshalPublicKey(proto_key));
@@ -55,10 +55,10 @@ namespace libp2p::security::noise {
         std::move(proto_key));
   }
 
-  outcome::result<common::ByteArray> HandshakeMessageMarshallerImpl::marshal(
+  outcome::result<Bytes> HandshakeMessageMarshallerImpl::marshal(
       const HandshakeMessage &msg) const {
     OUTCOME_TRY(proto_msg, handyToProto(msg));
-    common::ByteArray out_msg(proto_msg.ByteSizeLong());
+    Bytes out_msg(proto_msg.ByteSizeLong());
     if (not proto_msg.SerializeToArray(out_msg.data(),
                                        static_cast<int>(out_msg.size()))) {
       return Error::MESSAGE_SERIALIZING_ERROR;
@@ -67,8 +67,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>>
-  HandshakeMessageMarshallerImpl::unmarshal(
-      gsl::span<const uint8_t> msg_bytes) const {
+  HandshakeMessageMarshallerImpl::unmarshal(BytesIn msg_bytes) const {
     protobuf::NoiseHandshakePayload proto_msg;
     if (not proto_msg.ParseFromArray(msg_bytes.data(),
                                      static_cast<int>(msg_bytes.size()))) {

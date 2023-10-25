@@ -8,8 +8,7 @@
 
 #include <functional>
 
-#include <gsl/span>
-
+#include <libp2p/common/types.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::basic {
@@ -33,7 +32,7 @@ namespace libp2p::basic {
      * pointer, or having buffer as part of some class/struct, and using
      * enable_shared_from_this()
      */
-    virtual void write(gsl::span<const uint8_t> in, size_t bytes,
+    virtual void write(BytesIn in, size_t bytes,
                        WriteCallbackFunc cb) = 0;
 
     /**
@@ -49,7 +48,7 @@ namespace libp2p::basic {
      * pointer, or having buffer as part of some class/struct, and using
      * enable_shared_from_this()
      */
-    virtual void writeSome(gsl::span<const uint8_t> in, size_t bytes,
+    virtual void writeSome(BytesIn in, size_t bytes,
                            WriteCallbackFunc cb) = 0;
 
     /**

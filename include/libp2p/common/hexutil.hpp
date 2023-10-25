@@ -9,8 +9,9 @@
 #include <string_view>
 #include <vector>
 
-#include <gsl/span>
+#include <boost/algorithm/hex.hpp>
 
+#include <libp2p/common/types.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::common {
@@ -31,7 +32,11 @@ namespace libp2p::common {
    * @param len length of bytes
    * @return hexstring
    */
-  std::string hex_upper(gsl::span<const uint8_t> bytes) noexcept;
+  inline std::string hex_upper(BytesIn bytes) noexcept {
+    std::string res(bytes.size() * 2, '\x00');
+    boost::algorithm::hex(bytes.begin(), bytes.end(), res.begin());
+    return res;
+  }
 
   /**
    * @brief Converts bytes to hex representation
@@ -39,7 +44,11 @@ namespace libp2p::common {
    * @param len length of bytes
    * @return hexstring
    */
-  std::string hex_lower(gsl::span<const uint8_t> bytes) noexcept;
+  inline std::string hex_lower(BytesIn bytes) noexcept {
+    std::string res(bytes.size() * 2, '\x00');
+    boost::algorithm::hex_lower(bytes.begin(), bytes.end(), res.begin());
+    return res;
+  }
 
   /**
    * @brief Converts hex representation to bytes
@@ -60,9 +69,9 @@ namespace libp2p::common {
    * @param str String
    * @return Span
    */
-  inline gsl::span<const uint8_t> sv2span(const std::string_view &str) {
-    return gsl::span<const uint8_t>((const uint8_t *)str.data(),  // NOLINT
-                                    (ssize_t)str.size());         // NOLINT
+  inline BytesIn sv2span(const std::string_view &str) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<const uint8_t *>(str.data()), str.size()};
   }
 
   /**
@@ -70,7 +79,7 @@ namespace libp2p::common {
    * @param s Span
    * @return s
    */
-  inline gsl::span<const uint8_t> sv2span(const gsl::span<const uint8_t> &s) {
+  inline BytesIn sv2span(BytesIn s) {
     return s;
   }
 

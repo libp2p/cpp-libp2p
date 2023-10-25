@@ -71,8 +71,7 @@ namespace libp2p::security::secio {
      * @return byte sequence or an error if happened
      */
     outcome::result<std::vector<uint8_t>> getCorpus(
-        bool for_local_peer,
-        gsl::span<const uint8_t> ephemeral_public_key) const;
+        bool for_local_peer, BytesIn ephemeral_public_key) const;
 
     /**
      * Computes which cipher, hash, and ec-curve to use considering the

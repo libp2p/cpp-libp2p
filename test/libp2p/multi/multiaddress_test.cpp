@@ -17,19 +17,19 @@ using libp2p::multi::Multiaddress;
 using libp2p::multi::Protocol;
 using libp2p::multi::ProtocolList;
 using std::string_literals::operator""s;
-using libp2p::common::ByteArray;
+using libp2p::Bytes;
 
 using namespace libp2p::common;
 
 class MultiaddressTest : public ::testing::Test {
  public:
   const std::string_view valid_ip_udp = "/ip4/192.168.0.1/udp/228";
-  const ByteArray valid_ip_udp_bytes = "04C0A80001910200E4"_unhex;
-  const ByteArray valid_id_udp_buffer{valid_ip_udp_bytes};
+  const Bytes valid_ip_udp_bytes = "04C0A80001910200E4"_unhex;
+  const Bytes valid_id_udp_buffer{valid_ip_udp_bytes};
 
   const std::string_view invalid_addr = "/ip4/192.168.0.1/2";
-  const ByteArray invalid_addr_bytes = "04C0A8000102"_unhex;
-  const ByteArray invalid_addr_buffer{invalid_addr_bytes};
+  const Bytes invalid_addr_bytes = "04C0A8000102"_unhex;
+  const Bytes invalid_addr_buffer{invalid_addr_bytes};
 };
 
 /**

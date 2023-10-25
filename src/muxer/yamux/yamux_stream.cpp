@@ -39,12 +39,12 @@ namespace libp2p::connection {
     assert(write_queue_limit >= maximum_window_size_);
   }
 
-  void YamuxStream::read(gsl::span<uint8_t> out, size_t bytes,
+  void YamuxStream::read(BytesOut out, size_t bytes,
                          ReadCallbackFunc cb) {
     doRead(out, bytes, std::move(cb), false);
   }
 
-  void YamuxStream::readSome(gsl::span<uint8_t> out, size_t bytes,
+  void YamuxStream::readSome(BytesOut out, size_t bytes,
                              ReadCallbackFunc cb) {
     doRead(out, bytes, std::move(cb), true);
   }
@@ -63,12 +63,12 @@ namespace libp2p::connection {
     });
   }
 
-  void YamuxStream::write(gsl::span<const uint8_t> in, size_t bytes,
+  void YamuxStream::write(BytesIn in, size_t bytes,
                           WriteCallbackFunc cb) {
     doWrite(in, bytes, std::move(cb), false);
   }
 
-  void YamuxStream::writeSome(gsl::span<const uint8_t> in, size_t bytes,
+  void YamuxStream::writeSome(BytesIn in, size_t bytes,
                               WriteCallbackFunc cb) {
     doWrite(in, bytes, std::move(cb), true);
   }
@@ -208,7 +208,7 @@ namespace libp2p::connection {
   }
 
   YamuxStream::DataFromConnectionResult YamuxStream::onDataReceived(
-      gsl::span<uint8_t> bytes) {
+      BytesOut bytes) {
     auto sz = static_cast<size_t>(bytes.size());
 
     if (sz == 0) {
@@ -412,7 +412,7 @@ namespace libp2p::connection {
     }
   }
 
-  void YamuxStream::doRead(gsl::span<uint8_t> out, size_t bytes,
+  void YamuxStream::doRead(BytesOut out, size_t bytes,
                            ReadCallbackFunc cb, bool some) {
     assert(cb);
 
@@ -489,7 +489,7 @@ namespace libp2p::connection {
   void YamuxStream::doWrite() {
     size_t initial_window_size = window_size_;
 
-    gsl::span<const uint8_t> data;
+    BytesIn data;
     bool some = false;
     while (!close_reason_) {
       window_size_ = write_queue_.dequeue(window_size_, data, some);
@@ -522,7 +522,7 @@ namespace libp2p::connection {
     }
   }
 
-  void YamuxStream::doWrite(gsl::span<const uint8_t> in, size_t bytes,
+  void YamuxStream::doWrite(BytesIn in, size_t bytes,
                             WriteCallbackFunc cb, bool some) {
     if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
       return deferWriteCallback(Error::STREAM_INVALID_ARGUMENT, std::move(cb));

@@ -59,7 +59,7 @@ namespace libp2p::protocol::gossip {
     /// Adds message to be forwarded
     void addMessage(const TopicMessage &msg, const MessageId &msg_id);
 
-    static outcome::result<ByteArray> signableMessage(const TopicMessage &msg);
+    static outcome::result<Bytes> signableMessage(const TopicMessage &msg);
 
    private:
     /// Creates protobuf structures if needed

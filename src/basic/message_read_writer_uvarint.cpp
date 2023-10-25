@@ -46,7 +46,7 @@ namespace libp2p::basic {
         });
   }
 
-  void MessageReadWriterUvarint::write(gsl::span<const uint8_t> buffer,
+  void MessageReadWriterUvarint::write(BytesIn buffer,
                                        Writer::WriteCallbackFunc cb) {
     auto varint_len = multi::UVarint{static_cast<uint64_t>(buffer.size())};
 

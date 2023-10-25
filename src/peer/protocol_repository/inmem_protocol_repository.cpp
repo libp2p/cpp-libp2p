@@ -10,7 +10,7 @@
 namespace libp2p::peer {
 
   outcome::result<void> InmemProtocolRepository::addProtocols(
-      const PeerId &p, gsl::span<const ProtocolName> ms) {
+      const PeerId &p, std::span<const ProtocolName> ms) {
     auto s = getOrAllocateProtocolSet(p);
     for (const auto &m : ms) {
       s->insert(m);
@@ -20,7 +20,7 @@ namespace libp2p::peer {
   }
 
   outcome::result<void> InmemProtocolRepository::removeProtocols(
-      const PeerId &p, gsl::span<const ProtocolName> ms) {
+      const PeerId &p, std::span<const ProtocolName> ms) {
     OUTCOME_TRY(s, getProtocolSet(p));
 
     for (const auto &m : ms) {

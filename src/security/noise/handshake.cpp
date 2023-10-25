@@ -63,7 +63,7 @@ namespace libp2p::security::noise {
         initiator_{is_initiator},
         connection_cb_{std::move(cb)},
         key_marshaller_{std::move(key_marshaller)},
-        read_buffer_{std::make_shared<ByteArray>(kMaxMsgLen)},
+        read_buffer_{std::make_shared<Bytes>(kMaxMsgLen)},
         rw_{std::make_shared<InsecureReadWriter>(conn_, read_buffer_)},
         handshake_state_{std::make_unique<HandshakeState>()},
         remote_peer_id_{std::move(remote_peer_id)} {
@@ -106,7 +106,7 @@ namespace libp2p::security::noise {
     return noise_marshaller_->marshal(payload);
   }
 
-  void Handshake::sendHandshakeMessage(gsl::span<const uint8_t> payload,
+  void Handshake::sendHandshakeMessage(BytesIn payload,
                                        basic::Writer::WriteCallbackFunc cb) {
     IO_OUTCOME_TRY(write_result, handshake_state_->writeMessage({}, payload),
                    cb);
@@ -129,7 +129,7 @@ namespace libp2p::security::noise {
       if (rr.cs1 and rr.cs2) {
         self->setCipherStates(rr.cs1, rr.cs2);
       }
-      auto shared_data = std::make_shared<ByteArray>();
+      auto shared_data = std::make_shared<Bytes>();
       shared_data->swap(rr.data);
       cb(std::move(shared_data));
     };
@@ -137,7 +137,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<void> Handshake::handleRemoteHandshakePayload(
-      gsl::span<const uint8_t> payload) {
+      BytesIn payload) {
     OUTCOME_TRY(remote_payload, noise_marshaller_->unmarshal(payload));
     OUTCOME_TRY(remote_id, peer::PeerId::fromPublicKey(remote_payload.second));
     auto &&handy_payload = remote_payload.first;
@@ -147,7 +147,7 @@ namespace libp2p::security::noise {
                remote_peer_id_->toHex(), remote_id.toHex());
       return std::errc::bad_address;
     }
-    ByteArray to_verify;
+    Bytes to_verify;
     to_verify.reserve(kPayloadPrefix.size()
                       + handy_payload.identity_key.data.size());
     std::copy(kPayloadPrefix.begin(), kPayloadPrefix.end(),

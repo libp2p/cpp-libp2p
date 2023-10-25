@@ -53,7 +53,7 @@ namespace libp2p::crypto::secp256k1 {
   }
 
   outcome::result<Signature> Secp256k1ProviderImpl::sign(
-      gsl::span<const uint8_t> message, const PrivateKey &key) const {
+      BytesIn message, const PrivateKey &key) const {
     OUTCOME_TRY(digest, sha256(message));
     OUTCOME_TRY(private_key, bytesToPrivateKey(key));
     OUTCOME_TRY(signature, GenerateEcSignature(digest, private_key));
@@ -61,7 +61,7 @@ namespace libp2p::crypto::secp256k1 {
   }
 
   outcome::result<bool> Secp256k1ProviderImpl::verify(
-      gsl::span<const uint8_t> message, const Signature &signature,
+      BytesIn message, const Signature &signature,
       const PublicKey &key) const {
     OUTCOME_TRY(digest, sha256(message));
     OUTCOME_TRY(public_key, bytesToPublicKey(key));

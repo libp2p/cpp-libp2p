@@ -14,11 +14,11 @@ namespace libp2p::peer {
   struct ProtocolRepositoryMock : public ProtocolRepository {
     MOCK_METHOD2(addProtocols,
                  outcome::result<void>(const PeerId &,
-                                       gsl::span<const ProtocolName>));
+                                       std::span<const ProtocolName>));
 
     MOCK_METHOD2(removeProtocols,
                  outcome::result<void>(const PeerId &,
-                                       gsl::span<const ProtocolName>));
+                                       std::span<const ProtocolName>));
 
     MOCK_CONST_METHOD1(
         getProtocols,

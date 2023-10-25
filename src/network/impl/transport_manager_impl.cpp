@@ -17,7 +17,7 @@ namespace libp2p::network {
                              [](auto &&t) { return t != nullptr; }));
   }
 
-  gsl::span<const TransportManagerImpl::TransportSPtr>
+  std::span<const TransportManagerImpl::TransportSPtr>
   TransportManagerImpl::getAll() const {
     return transports_;
   }

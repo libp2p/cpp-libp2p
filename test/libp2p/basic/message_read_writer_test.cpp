@@ -15,7 +15,7 @@ using namespace basic;
 using namespace connection;
 using namespace multi;
 
-using libp2p::common::ByteArray;
+using libp2p::Bytes;
 using testing::_;
 using testing::Return;
 
@@ -30,10 +30,10 @@ class MessageReadWriterTest : public testing::Test {
   static constexpr uint64_t kMsgLength = 4;
   UVarint len_varint_ = UVarint{kMsgLength};
 
-  ByteArray msg_bytes_{0x11, 0x22, 0x33, 0x44};
+  Bytes msg_bytes_{0x11, 0x22, 0x33, 0x44};
 
-  ByteArray msg_with_varint_bytes_ = [this]() -> ByteArray {
-    ByteArray buffer = len_varint_.toVector();
+  Bytes msg_with_varint_bytes_ = [this]() -> Bytes {
+    Bytes buffer = len_varint_.toVector();
     buffer.insert(buffer.cend(), msg_bytes_.begin(), msg_bytes_.end());
     return buffer;
   }();

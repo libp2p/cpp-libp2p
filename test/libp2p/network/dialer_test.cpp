@@ -13,9 +13,7 @@
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/network/connection_manager_mock.hpp"
 #include "mock/libp2p/network/listener_mock.hpp"
-#include "mock/libp2p/network/router_mock.hpp"
 #include "mock/libp2p/network/transport_manager_mock.hpp"
-#include "mock/libp2p/peer/address_repository_mock.hpp"
 #include "mock/libp2p/protocol_muxer/protocol_muxer_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
 #include "testutil/gmock_actions.hpp"
@@ -36,6 +34,7 @@ using ::testing::Contains;
 using ::testing::Eq;
 using ::testing::InvokeArgument;
 using ::testing::Return;
+using ::testing::Truly;
 
 struct DialerTest : public ::testing::Test {
   void SetUp() override {
@@ -277,7 +276,7 @@ TEST_F(DialerTest, NewStreamFailed) {
  * @then get negotiation failure
  */
 TEST_F(DialerTest, NewStreamNegotiationFailed) {
-  // connection exist to peer
+  // connection exists to peer
   EXPECT_CALL(*cmgr, getBestConnectionForPeer(pid))
       .WillOnce(Return(connection));
 
@@ -286,7 +285,13 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
 
   auto r = std::make_error_code(std::errc::io_error);
 
-  EXPECT_CALL(*proto_muxer, selectOneOf(gsl::make_span(protocols), _, _, _, _))
+  auto if_protocols = [&](std::span<const peer::ProtocolName> actual) {
+    auto expected = std::span<const peer::ProtocolName>(protocols);
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
+  };
+
+  EXPECT_CALL(*proto_muxer, selectOneOf(Truly(if_protocols), _, _, _, _))
       .WillOnce(InvokeArgument<4>(r));
 
   bool executed = false;
@@ -309,14 +314,20 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
  * @then get new stream
  */
 TEST_F(DialerTest, NewStreamSuccess) {
-  // connection exist to peer
+  // connection exists to peer
   EXPECT_CALL(*cmgr, getBestConnectionForPeer(pid))
       .WillOnce(Return(connection));
 
   // newStream returns valid stream
   EXPECT_CALL(*connection, newStream()).WillOnce(Return(stream));
 
-  EXPECT_CALL(*proto_muxer, selectOneOf(gsl::make_span(protocols), _, _, _, _))
+  auto if_protocols = [&](std::span<const peer::ProtocolName> actual) {
+    auto expected = std::span<const peer::ProtocolName>(protocols);
+    return std::equal(actual.begin(), actual.end(), expected.begin(),
+                      expected.end());
+  };
+
+  EXPECT_CALL(*proto_muxer, selectOneOf(Truly(if_protocols), _, _, _, _))
       .WillOnce(InvokeArgument<4>(protocols[0]));
 
   bool executed = false;

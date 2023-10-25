@@ -13,7 +13,7 @@
 
 namespace libp2p::crypto {
 
-  using Buffer = libp2p::common::ByteArray;
+  using Buffer = libp2p::Bytes;
 
   struct Key {
     /**

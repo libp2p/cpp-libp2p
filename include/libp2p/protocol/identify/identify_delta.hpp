@@ -67,8 +67,8 @@ namespace libp2p::protocol {
      * @param added protocols
      * @param removed protocols
      */
-    void sendDelta(gsl::span<const peer::ProtocolName> added,
-                   gsl::span<const peer::ProtocolName> removed);
+    void sendDelta(std::span<const peer::ProtocolName> added,
+                   std::span<const peer::ProtocolName> removed);
 
     /**
      * Send a Delta message

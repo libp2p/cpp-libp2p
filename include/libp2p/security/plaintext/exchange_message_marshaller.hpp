@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include <gsl/span>
+#include <span>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/plaintext/exchange_message.hpp>
@@ -59,7 +59,7 @@ namespace libp2p::security::plaintext {
      * the public key
      */
     virtual outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>>
-    unmarshal(gsl::span<const uint8_t> msg_bytes) const = 0;
+    unmarshal(BytesIn msg_bytes) const = 0;
   };
 
 }  // namespace libp2p::security::plaintext

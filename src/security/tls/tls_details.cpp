@@ -145,7 +145,7 @@ namespace libp2p::security::tls_details {
 
       return crypto::ed25519::Ed25519ProviderImpl{}
           // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-          .sign(gsl::span<const uint8_t>(buf, msg_len), pk_data)
+          .sign(BytesIn(buf, msg_len), pk_data)
           .value();
     }
 
@@ -191,16 +191,16 @@ namespace libp2p::security::tls_details {
       }
       X509_NAME_add_entry_by_txt(
           name, "C", MBSTRING_ASC,
-          reinterpret_cast<const uint8_t *>("PY"),  // NOLINT
-          -1, -1, 0);
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          reinterpret_cast<const uint8_t *>("PY"), -1, -1, 0);
       X509_NAME_add_entry_by_txt(
           name, "O", MBSTRING_ASC,
-          reinterpret_cast<const uint8_t *>("libp2p"),  // NOLINT
-          -1, -1, 0);
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          reinterpret_cast<const uint8_t *>("libp2p"), -1, -1, 0);
       X509_NAME_add_entry_by_txt(
           name, "CN", MBSTRING_ASC,
-          reinterpret_cast<const uint8_t *>("libp2p"),  // NOLINT
-          -1, -1, 0);
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          reinterpret_cast<const uint8_t *>("libp2p"), -1, -1, 0);
       if (X509_set_issuer_name(cert, name) == 0) {
         throw std::runtime_error("cannot assign certificate issuer name");
       }
@@ -288,8 +288,7 @@ namespace libp2p::security::tls_details {
     };
 
     // extracts peer's pubkey and extension signature from ASN1 sequence
-    boost::optional<KeyAndSignature> unmarshalExtensionData(
-        gsl::span<const uint8_t> data) {
+    boost::optional<KeyAndSignature> unmarshalExtensionData(BytesIn data) {
       KeyAndSignature result;
 
       bool ok = (data.size() == kExtensionDataSize) && (data[0] == kSequenceTag)
@@ -329,9 +328,8 @@ namespace libp2p::security::tls_details {
       ASN1_OCTET_STRING *os = X509_EXTENSION_get_data(ext);
       assert(os);
 
-      auto ks_binary = unmarshalExtensionData(
-          gsl::span<const uint8_t>(os->data,
-                                   os->data + os->length));  // NOLINT
+      auto ks_binary = unmarshalExtensionData(BytesIn(os->data,
+                           os->data + os->length));  // NOLINT
       if (!ks_binary) {
         log()->info("cannot unmarshal libp2p certificate extension");
         return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
@@ -362,7 +360,7 @@ namespace libp2p::security::tls_details {
       i2d_PUBKEY(cert_pubkey, &b);
 
       auto verify_res = crypto::ed25519::Ed25519ProviderImpl{}.verify(
-          gsl::span<const uint8_t>(buf, buf + msg_len),  // NOLINT
+          BytesIn(buf, buf + msg_len),  // NOLINT
           signature, ed25519pkey);
 
       if (!verify_res) {

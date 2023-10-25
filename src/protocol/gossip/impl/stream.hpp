@@ -69,7 +69,7 @@ namespace libp2p::protocol::gossip {
     // TODO(artem): limit pending bytes and close slow streams that way
     size_t pending_bytes_ = 0;
 
-    std::shared_ptr<ByteArray> read_buffer_;
+    std::shared_ptr<Bytes> read_buffer_;
     /// Dont send feedback or schedule writes anymore
     bool closed_ = false;
 

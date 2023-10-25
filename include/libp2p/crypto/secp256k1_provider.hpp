@@ -6,7 +6,7 @@
 #ifndef LIBP2P_CRYPTO_SECP256K1_PROVIDER_HPP
 #define LIBP2P_CRYPTO_SECP256K1_PROVIDER_HPP
 
-#include <gsl/span>
+#include <libp2p/common/types.hpp>
 #include <libp2p/crypto/secp256k1_types.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -36,7 +36,7 @@ namespace libp2p::crypto::secp256k1 {
      * @param key - private key for signing
      * @return Secp256k1 signature or error code
      */
-    virtual outcome::result<Signature> sign(gsl::span<const uint8_t> message,
+    virtual outcome::result<Signature> sign(BytesIn message,
                                             const PrivateKey &key) const = 0;
 
     /**
@@ -46,7 +46,7 @@ namespace libp2p::crypto::secp256k1 {
      * @param key - public key for signature verifying
      * @return Result of the verification or error code
      */
-    virtual outcome::result<bool> verify(gsl::span<const uint8_t> message,
+    virtual outcome::result<bool> verify(BytesIn message,
                                          const Signature &signature,
                                          const PublicKey &key) const = 0;
 

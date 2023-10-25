@@ -55,7 +55,7 @@ namespace libp2p::protocol::gossip {
     void setMessageIdFn(MessageIdFn fn) override;
     Subscription subscribe(TopicSet topics,
                            SubscriptionCallback callback) override;
-    bool publish(TopicId topic, ByteArray data) override;
+    bool publish(TopicId topic, Bytes data) override;
 
     outcome::result<void> signMessage(TopicMessage &msg) const;
 

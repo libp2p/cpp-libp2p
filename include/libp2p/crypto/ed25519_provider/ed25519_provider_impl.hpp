@@ -8,6 +8,8 @@
 
 #include <libp2p/crypto/ed25519_provider.hpp>
 
+#include <libp2p/common/types.hpp>
+
 namespace libp2p::crypto::ed25519 {
 
   class Ed25519ProviderImpl : public Ed25519Provider {
@@ -18,10 +20,10 @@ namespace libp2p::crypto::ed25519 {
         const PrivateKey &private_key) const override;
 
     outcome::result<Signature> sign(
-        gsl::span<const uint8_t> message,
+        BytesIn message,
         const PrivateKey &private_key) const override;
 
-    outcome::result<bool> verify(gsl::span<const uint8_t> message,
+    outcome::result<bool> verify(BytesIn message,
                                  const Signature &signature,
                                  const PublicKey &public_key) const override;
   };

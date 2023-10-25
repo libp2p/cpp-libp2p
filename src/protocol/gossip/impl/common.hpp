@@ -31,7 +31,7 @@ namespace libp2p::protocol::gossip {
   struct Success {};
 
   /// Shared buffer used to broadcast messages
-  using SharedBuffer = std::shared_ptr<const ByteArray>;
+  using SharedBuffer = std::shared_ptr<const Bytes>;
 
   /// Time is scheduler's clock and counter
   using Time = std::chrono::milliseconds;
@@ -42,7 +42,7 @@ namespace libp2p::protocol::gossip {
   using TopicId = std::string;
 
   // message id == string(seq_no + from)
-  using MessageId = ByteArray;
+  using MessageId = Bytes;
 
   /// Remote peer and its context
   using PeerContextPtr = std::shared_ptr<struct PeerContext>;
@@ -52,27 +52,27 @@ namespace libp2p::protocol::gossip {
     using Ptr = std::shared_ptr<TopicMessage>;
 
     /// Peer id of creator
-    const ByteArray from;
+    const Bytes from;
 
     /// Sequence number: big endian uint64_t converted to string
-    const ByteArray seq_no;
+    const Bytes seq_no;
 
     /// Arbitrary data
-    const ByteArray data;
+    const Bytes data;
 
     /// Topic ids
     TopicId topic;
 
     // TODO(artem): signing and protobuf issue. Seems they didn't try their
     // kitchen
-    boost::optional<ByteArray> signature;
-    boost::optional<ByteArray> key;
+    boost::optional<Bytes> signature;
+    boost::optional<Bytes> key;
 
     /// Creates a new message from wire or storage
-    TopicMessage(ByteArray _from, ByteArray _seq, ByteArray _data);
+    TopicMessage(Bytes _from, Bytes _seq, Bytes _data);
 
     /// Creates topic message from scratch before publishing
-    TopicMessage(const peer::PeerId &_from, uint64_t _seq, ByteArray _data,
+    TopicMessage(const peer::PeerId &_from, uint64_t _seq, Bytes _data,
                  TopicId _topic);
   };
 
@@ -89,14 +89,14 @@ namespace libp2p::protocol::gossip {
   outcome::result<peer::PeerId> peerFrom(const TopicMessage &msg);
 
   /// Creates seq number byte representation as per pub-sub spec
-  ByteArray createSeqNo(uint64_t seq);
+  Bytes createSeqNo(uint64_t seq);
 
   /// Helper for text messages creation and protobuf
-  ByteArray fromString(const std::string &s);
+  Bytes fromString(const std::string &s);
 
   /// Creates message id, default function
-  MessageId createMessageId(const ByteArray &from, const ByteArray &seq,
-                            const ByteArray &data);
+  MessageId createMessageId(const Bytes &from, const Bytes &seq,
+                            const Bytes &data);
 }  // namespace libp2p::protocol::gossip
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::gossip, Error);

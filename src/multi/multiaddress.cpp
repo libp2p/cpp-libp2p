@@ -70,8 +70,7 @@ namespace libp2p::multi {
         ByteBuffer{std::vector<uint8_t>{bytes.begin(), bytes.end()}}};
   }
 
-  Multiaddress::FactoryResult Multiaddress::create(
-      gsl::span<const uint8_t> bytes) {
+  Multiaddress::FactoryResult Multiaddress::create(BytesIn bytes) {
     auto conversion_res = converters::bytesToMultiaddrString(bytes);
     if (!conversion_res) {
       return Error::INVALID_INPUT;
@@ -82,7 +81,7 @@ namespace libp2p::multi {
   }
 
   Multiaddress::FactoryResult Multiaddress::create(const ByteBuffer &bytes) {
-    return create(gsl::span<const uint8_t>(bytes));
+    return create(BytesIn(bytes));
   }
 
   Multiaddress::Multiaddress(std::string &&address, ByteBuffer &&bytes)

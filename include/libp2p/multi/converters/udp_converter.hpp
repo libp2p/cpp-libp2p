@@ -21,7 +21,7 @@ namespace libp2p::multi::converters {
     static outcome::result<std::string>
     addressToHex(std::string_view addr);
 
-    static outcome::result<common::ByteArray> addressToBytes(
+    static outcome::result<Bytes> addressToBytes(
         std::string_view addr);
   };
 }  // namespace libp2p::multi::converters

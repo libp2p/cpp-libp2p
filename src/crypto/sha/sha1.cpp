@@ -17,7 +17,7 @@ namespace libp2p::crypto {
     sinkCtx();
   }
 
-  outcome::result<void> Sha1::write(gsl::span<const uint8_t> data) {
+  outcome::result<void> Sha1::write(BytesIn data) {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
@@ -27,11 +27,11 @@ namespace libp2p::crypto {
     return outcome::success();
   }
 
-  outcome::result<void> Sha1::digestOut(gsl::span<uint8_t> out) const {
+  outcome::result<void> Sha1::digestOut(BytesOut out) const {
     if (not initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
-    if (out.size() != static_cast<ptrdiff_t>(digestSize())) {
+    if (out.size() != digestSize()) {
       return HmacProviderError::WRONG_DIGEST_SIZE;
     }
     SHA_CTX ctx = ctx_;
@@ -71,8 +71,7 @@ namespace libp2p::crypto {
     return HashType::SHA1;
   }
 
-  outcome::result<libp2p::common::Hash160> sha1(
-      gsl::span<const uint8_t> input) {
+  outcome::result<libp2p::common::Hash160> sha1(BytesIn input) {
     Sha1 sha;
     OUTCOME_TRY(sha.write(input));
     outcome::result<libp2p::common::Hash160> result{outcome::success()};
