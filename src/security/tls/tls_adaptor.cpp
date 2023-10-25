@@ -42,7 +42,8 @@ namespace libp2p::security {
 
   void TlsAdaptor::secureOutbound(
       std::shared_ptr<connection::LayerConnection> outbound,
-      const peer::PeerId &p, SecConnCallbackFunc cb) {
+      const peer::PeerId &p,
+      SecConnCallbackFunc cb) {
     asyncHandshake(std::move(outbound), p, std::move(cb));
   }
 
@@ -84,7 +85,8 @@ namespace libp2p::security {
 
   void TlsAdaptor::asyncHandshake(
       std::shared_ptr<connection::LayerConnection> conn,
-      boost::optional<peer::PeerId> remote_peer, SecConnCallbackFunc cb) {
+      boost::optional<peer::PeerId> remote_peer,
+      SecConnCallbackFunc cb) {
     bool is_client = conn->isInitiator();
 
     if (is_client) {
@@ -109,9 +111,11 @@ namespace libp2p::security {
       if (tcp_conn == nullptr) {
         ec = TlsError::TLS_INCOMPATIBLE_TRANSPORT;
       } else {
-        auto tls_conn = std::make_shared<TlsConnection>(
-            std::move(conn), ssl_context_, *idmgr_, tcp_conn->socket_,
-            std::move(remote_peer));
+        auto tls_conn = std::make_shared<TlsConnection>(std::move(conn),
+                                                        ssl_context_,
+                                                        *idmgr_,
+                                                        tcp_conn->socket_,
+                                                        std::move(remote_peer));
         tls_conn->asyncHandshake(std::move(cb), key_marshaller_);
       }
     }

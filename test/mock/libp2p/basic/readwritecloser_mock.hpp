@@ -23,10 +23,8 @@ namespace libp2p::basic {
 
     MOCK_METHOD2(read, void(BytesOut, Reader::ReadCallbackFunc));
     MOCK_METHOD2(readSome, void(BytesOut, Reader::ReadCallbackFunc));
-    MOCK_METHOD2(write,
-                 void(BytesIn, Writer::WriteCallbackFunc));
-    MOCK_METHOD2(writeSome,
-                 void(BytesIn, Writer::WriteCallbackFunc));
+    MOCK_METHOD2(write, void(BytesIn, Writer::WriteCallbackFunc));
+    MOCK_METHOD2(writeSome, void(BytesIn, Writer::WriteCallbackFunc));
   };
 }  // namespace libp2p::basic
 

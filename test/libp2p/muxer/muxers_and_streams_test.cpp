@@ -104,8 +104,11 @@ namespace libp2p::regression {
     using Behavior = std::function<void(Node &node)>;
 
     template <typename... InjectorArgs>
-    Node(int node_id, bool jumbo_msg, const Behavior &behavior,
-         std::shared_ptr<boost::asio::io_context> io, InjectorArgs &&...args)
+    Node(int node_id,
+         bool jumbo_msg,
+         const Behavior &behavior,
+         std::shared_ptr<boost::asio::io_context> io,
+         InjectorArgs &&...args)
         : behavior_(behavior) {
       stats_.node_id = node_id;
       auto injector =
@@ -151,8 +154,10 @@ namespace libp2p::regression {
     void listen(const multi::Multiaddress &listen_to) {
       auto listen_res = host_->listen(listen_to);
       if (!listen_res) {
-        TRACE("({}): Cannot listen to multiaddress {}, {}", stats_.node_id,
-              listen_to.getStringAddress(), listen_res.error().message());
+        TRACE("({}): Cannot listen to multiaddress {}, {}",
+              stats_.node_id,
+              listen_to.getStringAddress(),
+              listen_res.error().message());
         stats_.put(Stats::FATAL_ERROR);
         return behavior_(*this);
       }
@@ -255,7 +260,8 @@ namespace libp2p::regression {
 
     void onConnected(StreamAndProtocolOrError rstream) {
       if (!rstream) {
-        TRACE("({}): connect error: {}", stats_.node_id,
+        TRACE("({}): connect error: {}",
+              stats_.node_id,
               rstream.error().message());
         stats_.put(Stats::CONNECT_FAILURE);
       } else {
@@ -379,9 +385,15 @@ void testStreamsGetNotifiedAboutEOF(bool jumbo_msg, InjectorArgs &&...args) {
 
   io = std::make_shared<boost::asio::io_context>();
 
-  server = std::make_shared<Node>(kServerId, jumbo_msg, server_behavior, io,
+  server = std::make_shared<Node>(kServerId,
+                                  jumbo_msg,
+                                  server_behavior,
+                                  io,
                                   std::forward<decltype(args)>(args)...);
-  client = std::make_shared<Node>(kClientId, jumbo_msg, client_behavior, io,
+  client = std::make_shared<Node>(kClientId,
+                                  jumbo_msg,
+                                  client_behavior,
+                                  io,
                                   std::forward<decltype(args)>(args)...);
 
   io->post([&]() {
@@ -396,10 +408,12 @@ void testStreamsGetNotifiedAboutEOF(bool jumbo_msg, InjectorArgs &&...args) {
   EXPECT_TRUE(client_read);
   EXPECT_TRUE(eof_passed);
 
-  if (server)
+  if (server) {
     server->stop();
-  if (client)
+  }
+  if (client) {
     client->stop();
+  }
 }
 
 template <typename... InjectorArgs>
@@ -474,9 +488,15 @@ void testOutboundConnectionAcceptsStreams(InjectorArgs &&...args) {
 
   io = std::make_shared<boost::asio::io_context>();
 
-  server = std::make_shared<Node>(kServerId, false, server_behavior, io,
+  server = std::make_shared<Node>(kServerId,
+                                  false,
+                                  server_behavior,
+                                  io,
                                   std::forward<decltype(args)>(args)...);
-  client = std::make_shared<Node>(kClientId, false, client_behavior, io,
+  client = std::make_shared<Node>(kClientId,
+                                  false,
+                                  client_behavior,
+                                  io,
                                   std::forward<decltype(args)>(args)...);
 
   io->post([&]() {
@@ -491,10 +511,12 @@ void testOutboundConnectionAcceptsStreams(InjectorArgs &&...args) {
   EXPECT_TRUE(client_read_from_accepted_stream);
   EXPECT_TRUE(server_read_from_connected_stream);
 
-  if (server)
+  if (server) {
     server->stop();
-  if (client)
+  }
+  if (client) {
     client->stop();
+  }
 }
 
 TEST(StreamsRegression, YamuxStreamsGetNotifiedAboutEOF) {

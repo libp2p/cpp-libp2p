@@ -24,7 +24,7 @@ TEST(Byteutil, ToLittleEndian) {
   bytes.reserve(sizeof(uint64_t));
   putUint64LE(bytes, value);
 
-  std::vector<uint8_t> expected = {0xbb, 0xaa, 0xf0, 0xe0,
-                                   0xd0, 0xc0, 0xb0, 0xa0};
+  std::vector<uint8_t> expected = {
+      0xbb, 0xaa, 0xf0, 0xe0, 0xd0, 0xc0, 0xb0, 0xa0};
   ASSERT_EQ(bytes, expected);
 }

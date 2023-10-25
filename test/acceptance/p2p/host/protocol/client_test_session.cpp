@@ -35,7 +35,8 @@ namespace libp2p::protocol {
 
     write_buf_ = random_generator_->randomBytes(buffer_size_);
 
-    stream_->write(write_buf_, buffer_size_,
+    stream_->write(write_buf_,
+                   buffer_size_,
                    [self = shared_from_this(),
                     cb{std::move(cb)}](outcome::result<size_t> rw) mutable {
                      if (!rw) {
@@ -51,7 +52,8 @@ namespace libp2p::protocol {
 
     read_buf_ = std::vector<uint8_t>(buffer_size_);
 
-    stream_->read(read_buf_, buffer_size_,
+    stream_->read(read_buf_,
+                  buffer_size_,
                   [self = shared_from_this(),
                    cb{std::move(cb)}](outcome::result<size_t> rr) mutable {
                     if (!rr) {

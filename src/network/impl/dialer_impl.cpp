@@ -13,21 +13,23 @@
 
 namespace libp2p::network {
 
-  void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb,
+  void DialerImpl::dial(const peer::PeerInfo &p,
+                        DialResultFunc cb,
                         std::chrono::milliseconds timeout) {
     SL_TRACE(log_, "Dialing to {}", p.id.toBase58().substr(46));
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
 
-      SL_TRACE(log_, "Reusing connection to peer {}",
-               p.id.toBase58().substr(46));
+      SL_TRACE(
+          log_, "Reusing connection to peer {}", p.id.toBase58().substr(46));
       scheduler_->schedule(
           [cb{std::move(cb)}, c{std::move(c)}]() mutable { cb(std::move(c)); });
       return;
     }
 
     if (auto ctx = dialing_peers_.find(p.id); dialing_peers_.end() != ctx) {
-      SL_TRACE(log_, "Dialing to {} is already in progress",
+      SL_TRACE(log_,
+               "Dialing to {} is already in progress",
                p.id.toBase58().substr(46));
       // populate known addresses for in-progress dial if any new appear
       for (const auto &addr : p.addresses) {
@@ -59,8 +61,8 @@ namespace libp2p::network {
   void DialerImpl::rotate(const peer::PeerId &peer_id) {
     auto ctx_found = dialing_peers_.find(peer_id);
     if (dialing_peers_.end() == ctx_found) {
-      SL_ERROR(log_, "State inconsistency - cannot dial {}",
-               peer_id.toBase58());
+      SL_ERROR(
+          log_, "State inconsistency - cannot dial {}", peer_id.toBase58());
       return;
     }
     auto &&ctx = ctx_found->second;
@@ -126,7 +128,9 @@ namespace libp2p::network {
     ctx.addresses.erase(first_addr);
     if (auto tr = tmgr_->findBest(addr); nullptr != tr) {
       ctx.dialled = true;
-      SL_TRACE(log_, "Dial to {} via {}", peer_id.toBase58().substr(46),
+      SL_TRACE(log_,
+               "Dial to {} via {}",
+               peer_id.toBase58().substr(46),
                addr.getStringAddress());
       tr->dial(peer_id, addr, dial_handler, ctx.timeout);
     } else {
@@ -151,14 +155,18 @@ namespace libp2p::network {
     }
   }
 
-  void DialerImpl::newStream(const peer::PeerInfo &p, StreamProtocols protocols,
+  void DialerImpl::newStream(const peer::PeerInfo &p,
+                             StreamProtocols protocols,
                              StreamAndProtocolOrErrorCb cb,
                              std::chrono::milliseconds timeout) {
-    SL_TRACE(log_, "New stream to {} for {} (peer info)",
-             p.id.toBase58().substr(46), fmt::join(protocols, " "));
+    SL_TRACE(log_,
+             "New stream to {} for {} (peer info)",
+             p.id.toBase58().substr(46),
+             fmt::join(protocols, " "));
     dial(
         p,
-        [self{shared_from_this()}, protocols{std::move(protocols)},
+        [self{shared_from_this()},
+         protocols{std::move(protocols)},
          cb{std::move(cb)}](
             outcome::result<std::shared_ptr<connection::CapableConnection>>
                 rconn) mutable {
@@ -174,8 +182,10 @@ namespace libp2p::network {
   void DialerImpl::newStream(const peer::PeerId &peer_id,
                              StreamProtocols protocols,
                              StreamAndProtocolOrErrorCb cb) {
-    SL_TRACE(log_, "New stream to {} for {} (peer id)",
-             peer_id.toBase58().substr(46), fmt::join(protocols, " "));
+    SL_TRACE(log_,
+             "New stream to {} for {} (peer id)",
+             peer_id.toBase58().substr(46),
+             fmt::join(protocols, " "));
     auto conn = cmgr_->getBestConnectionForPeer(peer_id);
     if (!conn) {
       scheduler_->schedule(
@@ -187,7 +197,8 @@ namespace libp2p::network {
 
   void DialerImpl::newStream(
       std::shared_ptr<connection::CapableConnection> conn,
-      StreamProtocols protocols, StreamAndProtocolOrErrorCb cb) {
+      StreamProtocols protocols,
+      StreamAndProtocolOrErrorCb cb) {
     auto stream_res = conn->newStream();
     if (stream_res.has_error()) {
       scheduler_->schedule(
@@ -197,7 +208,10 @@ namespace libp2p::network {
     auto &&stream = stream_res.value();
     auto stream_copy = stream;
     multiselect_->selectOneOf(
-        protocols, std::move(stream_copy), true, true,
+        protocols,
+        std::move(stream_copy),
+        true,
+        true,
         [stream{std::move(stream)}, cb{std::move(cb)}](
             outcome::result<peer::ProtocolName> protocol_res) mutable {
           if (protocol_res.has_error()) {

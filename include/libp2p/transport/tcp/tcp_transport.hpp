@@ -25,10 +25,12 @@ namespace libp2p::transport {
     TcpTransport(std::shared_ptr<boost::asio::io_context> context,
                  std::shared_ptr<Upgrader> upgrader);
 
-    void dial(const peer::PeerId &remoteId, multi::Multiaddress address,
+    void dial(const peer::PeerId &remoteId,
+              multi::Multiaddress address,
               TransportAdaptor::HandlerFunc handler) override;
 
-    void dial(const peer::PeerId &remoteId, multi::Multiaddress address,
+    void dial(const peer::PeerId &remoteId,
+              multi::Multiaddress address,
               TransportAdaptor::HandlerFunc handler,
               std::chrono::milliseconds timeout) override;
 

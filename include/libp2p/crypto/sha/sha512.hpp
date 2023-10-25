@@ -9,9 +9,9 @@
 #include <string_view>
 
 #include <openssl/sha.h>
-#include <span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/hasher.hpp>
+#include <span>
 
 namespace libp2p::crypto {
 

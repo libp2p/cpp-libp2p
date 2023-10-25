@@ -27,7 +27,8 @@
 namespace libp2p::protocol::kademlia {
 
   KademliaImpl::KademliaImpl(
-      const Config &config, std::shared_ptr<Host> host,
+      const Config &config,
+      std::shared_ptr<Host> host,
       std::shared_ptr<Storage> storage,
       std::shared_ptr<ContentRoutingTable> content_routing_table,
       std::shared_ptr<PeerRoutingTable> peer_routing_table,
@@ -205,7 +206,8 @@ namespace libp2p::protocol::kademlia {
     return find_providers_executor->start();
   }
 
-  void KademliaImpl::addPeer(const PeerInfo &peer_info, bool permanent,
+  void KademliaImpl::addPeer(const PeerInfo &peer_info,
+                             bool permanent,
                              bool is_connected) {
     log_.debug("CALL: AddPeer ({})", peer_info.id.toBase58());
     for (auto &addr : peer_info.addresses) {
@@ -225,7 +227,8 @@ namespace libp2p::protocol::kademlia {
             permanent ? peer::ttl::kPermanent : peer::ttl::kDay);
     if (not upsert_res) {
       log_.debug("{} was skipped at addind to peer routing table: {}",
-                 peer_info.id.toBase58(), upsert_res.error().message());
+                 peer_info.id.toBase58(),
+                 upsert_res.error().message());
       return;
     }
 
@@ -233,12 +236,14 @@ namespace libp2p::protocol::kademlia {
         peer_routing_table_->update(peer_info.id, permanent, is_connected);
     if (not update_res) {
       log_.debug("{} was not added to peer routing table: {}",
-                 peer_info.id.toBase58(), update_res.error().message());
+                 peer_info.id.toBase58(),
+                 update_res.error().message());
       return;
     }
     if (update_res.value()) {
       log_.debug("{} was added to peer routing table; total {} peers",
-                 peer_info.id.toBase58(), peer_routing_table_->size());
+                 peer_info.id.toBase58(),
+                 peer_routing_table_->size());
     } else {
       log_.trace("{} was updated to peer routing table",
                  peer_info.id.toBase58());
@@ -360,8 +365,8 @@ namespace libp2p::protocol::kademlia {
     auto res = storage_->getValue(msg.key);
     if (res) {
       auto &[value, expire] = res.value();
-      msg.record = Message::Record{std::move(msg.key), std::move(value),
-                                   std::to_string(expire.count())};
+      msg.record = Message::Record{
+          std::move(msg.key), std::move(value), std::to_string(expire.count())};
     }
 
     auto buffer = std::make_shared<std::vector<uint8_t>>();
@@ -563,7 +568,7 @@ namespace libp2p::protocol::kademlia {
     Time delay = config_.randomWalk.delay;
     if ((iteration % config_.randomWalk.queries_per_period) == 0) {
       delay = config_.randomWalk.interval
-          - config_.randomWalk.delay * config_.randomWalk.queries_per_period;
+            - config_.randomWalk.delay * config_.randomWalk.queries_per_period;
     }
 
     // Schedule next walking
@@ -620,39 +625,62 @@ namespace libp2p::protocol::kademlia {
 
   std::shared_ptr<PutValueExecutor> KademliaImpl::createPutValueExecutor(
       ContentId key, ContentValue value, std::vector<PeerId> addressees) {
-    return std::make_shared<PutValueExecutor>(
-        config_, host_, scheduler_, shared_from_this(), std::move(key),
-        std::move(value), std::move(addressees));
+    return std::make_shared<PutValueExecutor>(config_,
+                                              host_,
+                                              scheduler_,
+                                              shared_from_this(),
+                                              std::move(key),
+                                              std::move(value),
+                                              std::move(addressees));
   }
 
   std::shared_ptr<GetValueExecutor> KademliaImpl::createGetValueExecutor(
       ContentId key, FoundValueHandler handler) {
-    return std::make_shared<GetValueExecutor>(
-        config_, host_, scheduler_, shared_from_this(), shared_from_this(),
-        content_routing_table_, peer_routing_table_, shared_from_this(),
-        validator_, std::move(key), std::move(handler));
+    return std::make_shared<GetValueExecutor>(config_,
+                                              host_,
+                                              scheduler_,
+                                              shared_from_this(),
+                                              shared_from_this(),
+                                              content_routing_table_,
+                                              peer_routing_table_,
+                                              shared_from_this(),
+                                              validator_,
+                                              std::move(key),
+                                              std::move(handler));
   }
 
   std::shared_ptr<AddProviderExecutor> KademliaImpl::createAddProviderExecutor(
       ContentId content_id) {
-    return std::make_shared<AddProviderExecutor>(
-        config_, host_, scheduler_, shared_from_this(), peer_routing_table_,
-        std::move(content_id));
+    return std::make_shared<AddProviderExecutor>(config_,
+                                                 host_,
+                                                 scheduler_,
+                                                 shared_from_this(),
+                                                 peer_routing_table_,
+                                                 std::move(content_id));
   }
 
   std::shared_ptr<FindProvidersExecutor>
   KademliaImpl::createGetProvidersExecutor(ContentId content_id,
                                            FoundProvidersHandler handler) {
-    return std::make_shared<FindProvidersExecutor>(
-        config_, host_, scheduler_, shared_from_this(), peer_routing_table_,
-        std::move(content_id), std::move(handler));
+    return std::make_shared<FindProvidersExecutor>(config_,
+                                                   host_,
+                                                   scheduler_,
+                                                   shared_from_this(),
+                                                   peer_routing_table_,
+                                                   std::move(content_id),
+                                                   std::move(handler));
   }
 
   std::shared_ptr<FindPeerExecutor> KademliaImpl::createFindPeerExecutor(
       PeerId peer_id, FoundPeerInfoHandler handler) {
-    return std::make_shared<FindPeerExecutor>(
-        config_, host_, scheduler_, shared_from_this(), shared_from_this(),
-        peer_routing_table_, std::move(peer_id), std::move(handler));
+    return std::make_shared<FindPeerExecutor>(config_,
+                                              host_,
+                                              scheduler_,
+                                              shared_from_this(),
+                                              shared_from_this(),
+                                              peer_routing_table_,
+                                              std::move(peer_id),
+                                              std::move(handler));
   }
 
 }  // namespace libp2p::protocol::kademlia

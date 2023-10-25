@@ -35,7 +35,8 @@ namespace libp2p::protocol::gossip {
       table_.erase(topic);
     }
     log_.debug("self {} {}",
-               (subscribed ? "subscribed to" : "unsubscribed from"), topic);
+               (subscribed ? "subscribed to" : "unsubscribed from"),
+               topic);
   }
 
   void RemoteSubscriptions::onPeerSubscribed(const PeerContextPtr &peer,
@@ -119,7 +120,8 @@ namespace libp2p::protocol::gossip {
   }
 
   void RemoteSubscriptions::onNewMessage(
-      const boost::optional<PeerContextPtr> &from, const TopicMessage::Ptr &msg,
+      const boost::optional<PeerContextPtr> &from,
+      const TopicMessage::Ptr &msg,
       const MessageId &msg_id) {
     auto now = scheduler_.now();
     bool is_published_locally = !from.has_value();

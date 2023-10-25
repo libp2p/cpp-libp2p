@@ -13,11 +13,11 @@
 #include <string_view>
 #include <unordered_map>
 
-#include <span>
 #include <boost/optional.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::multi {
 

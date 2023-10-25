@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/hasher.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::crypto::hmac {
 
@@ -36,7 +36,8 @@ namespace libp2p::crypto::hmac {
      * @param message source message
      * @return message digest if calculation was successful, error otherwise
      */
-    virtual outcome::result<Bytes> calculateDigest(
-        HashType hash_type, const Bytes &key, BytesIn message) const = 0;
+    virtual outcome::result<Bytes> calculateDigest(HashType hash_type,
+                                                   const Bytes &key,
+                                                   BytesIn message) const = 0;
   };
 }  // namespace libp2p::crypto::hmac

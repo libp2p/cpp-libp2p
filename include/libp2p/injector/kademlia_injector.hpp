@@ -53,15 +53,21 @@ namespace libp2p::injector {
         injector.template create<std::shared_ptr<event::Bus>>();
 
     initialized = std::make_shared<libp2p::protocol::kademlia::KademliaImpl>(
-        config, std::move(host), std::move(storage),
-        std::move(content_routing_table), std::move(table),
-        std::move(validator), std::move(scheduler), std::move(bus),
+        config,
+        std::move(host),
+        std::move(storage),
+        std::move(content_routing_table),
+        std::move(table),
+        std::move(validator),
+        std::move(scheduler),
+        std::move(bus),
         std::move(random_generator));
     return initialized.value();
   }
 
   template <
-      typename T, typename C = std::decay_t<T>,
+      typename T,
+      typename C = std::decay_t<T>,
       typename = std::enable_if<std::is_same_v<C, protocol::kademlia::Config>>>
   inline auto useKademliaConfig(T &&c) {
     return boost::di::bind<C>().template to(

@@ -41,8 +41,7 @@ namespace libp2p::multi {
      * @param varint_bytes an array of bytes, possibly representing an unsigned
      * varint
      */
-    static boost::optional<UVarint> create(
-        BytesIn varint_bytes);
+    static boost::optional<UVarint> create(BytesIn varint_bytes);
 
     /**
      * Converts a varint back to a usual unsigned integer.
@@ -69,9 +68,9 @@ namespace libp2p::multi {
      */
     UVarint &operator=(uint64_t n);
 
-    bool operator==(const UVarint& r) const;
-    bool operator!=(const UVarint& r) const;
-    bool operator<(const UVarint& r) const;
+    bool operator==(const UVarint &r) const;
+    bool operator!=(const UVarint &r) const;
+    bool operator<(const UVarint &r) const;
 
     /**
      * @return the number of bytes currently stored in a varint

@@ -74,8 +74,8 @@ class IdentifyTest : public testing::Test {
         identify_pb_msg_bytes_.end(),
         std::make_move_iterator(pb_msg_len_varint_->toVector().begin()),
         std::make_move_iterator(pb_msg_len_varint_->toVector().end()));
-    identify_pb_msg_bytes_.insert(identify_pb_msg_bytes_.end(),
-                                  identify_pb_msg_.ByteSizeLong(), 0);
+    identify_pb_msg_bytes_.insert(
+        identify_pb_msg_bytes_.end(), identify_pb_msg_.ByteSizeLong(), 0);
     identify_pb_msg_.SerializeToArray(
         identify_pb_msg_bytes_.data() + pb_msg_len_varint_->size(),
         identify_pb_msg_.ByteSizeLong());
@@ -185,9 +185,8 @@ TEST_F(IdentifyTest, Send) {
   // handle Identify request and check it
   EXPECT_CALL(*stream_, write(_, _, _))
       .WillOnce(Success(
-          BytesIn(identify_pb_msg_bytes_.data(),
-                                         identify_pb_msg_bytes_.size()),
-                        outcome::success(identify_pb_msg_bytes_.size())));
+          BytesIn(identify_pb_msg_bytes_.data(), identify_pb_msg_bytes_.size()),
+          outcome::success(identify_pb_msg_bytes_.size())));
 
   identify_->handle(StreamAndProtocol{stream_, {}});
 }
@@ -249,8 +248,8 @@ TEST_F(IdentifyTest, Receive) {
 
   auto if_protocols = [&](std::span<const peer::ProtocolName> actual) {
     auto expected = std::span<const peer::ProtocolName>(protocols_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(proto_repo_, addProtocols(kRemotePeerId, Truly(if_protocols)))
@@ -293,13 +292,13 @@ TEST_F(IdentifyTest, Receive) {
 
   auto if_listen_addrs = [&](std::span<const multi::Multiaddress> actual) {
     auto expected = std::span<const multi::Multiaddress>(listen_addresses_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(addr_repo_,
-              upsertAddresses(kRemotePeerId, Truly(if_listen_addrs),
-                              peer::ttl::kPermanent))
+              upsertAddresses(
+                  kRemotePeerId, Truly(if_listen_addrs), peer::ttl::kPermanent))
       .WillOnce(Return(outcome::success()));
 
   // trigger the event, to which Identify object reacts

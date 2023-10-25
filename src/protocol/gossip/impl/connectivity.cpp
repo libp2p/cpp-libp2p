@@ -36,7 +36,8 @@ namespace libp2p::protocol::gossip {
         host_(std::move(host)),
         msg_receiver_(std::move(msg_receiver)),
         connected_cb_(std::move(on_connected)),
-        log_("gossip", "Connectivity",
+        log_("gossip",
+             "Connectivity",
              host_->getPeerInfo().id.toBase58().substr(46)) {}
 
   Connectivity::~Connectivity() {
@@ -184,9 +185,13 @@ namespace libp2p::protocol::gossip {
     stream_id = ctx->inbound_streams.size() + 1;
     is_new_connection = (stream_id == 1 && !ctx->outbound_stream);
 
-    auto gossip_stream = std::make_shared<Stream>(
-        stream_id, config_, *scheduler_, on_stream_event_, *msg_receiver_,
-        std::move(stream), ctx);
+    auto gossip_stream = std::make_shared<Stream>(stream_id,
+                                                  config_,
+                                                  *scheduler_,
+                                                  on_stream_event_,
+                                                  *msg_receiver_,
+                                                  std::move(stream),
+                                                  ctx);
 
     gossip_stream->read();
 
@@ -299,9 +304,13 @@ namespace libp2p::protocol::gossip {
     size_t stream_id = 0;
     bool is_new_connection = ctx->inbound_streams.empty();
 
-    auto gossip_stream = std::make_shared<Stream>(
-        stream_id, config_, *scheduler_, on_stream_event_, *msg_receiver_,
-        std::move(stream), ctx);
+    auto gossip_stream = std::make_shared<Stream>(stream_id,
+                                                  config_,
+                                                  *scheduler_,
+                                                  on_stream_event_,
+                                                  *msg_receiver_,
+                                                  std::move(stream),
+                                                  ctx);
 
     gossip_stream->read();
 
@@ -342,8 +351,8 @@ namespace libp2p::protocol::gossip {
       }
       all_peers_.erase(ctx->peer_id);
     } else {
-      log_.info("banning peer {}, dial_attempts={}", ctx->str,
-                ctx->dial_attempts);
+      log_.info(
+          "banning peer {}, dial_attempts={}", ctx->str, ctx->dial_attempts);
       auto ts = scheduler_->now() + config_.ban_interval_msec;
       ctx->banned_until = ts;
       banned_peers_expiration_.insert({ts, ctx});

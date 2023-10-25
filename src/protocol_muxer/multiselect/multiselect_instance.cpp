@@ -27,8 +27,10 @@ namespace libp2p::protocol_muxer::multiselect {
 
   void MultiselectInstance::selectOneOf(
       std::span<const peer::ProtocolName> protocols,
-      std::shared_ptr<basic::ReadWriter> connection, bool is_initiator,
-      bool negotiate_multiselect, Multiselect::ProtocolHandlerFunc cb) {
+      std::shared_ptr<basic::ReadWriter> connection,
+      bool is_initiator,
+      bool negotiate_multiselect,
+      Multiselect::ProtocolHandlerFunc cb) {
     assert(!protocols.empty());
     assert(connection);
     assert(cb);
@@ -130,8 +132,10 @@ namespace libp2p::protocol_muxer::multiselect {
     SL_TRACE(log(), "sending {}", common::dumpBin(span));
 
     connection_->write(
-        span, span.size(),
-        [wptr = weak_from_this(), round = current_round_,
+        span,
+        span.size(),
+        [wptr = weak_from_this(),
+         round = current_round_,
          packet = std::move(packet)](outcome::result<size_t> res) {
           auto self = wptr.lock();
           if (self && self->current_round_ == round) {
@@ -183,7 +187,8 @@ namespace libp2p::protocol_muxer::multiselect {
     assert(bytes_needed > 0);
 
     if (bytes_needed > kMaxMessageSize) {
-      SL_TRACE(log(), "rejecting incoming traffic, too large message ({})",
+      SL_TRACE(log(),
+               "rejecting incoming traffic, too large message ({})",
                bytes_needed);
       return close(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
     }
@@ -191,8 +196,10 @@ namespace libp2p::protocol_muxer::multiselect {
     BytesOut span(*read_buffer_);
     span = span.first(static_cast<Parser::IndexType>(bytes_needed));
 
-    connection_->read(span, bytes_needed,
-                      [wptr = weak_from_this(), round = current_round_,
+    connection_->read(span,
+                      bytes_needed,
+                      [wptr = weak_from_this(),
+                       round = current_round_,
                        packet = read_buffer_](outcome::result<size_t> res) {
                         auto self = wptr.lock();
                         if (self && self->current_round_ == round) {
@@ -256,12 +263,14 @@ namespace libp2p::protocol_muxer::multiselect {
           result = handleNA();
           break;
         case Message::kWrongProtocolVersion: {
-          SL_DEBUG(log(), "Received unsupported protocol version: {}",
+          SL_DEBUG(log(),
+                   "Received unsupported protocol version: {}",
                    common::dumpBin(msg.content));
           result = ProtocolMuxer::Error::PROTOCOL_VIOLATION;
         } break;
         default: {
-          SL_DEBUG(log(), "Received invalid message: {}",
+          SL_DEBUG(log(),
+                   "Received invalid message: {}",
                    common::dumpBin(msg.content));
           result = ProtocolMuxer::Error::PROTOCOL_VIOLATION;
         } break;
@@ -288,7 +297,8 @@ namespace libp2p::protocol_muxer::multiselect {
         }
       }
 
-      SL_DEBUG(log(), "Unexpected message received by client: {}",
+      SL_DEBUG(log(),
+               "Unexpected message received by client: {}",
                common::dumpBin(protocol));
       return MaybeResult(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
     }
@@ -318,7 +328,8 @@ namespace libp2p::protocol_muxer::multiselect {
   MultiselectInstance::MaybeResult MultiselectInstance::handleNA() {
     if (is_initiator_) {
       if (current_protocol_ < protocols_.size()) {
-        SL_DEBUG(log(), "protocol {} was not accepted by peer",
+        SL_DEBUG(log(),
+                 "protocol {} was not accepted by peer",
                  protocols_[current_protocol_]);
       }
 
@@ -329,7 +340,8 @@ namespace libp2p::protocol_muxer::multiselect {
         return boost::none;
       }
 
-      SL_DEBUG(log(), "Failed to negotiate protocols: {}",
+      SL_DEBUG(log(),
+               "Failed to negotiate protocols: {}",
                fmt::join(protocols_.begin(), protocols_.end(), ", "));
       return MaybeResult(ProtocolMuxer::Error::NEGOTIATION_FAILED);
     }

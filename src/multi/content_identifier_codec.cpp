@@ -12,7 +12,8 @@
 #include <libp2p/multi/multicodec_type.hpp>
 #include <libp2p/multi/uvarint.hpp>
 
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, ContentIdentifierCodec::EncodeError,
+OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi,
+                            ContentIdentifierCodec::EncodeError,
                             e) {
   using E = libp2p::multi::ContentIdentifierCodec::EncodeError;
   switch (e) {
@@ -30,7 +31,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, ContentIdentifierCodec::EncodeError,
   return "Unknown error";
 }
 
-OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, ContentIdentifierCodec::DecodeError,
+OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi,
+                            ContentIdentifierCodec::DecodeError,
                             e) {
   using E = libp2p::multi::ContentIdentifierCodec::DecodeError;
   switch (e) {
@@ -58,7 +60,7 @@ namespace libp2p::multi {
       common::append(bytes, version.toBytes());
       UVarint type(static_cast<uint64_t>(cid.content_type));
       common::append(bytes, type.toBytes());
-      auto const &hash = cid.content_address.toBuffer();
+      const auto &hash = cid.content_address.toBuffer();
       common::append(bytes, hash);
 
     } else if (cid.version == ContentIdentifier::Version::V0) {
@@ -71,7 +73,7 @@ namespace libp2p::multi {
       if (cid.content_address.getHash().size() != 32) {
         return EncodeError::INVALID_HASH_LENGTH;
       }
-      auto const &hash = cid.content_address.toBuffer();
+      const auto &hash = cid.content_address.toBuffer();
       common::append(bytes, hash);
     }
     return bytes;
@@ -81,7 +83,8 @@ namespace libp2p::multi {
       const void *byte_buffer, size_t sz) {
     auto digest_res = crypto::sha256(std::span(
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        reinterpret_cast<const uint8_t *>(byte_buffer), sz));
+        reinterpret_cast<const uint8_t *>(byte_buffer),
+        sz));
     BOOST_ASSERT(digest_res.has_value());
 
     auto &hash = digest_res.value();
@@ -101,7 +104,8 @@ namespace libp2p::multi {
     bytes.reserve(1 + 1 + mhash.toBuffer().size());
     bytes.push_back(1);                                   // CID version
     bytes.push_back(static_cast<uint8_t>(content_type));  // Content-Type
-    std::copy(mhash.toBuffer().begin(), mhash.toBuffer().end(),
+    std::copy(mhash.toBuffer().begin(),
+              mhash.toBuffer().end(),
               std::back_inserter(bytes));  // multihash data
     return bytes;
   }
@@ -111,7 +115,8 @@ namespace libp2p::multi {
     if (bytes.size() == 34 and bytes[0] == 0x12 and bytes[1] == 0x20) {
       OUTCOME_TRY(hash, Multihash::createFromBytes(bytes));
       return ContentIdentifier(ContentIdentifier::Version::V0,
-                               MulticodecType::Code::DAG_PB, std::move(hash));
+                               MulticodecType::Code::DAG_PB,
+                               std::move(hash));
     }
     auto version_opt = UVarint::create(bytes);
     if (!version_opt) {
@@ -165,8 +170,9 @@ namespace libp2p::multi {
     OUTCOME_TRY(cid_bytes, encode(cid));
     switch (cid.version) {
       case ContentIdentifier::Version::V0:
-        if (base != MultibaseCodec::Encoding::BASE58)
+        if (base != MultibaseCodec::Encoding::BASE58) {
           return EncodeError::INVALID_BASE_ENCODING;
+        }
         result = detail::encodeBase58(cid_bytes);
         break;
       case ContentIdentifier::Version::V1:

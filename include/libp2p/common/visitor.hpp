@@ -57,7 +57,7 @@ namespace libp2p {
    * @return visitor
    */
   template <class... Fs>
-  constexpr auto make_visitor(Fs &&... fs) {
+  constexpr auto make_visitor(Fs &&...fs) {
     using visitor_type = lambda_visitor<std::decay_t<Fs>...>;
     return visitor_type(std::forward<Fs>(fs)...);
   }
@@ -79,7 +79,7 @@ namespace libp2p {
    */
   template <typename TVariant, typename... TVisitors>
   constexpr decltype(auto) visit_in_place(TVariant &&variant,
-                                          TVisitors &&... visitors) {
+                                          TVisitors &&...visitors) {
     return boost::apply_visitor(
         make_visitor(std::forward<TVisitors>(visitors)...),
         std::forward<TVariant>(variant));
@@ -94,7 +94,7 @@ namespace libp2p {
 
   /// construct visitor from Fs and apply it to optional T
   template <typename T, typename... Fs>
-  constexpr decltype(auto) match_in_place(T &&t, Fs &&... fs) {
+  constexpr decltype(auto) match_in_place(T &&t, Fs &&...fs) {
     return match(std::forward<T>(t), make_visitor(std::forward<Fs>(fs)...));
   }
-}  // namespace kagome
+}  // namespace libp2p

@@ -48,11 +48,12 @@ namespace libp2p::protocol::kademlia {
                 boost::multi_index::member<Record, Time, &Record::expire_time>>,
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::tag<ByRefreshTime>,
-                boost::multi_index::member<Record, Time,
-                                           &Record::refresh_time>>>>;
+                boost::multi_index::
+                    member<Record, Time, &Record::refresh_time>>>>;
 
    public:
-    StorageImpl(const Config &config, std::shared_ptr<StorageBackend> backend,
+    StorageImpl(const Config &config,
+                std::shared_ptr<StorageBackend> backend,
                 std::shared_ptr<basic::Scheduler> scheduler);
 
     ~StorageImpl() override;

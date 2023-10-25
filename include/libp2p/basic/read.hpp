@@ -11,9 +11,11 @@
 
 namespace libp2p {
   /// Read exactly `out.size()` bytes
-  inline void read(const std::shared_ptr<basic::Reader> &reader, BytesOut out,
+  inline void read(const std::shared_ptr<basic::Reader> &reader,
+                   BytesOut out,
                    std::function<void(outcome::result<void>)> cb) {
-    auto post_cb = [](decltype(reader) reader, decltype(cb) &&cb,
+    auto post_cb = [](decltype(reader) reader,
+                      decltype(cb) &&cb,
                       outcome::result<size_t> r) {
       reader->deferReadCallback(r,
                                 [cb{std::move(cb)}](outcome::result<size_t> r) {
@@ -29,9 +31,10 @@ namespace libp2p {
     }
     // read some bytes
     reader->readSome(
-        out, out.size(),
-        [weak{std::weak_ptr{reader}}, out, cb{std::move(cb)},
-         post_cb](outcome::result<size_t> n_res) mutable {
+        out,
+        out.size(),
+        [weak{std::weak_ptr{reader}}, out, cb{std::move(cb)}, post_cb](
+            outcome::result<size_t> n_res) mutable {
           auto reader = weak.lock();
           if (not reader) {
             return;

@@ -15,7 +15,8 @@ namespace libp2p::layer {
         boost::asio::ssl::context::tls);
     boost::system::error_code ec;
     context->use_private_key(boost::asio::buffer(pem),
-                             boost::asio::ssl::context::file_format::pem, ec);
+                             boost::asio::ssl::context::file_format::pem,
+                             ec);
     if (ec) {
       return ec;
     }
@@ -49,8 +50,8 @@ namespace libp2p::layer {
         io_context_, std::move(conn), server_certificate_.context);
     ssl->ssl_.async_handshake(
         boost::asio::ssl::stream_base::handshake_type::server,
-        [=, ws{ws_adaptor_},
-         cb{std::move(cb)}](boost::system::error_code ec) mutable {
+        [=, ws{ws_adaptor_}, cb{std::move(cb)}](
+            boost::system::error_code ec) mutable {
           if (ec) {
             return cb(ec);
           }
@@ -66,8 +67,8 @@ namespace libp2p::layer {
         io_context_, std::move(conn), client_context_);
     ssl->ssl_.async_handshake(
         boost::asio::ssl::stream_base::handshake_type::client,
-        [=, ws{ws_adaptor_},
-         cb{std::move(cb)}](boost::system::error_code ec) mutable {
+        [=, ws{ws_adaptor_}, cb{std::move(cb)}](
+            boost::system::error_code ec) mutable {
           if (ec) {
             return cb(ec);
           }

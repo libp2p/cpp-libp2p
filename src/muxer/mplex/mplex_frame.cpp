@@ -18,23 +18,24 @@ namespace libp2p::connection {
     multi::UVarint id_and_flag_varint{id_and_flag};
     multi::UVarint length_varint{length};
 
-    result.insert(result.end(), id_and_flag_varint.toVector().begin(),
+    result.insert(result.end(),
+                  id_and_flag_varint.toVector().begin(),
                   id_and_flag_varint.toVector().end());
-    result.insert(result.end(), length_varint.toVector().begin(),
+    result.insert(result.end(),
+                  length_varint.toVector().begin(),
                   length_varint.toVector().end());
     result.insert(result.end(), data.begin(), data.end());
     return result;
   }
 
   Bytes createFrameBytes(MplexFrame::Flag flag,
-                                     MplexStream::StreamNumber stream_number,
-                                     Bytes data) {
+                         MplexStream::StreamNumber stream_number,
+                         Bytes data) {
     return MplexFrame{flag, stream_number, data.size(), std::move(data)}
         .toBytes();
   }
 
-  outcome::result<MplexFrame> createFrame(uint64_t id_flag,
-                                          Bytes data) {
+  outcome::result<MplexFrame> createFrame(uint64_t id_flag, Bytes data) {
     using Flag = MplexFrame::Flag;
 
     Flag flag;
@@ -66,7 +67,8 @@ namespace libp2p::connection {
 
     return MplexFrame{flag,
                       static_cast<MplexStream::StreamNumber>(id_flag >> 3),
-                      data.size(), std::move(data)};
+                      data.size(),
+                      std::move(data)};
   }
 
   void readFrame(std::shared_ptr<basic::ReadWriter> reader,
@@ -81,7 +83,8 @@ namespace libp2p::connection {
           // read second varint
           basic::VarintReader::readVarint(
               reader,
-              [reader, cb{std::move(cb)},
+              [reader,
+               cb{std::move(cb)},
                id_flag =
                    varint_res.value().toUInt64()](auto &&varint_res) mutable {
                 if (varint_res.has_error()) {
@@ -97,9 +100,10 @@ namespace libp2p::connection {
                 // read data
                 std::shared_ptr<Bytes> data =
                     std::make_shared<Bytes>(length, 0);
-                reader->read(*data, length,
-                             [id_flag, data,
-                              cb{std::move(cb)}](auto &&read_res) mutable {
+                reader->read(*data,
+                             length,
+                             [id_flag, data, cb{std::move(cb)}](
+                                 auto &&read_res) mutable {
                                if (!read_res) {
                                  return cb(read_res.error());
                                }

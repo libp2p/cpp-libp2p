@@ -13,7 +13,8 @@
 namespace libp2p::protocol::kademlia {
 
   ContentRoutingTableImpl::ContentRoutingTableImpl(
-      const Config &config, basic::Scheduler &scheduler,
+      const Config &config,
+      basic::Scheduler &scheduler,
       std::shared_ptr<event::Bus> bus)
       : config_(config), scheduler_(scheduler), bus_(std::move(bus)) {
     BOOST_ASSERT(bus_ != nullptr);

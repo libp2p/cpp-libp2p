@@ -100,7 +100,8 @@ namespace libp2p::security {
 
   void Secio::secureOutbound(
       std::shared_ptr<connection::LayerConnection> outbound,
-      const peer::PeerId &p, SecurityAdaptor::SecConnCallbackFunc cb) {
+      const peer::PeerId &p,
+      SecurityAdaptor::SecConnCallbackFunc cb) {
     log_->info("securing outbound connection");
     auto dialer = std::make_shared<secio::Dialer>(outbound);
     sendProposeMessage(outbound, dialer, cb);
@@ -128,7 +129,10 @@ namespace libp2p::security {
       SecurityAdaptor::SecConnCallbackFunc cb) const {
     auto remote_peer_proposal_bytes = std::make_shared<std::vector<uint8_t>>();
     dialer->rw->read<secio::protobuf::Propose>(
-        [self{shared_from_this()}, conn, dialer, cb{std::move(cb)},
+        [self{shared_from_this()},
+         conn,
+         dialer,
+         cb{std::move(cb)},
          remote_peer_proposal_bytes](auto &&res) {
           SECIO_OUTCOME_TRY(other_peer_proto_propose, res, conn, cb);
           auto remote_peer_propose{self->propose_marshaller_->protoToHandy(
@@ -136,7 +140,8 @@ namespace libp2p::security {
           SECIO_OUTCOME_VOID_TRY(
               dialer->determineCommonAlgorithm(self->propose_message_,
                                                remote_peer_propose),
-              conn, cb)
+              conn,
+              cb)
           dialer->storeRemotePeerProposalBytes(remote_peer_proposal_bytes);
           SL_TRACE(self->log_, "remote peer proposal received");
           self->remote_peer_rand_.swap(remote_peer_propose.rand);
@@ -152,24 +157,28 @@ namespace libp2p::security {
     const auto &&self{this};
     SECIO_OUTCOME_TRY(curve, dialer->chosenCurve(), conn, cb)
     SECIO_OUTCOME_TRY(ephemeral_key,
-                      crypto_provider_->generateEphemeralKeyPair(curve), conn,
+                      crypto_provider_->generateEphemeralKeyPair(curve),
+                      conn,
                       cb)
     dialer->storeEphemeralKeypair(ephemeral_key);
     SECIO_OUTCOME_TRY(
         local_corpus,
-        dialer->getCorpus(true, ephemeral_key.ephemeral_public_key), conn, cb)
+        dialer->getCorpus(true, ephemeral_key.ephemeral_public_key),
+        conn,
+        cb)
     SECIO_OUTCOME_TRY(
         local_corpus_signature,
         crypto_provider_->sign(local_corpus, idmgr_->getKeyPair().privateKey),
-        conn, cb)
+        conn,
+        cb)
     secio::ExchangeMessage local_exchange{
         .epubkey = ephemeral_key.ephemeral_public_key,
         .signature = std::move(local_corpus_signature)};
     auto proto_exchange{exchange_marshaller_->handyToProto(local_exchange)};
     dialer->rw->write<secio::protobuf::Exchange>(
         proto_exchange,
-        [self{shared_from_this()}, conn, dialer,
-         cb{std::move(cb)}](auto &&res) {
+        [self{shared_from_this()}, conn, dialer, cb{std::move(cb)}](
+            auto &&res) {
           SECIO_OUTCOME_VOID_TRY(res, conn, cb)
           SL_TRACE(self->log_, "exchange message sent");
           self->receiveExchangeMessage(conn, dialer, cb);
@@ -181,25 +190,28 @@ namespace libp2p::security {
       const std::shared_ptr<secio::Dialer> &dialer,
       SecurityAdaptor::SecConnCallbackFunc cb) const {
     dialer->rw->read<secio::protobuf::Exchange>(
-        [self{shared_from_this()}, conn, dialer,
-         cb{std::move(cb)}](auto &&res) {
+        [self{shared_from_this()}, conn, dialer, cb{std::move(cb)}](
+            auto &&res) {
           SECIO_OUTCOME_TRY(remote_proto_exchange, res, conn, cb)
           auto remote_exchange{
               self->exchange_marshaller_->protoToHandy(remote_proto_exchange)};
           SL_TRACE(self->log_, "remote exchange message received");
           SECIO_OUTCOME_TRY(remote_corpus,
                             dialer->getCorpus(false, remote_exchange.epubkey),
-                            conn, cb)
+                            conn,
+                            cb)
 
           SECIO_OUTCOME_TRY(remote_key,
                             dialer->remotePublicKey(self->key_marshaller_,
                                                     self->propose_marshaller_),
-                            conn, cb)
+                            conn,
+                            cb)
           SECIO_OUTCOME_TRY(
               verify_res,
               self->crypto_provider_->verify(
                   remote_corpus, remote_exchange.signature, remote_key),
-              conn, cb)
+              conn,
+              cb)
           if (!verify_res) {
             const auto error{Error::REMOTE_PEER_SIGNATURE_IS_INVALID};
             self->closeConnection(conn, error);
@@ -209,31 +221,42 @@ namespace libp2p::security {
 
           SECIO_OUTCOME_TRY(
               shared_secret,
-              dialer->generateSharedSecret(remote_exchange.epubkey), conn, cb)
+              dialer->generateSharedSecret(remote_exchange.epubkey),
+              conn,
+              cb)
           SECIO_OUTCOME_TRY(chosen_cipher, dialer->chosenCipher(), conn, cb)
           SECIO_OUTCOME_TRY(chosen_hash, dialer->chosenHash(), conn, cb)
           SECIO_OUTCOME_TRY(stretched_keys,
                             self->crypto_provider_->stretchKey(
                                 chosen_cipher, chosen_hash, shared_secret),
-                            conn, cb)
+                            conn,
+                            cb)
           dialer->storeStretchedKeys(std::move(stretched_keys));
 
           SECIO_OUTCOME_TRY(remote_pubkey,
                             dialer->remotePublicKey(self->key_marshaller_,
                                                     self->propose_marshaller_),
-                            conn, cb)
-          SECIO_OUTCOME_TRY(local_stretched_key, dialer->localStretchedKey(),
-                            conn, cb)
-          SECIO_OUTCOME_TRY(remote_stretched_key, dialer->remoteStretchedKey(),
-                            conn, cb)
+                            conn,
+                            cb)
+          SECIO_OUTCOME_TRY(
+              local_stretched_key, dialer->localStretchedKey(), conn, cb)
+          SECIO_OUTCOME_TRY(
+              remote_stretched_key, dialer->remoteStretchedKey(), conn, cb)
 
           auto secio_conn = std::make_shared<connection::SecioConnection>(
-              conn, self->hmac_provider_, self->key_marshaller_,
-              self->idmgr_->getKeyPair().publicKey, remote_pubkey, chosen_hash,
-              chosen_cipher, local_stretched_key, remote_stretched_key);
+              conn,
+              self->hmac_provider_,
+              self->key_marshaller_,
+              self->idmgr_->getKeyPair().publicKey,
+              remote_pubkey,
+              chosen_hash,
+              chosen_cipher,
+              local_stretched_key,
+              remote_stretched_key);
           SECIO_OUTCOME_VOID_TRY(secio_conn->init(), conn, cb)
           secio_conn->write(
-              self->remote_peer_rand_, self->remote_peer_rand_.size(),
+              self->remote_peer_rand_,
+              self->remote_peer_rand_.size(),
               [self, conn, cb, secio_conn](auto &&write_res) {
                 SECIO_OUTCOME_TRY(written_bytes, write_res, conn, cb)
                 if (written_bytes != self->remote_peer_rand_.size()) {
@@ -242,7 +265,8 @@ namespace libp2p::security {
                 const auto kToRead{self->propose_message_.rand.size()};
                 auto buffer = std::make_shared<Bytes>(kToRead);
                 secio_conn->read(
-                    *buffer, kToRead,
+                    *buffer,
+                    kToRead,
                     [self, cb, conn, secio_conn, buffer](auto &&read_res) {
                       SECIO_OUTCOME_TRY(read_bytes, read_res, conn, cb)
                       if (read_bytes != buffer->size()

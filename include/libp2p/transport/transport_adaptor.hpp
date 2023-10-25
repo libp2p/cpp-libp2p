@@ -40,9 +40,12 @@ namespace libp2p::transport {
      * @param handler callback that will be executed on connection/error
      * @return connection in case of success, error otherwise
      */
-    virtual void dial(const peer::PeerId &remoteId, multi::Multiaddress address,
+    virtual void dial(const peer::PeerId &remoteId,
+                      multi::Multiaddress address,
                       HandlerFunc handler) {
-      dial(remoteId, std::move(address), std::move(handler),
+      dial(remoteId,
+           std::move(address),
+           std::move(handler),
            std::chrono::milliseconds(0));
     }
 
@@ -54,7 +57,8 @@ namespace libp2p::transport {
      * @param timeout in milliseconds for connection establishing
      * @return connection in case of success, error otherwise
      */
-    virtual void dial(const peer::PeerId &remoteId, multi::Multiaddress address,
+    virtual void dial(const peer::PeerId &remoteId,
+                      multi::Multiaddress address,
                       HandlerFunc handler,
                       std::chrono::milliseconds timeout) = 0;
 

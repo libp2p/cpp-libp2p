@@ -34,7 +34,8 @@ namespace libp2p::basic {
           if (0 != msg_len) {
             auto buffer = std::make_shared<std::vector<uint8_t>>(msg_len, 0);
             self->conn_->read(
-                *buffer, msg_len,
+                *buffer,
+                msg_len,
                 [self, buffer, cb = std::move(cb)](auto &&res) mutable {
                   if (!res) {
                     return cb(res.error());
@@ -58,8 +59,10 @@ namespace libp2p::basic {
                       std::make_move_iterator(varint_len.toVector().end()));
     msg_bytes->insert(msg_bytes->end(), buffer.begin(), buffer.end());
 
-    conn_->write(*msg_bytes, msg_bytes->size(),
-                 [cb = std::move(cb), varint_size = varint_len.size(),
+    conn_->write(*msg_bytes,
+                 msg_bytes->size(),
+                 [cb = std::move(cb),
+                  varint_size = varint_len.size(),
                   msg_bytes](auto &&res) {
                    if (!res) {
                      return cb(res.error());

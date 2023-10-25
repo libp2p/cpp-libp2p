@@ -31,12 +31,12 @@ struct InmemProtocolRepository_Test : public ::testing::Test {
   const PeerId p2 = PeerId::fromHash("12051203FFFFFF"_multihash).value();
 
   template <typename... T>
-  std::vector<ProtocolName> vec(T &&... arg) {
+  std::vector<ProtocolName> vec(T &&...arg) {
     return std::vector<ProtocolName>{arg...};
   }
 
   template <typename... T>
-  std::set<ProtocolName> set(T &&... arg) {
+  std::set<ProtocolName> set(T &&...arg) {
     return std::set<ProtocolName>{arg...};
   }
 };

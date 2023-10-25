@@ -63,7 +63,8 @@ namespace libp2p::connection {
         std::shared_ptr<LayerConnection> original_connection,
         std::shared_ptr<crypto::hmac::HmacProvider> hmac_provider,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
-        crypto::PublicKey local_pubkey, crypto::PublicKey remote_pubkey,
+        crypto::PublicKey local_pubkey,
+        crypto::PublicKey remote_pubkey,
         crypto::common::HashType hash_type,
         crypto::common::CipherType cipher_type,
         crypto::StretchedKey local_stretched_key,
@@ -95,20 +96,16 @@ namespace libp2p::connection {
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 
-    void read(BytesOut out, size_t bytes,
-              ReadCallbackFunc cb) override;
+    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
-    void readSome(BytesOut out, size_t bytes,
-                  ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(BytesIn in, size_t bytes,
-               WriteCallbackFunc cb) override;
+    void write(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
-    void writeSome(BytesIn in, size_t bytes,
-                   WriteCallbackFunc cb) override;
+    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 

@@ -13,10 +13,12 @@
 #include <libp2p/common/trace.hpp>
 
 namespace libp2p::connection {
-  Bytes YamuxFrame::frameBytes(uint8_t version, FrameType type,
-                                               Flag flag, uint32_t stream_id,
-                                               uint32_t length,
-                                               bool reserve_space) {
+  Bytes YamuxFrame::frameBytes(uint8_t version,
+                               FrameType type,
+                               Flag flag,
+                               uint32_t stream_id,
+                               uint32_t length,
+                               bool reserve_space) {
     using common::putUint16BE;
     using common::putUint32BE;
     using common::putUint8;
@@ -46,62 +48,81 @@ namespace libp2p::connection {
     TRACE("yamux newStreamMsg, stream_id={}", stream_id);
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
-                                  YamuxFrame::Flag::SYN, stream_id, 0);
+                                  YamuxFrame::Flag::SYN,
+                                  stream_id,
+                                  0);
   }
 
   Bytes ackStreamMsg(YamuxFrame::StreamId stream_id) {
     TRACE("yamux ackStreamMsg, stream_id={}", stream_id);
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
-                                  YamuxFrame::Flag::ACK, stream_id, 0);
+                                  YamuxFrame::Flag::ACK,
+                                  stream_id,
+                                  0);
   }
 
   Bytes closeStreamMsg(YamuxFrame::StreamId stream_id) {
     TRACE("yamux closeStreamMsg, stream_id={}", stream_id);
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
-                                  YamuxFrame::Flag::FIN, stream_id, 0);
+                                  YamuxFrame::Flag::FIN,
+                                  stream_id,
+                                  0);
   }
 
   Bytes resetStreamMsg(YamuxFrame::StreamId stream_id) {
     TRACE("yamux resetStreamMsg, stream_id={}", stream_id);
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
-                                  YamuxFrame::Flag::RST, stream_id, 0);
+                                  YamuxFrame::Flag::RST,
+                                  stream_id,
+                                  0);
   }
 
   Bytes pingOutMsg(uint32_t value) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::PING,
-                                  YamuxFrame::Flag::SYN, 0, value);
+                                  YamuxFrame::Flag::SYN,
+                                  0,
+                                  value);
   }
 
   Bytes pingResponseMsg(uint32_t value) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::PING,
-                                  YamuxFrame::Flag::ACK, 0, value);
+                                  YamuxFrame::Flag::ACK,
+                                  0,
+                                  value);
   }
 
   Bytes dataMsg(YamuxFrame::StreamId stream_id,
-                                uint32_t data_length, bool reserve_space) {
+                uint32_t data_length,
+                bool reserve_space) {
     TRACE("yamux dataMsg, stream_id={}, size={}", stream_id, data_length);
-    return YamuxFrame::frameBytes(
-        YamuxFrame::kDefaultVersion, YamuxFrame::FrameType::DATA,
-        YamuxFrame::Flag::NONE, stream_id, data_length, reserve_space);
+    return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
+                                  YamuxFrame::FrameType::DATA,
+                                  YamuxFrame::Flag::NONE,
+                                  stream_id,
+                                  data_length,
+                                  reserve_space);
   }
 
   Bytes goAwayMsg(YamuxFrame::GoAwayError error) {
     TRACE("yamux goAwayMsg");
-    return YamuxFrame::frameBytes(
-        YamuxFrame::kDefaultVersion, YamuxFrame::FrameType::GO_AWAY,
-        YamuxFrame::Flag::NONE, 0, static_cast<uint32_t>(error));
+    return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
+                                  YamuxFrame::FrameType::GO_AWAY,
+                                  YamuxFrame::Flag::NONE,
+                                  0,
+                                  static_cast<uint32_t>(error));
   }
 
-  Bytes windowUpdateMsg(YamuxFrame::StreamId stream_id,
-                                        uint32_t window_delta) {
-    return YamuxFrame::frameBytes(
-        YamuxFrame::kDefaultVersion, YamuxFrame::FrameType::WINDOW_UPDATE,
-        YamuxFrame::Flag::NONE, stream_id, window_delta);
+  Bytes windowUpdateMsg(YamuxFrame::StreamId stream_id, uint32_t window_delta) {
+    return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
+                                  YamuxFrame::FrameType::WINDOW_UPDATE,
+                                  YamuxFrame::Flag::NONE,
+                                  stream_id,
+                                  window_delta);
   }
 
   boost::optional<YamuxFrame> parseFrame(BytesIn frame_bytes) {

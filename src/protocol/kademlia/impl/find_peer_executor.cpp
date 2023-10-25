@@ -20,12 +20,14 @@ namespace libp2p::protocol::kademlia {
   std::atomic_size_t FindPeerExecutor::instance_number = 0;
 
   FindPeerExecutor::FindPeerExecutor(
-      const Config &config, std::shared_ptr<Host> host,
+      const Config &config,
+      std::shared_ptr<Host> host,
       std::shared_ptr<basic::Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
       std::shared_ptr<PeerRouting> peer_routing,
       const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
-      PeerId sought_peer_id, FoundPeerInfoHandler handler)
+      PeerId sought_peer_id,
+      FoundPeerInfoHandler handler)
       : config_(config),
         host_(std::move(host)),
         scheduler_(std::move(scheduler)),
@@ -41,7 +43,8 @@ namespace libp2p::protocol::kademlia {
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));
 
-    std::for_each(nearest_peer_ids_.begin(), nearest_peer_ids_.end(),
+    std::for_each(nearest_peer_ids_.begin(),
+                  nearest_peer_ids_.end(),
                   [this](auto &peer_id) { queue_.emplace(peer_id, target_); });
 
     log_.debug("created");
@@ -133,8 +136,10 @@ namespace libp2p::protocol::kademlia {
 
       ++requests_in_progress_;
 
-      log_.debug("connecting to {}; active {}, in queue {}", peer_id.toBase58(),
-                 requests_in_progress_, queue_.size());
+      log_.debug("connecting to {}; active {}, in queue {}",
+                 peer_id.toBase58(),
+                 requests_in_progress_,
+                 queue_.size());
 
       auto holder =
           std::make_shared<std::pair<std::shared_ptr<FindPeerExecutor>,
@@ -152,7 +157,8 @@ namespace libp2p::protocol::kademlia {
           config_.connectionTimeout);
 
       host_->newStream(
-          peer_info, config_.protocols,
+          peer_info,
+          config_.protocols,
           [holder](auto &&stream_res) {
             if (holder->first) {
               holder->second.cancel();
@@ -173,7 +179,8 @@ namespace libp2p::protocol::kademlia {
       --requests_in_progress_;
 
       log_.debug("cannot connect to peer: {}; active {}, in queue {}",
-                 stream_res.error().message(), requests_in_progress_,
+                 stream_res.error().message(),
+                 requests_in_progress_,
                  queue_.size());
 
       spawn();
@@ -185,8 +192,10 @@ namespace libp2p::protocol::kademlia {
 
     std::string addr(stream->remoteMultiaddr().value().getStringAddress());
 
-    log_.debug("connected to {}; active {}, in queue {}", addr,
-               requests_in_progress_, queue_.size());
+    log_.debug("connected to {}; active {}, in queue {}",
+               addr,
+               requests_in_progress_,
+               queue_.size());
 
     log_.debug("outgoing stream with {}",
                stream->remotePeerId().value().toBase58());
@@ -195,8 +204,10 @@ namespace libp2p::protocol::kademlia {
     if (!session->write(serialized_request_, shared_from_this())) {
       --requests_in_progress_;
 
-      log_.debug("write to {} failed; active {}, in queue {}", addr,
-                 requests_in_progress_, queue_.size());
+      log_.debug("write to {} failed; active {}, in queue {}",
+                 addr,
+                 requests_in_progress_,
+                 queue_.size());
 
       spawn();
       return;
@@ -226,7 +237,8 @@ namespace libp2p::protocol::kademlia {
     if (not msg_res) {
       log_.warn("Result from {} is failed: {}; active {}, in queue {}",
                 session->stream()->remotePeerId().value().toBase58(),
-                msg_res.error().message(), requests_in_progress_,
+                msg_res.error().message(),
+                requests_in_progress_,
                 queue_.size());
       return;
     }
@@ -244,7 +256,9 @@ namespace libp2p::protocol::kademlia {
     auto self_peer_id = host_->getId();
 
     log_.debug("Result from {} is gotten; active {}, in queue {}",
-               remote_peer_id.toBase58(), requests_in_progress_, queue_.size());
+               remote_peer_id.toBase58(),
+               requests_in_progress_,
+               queue_.size());
 
     // Append gotten peer to queue
     if (msg.closer_peers) {

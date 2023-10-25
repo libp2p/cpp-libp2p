@@ -24,7 +24,6 @@ namespace libp2p::protocol::gossip {
 
     ~MessageParser();
 
-
     /// Parses RPC protobuf message received from wire
     bool parse(BytesIn bytes);
 
@@ -36,4 +35,4 @@ namespace libp2p::protocol::gossip {
     std::unique_ptr<pubsub::pb::RPC> pb_msg_;
   };
 
-} //namespace libp2p::protocol::gossip
+}  // namespace libp2p::protocol::gossip

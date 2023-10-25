@@ -31,13 +31,11 @@ namespace libp2p::connection {
                            StreamId stream_id)
       : connection_{std::move(connection)}, stream_id_{stream_id} {}
 
-  void MplexStream::read(BytesOut out, size_t bytes,
-                         ReadCallbackFunc cb) {
+  void MplexStream::read(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
     read(out, bytes, std::move(cb), false);
   }
 
-  void MplexStream::readSome(BytesOut out, size_t bytes,
-                             ReadCallbackFunc cb) {
+  void MplexStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
     read(out, bytes, std::move(cb), true);
   }
 
@@ -60,7 +58,8 @@ namespace libp2p::connection {
     }
     if (boost::asio::buffer_copy(
             boost::asio::buffer(reading_->out.data(), size),
-            read_buffer_.data(), size)
+            read_buffer_.data(),
+            size)
         != size) {
       readDone(Error::STREAM_INTERNAL_ERROR);
       return true;
@@ -71,8 +70,10 @@ namespace libp2p::connection {
     return true;
   }
 
-  void MplexStream::read(BytesOut out, size_t bytes,
-                         ReadCallbackFunc cb, bool some) {
+  void MplexStream::read(BytesOut out,
+                         size_t bytes,
+                         ReadCallbackFunc cb,
+                         bool some) {
     if (is_reset_) {
       return cb(Error::STREAM_RESET_BY_PEER);
     }
@@ -96,8 +97,7 @@ namespace libp2p::connection {
     }
   }
 
-  void MplexStream::write(BytesIn in, size_t bytes,
-                          WriteCallbackFunc cb) {
+  void MplexStream::write(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
     // TODO(107): Reentrancy
 
     if (is_reset_) {
@@ -121,7 +121,9 @@ namespace libp2p::connection {
 
     is_writing_ = true;
     connection_.lock()->streamWrite(
-        stream_id_, in, bytes,
+        stream_id_,
+        in,
+        bytes,
         [self{shared_from_this()}, cb{std::move(cb)}](auto &&write_res) {
           self->is_writing_ = false;
           if (!write_res) {
@@ -160,8 +162,7 @@ namespace libp2p::connection {
     connection_.lock()->deferWriteCallback(ec, std::move(cb));
   }
 
-  void MplexStream::writeSome(BytesIn in, size_t bytes,
-                              WriteCallbackFunc cb) {
+  void MplexStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
     write(in, bytes, std::move(cb));
   }
 

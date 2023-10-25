@@ -32,7 +32,7 @@ namespace libp2p::security::noise {
 
   using MP = MessagePattern;
 
-  const inline HandshakePattern handshakeXX{
+  inline const HandshakePattern handshakeXX{
       .name = "XX",
       .initiatorPreMessages = {},
       .responderPreMessages = {},

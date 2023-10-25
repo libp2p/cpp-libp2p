@@ -31,10 +31,13 @@ namespace libp2p::protocol::kademlia {
       : public ResponseHandler,
         public std::enable_shared_from_this<PutValueExecutor> {
    public:
-    PutValueExecutor(const Config &config, std::shared_ptr<Host> host,
+    PutValueExecutor(const Config &config,
+                     std::shared_ptr<Host> host,
                      std::shared_ptr<basic::Scheduler> scheduler,
-                     std::shared_ptr<SessionHost> session_host, ContentId key,
-                     ContentValue value, std::vector<PeerId> addressees);
+                     std::shared_ptr<SessionHost> session_host,
+                     ContentId key,
+                     ContentValue value,
+                     std::vector<PeerId> addressees);
 
     ~PutValueExecutor();
 

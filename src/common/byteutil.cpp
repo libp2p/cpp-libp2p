@@ -56,7 +56,6 @@ namespace libp2p::common {
   }
 }  // namespace libp2p::common
 
-size_t std::hash<libp2p::Bytes>::operator()(
-    const libp2p::Bytes &x) const {
+size_t std::hash<libp2p::Bytes>::operator()(const libp2p::Bytes &x) const {
   return boost::hash_range(x.begin(), x.end());
 }

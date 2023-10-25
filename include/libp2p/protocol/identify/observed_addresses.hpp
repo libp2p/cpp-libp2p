@@ -48,8 +48,10 @@ namespace libp2p::protocol {
      * observed) address
      * @param is_initiator - was the remote peer an initiator of the connection?
      */
-    void add(multi::Multiaddress observed, multi::Multiaddress local,
-             const multi::Multiaddress &observer, bool is_initiator);
+    void add(multi::Multiaddress observed,
+             multi::Multiaddress local,
+             const multi::Multiaddress &observer,
+             bool is_initiator);
 
     /**
      * Get rid of expired addresses; should be called from time to time

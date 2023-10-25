@@ -36,8 +36,8 @@ class PlaintextConnectionTest : public testing::Test {
       std::make_shared<marshaller::KeyMarshallerMock>();
 
   std::shared_ptr<SecureConnection> secure_connection_ =
-      std::make_shared<PlaintextConnection>(connection_, local, remote,
-                                            key_marshaller_);
+      std::make_shared<PlaintextConnection>(
+          connection_, local, remote, key_marshaller_);
 
   std::vector<uint8_t> bytes_{0x11, 0x22};
 };

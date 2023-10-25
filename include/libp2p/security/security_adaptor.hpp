@@ -45,6 +45,7 @@ namespace libp2p::security {
      */
     virtual void secureOutbound(
         std::shared_ptr<connection::LayerConnection> outbound,
-        const peer::PeerId &p, SecConnCallbackFunc cb) = 0;
+        const peer::PeerId &p,
+        SecConnCallbackFunc cb) = 0;
   };
 }  // namespace libp2p::security

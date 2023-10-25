@@ -37,7 +37,8 @@ namespace libp2p::protocol::gossip {
     auto it = idx.find(id);
     if (it == idx.end()) {
       TRACE("MessageCache: {} not found, current size {}",
-            common::hex_upper(id), table_->size());
+            common::hex_upper(id),
+            table_->size());
       return boost::none;
     }
     return it->message;

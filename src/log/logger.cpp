@@ -38,7 +38,8 @@ namespace libp2p::log {
         ->getLogger(tag, group);
   }
 
-  Logger createLogger(const std::string &tag, const std::string &group,
+  Logger createLogger(const std::string &tag,
+                      const std::string &group,
                       Level level) {
     ensure_loger_system_is_initialized();
     return std::dynamic_pointer_cast<soralog::LoggerFactory>(logging_system_)

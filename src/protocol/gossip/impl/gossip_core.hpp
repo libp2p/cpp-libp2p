@@ -35,7 +35,8 @@ namespace libp2p::protocol::gossip {
     GossipCore &operator=(GossipCore &&) = delete;
 
     GossipCore(
-        Config config, std::shared_ptr<basic::Scheduler> scheduler,
+        Config config,
+        std::shared_ptr<basic::Scheduler> scheduler,
         std::shared_ptr<Host> host,
         std::shared_ptr<peer::IdentityManager> idmgr,
         std::shared_ptr<crypto::CryptoProvider> crypto_provider,
@@ -60,13 +61,16 @@ namespace libp2p::protocol::gossip {
     outcome::result<void> signMessage(TopicMessage &msg) const;
 
     // MessageReceiver overrides
-    void onSubscription(const PeerContextPtr &from, bool subscribe,
+    void onSubscription(const PeerContextPtr &from,
+                        bool subscribe,
                         const TopicId &topic) override;
-    void onIHave(const PeerContextPtr &from, const TopicId &topic,
+    void onIHave(const PeerContextPtr &from,
+                 const TopicId &topic,
                  const MessageId &msg_id) override;
     void onIWant(const PeerContextPtr &from, const MessageId &msg_id) override;
     void onGraft(const PeerContextPtr &from, const TopicId &topic) override;
-    void onPrune(const PeerContextPtr &from, const TopicId &topic,
+    void onPrune(const PeerContextPtr &from,
+                 const TopicId &topic,
                  uint64_t backoff_time) override;
     void onTopicMessage(const PeerContextPtr &from,
                         TopicMessage::Ptr msg) override;

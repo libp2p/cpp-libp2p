@@ -38,8 +38,7 @@ namespace libp2p::crypto::rsa {
      * @return signature as bytes sequence
      */
     virtual outcome::result<Signature> sign(
-        BytesIn message,
-        const PrivateKey &private_key) const = 0;
+        BytesIn message, const PrivateKey &private_key) const = 0;
 
     /**
      * @brief Verify signature for a message

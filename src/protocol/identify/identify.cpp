@@ -86,7 +86,8 @@ namespace libp2p::protocol {
                                  std::move(remote_peer_addr_res.value())}};
 
     msg_processor_->getHost().newStream(
-        peer_info, {kIdentifyProto},
+        peer_info,
+        {kIdentifyProto},
         [self{shared_from_this()}](auto &&stream_res) {
           if (!stream_res) {
             return;

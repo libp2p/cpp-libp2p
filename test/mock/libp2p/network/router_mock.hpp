@@ -17,7 +17,8 @@ namespace libp2p::network {
     MOCK_METHOD3(setProtocolHandler,
                  void(StreamProtocols, StreamAndProtocolCb, ProtocolPredicate));
 
-    MOCK_CONST_METHOD0(getSupportedProtocols, std::vector<peer::ProtocolName>());
+    MOCK_CONST_METHOD0(getSupportedProtocols,
+                       std::vector<peer::ProtocolName>());
 
     MOCK_METHOD1(removeProtocolHandlers, void(const peer::ProtocolName &));
 

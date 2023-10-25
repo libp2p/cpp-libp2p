@@ -43,7 +43,8 @@ namespace libp2p::peer {
                                        Milliseconds ttl) override;
 
     outcome::result<bool> upsertAddresses(
-        const PeerId &p, std::span<const multi::Multiaddress> ma,
+        const PeerId &p,
+        std::span<const multi::Multiaddress> ma,
         Milliseconds ttl) override;
 
     outcome::result<void> updateAddresses(const PeerId &p,

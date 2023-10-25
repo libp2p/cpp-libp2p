@@ -143,7 +143,8 @@ struct fmt::formatter<libp2p::peer::PeerId> {
       auto out = std::copy(message.begin(), message.end(), ctx.out());
       return std::copy_n(
           b58.begin() + (b58.size() - std::min<size_t>(6, b58.size())),
-          std::min<size_t>(6, b58.size()), out);
+          std::min<size_t>(6, b58.size()),
+          out);
     }
 
     return std::copy(std::begin(b58), std::end(b58), ctx.out());

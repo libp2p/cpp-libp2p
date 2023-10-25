@@ -56,8 +56,8 @@ namespace libp2p::transport {
 
     if (!close_reason_) {
       close_reason_ = reason;
-      log().debug("{} closing with reason: {}", debug_str_,
-                  close_reason_.message());
+      log().debug(
+          "{} closing with reason: {}", debug_str_, close_reason_.message());
     }
     if (socket_.is_open()) {
       boost::system::error_code ec;
@@ -130,7 +130,8 @@ namespace libp2p::transport {
                               TcpConnection::ResolveCallbackFunc cb) {
     auto resolver = std::make_shared<Tcp::resolver>(context_);
     resolver->async_resolve(
-        host_name, port,
+        host_name,
+        port,
         [wptr{weak_from_this()}, resolver, cb{std::move(cb)}](
             const ErrorCode &ec, auto &&iterator) {
           if (!wptr.expired()) {
@@ -145,7 +146,9 @@ namespace libp2p::transport {
                               TcpConnection::ResolveCallbackFunc cb) {
     auto resolver = std::make_shared<Tcp::resolver>(context_);
     resolver->async_resolve(
-        protocol, host_name, port,
+        protocol,
+        host_name,
+        port,
         [wptr{weak_from_this()}, resolver, cb{std::move(cb)}](
             const ErrorCode &ec, auto &&iterator) {
           if (!wptr.expired()) {
@@ -162,7 +165,8 @@ namespace libp2p::transport {
 
   void TcpConnection::connect(
       const TcpConnection::ResolverResultsType &iterator,
-      ConnectCallbackFunc cb, std::chrono::milliseconds timeout) {
+      ConnectCallbackFunc cb,
+      std::chrono::milliseconds timeout) {
     if (timeout > std::chrono::milliseconds::zero()) {
       connecting_with_timeout_ = true;
       deadline_timer_.expires_from_now(
@@ -190,7 +194,8 @@ namespace libp2p::transport {
           });
     }
     boost::asio::async_connect(
-        socket_, iterator,
+        socket_,
+        iterator,
         [wptr{weak_from_this()}, cb{std::move(cb)}](
             auto &&ec, const Tcp::endpoint &endpoint) {
           auto self = wptr.lock();
@@ -219,28 +224,33 @@ namespace libp2p::transport {
         });
   }
 
-  void TcpConnection::read(BytesOut out, size_t bytes,
+  void TcpConnection::read(BytesOut out,
+                           size_t bytes,
                            TcpConnection::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     TRACE("{} read {}", debug_str_, bytes);
     readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
-  void TcpConnection::readSome(BytesOut out, size_t bytes,
+  void TcpConnection::readSome(BytesOut out,
+                               size_t bytes,
                                TcpConnection::ReadCallbackFunc cb) {
     TRACE("{} read some up to {}", debug_str_, bytes);
     socket_.async_read_some(detail::makeBuffer(out, bytes),
                             closeOnError(*this, std::move(cb)));
   }
 
-  void TcpConnection::write(BytesIn in, size_t bytes,
+  void TcpConnection::write(BytesIn in,
+                            size_t bytes,
                             TcpConnection::WriteCallbackFunc cb) {
     TRACE("{} write {}", debug_str_, bytes);
-    boost::asio::async_write(socket_, detail::makeBuffer(in, bytes),
+    boost::asio::async_write(socket_,
+                             detail::makeBuffer(in, bytes),
                              closeOnError(*this, std::move(cb)));
   }
 
-  void TcpConnection::writeSome(BytesIn in, size_t bytes,
+  void TcpConnection::writeSome(BytesIn in,
+                                size_t bytes,
                                 TcpConnection::WriteCallbackFunc cb) {
     TRACE("{} write some up to {}", debug_str_, bytes);
     socket_.async_write_some(detail::makeBuffer(in, bytes),
@@ -250,8 +260,10 @@ namespace libp2p::transport {
   namespace {
     template <typename Callback, typename Arg>
     void deferCallback(boost::asio::io_context &ctx,
-                       std::weak_ptr<TcpConnection> wptr, bool &closed_by_host,
-                       Callback cb, Arg arg) {
+                       std::weak_ptr<TcpConnection> wptr,
+                       bool &closed_by_host,
+                       Callback cb,
+                       Arg arg) {
       // defers callback to the next event loop cycle,
       // cb will be called iff TcpConnection is still alive
       // and was not closed by host's side
@@ -267,14 +279,20 @@ namespace libp2p::transport {
 
   void TcpConnection::deferReadCallback(outcome::result<size_t> res,
                                         ReadCallbackFunc cb) {
-    deferCallback(context_, weak_from_this(), std::ref(closed_by_host_),
-                  std::move(cb), res);
+    deferCallback(context_,
+                  weak_from_this(),
+                  std::ref(closed_by_host_),
+                  std::move(cb),
+                  res);
   }
 
   void TcpConnection::deferWriteCallback(std::error_code ec,
                                          WriteCallbackFunc cb) {
-    deferCallback(context_, weak_from_this(), std::ref(closed_by_host_),
-                  std::move(cb), ec);
+    deferCallback(context_,
+                  weak_from_this(),
+                  std::ref(closed_by_host_),
+                  std::move(cb),
+                  ec);
   }
 
   outcome::result<void> TcpConnection::saveMultiaddresses() {
@@ -301,9 +319,10 @@ namespace libp2p::transport {
       return convert(ec);
     }
 #ifndef NDEBUG
-    debug_str_ = fmt::format(
-        "{} {} {}", local_multiaddress_->getStringAddress(),
-        initiator_ ? "->" : "<-", remote_multiaddress_->getStringAddress());
+    debug_str_ = fmt::format("{} {} {}",
+                             local_multiaddress_->getStringAddress(),
+                             initiator_ ? "->" : "<-",
+                             remote_multiaddress_->getStringAddress());
 #endif
     return outcome::success();
   }

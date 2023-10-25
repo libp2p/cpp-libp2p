@@ -83,8 +83,8 @@ TEST_F(PingTest, PingServer) {
 
   auto if_eq_buf = [&](BytesIn actual) {
     auto expected = BytesIn(buffer_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
   EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _))
       .WillOnce(InvokeArgument<2>(buffer_.size()));
@@ -114,8 +114,8 @@ TEST_F(PingTest, PingClient) {
       .WillRepeatedly(Return(buffer_));
   auto if_eq_buf = [&](BytesIn actual) {
     auto expected = BytesIn(buffer_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
   EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _))
       .WillOnce(InvokeArgument<2>(buffer_.size()))
@@ -153,8 +153,8 @@ TEST_F(PingTest, PingClientTimeoutExpired) {
   EXPECT_CALL(*rand_gen_, randomBytes(kPingMsgSize)).WillOnce(Return(buffer_));
   auto if_eq_buf = [&](BytesIn actual) {
     auto expected = BytesIn(buffer_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
   EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _));
 

@@ -9,10 +9,10 @@
 #include <future>
 #include <thread>
 
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/network/cares/cares.hpp>
 #include <libp2p/protocol/echo.hpp>
-#include <libp2p/basic/scheduler.hpp>
 #include <testutil/async/impl/clock_impl.hpp>
 #include <testutil/outcome.hpp>
 
@@ -55,7 +55,9 @@ class Peer {
    */
   explicit Peer(Duration timeout, bool secure);
 
-  ~Peer() { wait(); }
+  ~Peer() {
+    wait();
+  }
 
   /**
    * @brief schedules server start
@@ -71,7 +73,8 @@ class Peer {
    * @param message_count number of messages to send
    * @param tester object for testing purposes
    */
-  void startClient(const PeerInfo &pinfo, size_t message_count,
+  void startClient(const PeerInfo &pinfo,
+                   size_t message_count,
                    sptr<TickCounter> tester);
 
   /**

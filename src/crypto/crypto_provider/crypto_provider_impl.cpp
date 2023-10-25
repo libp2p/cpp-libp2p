@@ -213,8 +213,8 @@ namespace libp2p::crypto {
   outcome::result<Buffer> CryptoProviderImpl::signRsa(
       BytesIn message, const PrivateKey &private_key) const {
     rsa::PrivateKey priv_key;
-    priv_key.insert(priv_key.end(), private_key.data.begin(),
-                    private_key.data.end());
+    priv_key.insert(
+        priv_key.end(), private_key.data.begin(), private_key.data.end());
 
     OUTCOME_TRY(signature, rsa_provider_->sign(message, priv_key));
     return {signature.begin(), signature.end()};
@@ -251,8 +251,7 @@ namespace libp2p::crypto {
    * ################################################################### */
 
   outcome::result<bool> CryptoProviderImpl::verify(
-      BytesIn message, BytesIn signature,
-      const PublicKey &public_key) const {
+      BytesIn message, BytesIn signature, const PublicKey &public_key) const {
     switch (public_key.type) {
       case Key::Type::RSA:
         return verifyRsa(message, signature, public_key);
@@ -270,11 +269,10 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifyRsa(
-      BytesIn message, BytesIn signature,
-      const PublicKey &public_key) const {
+      BytesIn message, BytesIn signature, const PublicKey &public_key) const {
     rsa::PublicKey rsa_pub;
-    rsa_pub.insert(rsa_pub.end(), public_key.data.begin(),
-                   public_key.data.end());
+    rsa_pub.insert(
+        rsa_pub.end(), public_key.data.begin(), public_key.data.end());
 
     rsa::Signature rsa_sig;
     rsa_sig.insert(rsa_sig.end(), signature.begin(), signature.end());
@@ -283,8 +281,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifyEd25519(
-      BytesIn message, BytesIn signature,
-      const PublicKey &public_key) const {
+      BytesIn message, BytesIn signature, const PublicKey &public_key) const {
     ed25519::PublicKey ed_pub;
     std::copy_n(public_key.data.begin(), ed_pub.size(), ed_pub.begin());
 
@@ -295,8 +292,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifySecp256k1(
-      BytesIn message, BytesIn signature,
-      const PublicKey &public_key) const {
+      BytesIn message, BytesIn signature, const PublicKey &public_key) const {
     secp256k1::PublicKey secp_pub;
     std::copy_n(public_key.data.begin(), secp_pub.size(), secp_pub.begin());
 
@@ -307,8 +303,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<bool> CryptoProviderImpl::verifyEcdsa(
-      BytesIn message, BytesIn signature,
-      const PublicKey &public_key) const {
+      BytesIn message, BytesIn signature, const PublicKey &public_key) const {
     ecdsa::PublicKey ecdsa_pub;
     std::copy_n(public_key.data.begin(), ecdsa_pub.size(), ecdsa_pub.begin());
 
@@ -379,7 +374,8 @@ namespace libp2p::crypto {
     // generator
     std::vector<uint8_t> private_bytes(private_key_length_in_bytes, 0);
     // serialize to buffer
-    if (BN_bn2binpad(private_key_bignum, private_bytes.data(),
+    if (BN_bn2binpad(private_key_bignum,
+                     private_bytes.data(),
                      private_key_length_in_bytes)
         < 0) {
       return FAILED;
@@ -398,8 +394,12 @@ namespace libp2p::crypto {
        */
       EC_POINT *computed_public_key_point{nullptr};
       if (1
-          != EC_POINT_mul(curve_group, computed_public_key_point,
-                          private_key_bignum, nullptr, nullptr, nullptr)) {
+          != EC_POINT_mul(curve_group,
+                          computed_public_key_point,
+                          private_key_bignum,
+                          nullptr,
+                          nullptr,
+                          nullptr)) {
         return FAILED;
       }
       if (1 != EC_KEY_set_public_key(key, computed_public_key_point)) {
@@ -418,9 +418,12 @@ namespace libp2p::crypto {
 
     size_t pubkey_bytes_length{0};
     if (0
-        == (pubkey_bytes_length = EC_POINT_point2buf(
-                curve_group, public_key, POINT_CONVERSION_UNCOMPRESSED,
-                &pubkey_bytes_buffer, nullptr))) {
+        == (pubkey_bytes_length =
+                EC_POINT_point2buf(curve_group,
+                                   public_key,
+                                   POINT_CONVERSION_UNCOMPRESSED,
+                                   &pubkey_bytes_buffer,
+                                   nullptr))) {
       return FAILED;
     }
 
@@ -444,7 +447,8 @@ namespace libp2p::crypto {
       if (nullptr == curve_group) {
         return FAILED;
       }
-      FinalAction free_curve_group([curve_group] { EC_GROUP_free(curve_group); });
+      FinalAction free_curve_group(
+          [curve_group] { EC_GROUP_free(curve_group); });
 
       // create empty key
       EC_KEY *their_key = EC_KEY_new();
@@ -461,8 +465,8 @@ namespace libp2p::crypto {
       // restore their epubkey from bytes
       const unsigned char *their_epubkey_buffer{their_epubkey.data()};
       if (nullptr
-          == o2i_ECPublicKey(&their_key, &their_epubkey_buffer,
-                             their_epubkey.size())) {
+          == o2i_ECPublicKey(
+              &their_key, &their_epubkey_buffer, their_epubkey.size())) {
         return FAILED;
       }
 
@@ -488,8 +492,8 @@ namespace libp2p::crypto {
       // convert private key bytes to BIGNUM
       const unsigned char *private_key_buffer = private_bytes.data();
       if (nullptr
-          == BN_bin2bn(private_key_buffer, private_bytes.size(),
-                       private_bignum)) {
+          == BN_bin2bn(
+              private_key_buffer, private_bytes.size(), private_bignum)) {
         return FAILED;
       }
 
@@ -512,9 +516,11 @@ namespace libp2p::crypto {
         return FAILED;
       }
 
-      secret_len =
-          ECDH_compute_key(secret_buffer, secret_len, their_pubkey_point,
-                           our_private_key, nullptr);
+      secret_len = ECDH_compute_key(secret_buffer,
+                                    secret_len,
+                                    their_pubkey_point,
+                                    our_private_key,
+                                    nullptr);
       if (secret_len <= 0) {
         OPENSSL_free(secret_buffer);
         // ^ comment to the condition above:
@@ -550,8 +556,8 @@ namespace libp2p::crypto {
     }
 
     constexpr size_t hmac_key_size{20};
-    Buffer seed{'k', 'e', 'y', ' ', 'e', 'x', 'p',
-                'a', 'n', 's', 'i', 'o', 'n'};
+    Buffer seed{
+        'k', 'e', 'y', ' ', 'e', 'x', 'p', 'a', 'n', 's', 'i', 'o', 'n'};
 
     size_t output_size{2 * (iv_size + cipher_key_size + hmac_key_size)};
     Buffer result;

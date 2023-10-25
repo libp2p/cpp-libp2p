@@ -40,14 +40,18 @@ namespace libp2p::transport {
     int16_t entry_idx{};
     // find an entry in supported protocols list that is equal to the list of
     // protocols in the multiaddr
-    auto entry = std::find_if(
-        kSupportedProtocols.begin(), kSupportedProtocols.end(),
-        [&pvs](auto const &entry) {
-          return std::equal(entry.begin(), entry.end(), pvs.begin(), pvs.end(),
-                            [](Protocol::Code entry_proto, auto &pair) {
-                              return entry_proto == pair.first.code;
-                            });
-        });
+    auto entry = std::find_if(kSupportedProtocols.begin(),
+                              kSupportedProtocols.end(),
+                              [&pvs](const auto &entry) {
+                                return std::equal(
+                                    entry.begin(),
+                                    entry.end(),
+                                    pvs.begin(),
+                                    pvs.end(),
+                                    [](Protocol::Code entry_proto, auto &pair) {
+                                      return entry_proto == pair.first.code;
+                                    });
+                              });
     if (entry == kSupportedProtocols.end()) {
       return Error::PROTOCOLS_UNSUPPORTED;
     }

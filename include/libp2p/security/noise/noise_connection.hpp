@@ -36,7 +36,8 @@ namespace libp2p::connection {
 
     NoiseConnection(
         std::shared_ptr<LayerConnection> original_connection,
-        crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
+        crypto::PublicKey localPubkey,
+        crypto::PublicKey remotePubkey,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
         std::shared_ptr<security::noise::CipherState> encoder,
         std::shared_ptr<security::noise::CipherState> decoder);
@@ -45,20 +46,16 @@ namespace libp2p::connection {
 
     outcome::result<void> close() override;
 
-    void read(BytesOut out, size_t bytes,
-              ReadCallbackFunc cb) override;
+    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
-    void readSome(BytesOut out, size_t bytes,
-                  ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(BytesIn in, size_t bytes,
-               WriteCallbackFunc cb) override;
+    void write(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
-    void writeSome(BytesIn in, size_t bytes,
-                   WriteCallbackFunc cb) override;
+    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
@@ -75,13 +72,19 @@ namespace libp2p::connection {
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
    private:
-    void read(BytesOut out, size_t bytes, OperationContext ctx,
+    void read(BytesOut out,
+              size_t bytes,
+              OperationContext ctx,
               ReadCallbackFunc cb);
 
-    void readSome(BytesOut out, size_t bytes, OperationContext ctx,
+    void readSome(BytesOut out,
+                  size_t bytes,
+                  OperationContext ctx,
                   ReadCallbackFunc cb);
 
-    void write(BytesIn in, size_t bytes, OperationContext ctx,
+    void write(BytesIn in,
+               size_t bytes,
+               OperationContext ctx,
                WriteCallbackFunc cb);
 
     void eraseWriteBuffer(BufferList::iterator &iterator);

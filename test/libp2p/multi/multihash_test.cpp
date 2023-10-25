@@ -6,9 +6,9 @@
 
 #include <gtest/gtest.h>
 
-#include <libp2p/common/types.hpp>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/literals.hpp>
+#include <libp2p/common/types.hpp>
 #include <libp2p/multi/multihash.hpp>
 #include <libp2p/multi/uvarint.hpp>
 

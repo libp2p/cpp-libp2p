@@ -26,7 +26,8 @@ namespace libp2p::log {
                                     const std::string &group);
 
   [[nodiscard]] Logger createLogger(const std::string &tag,
-                                    const std::string &group, Level level);
+                                    const std::string &group,
+                                    Level level);
 
   void setLevelOfGroup(const std::string &group_name, Level level);
   void resetLevelOfGroup(const std::string &group_name);

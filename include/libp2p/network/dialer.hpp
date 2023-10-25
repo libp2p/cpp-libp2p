@@ -32,7 +32,8 @@ namespace libp2p::network {
      * Establishes a connection or returns existing one to a given peer with a
      * specific timeout
      */
-    virtual void dial(const peer::PeerInfo &p, DialResultFunc cb,
+    virtual void dial(const peer::PeerInfo &p,
+                      DialResultFunc cb,
                       std::chrono::milliseconds timeout) = 0;
 
     /**

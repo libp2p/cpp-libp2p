@@ -126,8 +126,7 @@ namespace libp2p::protocol::gossip {
     };
 
     /// Validator of messages arriving from the wire
-    using Validator =
-        std::function<bool(const Bytes &from, const Bytes &data)>;
+    using Validator = std::function<bool(const Bytes &from, const Bytes &data)>;
 
     /// Sets message validator for topic
     virtual void setValidator(const TopicId &topic, Validator validator) = 0;
@@ -153,7 +152,8 @@ namespace libp2p::protocol::gossip {
 
   // Creates Gossip object
   std::shared_ptr<Gossip> create(
-      std::shared_ptr<basic::Scheduler> scheduler, std::shared_ptr<Host> host,
+      std::shared_ptr<basic::Scheduler> scheduler,
+      std::shared_ptr<Host> host,
       std::shared_ptr<peer::IdentityManager> idmgr,
       std::shared_ptr<crypto::CryptoProvider> crypto_provider,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,

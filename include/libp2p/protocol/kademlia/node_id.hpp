@@ -9,8 +9,8 @@
 #include <bitset>
 #include <climits>
 #include <cstring>
-#include <span>
 #include <memory>
+#include <span>
 #include <vector>
 
 #include <libp2p/crypto/sha/sha256.hpp>

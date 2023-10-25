@@ -10,10 +10,10 @@
 
 #if TRACE_ENABLED
 
-#define TRACE(FMT, ...)                                            \
-  do {                                                             \
+#define TRACE(FMT, ...)                            \
+  do {                                             \
     auto log = libp2p::log::createLogger("debug"); \
-    SL_TRACE(log, (FMT), ##__VA_ARGS__);                           \
+    SL_TRACE(log, (FMT), ##__VA_ARGS__);           \
   } while (false)
 #else
 #define TRACE(...)

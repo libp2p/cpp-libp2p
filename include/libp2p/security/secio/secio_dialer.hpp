@@ -128,7 +128,8 @@ namespace libp2p::security::secio {
      * @return chosen algorithms structure if successful
      */
     static outcome::result<Algorithm> findCommonAlgo(
-        const ProposeMessage &local, const ProposeMessage &remote,
+        const ProposeMessage &local,
+        const ProposeMessage &remote,
         bool local_peer_is_preferred);
 
     boost::optional<std::vector<uint8_t>> local_peer_proposal_bytes_;

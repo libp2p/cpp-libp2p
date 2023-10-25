@@ -133,7 +133,8 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     while (!data.empty() && nested_parser.state_ == kUnderflow) {
       auto s = nested_parser.consume(data);
       if (s == kReady) {
-        messages_.insert(messages_.end(), nested_parser.messages_.begin(),
+        messages_.insert(messages_.end(),
+                         nested_parser.messages_.begin(),
                          nested_parser.messages_.end());
         nested_parser.reset();
       }

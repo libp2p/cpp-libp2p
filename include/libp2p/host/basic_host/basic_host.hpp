@@ -52,14 +52,17 @@ namespace libp2p::host {
 
     void disconnect(const peer::PeerId &peer_id) override;
 
-    void setProtocolHandler(StreamProtocols protocols, StreamAndProtocolCb cb,
+    void setProtocolHandler(StreamProtocols protocols,
+                            StreamAndProtocolCb cb,
                             ProtocolPredicate predicate) override;
 
-    void newStream(const peer::PeerInfo &peer_info, StreamProtocols protocols,
+    void newStream(const peer::PeerInfo &peer_info,
+                   StreamProtocols protocols,
                    StreamAndProtocolOrErrorCb cb,
                    std::chrono::milliseconds timeout = {}) override;
 
-    void newStream(const peer::PeerId &peer_id, StreamProtocols protocols,
+    void newStream(const peer::PeerId &peer_id,
+                   StreamProtocols protocols,
                    StreamAndProtocolOrErrorCb cb) override;
 
     outcome::result<void> listen(const multi::Multiaddress &ma) override;

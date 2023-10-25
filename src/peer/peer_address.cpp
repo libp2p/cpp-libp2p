@@ -64,7 +64,7 @@ namespace libp2p::peer {
 
   std::string PeerAddress::toString() const {
     return std::string{address_.getStringAddress()} + std::string{kP2PSubstr}
-    + id_.toBase58();
+         + id_.toBase58();
   }
 
   const PeerId &PeerAddress::getId() const noexcept {

@@ -40,8 +40,10 @@ namespace libp2p::crypto::random {
     void fillRandomly(Container &container) {
       static_assert(std::is_integral_v<typename Container::value_type>);
       static_assert(sizeof(typename Container::value_type) == 1);
-      std::transform(container.begin(), container.end(), container.begin(),
-                     [this](auto) { return randomByte(); });
+      std::transform(
+          container.begin(), container.end(), container.begin(), [this](auto) {
+            return randomByte();
+          });
     }
 
     /**

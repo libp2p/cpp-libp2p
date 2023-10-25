@@ -22,7 +22,8 @@ namespace libp2p::connection {
 
     /// Stream transfers data to connection
     virtual void writeStreamData(uint32_t stream_id,
-                                 BytesIn data, bool some) = 0;
+                                 BytesIn data,
+                                 bool some) = 0;
 
     /// Stream acknowledges received bytes
     virtual void ackReceivedBytes(uint32_t stream_id, uint32_t bytes) = 0;
@@ -48,23 +49,21 @@ namespace libp2p::connection {
     ~YamuxStream() override = default;
 
     YamuxStream(std::shared_ptr<connection::SecureConnection> connection,
-                YamuxStreamFeedback &feedback, uint32_t stream_id,
-                size_t maximum_window_size, size_t write_queue_limit);
+                YamuxStreamFeedback &feedback,
+                uint32_t stream_id,
+                size_t maximum_window_size,
+                size_t write_queue_limit);
 
-    void read(BytesOut out, size_t bytes,
-              ReadCallbackFunc cb) override;
+    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
-    void readSome(BytesOut out, size_t bytes,
-                  ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(BytesIn in, size_t bytes,
-               WriteCallbackFunc cb) override;
+    void write(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
-    void writeSome(BytesIn in, size_t bytes,
-                   WriteCallbackFunc cb) override;
+    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
@@ -119,8 +118,7 @@ namespace libp2p::connection {
     void doClose(std::error_code ec, bool notify_read_side);
 
     /// Called by read*() functions
-    void doRead(BytesOut out, size_t bytes, ReadCallbackFunc cb,
-                bool some);
+    void doRead(BytesOut out, size_t bytes, ReadCallbackFunc cb, bool some);
 
     /// Completes the read operation if any, clears read state
     [[nodiscard]] std::pair<ReadCallbackFunc, outcome::result<size_t>>
@@ -130,8 +128,7 @@ namespace libp2p::connection {
     void doWrite();
 
     /// Called by write*() functions
-    void doWrite(BytesIn in, size_t bytes,
-                 WriteCallbackFunc cb, bool some);
+    void doWrite(BytesIn in, size_t bytes, WriteCallbackFunc cb, bool some);
 
     /// Clears close callback state
     [[nodiscard]] std::pair<VoidResultHandlerFunc, outcome::result<void>>

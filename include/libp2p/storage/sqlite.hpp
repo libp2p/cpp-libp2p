@@ -18,7 +18,7 @@ namespace libp2p::storage {
    public:
     using StatementHandle = size_t;
     using database_binder = ::sqlite::database_binder;
-    static auto constexpr kLoggerTag = "sqlite";
+    static constexpr auto kLoggerTag = "sqlite";
 
     explicit SQLite(const std::string &db_file);
     SQLite(const std::string &db_file, const std::string &logger_tag);
@@ -64,7 +64,7 @@ namespace libp2p::storage {
      */
     template <typename... Args>
     inline int execCommand(StatementHandle st_handle,
-                           const Args &... args) noexcept {
+                           const Args &...args) noexcept {
       try {
         auto &st = getStatement(st_handle);
         bindArgs(st, args...);
@@ -89,8 +89,9 @@ namespace libp2p::storage {
      * @return true when query was successfully executed, otherwise - false
      */
     template <typename Sink, typename... Args>
-    inline bool execQuery(StatementHandle st_handle, Sink &&sink,
-                          const Args &... args) noexcept {
+    inline bool execQuery(StatementHandle st_handle,
+                          Sink &&sink,
+                          const Args &...args) noexcept {
       try {
         auto &st = getStatement(st_handle);
         bindArgs(st, args...);
@@ -106,14 +107,14 @@ namespace libp2p::storage {
     }
 
    private:
-    static inline database_binder &bindArgs(database_binder &statement) {
+    inline static database_binder &bindArgs(database_binder &statement) {
       return statement;
     }
 
     template <typename Arg, typename... Args>
-    static inline database_binder &bindArgs(database_binder &statement,
+    inline static database_binder &bindArgs(database_binder &statement,
                                             const Arg &arg,
-                                            const Args &... args) {
+                                            const Args &...args) {
       statement << arg;
       return bindArgs(statement, args...);
     }

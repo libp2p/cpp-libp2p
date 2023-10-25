@@ -34,7 +34,8 @@ namespace libp2p::crypto::aes {
     }
   }
 
-  outcome::result<void> AesCtrImpl::init(BytesIn key, BytesIn iv,
+  outcome::result<void> AesCtrImpl::init(BytesIn key,
+                                         BytesIn iv,
                                          const EVP_CIPHER *cipher) {
     ctx_ = EVP_CIPHER_CTX_new();
     if (nullptr == ctx_) {
@@ -43,8 +44,8 @@ namespace libp2p::crypto::aes {
 
     int mode{Mode::ENCRYPT == mode_ ? 1 : 0};
     if (1
-        != EVP_CipherInit_ex(ctx_, cipher, nullptr, key.data(), iv.data(),
-                             mode)) {
+        != EVP_CipherInit_ex(
+            ctx_, cipher, nullptr, key.data(), iv.data(), mode)) {
       return OpenSslError::FAILED_INITIALIZE_OPERATION;
     }
 
@@ -62,8 +63,8 @@ namespace libp2p::crypto::aes {
     int out_len{0};
 
     if (1
-        != EVP_CipherUpdate(ctx_, out_buffer.data(), &out_len, data.data(),
-                            data.size())) {
+        != EVP_CipherUpdate(
+            ctx_, out_buffer.data(), &out_len, data.data(), data.size())) {
       switch (mode_) {
         case Mode::ENCRYPT:
           return OpenSslError::FAILED_ENCRYPT_UPDATE;

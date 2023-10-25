@@ -58,8 +58,8 @@ class IdentifyDeltaTest : public testing::Test {
     msg_added_protos_bytes_.insert(msg_added_protos_bytes_.end(),
                                    added_proto_len_.toVector().begin(),
                                    added_proto_len_.toVector().end());
-    msg_added_protos_bytes_.insert(msg_added_protos_bytes_.end(),
-                                   msg_added_protos_.ByteSizeLong(), 0);
+    msg_added_protos_bytes_.insert(
+        msg_added_protos_bytes_.end(), msg_added_protos_.ByteSizeLong(), 0);
     msg_added_protos_.SerializeToArray(
         msg_added_protos_bytes_.data() + added_proto_len_.size(),
         msg_added_protos_.ByteSizeLong());
@@ -69,7 +69,8 @@ class IdentifyDeltaTest : public testing::Test {
                                       added_rm_proto_len_.toVector().begin(),
                                       added_rm_proto_len_.toVector().end());
     msg_added_rm_protos_bytes_.insert(msg_added_rm_protos_bytes_.end(),
-                                      msg_added_rm_protos_.ByteSizeLong(), 0);
+                                      msg_added_rm_protos_.ByteSizeLong(),
+                                      0);
     msg_added_rm_protos_.SerializeToArray(
         msg_added_rm_protos_bytes_.data() + added_rm_proto_len_.size(),
         msg_added_rm_protos_.ByteSizeLong());
@@ -129,8 +130,8 @@ TEST_F(IdentifyDeltaTest, Send) {
 
   auto if_added = [&](BytesIn actual) {
     auto expected = BytesIn(msg_added_protos_bytes_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(*stream_,
@@ -176,8 +177,8 @@ TEST_F(IdentifyDeltaTest, Receive) {
 
   auto if_added = [&](std::span<const peer::ProtocolName> actual) {
     auto expected = std::span<const peer::ProtocolName>(added_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(proto_repo_, addProtocols(kRemotePeerId, Truly(if_added)))
@@ -185,8 +186,8 @@ TEST_F(IdentifyDeltaTest, Receive) {
 
   auto if_removed = [&](std::span<const peer::ProtocolName> actual) {
     auto expected = std::span<const peer::ProtocolName>(removed_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(proto_repo_, removeProtocols(kRemotePeerId, Truly(if_removed)))

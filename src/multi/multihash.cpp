@@ -26,7 +26,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, Multihash::Error, e) {
              "actual length of the input data";
     case E::INPUT_TOO_LONG:
       return "The length of the input exceeds the maximum length of "
-          + std::to_string(libp2p::multi::Multihash::kMaxHashLength);
+           + std::to_string(libp2p::multi::Multihash::kMaxHashLength);
     case E::INPUT_TOO_SHORT:
       return "The length of the input is less than the required minimum of two "
              "bytes for the multihash header";

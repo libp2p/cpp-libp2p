@@ -38,7 +38,8 @@ namespace libp2p::security::noise {
     return std::vector<T>(data.begin(), data.end());
   }
 
-  outcome::result<HKDFResult> hkdf(HashType hash_type, size_t outputs,
+  outcome::result<HKDFResult> hkdf(HashType hash_type,
+                                   size_t outputs,
                                    BytesIn chaining_key,
                                    BytesIn input_key_material);
 
@@ -56,7 +57,7 @@ namespace libp2p::security::noise {
 
     /// does a Diffie-Hellman calculation between the given keys
     virtual outcome::result<Bytes> dh(const Bytes &private_key,
-                                          const Bytes &public_key) = 0;
+                                      const Bytes &public_key) = 0;
 
     /// returns the size in bytes of the result of dh computation
     virtual int dhSize() const = 0;
@@ -79,13 +80,15 @@ namespace libp2p::security::noise {
    public:
     virtual ~AEADCipher() = default;
 
-    virtual outcome::result<Bytes> encrypt(BytesIn precompiled_out, uint64_t nonce,
-                                               BytesIn plaintext,
-                                               BytesIn aad) = 0;
+    virtual outcome::result<Bytes> encrypt(BytesIn precompiled_out,
+                                           uint64_t nonce,
+                                           BytesIn plaintext,
+                                           BytesIn aad) = 0;
 
-    virtual outcome::result<Bytes> decrypt(BytesIn precompiled_out, uint64_t nonce,
-                                               BytesIn ciphertext,
-                                               BytesIn aad) = 0;
+    virtual outcome::result<Bytes> decrypt(BytesIn precompiled_out,
+                                           uint64_t nonce,
+                                           BytesIn ciphertext,
+                                           BytesIn aad) = 0;
   };
 
   class NamedAEADCipher {

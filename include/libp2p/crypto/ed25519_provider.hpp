@@ -47,8 +47,7 @@ namespace libp2p::crypto::ed25519 {
      * @return signature as bytes sequence
      */
     virtual outcome::result<Signature> sign(
-        BytesIn message,
-        const PrivateKey &private_key) const = 0;
+        BytesIn message, const PrivateKey &private_key) const = 0;
 
     /**
      * Verify signature of a message against a given public key

@@ -22,7 +22,8 @@ namespace libp2p::basic {
   }
 
   Scheduler::Handle SchedulerImpl::scheduleImpl(
-      Callback &&cb, std::chrono::milliseconds delay_from_now,
+      Callback &&cb,
+      std::chrono::milliseconds delay_from_now,
       bool make_handle) noexcept {
     assert(cb);
 
@@ -35,8 +36,8 @@ namespace libp2p::basic {
 
     if (expire_time.count() <= 0) {
       expire_time = kZeroTime;
-      deferred_callbacks_.push(seq, std::move(cb), make_handle,
-                               weak_from_this());
+      deferred_callbacks_.push(
+          seq, std::move(cb), make_handle, weak_from_this());
     } else {
       expire_time += now();
       timed_callbacks_.push(expire_time, seq, std::move(cb), weak_from_this());
@@ -75,8 +76,8 @@ namespace libp2p::basic {
     if (!cb) {
       return Error::kItemNotFound;
     }
-    timed_callbacks_.push(abs_time, ++seq_number_, std::move(cb),
-                          weak_from_this());
+    timed_callbacks_.push(
+        abs_time, ++seq_number_, std::move(cb), weak_from_this());
     return Ticket(abs_time, seq_number_);
   }
 
@@ -169,7 +170,9 @@ namespace libp2p::basic {
       : backend_(backend) {}
 
   void SchedulerImpl::DeferredCallbacks::push(
-      uint64_t seq, Callback cb, bool cancellable,
+      uint64_t seq,
+      Callback cb,
+      bool cancellable,
       std::weak_ptr<SchedulerBackendFeedback> sch) {
     if (cancellable) {
       cancellable_.push(seq, std::move(cb));
@@ -309,7 +312,9 @@ namespace libp2p::basic {
       : backend_(backend), timer_threshold_(timer_threshold) {}
 
   void SchedulerImpl::TimedCallbacks::push(
-      std::chrono::milliseconds abs_time, uint64_t seq, Callback cb,
+      std::chrono::milliseconds abs_time,
+      uint64_t seq,
+      Callback cb,
       std::weak_ptr<SchedulerBackendFeedback> sch) {
     items_.emplace(Ticket{abs_time, seq}, std::move(cb));
     rescheduleTimer(std::move(sch));
@@ -405,7 +410,8 @@ namespace libp2p::basic {
 
   outcome::result<SchedulerImpl::Ticket>
   SchedulerImpl::TimedCallbacks::rescheduleTicket(
-      const Ticket &ticket, std::chrono::milliseconds abs_time,
+      const Ticket &ticket,
+      std::chrono::milliseconds abs_time,
       uint64_t new_seq) {
     auto seq = ticket.second;
 

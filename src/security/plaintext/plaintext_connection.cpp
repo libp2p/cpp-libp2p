@@ -13,7 +13,8 @@ namespace libp2p::connection {
 
   PlaintextConnection::PlaintextConnection(
       std::shared_ptr<LayerConnection> original_connection,
-      crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
+      crypto::PublicKey localPubkey,
+      crypto::PublicKey remotePubkey,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller)
       : original_connection_{std::move(original_connection)},
         local_(std::move(localPubkey)),
@@ -56,22 +57,26 @@ namespace libp2p::connection {
     return original_connection_->remoteMultiaddr();
   }
 
-  void PlaintextConnection::read(BytesOut in, size_t bytes,
+  void PlaintextConnection::read(BytesOut in,
+                                 size_t bytes,
                                  Reader::ReadCallbackFunc f) {
     return original_connection_->read(in, bytes, std::move(f));
   };
 
-  void PlaintextConnection::readSome(BytesOut in, size_t bytes,
+  void PlaintextConnection::readSome(BytesOut in,
+                                     size_t bytes,
                                      Reader::ReadCallbackFunc f) {
     return original_connection_->readSome(in, bytes, std::move(f));
   };
 
-  void PlaintextConnection::write(BytesIn in, size_t bytes,
+  void PlaintextConnection::write(BytesIn in,
+                                  size_t bytes,
                                   Writer::WriteCallbackFunc f) {
     return original_connection_->write(in, bytes, std::move(f));
   }
 
-  void PlaintextConnection::writeSome(BytesIn in, size_t bytes,
+  void PlaintextConnection::writeSome(BytesIn in,
+                                      size_t bytes,
                                       Writer::WriteCallbackFunc f) {
     return original_connection_->writeSome(in, bytes, std::move(f));
   }

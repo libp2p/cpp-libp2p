@@ -11,7 +11,8 @@ namespace libp2p::connection {
   namespace {
     template <typename Callback, typename Arg>
     void deferCallback(boost::asio::io_context &ctx,
-                       std::weak_ptr<LoopbackStream> wptr, Callback cb,
+                       std::weak_ptr<LoopbackStream> wptr,
+                       Callback cb,
                        Arg arg) {
       // defers callback to the next event loop cycle,
       // cb will be called iff Loopbackstream is still exists
@@ -73,17 +74,20 @@ namespace libp2p::connection {
     return outcome::success(own_peer_info_.addresses.front());
   }
 
-  void LoopbackStream::read(BytesOut out, size_t bytes,
+  void LoopbackStream::read(BytesOut out,
+                            size_t bytes,
                             libp2p::basic::Reader::ReadCallbackFunc cb) {
     read(out, bytes, std::move(cb), false);
   }
 
-  void LoopbackStream::readSome(BytesOut out, size_t bytes,
+  void LoopbackStream::readSome(BytesOut out,
+                                size_t bytes,
                                 libp2p::basic::Reader::ReadCallbackFunc cb) {
     read(out, bytes, std::move(cb), true);
   }
 
-  void LoopbackStream::write(BytesIn in, size_t bytes,
+  void LoopbackStream::write(BytesIn in,
+                             size_t bytes,
                              libp2p::basic::Writer::WriteCallbackFunc cb) {
     if (is_reset_) {
       return deferWriteCallback(Error::STREAM_RESET_BY_HOST, std::move(cb));
@@ -114,12 +118,14 @@ namespace libp2p::connection {
     }
   }
 
-  void LoopbackStream::writeSome(BytesIn in, size_t bytes,
+  void LoopbackStream::writeSome(BytesIn in,
+                                 size_t bytes,
                                  libp2p::basic::Writer::WriteCallbackFunc cb) {
     write(in, bytes, std::move(cb));
   }
 
-  void LoopbackStream::read(BytesOut out, size_t bytes,
+  void LoopbackStream::read(BytesOut out,
+                            size_t bytes,
                             libp2p::basic::Reader::ReadCallbackFunc cb,
                             bool some) {
     if (is_reset_) {
@@ -134,7 +140,10 @@ namespace libp2p::connection {
 
     // this lambda checks, if there's enough data in our read buffer, and gives
     // it to the caller, if so
-    auto read_lambda = [self{shared_from_this()}, cb{std::move(cb)}, out, bytes,
+    auto read_lambda = [self{shared_from_this()},
+                        cb{std::move(cb)},
+                        out,
+                        bytes,
                         some](outcome::result<size_t> res) mutable {
       if (!res) {
         self->data_notified_ = true;
@@ -146,7 +155,8 @@ namespace libp2p::connection {
         auto to_read = some ? std::min(self->buffer_.size(), bytes) : bytes;
 
         if (boost::asio::buffer_copy(boost::asio::buffer(out.data(), to_read),
-                                     self->buffer_.data(), to_read)
+                                     self->buffer_.data(),
+                                     to_read)
             != to_read) {
           return self->deferReadCallback(Error::STREAM_INTERNAL_ERROR,
                                          std::move(cb));

@@ -8,9 +8,9 @@
 
 #include <vector>
 
-#include <span>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/secio/exchange_message.hpp>
+#include <span>
 
 namespace libp2p::security::secio {
 

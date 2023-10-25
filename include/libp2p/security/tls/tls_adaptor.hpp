@@ -38,7 +38,8 @@ namespace libp2p::security {
 
     /// Performs async handshake for outbound connection
     void secureOutbound(std::shared_ptr<connection::LayerConnection> outbound,
-                        const peer::PeerId &p, SecConnCallbackFunc cb) override;
+                        const peer::PeerId &p,
+                        SecConnCallbackFunc cb) override;
 
    private:
     /// Creates shared SSL context, generates certificate and private key

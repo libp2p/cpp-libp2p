@@ -8,10 +8,10 @@
 
 #include <memory>
 
-#include <span>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_info.hpp>
 #include <libp2p/transport/transport_adaptor.hpp>
+#include <span>
 
 namespace libp2p::network {
 

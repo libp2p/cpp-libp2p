@@ -108,14 +108,15 @@ namespace __libp2p {
 
 /// with 3 args: OUTCOME_CPP_DEFINE_CATEGORY_3
 /// with 2 args: OUTCOME_CPP_DEFINE_CATEGORY_2
-#define OUTCOME_CPP_DEFINE_CATEGORY(...)                    \
-  __GET_MACRO_3(__VA_ARGS__, OUTCOME_CPP_DEFINE_CATEGORY_3, \
-                OUTCOME_CPP_DEFINE_CATEGORY_2)              \
+#define OUTCOME_CPP_DEFINE_CATEGORY(...)       \
+  __GET_MACRO_3(__VA_ARGS__,                   \
+                OUTCOME_CPP_DEFINE_CATEGORY_3, \
+                OUTCOME_CPP_DEFINE_CATEGORY_2) \
   (__VA_ARGS__)
 
 /// with 2 args: OUTCOME_CPP_DEFINE_CATEGORY_2
 /// with 1 arg : OUTCOME_CPP_DEFINE_CATEGORY_1
-#define OUTCOME_HPP_DECLARE_ERROR(...)                    \
-  __GET_MACRO_2(__VA_ARGS__, OUTCOME_HPP_DECLARE_ERROR_2, \
-                OUTCOME_HPP_DECLARE_ERROR_1)              \
+#define OUTCOME_HPP_DECLARE_ERROR(...)                                       \
+  __GET_MACRO_2(                                                             \
+      __VA_ARGS__, OUTCOME_HPP_DECLARE_ERROR_2, OUTCOME_HPP_DECLARE_ERROR_1) \
   (__VA_ARGS__)

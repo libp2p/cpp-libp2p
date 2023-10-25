@@ -28,22 +28,35 @@ namespace libp2p::security {
     auto noise_marshaller =
         std::make_unique<noise::HandshakeMessageMarshallerImpl>(
             key_marshaller_);
-    auto handshake = std::make_shared<noise::Handshake>(
-        crypto_provider_, std::move(noise_marshaller), local_key_, inbound,
-        false, boost::none, std::move(cb), key_marshaller_);
+    auto handshake =
+        std::make_shared<noise::Handshake>(crypto_provider_,
+                                           std::move(noise_marshaller),
+                                           local_key_,
+                                           inbound,
+                                           false,
+                                           boost::none,
+                                           std::move(cb),
+                                           key_marshaller_);
     handshake->connect();
   }
 
   void Noise::secureOutbound(
       std::shared_ptr<connection::LayerConnection> outbound,
-      const peer::PeerId &p, SecurityAdaptor::SecConnCallbackFunc cb) {
+      const peer::PeerId &p,
+      SecurityAdaptor::SecConnCallbackFunc cb) {
     log_->info("securing outbound connection");
     auto noise_marshaller =
         std::make_unique<noise::HandshakeMessageMarshallerImpl>(
             key_marshaller_);
-    auto handshake = std::make_shared<noise::Handshake>(
-        crypto_provider_, std::move(noise_marshaller), local_key_, outbound,
-        true, p, std::move(cb), key_marshaller_);
+    auto handshake =
+        std::make_shared<noise::Handshake>(crypto_provider_,
+                                           std::move(noise_marshaller),
+                                           local_key_,
+                                           outbound,
+                                           true,
+                                           p,
+                                           std::move(cb),
+                                           key_marshaller_);
     handshake->connect();
   }
 }  // namespace libp2p::security

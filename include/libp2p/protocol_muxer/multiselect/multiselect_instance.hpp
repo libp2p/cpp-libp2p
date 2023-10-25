@@ -26,7 +26,8 @@ namespace libp2p::protocol_muxer::multiselect {
     /// Implements ProtocolMuxer API
     void selectOneOf(std::span<const peer::ProtocolName> protocols,
                      std::shared_ptr<basic::ReadWriter> connection,
-                     bool is_initiator, bool negotiate_multiselect,
+                     bool is_initiator,
+                     bool negotiate_multiselect,
                      Multiselect::ProtocolHandlerFunc cb);
 
    private:

@@ -8,7 +8,6 @@
 
 #include <vector>
 
-#include <span>
 #include <libp2p/layer/layer_adaptor.hpp>
 #include <libp2p/muxer/muxer_adaptor.hpp>
 #include <libp2p/peer/peer_id.hpp>
@@ -16,6 +15,7 @@
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
 #include <libp2p/security/security_adaptor.hpp>
 #include <libp2p/transport/upgrader.hpp>
+#include <span>
 
 namespace libp2p::transport {
   class UpgraderImpl : public Upgrader,
@@ -41,16 +41,19 @@ namespace libp2p::transport {
 
     ~UpgraderImpl() override = default;
 
-    void upgradeLayersInbound(RawSPtr conn, ProtoAddrVec layers,
+    void upgradeLayersInbound(RawSPtr conn,
+                              ProtoAddrVec layers,
                               OnLayerCallbackFunc cb) override;
 
-    void upgradeLayersOutbound(const multi::Multiaddress &address, RawSPtr conn,
+    void upgradeLayersOutbound(const multi::Multiaddress &address,
+                               RawSPtr conn,
                                ProtoAddrVec layers,
                                OnLayerCallbackFunc cb) override;
 
     void upgradeToSecureInbound(LayerSPtr conn,
                                 OnSecuredCallbackFunc cb) override;
-    void upgradeToSecureOutbound(LayerSPtr conn, const peer::PeerId &remoteId,
+    void upgradeToSecureOutbound(LayerSPtr conn,
+                                 const peer::PeerId &remoteId,
                                  OnSecuredCallbackFunc cb) override;
 
     void upgradeToMuxed(SecSPtr conn, OnMuxedCallbackFunc cb) override;
@@ -67,8 +70,10 @@ namespace libp2p::transport {
      * error happens
      */
     void upgradeToNextLayerOutbound(const multi::Multiaddress &address,
-                                    LayerSPtr conn, ProtoAddrVec layers,
-                                    size_t layer_index, OnLayerCallbackFunc cb);
+                                    LayerSPtr conn,
+                                    ProtoAddrVec layers,
+                                    size_t layer_index,
+                                    OnLayerCallbackFunc cb);
 
     /**
      * Upgrade inbound connection to next layer one
@@ -78,8 +83,10 @@ namespace libp2p::transport {
      * @param cb - callback, which is called, when a connection is upgraded or
      * error happens
      */
-    void upgradeToNextLayerInbound(LayerSPtr conn, ProtoAddrVec layers,
-                                   size_t layer_index, OnLayerCallbackFunc cb);
+    void upgradeToNextLayerInbound(LayerSPtr conn,
+                                   ProtoAddrVec layers,
+                                   size_t layer_index,
+                                   OnLayerCallbackFunc cb);
 
     std::shared_ptr<protocol_muxer::ProtocolMuxer> protocol_muxer_;
 

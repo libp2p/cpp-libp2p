@@ -9,8 +9,8 @@
 #include <array>
 #include <vector>
 
-#include <span>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::crypto::x25519 {
 

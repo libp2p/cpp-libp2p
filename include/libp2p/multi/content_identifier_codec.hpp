@@ -44,8 +44,7 @@ namespace libp2p::multi {
     static std::vector<uint8_t> encodeCIDV1(MulticodecType::Code content_type,
                                             const Multihash &mhash);
 
-    static outcome::result<ContentIdentifier> decode(
-        BytesIn bytes);
+    static outcome::result<ContentIdentifier> decode(BytesIn bytes);
 
     /**
      * @brief Encode CID to string representation

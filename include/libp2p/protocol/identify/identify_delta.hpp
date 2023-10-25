@@ -36,7 +36,8 @@ namespace libp2p::protocol {
      * @param conn_manager - connection manager of this node
      * @param bus, over which the events arrive
      */
-    IdentifyDelta(Host &host, network::ConnectionManager &conn_manager,
+    IdentifyDelta(Host &host,
+                  network::ConnectionManager &conn_manager,
                   event::Bus &bus);
 
     peer::ProtocolName getProtocolId() const override;

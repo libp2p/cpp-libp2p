@@ -21,7 +21,8 @@ namespace libp2p::network {
 
     ListenerManagerImpl(
         std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect,
-        std::shared_ptr<Router> router, std::shared_ptr<TransportManager> tmgr,
+        std::shared_ptr<Router> router,
+        std::shared_ptr<TransportManager> tmgr,
         std::shared_ptr<ConnectionManager> cmgr);
 
     bool isStarted() const override;

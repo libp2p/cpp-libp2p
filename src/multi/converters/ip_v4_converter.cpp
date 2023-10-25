@@ -25,8 +25,7 @@ namespace libp2p::multi::converters {
     return hex;
   }
 
-  outcome::result<Bytes> IPv4Converter::addressToBytes(
-      std::string_view addr) {
+  outcome::result<Bytes> IPv4Converter::addressToBytes(std::string_view addr) {
     boost::system::error_code ec;
     auto address = boost::asio::ip::make_address_v4(addr, ec);
     if (ec) {

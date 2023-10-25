@@ -53,8 +53,10 @@ namespace libp2p::protocol {
 
   void IdentifyPush::sendPush() {
     detail::streamToEachConnectedPeer(
-        msg_processor_->getHost(), msg_processor_->getConnectionManager(),
-        {kIdentifyPushProtocol}, [self{weak_from_this()}](auto &&s_res) {
+        msg_processor_->getHost(),
+        msg_processor_->getConnectionManager(),
+        {kIdentifyPushProtocol},
+        [self{weak_from_this()}](auto &&s_res) {
           if (!s_res) {
             return;
           }

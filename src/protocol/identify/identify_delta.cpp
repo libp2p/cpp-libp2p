@@ -40,7 +40,8 @@ namespace libp2p::protocol {
   void IdentifyDelta::start() {
     new_protos_sub_ =
         bus_.getChannel<event::network::ProtocolsAddedChannel>().subscribe(
-            [self{weak_from_this()}](std::vector<peer::ProtocolName> new_protos) {
+            [self{weak_from_this()}](
+                std::vector<peer::ProtocolName> new_protos) {
               if (auto s = self.lock()) {
                 return self.lock()->sendDelta(
                     new_protos, std::span<const peer::ProtocolName>());
@@ -48,10 +49,11 @@ namespace libp2p::protocol {
             });
     rm_protos_sub_ =
         bus_.getChannel<event::network::ProtocolsRemovedChannel>().subscribe(
-            [self{weak_from_this()}](std::vector<peer::ProtocolName> rm_protos) {
+            [self{weak_from_this()}](
+                std::vector<peer::ProtocolName> rm_protos) {
               if (auto s = self.lock()) {
-                return self.lock()->sendDelta(std::span<const peer::ProtocolName>(),
-                                              rm_protos);
+                return self.lock()->sendDelta(
+                    std::span<const peer::ProtocolName>(), rm_protos);
               }
             });
   }
@@ -62,7 +64,9 @@ namespace libp2p::protocol {
     auto [peer_id_str, peer_addr_str] = detail::getPeerIdentity(stream);
     if (!msg_res) {
       log_->error("cannot read identify-delta message from peer {}, {}: {}",
-                  peer_id_str, peer_addr_str, msg_res.error().message());
+                  peer_id_str,
+                  peer_addr_str,
+                  msg_res.error().message());
       return stream->reset();
     }
 
@@ -71,17 +75,22 @@ namespace libp2p::protocol {
       log_->error(
           "peer initiated a stream with IdentifyDelta, but sent something "
           "else; peer {}, {}",
-          peer_id_str, peer_addr_str);
+          peer_id_str,
+          peer_addr_str);
       return stream->reset();
     }
 
     log_->info("received an IdentifyDelta message from peer {}, {}",
-               peer_id_str, peer_addr_str);
-    stream->close([self{shared_from_this()}, s = stream,
+               peer_id_str,
+               peer_addr_str);
+    stream->close([self{shared_from_this()},
+                   s = stream,
                    p = std::move(peer_id_str),
                    a = std::move(peer_addr_str)](auto &&res) {
       if (!res) {
-        self->log_->error("cannot close stream to peer {}, {}: {}", p, a,
+        self->log_->error("cannot close stream to peer {}, {}: {}",
+                          p,
+                          a,
                           res.error().message());
       }
     });
@@ -105,8 +114,10 @@ namespace libp2p::protocol {
     }
     auto add_res = proto_repo.addProtocols(peer_id, added_protocols);
     if (!add_res) {
-      log_->error("cannot add new protocols of peer {}, {}: {}", peer_id_str,
-                  peer_addr_str, add_res.error().message());
+      log_->error("cannot add new protocols of peer {}, {}: {}",
+                  peer_id_str,
+                  peer_addr_str,
+                  add_res.error().message());
     }
 
     std::vector<peer::ProtocolName> rm_protocols;
@@ -116,8 +127,10 @@ namespace libp2p::protocol {
     }
     auto rm_res = proto_repo.removeProtocols(peer_id, rm_protocols);
     if (!rm_res) {
-      log_->error("cannot remove protocols of peer {}, {}: {}", peer_id_str,
-                  peer_addr_str, rm_res.error().message());
+      log_->error("cannot remove protocols of peer {}, {}: {}",
+                  peer_id_str,
+                  peer_addr_str,
+                  rm_res.error().message());
     }
   }
 
@@ -132,7 +145,9 @@ namespace libp2p::protocol {
     }
 
     detail::streamToEachConnectedPeer(
-        host_, conn_manager_, {kIdentifyDeltaProtocol},
+        host_,
+        conn_manager_,
+        {kIdentifyDeltaProtocol},
         [self{shared_from_this()}, msg](auto s_res) {
           if (!s_res) {
             return;

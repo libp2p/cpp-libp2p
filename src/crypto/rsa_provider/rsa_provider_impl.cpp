@@ -107,8 +107,8 @@ namespace libp2p::crypto::rsa {
   outcome::result<PublicKey> RsaProviderImpl::derive(
       const PrivateKey &private_key) const {
     const unsigned char *data_pointer = private_key.data();
-    RSA *rsa = d2i_RSAPrivateKey(nullptr, &data_pointer,
-                                 static_cast<long>(private_key.size()));
+    RSA *rsa = d2i_RSAPrivateKey(
+        nullptr, &data_pointer, static_cast<long>(private_key.size()));
     if (nullptr == rsa) {
       return KeyGeneratorError::KEY_DERIVATION_FAILED;
     }
@@ -123,8 +123,8 @@ namespace libp2p::crypto::rsa {
       const PrivateKey &private_key) {
     const unsigned char *data_pointer = private_key.data();
     std::shared_ptr<RSA> rsa{
-        d2i_RSAPrivateKey(nullptr, &data_pointer,
-                          static_cast<long>(private_key.size())),
+        d2i_RSAPrivateKey(
+            nullptr, &data_pointer, static_cast<long>(private_key.size())),
         RSA_free};
     if (nullptr == rsa) {
       return KeyValidatorError::INVALID_PRIVATE_KEY;
@@ -139,8 +139,12 @@ namespace libp2p::crypto::rsa {
     Signature signature(RSA_size(rsa.get()));
     unsigned int signature_size = 0;
     if (1
-        != RSA_sign(NID_sha256, digest.data(), digest.size(), signature.data(),
-                    &signature_size, rsa.get())) {
+        != RSA_sign(NID_sha256,
+                    digest.data(),
+                    digest.size(),
+                    signature.data(),
+                    &signature_size,
+                    rsa.get())) {
       return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
     }
 
@@ -148,14 +152,19 @@ namespace libp2p::crypto::rsa {
   }
 
   outcome::result<bool> RsaProviderImpl::verify(
-      BytesIn message, const Signature &signature,
+      BytesIn message,
+      const Signature &signature,
       const PublicKey &public_key) const {
     OUTCOME_TRY(x509_key, RsaProviderImpl::getPublicKeyFromBytes(public_key));
     EVP_PKEY *key = X509_PUBKEY_get0(x509_key.get());
     std::unique_ptr<RSA, void (*)(RSA *)> rsa{EVP_PKEY_get1_RSA(key), RSA_free};
     OUTCOME_TRY(digest, sha256(message));
-    int result = RSA_verify(NID_sha256, digest.data(), digest.size(),
-                            signature.data(), signature.size(), rsa.get());
+    int result = RSA_verify(NID_sha256,
+                            digest.data(),
+                            digest.size(),
+                            signature.data(),
+                            signature.size(),
+                            rsa.get());
     return 1 == result;
   }
 

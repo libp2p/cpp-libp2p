@@ -192,7 +192,8 @@ namespace libp2p::event {
    * @tparam DispatchPolicy - The dispatch policy to use for this channel
    * (defaults to @ref drop_exceptions)
    */
-  template <typename Tag, typename Data,
+  template <typename Tag,
+            typename Data,
             typename DispatchPolicy = drop_exceptions>
   struct channel_decl {
     using channel_type = Channel<Data, DispatchPolicy>;

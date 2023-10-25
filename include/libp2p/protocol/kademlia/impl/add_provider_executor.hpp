@@ -28,7 +28,8 @@ namespace libp2p::protocol::kademlia {
       : public std::enable_shared_from_this<AddProviderExecutor> {
    public:
     AddProviderExecutor(
-        const Config &config, std::shared_ptr<Host> host,
+        const Config &config,
+        std::shared_ptr<Host> host,
         std::shared_ptr<basic::Scheduler> scheduler,
         std::shared_ptr<SessionHost> session_host,
         const std::shared_ptr<PeerRoutingTable> &peer_routing_table,

@@ -7,16 +7,15 @@
 #include "peer_set.hpp"
 
 #include <algorithm>
-#include <random>
 #include <chrono>
+#include <random>
 
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 
 namespace libp2p::protocol::gossip {
 
-  boost::optional<PeerContextPtr> PeerSet::find(
-      const peer::PeerId &id) const {
+  boost::optional<PeerContextPtr> PeerSet::find(const peer::PeerId &id) const {
     auto it = peers_.find(id);
     if (it == peers_.end()) {
       return boost::none;
@@ -64,8 +63,8 @@ namespace libp2p::protocol::gossip {
       ret.reserve(n > size() ? size() : n);
       std::mt19937 gen;
       gen.seed(std::chrono::system_clock::now().time_since_epoch().count());
-      std::sample(peers_.begin(), peers_.end(), std::back_inserter(ret), n,
-                  gen);
+      std::sample(
+          peers_.begin(), peers_.end(), std::back_inserter(ret), n, gen);
     }
     return ret;
   }

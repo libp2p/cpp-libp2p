@@ -9,7 +9,8 @@
 #include <generated/security/plaintext/protobuf/plaintext.pb.h>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::plaintext,
-                            ExchangeMessageMarshallerImpl::Error, e) {
+                            ExchangeMessageMarshallerImpl::Error,
+                            e) {
   using E = libp2p::security::plaintext::ExchangeMessageMarshallerImpl::Error;
   switch (e) {
     case E::PUBLIC_KEY_SERIALIZING_ERROR:

@@ -13,7 +13,8 @@ namespace libp2p {
   inline void readReturnSize(const std::shared_ptr<basic::Reader> &reader,
                              BytesOut out,
                              basic::Reader::ReadCallbackFunc cb) {
-    read(reader, out,
+    read(reader,
+         out,
          [n{out.size()}, cb{std::move(cb)}](outcome::result<void> r) {
            if (r.has_error()) {
              cb(r.error());

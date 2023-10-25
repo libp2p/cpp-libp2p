@@ -16,11 +16,13 @@ namespace libp2p::crypto::chachapoly {
    public:
     explicit ChaCha20Poly1305Impl(Key key);
 
-    outcome::result<Bytes> encrypt(const Nonce &nonce, BytesIn plaintext,
-                                       BytesIn aad) override;
+    outcome::result<Bytes> encrypt(const Nonce &nonce,
+                                   BytesIn plaintext,
+                                   BytesIn aad) override;
 
-    outcome::result<Bytes> decrypt(const Nonce &nonce, BytesIn ciphertext,
-                                       BytesIn aad) override;
+    outcome::result<Bytes> decrypt(const Nonce &nonce,
+                                   BytesIn ciphertext,
+                                   BytesIn aad) override;
 
    private:
     const Key key_;

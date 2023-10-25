@@ -11,9 +11,10 @@ namespace libp2p::security::noise {
   NoiseCCP1305Impl::NoiseCCP1305Impl(Key32 key)
       : ccp_{std::make_unique<crypto::chachapoly::ChaCha20Poly1305Impl>(key)} {}
 
-  outcome::result<Bytes> NoiseCCP1305Impl::encrypt(BytesIn precompiled_out, uint64_t nonce,
-                                                       BytesIn plaintext,
-                                                       BytesIn aad) {
+  outcome::result<Bytes> NoiseCCP1305Impl::encrypt(BytesIn precompiled_out,
+                                                   uint64_t nonce,
+                                                   BytesIn plaintext,
+                                                   BytesIn aad) {
     auto n = ccp_->uint64toNonce(nonce);
     OUTCOME_TRY(enc, ccp_->encrypt(n, plaintext, aad));
     auto res = spanToVec(precompiled_out);
@@ -22,9 +23,10 @@ namespace libp2p::security::noise {
     return res;
   }
 
-  outcome::result<Bytes> NoiseCCP1305Impl::decrypt(BytesIn precompiled_out, uint64_t nonce,
-                                                       BytesIn ciphertext,
-                                                       BytesIn aad) {
+  outcome::result<Bytes> NoiseCCP1305Impl::decrypt(BytesIn precompiled_out,
+                                                   uint64_t nonce,
+                                                   BytesIn ciphertext,
+                                                   BytesIn aad) {
     auto n = ccp_->uint64toNonce(nonce);
     OUTCOME_TRY(dec, ccp_->decrypt(n, ciphertext, aad));
     auto res = spanToVec(precompiled_out);

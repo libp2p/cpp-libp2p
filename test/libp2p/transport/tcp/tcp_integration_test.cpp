@@ -124,8 +124,8 @@ TEST(TCP, TwoListenersCantBindOnSamePort) {
  * @then each client is expected to receive sent message
  */
 TEST(TCP, SingleListenerCanAcceptManyClients) {
-  constexpr static int kClients = 2;
-  constexpr static int kSize = 1500;
+  static constexpr int kClients = 2;
+  static constexpr int kSize = 1500;
   size_t counter = 0;  // number of answers
   auto ma = "/ip4/127.0.0.1/tcp/40003"_multiaddr;
 
@@ -138,20 +138,20 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
     EXPECT_FALSE(conn->isInitiator());
 
     auto buf = std::make_shared<std::vector<uint8_t>>(kSize, 0);
-    conn->readSome(*buf, buf->size(),
-                   [&counter, conn, buf, context](auto &&res) {
-                     ASSERT_TRUE(res) << res.error().message();
+    conn->readSome(
+        *buf, buf->size(), [&counter, conn, buf, context](auto &&res) {
+          ASSERT_TRUE(res) << res.error().message();
 
-                     conn->write(*buf, buf->size(),
-                                 [&counter, conn, buf, context](auto &&res) {
-                                   ASSERT_TRUE(res) << res.error().message();
-                                   EXPECT_EQ(res.value(), buf->size());
-                                   counter++;
-                                   if (counter >= kClients) {
-                                     context->stop();
-                                   }
-                                 });
-                   });
+          conn->write(
+              *buf, buf->size(), [&counter, conn, buf, context](auto &&res) {
+                ASSERT_TRUE(res) << res.error().message();
+                EXPECT_EQ(res.value(), buf->size());
+                counter++;
+                if (counter >= kClients) {
+                  context->stop();
+                }
+              });
+        });
   });
 
   ASSERT_TRUE(listener);
@@ -175,18 +175,19 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
 
         EXPECT_TRUE(conn->isInitiator());
 
-        conn->write(*buf, buf->size(),
-                    [conn, readback, buf, context](auto &&res) {
-                      ASSERT_TRUE(res) << res.error().message();
-                      ASSERT_EQ(res.value(), buf->size());
-                      conn->read(*readback, readback->size(),
-                                 [conn, readback, buf, context](auto &&res) {
-                                   context->stop();
-                                   ASSERT_TRUE(res) << res.error().message();
-                                   ASSERT_EQ(res.value(), readback->size());
-                                   ASSERT_EQ(*buf, *readback);
-                                 });
-                    });
+        conn->write(
+            *buf, buf->size(), [conn, readback, buf, context](auto &&res) {
+              ASSERT_TRUE(res) << res.error().message();
+              ASSERT_EQ(res.value(), buf->size());
+              conn->read(*readback,
+                         readback->size(),
+                         [conn, readback, buf, context](auto &&res) {
+                           context->stop();
+                           ASSERT_TRUE(res) << res.error().message();
+                           ASSERT_EQ(res.value(), readback->size());
+                           ASSERT_EQ(*buf, *readback);
+                         });
+            });
       });
 
       context->run_for(400ms);
@@ -194,8 +195,8 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
   });
 
   context->run_for(500ms);
-  std::for_each(clients.begin(), clients.end(),
-                [](std::thread &t) { t.join(); });
+  std::for_each(
+      clients.begin(), clients.end(), [](std::thread &t) { t.join(); });
 
   ASSERT_EQ(counter, kClients) << "not all clients' requests were handled";
 }
@@ -321,7 +322,8 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
 
   transport->dial(
       testutil::randomPeerId(),  // ignore arg
-      ma, [kSize](auto &&rconn) {
+      ma,
+      [kSize](auto &&rconn) {
         auto conn = expectConnectionValid(rconn);
 
         auto readback = std::make_shared<Bytes>(kSize, 0);

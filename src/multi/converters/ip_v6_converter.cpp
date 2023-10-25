@@ -12,8 +12,7 @@
 
 namespace libp2p::multi::converters {
 
-  outcome::result<Bytes> IPv6Converter::addressToBytes(
-      std::string_view addr) {
+  outcome::result<Bytes> IPv6Converter::addressToBytes(std::string_view addr) {
     boost::system::error_code ec;
     auto address = boost::asio::ip::make_address_v6(addr, ec);
     if (ec) {

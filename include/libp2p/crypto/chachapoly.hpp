@@ -8,11 +8,11 @@
 
 #include <array>
 
-#include <span>
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::crypto::chachapoly {
   using libp2p::Bytes;
@@ -30,10 +30,9 @@ namespace libp2p::crypto::chachapoly {
      * @param associated_data - data for message authentication
      * @return ciphertext bytes
      */
-    virtual outcome::result<Bytes> encrypt(
-        const Nonce &nonce,
-                                               BytesIn plaintext,
-                                               BytesIn aad) = 0;
+    virtual outcome::result<Bytes> encrypt(const Nonce &nonce,
+                                           BytesIn plaintext,
+                                           BytesIn aad) = 0;
 
     /**
      * Does authenticated decryption with associated data (AEAD)
@@ -42,10 +41,9 @@ namespace libp2p::crypto::chachapoly {
      * @param associated_data - data for message authentication
      * @return plaintext bytes
      */
-    virtual outcome::result<Bytes> decrypt(
-        const Nonce &nonce,
-                                               BytesIn ciphertext,
-                                               BytesIn aad) = 0;
+    virtual outcome::result<Bytes> decrypt(const Nonce &nonce,
+                                           BytesIn ciphertext,
+                                           BytesIn aad) = 0;
 
     /**
      * Convert 64-bit integer to 12-bit long byte sequence with four zero bytes

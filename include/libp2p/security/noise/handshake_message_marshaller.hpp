@@ -8,10 +8,10 @@
 
 #include <tuple>
 
-#include <span>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/noise/handshake_message.hpp>
+#include <span>
 
 namespace libp2p::security::noise {
 

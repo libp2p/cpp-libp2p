@@ -17,13 +17,17 @@ namespace libp2p::network {
 
     MOCK_METHOD2(dial, void(const peer::PeerInfo &, DialResultFunc));
     MOCK_METHOD3(dial,
-                 void(const peer::PeerInfo &, DialResultFunc,
+                 void(const peer::PeerInfo &,
+                      DialResultFunc,
                       std::chrono::milliseconds));
     MOCK_METHOD4(newStream,
-                 void(const peer::PeerInfo &, StreamProtocols,
-                      StreamAndProtocolOrErrorCb, std::chrono::milliseconds));
+                 void(const peer::PeerInfo &,
+                      StreamProtocols,
+                      StreamAndProtocolOrErrorCb,
+                      std::chrono::milliseconds));
     MOCK_METHOD3(newStream,
-                 void(const peer::PeerId &, StreamProtocols,
+                 void(const peer::PeerId &,
+                      StreamProtocols,
                       StreamAndProtocolOrErrorCb));
   };
 

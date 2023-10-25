@@ -11,10 +11,10 @@
 #include <vector>
 
 #include <boost/signals2.hpp>
-#include <span>
 #include <libp2p/basic/garbage_collectable.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_id.hpp>
+#include <span>
 
 namespace libp2p::peer {
 
@@ -93,7 +93,8 @@ namespace libp2p::peer {
      * @note triggers #onAddressAdded for each address
      */
     virtual outcome::result<bool> addAddresses(
-        const PeerId &p, std::span<const multi::Multiaddress> ma,
+        const PeerId &p,
+        std::span<const multi::Multiaddress> ma,
         Milliseconds ttl) = 0;
 
     /**
@@ -109,7 +110,8 @@ namespace libp2p::peer {
      * @note triggers #onAddressAdded when any new addresses are inserted
      */
     virtual outcome::result<bool> upsertAddresses(
-        const PeerId &p, std::span<const multi::Multiaddress> ma,
+        const PeerId &p,
+        std::span<const multi::Multiaddress> ma,
         Milliseconds ttl) = 0;
 
     /**

@@ -85,7 +85,8 @@ namespace libp2p::security {
 
   void Plaintext::secureOutbound(
       std::shared_ptr<connection::LayerConnection> outbound,
-      const peer::PeerId &p, SecConnCallbackFunc cb) {
+      const peer::PeerId &p,
+      SecConnCallbackFunc cb) {
     SL_DEBUG(log_, "securing outbound connection");
     auto rw = std::make_shared<basic::ProtobufMessageReadWriter>(outbound);
     sendExchangeMsg(outbound, rw, cb);
@@ -101,8 +102,8 @@ namespace libp2p::security {
 
     // TODO(107): Reentrancy
 
-    PLAINTEXT_OUTCOME_TRY(proto_exchange_msg,
-                          marshaller_->handyToProto(exchange_msg), conn, cb)
+    PLAINTEXT_OUTCOME_TRY(
+        proto_exchange_msg, marshaller_->handyToProto(exchange_msg), conn, cb)
 
     rw->write<plaintext::protobuf::Exchange>(
         proto_exchange_msg,
@@ -117,15 +118,22 @@ namespace libp2p::security {
   void Plaintext::receiveExchangeMsg(
       const std::shared_ptr<connection::LayerConnection> &conn,
       const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
-      const MaybePeerId &p, SecConnCallbackFunc cb) const {
+      const MaybePeerId &p,
+      SecConnCallbackFunc cb) const {
     auto remote_peer_exchange_bytes = std::make_shared<std::vector<uint8_t>>();
     rw->read<plaintext::protobuf::Exchange>(
-        [self{shared_from_this()}, conn, p, cb{std::move(cb)},
+        [self{shared_from_this()},
+         conn,
+         p,
+         cb{std::move(cb)},
          remote_peer_exchange_bytes](auto &&res) {
           if (!res) {
             return cb(res.error());
           }
-          self->readCallback(conn, p, cb, remote_peer_exchange_bytes,
+          self->readCallback(conn,
+                             p,
+                             cb,
+                             remote_peer_exchange_bytes,
                              remote_peer_exchange_bytes->size());
         },
         remote_peer_exchange_bytes);
@@ -133,7 +141,8 @@ namespace libp2p::security {
 
   void Plaintext::readCallback(
       const std::shared_ptr<connection::LayerConnection> &conn,
-      const MaybePeerId &p, const SecConnCallbackFunc &cb,
+      const MaybePeerId &p,
+      const SecConnCallbackFunc &cb,
       const std::shared_ptr<std::vector<uint8_t>> &read_bytes,
       outcome::result<size_t> read_call_res) const {
     /*
@@ -141,8 +150,8 @@ namespace libp2p::security {
      * exchange message. This could be a subject of further improvement.
      */
     PLAINTEXT_OUTCOME_VOID_TRY(read_call_res, conn, cb);
-    PLAINTEXT_OUTCOME_TRY(in_exchange_msg, marshaller_->unmarshal(*read_bytes),
-                          conn, cb);
+    PLAINTEXT_OUTCOME_TRY(
+        in_exchange_msg, marshaller_->unmarshal(*read_bytes), conn, cb);
     auto &msg = in_exchange_msg.first;
     auto received_pid = msg.peer_id;
     auto pkey = msg.pubkey;
@@ -160,22 +169,25 @@ namespace libp2p::security {
       log_->error(
           "ID, which was received in the message ({}) and the one, which was "
           "derived from the public key ({}), differ",
-          received_pid.toBase58(), derived_pid.toBase58());
+          received_pid.toBase58(),
+          derived_pid.toBase58());
       closeConnection(conn, Error::INVALID_PEER_ID);
       return cb(Error::INVALID_PEER_ID);
     }
     if (p.has_value()) {
       if (received_pid != p.value()) {
         auto s = p.value().toBase58();
-        log_->error("received_pid={}, p.value()={}", received_pid.toBase58(),
-                    s);
+        log_->error(
+            "received_pid={}, p.value()={}", received_pid.toBase58(), s);
         closeConnection(conn, Error::INVALID_PEER_ID);
         return cb(Error::INVALID_PEER_ID);
       }
     }
 
     cb(std::make_shared<connection::PlaintextConnection>(
-        conn, idmgr_->getKeyPair().publicKey, std::move(pkey),
+        conn,
+        idmgr_->getKeyPair().publicKey,
+        std::move(pkey),
         key_marshaller_));
   }
 

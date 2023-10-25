@@ -64,8 +64,7 @@ namespace libp2p::crypto {
    * since their types are identical.
    */
   extern template outcome::result<std::shared_ptr<EVP_PKEY>>
-  NewEvpPkeyFromBytes(int, BytesIn,
-                      decltype(EVP_PKEY_new_raw_public_key) *);
+  NewEvpPkeyFromBytes(int, BytesIn, decltype(EVP_PKEY_new_raw_public_key) *);
 
   /**
    * @brief Generate EC signature based on key type
@@ -84,7 +83,8 @@ namespace libp2p::crypto {
    * @param key - EC public key
    * @return signature status or error code
    */
-  outcome::result<bool> VerifyEcSignature(BytesIn digest, BytesIn signature,
+  outcome::result<bool> VerifyEcSignature(BytesIn digest,
+                                          BytesIn signature,
                                           const std::shared_ptr<EC_KEY> &key);
 
 }  // namespace libp2p::crypto

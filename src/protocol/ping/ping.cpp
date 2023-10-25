@@ -11,7 +11,8 @@
 #include <libp2p/protocol/ping/ping_server_session.hpp>
 
 namespace libp2p::protocol {
-  Ping::Ping(Host &host, libp2p::event::Bus &bus,
+  Ping::Ping(Host &host,
+             libp2p::event::Bus &bus,
              boost::asio::io_context &io_context,
              std::shared_ptr<crypto::random::RandomGenerator> rand_gen,
              PingConfig config)
@@ -41,14 +42,17 @@ namespace libp2p::protocol {
     }
     auto peer_info = host_.getPeerRepository().getPeerInfo(remote_peer.value());
     return host_.newStream(
-        peer_info, {detail::kPingProto},
+        peer_info,
+        {detail::kPingProto},
         [self{shared_from_this()}, cb = std::move(cb)](auto &&stream_res) {
           if (!stream_res) {
             return cb(stream_res.error());
           }
           auto session = std::make_shared<PingClientSession>(
-              self->io_context_, self->bus_,
-              std::move(stream_res.value().stream), self->rand_gen_,
+              self->io_context_,
+              self->bus_,
+              std::move(stream_res.value().stream),
+              self->rand_gen_,
               self->config_);
           session->start();
           cb(std::move(session));

@@ -31,7 +31,8 @@ namespace libp2p::crypto::ecdsa {
                                  const PublicKey &key) const override;
 
     outcome::result<bool> verifyPrehashed(
-        const PrehashedMessage &message, const Signature &signature,
+        const PrehashedMessage &message,
+        const Signature &signature,
         const PublicKey &public_key) const override;
 
    private:

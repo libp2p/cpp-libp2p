@@ -174,8 +174,8 @@ TEST(Gossip, MessageCache) {
 
   // insert helper function
   auto insertMessage = [&](const g::TopicId &topic) {
-    auto msg = std::make_shared<g::TopicMessage>(testutil::randomPeerId(),
-                                                 seq++, fake_body, topic);
+    auto msg = std::make_shared<g::TopicMessage>(
+        testutil::randomPeerId(), seq++, fake_body, topic);
     auto msg_id = g::createMessageId(msg->from, msg->seq_no, msg->data);
     ASSERT_TRUE(cache.insert(msg, msg_id));
     inserted_messages.emplace_back(current_time, std::move(msg_id));
@@ -189,10 +189,12 @@ TEST(Gossip, MessageCache) {
 
   for (; current_time <= stop_time; ++current_time) {
     insertMessage(topic_1);
-    if (current_time.count() % 2 == 1)
+    if (current_time.count() % 2 == 1) {
       insertMessage(topic_2);
-    if (current_time.count() % timer_interval.count() == 0)
+    }
+    if (current_time.count() % timer_interval.count() == 0) {
       cache.shift();
+    }
     if (current_time.count() % (timer_interval.count() * 10) == 0) {
       for (auto it = inserted_messages.rbegin(); it != inserted_messages.rend();
            ++it) {

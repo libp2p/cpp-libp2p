@@ -32,8 +32,7 @@ namespace libp2p::basic {
      * pointer, or having buffer as part of some class/struct, and using
      * enable_shared_from_this()
      */
-    virtual void write(BytesIn in, size_t bytes,
-                       WriteCallbackFunc cb) = 0;
+    virtual void write(BytesIn in, size_t bytes, WriteCallbackFunc cb) = 0;
 
     /**
      * @brief Write up to {@code} in.size() {@nocode} bytes.
@@ -48,8 +47,7 @@ namespace libp2p::basic {
      * pointer, or having buffer as part of some class/struct, and using
      * enable_shared_from_this()
      */
-    virtual void writeSome(BytesIn in, size_t bytes,
-                           WriteCallbackFunc cb) = 0;
+    virtual void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) = 0;
 
     /**
      * @brief Defers reporting error state to callback to avoid reentrancy
@@ -59,7 +57,8 @@ namespace libp2p::basic {
      *
      * @note if (!ec) then this function does nothing
      */
-    virtual void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) = 0;
+    virtual void deferWriteCallback(std::error_code ec,
+                                    WriteCallbackFunc cb) = 0;
   };
 
 }  // namespace libp2p::basic

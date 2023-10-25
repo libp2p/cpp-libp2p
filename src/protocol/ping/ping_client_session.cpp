@@ -12,7 +12,8 @@
 
 namespace libp2p::protocol {
   PingClientSession::PingClientSession(
-      boost::asio::io_service &io_service, libp2p::event::Bus &bus,
+      boost::asio::io_service &io_service,
+      libp2p::event::Bus &bus,
       std::shared_ptr<connection::Stream> stream,
       std::shared_ptr<crypto::random::RandomGenerator> rand_gen,
       PingConfig config)
@@ -47,7 +48,8 @@ namespace libp2p::protocol {
 
     auto rand_buf = rand_gen_->randomBytes(config_.message_size);
     std::move(rand_buf.begin(), rand_buf.end(), write_buffer_.begin());
-    stream_->write(write_buffer_, config_.message_size,
+    stream_->write(write_buffer_,
+                   config_.message_size,
                    [self{shared_from_this()}](auto &&write_res) {
                      if (!write_res) {
                        self->last_error_ = write_res.error();
@@ -78,7 +80,8 @@ namespace libp2p::protocol {
       return;
     }
 
-    stream_->read(read_buffer_, config_.message_size,
+    stream_->read(read_buffer_,
+                  config_.message_size,
                   [self{shared_from_this()}](auto &&read_res) {
                     if (!read_res) {
                       self->last_error_ = read_res.error();

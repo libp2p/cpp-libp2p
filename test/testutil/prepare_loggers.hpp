@@ -6,7 +6,6 @@
 
 #pragma once
 
-
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/log/logger.hpp>
 

@@ -49,8 +49,8 @@ namespace libp2p::connection {
    * @return bytes of the MplexFrame
    */
   Bytes createFrameBytes(MplexFrame::Flag flag,
-                                     MplexStream::StreamNumber stream_number,
-                                     Bytes data = {});
+                         MplexStream::StreamNumber stream_number,
+                         Bytes data = {});
 
   /**
    * Create an MplexFrame
@@ -59,8 +59,7 @@ namespace libp2p::connection {
    * @param data to be in this frame
    * @return created frame or error
    */
-  outcome::result<MplexFrame> createFrame(uint64_t id_flag,
-                                          Bytes data);
+  outcome::result<MplexFrame> createFrame(uint64_t id_flag, Bytes data);
 
   /**
    * Read and parse MplexFrame bytes

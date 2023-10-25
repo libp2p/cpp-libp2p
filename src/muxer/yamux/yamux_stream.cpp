@@ -24,8 +24,10 @@ namespace libp2p::connection {
 
   YamuxStream::YamuxStream(
       std::shared_ptr<connection::SecureConnection> connection,
-      YamuxStreamFeedback &feedback, uint32_t stream_id,
-      size_t maximum_window_size, size_t write_queue_limit)
+      YamuxStreamFeedback &feedback,
+      uint32_t stream_id,
+      size_t maximum_window_size,
+      size_t write_queue_limit)
       : connection_(std::move(connection)),
         feedback_(feedback),
         stream_id_(stream_id),
@@ -40,13 +42,11 @@ namespace libp2p::connection {
     assert(write_queue_limit >= maximum_window_size_);
   }
 
-  void YamuxStream::read(BytesOut out, size_t bytes,
-                         ReadCallbackFunc cb) {
+  void YamuxStream::read(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
     doRead(out, bytes, std::move(cb), false);
   }
 
-  void YamuxStream::readSome(BytesOut out, size_t bytes,
-                             ReadCallbackFunc cb) {
+  void YamuxStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
     doRead(out, bytes, std::move(cb), true);
   }
 
@@ -64,13 +64,11 @@ namespace libp2p::connection {
     });
   }
 
-  void YamuxStream::write(BytesIn in, size_t bytes,
-                          WriteCallbackFunc cb) {
+  void YamuxStream::write(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
     doWrite(in, bytes, std::move(cb), false);
   }
 
-  void YamuxStream::writeSome(BytesIn in, size_t bytes,
-                              WriteCallbackFunc cb) {
+  void YamuxStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
     doWrite(in, bytes, std::move(cb), true);
   }
 
@@ -202,7 +200,9 @@ namespace libp2p::connection {
   void YamuxStream::increaseSendWindow(size_t delta) {
     if (delta > 0) {
       window_size_ += delta;
-      TRACE("stream {} send window increased by {} to {}", stream_id_, delta,
+      TRACE("stream {} send window increased by {} to {}",
+            stream_id_,
+            delta,
             window_size_);
       doWrite();
     }
@@ -265,10 +265,12 @@ namespace libp2p::connection {
       overflow = (internal_read_buffer_.size() > peers_window_size_);
       if (overflow) {
         log()->debug("read buffer overflow {} > {}, stream {}",
-                     internal_read_buffer_.size(), peers_window_size_,
+                     internal_read_buffer_.size(),
+                     peers_window_size_,
                      stream_id_);
       } else {
-        TRACE("stream {} receive window reduced by {} to {}", stream_id_,
+        TRACE("stream {} receive window reduced by {} to {}",
+              stream_id_,
               internal_read_buffer_.size(),
               peers_window_size_ - internal_read_buffer_.size());
       }
@@ -283,8 +285,10 @@ namespace libp2p::connection {
       doClose(Error::STREAM_RECEIVE_OVERFLOW, false);
     } else if (bytes_consumed > 0) {
       feedback_.ackReceivedBytes(stream_id_, bytes_consumed);
-      TRACE("stream {} receive window increased by {} to {}", stream_id_,
-            bytes_consumed, peers_window_size_ - internal_read_buffer_.size());
+      TRACE("stream {} receive window increased by {} to {}",
+            stream_id_,
+            bytes_consumed,
+            peers_window_size_ - internal_read_buffer_.size());
     }
 
     if (read_cb_and_res.first) {
@@ -413,8 +417,10 @@ namespace libp2p::connection {
     }
   }
 
-  void YamuxStream::doRead(BytesOut out, size_t bytes,
-                           ReadCallbackFunc cb, bool some) {
+  void YamuxStream::doRead(BytesOut out,
+                           size_t bytes,
+                           ReadCallbackFunc cb,
+                           bool some) {
     assert(cb);
 
     if (!cb || bytes == 0 || out.empty()
@@ -497,14 +503,18 @@ namespace libp2p::connection {
       if (data.empty()) {
         break;
       }
-      TRACE("stream {} dequeued {}/{} bytes to write", stream_id_, data.size(),
+      TRACE("stream {} dequeued {}/{} bytes to write",
+            stream_id_,
+            data.size(),
             write_queue_.unsentBytes() + data.size());
       feedback_.writeStreamData(stream_id_, data, some);
     }
 
     if (initial_window_size != window_size_) {
-      TRACE("stream {} send window size reduced from {} to {}", stream_id_,
-            initial_window_size, window_size_);
+      TRACE("stream {} send window size reduced from {} to {}",
+            stream_id_,
+            initial_window_size,
+            window_size_);
     }
 
     if (!is_writable_ && !close_reason_ && window_size_ > 0) {
@@ -523,8 +533,10 @@ namespace libp2p::connection {
     }
   }
 
-  void YamuxStream::doWrite(BytesIn in, size_t bytes,
-                            WriteCallbackFunc cb, bool some) {
+  void YamuxStream::doWrite(BytesIn in,
+                            size_t bytes,
+                            WriteCallbackFunc cb,
+                            bool some) {
     if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
       return deferWriteCallback(Error::STREAM_INVALID_ARGUMENT, std::move(cb));
     }
@@ -541,8 +553,8 @@ namespace libp2p::connection {
       return deferWriteCallback(Error::STREAM_WRITE_OVERFLOW, std::move(cb));
     }
 
-    write_queue_.enqueue(in.first(static_cast<ptrdiff_t>(bytes)), some,
-                         std::move(cb));
+    write_queue_.enqueue(
+        in.first(static_cast<ptrdiff_t>(bytes)), some, std::move(cb));
     doWrite();
   }
 

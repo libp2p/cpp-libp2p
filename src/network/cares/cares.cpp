@@ -114,7 +114,8 @@ namespace libp2p::network::c_ares {
     if (ARES_SUCCESS != status) {
       SL_DEBUG(log(),
                "Unable to initialize c-ares channel for request to {} - {}",
-               uri, ::ares_strerror(status));
+               uri,
+               ::ares_strerror(status));
       reportError(io_context, std::move(callback), Error::CHANNEL_INIT_FAILURE);
       return;
     }
@@ -125,8 +126,12 @@ namespace libp2p::network::c_ares {
 
     try {
       std::thread worker([channel, request] {
-        ::ares_query(channel, request->uri.c_str(), ns_c_in, ns_t_txt,
-                     Ares::txtCallback, request.get());
+        ::ares_query(channel,
+                     request->uri.c_str(),
+                     ns_c_in,
+                     ns_t_txt,
+                     Ares::txtCallback,
+                     request.get());
         Ares::waitAresChannel(channel);
         ::ares_destroy(channel);
       });
@@ -139,7 +144,8 @@ namespace libp2p::network::c_ares {
 
   void Ares::reportError(
       const std::weak_ptr<boost::asio::io_context> &io_context,
-      Ares::TxtCallback callback, Ares::Error error) {
+      Ares::TxtCallback callback,
+      Ares::Error error) {
     if (auto ctx = io_context.lock()) {
       ctx->post([callback{std::move(callback)}, error] { callback(error); });
       return;
@@ -147,11 +153,12 @@ namespace libp2p::network::c_ares {
     SL_DEBUG(log(), "IO context has expired");
   }
 
-  void Ares::txtCallback(void *arg, int status, int, unsigned char *abuf,
-                         int alen) {
+  void Ares::txtCallback(
+      void *arg, int status, int, unsigned char *abuf, int alen) {
     auto *request_ptr{static_cast<RequestContext *>(arg)};
     if (ARES_SUCCESS != status) {
-      reportError(request_ptr->io_context, request_ptr->callback,
+      reportError(request_ptr->io_context,
+                  request_ptr->callback,
                   kQueryErrors.at(status));
       removeRequest(request_ptr);
       return;
@@ -159,7 +166,8 @@ namespace libp2p::network::c_ares {
     ::ares_txt_reply *reply{nullptr};
     auto parse_status = ::ares_parse_txt_reply(abuf, alen, &reply);
     if (ARES_SUCCESS != parse_status) {
-      reportError(request_ptr->io_context, request_ptr->callback,
+      reportError(request_ptr->io_context,
+                  request_ptr->callback,
                   kQueryErrors.at(parse_status));
       removeRequest(request_ptr);
       if (nullptr != reply) {

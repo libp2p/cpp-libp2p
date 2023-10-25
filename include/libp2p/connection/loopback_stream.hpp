@@ -41,17 +41,13 @@ namespace libp2p::connection {
         const override;
 
    protected:
-    void read(BytesOut out, size_t bytes,
-              ReadCallbackFunc cb) override;
+    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
-    void readSome(BytesOut out, size_t bytes,
-                  ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
-    void write(BytesIn in, size_t bytes,
-               WriteCallbackFunc cb) override;
+    void write(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
-    void writeSome(BytesIn in, size_t bytes,
-                   WriteCallbackFunc cb) override;
+    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
@@ -59,8 +55,7 @@ namespace libp2p::connection {
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
    private:
-    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb,
-              bool some);
+    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb, bool some);
 
     libp2p::peer::PeerInfo own_peer_info_;
     std::shared_ptr<boost::asio::io_context> io_context_;

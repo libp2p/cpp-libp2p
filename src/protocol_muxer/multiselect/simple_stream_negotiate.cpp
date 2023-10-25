@@ -27,13 +27,15 @@ namespace libp2p::protocol_muxer::multiselect {
       MsgBuf read;
     };
 
-    void failed(const StreamPtr &stream, const Callback &cb,
+    void failed(const StreamPtr &stream,
+                const Callback &cb,
                 std::error_code ec) {
       stream->reset();
       cb(ec);
     }
 
-    void completed(StreamPtr stream, const Callback &cb,
+    void completed(StreamPtr stream,
+                   const Callback &cb,
                    const Buffers &buffers) {
       // In this case we expect the exact echo in reply
       if (buffers.read == buffers.written) {
@@ -42,19 +44,21 @@ namespace libp2p::protocol_muxer::multiselect {
       failed(stream, cb, ProtocolMuxer::Error::NEGOTIATION_FAILED);
     }
 
-    void onLastBytesRead(StreamPtr stream, const Callback &cb,
-                         const Buffers &buffers, outcome::result<size_t> res) {
+    void onLastBytesRead(StreamPtr stream,
+                         const Callback &cb,
+                         const Buffers &buffers,
+                         outcome::result<size_t> res) {
       if (!res) {
         return failed(stream, cb, res.error());
       }
 
-      SL_TRACE(log(), "received {}",
-               common::dumpBin(BytesIn(buffers.read)));
+      SL_TRACE(log(), "received {}", common::dumpBin(BytesIn(buffers.read)));
 
       completed(std::move(stream), cb, buffers);
     }
 
-    void onFirstBytesRead(StreamPtr stream, Callback cb,
+    void onFirstBytesRead(StreamPtr stream,
+                          Callback cb,
                           std::shared_ptr<Buffers> buffers,
                           outcome::result<size_t> res) {
       if (!res) {
@@ -73,8 +77,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
       assert(total_sz > kMaxVarintSize);
 
-      SL_TRACE(log(), "read {}",
-               common::dumpBin(BytesOut(buffers->read)));
+      SL_TRACE(log(), "read {}", common::dumpBin(BytesOut(buffers->read)));
 
       size_t remaining_bytes = total_sz - kMaxVarintSize;
 
@@ -84,14 +87,16 @@ namespace libp2p::protocol_muxer::multiselect {
       span = span.subspan(kMaxVarintSize, remaining_bytes);
 
       stream->read(
-          span, span.size(),
-          [stream = stream, cb = std::move(cb),
-           buffers = std::move(buffers)](outcome::result<size_t> res) mutable {
+          span,
+          span.size(),
+          [stream = stream, cb = std::move(cb), buffers = std::move(buffers)](
+              outcome::result<size_t> res) mutable {
             onLastBytesRead(std::move(stream), cb, *buffers, res);
           });
     }
 
-    void onPacketWritten(StreamPtr stream, Callback cb,
+    void onPacketWritten(StreamPtr stream,
+                         Callback cb,
                          std::shared_ptr<Buffers> buffers,
                          outcome::result<size_t> res) {
       if (!res) {
@@ -106,9 +111,10 @@ namespace libp2p::protocol_muxer::multiselect {
       span = span.first(kMaxVarintSize);
 
       stream->read(
-          span, span.size(),
-          [stream = stream, cb = std::move(cb),
-           buffers = std::move(buffers)](outcome::result<size_t> res) mutable {
+          span,
+          span.size(),
+          [stream = stream, cb = std::move(cb), buffers = std::move(buffers)](
+              outcome::result<size_t> res) mutable {
             onFirstBytesRead(stream, std::move(cb), std::move(buffers), res);
           });
     }
@@ -135,11 +141,12 @@ namespace libp2p::protocol_muxer::multiselect {
     SL_TRACE(log(), "sending {}", common::dumpBin(span));
 
     stream->write(
-        span, span.size(),
-        [stream = stream, cb = std::move(cb),
-         buffers = std::move(buffers)](outcome::result<size_t> res) mutable {
-          onPacketWritten(std::move(stream), std::move(cb), std::move(buffers),
-                          res);
+        span,
+        span.size(),
+        [stream = stream, cb = std::move(cb), buffers = std::move(buffers)](
+            outcome::result<size_t> res) mutable {
+          onPacketWritten(
+              std::move(stream), std::move(cb), std::move(buffers), res);
         });
   }
 

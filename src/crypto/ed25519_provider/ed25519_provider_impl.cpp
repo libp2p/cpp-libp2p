@@ -39,13 +39,13 @@ namespace libp2p::crypto::ed25519 {
     size_t priv_len{keypair.private_key.size()};
     size_t pub_len{keypair.public_key.size()};
     if (1
-        != EVP_PKEY_get_raw_private_key(pkey, keypair.private_key.data(),
-                                        &priv_len)) {
+        != EVP_PKEY_get_raw_private_key(
+            pkey, keypair.private_key.data(), &priv_len)) {
       return FAILED;
     }
     if (1
-        != EVP_PKEY_get_raw_public_key(pkey, keypair.public_key.data(),
-                                       &pub_len)) {
+        != EVP_PKEY_get_raw_public_key(
+            pkey, keypair.public_key.data(), &pub_len)) {
       return FAILED;
     }
 
@@ -54,14 +54,15 @@ namespace libp2p::crypto::ed25519 {
 
   outcome::result<PublicKey> Ed25519ProviderImpl::derive(
       const PrivateKey &private_key) const {
-    OUTCOME_TRY(evp_pkey,
-                NewEvpPkeyFromBytes(EVP_PKEY_ED25519, private_key,
-                                    EVP_PKEY_new_raw_private_key));
+    OUTCOME_TRY(
+        evp_pkey,
+        NewEvpPkeyFromBytes(
+            EVP_PKEY_ED25519, private_key, EVP_PKEY_new_raw_private_key));
     PublicKey public_key{0};
     size_t pub_len{public_key.size()};
     if (1
-        != EVP_PKEY_get_raw_public_key(evp_pkey.get(), public_key.data(),
-                                       &pub_len)) {
+        != EVP_PKEY_get_raw_public_key(
+            evp_pkey.get(), public_key.data(), &pub_len)) {
       return KeyGeneratorError::KEY_DERIVATION_FAILED;
     }
 
@@ -70,9 +71,10 @@ namespace libp2p::crypto::ed25519 {
 
   outcome::result<Signature> Ed25519ProviderImpl::sign(
       BytesIn message, const PrivateKey &private_key) const {
-    OUTCOME_TRY(evp_pkey,
-                NewEvpPkeyFromBytes(EVP_PKEY_ED25519, private_key,
-                                    EVP_PKEY_new_raw_private_key));
+    OUTCOME_TRY(
+        evp_pkey,
+        NewEvpPkeyFromBytes(
+            EVP_PKEY_ED25519, private_key, EVP_PKEY_new_raw_private_key));
     constexpr auto FAILED{CryptoProviderError::SIGNATURE_GENERATION_FAILED};
 
     std::shared_ptr<EVP_MD_CTX> mctx{EVP_MD_CTX_new(), EVP_MD_CTX_free};
@@ -81,27 +83,31 @@ namespace libp2p::crypto::ed25519 {
     }
 
     if (1
-        != EVP_DigestSignInit(mctx.get(), nullptr, nullptr, nullptr,
-                              evp_pkey.get())) {
+        != EVP_DigestSignInit(
+            mctx.get(), nullptr, nullptr, nullptr, evp_pkey.get())) {
       return FAILED;
     }
 
     Signature signature;
     size_t signature_len{signature.size()};
     if (1
-        != EVP_DigestSign(mctx.get(), signature.data(), &signature_len,
-                          message.data(), message.size())) {
+        != EVP_DigestSign(mctx.get(),
+                          signature.data(),
+                          &signature_len,
+                          message.data(),
+                          message.size())) {
       return FAILED;
     }
     return signature;
   }
 
   outcome::result<bool> Ed25519ProviderImpl::verify(
-      BytesIn message, const Signature &signature,
+      BytesIn message,
+      const Signature &signature,
       const PublicKey &public_key) const {
     OUTCOME_TRY(evp_pkey,
-                NewEvpPkeyFromBytes(EVP_PKEY_ED25519, public_key,
-                                    EVP_PKEY_new_raw_public_key));
+                NewEvpPkeyFromBytes(
+                    EVP_PKEY_ED25519, public_key, EVP_PKEY_new_raw_public_key));
     constexpr auto FAILED{CryptoProviderError::SIGNATURE_VERIFICATION_FAILED};
 
     std::shared_ptr<EVP_MD_CTX> mctx{EVP_MD_CTX_new(), EVP_MD_CTX_free};
@@ -110,12 +116,15 @@ namespace libp2p::crypto::ed25519 {
     }
 
     if (1
-        != EVP_DigestVerifyInit(mctx.get(), nullptr, nullptr, nullptr,
-                                evp_pkey.get())) {
+        != EVP_DigestVerifyInit(
+            mctx.get(), nullptr, nullptr, nullptr, evp_pkey.get())) {
       return FAILED;
     }
-    int valid = EVP_DigestVerify(mctx.get(), signature.data(), signature.size(),
-                                 message.data(), message.size());
+    int valid = EVP_DigestVerify(mctx.get(),
+                                 signature.data(),
+                                 signature.size(),
+                                 message.data(),
+                                 message.size());
     if (1 == valid || 0 == valid) {
       return valid;
     }

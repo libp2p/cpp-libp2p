@@ -12,7 +12,6 @@
 namespace libp2p::protocol::kademlia {
 
   struct PeerIdWithDistance {
-
     template <typename T>
     PeerIdWithDistance(const PeerId &peer_id, T &&target)
         : peer_id_(peer_id),
@@ -20,9 +19,9 @@ namespace libp2p::protocol::kademlia {
     }
 
     bool operator<(const PeerIdWithDistance &other) const noexcept {
-      return std::memcmp(distance_.data(), other.distance_.data(),
-                         distance_.size())
-          < 0;
+      return std::memcmp(
+                 distance_.data(), other.distance_.data(), distance_.size())
+           < 0;
     }
 
     const PeerId &operator*() const {

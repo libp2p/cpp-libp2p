@@ -53,7 +53,7 @@ struct InmemAddressRepository_Test : public ::testing::Test {
   const Multiaddress ma4 = "/ip4/127.0.0.1/tcp/8083"_multiaddr;
 
   template <typename... T>
-  std::vector<T...> vec(T &&... arg) {
+  std::vector<T...> vec(T &&...arg) {
     return std::vector<T...>{arg...};
   }
 };

@@ -9,9 +9,9 @@
 #include <memory>
 #include <vector>
 
-#include <span>
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::basic {
   /**
@@ -39,7 +39,6 @@ namespace libp2p::basic {
      * @param cb is called when the message is written or an error happened.
      * Quantity of bytes written is passed as an argument in case of success
      */
-    virtual void write(BytesIn buffer,
-                       Writer::WriteCallbackFunc cb) = 0;
+    virtual void write(BytesIn buffer, Writer::WriteCallbackFunc cb) = 0;
   };
 }  // namespace libp2p::basic

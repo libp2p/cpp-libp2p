@@ -150,7 +150,7 @@ namespace libp2p::multi::detail {
     size_t bytes_pos = 0;
 
     while (len-- && src[in_pos] != '=') {  // NOLINT
-      auto const v = inverse_table.at(src[in_pos]);
+      const auto v = inverse_table.at(src[in_pos]);
       if (v == -1) {
         return {};
       }

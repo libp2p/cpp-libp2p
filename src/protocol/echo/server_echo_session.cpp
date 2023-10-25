@@ -44,7 +44,8 @@ namespace libp2p::protocol {
     }
 
     stream_->readSome(
-        buf_, buf_.size(),
+        buf_,
+        buf_.size(),
         [self{shared_from_this()}](outcome::result<size_t> rread) {
           self->onRead(rread);
         });
@@ -81,7 +82,8 @@ namespace libp2p::protocol {
         buf_.begin() + size);
     BytesIn span = write_buf;
     stream_->write(
-        span, size,
+        span,
+        size,
         [self{shared_from_this()}, write_buf{std::move(write_buf)}](
             outcome::result<size_t> rwrite) { self->onWrite(rwrite); });
   }

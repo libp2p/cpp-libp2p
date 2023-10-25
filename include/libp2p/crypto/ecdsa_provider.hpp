@@ -63,7 +63,8 @@ namespace libp2p::crypto::ecdsa {
      * @return true - when signature matches, false - otherwise
      */
     virtual outcome::result<bool> verifyPrehashed(
-        const PrehashedMessage &message, const Signature &signature,
+        const PrehashedMessage &message,
+        const Signature &signature,
         const PublicKey &public_key) const = 0;
 
     virtual ~EcdsaProvider() = default;

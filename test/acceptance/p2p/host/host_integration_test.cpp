@@ -65,8 +65,13 @@ struct HostIntegrationTest
 TEST_P(HostIntegrationTest, InteractAllToAllSuccess) {
   testutil::prepareLoggers();
 
-  const auto [peer_count, ping_times, start_port, timeout, future_timeout,
-              system_timeout, secured] = GetParam();
+  const auto [peer_count,
+              ping_times,
+              start_port,
+              timeout,
+              future_timeout,
+              system_timeout,
+              secured] = GetParam();
   const auto addr_prefix = "/ip4/127.0.0.1/tcp/";
   testutil::MultiaddressGenerator ma_generator(addr_prefix, start_port);
 

@@ -39,7 +39,8 @@ namespace libp2p::crypto::aes {
     outcome::result<Bytes> finalize() override;
 
    private:
-    outcome::result<void> init(BytesIn key, BytesIn iv,
+    outcome::result<void> init(BytesIn key,
+                               BytesIn iv,
                                const EVP_CIPHER *cipher);
 
     const Mode mode_;

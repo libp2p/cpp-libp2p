@@ -31,8 +31,7 @@ namespace libp2p::multi::converters {
     return ConversionError::INVALID_ADDRESS;
   }
 
-  outcome::result<Bytes> TcpConverter::addressToBytes(
-      std::string_view addr) {
+  outcome::result<Bytes> TcpConverter::addressToBytes(std::string_view addr) {
     for (auto c : addr) {
       if (std::isdigit(c) == 0) {
         return ConversionError::INVALID_ADDRESS;

@@ -9,7 +9,8 @@
 #include <numeric>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia,
-                            PeerRoutingTableImpl::Error, e) {
+                            PeerRoutingTableImpl::Error,
+                            e) {
   using E = libp2p::protocol::kademlia::PeerRoutingTableImpl::Error;
 
   switch (e) {
@@ -51,8 +52,9 @@ namespace libp2p::protocol::kademlia {
   }
 
   auto Bucket::find(const peer::PeerId &p) const {
-    return std::find_if(peers_.begin(), peers_.end(),
-                        [&p](const auto &i) { return i.peer_id == p; });
+    return std::find_if(peers_.begin(), peers_.end(), [&p](const auto &i) {
+      return i.peer_id == p;
+    });
   }
 
   bool Bucket::moveToFront(const PeerId &pid) {
@@ -96,7 +98,9 @@ namespace libp2p::protocol::kademlia {
   std::vector<peer::PeerId> Bucket::peerIds() const {
     std::vector<peer::PeerId> peerIds;
     peerIds.reserve(peers_.size());
-    std::transform(peers_.begin(), peers_.end(), std::back_inserter(peerIds),
+    std::transform(peers_.begin(),
+                   peers_.end(),
+                   std::back_inserter(peerIds),
                    [](const auto &bpi) { return bpi.peer_id; });
     return peerIds;
   }
@@ -190,8 +194,10 @@ namespace libp2p::protocol::kademlia {
   }
 
   namespace {
-    outcome::result<bool> replacePeer(Bucket &bucket, const peer::PeerId &pid,
-                                      bool is_replaceable, event::Bus &bus) {
+    outcome::result<bool> replacePeer(Bucket &bucket,
+                                      const peer::PeerId &pid,
+                                      bool is_replaceable,
+                                      event::Bus &bus) {
       const auto removed = bucket.removeReplaceableItem();
       if (!removed.has_value()) {
         return PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY;
@@ -274,7 +280,9 @@ namespace libp2p::protocol::kademlia {
 
   size_t PeerRoutingTableImpl::size() const {
     return std::accumulate(
-        buckets_.begin(), buckets_.end(), 0u,
+        buckets_.begin(),
+        buckets_.end(),
+        0u,
         [](size_t num, const Bucket &bucket) { return num + bucket.size(); });
   }
 

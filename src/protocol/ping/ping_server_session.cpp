@@ -30,7 +30,8 @@ namespace libp2p::protocol {
       return;
     }
 
-    stream_->read(buffer_, config_.message_size,
+    stream_->read(buffer_,
+                  config_.message_size,
                   [self{shared_from_this()}](auto &&read_res) {
                     if (!read_res) {
                       return;
@@ -48,7 +49,8 @@ namespace libp2p::protocol {
       return;
     }
 
-    stream_->write(buffer_, config_.message_size,
+    stream_->write(buffer_,
+                   config_.message_size,
                    [self{shared_from_this()}](auto &&write_res) {
                      if (!write_res) {
                        return;

@@ -12,7 +12,7 @@
 
 namespace libp2p::log {
 
-    /// Local logger with common prefix used to distinguish message source
+  /// Local logger with common prefix used to distinguish message source
   /// instances
   class SubLogger {
    public:
@@ -21,7 +21,8 @@ namespace libp2p::log {
           prefix_(),
           prefix_size_(prefix_.size()) {}
 
-    explicit SubLogger(const std::string &tag, const std::string &group,
+    explicit SubLogger(const std::string &tag,
+                       const std::string &group,
                        std::string_view prefix)
         : log_(log::createLogger(tag, group)),
           prefix_(prefix),
@@ -30,8 +31,10 @@ namespace libp2p::log {
     }
 
     template <typename T>
-    explicit SubLogger(const std::string &tag, const std::string &group,
-                       std::string_view prefix, T instance)
+    explicit SubLogger(const std::string &tag,
+                       const std::string &group,
+                       std::string_view prefix,
+                       T instance)
         : log_(log::createLogger(tag, group)),
           prefix_(makePrefix(prefix, instance)),
           prefix_size_(prefix_.size()) {}

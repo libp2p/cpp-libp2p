@@ -182,7 +182,7 @@ namespace libp2p::network {
       outcome::result<std::shared_ptr<connection::CapableConnection>> rconn) {
     if (!rconn) {
       log()->warn("can not accept valid connection, {}",
-                 rconn.error().message());
+                  rconn.error().message());
       return;  // ignore
     }
     auto &&conn = rconn.value();
@@ -212,7 +212,8 @@ namespace libp2p::network {
 
           // negotiate protocols
           this->multiselect_->selectOneOf(
-              this->router_->getSupportedProtocols(), stream,
+              this->router_->getSupportedProtocols(),
+              stream,
               false /* not initiator */,
               true /* need to negotiate multistream itself - SPEC ???*/,
               [this, stream](outcome::result<peer::ProtocolName> rproto) {
@@ -220,7 +221,7 @@ namespace libp2p::network {
 
                 if (!rproto) {
                   log()->warn("can not negotiate protocols, {}",
-                             rproto.error().message());
+                              rproto.error().message());
                   success = false;
                 } else {
                   auto &&proto = rproto.value();

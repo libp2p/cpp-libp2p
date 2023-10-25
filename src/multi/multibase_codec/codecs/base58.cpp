@@ -79,7 +79,8 @@ namespace libp2p::multi::detail {
       int i = 0;
       // Apply "b58 = b58 * 256 + ch".
       for (auto it = b58.rbegin();
-           (carry != 0 || i < length) && (it != b58.rend()); it++, i++) {
+           (carry != 0 || i < length) && (it != b58.rend());
+           it++, i++) {
         carry += 256 * (*it);
         *it = carry % 58;
         carry /= 58;
@@ -135,7 +136,8 @@ namespace libp2p::multi::detail {
       }
       int i = 0;
       for (auto it = b256.rbegin();
-           (carry != 0 || i < length) && (it != b256.rend()); ++it, ++i) {
+           (carry != 0 || i < length) && (it != b256.rend());
+           ++it, ++i) {
         carry += 58 * (*it);
         *it = carry % 256;
         carry /= 256;

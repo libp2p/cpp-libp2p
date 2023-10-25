@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <vector>
 #include <array>
+#include <vector>
 
 namespace libp2p::crypto::secp256k1 {
 

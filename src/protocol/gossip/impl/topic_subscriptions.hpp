@@ -21,8 +21,10 @@ namespace libp2p::protocol::gossip {
    public:
     /// Ctor. Dependencies are passed by ref because this object is a part of
     /// RemoteSubscriptions and lives only within its scope
-    TopicSubscriptions(TopicId topic, const Config &config,
-                       Connectivity &connectivity, log::SubLogger &log);
+    TopicSubscriptions(TopicId topic,
+                       const Config &config,
+                       Connectivity &connectivity,
+                       log::SubLogger &log);
 
     /// Returns true if no peers subscribed and not self-subscribed and
     /// no fanout period at the moment (empty item may be erased)
@@ -30,7 +32,8 @@ namespace libp2p::protocol::gossip {
 
     /// Forwards message to mesh members and announce to other subscribers
     void onNewMessage(const boost::optional<PeerContextPtr> &from,
-                      const TopicMessage::Ptr &msg, const MessageId &msg_id,
+                      const TopicMessage::Ptr &msg,
+                      const MessageId &msg_id,
                       Time now);
 
     /// Periodic job needed to update meshes and shift "I have" caches

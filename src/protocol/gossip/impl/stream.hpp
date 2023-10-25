@@ -30,9 +30,13 @@ namespace libp2p::protocol::gossip {
     /// by design, so dependencies are stored by reference.
     /// Also, peer is passed separately because it cannot be fetched from stream
     /// once the stream is dead
-    Stream(size_t stream_id, const Config &config, basic::Scheduler &scheduler,
-           const Feedback &feedback, MessageReceiver &msg_receiver,
-           std::shared_ptr<connection::Stream> stream, PeerContextPtr peer);
+    Stream(size_t stream_id,
+           const Config &config,
+           basic::Scheduler &scheduler,
+           const Feedback &feedback,
+           MessageReceiver &msg_receiver,
+           std::shared_ptr<connection::Stream> stream,
+           PeerContextPtr peer);
 
     /// Begins reading messages from stream
     void read();

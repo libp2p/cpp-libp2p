@@ -36,7 +36,8 @@ namespace libp2p::common {
     return libp2p::common::unhex(std::string_view(c, s)).value();
   }
 
-  libp2p::multi::Multiaddress operator""_multiaddr(const char *c, std::size_t s) {
+  libp2p::multi::Multiaddress operator""_multiaddr(const char *c,
+                                                   std::size_t s) {
     return libp2p::multi::Multiaddress::create(std::string_view(c, s)).value();
   }
 

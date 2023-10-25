@@ -7,8 +7,8 @@
 #pragma once
 
 #include <openssl/evp.h>
-#include <span>
 #include <libp2p/crypto/hmac_provider.hpp>
+#include <span>
 
 namespace libp2p::crypto::hmac {
 

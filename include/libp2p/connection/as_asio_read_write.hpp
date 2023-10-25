@@ -67,17 +67,18 @@ namespace libp2p {
           boost::asio::detail::buffer_sequence_adapter<
               boost::asio::mutable_buffer,
               MutableBufferSequence>::first(buffers)};
-      impl->readSome(asioBuffer(buffer), buffer.size(),
-                     wrapCb(std::forward<Cb>(cb)));
+      impl->readSome(
+          asioBuffer(buffer), buffer.size(), wrapCb(std::forward<Cb>(cb)));
     }
 
     template <typename ConstBufferSequence, typename Cb>
     void async_write_some(const ConstBufferSequence &buffers, Cb &&cb) {
       boost::asio::const_buffer buffer{
           boost::asio::detail::buffer_sequence_adapter<
-              boost::asio::const_buffer, ConstBufferSequence>::first(buffers)};
-      impl->writeSome(asioBuffer(buffer), buffer.size(),
-                      wrapCb(std::forward<Cb>(cb)));
+              boost::asio::const_buffer,
+              ConstBufferSequence>::first(buffers)};
+      impl->writeSome(
+          asioBuffer(buffer), buffer.size(), wrapCb(std::forward<Cb>(cb)));
     }
 
     std::shared_ptr<boost::asio::io_context> io;

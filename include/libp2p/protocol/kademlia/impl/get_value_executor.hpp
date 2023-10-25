@@ -36,14 +36,16 @@ namespace libp2p::protocol::kademlia {
         public std::enable_shared_from_this<GetValueExecutor> {
    public:
     GetValueExecutor(
-        const Config &config, std::shared_ptr<Host> host,
+        const Config &config,
+        std::shared_ptr<Host> host,
         std::shared_ptr<basic::Scheduler> scheduler,
         std::shared_ptr<SessionHost> session_host,
         std::shared_ptr<PeerRouting> peer_routing,
         std::shared_ptr<ContentRoutingTable> content_routing_table,
         const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
         std::shared_ptr<ExecutorsFactory> executor_factory,
-        std::shared_ptr<Validator> validator, ContentId key,
+        std::shared_ptr<Validator> validator,
+        ContentId key,
         FoundValueHandler handler);
 
     ~GetValueExecutor() override;

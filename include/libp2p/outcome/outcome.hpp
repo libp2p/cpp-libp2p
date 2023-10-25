@@ -37,7 +37,8 @@
 namespace libp2p::outcome {
   using namespace BOOST_OUTCOME_V2_NAMESPACE;  // NOLINT
 
-  template <class R, class S = std::error_code,
+  template <class R,
+            class S = std::error_code,
             class NoValuePolicy = policy::default_policy<R, S, void>>  //
   using result = basic_result<R, S, NoValuePolicy>;
 

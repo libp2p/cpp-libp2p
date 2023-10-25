@@ -45,7 +45,8 @@ struct BasicHostTest : public ::testing::Test {
       std::make_shared<peer::AddressRepositoryMock>();
 
   std::unique_ptr<Host> host = std::make_unique<host::BasicHost>(
-      idmgr, std::make_unique<network::NetworkMock>(),
+      idmgr,
+      std::make_unique<network::NetworkMock>(),
       std::make_unique<peer::PeerRepositoryMock>(),
       std::make_shared<libp2p::event::Bus>(),
       std::make_shared<libp2p::network::TransportManagerMock>());
@@ -151,7 +152,9 @@ TEST_F(BasicHostTest, NewStream) {
 
   EXPECT_CALL(network, getDialer()).WillOnce(ReturnRef(*dialer));
   EXPECT_CALL(*dialer,
-              newStream(pinfo, StreamProtocols{protocol}, _,
+              newStream(pinfo,
+                        StreamProtocols{protocol},
+                        _,
                         std::chrono::milliseconds::zero()))
       .WillOnce(Arg2CallbackWithArg(StreamAndProtocol{stream, protocol}));
 

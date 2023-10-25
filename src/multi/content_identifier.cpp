@@ -35,7 +35,7 @@ namespace libp2p::multi {
 
   bool ContentIdentifier::operator==(const ContentIdentifier &c) const {
     return version == c.version and content_type == c.content_type
-        and content_address == c.content_address;
+       and content_address == c.content_address;
   }
 
   bool ContentIdentifier::operator<(const ContentIdentifier &c) const {

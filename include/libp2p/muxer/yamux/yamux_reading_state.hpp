@@ -25,7 +25,6 @@ namespace libp2p::connection {
     using DataCallback = std::function<void(
         BytesOut segment, StreamId stream_id, bool rst, bool fin)>;
 
-
     YamuxReadingState(HeaderCallback on_header, DataCallback on_data);
 
     /// Data received from wire, collect it and segment into frames.

@@ -49,7 +49,7 @@ namespace libp2p::multi::converters {
     enum class WordType { PROTOCOL, ADDRESS };
     WordType type = WordType::PROTOCOL;
 
-    Protocol const *protx = nullptr;
+    const Protocol *protx = nullptr;
 
     std::list<std::string> tokens;
     boost::algorithm::split(tokens, str, boost::algorithm::is_any_of("/"));
@@ -93,7 +93,7 @@ namespace libp2p::multi::converters {
   }
 
   outcome::result<Bytes> addressToBytes(const Protocol &protocol,
-                                            std::string_view addr) {
+                                        std::string_view addr) {
     // TODO(Akvinikym) 25.02.19 PRE-49: add more protocols
     switch (protocol.code) {
       case Protocol::Code::IP4:
@@ -137,8 +137,8 @@ namespace libp2p::multi::converters {
     OUTCOME_TRY(bytes, addressToBytes(protocol, addr));
     std::string hex;
     hex.reserve(bytes.size() * 2);
-    boost::algorithm::hex_lower(bytes.begin(), bytes.end(),
-                                std::back_inserter(hex));
+    boost::algorithm::hex_lower(
+        bytes.begin(), bytes.end(), std::back_inserter(hex));
     return std::move(hex);
   }
 
@@ -154,7 +154,7 @@ namespace libp2p::multi::converters {
     while (lastpos < bytes.size() * 2) {
       BytesIn pid_bytes{bytes};
       auto protocol_int = UVarint(pid_bytes.subspan(lastpos / 2)).toUInt64();
-      Protocol const *protocol =
+      const Protocol *protocol =
           ProtocolList::get(static_cast<Protocol::Code>(protocol_int));
       if (protocol == nullptr) {
         return ConversionError::NO_SUCH_PROTOCOL;

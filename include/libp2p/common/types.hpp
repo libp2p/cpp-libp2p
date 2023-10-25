@@ -46,7 +46,7 @@ namespace libp2p {
 
   template <class T>
   concept SpanOfBytes = std::is_same_v<std::decay_t<T>, BytesIn>
-      or std::is_same_v<std::decay_t<T>, BytesIn>;
+                     or std::is_same_v<std::decay_t<T>, BytesIn>;
 
   inline bool operator==(const SpanOfBytes auto &lhs,
                          const SpanOfBytes auto &rhs) {
@@ -55,8 +55,8 @@ namespace libp2p {
 
   inline auto operator<=>(const SpanOfBytes auto &lhs,
                           const SpanOfBytes auto &rhs) {
-    return cxx20::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
-                                                    rhs.begin(), rhs.end());
+    return cxx20::lexicographical_compare_three_way(
+        lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
   }
 
 }  // namespace libp2p

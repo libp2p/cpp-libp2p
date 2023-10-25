@@ -40,8 +40,8 @@ using ::testing::Truly;
 struct DialerTest : public ::testing::Test {
   void SetUp() override {
     testutil::prepareLoggers();
-    dialer = std::make_shared<DialerImpl>(proto_muxer, tmgr, cmgr, listener,
-                                          scheduler);
+    dialer = std::make_shared<DialerImpl>(
+        proto_muxer, tmgr, cmgr, listener, scheduler);
   }
 
   std::shared_ptr<StreamMock> stream = std::make_shared<StreamMock>();
@@ -288,8 +288,8 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
 
   auto if_protocols = [&](std::span<const peer::ProtocolName> actual) {
     auto expected = std::span<const peer::ProtocolName>(protocols);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(*proto_muxer, selectOneOf(Truly(if_protocols), _, _, _, _))
@@ -324,8 +324,8 @@ TEST_F(DialerTest, NewStreamSuccess) {
 
   auto if_protocols = [&](std::span<const peer::ProtocolName> actual) {
     auto expected = std::span<const peer::ProtocolName>(protocols);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(*proto_muxer, selectOneOf(Truly(if_protocols), _, _, _, _))

@@ -58,7 +58,7 @@ class PlaintextAdaptorTest : public testing::Test {
   std::shared_ptr<NiceMock<LayerConnectionMock>> conn =
       std::make_shared<NiceMock<LayerConnectionMock>>();
 
-  constexpr static size_t ED25519_PUB_KEY_SIZE = 32;
+  static constexpr size_t ED25519_PUB_KEY_SIZE = 32;
   PublicKey remote_pubkey{
       {Key::Type::Ed25519, std::vector<uint8_t>(ED25519_PUB_KEY_SIZE, 1)}};
   KeyPair local_keypair{
@@ -148,7 +148,8 @@ TEST_F(PlaintextAdaptorTest, DISABLED_SecureOutbound) {
           Return(std::make_pair(remote_msg, ProtobufKey{remote_pubkey.data})));
 
   adaptor->secureOutbound(
-      conn, pid,
+      conn,
+      pid,
       [pid, this](outcome::result<std::shared_ptr<SecureConnection>> rc) {
         EXPECT_OUTCOME_TRUE(sec, rc);
 

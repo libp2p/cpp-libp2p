@@ -30,14 +30,17 @@ TEST_P(TransportParserTest, ParseSuccessfully) {
   auto r_ok = MultiaddressParser::parse(GetParam());
   std::vector<Protocol::Code> proto_codes;
   auto multiaddr_protos = GetParam().getProtocols();
-  auto callback = [](Protocol const &proto) { return proto.code; };
-  std::transform(multiaddr_protos.begin(), multiaddr_protos.end(),
-                 std::back_inserter(proto_codes), callback);
+  auto callback = [](const Protocol &proto) { return proto.code; };
+  std::transform(multiaddr_protos.begin(),
+                 multiaddr_protos.end(),
+                 std::back_inserter(proto_codes),
+                 callback);
   ASSERT_EQ(r_ok.value().chosen_protos, proto_codes);
 }
 
 auto addresses = {"/ip4/127.0.0.1/tcp/5050"_multiaddr};
-INSTANTIATE_TEST_SUITE_P(TestSupported, TransportParserTest,
+INSTANTIATE_TEST_SUITE_P(TestSupported,
+                         TransportParserTest,
                          ::testing::ValuesIn(addresses));
 
 /**

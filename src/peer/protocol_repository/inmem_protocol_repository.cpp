@@ -31,8 +31,8 @@ namespace libp2p::peer {
     return outcome::success();
   }
 
-  outcome::result<std::vector<ProtocolName>> InmemProtocolRepository::getProtocols(
-      const PeerId &p) const {
+  outcome::result<std::vector<ProtocolName>>
+  InmemProtocolRepository::getProtocols(const PeerId &p) const {
     OUTCOME_TRY(s, getProtocolSet(p));
     return std::vector<ProtocolName>(s->begin(), s->end());
   }
@@ -46,8 +46,11 @@ namespace libp2p::peer {
     std::vector<ProtocolName> ret;
     ret.reserve(size);
 
-    std::set_intersection(protocols.begin(), protocols.end(), s->begin(),
-                          s->end(), std::back_inserter(ret));
+    std::set_intersection(protocols.begin(),
+                          protocols.end(),
+                          s->begin(),
+                          s->end(),
+                          std::back_inserter(ret));
     return ret;
   }
 

@@ -29,7 +29,8 @@ namespace libp2p::protocol::gossip {
 
   }  // namespace
 
-  TopicSubscriptions::TopicSubscriptions(TopicId topic, const Config &config,
+  TopicSubscriptions::TopicSubscriptions(TopicId topic,
+                                         const Config &config,
                                          Connectivity &connectivity,
                                          log::SubLogger &log)
       : topic_(std::move(topic)),
@@ -46,13 +47,17 @@ namespace libp2p::protocol::gossip {
   }
 
   void TopicSubscriptions::onNewMessage(
-      const boost::optional<PeerContextPtr> &from, const TopicMessage::Ptr &msg,
-      const MessageId &msg_id, Time now) {
+      const boost::optional<PeerContextPtr> &from,
+      const TopicMessage::Ptr &msg,
+      const MessageId &msg_id,
+      Time now) {
     bool is_published_locally = !from.has_value();
 
     if (is_published_locally) {
       fanout_period_ends_ = now + config_.seen_cache_lifetime_msec;
-      log_.debug("setting fanout period for {}, {}->{}", topic_, now.count(),
+      log_.debug("setting fanout period for {}, {}->{}",
+                 topic_,
+                 now.count(),
                  fanout_period_ends_.count());
     }
 
@@ -84,8 +89,10 @@ namespace libp2p::protocol::gossip {
 
     seen_cache_.emplace_back(now + config_.seen_cache_lifetime_msec, msg_id);
 
-    log_.debug("message forwarded, topic={}, m={}, s={}", topic_,
-               mesh_peers_.size(), subscribed_peers_.size());
+    log_.debug("message forwarded, topic={}, m={}, s={}",
+               topic_,
+               mesh_peers_.size(),
+               subscribed_peers_.size());
   }
 
   void TopicSubscriptions::onHeartbeat(Time now) {
@@ -134,7 +141,8 @@ namespace libp2p::protocol::gossip {
       seen_cache_.erase(b, e);
       changed = true;
     } else if (seen_cache_size != 0) {
-      auto it = std::find_if(seen_cache_.begin(), seen_cache_.end(),
+      auto it = std::find_if(seen_cache_.begin(),
+                             seen_cache_.end(),
                              [now](const auto &p) { return p.first >= now; });
       if (it != seen_cache_.begin()) {
         seen_cache_.erase(seen_cache_.begin(), it);
@@ -143,8 +151,10 @@ namespace libp2p::protocol::gossip {
     }
 
     if (changed) {
-      log_.debug("seen cache size changed {}->{} for {}", seen_cache_size,
-                 seen_cache_.size(), topic_);
+      log_.debug("seen cache size changed {}->{} for {}",
+                 seen_cache_size,
+                 seen_cache_.size(),
+                 topic_);
     }
   }
 
@@ -220,8 +230,10 @@ namespace libp2p::protocol::gossip {
     p->message_builder->addGraft(topic_);
     connectivity_.peerIsWritable(p, false);
     mesh_peers_.insert(p);
-    log_.debug("peer {} added to mesh (size={}) for topic {}", p->str,
-               mesh_peers_.size(), topic_);
+    log_.debug("peer {} added to mesh (size={}) for topic {}",
+               p->str,
+               mesh_peers_.size(),
+               topic_);
   }
 
   void TopicSubscriptions::removeFromMesh(const PeerContextPtr &p) {
@@ -230,8 +242,10 @@ namespace libp2p::protocol::gossip {
     p->message_builder->addPrune(topic_);
     connectivity_.peerIsWritable(p, false);
     subscribed_peers_.insert(p);
-    log_.debug("peer {} removed from mesh (size={}) for topic {}", p->str,
-               mesh_peers_.size(), topic_);
+    log_.debug("peer {} removed from mesh (size={}) for topic {}",
+               p->str,
+               mesh_peers_.size(),
+               topic_);
   }
 
 }  // namespace libp2p::protocol::gossip

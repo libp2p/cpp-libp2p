@@ -15,7 +15,8 @@ namespace libp2p::network {
    public:
     ~RouterImpl() override = default;
 
-    void setProtocolHandler(StreamProtocols protocols, StreamAndProtocolCb cb,
+    void setProtocolHandler(StreamProtocols protocols,
+                            StreamAndProtocolCb cb,
                             ProtocolPredicate predicate = {}) override;
 
     std::vector<peer::ProtocolName> getSupportedProtocols() const override;

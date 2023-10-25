@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <mock/libp2p/connection/raw_connection_mock.hpp>
 #include <mock/libp2p/connection/layer_connection_mock.hpp>
+#include <mock/libp2p/connection/raw_connection_mock.hpp>
 
 #include <gmock/gmock.h>
 

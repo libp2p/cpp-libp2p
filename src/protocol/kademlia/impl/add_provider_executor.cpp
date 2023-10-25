@@ -17,7 +17,8 @@ namespace libp2p::protocol::kademlia {
   std::atomic_size_t AddProviderExecutor::instance_number = 0;
 
   AddProviderExecutor::AddProviderExecutor(
-      const Config &config, std::shared_ptr<Host> host,
+      const Config &config,
+      std::shared_ptr<Host> host,
       std::shared_ptr<basic::Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
       const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
@@ -35,7 +36,8 @@ namespace libp2p::protocol::kademlia {
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));
 
-    std::for_each(nearest_peer_ids_.begin(), nearest_peer_ids_.end(),
+    std::for_each(nearest_peer_ids_.begin(),
+                  nearest_peer_ids_.end(),
                   [this](auto &peer_id) { queue_.emplace(peer_id, target_); });
 
     log_.debug("created");
@@ -120,8 +122,10 @@ namespace libp2p::protocol::kademlia {
       ++requests_in_progress_;
 
       log_.debug("connecting to {}; done {}, active {}, in queue {}",
-                 peer_info.id.toBase58(), requests_succeed_,
-                 requests_in_progress_, queue_.size());
+                 peer_info.id.toBase58(),
+                 requests_succeed_,
+                 requests_in_progress_,
+                 queue_.size());
 
       auto holder =
           std::make_shared<std::pair<std::shared_ptr<AddProviderExecutor>,
@@ -139,7 +143,8 @@ namespace libp2p::protocol::kademlia {
           config_.connectionTimeout);
 
       host_->newStream(
-          peer_info, config_.protocols,
+          peer_info,
+          config_.protocols,
           [holder](auto &&stream_res) {
             if (holder->first) {
               holder->second.cancel();
@@ -160,8 +165,10 @@ namespace libp2p::protocol::kademlia {
       --requests_in_progress_;
 
       log_.debug("cannot connect to peer: {}; done {}, active {}, in queue {}",
-                 stream_res.error().message(), requests_succeed_,
-                 requests_in_progress_, queue_.size());
+                 stream_res.error().message(),
+                 requests_succeed_,
+                 requests_in_progress_,
+                 queue_.size());
 
       spawn();
       return;
@@ -171,8 +178,11 @@ namespace libp2p::protocol::kademlia {
     assert(stream->remoteMultiaddr().has_value());
 
     std::string addr(stream->remoteMultiaddr().value().getStringAddress());
-    log_.debug("connected to {}; done {}, active {}, in queue {}", addr,
-               requests_succeed_, requests_in_progress_, queue_.size());
+    log_.debug("connected to {}; done {}, active {}, in queue {}",
+               addr,
+               requests_succeed_,
+               requests_in_progress_,
+               queue_.size());
 
     log_.debug("outgoing stream with {}",
                stream->remotePeerId().value().toBase58());
@@ -184,10 +194,16 @@ namespace libp2p::protocol::kademlia {
     if (session->write(serialized_request_, {})) {
       ++requests_succeed_;
       log_.debug("write to {} successfuly; done {}, active {}, in queue {}",
-                 addr, requests_succeed_, requests_in_progress_, queue_.size());
+                 addr,
+                 requests_succeed_,
+                 requests_in_progress_,
+                 queue_.size());
     } else {
-      log_.debug("write to {} failed; done {}, active {}, in queue {}", addr,
-                 requests_succeed_, requests_in_progress_, queue_.size());
+      log_.debug("write to {} failed; done {}, active {}, in queue {}",
+                 addr,
+                 requests_succeed_,
+                 requests_in_progress_,
+                 queue_.size());
     }
 
     spawn();

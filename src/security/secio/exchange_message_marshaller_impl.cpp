@@ -9,7 +9,8 @@
 #include <generated/security/secio/protobuf/secio.pb.h>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::secio,
-                            ExchangeMessageMarshallerImpl::Error, e) {
+                            ExchangeMessageMarshallerImpl::Error,
+                            e) {
   using E = libp2p::security::secio::ExchangeMessageMarshallerImpl::Error;
   switch (e) {
     case E::MESSAGE_SERIALIZING_ERROR:

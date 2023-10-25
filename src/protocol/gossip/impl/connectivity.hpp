@@ -32,7 +32,8 @@ namespace libp2p::protocol::gossip {
     using ConnectionStatusFeedback =
         std::function<void(bool connected, const PeerContextPtr &ctx)>;
 
-    Connectivity(Config config, std::shared_ptr<basic::Scheduler> scheduler,
+    Connectivity(Config config,
+                 std::shared_ptr<basic::Scheduler> scheduler,
                  std::shared_ptr<Host> host,
                  std::shared_ptr<MessageReceiver> msg_receiver,
                  ConnectionStatusFeedback on_connected);

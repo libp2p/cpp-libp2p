@@ -40,15 +40,20 @@ Peer::Peer(Peer::Duration timeout, bool secure)
       secp256k1_provider_{
           std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>()},
       hmac_provider_{std::make_shared<crypto::hmac::HmacProviderImpl>()},
-      crypto_provider_{std::make_shared<crypto::CryptoProviderImpl>(
-          random_provider_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
-          secp256k1_provider_, hmac_provider_)},
+      crypto_provider_{
+          std::make_shared<crypto::CryptoProviderImpl>(random_provider_,
+                                                       ed25519_provider_,
+                                                       rsa_provider_,
+                                                       ecdsa_provider_,
+                                                       secp256k1_provider_,
+                                                       hmac_provider_)},
       scheduler_{std::make_shared<basic::SchedulerImpl>(
           std::make_shared<basic::AsioSchedulerBackend>(context_),
           basic::Scheduler::Config{})},
       secure_{secure} {
   EXPECT_OUTCOME_TRUE_MSG(
-      keys, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
+      keys,
+      crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
       "failed to generate keys");
   host_ = makeHost(keys);
 
@@ -67,31 +72,39 @@ void Peer::startServer(const multi::Multiaddress &address,
   thread_ = std::thread([this] { context_->run_for(timeout_); });
 }
 
-void Peer::startClient(const peer::PeerInfo &pinfo, size_t message_count,
+void Peer::startClient(const peer::PeerInfo &pinfo,
+                       size_t message_count,
                        Peer::sptr<TickCounter> counter) {
-  context_->post([this, server_id = pinfo.id.toBase58(), pinfo, message_count,
+  context_->post([this,
+                  server_id = pinfo.id.toBase58(),
+                  pinfo,
+                  message_count,
                   counter = std::move(counter)]() mutable {
     this->host_->newStream(
-        pinfo, {echo_->getProtocolId()},
-        [server_id = std::move(server_id), ping_times = message_count,
+        pinfo,
+        {echo_->getProtocolId()},
+        [server_id = std::move(server_id),
+         ping_times = message_count,
          counter =
              std::move(counter)](StreamAndProtocolOrError rstream) mutable {
           // get stream
-          EXPECT_OUTCOME_TRUE_MSG(stream, rstream,
-                                  "failed to connect to server: " + server_id);
+          EXPECT_OUTCOME_TRUE_MSG(
+              stream, rstream, "failed to connect to server: " + server_id);
           // make client session
           auto client = std::make_shared<protocol::ClientTestSession>(
               stream.stream, ping_times);
           // handle session
           client->handle(
-              [server_id = std::move(server_id), client,
+              [server_id = std::move(server_id),
+               client,
                counter = std::move(counter)](
                   outcome::result<std::vector<uint8_t>> res) mutable {
                 // count message exchange
                 counter->tick();
                 // ensure message returned
                 EXPECT_OUTCOME_TRUE_MSG(
-                    vec, res,
+                    vec,
+                    res,
                     "failed to receive response from server: " + server_id);
                 // ensure message is correct
                 ASSERT_EQ(vec.size(), client->bufferSize());  // NOLINT
@@ -108,9 +121,13 @@ void Peer::wait() {
 }
 
 Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
-  auto crypto_provider = std::make_shared<crypto::CryptoProviderImpl>(
-      random_provider_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
-      secp256k1_provider_, hmac_provider_);
+  auto crypto_provider =
+      std::make_shared<crypto::CryptoProviderImpl>(random_provider_,
+                                                   ed25519_provider_,
+                                                   rsa_provider_,
+                                                   ecdsa_provider_,
+                                                   secp256k1_provider_,
+                                                   hmac_provider_);
 
   auto key_validator =
       std::make_shared<crypto::validator::KeyValidatorImpl>(crypto_provider);
@@ -140,7 +157,9 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
         crypto_provider,
         std::make_shared<security::secio::ProposeMessageMarshallerImpl>(),
         std::make_shared<security::secio::ExchangeMessageMarshallerImpl>(),
-        idmgr, key_marshaller, hmac_provider_));
+        idmgr,
+        key_marshaller,
+        hmac_provider_));
   } else {
     security_adaptors.emplace_back(std::make_shared<security::Plaintext>(
         std::move(exchange_msg_marshaller), idmgr, std::move(key_marshaller)));
@@ -149,9 +168,11 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   std::vector<std::shared_ptr<muxer::MuxerAdaptor>> muxer_adaptors = {
       std::make_shared<muxer::Yamux>(muxed_config_, scheduler_, nullptr)};
 
-  auto upgrader = std::make_shared<transport::UpgraderImpl>(
-      multiselect, std::move(layer_adaptors), std::move(security_adaptors),
-      std::move(muxer_adaptors));
+  auto upgrader =
+      std::make_shared<transport::UpgraderImpl>(multiselect,
+                                                std::move(layer_adaptors),
+                                                std::move(security_adaptors),
+                                                std::move(muxer_adaptors));
 
   std::vector<std::shared_ptr<transport::TransportAdaptor>> transports = {
       std::make_shared<transport::TcpTransport>(context_, std::move(upgrader))};
@@ -166,8 +187,8 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto listener = std::make_shared<network::ListenerManagerImpl>(
       multiselect, std::move(router), tmgr, cmgr);
 
-  auto dialer = std::make_unique<network::DialerImpl>(multiselect, tmgr, cmgr,
-                                                      listener, scheduler_);
+  auto dialer = std::make_unique<network::DialerImpl>(
+      multiselect, tmgr, cmgr, listener, scheduler_);
 
   auto network = std::make_unique<network::NetworkImpl>(
       std::move(listener), std::move(dialer), cmgr);
@@ -185,7 +206,9 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto peer_repo = std::make_unique<peer::PeerRepositoryImpl>(
       std::move(addr_repo), std::move(key_repo), std::move(protocol_repo));
 
-  return std::make_shared<host::BasicHost>(idmgr, std::move(network),
-                                           std::move(peer_repo), std::move(bus),
+  return std::make_shared<host::BasicHost>(idmgr,
+                                           std::move(network),
+                                           std::move(peer_repo),
+                                           std::move(bus),
                                            std::move(tmgr));
 }

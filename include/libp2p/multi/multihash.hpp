@@ -10,10 +10,10 @@
 #include <string>
 #include <utility>
 
-#include <span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/hash_type.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::multi {
 
@@ -125,12 +125,12 @@ namespace libp2p::multi {
       std::vector<uint8_t> bytes;
       uint8_t hash_offset{};  ///< size of non-hash data from the beginning
       HashType type;
-      size_t std_hash; ///< Hash for unordered containers
+      size_t std_hash;  ///< Hash for unordered containers
 
       Data(HashType t, BytesIn h);
     };
 
-    const Data& data() const;
+    const Data &data() const;
 
     std::shared_ptr<const Data> data_;
   };

@@ -18,8 +18,10 @@ namespace libp2p::protocol::gossip {
    public:
     /// Ctor. Dependencies are passed by ref becaus this object is a part of
     /// GossipCore and lives only within its scope
-    RemoteSubscriptions(const Config &config, Connectivity &connectivity,
-                        basic::Scheduler &scheduler, log::SubLogger &log);
+    RemoteSubscriptions(const Config &config,
+                        Connectivity &connectivity,
+                        basic::Scheduler &scheduler,
+                        log::SubLogger &log);
 
     /// This host subscribes or unsubscribes
     void onSelfSubscribed(bool subscribed, const TopicId &topic);
@@ -28,7 +30,8 @@ namespace libp2p::protocol::gossip {
     void onPeerSubscribed(const PeerContextPtr &peer, const TopicId &topic);
 
     /// Remote peer unsubscribes
-    void onPeerUnsubscribed(const PeerContextPtr &peer, const TopicId &topic,
+    void onPeerUnsubscribed(const PeerContextPtr &peer,
+                            const TopicId &topic,
                             bool disconnected);
 
     /// Peer disconnected - remove it from all topics it's subscribed to
@@ -41,13 +44,15 @@ namespace libp2p::protocol::gossip {
     void onGraft(const PeerContextPtr &peer, const TopicId &topic);
 
     /// Remote peer removes topic from its mesh
-    void onPrune(const PeerContextPtr &peer, const TopicId &topic,
+    void onPrune(const PeerContextPtr &peer,
+                 const TopicId &topic,
                  uint64_t backoff_time);
 
     /// Forwards message to its topics. If 'from' is not set then the message is
     /// published locally
     void onNewMessage(const boost::optional<PeerContextPtr> &from,
-                      const TopicMessage::Ptr &msg, const MessageId &msg_id);
+                      const TopicMessage::Ptr &msg,
+                      const MessageId &msg_id);
 
     /// Periodic job needed to update meshes and shift "I have" caches
     void onHeartbeat();

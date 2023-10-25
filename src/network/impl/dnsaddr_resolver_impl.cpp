@@ -56,7 +56,9 @@ namespace libp2p::network {
         cb(Error::MALFORMED_RESPONSE);
         return;
       }
-      std::transform(lines.begin(), lines.end(), lines.begin(),
+      std::transform(lines.begin(),
+                     lines.end(),
+                     lines.begin(),
                      [](const std::string &line) -> std::string {
                        return line.substr(8);  // drop first "dnsaddr=" chars
                      });

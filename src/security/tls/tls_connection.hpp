@@ -45,7 +45,8 @@ namespace libp2p::connection {
     /// outbound connections
     TlsConnection(std::shared_ptr<LayerConnection> original_connection,
                   std::shared_ptr<boost::asio::ssl::context> ssl_context,
-                  const peer::IdentityManager &idmgr, tcp_socket_t &tcp_socket,
+                  const peer::IdentityManager &idmgr,
+                  tcp_socket_t &tcp_socket,
                   boost::optional<peer::PeerId> remote_peer);
 
     /// Performs async handshake and passes its result into callback. This fn is
@@ -80,24 +81,20 @@ namespace libp2p::connection {
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 
     /// Async reads exactly the # of bytes given
-    void read(BytesOut out, size_t bytes,
-              ReadCallbackFunc cb) override;
+    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
     /// Async reads up to the # of bytes given
-    void readSome(BytesOut out, size_t bytes,
-                  ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
     /// Defers read callback to avoid reentrancy in async calls
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
     /// Async writes exactly the # of bytes given
-    void write(BytesIn in, size_t bytes,
-               WriteCallbackFunc cb) override;
+    void write(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     /// Async writes up to the # of bytes given
-    void writeSome(BytesIn in, size_t bytes,
-                   WriteCallbackFunc cb) override;
+    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     /// Defers error callback to avoid reentrancy in async calls
     void deferWriteCallback(std::error_code ec, ReadCallbackFunc cb) override;
@@ -112,7 +109,8 @@ namespace libp2p::connection {
     /// Async handshake callback. Performs libp2p-specific verification and
     /// extraction of remote peer's identity fields
     void onHandshakeResult(
-        const boost::system::error_code &error, const HandshakeCallback &cb,
+        const boost::system::error_code &error,
+        const HandshakeCallback &cb,
         const crypto::marshaller::KeyMarshaller &key_marshaller);
 
     /// Local peer id

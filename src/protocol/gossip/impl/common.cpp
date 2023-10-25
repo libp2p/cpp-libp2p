@@ -89,7 +89,8 @@ namespace libp2p::protocol::gossip {
     return ret;
   }
 
-  MessageId createMessageId(const Bytes &from, const Bytes &seq,
+  MessageId createMessageId(const Bytes &from,
+                            const Bytes &seq,
                             const Bytes &data) {
     MessageId msg_id(from);
     msg_id.reserve(seq.size() + from.size());
@@ -102,8 +103,10 @@ namespace libp2p::protocol::gossip {
         seq_no(std::move(_seq)),
         data(std::move(_data)) {}
 
-  TopicMessage::TopicMessage(const peer::PeerId &_from, uint64_t _seq,
-                             Bytes _data, TopicId _topic)
+  TopicMessage::TopicMessage(const peer::PeerId &_from,
+                             uint64_t _seq,
+                             Bytes _data,
+                             TopicId _topic)
       : from(_from.toVector()),
         seq_no(createSeqNo(_seq)),
         data(std::move(_data)),

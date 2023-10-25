@@ -49,22 +49,25 @@ TEST_F(LoopbackStreamTest, Basic) {
   std::shared_ptr<libp2p::connection::Stream> stream =
       std::make_shared<LoopbackStream>(PeerInfo{peer_id, {}}, context);
   bool all_executed{false};
-  stream->write(kBuffer, kBuffer.size(),
-                [stream, buf = kBuffer, &all_executed](auto result) {
-                  EXPECT_OUTCOME_TRUE(bytes, result);
-                  ASSERT_EQ(bytes, kBufferSize);
-                  auto read_buf = std::make_shared<Buffer>(kBufferSize, 0);
-                  ASSERT_EQ(read_buf->size(), kBufferSize);
-                  ASSERT_NE(*read_buf, buf);
-                  stream->read(*read_buf, kBufferSize,
-                               [buf = read_buf, source_buf = buf,
-                                &all_executed](auto result) {
-                                 EXPECT_OUTCOME_TRUE(bytes, result);
-                                 ASSERT_EQ(bytes, kBufferSize);
-                                 ASSERT_EQ(*buf, source_buf);
-                                 all_executed = true;
-                               });
-                });
+  stream->write(
+      kBuffer,
+      kBuffer.size(),
+      [stream, buf = kBuffer, &all_executed](auto result) {
+        EXPECT_OUTCOME_TRUE(bytes, result);
+        ASSERT_EQ(bytes, kBufferSize);
+        auto read_buf = std::make_shared<Buffer>(kBufferSize, 0);
+        ASSERT_EQ(read_buf->size(), kBufferSize);
+        ASSERT_NE(*read_buf, buf);
+        stream->read(
+            *read_buf,
+            kBufferSize,
+            [buf = read_buf, source_buf = buf, &all_executed](auto result) {
+              EXPECT_OUTCOME_TRUE(bytes, result);
+              ASSERT_EQ(bytes, kBufferSize);
+              ASSERT_EQ(*buf, source_buf);
+              all_executed = true;
+            });
+      });
   context->run();
   ASSERT_TRUE(all_executed);
 }

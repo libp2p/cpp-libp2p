@@ -24,10 +24,9 @@ namespace libp2p::crypto::chachapoly {
         cipher_{EVP_chacha20_poly1305()},
         block_size_{EVP_CIPHER_block_size(cipher_)} {}
 
-  outcome::result<Bytes> ChaCha20Poly1305Impl::encrypt(
-      const Nonce &nonce,
-                                                           BytesIn plaintext,
-                                                           BytesIn aad) {
+  outcome::result<Bytes> ChaCha20Poly1305Impl::encrypt(const Nonce &nonce,
+                                                       BytesIn plaintext,
+                                                       BytesIn aad) {
     const auto init_failure = OpenSslError::FAILED_INITIALIZE_OPERATION;
     std::vector<uint8_t> result;
     // just reserving the space, possibly without actual memory allocation:
@@ -42,13 +41,16 @@ namespace libp2p::crypto::chachapoly {
     FinalAction free_ctx([ctx] { EVP_CIPHER_CTX_free(ctx); });
 
     IF1(EVP_EncryptInit_ex(ctx, cipher_, nullptr, nullptr, nullptr),
-        "Failed to initialize EVP encryption.", init_failure)
+        "Failed to initialize EVP encryption.",
+        init_failure)
 
     IF1(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, 12, nullptr),
-        "Cannot set AEAD initialization vector length.", init_failure)
+        "Cannot set AEAD initialization vector length.",
+        init_failure)
 
     IF1(EVP_EncryptInit_ex(ctx, nullptr, nullptr, key_.data(), nonce.data()),
-        "Cannot finalize init of encryption engine.", init_failure)
+        "Cannot finalize init of encryption engine.",
+        init_failure)
 
     int len{0};
     IF1(EVP_EncryptUpdate(ctx, nullptr, &len, nullptr, plaintext.size()),
@@ -63,27 +65,31 @@ namespace libp2p::crypto::chachapoly {
           OpenSslError::FAILED_ENCRYPT_UPDATE)
     }
 
-    IF1(EVP_EncryptUpdate(ctx, result.data(), &len, plaintext.data(),
-                          plaintext.size()),
-        "Plaintext encryption failed.", OpenSslError::FAILED_ENCRYPT_UPDATE)
+    IF1(EVP_EncryptUpdate(
+            ctx, result.data(), &len, plaintext.data(), plaintext.size()),
+        "Plaintext encryption failed.",
+        OpenSslError::FAILED_ENCRYPT_UPDATE)
     int ciphertext_len = len;  // without tag size
     IF1(EVP_EncryptFinal_ex(ctx, result.data() + len, &len),  // NOLINT
-        "Unable to finalize encryption.", OpenSslError::FAILED_ENCRYPT_FINALIZE)
+        "Unable to finalize encryption.",
+        OpenSslError::FAILED_ENCRYPT_FINALIZE)
 
     ciphertext_len += len;
-    IF1(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, EVP_CTRL_AEAD_GET_TAG,
+    IF1(EVP_CIPHER_CTX_ctrl(ctx,
+                            EVP_CTRL_AEAD_GET_TAG,
+                            EVP_CTRL_AEAD_GET_TAG,
                             result.data() + ciphertext_len),  // NOLINT
-        "Failed to write tag.", OpenSslError::FAILED_ENCRYPT_FINALIZE)
+        "Failed to write tag.",
+        OpenSslError::FAILED_ENCRYPT_FINALIZE)
 
     // remove the last block_size bytes if those were not used
     result.resize(ciphertext_len + 16);
     return result;
   }
 
-  outcome::result<Bytes> ChaCha20Poly1305Impl::decrypt(
-      const Nonce &nonce,
-                                                           BytesIn ciphertext,
-                                                           BytesIn aad) {
+  outcome::result<Bytes> ChaCha20Poly1305Impl::decrypt(const Nonce &nonce,
+                                                       BytesIn ciphertext,
+                                                       BytesIn aad) {
     Bytes result;
     // plain text should take less bytes than cipher text,
     // at least it would not contain tag-length bytes (16).
@@ -101,7 +107,9 @@ namespace libp2p::crypto::chachapoly {
         OpenSslError::FAILED_INITIALIZE_OPERATION)
 
     IF1(EVP_CIPHER_CTX_ctrl(
-            ctx, EVP_CTRL_AEAD_SET_TAG, EVP_CTRL_AEAD_GET_TAG,
+            ctx,
+            EVP_CTRL_AEAD_SET_TAG,
+            EVP_CTRL_AEAD_GET_TAG,
             (uint8_t *)ciphertext.data() + ciphertext.size() - 16),  // NOLINT
         "Failed to specify buffer for further tag reading.",
         OpenSslError::FAILED_DECRYPT_UPDATE)
@@ -117,9 +125,13 @@ namespace libp2p::crypto::chachapoly {
           OpenSslError::FAILED_DECRYPT_UPDATE)
     }
 
-    IF1(EVP_DecryptUpdate(ctx, result.data(), &len, ciphertext.data(),
+    IF1(EVP_DecryptUpdate(ctx,
+                          result.data(),
+                          &len,
+                          ciphertext.data(),
                           ciphertext.size() - 16),
-        "Ciphertext decryption failed.", OpenSslError::FAILED_DECRYPT_UPDATE)
+        "Ciphertext decryption failed.",
+        OpenSslError::FAILED_DECRYPT_UPDATE)
 
     IF1(EVP_DecryptFinal_ex(ctx,
                             result.data() + len,  // NOLINT

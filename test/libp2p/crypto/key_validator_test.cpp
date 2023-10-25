@@ -56,8 +56,8 @@ struct BaseKeyTest {
   std::shared_ptr<HmacProvider> hmac_provider =
       std::make_shared<HmacProviderImpl>();
   std::shared_ptr<CryptoProvider> crypto_provider =
-      std::make_shared<CryptoProviderImpl>(random, ed25519, rsa, ecdsa,
-                                           secp256k1, hmac_provider);
+      std::make_shared<CryptoProviderImpl>(
+          random, ed25519, rsa, ecdsa, secp256k1, hmac_provider);
   std::shared_ptr<KeyValidator> validator =
       std::make_shared<KeyValidatorImpl>(crypto_provider);
 };
@@ -124,8 +124,10 @@ TEST_P(GeneratedKeysTest, InvalidPublicKeyInvalidatesPair) {
   EXPECT_OUTCOME_FALSE_1(validator->validate(invalid_pair))
 }
 
-INSTANTIATE_TEST_SUITE_P(GeneratedValidKeysCases, GeneratedKeysTest,
-                         ::testing::Values(Key::Type::RSA, Key::Type::Ed25519,
+INSTANTIATE_TEST_SUITE_P(GeneratedValidKeysCases,
+                         GeneratedKeysTest,
+                         ::testing::Values(Key::Type::RSA,
+                                           Key::Type::Ed25519,
                                            Key::Type::Secp256k1));
 
 class RandomKeyTest : public BaseKeyTest,
@@ -149,7 +151,8 @@ TEST_P(RandomKeyTest, Every32byteIsValidPrivateKey) {
   EXPECT_OUTCOME_TRUE_1(crypto_provider->derivePublicKey(private_key))
 }
 
-INSTANTIATE_TEST_SUITE_P(RandomSequencesCases, RandomKeyTest,
+INSTANTIATE_TEST_SUITE_P(RandomSequencesCases,
+                         RandomKeyTest,
                          ::testing::Values(Key::Type::Ed25519,
                                            Key::Type::Secp256k1));
 

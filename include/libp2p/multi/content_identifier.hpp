@@ -31,7 +31,8 @@ namespace libp2p::multi {
       : public boost::equality_comparable<ContentIdentifier> {
     enum class Version { V0 = 0, V1 = 1 };
 
-    ContentIdentifier(Version version, MulticodecType::Code content_type,
+    ContentIdentifier(Version version,
+                      MulticodecType::Code content_type,
                       Multihash content_address);
 
     /**

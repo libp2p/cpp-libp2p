@@ -20,7 +20,7 @@ namespace libp2p::basic {
       std::shared_ptr<ReadWriter>
           conn)  // NOLINT(performance-unnecessary-value-param)
       : read_writer_{
-            std::make_shared<MessageReadWriterUvarint>(std::move(conn))} {
+          std::make_shared<MessageReadWriterUvarint>(std::move(conn))} {
     BOOST_ASSERT(read_writer_);
   }
 }  // namespace libp2p::basic

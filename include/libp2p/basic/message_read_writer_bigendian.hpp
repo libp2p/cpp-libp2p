@@ -9,10 +9,10 @@
 #include <memory>
 #include <vector>
 
-#include <span>
 #include <libp2p/basic/message_read_writer.hpp>
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::basic {
   /**
@@ -44,8 +44,7 @@ namespace libp2p::basic {
      * @param buffer - the message to be written
      * @param cb, which is called, when the message is read or error happens
      */
-    void write(BytesIn buffer,
-               Writer::WriteCallbackFunc cb) override;
+    void write(BytesIn buffer, Writer::WriteCallbackFunc cb) override;
 
    private:
     std::shared_ptr<ReadWriter> conn_;

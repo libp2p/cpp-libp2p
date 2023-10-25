@@ -38,7 +38,8 @@ namespace libp2p::basic {
                                                  std::chrono::milliseconds));
 
    protected:
-    Handle scheduleImpl(Callback &&cb, std::chrono::milliseconds delay_from_now,
+    Handle scheduleImpl(Callback &&cb,
+                        std::chrono::milliseconds delay_from_now,
                         bool make_handle) noexcept override {
       return scheduleImplMockCall(cb, delay_from_now, make_handle);
     }
