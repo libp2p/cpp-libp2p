@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_YAMUX_FRAME_HPP
-#define LIBP2P_YAMUX_FRAME_HPP
+#pragma once
 
 #include <boost/optional.hpp>
 #include <span>
@@ -54,9 +54,12 @@ namespace libp2p::connection {
      * not send messages with more than one flag set, so enum can be accepted as
      * well
      */
-    static Bytes frameBytes(
-        uint8_t version, FrameType type, Flag flag, uint32_t stream_id,
-        uint32_t length, bool reserve_space = true);
+    static Bytes frameBytes(uint8_t version,
+                            FrameType type,
+                            Flag flag,
+                            uint32_t stream_id,
+                            uint32_t length,
+                            bool reserve_space = true);
 
     /**
      * Check if the (\param flag) is set in this frame
@@ -115,7 +118,8 @@ namespace libp2p::connection {
    * @return bytes of the message
    */
   Bytes dataMsg(YamuxFrame::StreamId stream_id,
-                            uint32_t data_length, bool reserve_space = true);
+                uint32_t data_length,
+                bool reserve_space = true);
 
   /**
    * Create a message, which breaks a connection with a peer
@@ -130,8 +134,7 @@ namespace libp2p::connection {
    * @param window_delta to be put into the message
    * @return bytes of the message
    */
-  Bytes windowUpdateMsg(YamuxFrame::StreamId stream_id,
-                                    uint32_t window_delta);
+  Bytes windowUpdateMsg(YamuxFrame::StreamId stream_id, uint32_t window_delta);
 
   /**
    * Convert bytes into a frame object, if it is correct
@@ -140,5 +143,3 @@ namespace libp2p::connection {
    */
   boost::optional<YamuxFrame> parseFrame(BytesIn frame_bytes);
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_YAMUX_FRAME_HPP

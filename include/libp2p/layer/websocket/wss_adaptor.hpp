@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_LAYER_WEBSOCKET_WSS_ADAPTOR_HPP
-#define LIBP2P_LAYER_WEBSOCKET_WSS_ADAPTOR_HPP
+#pragma once
 
 #include <libp2p/layer/layer_adaptor.hpp>
 
@@ -47,5 +47,3 @@ namespace libp2p::layer {
     std::shared_ptr<WsAdaptor> ws_adaptor_;
   };
 }  // namespace libp2p::layer
-
-#endif  // LIBP2P_LAYER_WEBSOCKET_WSS_ADAPTOR_HPP

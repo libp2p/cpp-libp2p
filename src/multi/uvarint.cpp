@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,8 +15,9 @@ namespace libp2p::multi {
     do {
       uint8_t byte = static_cast<uint8_t>(number) & 0x7f;
       number >>= 7;
-      if (number != 0)
+      if (number != 0) {
         byte |= 0x80;
+      }
       bytes_.push_back(byte);
     } while (number != 0);
   }
@@ -72,8 +74,8 @@ namespace libp2p::multi {
   }
 
   bool UVarint::operator==(const UVarint &r) const {
-    return std::equal(bytes_.begin(), bytes_.end(), r.bytes_.begin(),
-                      r.bytes_.end());
+    return std::equal(
+        bytes_.begin(), bytes_.end(), r.bytes_.begin(), r.bytes_.end());
   }
 
   bool UVarint::operator!=(const UVarint &r) const {

@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp"
@@ -61,8 +62,7 @@ namespace libp2p::crypto::secp256k1 {
   }
 
   outcome::result<bool> Secp256k1ProviderImpl::verify(
-      BytesIn message, const Signature &signature,
-      const PublicKey &key) const {
+      BytesIn message, const Signature &signature, const PublicKey &key) const {
     OUTCOME_TRY(digest, sha256(message));
     OUTCOME_TRY(public_key, bytesToPublicKey(key));
     OUTCOME_TRY(result, VerifyEcSignature(digest, signature, public_key));
@@ -91,8 +91,12 @@ namespace libp2p::crypto::secp256k1 {
       return KeyGeneratorError::INTERNAL_ERROR;
     }
     EC_KEY_set_conv_form(key.get(), POINT_CONVERSION_COMPRESSED);
-    if (EC_POINT_mul(EC_KEY_get0_group(key.get()), point.get(),
-                     key_bignum.get(), nullptr, nullptr, nullptr)
+    if (EC_POINT_mul(EC_KEY_get0_group(key.get()),
+                     point.get(),
+                     key_bignum.get(),
+                     nullptr,
+                     nullptr,
+                     nullptr)
         != 1) {
       return KeyGeneratorError::INTERNAL_ERROR;
     }
@@ -114,8 +118,8 @@ namespace libp2p::crypto::secp256k1 {
     }
     const uint8_t *public_key_ptr = input.data();
     EC_KEY *key_ptr = key.get();
-    key_ptr = o2i_ECPublicKey(&key_ptr, &public_key_ptr,
-                              static_cast<long>(input.size()));
+    key_ptr = o2i_ECPublicKey(
+        &key_ptr, &public_key_ptr, static_cast<long>(input.size()));
     if (key_ptr == nullptr) {
       return KeyGeneratorError::INTERNAL_ERROR;
     }

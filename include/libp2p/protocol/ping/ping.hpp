@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PING_IMPL_HPP
-#define LIBP2P_PING_IMPL_HPP
+#pragma once
 
 #include <memory>
 
@@ -38,7 +38,9 @@ namespace libp2p::protocol {
      * @param rand_gen - generator, which is used to generate Ping bytes
      * @param config, with which the instance is to be created
      */
-    Ping(Host &host, event::Bus &bus, boost::asio::io_context &io_context,
+    Ping(Host &host,
+         event::Bus &bus,
+         boost::asio::io_context &io_context,
          std::shared_ptr<crypto::random::RandomGenerator> rand_gen,
          PingConfig config = PingConfig{});
 
@@ -64,5 +66,3 @@ namespace libp2p::protocol {
     PingConfig config_;
   };
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_PING_IMPL_HPP

@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_NETWORK_CARES_CARES_HPP
-#define LIBP2P_INCLUDE_LIBP2P_NETWORK_CARES_CARES_HPP
+#pragma once
 
 #include <atomic>
 #include <functional>
@@ -55,7 +55,7 @@ namespace libp2p::network::c_ares {
       E_BAD_RESPONSE,
     };
 
-    static inline const std::map<int, Ares::Error> kQueryErrors = {
+    inline static const std::map<int, Ares::Error> kQueryErrors = {
         {ARES_ENODATA, Error::E_NO_DATA},
         {ARES_EFORMERR, Error::E_BAD_QUERY},
         {ARES_ESERVFAIL, Error::E_SERVER_FAIL},
@@ -92,7 +92,8 @@ namespace libp2p::network::c_ares {
       TxtCallback callback;
 
       RequestContext(std::weak_ptr<boost::asio::io_context> io_context_,
-                     std::string uri_, TxtCallback callback_)
+                     std::string uri_,
+                     TxtCallback callback_)
           : io_context{std::move(io_context_)},
             uri{std::move(uri_)},
             callback{std::move(callback_)} {}
@@ -101,10 +102,11 @@ namespace libp2p::network::c_ares {
     /// schedules to user's io_context the call of callback with specified error
     static void reportError(
         const std::weak_ptr<boost::asio::io_context> &io_context,
-        TxtCallback callback, Error error);
+        TxtCallback callback,
+        Error error);
 
-    static void txtCallback(void *arg, int status, int timeouts,
-                            unsigned char *abuf, int alen);
+    static void txtCallback(
+        void *arg, int status, int timeouts, unsigned char *abuf, int alen);
 
     /// does ares sockets processing for the channel, to be in a separate thread
     static void waitAresChannel(::ares_channel channel);
@@ -121,5 +123,3 @@ namespace libp2p::network::c_ares {
 }  // namespace libp2p::network::c_ares
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::network::c_ares, Ares::Error);
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_NETWORK_CARES_CARES_HPP

@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -21,7 +22,7 @@ namespace libp2p::security::noise {
   }
 
   outcome::result<Bytes> CipherSuiteImpl::dh(const Bytes &private_key,
-                                                 const Bytes &public_key) {
+                                             const Bytes &public_key) {
     return dh_->dh(private_key, public_key);
   }
 

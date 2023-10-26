@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_GOSSIP_MESSAGE_RECEIVER_HPP
-#define LIBP2P_PROTOCOL_GOSSIP_MESSAGE_RECEIVER_HPP
+#pragma once
 
 #include "common.hpp"
 
@@ -16,11 +16,13 @@ namespace libp2p::protocol::gossip {
     virtual ~MessageReceiver() = default;
 
     /// Topic subscribe-unsubscribe request received
-    virtual void onSubscription(const PeerContextPtr &from, bool subscribe,
+    virtual void onSubscription(const PeerContextPtr &from,
+                                bool subscribe,
                                 const TopicId &topic) = 0;
 
     /// "I have message ids" notification received
-    virtual void onIHave(const PeerContextPtr &from, const TopicId &topic,
+    virtual void onIHave(const PeerContextPtr &from,
+                         const TopicId &topic,
                          const MessageId &msg_id) = 0;
 
     /// "I want message" request received
@@ -33,7 +35,8 @@ namespace libp2p::protocol::gossip {
     /// Prune request received (gossip mesh control).
     /// the peer must not be bothered with GRAFT requests for at least
     /// backoff_time seconds
-    virtual void onPrune(const PeerContextPtr &from, const TopicId &topic,
+    virtual void onPrune(const PeerContextPtr &from,
+                         const TopicId &topic,
                          uint64_t backoff_time) = 0;
 
     /// Message received
@@ -45,5 +48,3 @@ namespace libp2p::protocol::gossip {
   };
 
 }  // namespace libp2p::protocol::gossip
-
-#endif  // LIBP2P_PROTOCOL_GOSSIP_MESSAGE_RECEIVER_HPP

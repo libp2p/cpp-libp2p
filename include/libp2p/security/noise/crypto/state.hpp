@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_STATE_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_STATE_HPP
+#pragma once
 
 #include <boost/optional.hpp>
 
@@ -36,12 +36,12 @@ namespace libp2p::security::noise {
     CipherState(std::shared_ptr<CipherSuite> cipher_suite, Key32 key);
 
     outcome::result<Bytes> encrypt(BytesIn precompiled_out,
-                                       BytesIn plaintext,
-                                       BytesIn aad);
+                                   BytesIn plaintext,
+                                   BytesIn aad);
 
     outcome::result<Bytes> decrypt(BytesIn precompiled_out,
-                                       BytesIn ciphertext,
-                                       BytesIn aad);
+                                   BytesIn ciphertext,
+                                   BytesIn aad);
 
     outcome::result<void> rekey();
 
@@ -63,8 +63,7 @@ namespace libp2p::security::noise {
 
     explicit SymmetricState(std::shared_ptr<CipherSuite> cipher_suite);
 
-    outcome::result<void> initializeSymmetric(
-        BytesIn handshake_name);
+    outcome::result<void> initializeSymmetric(BytesIn handshake_name);
 
     outcome::result<void> mixKey(BytesIn dh_output);
 
@@ -72,13 +71,11 @@ namespace libp2p::security::noise {
 
     outcome::result<void> mixKeyAndHash(BytesIn data);
 
-    outcome::result<Bytes> encryptAndHash(
-        BytesIn precompiled_out,
-        BytesIn plaintext);
+    outcome::result<Bytes> encryptAndHash(BytesIn precompiled_out,
+                                          BytesIn plaintext);
 
-    outcome::result<Bytes> decryptAndHash(
-        BytesIn precompiled_out,
-        BytesIn ciphertext);
+    outcome::result<Bytes> decryptAndHash(BytesIn precompiled_out,
+                                          BytesIn ciphertext);
 
     outcome::result<CSPair> split();
 
@@ -91,7 +88,7 @@ namespace libp2p::security::noise {
     bool hasKey() const;
 
    private:
-    bool has_key_ = false;         // has_k
+    bool has_key_ = false;     // has_k
     Bytes chaining_key_;       // ck
     Bytes hash_;               // h
     Bytes prev_chaining_key_;  // prev_ck
@@ -106,20 +103,19 @@ namespace libp2p::security::noise {
   class HandshakeStateConfig {
    public:
     HandshakeStateConfig(std::shared_ptr<CipherSuite> cipher_suite,
-                         HandshakePattern pattern, bool is_initiator,
+                         HandshakePattern pattern,
+                         bool is_initiator,
                          DHKey local_static_keypair);
 
     HandshakeStateConfig &setPrologue(BytesIn prologue);
 
-    HandshakeStateConfig &setPresharedKey(BytesIn key,
-                                          int placement);
+    HandshakeStateConfig &setPresharedKey(BytesIn key, int placement);
 
     HandshakeStateConfig &setLocalEphemeralKeypair(DHKey keypair);
 
     HandshakeStateConfig &setRemoteStaticPubkey(BytesIn key);
 
-    HandshakeStateConfig &setRemoteEphemeralPubkey(
-        BytesIn key);
+    HandshakeStateConfig &setRemoteEphemeralPubkey(BytesIn key);
 
    private:
     template <typename T>
@@ -151,13 +147,11 @@ namespace libp2p::security::noise {
 
     outcome::result<void> init(HandshakeStateConfig config);
 
-    outcome::result<MessagingResult> writeMessage(
-        BytesIn precompiled_out,
-        BytesIn payload);
+    outcome::result<MessagingResult> writeMessage(BytesIn precompiled_out,
+                                                  BytesIn payload);
 
-    outcome::result<MessagingResult> readMessage(
-        BytesIn precompiled_out,
-        BytesIn message);
+    outcome::result<MessagingResult> readMessage(BytesIn precompiled_out,
+                                                 BytesIn message);
 
     outcome::result<Bytes> channelBinding() const;
 
@@ -204,9 +198,9 @@ namespace libp2p::security::noise {
     std::unique_ptr<SymmetricState> symmetric_state_;  // ss
     DHKey local_static_kp_;                            // s
     DHKey local_ephemeral_kp_;                         // e
-    Bytes remote_static_pubkey_;                   // rs
-    Bytes remote_ephemeral_pubkey_;                // re
-    Bytes preshared_key_;                          // psk
+    Bytes remote_static_pubkey_;                       // rs
+    Bytes remote_ephemeral_pubkey_;                    // re
+    Bytes preshared_key_;                              // psk
     MessagePatterns message_patterns_;
     bool should_write_;
     bool is_initiator_;
@@ -216,5 +210,3 @@ namespace libp2p::security::noise {
 }  // namespace libp2p::security::noise
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security::noise, Error);
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_STATE_HPP

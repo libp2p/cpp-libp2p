@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -35,8 +36,8 @@ class PlaintextConnectionTest : public testing::Test {
       std::make_shared<marshaller::KeyMarshallerMock>();
 
   std::shared_ptr<SecureConnection> secure_connection_ =
-      std::make_shared<PlaintextConnection>(connection_, local, remote,
-                                            key_marshaller_);
+      std::make_shared<PlaintextConnection>(
+          connection_, local, remote, key_marshaller_);
 
   std::vector<uint8_t> bytes_{0x11, 0x22};
 };

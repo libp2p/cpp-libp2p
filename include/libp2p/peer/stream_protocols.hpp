@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PEER_STREAM_PROTOCOLS_HPP
-#define LIBP2P_PEER_STREAM_PROTOCOLS_HPP
+#pragma once
 
 #include <vector>
 
@@ -18,5 +18,3 @@ namespace libp2p {
    */
   using StreamProtocols = std::vector<peer::ProtocolName>;
 }  // namespace libp2p
-
-#endif  // LIBP2P_PEER_STREAM_PROTOCOLS_HPP

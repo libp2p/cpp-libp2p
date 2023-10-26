@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -40,9 +41,10 @@ struct TcpListenerTest : public ::testing::Test {
   multi::Multiaddress ma = "/ip4/127.0.0.1/tcp/40005"_multiaddr;
 
   void SetUp() override {
-    listener = std::make_shared<TcpListener>(
-        *context, upgrader,
-        [this](auto &&r) { cb.Call(std::forward<decltype(r)>(r)); });
+    listener =
+        std::make_shared<TcpListener>(*context, upgrader, [this](auto &&r) {
+          cb.Call(std::forward<decltype(r)>(r));
+        });
   }
 };
 

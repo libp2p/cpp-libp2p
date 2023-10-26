@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -18,7 +19,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi::converters, ConversionError, e) {
     case E::NOT_IMPLEMENTED:
       return "Conversion for this protocol is not implemented";
     case E::EMPTY_ADDRESS:
-    return "Empty address (missed address or duplicated slashes)";
+      return "Empty address (missed address or duplicated slashes)";
     case E::INVALID_ADDRESS:
       return "Invalid address";
     default:

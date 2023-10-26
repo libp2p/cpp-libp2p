@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP
-#define LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP
+#pragma once
 
 #include <libp2p/security/plaintext/exchange_message_marshaller.hpp>
 
@@ -36,4 +36,3 @@ namespace libp2p::security::plaintext {
             BytesIn));
   };
 }  // namespace libp2p::security::plaintext
-#endif  // LIBP2P_EXCHANGE_MESSAGE_MARSHALLER_MOCK_HPP

@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CAPABLE_CONNECTION_MOCK_HPP
-#define LIBP2P_CAPABLE_CONNECTION_MOCK_HPP
+#pragma once
 
 #include <gmock/gmock.h>
 
@@ -31,16 +31,10 @@ namespace libp2p::connection {
 
     MOCK_CONST_METHOD0(isClosed, bool(void));
     MOCK_METHOD0(close, outcome::result<void>());
-    MOCK_METHOD3(read,
-                 void(BytesOut, size_t, Reader::ReadCallbackFunc));
-    MOCK_METHOD3(readSome,
-                 void(BytesOut, size_t, Reader::ReadCallbackFunc));
-    MOCK_METHOD3(write,
-                 void(BytesIn, size_t,
-                      Writer::WriteCallbackFunc));
-    MOCK_METHOD3(writeSome,
-                 void(BytesIn, size_t,
-                      Writer::WriteCallbackFunc));
+    MOCK_METHOD3(read, void(BytesOut, size_t, Reader::ReadCallbackFunc));
+    MOCK_METHOD3(readSome, void(BytesOut, size_t, Reader::ReadCallbackFunc));
+    MOCK_METHOD3(write, void(BytesIn, size_t, Writer::WriteCallbackFunc));
+    MOCK_METHOD3(writeSome, void(BytesIn, size_t, Writer::WriteCallbackFunc));
     MOCK_METHOD2(deferReadCallback,
                  void(outcome::result<size_t>, Reader::ReadCallbackFunc));
     MOCK_METHOD2(deferWriteCallback,
@@ -88,22 +82,22 @@ namespace libp2p::connection {
       return real_->remoteMultiaddr();
     };
 
-    void read(BytesOut in, size_t bytes,
-              Reader::ReadCallbackFunc f) override {
+    void read(BytesOut in, size_t bytes, Reader::ReadCallbackFunc f) override {
       return real_->read(in, bytes, f);
     };
 
-    void readSome(BytesOut in, size_t bytes,
+    void readSome(BytesOut in,
+                  size_t bytes,
                   Reader::ReadCallbackFunc f) override {
       return real_->readSome(in, bytes, f);
     };
 
-    void write(BytesIn in, size_t bytes,
-               Writer::WriteCallbackFunc f) override {
+    void write(BytesIn in, size_t bytes, Writer::WriteCallbackFunc f) override {
       return real_->write(in, bytes, f);
     }
 
-    void writeSome(BytesIn in, size_t bytes,
+    void writeSome(BytesIn in,
+                   size_t bytes,
                    Writer::WriteCallbackFunc f) override {
       return real_->writeSome(in, bytes, f);
     }
@@ -129,5 +123,3 @@ namespace libp2p::connection {
     std::shared_ptr<LayerConnection> real_;
   };
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_CAPABLE_CONNECTION_MOCK_HPP

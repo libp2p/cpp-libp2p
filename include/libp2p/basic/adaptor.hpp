@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ADAPTOR_HPP
-#define LIBP2P_ADAPTOR_HPP
+#pragma once
 
 #include <libp2p/peer/protocol.hpp>
 
@@ -24,5 +24,3 @@ namespace libp2p::basic {
     virtual peer::ProtocolName getProtocolId() const = 0;
   };
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_ADAPTOR_HPP

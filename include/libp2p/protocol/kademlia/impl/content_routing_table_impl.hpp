@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_CONTENTROUTINGIMPL
-#define LIBP2P_PROTOCOL_KADEMLIA_CONTENTROUTINGIMPL
+#pragma once
 
 #include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
 
@@ -51,7 +51,8 @@ namespace libp2p::protocol::kademlia {
       : public ContentRoutingTable,
         public std::enable_shared_from_this<ContentRoutingTableImpl> {
    public:
-    ContentRoutingTableImpl(const Config &config, basic::Scheduler &scheduler,
+    ContentRoutingTableImpl(const Config &config,
+                            basic::Scheduler &scheduler,
                             std::shared_ptr<event::Bus> bus);
 
     ~ContentRoutingTableImpl() override;
@@ -72,5 +73,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_KAD_CONTENT_PROVIDERS_STORE_HPP

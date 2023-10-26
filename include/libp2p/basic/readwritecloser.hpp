@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_READWRITECLOSER_HPP
-#define LIBP2P_READWRITECLOSER_HPP
+#pragma once
 
 #include <libp2p/basic/closeable.hpp>
 #include <libp2p/basic/readwriter.hpp>
@@ -16,5 +16,3 @@ namespace libp2p::basic {
   };
 
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_READWRITECLOSER_HPP

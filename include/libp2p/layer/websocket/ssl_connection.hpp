@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONNECTION_WSCONNECTION
-#define LIBP2P_CONNECTION_WSCONNECTION
+#pragma once
 
 #include <boost/asio/ssl/stream.hpp>
 
@@ -32,17 +32,13 @@ namespace libp2p::connection {
     outcome::result<void> close() override;
     bool isClosed() const override;
 
-    void read(BytesOut out, size_t bytes,
-              ReadCallbackFunc cb) override;
-    void readSome(BytesOut out, size_t bytes,
-                  ReadCallbackFunc cb) override;
+    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(BytesIn in, size_t bytes,
-               WriteCallbackFunc cb) override;
-    void writeSome(BytesIn in, size_t bytes,
-                   WriteCallbackFunc cb) override;
+    void write(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
+    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
    private:
@@ -56,5 +52,3 @@ namespace libp2p::connection {
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::connection::SslConnection);
   };
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_CONNECTION_WSCONNECTION

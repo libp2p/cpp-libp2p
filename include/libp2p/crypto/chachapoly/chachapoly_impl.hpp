@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_CRYPTO_CHACHAPOLY_CHACHAPOLY_IMPL_HPP
-#define LIBP2P_INCLUDE_LIBP2P_CRYPTO_CHACHAPOLY_CHACHAPOLY_IMPL_HPP
+#pragma once
 
 #include <openssl/evp.h>
 #include <libp2p/crypto/chachapoly.hpp>
@@ -16,11 +16,13 @@ namespace libp2p::crypto::chachapoly {
    public:
     explicit ChaCha20Poly1305Impl(Key key);
 
-    outcome::result<Bytes> encrypt(const Nonce &nonce, BytesIn plaintext,
-                                       BytesIn aad) override;
+    outcome::result<Bytes> encrypt(const Nonce &nonce,
+                                   BytesIn plaintext,
+                                   BytesIn aad) override;
 
-    outcome::result<Bytes> decrypt(const Nonce &nonce, BytesIn ciphertext,
-                                       BytesIn aad) override;
+    outcome::result<Bytes> decrypt(const Nonce &nonce,
+                                   BytesIn ciphertext,
+                                   BytesIn aad) override;
 
    private:
     const Key key_;
@@ -30,5 +32,3 @@ namespace libp2p::crypto::chachapoly {
   };
 
 }  // namespace libp2p::crypto::chachapoly
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_CRYPTO_CHACHAPOLY_CHACHAPOLY_IMPL_HPP

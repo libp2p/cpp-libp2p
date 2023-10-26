@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONSOLE_ASYNC_READER_HPP
-#define LIBP2P_CONSOLE_ASYNC_READER_HPP
+#pragma once
 
 #include <string>
 #include <functional>
@@ -40,5 +40,3 @@ namespace libp2p::protocol::example::utility {
   };
 
 } //namespace libp2p::protocol::example::utility
-
-#endif  // LIBP2P_CONSOLE_ASYNC_READER_HPP

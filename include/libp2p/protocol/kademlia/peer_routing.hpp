@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_PEERROUTING
-#define LIBP2P_PROTOCOL_KADEMLIA_PEERROUTING
+#pragma once
 
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
@@ -19,7 +19,8 @@ namespace libp2p::protocol::kademlia {
    public:
     virtual ~PeerRouting() = default;
 
-    virtual void addPeer(const PeerInfo &peer_info, bool permanent,
+    virtual void addPeer(const PeerInfo &peer_info,
+                         bool permanent,
                          bool is_connected = false) = 0;
 
     /// Searches for a peer with given @param ID, @returns PeerInfo
@@ -29,5 +30,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_PEERROUTING

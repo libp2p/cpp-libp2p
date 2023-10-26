@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_STORAGEIMPL
-#define LIBP2P_PROTOCOL_KADEMLIA_STORAGEIMPL
+#pragma once
 
 #include <libp2p/protocol/kademlia/impl/storage.hpp>
 
@@ -48,11 +48,12 @@ namespace libp2p::protocol::kademlia {
                 boost::multi_index::member<Record, Time, &Record::expire_time>>,
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::tag<ByRefreshTime>,
-                boost::multi_index::member<Record, Time,
-                                           &Record::refresh_time>>>>;
+                boost::multi_index::
+                    member<Record, Time, &Record::refresh_time>>>>;
 
    public:
-    StorageImpl(const Config &config, std::shared_ptr<StorageBackend> backend,
+    StorageImpl(const Config &config,
+                std::shared_ptr<StorageBackend> backend,
                 std::shared_ptr<basic::Scheduler> scheduler);
 
     ~StorageImpl() override;
@@ -76,5 +77,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_STORAGEIMPL

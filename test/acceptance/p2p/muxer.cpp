@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -63,18 +64,21 @@ struct UpgraderSemiMock : public Upgrader {
                    std::shared_ptr<MuxerAdaptor> m)
       : security(std::move(s)), mux(std::move(m)) {}
 
-  void upgradeLayersOutbound(const multi::Multiaddress &address, RawSPtr conn,
+  void upgradeLayersOutbound(const multi::Multiaddress &address,
+                             RawSPtr conn,
                              ProtoAddrVec layers,
                              OnLayerCallbackFunc cb) override {
     cb(conn);
   }
 
-  void upgradeLayersInbound(RawSPtr conn, ProtoAddrVec layers,
+  void upgradeLayersInbound(RawSPtr conn,
+                            ProtoAddrVec layers,
                             OnLayerCallbackFunc cb) override {
     cb(conn);
   }
 
-  void upgradeToSecureOutbound(LayerSPtr conn, const peer::PeerId &remoteId,
+  void upgradeToSecureOutbound(LayerSPtr conn,
+                               const peer::PeerId &remoteId,
                                OnSecuredCallbackFunc cb) override {
     security->secureOutbound(conn, remoteId, std::move(cb));
   }
@@ -141,7 +145,8 @@ struct Server : public std::enable_shared_from_this<Server> {
 
           // 01-echo back read data
           stream->write(
-              *buf, read,
+              *buf,
+              read,
               [buf, read, stream, this](outcome::result<size_t> rwrite) {
                 EXPECT_OUTCOME_TRUE(write, rwrite)
                 this->println("write ", write, " bytes");
@@ -172,8 +177,9 @@ struct Server : public std::enable_shared_from_this<Server> {
  private:
   template <typename... Args>
   void println(Args &&...args) {
-    if (!verbose())
+    if (!verbose()) {
       return;
+    }
     std::cout << "[server " << std::this_thread::get_id() << "]\t";
     (std::cout << ... << args);
     std::cout << std::endl;
@@ -184,8 +190,10 @@ struct Server : public std::enable_shared_from_this<Server> {
 };
 
 struct Client : public std::enable_shared_from_this<Client> {
-  Client(std::shared_ptr<TcpTransport> transport, size_t seed,
-         std::shared_ptr<boost::asio::io_context> context, size_t streams,
+  Client(std::shared_ptr<TcpTransport> transport,
+         size_t seed,
+         std::shared_ptr<boost::asio::io_context> context,
+         size_t streams,
          size_t rounds)
       : context_(std::move(context)),
         streams_(streams),
@@ -197,7 +205,8 @@ struct Client : public std::enable_shared_from_this<Client> {
   void connect(const PeerId &p, const Multiaddress &server) {
     // create new stream
     transport_->dial(
-        p, server,
+        p,
+        server,
         [this](outcome::result<std::shared_ptr<CapableConnection>> rconn) {
           EXPECT_OUTCOME_TRUE(conn, rconn);
           conn->start();
@@ -219,7 +228,8 @@ struct Client : public std::enable_shared_from_this<Client> {
     }
   }
 
-  void onStream(size_t streamId, size_t round,
+  void onStream(size_t streamId,
+                size_t round,
                 const std::shared_ptr<Stream> &stream) {
     if ((streamWrites == rounds_ * streams_) && streamReads == streamWrites) {
       context_->stop();
@@ -233,7 +243,8 @@ struct Client : public std::enable_shared_from_this<Client> {
 
     auto buf = randomBuffer();
     stream->write(
-        *buf, buf->size(),
+        *buf,
+        buf->size(),
         [round, streamId, buf, stream, this](outcome::result<size_t> rwrite) {
           EXPECT_OUTCOME_TRUE(write, rwrite);
           this->println(streamId, " write ", write, " bytes");
@@ -242,9 +253,10 @@ struct Client : public std::enable_shared_from_this<Client> {
           auto readbuf = std::make_shared<std::vector<uint8_t>>();
           readbuf->resize(write);
 
-          stream->read(*readbuf, readbuf->size(),
-                       [round, streamId, write, buf, readbuf, stream,
-                        this](outcome::result<size_t> rread) {
+          stream->read(*readbuf,
+                       readbuf->size(),
+                       [round, streamId, write, buf, readbuf, stream, this](
+                           outcome::result<size_t> rread) {
                          EXPECT_OUTCOME_TRUE(read, rread);
                          this->println(streamId, " readSome ", read, " bytes");
                          this->streamReads++;
@@ -263,8 +275,9 @@ struct Client : public std::enable_shared_from_this<Client> {
  private:
   template <typename... Args>
   void println(Args &&...args) {
-    if (!verbose())
+    if (!verbose()) {
       return;
+    }
     std::cout << "[client " << std::this_thread::get_id() << "]\t";
     (std::cout << ... << args);
     std::cout << std::endl;
@@ -379,8 +392,8 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   auto msg_marshaller =
       std::make_shared<plaintext::ExchangeMessageMarshallerImpl>(
           key_marshaller);
-  auto plaintext = std::make_shared<Plaintext>(msg_marshaller, idmgr,
-                                               std::move(key_marshaller));
+  auto plaintext = std::make_shared<Plaintext>(
+      msg_marshaller, idmgr, std::move(key_marshaller));
   auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
   auto transport = std::make_shared<TcpTransport>(server_context, upgrader);
   auto server = std::make_shared<Server>(transport);
@@ -417,8 +430,8 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
             std::make_shared<Plaintext>(msg_marshaller, idmgr, key_marshaller);
         auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
         auto transport = std::make_shared<TcpTransport>(context, upgrader);
-        auto client = std::make_shared<Client>(transport, localSeed, context,
-                                               streams, rounds);
+        auto client = std::make_shared<Client>(
+            transport, localSeed, context, streams, rounds);
 
         EXPECT_OUTCOME_TRUE(marshalled_key,
                             key_marshaller->marshal(serverKeyPair.publicKey))
@@ -453,6 +466,7 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   EXPECT_GE(server->streamWrites, totalClients * streams * rounds);
 }
 
-INSTANTIATE_TEST_SUITE_P(AllMuxers, MuxerAcceptanceTest,
+INSTANTIATE_TEST_SUITE_P(AllMuxers,
+                         MuxerAcceptanceTest,
                          ::testing::Values(MuxerType::mplex, MuxerType::yamux),
                          MuxerAcceptanceTest::PrintToStringParamName());

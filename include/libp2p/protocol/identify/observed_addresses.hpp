@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_OBSERVED_ADDRESSES_HPP
-#define LIBP2P_OBSERVED_ADDRESSES_HPP
+#pragma once
 
 #include <chrono>
 #include <unordered_map>
@@ -48,8 +48,10 @@ namespace libp2p::protocol {
      * observed) address
      * @param is_initiator - was the remote peer an initiator of the connection?
      */
-    void add(multi::Multiaddress observed, multi::Multiaddress local,
-             const multi::Multiaddress &observer, bool is_initiator);
+    void add(multi::Multiaddress observed,
+             multi::Multiaddress local,
+             const multi::Multiaddress &observer,
+             bool is_initiator);
 
     /**
      * Get rid of expired addresses; should be called from time to time
@@ -95,5 +97,3 @@ namespace libp2p::protocol {
     multi::Multiaddress observerGroup(const multi::Multiaddress &addr) const;
   };
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_OBSERVED_ADDRESSES_HPP

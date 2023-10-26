@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_MUXER_MOCK_HPP
-#define LIBP2P_PROTOCOL_MUXER_MOCK_HPP
+#pragma once
 
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
 
@@ -18,7 +18,8 @@ namespace libp2p::protocol_muxer {
     MOCK_METHOD5(selectOneOf,
                  void(std::span<const peer::ProtocolName> protocols,
                       std::shared_ptr<basic::ReadWriter> connection,
-                      bool is_initiator, bool negotiate_multiselect,
+                      bool is_initiator,
+                      bool negotiate_multiselect,
                       ProtocolHandlerFunc cb));
 
     MOCK_METHOD3(
@@ -29,5 +30,3 @@ namespace libp2p::protocol_muxer {
                  void(outcome::result<std::shared_ptr<connection::Stream>>)>));
   };
 }  // namespace libp2p::protocol_muxer
-
-#endif  // LIBP2P_PROTOCOL_MUXER_MOC_HPP

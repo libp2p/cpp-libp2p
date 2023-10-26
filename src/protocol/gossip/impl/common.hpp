@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_GOSSIP_COMMON_HPP
-#define LIBP2P_PROTOCOL_GOSSIP_COMMON_HPP
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -72,7 +72,9 @@ namespace libp2p::protocol::gossip {
     TopicMessage(Bytes _from, Bytes _seq, Bytes _data);
 
     /// Creates topic message from scratch before publishing
-    TopicMessage(const peer::PeerId &_from, uint64_t _seq, Bytes _data,
+    TopicMessage(const peer::PeerId &_from,
+                 uint64_t _seq,
+                 Bytes _data,
                  TopicId _topic);
   };
 
@@ -95,10 +97,9 @@ namespace libp2p::protocol::gossip {
   Bytes fromString(const std::string &s);
 
   /// Creates message id, default function
-  MessageId createMessageId(const Bytes &from, const Bytes &seq,
+  MessageId createMessageId(const Bytes &from,
+                            const Bytes &seq,
                             const Bytes &data);
 }  // namespace libp2p::protocol::gossip
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::gossip, Error);
-
-#endif  // LIBP2P_PROTOCOL_GOSSIP_COMMON_HPP

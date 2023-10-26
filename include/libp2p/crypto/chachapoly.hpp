@@ -1,18 +1,18 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_CRYPTO_CHACHAPOLY_HPP
-#define LIBP2P_INCLUDE_LIBP2P_CRYPTO_CHACHAPOLY_HPP
+#pragma once
 
 #include <array>
 
-#include <span>
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::crypto::chachapoly {
   using libp2p::Bytes;
@@ -30,10 +30,9 @@ namespace libp2p::crypto::chachapoly {
      * @param associated_data - data for message authentication
      * @return ciphertext bytes
      */
-    virtual outcome::result<Bytes> encrypt(
-        const Nonce &nonce,
-                                               BytesIn plaintext,
-                                               BytesIn aad) = 0;
+    virtual outcome::result<Bytes> encrypt(const Nonce &nonce,
+                                           BytesIn plaintext,
+                                           BytesIn aad) = 0;
 
     /**
      * Does authenticated decryption with associated data (AEAD)
@@ -42,10 +41,9 @@ namespace libp2p::crypto::chachapoly {
      * @param associated_data - data for message authentication
      * @return plaintext bytes
      */
-    virtual outcome::result<Bytes> decrypt(
-        const Nonce &nonce,
-                                               BytesIn ciphertext,
-                                               BytesIn aad) = 0;
+    virtual outcome::result<Bytes> decrypt(const Nonce &nonce,
+                                           BytesIn ciphertext,
+                                           BytesIn aad) = 0;
 
     /**
      * Convert 64-bit integer to 12-bit long byte sequence with four zero bytes
@@ -64,5 +62,3 @@ namespace libp2p::crypto::chachapoly {
   };
 
 }  // namespace libp2p::crypto::chachapoly
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_CRYPTO_CHACHAPOLY_HPP

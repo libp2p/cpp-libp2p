@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "acceptance/p2p/host/protocol/client_test_session.hpp"
@@ -34,7 +35,8 @@ namespace libp2p::protocol {
 
     write_buf_ = random_generator_->randomBytes(buffer_size_);
 
-    stream_->write(write_buf_, buffer_size_,
+    stream_->write(write_buf_,
+                   buffer_size_,
                    [self = shared_from_this(),
                     cb{std::move(cb)}](outcome::result<size_t> rw) mutable {
                      if (!rw) {
@@ -50,7 +52,8 @@ namespace libp2p::protocol {
 
     read_buf_ = std::vector<uint8_t>(buffer_size_);
 
-    stream_->read(read_buf_, buffer_size_,
+    stream_->read(read_buf_,
+                  buffer_size_,
                   [self = shared_from_this(),
                    cb{std::move(cb)}](outcome::result<size_t> rr) mutable {
                     if (!rr) {

@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_MARSHALER_KEY_MARSHALER_IMPL_HPP
-#define LIBP2P_CRYPTO_MARSHALER_KEY_MARSHALER_IMPL_HPP
+#pragma once
 
 #include <memory>
 
@@ -35,5 +35,3 @@ namespace libp2p::crypto::marshaller {
     std::shared_ptr<validator::KeyValidator> key_validator_;
   };
 }  // namespace libp2p::crypto::marshaller
-
-#endif  // LIBP2P_CRYPTO_MARSHALER_KEY_MARSHALER_IMPL_HPP

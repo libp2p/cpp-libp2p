@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASE16_HPP
-#define LIBP2P_BASE16_HPP
+#pragma once
 
 #include <optional>
 
@@ -42,5 +42,3 @@ namespace libp2p::multi::detail {
    */
   outcome::result<Bytes> decodeBase16Lower(std::string_view string);
 }  // namespace libp2p::multi::detail
-
-#endif  // LIBP2P_BASE16_HPP

@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,7 +9,8 @@
 namespace libp2p::transport {
 
   UpgraderSession::UpgraderSession(
-      std::shared_ptr<transport::Upgrader> upgrader, ProtoAddrVec layers,
+      std::shared_ptr<transport::Upgrader> upgrader,
+      ProtoAddrVec layers,
       std::shared_ptr<connection::RawConnection> raw,
       UpgraderSession::HandlerFunc handler)
       : upgrader_(std::move(upgrader)),
@@ -29,8 +31,8 @@ namespace libp2p::transport {
       self->secureInbound(std::move(conn));
     };
 
-    upgrader_->upgradeLayersInbound(raw_, layers_,
-                                    std::move(on_layers_upgraded));
+    upgrader_->upgradeLayersInbound(
+        raw_, layers_, std::move(on_layers_upgraded));
   }
 
   void UpgraderSession::upgradeOutbound(const multi::Multiaddress &address,
@@ -47,8 +49,8 @@ namespace libp2p::transport {
       self->secureOutbound(std::move(conn), remoteId);
     };
 
-    upgrader_->upgradeLayersOutbound(address, raw_, layers_,
-                                     std::move(on_layers_upgraded));
+    upgrader_->upgradeLayersOutbound(
+        address, raw_, layers_, std::move(on_layers_upgraded));
   }
 
   void UpgraderSession::secureInbound(
@@ -76,8 +78,8 @@ namespace libp2p::transport {
       self->onSecured(std::move(conn));
     };
 
-    upgrader_->upgradeToSecureOutbound(std::move(conn), remoteId,
-                                       std::move(on_sec_upgraded));
+    upgrader_->upgradeToSecureOutbound(
+        std::move(conn), remoteId, std::move(on_sec_upgraded));
   }
 
   void UpgraderSession::onSecured(

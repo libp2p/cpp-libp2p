@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TESTUTIL_PEER_HPP
-#define LIBP2P_TESTUTIL_PEER_HPP
+#pragma once
 
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include <libp2p/peer/peer_id.hpp>
@@ -17,5 +17,3 @@ namespace testutil {
   PeerId randomPeerId();
 
 }  // namespace testutil
-
-#endif  // LIBP2P_TESTUTIL_PEER_HPP

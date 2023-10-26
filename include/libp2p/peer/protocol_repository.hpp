@@ -1,20 +1,20 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_REPOSITORY_HPP
-#define LIBP2P_PROTOCOL_REPOSITORY_HPP
+#pragma once
 
 #include <set>
 #include <unordered_set>
 #include <vector>
 
-#include <span>
 #include <libp2p/basic/garbage_collectable.hpp>
+#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/protocol.hpp>
-#include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::peer {
 
@@ -80,5 +80,3 @@ namespace libp2p::peer {
   };
 
 }  // namespace libp2p::peer
-
-#endif  // LIBP2P_PROTOCOL_REPOSITORY_HPP

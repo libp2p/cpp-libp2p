@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_ECDSA_PROVIDER_HPP
-#define LIBP2P_CRYPTO_ECDSA_PROVIDER_HPP
+#pragma once
 
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/ecdsa_types.hpp>
@@ -63,11 +63,10 @@ namespace libp2p::crypto::ecdsa {
      * @return true - when signature matches, false - otherwise
      */
     virtual outcome::result<bool> verifyPrehashed(
-        const PrehashedMessage &message, const Signature &signature,
+        const PrehashedMessage &message,
+        const Signature &signature,
         const PublicKey &public_key) const = 0;
 
     virtual ~EcdsaProvider() = default;
   };
 };  // namespace libp2p::crypto::ecdsa
-
-#endif  // LIBP2P_CRYPTO_ECDSA_PROVIDER_HPP

@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MULTISELECT_PARSER_HPP
-#define LIBP2P_MULTISELECT_PARSER_HPP
+#pragma once
 
 #include <libp2p/basic/read_buffer.hpp>
 #include <libp2p/basic/varint_prefix_reader.hpp>
@@ -91,5 +91,3 @@ namespace libp2p::protocol_muxer::multiselect::detail {
   };
 
 }  // namespace libp2p::protocol_muxer::multiselect::detail
-
-#endif  // LIBP2P_MULTISELECT_PARSER_HPP

@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_DIALER_MOCK_HPP
-#define LIBP2P_DIALER_MOCK_HPP
+#pragma once
 
 #include <libp2p/network/dialer.hpp>
 
@@ -17,16 +17,18 @@ namespace libp2p::network {
 
     MOCK_METHOD2(dial, void(const peer::PeerInfo &, DialResultFunc));
     MOCK_METHOD3(dial,
-                 void(const peer::PeerInfo &, DialResultFunc,
+                 void(const peer::PeerInfo &,
+                      DialResultFunc,
                       std::chrono::milliseconds));
     MOCK_METHOD4(newStream,
-                 void(const peer::PeerInfo &, StreamProtocols,
-                      StreamAndProtocolOrErrorCb, std::chrono::milliseconds));
+                 void(const peer::PeerInfo &,
+                      StreamProtocols,
+                      StreamAndProtocolOrErrorCb,
+                      std::chrono::milliseconds));
     MOCK_METHOD3(newStream,
-                 void(const peer::PeerId &, StreamProtocols,
+                 void(const peer::PeerId &,
+                      StreamProtocols,
                       StreamAndProtocolOrErrorCb));
   };
 
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_DIALER_MOCK_HPP

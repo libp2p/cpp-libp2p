@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASIC_SCHEDULER_IMPL_HPP
-#define LIBP2P_BASIC_SCHEDULER_IMPL_HPP
+#pragma once
 
 #include <map>
 #include <unordered_map>
@@ -33,7 +33,8 @@ namespace libp2p::basic {
     std::chrono::milliseconds now() const noexcept override;
 
     /// Scheduler API impl
-    Handle scheduleImpl(Callback &&cb, std::chrono::milliseconds delay_from_now,
+    Handle scheduleImpl(Callback &&cb,
+                        std::chrono::milliseconds delay_from_now,
                         bool make_handle) noexcept override;
 
     /// Cancels the ticket, called from Handle
@@ -123,7 +124,9 @@ namespace libp2p::basic {
       explicit DeferredCallbacks(SchedulerBackend &backend);
 
       /// Adds item and reschedules timer if needed
-      void push(uint64_t seq, Callback cb, bool cancellable,
+      void push(uint64_t seq,
+                Callback cb,
+                bool cancellable,
                 std::weak_ptr<SchedulerBackendFeedback> sch);
 
       /// Timer callback, owner arg helps control lifetime
@@ -181,7 +184,9 @@ namespace libp2p::basic {
                      std::chrono::milliseconds timer_threshold);
 
       /// Adds item and reschedules timer if needed
-      void push(std::chrono::milliseconds abs_time, uint64_t seq, Callback cb,
+      void push(std::chrono::milliseconds abs_time,
+                uint64_t seq,
+                Callback cb,
                 std::weak_ptr<SchedulerBackendFeedback> sch);
 
       /// Timer callback, owner arg helps control lifetime
@@ -194,7 +199,8 @@ namespace libp2p::basic {
 
       /// Rechedules timed ticket, may return errors, see Scheduler API
       outcome::result<Ticket> rescheduleTicket(
-          const Ticket &ticket, std::chrono::milliseconds abs_time,
+          const Ticket &ticket,
+          std::chrono::milliseconds abs_time,
           uint64_t new_seq);
 
      private:
@@ -237,5 +243,3 @@ namespace libp2p::basic {
     TimedCallbacks timed_callbacks_;
   };
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_SCHEDULER_IMPL_HPP

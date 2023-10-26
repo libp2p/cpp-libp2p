@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -12,7 +13,9 @@ namespace libp2p::transport {
   void TcpTransport::dial(const peer::PeerId &remoteId,
                           multi::Multiaddress address,
                           TransportAdaptor::HandlerFunc handler) {
-    dial(remoteId, std::move(address), std::move(handler),
+    dial(remoteId,
+         std::move(address),
+         std::move(handler),
          std::chrono::milliseconds::zero());
   }
 
@@ -32,7 +35,9 @@ namespace libp2p::transport {
 
     auto layers = detail::getLayers(address);
 
-    auto connect = [=, self{shared_from_this()}, handler{std::move(handler)},
+    auto connect = [=,
+                    self{shared_from_this()},
+                    handler{std::move(handler)},
                     layers = std::move(layers)](auto ec, auto r) mutable {
       if (ec) {
         return handler(ec);
@@ -69,8 +74,8 @@ namespace libp2p::transport {
 
   std::shared_ptr<TransportListener> TcpTransport::createListener(
       TransportListener::HandlerFunc handler) {
-    return std::make_shared<TcpListener>(*context_, upgrader_,
-                                         std::move(handler));
+    return std::make_shared<TcpListener>(
+        *context_, upgrader_, std::move(handler));
   }
 
   bool TcpTransport::canDial(const multi::Multiaddress &ma) const {

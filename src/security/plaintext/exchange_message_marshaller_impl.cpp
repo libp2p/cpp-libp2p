@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,7 +9,8 @@
 #include <generated/security/plaintext/protobuf/plaintext.pb.h>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::plaintext,
-                            ExchangeMessageMarshallerImpl::Error, e) {
+                            ExchangeMessageMarshallerImpl::Error,
+                            e) {
   using E = libp2p::security::plaintext::ExchangeMessageMarshallerImpl::Error;
   switch (e) {
     case E::PUBLIC_KEY_SERIALIZING_ERROR:

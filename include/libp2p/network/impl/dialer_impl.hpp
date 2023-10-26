@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_DIALER_IMPL_HPP
-#define LIBP2P_DIALER_IMPL_HPP
+#pragma once
 
 #include <set>
 #include <unordered_map>
@@ -30,16 +30,19 @@ namespace libp2p::network {
                std::shared_ptr<basic::Scheduler> scheduler);
 
     // Establishes a connection to a given peer
-    void dial(const peer::PeerInfo &p, DialResultFunc cb,
+    void dial(const peer::PeerInfo &p,
+              DialResultFunc cb,
               std::chrono::milliseconds timeout) override;
 
     // NewStream returns a new stream to given peer p.
     // If there is no connection to p, attempts to create one.
-    void newStream(const peer::PeerInfo &p, StreamProtocols protocols,
+    void newStream(const peer::PeerInfo &p,
+                   StreamProtocols protocols,
                    StreamAndProtocolOrErrorCb cb,
                    std::chrono::milliseconds timeout = {}) override;
 
-    void newStream(const peer::PeerId &peer_id, StreamProtocols protocols,
+    void newStream(const peer::PeerId &peer_id,
+                   StreamProtocols protocols,
                    StreamAndProtocolOrErrorCb cb) override;
 
    private:
@@ -76,7 +79,8 @@ namespace libp2p::network {
     void completeDial(const peer::PeerId &peer_id, const DialResult &result);
 
     void newStream(std::shared_ptr<connection::CapableConnection> conn,
-                   StreamProtocols protocols, StreamAndProtocolOrErrorCb cb);
+                   StreamProtocols protocols,
+                   StreamAndProtocolOrErrorCb cb);
 
     std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect_;
     std::shared_ptr<TransportManager> tmgr_;
@@ -90,5 +94,3 @@ namespace libp2p::network {
   };
 
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_DIALER_IMPL_HPP

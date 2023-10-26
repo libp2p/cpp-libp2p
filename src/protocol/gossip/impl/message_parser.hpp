@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_GOSSIP_MESSAGE_PARSER_HPP
-#define LIBP2P_PROTOCOL_GOSSIP_MESSAGE_PARSER_HPP
+#pragma once
 
 #include "common.hpp"
 
@@ -24,7 +24,6 @@ namespace libp2p::protocol::gossip {
 
     ~MessageParser();
 
-
     /// Parses RPC protobuf message received from wire
     bool parse(BytesIn bytes);
 
@@ -36,6 +35,4 @@ namespace libp2p::protocol::gossip {
     std::unique_ptr<pubsub::pb::RPC> pb_msg_;
   };
 
-} //namespace libp2p::protocol::gossip
-
-#endif  // LIBP2P_PROTOCOL_GOSSIP_MESSAGE_PARSER_HPP
+}  // namespace libp2p::protocol::gossip

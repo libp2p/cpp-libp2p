@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PLAINTEXT_ADAPTOR_HPP
-#define LIBP2P_PLAINTEXT_ADAPTOR_HPP
+#pragma once
 
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/log/logger.hpp>
@@ -50,7 +50,8 @@ namespace libp2p::security {
                        SecConnCallbackFunc cb) override;
 
     void secureOutbound(std::shared_ptr<connection::LayerConnection> outbound,
-                        const peer::PeerId &p, SecConnCallbackFunc cb) override;
+                        const peer::PeerId &p,
+                        SecConnCallbackFunc cb) override;
 
    private:
     using MaybePeerId = boost::optional<peer::PeerId>;
@@ -63,11 +64,13 @@ namespace libp2p::security {
     void receiveExchangeMsg(
         const std::shared_ptr<connection::LayerConnection> &conn,
         const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
-        const MaybePeerId &p, SecConnCallbackFunc cb) const;
+        const MaybePeerId &p,
+        SecConnCallbackFunc cb) const;
 
     // the callback passed to an async read call in receiveExchangeMsg
     void readCallback(const std::shared_ptr<connection::LayerConnection> &conn,
-                      const MaybePeerId &p, const SecConnCallbackFunc &cb,
+                      const MaybePeerId &p,
+                      const SecConnCallbackFunc &cb,
                       const std::shared_ptr<std::vector<uint8_t>> &read_bytes,
                       outcome::result<size_t> read_call_res) const;
 
@@ -86,5 +89,3 @@ namespace libp2p::security {
 }  // namespace libp2p::security
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security, Plaintext::Error);
-
-#endif  // LIBP2P_PLAINTEXT_ADAPTOR_HPP

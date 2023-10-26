@@ -1,20 +1,20 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ADDRESS_REPOSITORY_HPP
-#define LIBP2P_ADDRESS_REPOSITORY_HPP
+#pragma once
 
 #include <chrono>
 #include <unordered_set>
 #include <vector>
 
 #include <boost/signals2.hpp>
-#include <span>
 #include <libp2p/basic/garbage_collectable.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_id.hpp>
+#include <span>
 
 namespace libp2p::peer {
 
@@ -93,7 +93,8 @@ namespace libp2p::peer {
      * @note triggers #onAddressAdded for each address
      */
     virtual outcome::result<bool> addAddresses(
-        const PeerId &p, std::span<const multi::Multiaddress> ma,
+        const PeerId &p,
+        std::span<const multi::Multiaddress> ma,
         Milliseconds ttl) = 0;
 
     /**
@@ -109,7 +110,8 @@ namespace libp2p::peer {
      * @note triggers #onAddressAdded when any new addresses are inserted
      */
     virtual outcome::result<bool> upsertAddresses(
-        const PeerId &p, std::span<const multi::Multiaddress> ma,
+        const PeerId &p,
+        std::span<const multi::Multiaddress> ma,
         Milliseconds ttl) = 0;
 
     /**
@@ -175,5 +177,3 @@ namespace libp2p::peer {
   };
 
 }  // namespace libp2p::peer
-
-#endif  // LIBP2P_ADDRESS_REPOSITORY_HPP

@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_IDENTIFY_DELTA_HPP
-#define LIBP2P_IDENTIFY_DELTA_HPP
+#pragma once
 
 #include <vector>
 
@@ -36,7 +36,8 @@ namespace libp2p::protocol {
      * @param conn_manager - connection manager of this node
      * @param bus, over which the events arrive
      */
-    IdentifyDelta(Host &host, network::ConnectionManager &conn_manager,
+    IdentifyDelta(Host &host,
+                  network::ConnectionManager &conn_manager,
                   event::Bus &bus);
 
     peer::ProtocolName getProtocolId() const override;
@@ -88,5 +89,3 @@ namespace libp2p::protocol {
     libp2p::log::Logger log_ = libp2p::log::createLogger("IdentifyDelta");
   };
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_IDENTIFY_DELTA_HPP

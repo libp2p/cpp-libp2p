@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_MUXER_MULTISELECT_INSTANCE_HPP
-#define LIBP2P_PROTOCOL_MUXER_MULTISELECT_INSTANCE_HPP
+#pragma once
 
 #include <libp2p/protocol_muxer/multiselect.hpp>
 #include "parser.hpp"
@@ -26,7 +26,8 @@ namespace libp2p::protocol_muxer::multiselect {
     /// Implements ProtocolMuxer API
     void selectOneOf(std::span<const peer::ProtocolName> protocols,
                      std::shared_ptr<basic::ReadWriter> connection,
-                     bool is_initiator, bool negotiate_multiselect,
+                     bool is_initiator,
+                     bool negotiate_multiselect,
                      Multiselect::ProtocolHandlerFunc cb);
 
    private:
@@ -127,5 +128,3 @@ namespace libp2p::protocol_muxer::multiselect {
   };
 
 }  // namespace libp2p::protocol_muxer::multiselect
-
-#endif  // LIBP2P_PROTOCOL_MUXER_MULTISELECT_INSTANCE_HPP

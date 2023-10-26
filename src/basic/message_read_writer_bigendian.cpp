@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -23,7 +24,8 @@ namespace libp2p::basic {
     auto buffer = std::make_shared<std::vector<uint8_t>>();
     buffer->resize(kLenMarkerSize);
     conn_->read(
-        *buffer, kLenMarkerSize,
+        *buffer,
+        kLenMarkerSize,
         [self{shared_from_this()}, buffer, cb{std::move(cb)}](auto &&result) {
           if (not result) {
             return cb(result.error());
@@ -32,13 +34,13 @@ namespace libp2p::basic {
               common::convert<uint32_t>(buffer->data()));
           buffer->resize(msg_len);
           std::fill(buffer->begin(), buffer->end(), 0u);
-          self->conn_->read(*buffer, msg_len,
-                            [self, buffer, cb](auto &&result) {
-                              if (not result) {
-                                return cb(result.error());
-                              }
-                              cb(buffer);
-                            });
+          self->conn_->read(
+              *buffer, msg_len, [self, buffer, cb](auto &&result) {
+                if (not result) {
+                  return cb(result.error());
+                }
+                cb(buffer);
+              });
         });
   }
 
@@ -53,7 +55,8 @@ namespace libp2p::basic {
     raw_buf.reserve(kLenMarkerSize + buffer.size());
     common::putUint32BE(raw_buf, buffer.size());
     raw_buf.insert(raw_buf.end(), buffer.begin(), buffer.end());
-    conn_->write(raw_buf, raw_buf.size(),
+    conn_->write(raw_buf,
+                 raw_buf.size(),
                  [self{shared_from_this()}, cb{std::move(cb)}](auto &&result) {
                    if (not result) {
                      return cb(result.error());

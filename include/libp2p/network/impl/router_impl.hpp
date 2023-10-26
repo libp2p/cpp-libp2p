@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ROUTER_IMPL_HPP
-#define LIBP2P_ROUTER_IMPL_HPP
+#pragma once
 
 #include <tsl/htrie_map.h>
 #include <libp2p/network/router.hpp>
@@ -15,7 +15,8 @@ namespace libp2p::network {
    public:
     ~RouterImpl() override = default;
 
-    void setProtocolHandler(StreamProtocols protocols, StreamAndProtocolCb cb,
+    void setProtocolHandler(StreamProtocols protocols,
+                            StreamAndProtocolCb cb,
                             ProtocolPredicate predicate = {}) override;
 
     std::vector<peer::ProtocolName> getSupportedProtocols() const override;
@@ -41,5 +42,3 @@ namespace libp2p::network {
 }  // namespace libp2p::network
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::network, RouterImpl::Error)
-
-#endif  // LIBP2P_ROUTER_IMPL_HPP

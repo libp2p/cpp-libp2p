@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_MUXER_SIMPLE_STREAM_NEGOTIATE_HPP
-#define LIBP2P_PROTOCOL_MUXER_SIMPLE_STREAM_NEGOTIATE_HPP
+#pragma once
 
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/peer/protocol.hpp>
@@ -20,5 +20,3 @@ namespace libp2p::protocol_muxer::multiselect {
           cb);
 
 }  // namespace libp2p::protocol_muxer::multiselect
-
-#endif  // LIBP2P_PROTOCOL_MUXER_SIMPLE_STREAM_NEGOTIATE_HPP

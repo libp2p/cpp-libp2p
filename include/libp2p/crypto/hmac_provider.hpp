@@ -1,16 +1,16 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP
-#define LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP
+#pragma once
 
-#include <span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/hasher.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::crypto::hmac {
 
@@ -36,9 +36,8 @@ namespace libp2p::crypto::hmac {
      * @param message source message
      * @return message digest if calculation was successful, error otherwise
      */
-    virtual outcome::result<Bytes> calculateDigest(
-        HashType hash_type, const Bytes &key, BytesIn message) const = 0;
+    virtual outcome::result<Bytes> calculateDigest(HashType hash_type,
+                                                   const Bytes &key,
+                                                   BytesIn message) const = 0;
   };
 }  // namespace libp2p::crypto::hmac
-
-#endif  // LIBP2P_CRYPTO_HMAC_HMAC_PROVIDER_HPP

@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,8 +12,7 @@
 
 namespace libp2p::multi::converters {
 
-  outcome::result<Bytes> IPv6Converter::addressToBytes(
-      std::string_view addr) {
+  outcome::result<Bytes> IPv6Converter::addressToBytes(std::string_view addr) {
     boost::system::error_code ec;
     auto address = boost::asio::ip::make_address_v6(addr, ec);
     if (ec) {

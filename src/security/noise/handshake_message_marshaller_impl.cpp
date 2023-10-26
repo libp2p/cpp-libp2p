@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,7 +8,8 @@
 
 #include <generated/security/noise/protobuf/noise.pb.h>
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::noise,
-                            HandshakeMessageMarshallerImpl::Error, e) {
+                            HandshakeMessageMarshallerImpl::Error,
+                            e) {
   using E = libp2p::security::noise::HandshakeMessageMarshallerImpl::Error;
   switch (e) {
     case E::MESSAGE_SERIALIZING_ERROR:
@@ -42,7 +44,7 @@ namespace libp2p::security::noise {
   HandshakeMessageMarshallerImpl::protoToHandy(
       const protobuf::NoiseHandshakePayload &proto_msg) const {
     Bytes key_bytes{proto_msg.identity_key().begin(),
-                                proto_msg.identity_key().end()};
+                    proto_msg.identity_key().end()};
     crypto::ProtobufKey proto_key{std::move(key_bytes)};
     OUTCOME_TRY(pubkey, marshaller_->unmarshalPublicKey(proto_key));
 

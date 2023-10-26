@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_COMMON_METRICS_INSTANCE_COUNT_HPP
-#define LIBP2P_COMMON_METRICS_INSTANCE_COUNT_HPP
+#pragma once
 
 #include <atomic>
 #include <mutex>
@@ -21,15 +21,11 @@
       })();                                                          \
       return count;                                                  \
     }                                                                \
-    Libp2pMetricsInstanceCount(const type *) {                       \
-      ++count();                                                     \
-    }                                                                \
+    Libp2pMetricsInstanceCount(const type *) { ++count(); }          \
     Libp2pMetricsInstanceCount(const Libp2pMetricsInstanceCount &) { \
       ++count();                                                     \
     }                                                                \
-    ~Libp2pMetricsInstanceCount() {                                  \
-      --count();                                                     \
-    }                                                                \
+    ~Libp2pMetricsInstanceCount() { --count(); }                     \
   } libp2p_metrics_instance_count {                                  \
     this                                                             \
   }
@@ -53,5 +49,3 @@ namespace libp2p::metrics::instance {
     }
   };
 }  // namespace libp2p::metrics::instance
-
-#endif  // LIBP2P_COMMON_METRICS_INSTANCE_COUNT_HPP

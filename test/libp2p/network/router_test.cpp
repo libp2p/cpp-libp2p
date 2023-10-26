@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -53,7 +54,8 @@ class RouterTest : public ::testing::Test, public RouterImpl {
     for (const auto &proto : protocols) {
       setHandlerWithFail(proto);
     }
-    ASSERT_TRUE(std::is_permutation(protocols.begin(), protocols.end(),
+    ASSERT_TRUE(std::is_permutation(protocols.begin(),
+                                    protocols.end(),
                                     this->getSupportedProtocols().begin()));
   }
 };
@@ -101,7 +103,8 @@ TEST_F(RouterTest, SetHandlerWithPredicate) {
   // this match is equal to the next one, but its handler will evaluate to
   // false; must not be invoked
   this->setProtocolHandler(
-      {kVersionProtocolPrefix}, [](auto &&) { FAIL(); },
+      {kVersionProtocolPrefix},
+      [](auto &&) { FAIL(); },
       [](auto &&) { return false; });
 
   // this match must be invoked
@@ -126,7 +129,7 @@ TEST_F(RouterTest, SetHandlerWithPredicate) {
 TEST_F(RouterTest, GetSupportedProtocols) {
   static const std::vector<ProtocolName> kExpectedVec1{kDefaultProtocol};
   static const std::vector<ProtocolName> kExpectedVec2{kDefaultProtocol,
-                                                   kProtocolPrefix};
+                                                       kProtocolPrefix};
 
   ASSERT_TRUE(this->getSupportedProtocols().empty());
 
@@ -135,11 +138,13 @@ TEST_F(RouterTest, GetSupportedProtocols) {
 
   setHandlerWithFail(kProtocolPrefix);
   // protocols may be returned in any order
-  ASSERT_TRUE(std::is_permutation(kExpectedVec2.begin(), kExpectedVec2.end(),
+  ASSERT_TRUE(std::is_permutation(kExpectedVec2.begin(),
+                                  kExpectedVec2.end(),
                                   this->getSupportedProtocols().begin()));
 
   setHandlerWithFail(kDefaultProtocol);
-  ASSERT_TRUE(std::is_permutation(kExpectedVec2.begin(), kExpectedVec2.end(),
+  ASSERT_TRUE(std::is_permutation(kExpectedVec2.begin(),
+                                  kExpectedVec2.end(),
                                   this->getSupportedProtocols().begin()));
 }
 

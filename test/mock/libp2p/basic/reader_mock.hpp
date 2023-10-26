@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_READER_MOCK_HPP
-#define LIBP2P_READER_MOCK_HPP
+#pragma once
 
 #include <libp2p/basic/reader.hpp>
 
@@ -27,5 +27,3 @@ inline std::ostream &operator<<(std::ostream &s,
   s << common::hex_upper(v) << "\n";
   return s;
 }
-
-#endif  // LIBP2P_READER_MOCK_HPP

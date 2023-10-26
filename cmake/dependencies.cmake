@@ -1,5 +1,6 @@
 #
-# Copyright Soramitsu Co., Ltd. All Rights Reserved.
+# Copyright Quadrivium LLC
+# All Rights Reserved
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -43,6 +44,6 @@ find_package(tsl_hat_trie CONFIG REQUIRED)
 hunter_add_package(Boost.DI)
 find_package(Boost.DI CONFIG REQUIRED)
 
-# https://github.com/soramitsu/libp2p-sqlite-modern-cpp/tree/hunter
+# https://github.com/qdrvm/libp2p-sqlite-modern-cpp/tree/hunter
 hunter_add_package(SQLiteModernCpp)
 find_package(SQLiteModernCpp CONFIG REQUIRED)

@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -47,7 +48,8 @@ namespace libp2p::transport {
       return outcome::success();
     } catch (const boost::system::system_error &e) {
       log::createLogger("Listener")
-          ->error("Cannot listen to {}: {}", address.getStringAddress(),
+          ->error("Cannot listen to {}: {}",
+                  address.getStringAddress(),
                   e.code().message());
       return e.code();
     }

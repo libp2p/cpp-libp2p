@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -41,8 +42,8 @@ namespace libp2p::security::noise {
       }
       uint16_t frame_len{
           ntohs(common::convert<uint16_t>(self->buffer_->data()))};  // NOLINT
-      auto read_cb = [cb = std::move(cb), self,
-                      frame_len](outcome::result<size_t> result) {
+      auto read_cb = [cb = std::move(cb), self, frame_len](
+                         outcome::result<size_t> result) {
         IO_OUTCOME_TRY(read_bytes, result, cb);
         if (frame_len != read_bytes) {
           return cb(std::errc::broken_pipe);

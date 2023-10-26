@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOLLIST_HPP
-#define LIBP2P_PROTOCOLLIST_HPP
+#pragma once
 
 #include <array>
 #include <functional>
@@ -91,11 +91,11 @@ namespace libp2p::multi {
      * Returns a protocol with the corresponding name if it exists, or nullptr
      * otherwise
      */
-    static constexpr auto get(std::string_view name) -> Protocol const * {
+    static constexpr auto get(std::string_view name) -> const Protocol * {
       if (name == "ipfs") {
         name = "p2p";  // IPFS is a legacy name, P2P is the preferred one
       }
-      for (Protocol const &protocol : protocols_) {
+      for (const Protocol &protocol : protocols_) {
         if (protocol.name == name) {
           return &protocol;
         }
@@ -107,8 +107,8 @@ namespace libp2p::multi {
      * Returns a protocol with the corresponding code if it exists, or nullptr
      * otherwise
      */
-    static constexpr auto get(Protocol::Code code) -> Protocol const * {
-      for (Protocol const &protocol : protocols_) {
+    static constexpr auto get(Protocol::Code code) -> const Protocol * {
+      for (const Protocol &protocol : protocols_) {
         if (protocol.code == code) {
           return &protocol;
         }
@@ -171,4 +171,3 @@ namespace libp2p::multi {
   };
 
 }  // namespace libp2p::multi
-#endif  // LIBP2P_PROTOCOLLIST_HPP

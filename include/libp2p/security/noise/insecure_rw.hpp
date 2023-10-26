@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_INSECURE_RW_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_INSECURE_RW_HPP
+#pragma once
 
 #include <memory>
 
@@ -38,8 +38,7 @@ namespace libp2p::security::noise {
     void read(ReadCallbackFunc cb) override;
 
     /// write the given bytes to the network
-    void write(BytesIn buffer,
-               basic::Writer::WriteCallbackFunc cb) override;
+    void write(BytesIn buffer, basic::Writer::WriteCallbackFunc cb) override;
 
    private:
     std::shared_ptr<connection::LayerConnection> connection_;
@@ -48,5 +47,3 @@ namespace libp2p::security::noise {
   };
 
 }  // namespace libp2p::security::noise
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_INSECURE_RW_HPP

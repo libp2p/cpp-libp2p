@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MULTISELECT_SERIALIZING_HPP
-#define LIBP2P_MULTISELECT_SERIALIZING_HPP
+#pragma once
 
 #include <boost/container/static_vector.hpp>
 
@@ -100,5 +100,3 @@ namespace libp2p::protocol_muxer::multiselect::detail {
   }
 
 }  // namespace libp2p::protocol_muxer::multiselect::detail
-
-#endif  // LIBP2P_MULTISELECT_SERIALIZING_HPP

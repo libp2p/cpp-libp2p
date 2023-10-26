@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -85,7 +86,8 @@ namespace libp2p::protocol {
                                  std::move(remote_peer_addr_res.value())}};
 
     msg_processor_->getHost().newStream(
-        peer_info, {kIdentifyProto},
+        peer_info,
+        {kIdentifyProto},
         [self{shared_from_this()}](auto &&stream_res) {
           if (!stream_res) {
             return;

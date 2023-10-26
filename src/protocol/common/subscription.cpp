@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,7 +18,7 @@ namespace libp2p::protocol {
     assert(source_wptr_.lock());
   }
 
-  Subscription& Subscription::operator=(Subscription&& x) noexcept {
+  Subscription &Subscription::operator=(Subscription &&x) noexcept {
     cancel();
     ticket_ = x.ticket_;
     source_wptr_ = std::move(x.source_wptr_);

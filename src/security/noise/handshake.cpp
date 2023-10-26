@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -43,8 +44,8 @@ namespace libp2p::security::noise {
     auto dh = std::make_shared<NoiseDiffieHellmanImpl>();
     auto hash = std::make_shared<NoiseSHA256HasherImpl>();
     auto cipher = std::make_shared<NamedCCPImpl>();
-    return std::make_shared<CipherSuiteImpl>(std::move(dh), std::move(hash),
-                                             std::move(cipher));
+    return std::make_shared<CipherSuiteImpl>(
+        std::move(dh), std::move(hash), std::move(cipher));
   }
 
   Handshake::Handshake(
@@ -53,7 +54,8 @@ namespace libp2p::security::noise {
           noise_marshaller,
       crypto::KeyPair local_key,
       std::shared_ptr<connection::LayerConnection> connection,
-      bool is_initiator, boost::optional<peer::PeerId> remote_peer_id,
+      bool is_initiator,
+      boost::optional<peer::PeerId> remote_peer_id,
       SecurityAdaptor::SecConnCallbackFunc cb,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller)
       : crypto_provider_{std::move(crypto_provider)},
@@ -108,9 +110,10 @@ namespace libp2p::security::noise {
 
   void Handshake::sendHandshakeMessage(BytesIn payload,
                                        basic::Writer::WriteCallbackFunc cb) {
-    IO_OUTCOME_TRY(write_result, handshake_state_->writeMessage({}, payload),
-                   cb);
-    auto write_cb = [self{shared_from_this()}, cb{std::move(cb)},
+    IO_OUTCOME_TRY(
+        write_result, handshake_state_->writeMessage({}, payload), cb);
+    auto write_cb = [self{shared_from_this()},
+                     cb{std::move(cb)},
                      wr{write_result}](outcome::result<size_t> result) {
       IO_OUTCOME_TRY(bytes_written, result, cb);
       if (wr.cs1 and wr.cs2) {
@@ -144,20 +147,24 @@ namespace libp2p::security::noise {
     if (initiator_ and remote_peer_id_ != remote_id) {
       SL_DEBUG(log_,
                "Remote peer id mismatches already known, expected {}, got {}",
-               remote_peer_id_->toHex(), remote_id.toHex());
+               remote_peer_id_->toHex(),
+               remote_id.toHex());
       return std::errc::bad_address;
     }
     Bytes to_verify;
     to_verify.reserve(kPayloadPrefix.size()
                       + handy_payload.identity_key.data.size());
-    std::copy(kPayloadPrefix.begin(), kPayloadPrefix.end(),
+    std::copy(kPayloadPrefix.begin(),
+              kPayloadPrefix.end(),
               std::back_inserter(to_verify));
     OUTCOME_TRY(remote_static, handshake_state_->remotePeerStaticPubkey());
-    std::copy(remote_static.begin(), remote_static.end(),
+    std::copy(remote_static.begin(),
+              remote_static.end(),
               std::back_inserter(to_verify));
-    OUTCOME_TRY(signature_correct,
-                crypto_provider_->verify(to_verify, handy_payload.identity_sig,
-                                         handy_payload.identity_key));
+    OUTCOME_TRY(
+        signature_correct,
+        crypto_provider_->verify(
+            to_verify, handy_payload.identity_sig, handy_payload.identity_key));
     if (not signature_correct) {
       SL_TRACE(log_, "Remote peer's payload signature verification failed");
       return std::errc::owner_dead;
@@ -170,8 +177,8 @@ namespace libp2p::security::noise {
   outcome::result<void> Handshake::runHandshake() {
     auto cipher_suite = defaultCipherSuite();
     OUTCOME_TRY(keypair, cipher_suite->generate());
-    HandshakeStateConfig config(defaultCipherSuite(), handshakeXX, initiator_,
-                                keypair);
+    HandshakeStateConfig config(
+        defaultCipherSuite(), handshakeXX, initiator_, keypair);
     OUTCOME_TRY(handshake_state_->init(std::move(config)));
     OUTCOME_TRY(payload, generateHandshakePayload(keypair));
     const size_t dh25519_len = 32;
@@ -271,8 +278,12 @@ namespace libp2p::security::noise {
     }
 
     auto secured_connection = std::make_shared<connection::NoiseConnection>(
-        conn_, local_key_.publicKey, remote_peer_pubkey_.value(),
-        key_marshaller_, enc_, dec_);
+        conn_,
+        local_key_.publicKey,
+        remote_peer_pubkey_.value(),
+        key_marshaller_,
+        enc_,
+        dec_);
     log_->info("Handshake succeeded");
     connection_cb_(std::move(secured_connection));
   }

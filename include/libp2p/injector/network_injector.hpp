@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_NETWORK_INJECTOR_HPP
-#define LIBP2P_NETWORK_INJECTOR_HPP
+#pragma once
 
 #include <boost/di.hpp>
 
@@ -161,7 +161,8 @@ namespace libp2p::injector {
       if (auto cert_res = layer::WssCertificate::make(pem)) {
         cert = std::move(cert_res.value());
       } else {
-        SL_WARN(log::createLogger("libp2p::injector::useWssPem"), "{}",
+        SL_WARN(log::createLogger("libp2p::injector::useWssPem"),
+                "{}",
                 cert_res.error().message());
       }
     }
@@ -287,9 +288,12 @@ namespace libp2p::injector {
         std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>();
     auto hmac_provider = std::make_shared<crypto::hmac::HmacProviderImpl>();
     std::shared_ptr<crypto::CryptoProvider> crypto_provider =
-        std::make_shared<crypto::CryptoProviderImpl>(
-            csprng, ed25519_provider, rsa_provider, ecdsa_provider,
-            secp256k1_provider, hmac_provider);
+        std::make_shared<crypto::CryptoProviderImpl>(csprng,
+                                                     ed25519_provider,
+                                                     rsa_provider,
+                                                     ecdsa_provider,
+                                                     secp256k1_provider,
+                                                     hmac_provider);
     auto validator =
         std::make_shared<crypto::validator::KeyValidatorImpl>(crypto_provider);
 
@@ -348,5 +352,3 @@ namespace libp2p::injector {
   }
 
 }  // namespace libp2p::injector
-
-#endif  // LIBP2P_NETWORK_INJECTOR_HPP

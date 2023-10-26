@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_RANDOM_RANDOM_GENERATOR_HPP
-#define LIBP2P_CRYPTO_RANDOM_RANDOM_GENERATOR_HPP
+#pragma once
 
 #include <algorithm>
 #include <cstdint>
@@ -40,8 +40,10 @@ namespace libp2p::crypto::random {
     void fillRandomly(Container &container) {
       static_assert(std::is_integral_v<typename Container::value_type>);
       static_assert(sizeof(typename Container::value_type) == 1);
-      std::transform(container.begin(), container.end(), container.begin(),
-                     [this](auto) { return randomByte(); });
+      std::transform(
+          container.begin(), container.end(), container.begin(), [this](auto) {
+            return randomByte();
+          });
     }
 
     /**
@@ -62,5 +64,3 @@ namespace libp2p::crypto::random {
    */
   class CSPRNG : public RandomGenerator {};
 }  // namespace libp2p::crypto::random
-
-#endif  // LIBP2P_CRYPTO_RANDOM_RANDOM_GENERATOR_HPP

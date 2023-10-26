@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_YAMUX_READING_STATE_HPP
-#define LIBP2P_YAMUX_READING_STATE_HPP
+#pragma once
 
 #include <libp2p/basic/read_buffer.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
@@ -24,7 +24,6 @@ namespace libp2p::connection {
     /// Callback on data segments
     using DataCallback = std::function<void(
         BytesOut segment, StreamId stream_id, bool rst, bool fin)>;
-
 
     YamuxReadingState(HeaderCallback on_header, DataCallback on_data);
 
@@ -69,5 +68,3 @@ namespace libp2p::connection {
   };
 
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_YAMUX_READING_STATE_HPP

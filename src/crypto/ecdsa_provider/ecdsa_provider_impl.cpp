@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -37,8 +38,12 @@ namespace libp2p::crypto::ecdsa {
     const BIGNUM *private_num = EC_KEY_get0_private_key(ec_key.get());
     EC_POINT *ec_point = EC_POINT_new(EC_KEY_get0_group(ec_key.get()));
     FinalAction free_ec_point([ec_point]() { EC_POINT_free(ec_point); });
-    if (EC_POINT_mul(EC_KEY_get0_group(ec_key.get()), ec_point, private_num,
-                     nullptr, nullptr, nullptr)
+    if (EC_POINT_mul(EC_KEY_get0_group(ec_key.get()),
+                     ec_point,
+                     private_num,
+                     nullptr,
+                     nullptr,
+                     nullptr)
         != 1) {
       return KeyGeneratorError::KEY_GENERATION_FAILED;
     }
@@ -71,7 +76,8 @@ namespace libp2p::crypto::ecdsa {
   }
 
   outcome::result<bool> EcdsaProviderImpl::verifyPrehashed(
-      const PrehashedMessage &message, const Signature &signature,
+      const PrehashedMessage &message,
+      const Signature &signature,
       const PublicKey &public_key) const {
     OUTCOME_TRY(ec_key, convertBytesToEcKey(public_key, d2i_EC_PUBKEY));
     OUTCOME_TRY(signature_status,

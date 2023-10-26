@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_VARINT_PREFIX_READER_HPP
-#define LIBP2P_VARINT_PREFIX_READER_HPP
+#pragma once
 
 #include <cstdint>
 #include <span>
@@ -66,5 +66,3 @@ namespace libp2p::basic {
     uint8_t got_bytes_ = 0;
   };
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_VARINT_PREFIX_READER_HPP

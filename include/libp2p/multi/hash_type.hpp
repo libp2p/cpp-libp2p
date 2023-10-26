@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_HASH_TYPE_HPP
-#define LIBP2P_HASH_TYPE_HPP
+#pragma once
 
 namespace libp2p::multi {
   /// TODO(Harrm) FIL-14: Hash types are a part of multicodec table, it would be
@@ -24,5 +24,3 @@ namespace libp2p::multi {
     poseidon_bls12_381_a1_fc1 = 0xb401,
   };
 }  // namespace libp2p::multi
-
-#endif  // LIBP2P_HASH_TYPE_HPP

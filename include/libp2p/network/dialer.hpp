@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_NETWORK_DIALER_HPP
-#define LIBP2P_NETWORK_DIALER_HPP
+#pragma once
 
 #include <chrono>
 
@@ -32,7 +32,8 @@ namespace libp2p::network {
      * Establishes a connection or returns existing one to a given peer with a
      * specific timeout
      */
-    virtual void dial(const peer::PeerInfo &p, DialResultFunc cb,
+    virtual void dial(const peer::PeerInfo &p,
+                      DialResultFunc cb,
                       std::chrono::milliseconds timeout) = 0;
 
     /**
@@ -61,5 +62,3 @@ namespace libp2p::network {
   };
 
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_NETWORK_DIALER_HPP

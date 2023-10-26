@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECIO_ADAPTOR_HPP
-#define LIBP2P_SECIO_ADAPTOR_HPP
+#pragma once
 
 #include <libp2p/crypto/aes_ctr.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
@@ -55,7 +55,8 @@ namespace libp2p::security {
                        SecConnCallbackFunc cb) override;
 
     void secureOutbound(std::shared_ptr<connection::LayerConnection> outbound,
-                        const peer::PeerId &p, SecConnCallbackFunc cb) override;
+                        const peer::PeerId &p,
+                        SecConnCallbackFunc cb) override;
 
    private:
     void sendProposeMessage(
@@ -98,5 +99,3 @@ namespace libp2p::security {
 }  // namespace libp2p::security
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security, Secio::Error);
-
-#endif  // LIBP2P_SECIO_ADAPTOR_HPP

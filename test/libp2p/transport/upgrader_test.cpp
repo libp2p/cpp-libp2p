@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -182,19 +183,21 @@ TEST_F(UpgraderTest, UpgradeSecureInitiator) {
 
   auto if_sec_proto = [&](std::span<const ProtocolName> actual) {
     auto expected = std::span<const ProtocolName>(security_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(*muxer_,
               selectOneOf(Truly(if_sec_proto),
                           std::static_pointer_cast<ReadWriter>(layer2_conn_),
-                          true, true, _))
+                          true,
+                          true,
+                          _))
       .WillOnce(Arg4CallbackWithArg(security_protos_[0]));
   EXPECT_CALL(
       *std::static_pointer_cast<SecurityAdaptorMock>(security_adaptors_[0]),
-      secureOutbound(std::static_pointer_cast<LayerConnection>(layer2_conn_),
-                     peer_id_, _))
+      secureOutbound(
+          std::static_pointer_cast<LayerConnection>(layer2_conn_), peer_id_, _))
       .WillOnce(Arg2CallbackWithArg(sec_conn_));
 
   upgrader_->upgradeToSecureOutbound(
@@ -209,14 +212,16 @@ TEST_F(UpgraderTest, UpgradeSecureNotInitiator) {
 
   auto if_sec_proto = [&](std::span<const ProtocolName> actual) {
     auto expected = std::span<const ProtocolName>(security_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(*muxer_,
               selectOneOf(Truly(if_sec_proto),
                           std::static_pointer_cast<ReadWriter>(layer2_conn_),
-                          false, true, _))
+                          false,
+                          true,
+                          _))
       .WillOnce(Arg4CallbackWithArg(success(security_protos_[1])));
   EXPECT_CALL(
       *std::static_pointer_cast<SecurityAdaptorMock>(security_adaptors_[1]),
@@ -235,14 +240,16 @@ TEST_F(UpgraderTest, UpgradeSecureFail) {
 
   auto if_sec_proto = [&](std::span<const ProtocolName> actual) {
     auto expected = std::span<const ProtocolName>(security_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(*muxer_,
               selectOneOf(Truly(if_sec_proto),
                           std::static_pointer_cast<ReadWriter>(layer2_conn_),
-                          false, true, _))
+                          false,
+                          true,
+                          _))
       .WillOnce(Arg4CallbackWithArg(failure(std::error_code())));
 
   upgrader_->upgradeToSecureInbound(layer2_conn_, [](auto &&upgraded_conn_res) {
@@ -255,14 +262,16 @@ TEST_F(UpgraderTest, UpgradeMux) {
 
   auto if_muxer_proto = [&](std::span<const ProtocolName> actual) {
     auto expected = std::span<const ProtocolName>(muxer_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(*muxer_,
               selectOneOf(Truly(if_muxer_proto),
-                          std::static_pointer_cast<ReadWriter>(sec_conn_), true,
-                          true, _))
+                          std::static_pointer_cast<ReadWriter>(sec_conn_),
+                          true,
+                          true,
+                          _))
       .WillOnce(Arg4CallbackWithArg(success(muxer_protos_[0])));
   EXPECT_CALL(
       *std::static_pointer_cast<MuxerAdaptorMock>(muxer_adaptors_[0]),
@@ -280,14 +289,16 @@ TEST_F(UpgraderTest, UpgradeMuxFail) {
 
   auto if_muxer_proto = [&](std::span<const ProtocolName> actual) {
     auto expected = std::span<const ProtocolName>(muxer_protos_);
-    return std::equal(actual.begin(), actual.end(), expected.begin(),
-                      expected.end());
+    return std::equal(
+        actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(*muxer_,
               selectOneOf(Truly(if_muxer_proto),
-                          std::static_pointer_cast<ReadWriter>(sec_conn_), true,
-                          true, _))
+                          std::static_pointer_cast<ReadWriter>(sec_conn_),
+                          true,
+                          true,
+                          _))
       .WillOnce(Arg4CallbackWithArg(failure(std::error_code())));
 
   upgrader_->upgradeToMuxed(sec_conn_, [](auto &&upgraded_conn_res) {

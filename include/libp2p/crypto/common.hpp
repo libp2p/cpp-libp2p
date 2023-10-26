@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_COMMON_HPP
-#define LIBP2P_CRYPTO_COMMON_HPP
+#pragma once
 
 #include <cstdint>
 #include <functional>
@@ -52,5 +52,3 @@ namespace libp2p::crypto::common {
    */
   enum class CipherType { AES128, AES256 };
 }  // namespace libp2p::crypto::common
-
-#endif  // LIBP2P_CRYPTO_COMMON_HPP

@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_GOSSIP_PEER_CONTEXT_HPP
-#define LIBP2P_PROTOCOL_GOSSIP_PEER_CONTEXT_HPP
+#pragma once
 
 #include <libp2p/common/metrics/instance_count.hpp>
 
@@ -61,5 +61,3 @@ namespace libp2p::protocol::gossip {
   bool operator<(const PeerContextPtr &a, const PeerContextPtr &b);
 
 }  // namespace libp2p::protocol::gossip
-
-#endif  // LIBP2P_PROTOCOL_GOSSIP_PEER_CONTEXT_HPP

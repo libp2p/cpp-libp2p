@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONTENT_IDENTIFIER_HPP
-#define LIBP2P_CONTENT_IDENTIFIER_HPP
+#pragma once
 
 #include <vector>
 
@@ -31,7 +31,8 @@ namespace libp2p::multi {
       : public boost::equality_comparable<ContentIdentifier> {
     enum class Version { V0 = 0, V1 = 1 };
 
-    ContentIdentifier(Version version, MulticodecType::Code content_type,
+    ContentIdentifier(Version version,
+                      MulticodecType::Code content_type,
                       Multihash content_address);
 
     /**
@@ -49,5 +50,3 @@ namespace libp2p::multi {
   };
 
 }  // namespace libp2p::multi
-
-#endif  // LIBP2P_CONTENT_IDENTIFIER_HPP

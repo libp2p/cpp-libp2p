@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_HPP
+#pragma once
 
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
@@ -31,7 +31,8 @@ namespace libp2p::security::noise {
             noise_marshaller,
         crypto::KeyPair local_key,
         std::shared_ptr<connection::LayerConnection> connection,
-        bool is_initiator, boost::optional<peer::PeerId> remote_peer_id,
+        bool is_initiator,
+        boost::optional<peer::PeerId> remote_peer_id,
         SecurityAdaptor::SecConnCallbackFunc cb,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
@@ -83,5 +84,3 @@ namespace libp2p::security::noise {
   };
 
 }  // namespace libp2p::security::noise
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_HPP

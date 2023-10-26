@@ -1,17 +1,17 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MESSAGE_READ_WRITER_HPP
-#define LIBP2P_MESSAGE_READ_WRITER_HPP
+#pragma once
 
 #include <memory>
 #include <vector>
 
-#include <span>
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::basic {
   /**
@@ -39,9 +39,6 @@ namespace libp2p::basic {
      * @param cb is called when the message is written or an error happened.
      * Quantity of bytes written is passed as an argument in case of success
      */
-    virtual void write(BytesIn buffer,
-                       Writer::WriteCallbackFunc cb) = 0;
+    virtual void write(BytesIn buffer, Writer::WriteCallbackFunc cb) = 0;
   };
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_MESSAGE_READ_WRITER_HPP

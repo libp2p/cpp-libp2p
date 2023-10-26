@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -38,8 +39,8 @@ namespace libp2p::peer {
                 auto peer_id = peer::PeerId::fromBase58(peer_id_str.get());
                 if (peer_id.has_value()) {
                   std::vector addr_vec = {addr};
-                  if (auto added = self->addAddresses(peer_id.value(), addr_vec,
-                                                      kDefaultTtl);
+                  if (auto added = self->addAddresses(
+                          peer_id.value(), addr_vec, kDefaultTtl);
                       added.has_error()) {
                     callback(added.error());
                   } else {
@@ -73,7 +74,8 @@ namespace libp2p::peer {
   }
 
   outcome::result<bool> InmemAddressRepository::addAddresses(
-      const PeerId &p, std::span<const multi::Multiaddress> ma,
+      const PeerId &p,
+      std::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
     bool added = false;
     auto peer_it = findOrInsert(p);
@@ -91,7 +93,8 @@ namespace libp2p::peer {
   }
 
   outcome::result<bool> InmemAddressRepository::upsertAddresses(
-      const PeerId &p, std::span<const multi::Multiaddress> ma,
+      const PeerId &p,
+      std::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
     bool added = false;
     auto peer_it = findOrInsert(p);
@@ -120,8 +123,9 @@ namespace libp2p::peer {
     auto &addresses = *peer_it->second;
 
     auto expires_at = Clock::now() + ttl;
-    std::for_each(addresses.begin(), addresses.end(),
-                  [expires_at](auto &item) { item.second = expires_at; });
+    std::for_each(addresses.begin(), addresses.end(), [expires_at](auto &item) {
+      item.second = expires_at;
+    });
 
     return outcome::success();
   }  // namespace libp2p::peer
@@ -136,7 +140,9 @@ namespace libp2p::peer {
 
     std::vector<multi::Multiaddress> ma;
     ma.reserve(addresses.size());
-    std::transform(addresses.begin(), addresses.end(), std::back_inserter(ma),
+    std::transform(addresses.begin(),
+                   addresses.end(),
+                   std::back_inserter(ma),
                    [](auto &item) { return item.first; });
     return ma;
   }

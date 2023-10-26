@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_PEERROUTINGTABLEIMPL
-#define LIBP2P_PROTOCOL_KADEMLIA_PEERROUTINGTABLEIMPL
+#pragma once
 
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 
@@ -102,7 +102,8 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<peer::IdentityManager> identity_manager,
         std::shared_ptr<event::Bus> bus);
 
-    outcome::result<bool> update(const peer::PeerId &pid, bool is_permanent,
+    outcome::result<bool> update(const peer::PeerId &pid,
+                                 bool is_permanent,
                                  bool is_connected = false) override;
 
     void remove(const peer::PeerId &peer_id) override;
@@ -132,5 +133,3 @@ namespace libp2p::protocol::kademlia {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol::kademlia,
                           PeerRoutingTableImpl::Error);
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_PEERROUTINGTABLEIMPL

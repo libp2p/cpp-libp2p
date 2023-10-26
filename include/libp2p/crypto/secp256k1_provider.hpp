@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_SECP256K1_PROVIDER_HPP
-#define LIBP2P_CRYPTO_SECP256K1_PROVIDER_HPP
+#pragma once
 
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/secp256k1_types.hpp>
@@ -53,5 +53,3 @@ namespace libp2p::crypto::secp256k1 {
     virtual ~Secp256k1Provider() = default;
   };
 };  // namespace libp2p::crypto::secp256k1
-
-#endif  // LIBP2P_CRYPTO_SECP256K1_PROVIDER_HPP

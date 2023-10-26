@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_READER_HPP
-#define LIBP2P_READER_HPP
+#pragma once
 
 #include <functional>
 #include <vector>
@@ -32,8 +32,7 @@ namespace libp2p::basic {
      * pointer, or having buffer as part of some class/struct, and using
      * enable_shared_from_this()
      */
-    virtual void read(BytesOut out, size_t bytes,
-                      ReadCallbackFunc cb) = 0;
+    virtual void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) = 0;
 
     /**
      * @brief Reads up to {@code} min(out.size(), bytes) {@nocode} bytes to the
@@ -47,8 +46,7 @@ namespace libp2p::basic {
      * pointer, or having buffer as part of some class/struct, and using
      * enable_shared_from_this()
      */
-    virtual void readSome(BytesOut out, size_t bytes,
-                          ReadCallbackFunc cb) = 0;
+    virtual void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) = 0;
 
     /**
      * @brief Defers reporting result or error to callback to avoid reentrancy
@@ -61,5 +59,3 @@ namespace libp2p::basic {
   };
 
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_READER_HPP

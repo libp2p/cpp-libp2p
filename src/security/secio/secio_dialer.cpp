@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -186,12 +187,12 @@ namespace libp2p::security::secio {
                                                const ProposeMessage &remote) {
     // determine preferred peer
     std::vector<uint8_t> corpus1{remote.pubkey.begin(), remote.pubkey.end()};
-    std::copy(local.rand.begin(), local.rand.end(),
-              std::back_inserter(corpus1));
+    std::copy(
+        local.rand.begin(), local.rand.end(), std::back_inserter(corpus1));
 
     std::vector<uint8_t> corpus2{local.pubkey.begin(), local.pubkey.end()};
-    std::copy(remote.rand.begin(), remote.rand.end(),
-              std::back_inserter(corpus2));
+    std::copy(
+        remote.rand.begin(), remote.rand.end(), std::back_inserter(corpus2));
 
     OUTCOME_TRY(oh1, crypto::sha256(corpus1));
     OUTCOME_TRY(oh2, crypto::sha256(corpus2));
@@ -205,7 +206,8 @@ namespace libp2p::security::secio {
   }
 
   outcome::result<Dialer::Algorithm> Dialer::findCommonAlgo(
-      const ProposeMessage &local, const ProposeMessage &remote,
+      const ProposeMessage &local,
+      const ProposeMessage &remote,
       bool local_is_preferred) {
     Algorithm match{};
 
@@ -266,18 +268,22 @@ namespace libp2p::security::secio {
     std::vector<uint8_t> corpus;
     corpus.reserve(corpus_len);
     if (for_local_peer) {
-      corpus.insert(corpus.end(), local_peer_proposal_bytes_->begin(),
+      corpus.insert(corpus.end(),
+                    local_peer_proposal_bytes_->begin(),
                     local_peer_proposal_bytes_->end());
-      corpus.insert(corpus.end(), remote_peer_proposal_bytes_->begin(),
+      corpus.insert(corpus.end(),
+                    remote_peer_proposal_bytes_->begin(),
                     remote_peer_proposal_bytes_->end());
     } else {
-      corpus.insert(corpus.end(), remote_peer_proposal_bytes_->begin(),
+      corpus.insert(corpus.end(),
+                    remote_peer_proposal_bytes_->begin(),
                     remote_peer_proposal_bytes_->end());
-      corpus.insert(corpus.end(), local_peer_proposal_bytes_->begin(),
+      corpus.insert(corpus.end(),
+                    local_peer_proposal_bytes_->begin(),
                     local_peer_proposal_bytes_->end());
     }
-    corpus.insert(corpus.end(), ephemeral_public_key.begin(),
-                  ephemeral_public_key.end());
+    corpus.insert(
+        corpus.end(), ephemeral_public_key.begin(), ephemeral_public_key.end());
 
     return corpus;
   }

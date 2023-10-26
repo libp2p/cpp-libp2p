@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_GOSSIP_STREAM_HPP
-#define LIBP2P_PROTOCOL_GOSSIP_STREAM_HPP
+#pragma once
 
 #include <deque>
 
@@ -30,9 +30,13 @@ namespace libp2p::protocol::gossip {
     /// by design, so dependencies are stored by reference.
     /// Also, peer is passed separately because it cannot be fetched from stream
     /// once the stream is dead
-    Stream(size_t stream_id, const Config &config, basic::Scheduler &scheduler,
-           const Feedback &feedback, MessageReceiver &msg_receiver,
-           std::shared_ptr<connection::Stream> stream, PeerContextPtr peer);
+    Stream(size_t stream_id,
+           const Config &config,
+           basic::Scheduler &scheduler,
+           const Feedback &feedback,
+           MessageReceiver &msg_receiver,
+           std::shared_ptr<connection::Stream> stream,
+           PeerContextPtr peer);
 
     /// Begins reading messages from stream
     void read();
@@ -83,5 +87,3 @@ namespace libp2p::protocol::gossip {
   };
 
 }  // namespace libp2p::protocol::gossip
-
-#endif  // LIBP2P_PROTOCOL_GOSSIP_STREAM_HPP

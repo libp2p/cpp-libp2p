@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TEST_TESTUTIL_LIBP2P_MA_GENERATOR_HPP
-#define LIBP2P_TEST_TESTUTIL_LIBP2P_MA_GENERATOR_HPP
+#pragma once
 
 #include <iostream>
 
@@ -30,5 +30,3 @@ namespace testutil {
     uint16_t current_port_;
   };
 }  // namespace testutil
-
-#endif  // LIBP2P_TEST_TESTUTIL_LIBP2P_MA_GENERATOR_HPP

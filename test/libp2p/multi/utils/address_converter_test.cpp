@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -62,9 +63,10 @@ TEST(AddressConverter, Ip4AddressToBytes) {
 TEST(AddressConverter, Ip6AddressToBytes) {
   const auto &protocol = *ProtocolList::get(libp2p::multi::Protocol::Code::IP6);
   EXAMINE_STR_TO_BYTES("2001:0db8:0000:0000:0000:ff00:0042:8329",
-                       "20010db8000000000000ff0000428329", true);
-  EXAMINE_STR_TO_BYTES("2001:db8::ff00:42:8329",
-                       "20010db8000000000000ff0000428329", true);
+                       "20010db8000000000000ff0000428329",
+                       true);
+  EXAMINE_STR_TO_BYTES(
+      "2001:db8::ff00:42:8329", "20010db8000000000000ff0000428329", true);
   EXAMINE_STR_TO_BYTES("::1", "00000000000000000000000000000001", true);
   EXAMINE_STR_TO_BYTES("", "", false);
   EXAMINE_STR_TO_BYTES("::1::", "", false);

@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_UPGRADER_HPP
-#define LIBP2P_UPGRADER_HPP
+#pragma once
 
 #include <memory>
 
@@ -45,7 +45,8 @@ namespace libp2p::transport {
      * error happens
      */
     virtual void upgradeLayersOutbound(const multi::Multiaddress &address,
-                                       RawSPtr conn, ProtoAddrVec layers,
+                                       RawSPtr conn,
+                                       ProtoAddrVec layers,
                                        OnLayerCallbackFunc cb) = 0;
 
     /**
@@ -56,7 +57,8 @@ namespace libp2p::transport {
      * @param cb - callback, which is called, when a connection is upgraded or
      * error happens
      */
-    virtual void upgradeLayersInbound(RawSPtr conn, ProtoAddrVec layers,
+    virtual void upgradeLayersInbound(RawSPtr conn,
+                                      ProtoAddrVec layers,
                                       OnLayerCallbackFunc cb) = 0;
 
     /**
@@ -89,5 +91,3 @@ namespace libp2p::transport {
   };
 
 }  // namespace libp2p::transport
-
-#endif  // LIBP2P_UPGRADER_HPP

@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PEER_ID_HPP
-#define LIBP2P_PEER_ID_HPP
+#pragma once
 
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
@@ -143,7 +143,8 @@ struct fmt::formatter<libp2p::peer::PeerId> {
       auto out = std::copy(message.begin(), message.end(), ctx.out());
       return std::copy_n(
           b58.begin() + (b58.size() - std::min<size_t>(6, b58.size())),
-          std::min<size_t>(6, b58.size()), out);
+          std::min<size_t>(6, b58.size()),
+          out);
     }
 
     return std::copy(std::begin(b58), std::end(b58), ctx.out());
@@ -151,5 +152,3 @@ struct fmt::formatter<libp2p::peer::PeerId> {
 };
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::peer, PeerId::FactoryError)
-
-#endif  // LIBP2P_PEER_ID_HPP

@@ -1,18 +1,18 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONVERTER_UTILS_HPP
-#define LIBP2P_CONVERTER_UTILS_HPP
+#pragma once
 
 #include <string>
 #include <vector>
 
-#include <span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::multi::converters {
 
@@ -22,7 +22,7 @@ namespace libp2p::multi::converters {
    * address and protocol were valid
    */
   outcome::result<Bytes> addressToBytes(const Protocol &protocol,
-                                                    std::string_view addr);
+                                        std::string_view addr);
 
   /**
    * Converts the given address string of the specified protocol
@@ -53,9 +53,6 @@ namespace libp2p::multi::converters {
    * a multiaddr to a string containing the multiaddr in a human-readable
    * format, if the provided byte sequence was a valid multiaddr
    */
-  auto bytesToMultiaddrString(BytesIn bytes)
-      -> outcome::result<std::string>;
+  auto bytesToMultiaddrString(BytesIn bytes) -> outcome::result<std::string>;
 
 }  // namespace libp2p::multi::converters
-
-#endif  // LIBP2P_CONVERTER_UTILS_HPP

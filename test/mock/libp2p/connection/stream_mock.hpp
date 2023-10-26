@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_STREAM_MOCK_HPP
-#define LIBP2P_STREAM_MOCK_HPP
+#pragma once
 
 #include <libp2p/connection/stream.hpp>
 
@@ -25,16 +25,10 @@ namespace libp2p::connection {
 
     MOCK_METHOD1(close, void(VoidResultHandlerFunc));
 
-    MOCK_METHOD3(read,
-                 void(BytesOut, size_t, Reader::ReadCallbackFunc));
-    MOCK_METHOD3(readSome,
-                 void(BytesOut, size_t, Reader::ReadCallbackFunc));
-    MOCK_METHOD3(write,
-                 void(BytesIn, size_t,
-                      Writer::WriteCallbackFunc));
-    MOCK_METHOD3(writeSome,
-                 void(BytesIn, size_t,
-                      Writer::WriteCallbackFunc));
+    MOCK_METHOD3(read, void(BytesOut, size_t, Reader::ReadCallbackFunc));
+    MOCK_METHOD3(readSome, void(BytesOut, size_t, Reader::ReadCallbackFunc));
+    MOCK_METHOD3(write, void(BytesIn, size_t, Writer::WriteCallbackFunc));
+    MOCK_METHOD3(writeSome, void(BytesIn, size_t, Writer::WriteCallbackFunc));
 
     MOCK_METHOD2(deferReadCallback,
                  void(outcome::result<size_t>, Reader::ReadCallbackFunc));
@@ -59,5 +53,3 @@ namespace libp2p::connection {
     MOCK_CONST_METHOD0(remoteMultiaddr, outcome::result<multi::Multiaddress>());
   };
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_STREAM_MOCK_HPP

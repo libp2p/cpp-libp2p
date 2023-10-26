@@ -1,19 +1,19 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MULTIHASH_HPP
-#define LIBP2P_MULTIHASH_HPP
+#pragma once
 
 #include <cstdint>
 #include <string>
 #include <utility>
 
-#include <span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/hash_type.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::multi {
 
@@ -125,12 +125,12 @@ namespace libp2p::multi {
       std::vector<uint8_t> bytes;
       uint8_t hash_offset{};  ///< size of non-hash data from the beginning
       HashType type;
-      size_t std_hash; ///< Hash for unordered containers
+      size_t std_hash;  ///< Hash for unordered containers
 
       Data(HashType t, BytesIn h);
     };
 
-    const Data& data() const;
+    const Data &data() const;
 
     std::shared_ptr<const Data> data_;
   };
@@ -147,5 +147,3 @@ namespace std {
 }  // namespace std
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi, Multihash::Error);
-
-#endif  // LIBP2P_MULTIHASH_HPP

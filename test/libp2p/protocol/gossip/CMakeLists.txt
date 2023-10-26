@@ -1,5 +1,8 @@
-# Copyright Soramitsu Co., Ltd. All Rights Reserved.
+#
+# Copyright Quadrivium LLC
+# All Rights Reserved
 # SPDX-License-Identifier: Apache-2.0
+#
 
 addtest(gossip_structures_test
     gossip_structures_test.cpp

@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -73,25 +74,36 @@ namespace libp2p::protocol {
       if (ec_) {
         then(ec_);
       } else {
-        if (not std::equal(recv_buf_.begin(), recv_buf_.end(), buf_.begin(),
-                           buf_.end())) {
+        if (not std::equal(
+                recv_buf_.begin(), recv_buf_.end(), buf_.begin(), buf_.end())) {
           log::createLogger("Echo")->error(
               "ClientEchoSession: send and receive buffers mismatch");
 
           auto log = log::createLogger("Echo");
           size_t i = 0;
-          log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`", i, buf_[i],
-                     (char)buf_[i], recv_buf_[i], (char)recv_buf_[i]);
+          log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`",
+                     i,
+                     buf_[i],
+                     (char)buf_[i],
+                     recv_buf_[i],
+                     (char)recv_buf_[i]);
           for (size_t i = 1; i < buf_.size() - 1; ++i) {
             if (buf_[i] != recv_buf_[i]) {
-              log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`", i,
-                         buf_[i], (char)buf_[i], recv_buf_[i],
+              log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`",
+                         i,
+                         buf_[i],
+                         (char)buf_[i],
+                         recv_buf_[i],
                          (char)recv_buf_[i]);
             }
           }
           i = buf_.size() - 1;
-          log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`", i, buf_[i],
-                     (char)buf_[i], recv_buf_[i], (char)recv_buf_[i]);
+          log->error("Compare:  [{:08}] {:02x} `{}` {:02x} `{}`",
+                     i,
+                     buf_[i],
+                     (char)buf_[i],
+                     recv_buf_[i],
+                     (char)recv_buf_[i]);
         }
         auto begin = recv_buf_.begin();
         // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)

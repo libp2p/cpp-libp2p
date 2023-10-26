@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -75,7 +76,8 @@ TEST(VarintPrefixReader, VarintReadPartial) {
   using libp2p::basic::VarintPrefixReader;
   using libp2p::multi::UVarint;
 
-  auto test = [](VarintPrefixReader &reader, BytesIn &buffer,
+  auto test = [](VarintPrefixReader &reader,
+                 BytesIn &buffer,
                  std::vector<uint64_t> &results) {
     if (reader.consume(buffer) == VarintPrefixReader::kReady) {
       results.push_back(reader.value());

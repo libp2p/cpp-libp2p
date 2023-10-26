@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_SUBSCRIPTIONS_HPP
-#define LIBP2P_PROTOCOL_SUBSCRIPTIONS_HPP
+#pragma once
 
 #include <functional>
 #include <unordered_map>
@@ -66,19 +66,20 @@ namespace libp2p::protocol {
       being_canceled_.clear();
 
       // and maybe someone subscribed inside callbacks
-      for (auto& [ticket, cb] : being_subscribed_) {
+      for (auto &[ticket, cb] : being_subscribed_) {
         subscriptions_[ticket] = std::move(cb);
       }
       being_subscribed_.clear();
     }
 
    protected:
-
     /// To be overrided, returns true if args applicable to ticket
     virtual bool filter(uint64_t ticket, Args... args) = 0;
 
     /// Used by derived classes to make filters
-    uint64_t lastTicket() { return last_ticket_; }
+    uint64_t lastTicket() {
+      return last_ticket_;
+    }
 
     void unsubscribe(uint64_t ticket) override {
       if (inside_publish_) {
@@ -89,7 +90,6 @@ namespace libp2p::protocol {
     }
 
    private:
-
     uint64_t last_ticket_ = 0;
     std::unordered_map<uint64_t, Callback> subscriptions_;
     std::unordered_map<uint64_t, Callback> being_subscribed_;
@@ -98,5 +98,3 @@ namespace libp2p::protocol {
   };
 
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_PROTOCOL_SUBSCRIPTIONS_HPP

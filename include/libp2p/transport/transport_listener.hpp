@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TRANSPORT_LISTENER_HPP
-#define LIBP2P_TRANSPORT_LISTENER_HPP
+#pragma once
 
 #include <boost/signals2/connection.hpp>
 #include <functional>
@@ -54,5 +54,3 @@ namespace libp2p::transport {
     virtual outcome::result<multi::Multiaddress> getListenMultiaddr() const = 0;
   };
 }  // namespace libp2p::transport
-
-#endif  // LIBP2P_TRANSPORT_LISTENER_HPP

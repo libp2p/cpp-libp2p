@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASIC_SCHEDULERMOCK
-#define LIBP2P_BASIC_SCHEDULERMOCK
+#pragma once
 
 #include <libp2p/basic/scheduler.hpp>
 
@@ -38,7 +38,8 @@ namespace libp2p::basic {
                                                  std::chrono::milliseconds));
 
    protected:
-    Handle scheduleImpl(Callback &&cb, std::chrono::milliseconds delay_from_now,
+    Handle scheduleImpl(Callback &&cb,
+                        std::chrono::milliseconds delay_from_now,
                         bool make_handle) noexcept override {
       return scheduleImplMockCall(cb, delay_from_now, make_handle);
     }
@@ -55,5 +56,3 @@ namespace libp2p::basic {
   };
 
 }  // namespace libp2p::basic
-
-#endif  // LIBP2P_BASIC_SCHEDULERMOCK

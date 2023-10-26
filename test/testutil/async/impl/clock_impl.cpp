@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -15,4 +16,4 @@ namespace libp2p::clock {
   template class ClockImpl<std::chrono::steady_clock>;
   template class ClockImpl<std::chrono::system_clock>;
 
-}  // namespace libp2p::async
+}  // namespace libp2p::clock

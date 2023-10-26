@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,7 +9,8 @@
 #include <generated/security/secio/protobuf/secio.pb.h>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::secio,
-                            ProposeMessageMarshallerImpl::Error, e) {
+                            ProposeMessageMarshallerImpl::Error,
+                            e) {
   using E = libp2p::security::secio::ProposeMessageMarshallerImpl::Error;
   switch (e) {
     case E::MESSAGE_SERIALIZING_ERROR:
@@ -37,7 +39,7 @@ namespace libp2p::security::secio {
   ProposeMessage ProposeMessageMarshallerImpl::protoToHandy(
       const protobuf::Propose &proto_msg) const {
     return ProposeMessage{
-        .rand = {proto_msg.rand().begin(), proto_msg.rand().end()}, // NOLINT
+        .rand = {proto_msg.rand().begin(), proto_msg.rand().end()},  // NOLINT
         .pubkey = {proto_msg.pubkey().begin(), proto_msg.pubkey().end()},
         .exchanges = proto_msg.exchanges(),
         .ciphers = proto_msg.ciphers(),

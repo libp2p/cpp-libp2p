@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SECURITY_TLS_ADAPTOR_HPP
-#define LIBP2P_SECURITY_TLS_ADAPTOR_HPP
+#pragma once
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl.hpp>
@@ -38,7 +38,8 @@ namespace libp2p::security {
 
     /// Performs async handshake for outbound connection
     void secureOutbound(std::shared_ptr<connection::LayerConnection> outbound,
-                        const peer::PeerId &p, SecConnCallbackFunc cb) override;
+                        const peer::PeerId &p,
+                        SecConnCallbackFunc cb) override;
 
    private:
     /// Creates shared SSL context, generates certificate and private key
@@ -62,5 +63,3 @@ namespace libp2p::security {
     std::shared_ptr<boost::asio::ssl::context> ssl_context_;
   };
 }  // namespace libp2p::security
-
-#endif  // LIBP2P_SECURITY_TLS_ADAPTOR_HPP

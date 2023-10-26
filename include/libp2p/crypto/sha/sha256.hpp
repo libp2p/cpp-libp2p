@@ -1,15 +1,15 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_SHA256_HPP
-#define LIBP2P_SHA256_HPP
+#pragma once
 
 #include <openssl/sha.h>
-#include <span>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/hasher.hpp>
+#include <span>
 
 namespace libp2p::crypto {
 
@@ -45,5 +45,3 @@ namespace libp2p::crypto {
    */
   outcome::result<libp2p::common::Hash256> sha256(BytesIn input);
 }  // namespace libp2p::crypto
-
-#endif  // LIBP2P_SHA256_HPP

@@ -1,13 +1,14 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <gtest/gtest.h>
 
-#include <libp2p/common/types.hpp>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/literals.hpp>
+#include <libp2p/common/types.hpp>
 #include <libp2p/multi/multihash.hpp>
 #include <libp2p/multi/uvarint.hpp>
 

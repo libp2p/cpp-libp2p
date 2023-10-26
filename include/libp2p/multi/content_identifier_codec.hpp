@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONTENT_IDENTIFIER_CODEC_HPP
-#define LIBP2P_CONTENT_IDENTIFIER_CODEC_HPP
+#pragma once
 
 #include <libp2p/multi/content_identifier.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base58.hpp>
@@ -44,8 +44,7 @@ namespace libp2p::multi {
     static std::vector<uint8_t> encodeCIDV1(MulticodecType::Code content_type,
                                             const Multihash &mhash);
 
-    static outcome::result<ContentIdentifier> decode(
-        BytesIn bytes);
+    static outcome::result<ContentIdentifier> decode(BytesIn bytes);
 
     /**
      * @brief Encode CID to string representation
@@ -79,5 +78,3 @@ namespace libp2p::multi {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi, ContentIdentifierCodec::EncodeError);
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi, ContentIdentifierCodec::DecodeError);
-
-#endif  // LIBP2P_CONTENT_IDENTIFIER_CODEC_HPP

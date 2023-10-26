@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,8 +18,10 @@
 
 namespace libp2p::protocol::gossip {
 
-  Stream::Stream(size_t stream_id, const Config &config,
-                 basic::Scheduler &scheduler, const Feedback &feedback,
+  Stream::Stream(size_t stream_id,
+                 const Config &config,
+                 basic::Scheduler &scheduler,
+                 const Feedback &feedback,
                  MessageReceiver &msg_receiver,
                  std::shared_ptr<connection::Stream> stream,
                  PeerContextPtr peer)
@@ -79,9 +82,10 @@ namespace libp2p::protocol::gossip {
 
     read_buffer_->resize(msg_len);
 
-    stream_->read(std::span(read_buffer_->data(), msg_len), msg_len,
-                  [self_wptr = weak_from_this(), this,
-                   buffer = read_buffer_](auto &&res) {
+    stream_->read(std::span(read_buffer_->data(), msg_len),
+                  msg_len,
+                  [self_wptr = weak_from_this(), this, buffer = read_buffer_](
+                      auto &&res) {
                     if (self_wptr.expired()) {
                       return;
                     }

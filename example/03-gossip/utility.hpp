@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_EXAMPLE_UTILITY_HPP
-#define LIBP2P_PROTOCOL_EXAMPLE_UTILITY_HPP
+#pragma once
 
 #include <boost/asio/io_context.hpp>
 
@@ -33,5 +33,3 @@ namespace libp2p::protocol::example::utility {
   boost::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str);
 
 }  // namespace libp2p::protocol::example::utility
-
-#endif  // LIBP2P_PROTOCOL_EXAMPLE_UTILITY_HPP

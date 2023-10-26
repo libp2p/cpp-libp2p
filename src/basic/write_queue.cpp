@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,7 +18,8 @@ namespace libp2p::basic {
     return total_unsent_size_;
   }
 
-  void WriteQueue::enqueue(DataRef data, bool some,
+  void WriteQueue::enqueue(DataRef data,
+                           bool some,
                            Writer::WriteCallbackFunc cb) {
     auto data_sz = static_cast<size_t>(data.size());
 

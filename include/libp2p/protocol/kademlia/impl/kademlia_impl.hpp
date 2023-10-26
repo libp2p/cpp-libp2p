@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_KADEMLIAIMPL
-#define LIBP2P_PROTOCOL_KADEMLIA_KADEMLIAIMPL
+#pragma once
 
 #include <libp2p/protocol/kademlia/impl/executors_factory.hpp>
 #include <libp2p/protocol/kademlia/impl/session_host.hpp>
@@ -35,7 +35,8 @@ namespace libp2p::protocol::kademlia {
                              public std::enable_shared_from_this<KademliaImpl> {
    public:
     KademliaImpl(
-        const Config &config, std::shared_ptr<Host> host,
+        const Config &config,
+        std::shared_ptr<Host> host,
         std::shared_ptr<Storage> storage,
         std::shared_ptr<ContentRoutingTable> content_routing_table,
         std::shared_ptr<PeerRoutingTable> peer_routing_table,
@@ -63,11 +64,13 @@ namespace libp2p::protocol::kademlia {
     outcome::result<void> provide(const Key &key, bool need_notify) override;
 
     /// @see ContentRouting::findProviders
-    outcome::result<void> findProviders(const Key &key, size_t limit,
+    outcome::result<void> findProviders(const Key &key,
+                                        size_t limit,
                                         FoundProvidersHandler handler) override;
 
     /// @see PeerRouting::addPeer
-    void addPeer(const PeerInfo &peer_info, bool permanent,
+    void addPeer(const PeerInfo &peer_info,
+                 bool permanent,
                  bool is_connected = false) override;
 
     /// @see PeerRouting::findPeer
@@ -96,7 +99,8 @@ namespace libp2p::protocol::kademlia {
     void handleProtocol(StreamAndProtocol stream);
 
     std::shared_ptr<PutValueExecutor> createPutValueExecutor(
-        ContentId key, ContentValue value,
+        ContentId key,
+        ContentValue value,
         std::vector<PeerId> addressees) override;
 
     std::shared_ptr<GetValueExecutor> createGetValueExecutor(
@@ -153,7 +157,8 @@ namespace libp2p::protocol::kademlia {
     };
 
     std::unordered_map<const std::shared_ptr<connection::Stream>,
-                       std::shared_ptr<Session>, StreamPtrHaher,
+                       std::shared_ptr<Session>,
+                       StreamPtrHaher,
                        StreamPtrComparator>
         sessions_;
 
@@ -167,5 +172,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_KADEMLIAIMPL

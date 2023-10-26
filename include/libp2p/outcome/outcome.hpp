@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_OUTCOME_HPP
-#define LIBP2P_OUTCOME_HPP
+#pragma once
 
 #include <boost/outcome/result.hpp>
 #include <boost/outcome/success_failure.hpp>
@@ -37,7 +37,8 @@
 namespace libp2p::outcome {
   using namespace BOOST_OUTCOME_V2_NAMESPACE;  // NOLINT
 
-  template <class R, class S = std::error_code,
+  template <class R,
+            class S = std::error_code,
             class NoValuePolicy = policy::default_policy<R, S, void>>  //
   using result = basic_result<R, S, NoValuePolicy>;
 
@@ -169,5 +170,3 @@ struct fmt::formatter<libp2p::outcome::result<Result, Failure>> {
     }
   }
 };
-
-#endif  // LIBP2P_OUTCOME_HPP

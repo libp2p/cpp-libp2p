@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -55,22 +56,26 @@ OUTCOME_CPP_DEFINE_CATEGORY(sooper::loong::ns, DivisionErrc, e) {
 }
 
 outcome::result<int> convert(const std::string &str) {
-  if (str.empty())
+  if (str.empty()) {
     return ConversionErrc::EMPTY_STRING;
+  }
 
-  if (!std::all_of(str.begin(), str.end(), ::isdigit))
+  if (!std::all_of(str.begin(), str.end(), ::isdigit)) {
     return ConversionErrc::ILLEGAL_CHAR;
+  }
 
-  if (str.length() > 9)
+  if (str.length() > 9) {
     return ConversionErrc::TOO_LONG;
+  }
 
   return atoi(str.c_str());
 }
 
 outcome::result<int> divide(int a, int b) {
   using sooper::loong::ns::DivisionErrc;
-  if (b == 0)
+  if (b == 0) {
     return DivisionErrc::DIVISION_BY_ZERO;
+  }
 
   return a / b;
 }

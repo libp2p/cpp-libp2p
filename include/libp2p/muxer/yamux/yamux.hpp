@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_YAMUX_IMPL_HPP
-#define LIBP2P_YAMUX_IMPL_HPP
+#pragma once
 
 #include <libp2p/basic/scheduler.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
@@ -38,5 +38,3 @@ namespace libp2p::muxer {
     connection::CapableConnection::ConnectionClosedCallback close_cb_;
   };
 }  // namespace libp2p::muxer
-
-#endif  // LIBP2P_YAMUX_IMPL_HPP

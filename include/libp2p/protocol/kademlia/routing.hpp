@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_ROUTING
-#define LIBP2P_PROTOCOL_KADEMLIA_ROUTING
+#pragma once
 
 #include <libp2p/protocol/kademlia/content_routing.hpp>
 #include <libp2p/protocol/kademlia/peer_routing.hpp>
@@ -27,5 +27,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_ROUTING

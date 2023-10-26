@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_LAYER_LAYERADAPTOR
-#define LIBP2P_LAYER_LAYERADAPTOR
+#pragma once
 
 #include <memory>
 
@@ -45,5 +45,3 @@ namespace libp2p::layer {
         LayerConnCallbackFunc cb) const = 0;
   };
 }  // namespace libp2p::layer
-
-#endif  // LIBP2P_LAYER_LAYERADAPTOR

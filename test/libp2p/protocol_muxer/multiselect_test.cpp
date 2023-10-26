@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -66,7 +67,8 @@ TEST(Multiselect, SingleValidMessagesPartialRead) {
 
   using Span = BytesIn;
 
-  auto split_span = [](Span span, size_t first_split,
+  auto split_span = [](Span span,
+                       size_t first_split,
                        size_t second_split) -> std::tuple<Span, Span, Span> {
     return {span.first(first_split),
             span.subspan(first_split, span.size() - second_split - first_split),

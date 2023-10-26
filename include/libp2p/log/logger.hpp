@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_LOGGER_HPP
-#define LIBP2P_LOGGER_HPP
+#pragma once
 
 #include <soralog/level.hpp>
 #include <soralog/logger.hpp>
@@ -26,7 +26,8 @@ namespace libp2p::log {
                                     const std::string &group);
 
   [[nodiscard]] Logger createLogger(const std::string &tag,
-                                    const std::string &group, Level level);
+                                    const std::string &group,
+                                    Level level);
 
   void setLevelOfGroup(const std::string &group_name, Level level);
   void resetLevelOfGroup(const std::string &group_name);
@@ -35,5 +36,3 @@ namespace libp2p::log {
   void resetLevelOfLogger(const std::string &logger_name);
 
 }  // namespace libp2p::log
-
-#endif  // LIBP2P_LOGGER_HPP

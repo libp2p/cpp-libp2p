@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -141,15 +142,15 @@ namespace libp2p::host {
                             StreamProtocols protocols,
                             StreamAndProtocolOrErrorCb cb,
                             std::chrono::milliseconds timeout) {
-    network_->getDialer().newStream(peer_info, std::move(protocols),
-                                    std::move(cb), timeout);
+    network_->getDialer().newStream(
+        peer_info, std::move(protocols), std::move(cb), timeout);
   }
 
   void BasicHost::newStream(const peer::PeerId &peer_id,
                             StreamProtocols protocols,
                             StreamAndProtocolOrErrorCb cb) {
-    network_->getDialer().newStream(peer_id, std::move(protocols),
-                                    std::move(cb));
+    network_->getDialer().newStream(
+        peer_id, std::move(protocols), std::move(cb));
   }
 
   outcome::result<void> BasicHost::listen(const multi::Multiaddress &ma) {
@@ -176,17 +177,20 @@ namespace libp2p::host {
         [h{std::move(h)}](auto &&conn) {
           if (auto connection = conn.lock()) {
             auto remote_peer_res = connection->remotePeer();
-            if (!remote_peer_res)
+            if (!remote_peer_res) {
               return;
+            }
 
             auto remote_peer_addr_res = connection->remoteMultiaddr();
-            if (!remote_peer_addr_res)
+            if (!remote_peer_addr_res) {
               return;
+            }
 
-            if (h != nullptr)
+            if (h != nullptr) {
               h(peer::PeerInfo{std::move(remote_peer_res.value()),
                                std::vector<multi::Multiaddress>{
                                    std::move(remote_peer_addr_res.value())}});
+            }
           }
         });
   }

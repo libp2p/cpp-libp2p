@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_FINDPEEREXECUTOR
-#define LIBP2P_PROTOCOL_KADEMLIA_FINDPEEREXECUTOR
+#pragma once
 
 #include <libp2p/protocol/kademlia/impl/response_handler.hpp>
 
@@ -31,12 +31,14 @@ namespace libp2p::protocol::kademlia {
         public std::enable_shared_from_this<FindPeerExecutor> {
    public:
     FindPeerExecutor(
-        const Config &config, std::shared_ptr<Host> host,
+        const Config &config,
+        std::shared_ptr<Host> host,
         std::shared_ptr<basic::Scheduler> scheduler,
         std::shared_ptr<SessionHost> session_host,
         std::shared_ptr<PeerRouting> peer_routing,
         const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
-        PeerId peer_id, FoundPeerInfoHandler handler);
+        PeerId peer_id,
+        FoundPeerInfoHandler handler);
 
     ~FindPeerExecutor() override;
 
@@ -87,5 +89,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_FINDPEEREXECUTOR

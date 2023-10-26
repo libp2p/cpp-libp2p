@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TCP_CONNECTION_HPP
-#define LIBP2P_TCP_CONNECTION_HPP
+#pragma once
 
 #include <atomic>
 #include <chrono>
@@ -55,7 +55,8 @@ namespace libp2p::transport {
      * @param host_name host name to resolve
      * @param cb callback executed on operation completion.
      */
-    void resolve(const std::string &host_name, const std::string &port,
+    void resolve(const std::string &host_name,
+                 const std::string &port,
                  ResolveCallbackFunc cb);
 
     /**
@@ -64,8 +65,10 @@ namespace libp2p::transport {
      * @param host_name host name to resolve
      * @param cb callback executed on operation completion.
      */
-    void resolve(const Tcp &protocol, const std::string &host_name,
-                 const std::string &port, ResolveCallbackFunc cb);
+    void resolve(const Tcp &protocol,
+                 const std::string &host_name,
+                 const std::string &port,
+                 ResolveCallbackFunc cb);
 
     /**
      * @brief Connect to a remote service.
@@ -81,23 +84,20 @@ namespace libp2p::transport {
      * @param cb callback executed on operation completion.
      * @param timeout in milliseconds for connection establishing.
      */
-    void connect(const ResolverResultsType &iterator, ConnectCallbackFunc cb,
+    void connect(const ResolverResultsType &iterator,
+                 ConnectCallbackFunc cb,
                  std::chrono::milliseconds timeout);
 
-    void read(BytesOut out, size_t bytes,
-              ReadCallbackFunc cb) override;
+    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
-    void readSome(BytesOut out, size_t bytes,
-                  ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    void write(BytesIn in, size_t bytes,
-               WriteCallbackFunc cb) override;
+    void write(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
-    void writeSome(BytesIn in, size_t bytes,
-                   WriteCallbackFunc cb) override;
+    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
@@ -147,5 +147,3 @@ namespace libp2p::transport {
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::transport::TcpConnection);
   };
 }  // namespace libp2p::transport
-
-#endif  // LIBP2P_TCP_CONNECTION_HPP

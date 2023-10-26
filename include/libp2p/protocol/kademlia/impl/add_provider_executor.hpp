@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_ADDPROVIDEREXECUTOR
-#define LIBP2P_PROTOCOL_KADEMLIA_ADDPROVIDEREXECUTOR
+#pragma once
 
 #include <memory>
 #include <queue>
@@ -28,7 +28,8 @@ namespace libp2p::protocol::kademlia {
       : public std::enable_shared_from_this<AddProviderExecutor> {
    public:
     AddProviderExecutor(
-        const Config &config, std::shared_ptr<Host> host,
+        const Config &config,
+        std::shared_ptr<Host> host,
         std::shared_ptr<basic::Scheduler> scheduler,
         std::shared_ptr<SessionHost> session_host,
         const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
@@ -71,5 +72,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_ADDPROVIDEREXECUTOR

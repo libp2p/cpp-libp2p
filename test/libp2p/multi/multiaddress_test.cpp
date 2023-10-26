@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -91,8 +92,8 @@ TEST_F(MultiaddressTest, Encapsulate) {
 
   auto joined_byte_address = address1.getBytesAddress();
   auto &address2_bytes = address2.getBytesAddress();
-  joined_byte_address.insert(joined_byte_address.end(), address2_bytes.begin(),
-                             address2_bytes.end());
+  joined_byte_address.insert(
+      joined_byte_address.end(), address2_bytes.begin(), address2_bytes.end());
 
   address1.encapsulate(address2);
   ASSERT_EQ(std::string(address1.getStringAddress()), joined_string_address);

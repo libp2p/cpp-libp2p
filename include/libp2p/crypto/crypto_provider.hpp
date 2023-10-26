@@ -1,18 +1,18 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_PROVIDER_HPP
-#define LIBP2P_CRYPTO_PROVIDER_HPP
+#pragma once
 
 #include <vector>
 
 #include <boost/filesystem.hpp>
-#include <span>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::crypto {
   /**
@@ -50,8 +50,7 @@ namespace libp2p::crypto {
      * @return signature bytes
      */
     virtual outcome::result<Buffer> sign(
-        BytesIn message,
-        const PrivateKey &private_key) const = 0;
+        BytesIn message, const PrivateKey &private_key) const = 0;
 
     /**
      * @brief verifies validness of the signature for a given message and public
@@ -81,10 +80,9 @@ namespace libp2p::crypto {
      * @return objects of type StretchedKey
      */
     virtual outcome::result<std::pair<StretchedKey, StretchedKey>> stretchKey(
-        common::CipherType cipher_type, common::HashType hash_type,
+        common::CipherType cipher_type,
+        common::HashType hash_type,
         const Buffer &secret) const = 0;
   };
 
 }  // namespace libp2p::crypto
-
-#endif  // LIBP2P_CRYPTO_PROVIDER_HPP

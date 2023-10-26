@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_LISTENER_MANAGER_IMPL_HPP
-#define LIBP2P_LISTENER_MANAGER_IMPL_HPP
+#pragma once
 
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/network/connection_manager.hpp>
@@ -21,7 +21,8 @@ namespace libp2p::network {
 
     ListenerManagerImpl(
         std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect,
-        std::shared_ptr<Router> router, std::shared_ptr<TransportManager> tmgr,
+        std::shared_ptr<Router> router,
+        std::shared_ptr<TransportManager> tmgr,
         std::shared_ptr<ConnectionManager> cmgr);
 
     bool isStarted() const override;
@@ -62,5 +63,3 @@ namespace libp2p::network {
   };
 
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_LISTENER_MANAGER_IMPL_HPP

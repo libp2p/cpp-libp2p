@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -57,8 +58,9 @@ namespace libp2p::multi::detail {
   }
 
   unsigned char shift_right(uint8_t byte, int8_t offset) {
-    if (offset > 0)
+    if (offset > 0) {
       return byte >> offset;
+    }
 
     return byte << -offset;
   }
@@ -97,7 +99,8 @@ namespace libp2p::multi::detail {
     for (size_t i = 0, j = 0; i < bytes.size(); i += 5, j += 8) {
       int n = encode_sequence(
           std::span(&bytes[i], std::min<size_t>(bytes.size() - i, 5)),
-          std::span(&result[j], 8), mode);
+          std::span(&result[j], 8),
+          mode);
       if (n < 8) {
         result.erase(result.end() - (8 - n), result.end());
       }
@@ -118,20 +121,24 @@ namespace libp2p::multi::detail {
     char decoded_ch = -1;
 
     if (mode == Base32Mode::UPPER) {
-      if (c >= 'A' && c <= 'Z')
+      if (c >= 'A' && c <= 'Z') {
         decoded_ch = c - 'A';  // NOLINT
+      }
     } else {
-      if (c >= 'a' && c <= 'z')
+      if (c >= 'a' && c <= 'z') {
         decoded_ch = c - 'a';  // NOLINT
+      }
     }
-    if (c >= '2' && c <= '7')
+    if (c >= '2' && c <= '7') {
       decoded_ch = c - '2' + 26;  // NOLINT
+    }
 
     return decoded_ch;
   }
 
   outcome::result<int> decode_sequence(std::span<const char> coded,
-                                       BytesOut plain, Base32Mode mode) {
+                                       BytesOut plain,
+                                       Base32Mode mode) {
     plain[0] = 0;
     for (size_t block = 0; block < 8; block++) {
       int bit = get_bit(block);
@@ -167,7 +174,8 @@ namespace libp2p::multi::detail {
           n,
           decode_sequence(
               std::span(&string[i], std::min<size_t>(string.size() - i, 8)),
-              std::span(&result[j], 5), mode));
+              std::span(&result[j], 5),
+              mode));
       if (n < 5) {
         result.erase(result.end() - (5 - n), result.end());
       }

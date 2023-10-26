@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_PROVIDER_CRYPTO_PROVIDER_IMPL_HPP
-#define LIBP2P_CRYPTO_PROVIDER_CRYPTO_PROVIDER_IMPL_HPP
+#pragma once
 
 #include <libp2p/crypto/crypto_provider.hpp>
 
@@ -54,14 +54,16 @@ namespace libp2p::crypto {
     outcome::result<Buffer> sign(BytesIn message,
                                  const PrivateKey &private_key) const override;
 
-    outcome::result<bool> verify(BytesIn message, BytesIn signature,
+    outcome::result<bool> verify(BytesIn message,
+                                 BytesIn signature,
                                  const PublicKey &public_key) const override;
 
     outcome::result<EphemeralKeyPair> generateEphemeralKeyPair(
         common::CurveType curve) const override;
 
     outcome::result<std::pair<StretchedKey, StretchedKey>> stretchKey(
-        common::CipherType cipher_type, common::HashType hash_type,
+        common::CipherType cipher_type,
+        common::HashType hash_type,
         const Buffer &secret) const override;
 
    private:
@@ -74,7 +76,8 @@ namespace libp2p::crypto {
     outcome::result<PublicKey> deriveRsa(const PrivateKey &key) const;
     outcome::result<Buffer> signRsa(BytesIn message,
                                     const PrivateKey &private_key) const;
-    outcome::result<bool> verifyRsa(BytesIn message, BytesIn signature,
+    outcome::result<bool> verifyRsa(BytesIn message,
+                                    BytesIn signature,
                                     const PublicKey &public_key) const;
 
     // Ed25519
@@ -82,7 +85,8 @@ namespace libp2p::crypto {
     outcome::result<PublicKey> deriveEd25519(const PrivateKey &key) const;
     outcome::result<Buffer> signEd25519(BytesIn message,
                                         const PrivateKey &private_key) const;
-    outcome::result<bool> verifyEd25519(BytesIn message, BytesIn signature,
+    outcome::result<bool> verifyEd25519(BytesIn message,
+                                        BytesIn signature,
                                         const PublicKey &public_key) const;
 
     // Secp256k1
@@ -90,7 +94,8 @@ namespace libp2p::crypto {
     outcome::result<PublicKey> deriveSecp256k1(const PrivateKey &key) const;
     outcome::result<Buffer> signSecp256k1(BytesIn message,
                                           const PrivateKey &private_key) const;
-    outcome::result<bool> verifySecp256k1(BytesIn message, BytesIn signature,
+    outcome::result<bool> verifySecp256k1(BytesIn message,
+                                          BytesIn signature,
                                           const PublicKey &public_key) const;
 
     // ECDSA
@@ -98,7 +103,8 @@ namespace libp2p::crypto {
     outcome::result<PublicKey> deriveEcdsa(const PrivateKey &key) const;
     outcome::result<Buffer> signEcdsa(BytesIn message,
                                       const PrivateKey &private_key) const;
-    outcome::result<bool> verifyEcdsa(BytesIn message, BytesIn signature,
+    outcome::result<bool> verifyEcdsa(BytesIn message,
+                                      BytesIn signature,
                                       const PublicKey &public_key) const;
 
     std::shared_ptr<random::CSPRNG> random_provider_;
@@ -111,5 +117,3 @@ namespace libp2p::crypto {
 }  // namespace libp2p::crypto
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::crypto, CryptoProviderImpl::Error)
-
-#endif  // LIBP2P_CRYPTO_PROVIDER_CRYPTO_PROVIDER_IMPL_HPP

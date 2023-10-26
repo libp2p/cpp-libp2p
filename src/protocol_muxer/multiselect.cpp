@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -22,10 +23,14 @@ namespace libp2p::protocol_muxer::multiselect {
 
   void Multiselect::selectOneOf(std::span<const peer::ProtocolName> protocols,
                                 std::shared_ptr<basic::ReadWriter> connection,
-                                bool is_initiator, bool negotiate_multiselect,
+                                bool is_initiator,
+                                bool negotiate_multiselect,
                                 ProtocolHandlerFunc cb) {
-    getInstance()->selectOneOf(protocols, std::move(connection), is_initiator,
-                               negotiate_multiselect, std::move(cb));
+    getInstance()->selectOneOf(protocols,
+                               std::move(connection),
+                               is_initiator,
+                               negotiate_multiselect,
+                               std::move(cb));
   }
 
   void Multiselect::simpleStreamNegotiate(
@@ -59,8 +64,11 @@ namespace libp2p::protocol_muxer::multiselect {
     if (cache_.empty()) {
       instance = std::make_shared<MultiselectInstance>(*this);
     } else {
-      SL_TRACE(log(), "cache: {}->{}, active {}->{}", cache_.size(),
-               cache_.size() - 1, active_instances_.size(),
+      SL_TRACE(log(),
+               "cache: {}->{}, active {}->{}",
+               cache_.size(),
+               cache_.size() - 1,
+               active_instances_.size(),
                active_instances_.size() + 1);
       instance = std::move(cache_.back());
       cache_.pop_back();

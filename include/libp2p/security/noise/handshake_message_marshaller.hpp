@@ -1,17 +1,17 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_MESSAGE_MARSHALLER_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_MESSAGE_MARSHALLER_HPP
+#pragma once
 
 #include <tuple>
 
-#include <span>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/noise/handshake_message.hpp>
+#include <span>
 
 namespace libp2p::security::noise {
 
@@ -58,5 +58,3 @@ namespace libp2p::security::noise {
     unmarshal(BytesIn msg_bytes) const = 0;
   };
 }  // namespace libp2p::security::noise
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_MESSAGE_MARSHALLER_HPP

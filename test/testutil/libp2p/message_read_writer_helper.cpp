@@ -1,6 +1,7 @@
 
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -57,7 +58,8 @@ namespace libp2p::basic {
       const std::shared_ptr<ReadWriterMock> &read_writer_mock,
       std::vector<uint8_t> msg) {
     UVarint varint_to_write{msg.size()};
-    msg.insert(msg.begin(), varint_to_write.toVector().begin(),
+    msg.insert(msg.begin(),
+               varint_to_write.toVector().begin(),
                varint_to_write.toVector().end());
     EXPECT_CALL(*read_writer_mock, write(_, msg.size(), _))
         .WillOnce(CheckBytes(msg));
@@ -67,7 +69,8 @@ namespace libp2p::basic {
       const std::shared_ptr<connection::StreamMock> &stream_mock,
       std::vector<uint8_t> msg) {
     UVarint varint_to_write{msg.size()};
-    msg.insert(msg.begin(), varint_to_write.toVector().begin(),
+    msg.insert(msg.begin(),
+               varint_to_write.toVector().begin(),
                varint_to_write.toVector().end());
     EXPECT_CALL(*stream_mock, write(_, msg.size(), _))  // NOLINT
         .WillOnce(CheckBytes(msg));

@@ -1,19 +1,19 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TCP_CONNECTION_UTIL_HPP
-#define LIBP2P_TCP_CONNECTION_UTIL_HPP
+#pragma once
 
 #include <sstream>
 #include <system_error>  // for std::errc
 
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
-#include <span>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::transport::detail {
   template <typename T>
@@ -143,5 +143,3 @@ namespace libp2p::transport::detail {
     }
   }
 }  // namespace libp2p::transport::detail
-
-#endif  // LIBP2P_TCP_CONNECTION_UTIL_HPP

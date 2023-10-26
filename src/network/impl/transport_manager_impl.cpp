@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,7 +14,8 @@ namespace libp2p::network {
       : transports_{std::move(transports)} {
     BOOST_ASSERT_MSG(!transports_.empty(),
                      "TransportManagerImpl got 0 transports");
-    BOOST_ASSERT(std::all_of(transports_.begin(), transports_.end(),
+    BOOST_ASSERT(std::all_of(transports_.begin(),
+                             transports_.end(),
                              [](auto &&t) { return t != nullptr; }));
   }
 
@@ -28,7 +30,8 @@ namespace libp2p::network {
 
   TransportManagerImpl::TransportSPtr TransportManagerImpl::findBest(
       const multi::Multiaddress &ma) {
-    auto it = std::find_if(transports_.begin(), transports_.end(),
+    auto it = std::find_if(transports_.begin(),
+                           transports_.end(),
                            [&ma](const auto &t) { return t->canDial(ma); });
     if (it != transports_.end()) {
       return *it;

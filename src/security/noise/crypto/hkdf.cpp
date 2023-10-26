@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -19,8 +20,8 @@ namespace libp2p::security::noise {
 
   using HMAC = crypto::hmac::HmacProviderCtrImpl;
 
-  outcome::result<HKDFResult> hkdf(
-      HashType hash_type, size_t outputs,
+  outcome::result<HKDFResult> hkdf(HashType hash_type,
+                                   size_t outputs,
                                    BytesIn chaining_key,
                                    BytesIn input_key_material) {
     if (0 == outputs or outputs > 3) {

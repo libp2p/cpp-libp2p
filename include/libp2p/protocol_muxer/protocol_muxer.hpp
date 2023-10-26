@@ -1,16 +1,16 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_MUXER_HPP
-#define LIBP2P_PROTOCOL_MUXER_HPP
+#pragma once
 
 #include <memory>
 
-#include <span>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/peer/protocol.hpp>
+#include <span>
 
 namespace libp2p::protocol_muxer {
   /**
@@ -46,7 +46,8 @@ namespace libp2p::protocol_muxer {
      */
     virtual void selectOneOf(std::span<const peer::ProtocolName> protocols,
                              std::shared_ptr<basic::ReadWriter> connection,
-                             bool is_initiator, bool negotiate_multistream,
+                             bool is_initiator,
+                             bool negotiate_multistream,
                              ProtocolHandlerFunc cb) = 0;
 
     /**
@@ -60,13 +61,10 @@ namespace libp2p::protocol_muxer {
         const std::shared_ptr<connection::Stream> &stream,
         const peer::ProtocolName &protocol_id,
         std::function<
-            void(outcome::result<std::shared_ptr<connection::Stream>>)>
-            cb) = 0;
+            void(outcome::result<std::shared_ptr<connection::Stream>>)> cb) = 0;
 
     virtual ~ProtocolMuxer() = default;
   };
 }  // namespace libp2p::protocol_muxer
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::protocol_muxer, ProtocolMuxer::Error)
-
-#endif  // LIBP2P_PROTOCOL_MUXER_HPP

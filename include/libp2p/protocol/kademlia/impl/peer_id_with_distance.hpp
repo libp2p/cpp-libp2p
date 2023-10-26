@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_PEERINFOWITHDISTANCE
-#define LIBP2P_PROTOCOL_KADEMLIA_PEERINFOWITHDISTANCE
+#pragma once
 
 #include <libp2p/protocol/kademlia/common.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
@@ -12,7 +12,6 @@
 namespace libp2p::protocol::kademlia {
 
   struct PeerIdWithDistance {
-
     template <typename T>
     PeerIdWithDistance(const PeerId &peer_id, T &&target)
         : peer_id_(peer_id),
@@ -20,9 +19,9 @@ namespace libp2p::protocol::kademlia {
     }
 
     bool operator<(const PeerIdWithDistance &other) const noexcept {
-      return std::memcmp(distance_.data(), other.distance_.data(),
-                         distance_.size())
-          < 0;
+      return std::memcmp(
+                 distance_.data(), other.distance_.data(), distance_.size())
+           < 0;
     }
 
     const PeerId &operator*() const {
@@ -38,5 +37,3 @@ namespace libp2p::protocol::kademlia {
   };
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_PEERINFOWITHDISTANCE

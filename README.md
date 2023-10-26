@@ -25,12 +25,12 @@ Target C++ compilers are:
 
 To clone repository execute
 ```
-git clone https://github.com/soramitsu/libp2p.git
+git clone https://github.com/libp2p/libp2p-cpp.git
 ```
 
 ### Build cpp-libp2p
 
-First build will likely take long time. However, you can cache binaries to [hunter-binary-cache](https://github.com/soramitsu/hunter-binary-cache) or even download binaries from the cache in case someone has already compiled project with the same compiler. To do so you need to set up two environment variables:
+First build will likely take long time. However, you can cache binaries to [hunter-binary-cache](https://github.com/qdrvm/hunter-binary-cache) or even download binaries from the cache in case someone has already compiled project with the same compiler. To do so you need to set up two environment variables:
 ```
 GITHUB_HUNTER_USERNAME=<github account name>
 GITHUB_HUNTER_TOKEN=<github token>
@@ -75,18 +75,18 @@ find_package(libp2p REQUIRED)
 To set which version of cpp-libp2p to use it is required to add these lines to Hunter/config.cmake file:
 ```cmake
 hunter_config(libp2p
-    URL https://github.com/soramitsu/libp2p/archive/dad84a03a9651c7c2bb8a8f17d0e5ea67bd10b4f.zip
+    URL https://github.com/libp2p/cpp-libp2p/archive/dad84a03a9651c7c2bb8a8f17d0e5ea67bd10b4f.zip
     SHA1 860742c6e3e9736d68b392513d795e09572780aa
     )
 ``` 
 Where URL is the link to archive of certain commit in cpp-libp2p repo and SHA1 is the checksum of this archive.
 By simply updating URL and SHA1 it is possible to change the version of cpp-libp2p in another project. 
 
-Example of adding cpp-libp2p to other project can be found [here](https://github.com/soramitsu/kagome/blob/3edda60f27d378a21fc57cd8bec7f0f519203318/cmake/dependencies.cmake#L59) and [here](https://github.com/soramitsu/kagome/blob/3edda60f27d378a21fc57cd8bec7f0f519203318/cmake/Hunter/config.cmake#L24)
+Example of adding cpp-libp2p to other project can be found [here](https://github.com/qdrvm/kagome/blob/3edda60f27d378a21fc57cd8bec7f0f519203318/cmake/dependencies.cmake#L59) and [here](https://github.com/qdrvm/kagome/blob/3edda60f27d378a21fc57cd8bec7f0f519203318/cmake/Hunter/config.cmake#L24)
 
 ## Notable users
 
-* https://github.com/soramitsu/kagome
+* https://github.com/qdrvm/kagome
 * https://github.com/filecoin-project/cpp-filecoin  
 
 ## Maintenance

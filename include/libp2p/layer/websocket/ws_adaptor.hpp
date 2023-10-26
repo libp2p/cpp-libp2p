@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_LAYER_WEBSOCKETADAPTOR
-#define LIBP2P_LAYER_WEBSOCKETADAPTOR
+#pragma once
 
 #include <libp2p/basic/scheduler.hpp>
 #include <libp2p/layer/layer_adaptor.hpp>
@@ -38,5 +38,3 @@ namespace libp2p::layer {
   };
 
 }  // namespace libp2p::layer
-
-#endif  // LIBP2P_LAYER_WEBSOCKETADAPTOR

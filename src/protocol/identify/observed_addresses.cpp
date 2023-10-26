@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -32,7 +33,8 @@ namespace libp2p::protocol {
 
     for (const auto &it : observed_addresses_) {
       auto addresses = getAddressesFor(it.first);
-      result.insert(result.end(), std::make_move_iterator(addresses.begin()),
+      result.insert(result.end(),
+                    std::make_move_iterator(addresses.begin()),
                     std::make_move_iterator(addresses.end()));
     }
 
@@ -60,7 +62,8 @@ namespace libp2p::protocol {
 
     auto &addresses = local_addr_entry->second;
     auto observed_addr_it =
-        std::find_if(addresses.begin(), addresses.end(),
+        std::find_if(addresses.begin(),
+                     addresses.end(),
                      [&observed](const auto &observed_addr) {
                        return observed_addr.address == observed;
                      });
@@ -84,10 +87,11 @@ namespace libp2p::protocol {
       // firstly, remove the "outer" structures with observed addresses, which
       // were expired
       auto &addresses = addr_entry.second;
-      addresses.erase(std::remove_if(addresses.begin(), addresses.end(),
+      addresses.erase(std::remove_if(addresses.begin(),
+                                     addresses.end(),
                                      [now](const auto &observed_addr) {
                                        return now - observed_addr.last_seen
-                                           > observed_addr.ttl;
+                                            > observed_addr.ttl;
                                      }),
                       addresses.end());
 

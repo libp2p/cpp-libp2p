@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONNECTION_STREAM_AND_PROTOCOL_HPP
-#define LIBP2P_CONNECTION_STREAM_AND_PROTOCOL_HPP
+#pragma once
 
 #include <functional>
 #include <memory>
@@ -40,5 +40,3 @@ namespace libp2p {
    */
   using StreamAndProtocolCb = std::function<void(StreamAndProtocol)>;
 }  // namespace libp2p
-
-#endif  // LIBP2P_CONNECTION_STREAM_AND_PROTOCOL_HPP

@@ -1,18 +1,18 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_MARSHALLER_HPP
-#define LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_MARSHALLER_HPP
+#pragma once
 
 #include <utility>
 #include <vector>
 
-#include <span>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/plaintext/exchange_message.hpp>
+#include <span>
 
 namespace libp2p::security::plaintext {
 
@@ -63,5 +63,3 @@ namespace libp2p::security::plaintext {
   };
 
 }  // namespace libp2p::security::plaintext
-
-#endif  // LIBP2P_PLAINTEXT_EXCHANGE_MESSAGE_MARSHALLER_HPP

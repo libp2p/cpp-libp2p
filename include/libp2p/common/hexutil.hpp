@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_HEXUTIL_HPP
-#define LIBP2P_HEXUTIL_HPP
+#pragma once
 
 #include <string_view>
 #include <vector>
@@ -115,5 +115,3 @@ namespace libp2p::common {
 }  // namespace libp2p::common
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::common, UnhexError);
-
-#endif  // LIBP2P_HEXUTIL_HPP

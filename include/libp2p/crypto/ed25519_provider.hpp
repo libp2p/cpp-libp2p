@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ED25519_PROVIDER_HPP
-#define LIBP2P_ED25519_PROVIDER_HPP
+#pragma once
 
 #include <array>
 
@@ -47,8 +47,7 @@ namespace libp2p::crypto::ed25519 {
      * @return signature as bytes sequence
      */
     virtual outcome::result<Signature> sign(
-        BytesIn message,
-        const PrivateKey &private_key) const = 0;
+        BytesIn message, const PrivateKey &private_key) const = 0;
 
     /**
      * Verify signature of a message against a given public key
@@ -65,5 +64,3 @@ namespace libp2p::crypto::ed25519 {
   };
 
 }  // namespace libp2p::crypto::ed25519
-
-#endif  // LIBP2P_ED25519_PROVIDER_HPP

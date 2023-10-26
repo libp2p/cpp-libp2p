@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -42,8 +43,9 @@ namespace libp2p::protocol::kademlia {
     libp2p::basic::VarintReader::readVarint(
         stream_,
         [wp = weak_from_this()](outcome::result<multi::UVarint> varint) {
-          if (auto self = wp.lock())
+          if (auto self = wp.lock()) {
             self->onLengthRead(std::move(varint));
+          }
         });
     setReadingTimeout();
     return true;
@@ -60,9 +62,10 @@ namespace libp2p::protocol::kademlia {
     ++writing_;
 
     // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-    stream_->write(*buffer, buffer->size(),
-                   [wp = weak_from_this(), buffer,
-                    response_handler](outcome::result<size_t> result) {
+    stream_->write(*buffer,
+                   buffer->size(),
+                   [wp = weak_from_this(), buffer, response_handler](
+                       outcome::result<size_t> result) {
                      if (auto self = wp.lock()) {
                        self->onMessageWritten(result, response_handler);
                      }
@@ -118,7 +121,8 @@ namespace libp2p::protocol::kademlia {
 
     // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
     stream_->read(std::span(inner_buffer_.data(), inner_buffer_.size()),
-                  msg_len, [wp = weak_from_this()](auto &&res) {
+                  msg_len,
+                  [wp = weak_from_this()](auto &&res) {
                     if (auto self = wp.lock()) {
                       self->onMessageRead(std::forward<decltype(res)>(res));
                     }

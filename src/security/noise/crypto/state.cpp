@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -60,16 +61,16 @@ namespace libp2p::security::noise {
         nonce_{0} {}
 
   outcome::result<Bytes> CipherState::encrypt(BytesIn precompiled_out,
-                                                  BytesIn plaintext,
-                                                  BytesIn aad) {
+                                              BytesIn plaintext,
+                                              BytesIn aad) {
     auto enc_res = cipher_->encrypt(precompiled_out, nonce_, plaintext, aad);
     ++nonce_;
     return enc_res;
   }
 
   outcome::result<Bytes> CipherState::decrypt(BytesIn precompiled_out,
-                                                  BytesIn ciphertext,
-                                                  BytesIn aad) {
+                                              BytesIn ciphertext,
+                                              BytesIn aad) {
     auto dec_res = cipher_->decrypt(precompiled_out, nonce_, ciphertext, aad);
     ++nonce_;
     return dec_res;
@@ -80,8 +81,8 @@ namespace libp2p::security::noise {
     memset(zeroed.data(), 0u, zeroed.size());
     Bytes empty;
     OUTCOME_TRY(out_res,
-                cipher_->encrypt({}, std::numeric_limits<uint64_t>::max(),
-                                 zeroed, empty));
+                cipher_->encrypt(
+                    {}, std::numeric_limits<uint64_t>::max(), zeroed, empty));
     std::copy_n(out_res.begin(), key_.size(), key_.begin());
     cipher_ = cipher_suite_->cipher(key_);
     return outcome::success();
@@ -151,14 +152,15 @@ namespace libp2p::security::noise {
     return outcome::success();
   }
 
-  outcome::result<Bytes> SymmetricState::encryptAndHash(
-      BytesIn precompiled_out, BytesIn plaintext) {
+  outcome::result<Bytes> SymmetricState::encryptAndHash(BytesIn precompiled_out,
+                                                        BytesIn plaintext) {
     if (not has_key_) {
       Bytes result(precompiled_out.size() + plaintext.size());
       OUTCOME_TRY(mixHash(plaintext));
-      std::copy_n(precompiled_out.begin(), precompiled_out.size(),
-                  result.begin());
-      std::copy_n(plaintext.begin(), plaintext.size(),
+      std::copy_n(
+          precompiled_out.begin(), precompiled_out.size(), result.begin());
+      std::copy_n(plaintext.begin(),
+                  plaintext.size(),
                   result.begin() + precompiled_out.size());
       return result;
     }
@@ -176,14 +178,15 @@ namespace libp2p::security::noise {
     return std::move(ciphertext);
   }
 
-  outcome::result<Bytes> SymmetricState::decryptAndHash(
-      BytesIn precompiled_out, BytesIn ciphertext) {
+  outcome::result<Bytes> SymmetricState::decryptAndHash(BytesIn precompiled_out,
+                                                        BytesIn ciphertext) {
     if (not has_key_) {
       Bytes result(precompiled_out.size() + ciphertext.size());
       OUTCOME_TRY(mixHash(ciphertext));
-      std::copy_n(precompiled_out.begin(), precompiled_out.size(),
-                  result.begin());
-      std::copy_n(ciphertext.begin(), ciphertext.size(),
+      std::copy_n(
+          precompiled_out.begin(), precompiled_out.size(), result.begin());
+      std::copy_n(ciphertext.begin(),
+                  ciphertext.size(),
                   result.begin() + precompiled_out.size());
       return result;
     }
@@ -225,8 +228,10 @@ namespace libp2p::security::noise {
   // Handshake state config
 
   HandshakeStateConfig::HandshakeStateConfig(
-      std::shared_ptr<CipherSuite> cipher_suite, HandshakePattern pattern,
-      bool is_initiator, DHKey local_static_keypair)
+      std::shared_ptr<CipherSuite> cipher_suite,
+      HandshakePattern pattern,
+      bool is_initiator,
+      DHKey local_static_keypair)
       : cipher_suite_{std::move(cipher_suite)},
         pattern_{std::move(pattern)},
         is_initiator_{is_initiator},
@@ -238,7 +243,8 @@ namespace libp2p::security::noise {
     return *this;
   }
 
-  HandshakeStateConfig &HandshakeStateConfig::setPresharedKey(BytesIn key, int placement) {
+  HandshakeStateConfig &HandshakeStateConfig::setPresharedKey(BytesIn key,
+                                                              int placement) {
     Bytes data(key.begin(), key.end());
     preshared_key_ = std::move(data);
     preshared_key_placement_ = placement;
@@ -310,7 +316,7 @@ namespace libp2p::security::noise {
        << symmetric_state_->cipherSuite()->name();
     auto handshake_name_str = ss.str();
     Bytes handshake_name_bytes(handshake_name_str.begin(),
-                                   handshake_name_str.end());
+                               handshake_name_str.end());
     OUTCOME_TRY(symmetric_state_->initializeSymmetric(handshake_name_bytes));
     Bytes prologue;
     if (config.prologue_) {
@@ -399,7 +405,8 @@ namespace libp2p::security::noise {
   outcome::result<void> HandshakeState::writeMessageE(Bytes &out) {
     OUTCOME_TRY(ephemeral_kp, symmetric_state_->cipherSuite()->generate());
     local_ephemeral_kp_ = std::move(ephemeral_kp);
-    out.insert(out.end(), local_ephemeral_kp_.pub.begin(),
+    out.insert(out.end(),
+               local_ephemeral_kp_.pub.begin(),
                local_ephemeral_kp_.pub.end());
     OUTCOME_TRY(symmetric_state_->mixHash(local_ephemeral_kp_.pub));
     if (not preshared_key_.empty()) {

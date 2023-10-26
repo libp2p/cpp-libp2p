@@ -1,0 +1,91 @@
+#!/bin/sh
+#
+# Copyright Quadrivium LLC
+# All Rights Reserved
+# SPDX-License-Identifier: Apache-2.0
+#
+
+if git rev-parse --verify HEAD >/dev/null 2>&1; then
+  BASE=HEAD
+else
+  # Initial commit: diff BASE an empty tree object
+  BASE=$(git hash-object -t tree /dev/null)
+fi
+
+# check clang-format binary
+CLANG_FORMAT_ENABLED=1
+CLANG_FORMAT=$(which clang-format-15)
+if [ -z "${CLANG_FORMAT}" ]; then
+  CLANG_FORMAT=$(which clang-format)
+  if [ -z "${CLANG_FORMAT}" ]; then
+    echo "Command clang-format is not found" >&2
+    echo "Please, install clang-format version 15 to enable checkup C++-files formatting over git pre-commit hook" >&2
+    CLANG_FORMAT_ENABLED=0
+  fi
+fi
+
+# check clang-format version
+if [ $CLANG_FORMAT_ENABLED ]; then
+  CLANG_FORMAT_VERSION=$($CLANG_FORMAT --version | sed -r "s/.*version ([[:digit:]]+).*/\1/")
+
+  if [ "$CLANG_FORMAT_VERSION" != "15" ]; then
+    echo "Please, install clang-format version 15 to enable checkup C++-files formatting over git pre-commit hook" >&2
+    CLANG_FORMAT_ENABLED=0
+  fi
+fi
+
+FILES=$(git diff --staged --diff-filter=ACMR --name-only)
+
+# check c++ files' format with clang-format
+CXX_RES=0
+if [ $CLANG_FORMAT_ENABLED ]; then
+#  for FILE in $(git diff-index --name-only "${BASE}" --diff-filter=ACMR | grep -e "\\.[ch]pp$"); do
+  for FILE in $(echo "$FILES" | grep -e "\\.[ch]pp$"); do
+    O_HASH=$(shasum <"${FILE}")
+    F_HASH=$(${CLANG_FORMAT} --style=file "$FILE" | shasum)
+    if [ "${O_HASH}" != "${F_HASH}" ]; then
+      echo "File looks nonformatted: $FILE"
+      CXX_RES=1
+    fi
+  done
+
+  if [ $CXX_RES = 1 ]; then
+    CLANG_FORMAT_VERSION_FULL=$($CLANG_FORMAT --version | sed -r "s/.*version ([[:digit:]\.]+).*/\1/")
+    echo "Used clang-format version $CLANG_FORMAT_VERSION_FULL" >&2
+  fi
+fi
+
+## check cmake-format binary
+#CMAKE_FORMAT_ENABLED=1
+#CMAKE_FORMAT=$(which cmake-format)
+#if [ -z "${CMAKE_FORMAT}" ]; then
+#  echo "Command cmake-format is not found" >&2
+#  echo "Please, install cmake-format version 15 to enable checkup cmake-files formatting over git pre-commit hook" >&2
+#  CMAKE_FORMAT_ENABLED=0
+#fi
+#
+## check cmake-files' format with cmake-format
+#CMAKE_RES=0
+#if [ $CMAKE_FORMAT_ENABLED ]; then
+#  for FILE in $(echo "$FILES" | grep -e "\(\(CMakeLists\\.txt\)\|\(\\.cmake\)\)$"); do
+#    O_HASH=$(shasum <"${FILE}")
+#    F_HASH=$(${CMAKE_FORMAT} "$FILE" | shasum)
+#    if [ "${O_HASH}" != "${F_HASH}" ]; then
+#      echo "File looks nonformatted: $FILE"
+#      CMAKE_RES=1
+#    fi
+#  done
+#
+#  if [ $CMAKE_RES = 1 ]; then
+#    CMAKE_FORMAT_VERSION_FULL=$($CMAKE_FORMAT --version)
+#    echo "Used cmake-format version $CMAKE_FORMAT_VERSION_FULL" >&2
+#  fi
+#fi
+
+# result of checks
+if [ "$CXX_RES" = "1" ] || [ "$CMAKE_RES" = "1" ]; then
+  echo "Formatter required" >&2
+  exit 1
+fi
+
+exit 0

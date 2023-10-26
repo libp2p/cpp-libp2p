@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -65,13 +66,16 @@ namespace libp2p::security::tls_details {
     }
 
     std::array<char, 256> subject_name{};
-    X509_NAME_oneline(X509_get_subject_name(cert), subject_name.data(),
-                      subject_name.size());
+    X509_NAME_oneline(
+        X509_get_subject_name(cert), subject_name.data(), subject_name.size());
 
     log()->log(status ? log::Level::TRACE : log::Level::INFO,
                "in certificate verify callback, subject={}, error={} ({}), "
                "depth={}, status={}",
-               subject_name.data(), x509ErrorToStr(error), error, depth,
+               subject_name.data(),
+               x509ErrorToStr(error),
+               error,
+               depth,
                status);
     return status;
   }
@@ -135,7 +139,8 @@ namespace libp2p::security::tls_details {
       uint8_t buf[msg_len];  // NOLINT
       memcpy(buf, sign_prefix.data(), sign_prefix.size());
       memcpy(buf + sign_prefix.size(),  // NOLINT
-             cert_pub_key.data(), cert_pub_key.size());
+             cert_pub_key.data(),
+             cert_pub_key.size());
 
       assert(host_private_key.type == crypto::Key::Type::Ed25519);
       assert(host_private_key.data.size() == 32);
@@ -190,17 +195,32 @@ namespace libp2p::security::tls_details {
         throw std::runtime_error("cannot get certificate subject name");
       }
       X509_NAME_add_entry_by_txt(
-          name, "C", MBSTRING_ASC,
+          name,
+          "C",
+          MBSTRING_ASC,
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<const uint8_t *>("PY"), -1, -1, 0);
+          reinterpret_cast<const uint8_t *>("PY"),
+          -1,
+          -1,
+          0);
       X509_NAME_add_entry_by_txt(
-          name, "O", MBSTRING_ASC,
+          name,
+          "O",
+          MBSTRING_ASC,
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<const uint8_t *>("libp2p"), -1, -1, 0);
+          reinterpret_cast<const uint8_t *>("libp2p"),
+          -1,
+          -1,
+          0);
       X509_NAME_add_entry_by_txt(
-          name, "CN", MBSTRING_ASC,
+          name,
+          "CN",
+          MBSTRING_ASC,
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<const uint8_t *>("libp2p"), -1, -1, 0);
+          reinterpret_cast<const uint8_t *>("libp2p"),
+          -1,
+          -1,
+          0);
       if (X509_set_issuer_name(cert, name) == 0) {
         throw std::runtime_error("cannot assign certificate issuer name");
       }
@@ -292,11 +312,11 @@ namespace libp2p::security::tls_details {
       KeyAndSignature result;
 
       bool ok = (data.size() == kExtensionDataSize) && (data[0] == kSequenceTag)
-          && (data[1] == kExtensionDataSize - kAsnHeaderSize)
-          && (data[2] == kOctetStringTag)
-          && (data[3] == kMarshalledPublicKeySize)
-          && (data[kSigOffset] == kOctetStringTag)
-          && (data[kSigOffset + 1] == kSignatureSize);
+             && (data[1] == kExtensionDataSize - kAsnHeaderSize)
+             && (data[2] == kOctetStringTag)
+             && (data[3] == kMarshalledPublicKeySize)
+             && (data[kSigOffset] == kOctetStringTag)
+             && (data[kSigOffset + 1] == kSignatureSize);
 
       if (!ok) {
         return boost::none;
@@ -304,7 +324,8 @@ namespace libp2p::security::tls_details {
 
       auto slice = data.subspan(4, kMarshalledPublicKeySize);
       result.pkey.assign(slice.begin(), slice.end());
-      memcpy(result.signature.data(), &data[kSigOffset + kAsnHeaderSize],
+      memcpy(result.signature.data(),
+             &data[kSigOffset + kAsnHeaderSize],
              kSignatureSize);
 
       return result;
@@ -328,8 +349,9 @@ namespace libp2p::security::tls_details {
       ASN1_OCTET_STRING *os = X509_EXTENSION_get_data(ext);
       assert(os);
 
-      auto ks_binary = unmarshalExtensionData(BytesIn(os->data,
-                           os->data + os->length));  // NOLINT
+      auto ks_binary =
+          unmarshalExtensionData(BytesIn(os->data,
+                                         os->data + os->length));  // NOLINT
       if (!ks_binary) {
         log()->info("cannot unmarshal libp2p certificate extension");
         return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
@@ -339,8 +361,10 @@ namespace libp2p::security::tls_details {
     }
 
     outcome::result<void> verifyExtensionSignature(
-        X509 *peer_certificate, const crypto::PublicKey &peer_pubkey,
-        const Signature &signature, const peer::PeerId &peer_id) {
+        X509 *peer_certificate,
+        const crypto::PublicKey &peer_pubkey,
+        const Signature &signature,
+        const peer::PeerId &peer_id) {
       crypto::ed25519::PublicKey ed25519pkey;
       assert(peer_pubkey.data.size() == ed25519pkey.size());
 
@@ -361,10 +385,12 @@ namespace libp2p::security::tls_details {
 
       auto verify_res = crypto::ed25519::Ed25519ProviderImpl{}.verify(
           BytesIn(buf, buf + msg_len),  // NOLINT
-          signature, ed25519pkey);
+          signature,
+          ed25519pkey);
 
       if (!verify_res) {
-        log()->info("peer {} verification failed, {}", peer_id.toBase58(),
+        log()->info("peer {} verification failed, {}",
+                    peer_id.toBase58(),
                     verify_res.error().message());
         return TlsError::TLS_PEER_VERIFY_FAILED;
       }
@@ -406,9 +432,10 @@ namespace libp2p::security::tls_details {
     }
 
     // 3. Verify
-    OUTCOME_TRY(
-        verifyExtensionSignature(peer_certificate, peer_pubkey_res.value(),
-                                 bin_fields.signature, peer_id_res.value()));
+    OUTCOME_TRY(verifyExtensionSignature(peer_certificate,
+                                         peer_pubkey_res.value(),
+                                         bin_fields.signature,
+                                         peer_id_res.value()));
 
     return PubkeyAndPeerId{std::move(peer_pubkey_res.value()),
                            std::move(peer_id_res.value())};

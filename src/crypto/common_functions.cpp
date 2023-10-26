@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -32,7 +33,8 @@ namespace libp2p::crypto {
     if (nullptr == private_bignum) {
       return FAILED;
     }
-    FinalAction free_private_bignum([private_bignum] { BN_free(private_bignum); });
+    FinalAction free_private_bignum(
+        [private_bignum] { BN_free(private_bignum); });
 
     // set private key to the resulting key structure
     if (1 != EC_KEY_set_private_key(key.get(), private_bignum)) {
@@ -46,19 +48,24 @@ namespace libp2p::crypto {
     if (nullptr == public_key_point) {
       return FAILED;
     }
-    FinalAction free_public_key_point([public_key_point] { EC_POINT_free(public_key_point); });
+    FinalAction free_public_key_point(
+        [public_key_point] { EC_POINT_free(public_key_point); });
 
     // derive the public key
     if (1
-        != EC_POINT_mul(EC_KEY_get0_group(key.get()), public_key_point,
-                        private_bignum, nullptr, nullptr, nullptr)) {
+        != EC_POINT_mul(EC_KEY_get0_group(key.get()),
+                        public_key_point,
+                        private_bignum,
+                        nullptr,
+                        nullptr,
+                        nullptr)) {
       return FAILED;
     }
 
     // check the public key
     if (1
-        != EC_POINT_is_on_curve(EC_KEY_get0_group(key.get()), public_key_point,
-                                nullptr)) {
+        != EC_POINT_is_on_curve(
+            EC_KEY_get0_group(key.get()), public_key_point, nullptr)) {
       return KeyValidatorError::INVALID_PUBLIC_KEY;
     }
 
@@ -94,8 +101,8 @@ namespace libp2p::crypto {
   outcome::result<std::vector<uint8_t>> GenerateEcSignature(
       BytesIn digest, const std::shared_ptr<EC_KEY> &key) {
     std::shared_ptr<ECDSA_SIG> signature{
-        ECDSA_do_sign(digest.data(), static_cast<int>(digest.size()),
-                      key.get()),
+        ECDSA_do_sign(
+            digest.data(), static_cast<int>(digest.size()), key.get()),
         ECDSA_SIG_free};
     if (signature == nullptr) {
       return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
@@ -111,11 +118,15 @@ namespace libp2p::crypto {
     return std::move(signature_bytes);
   }
 
-  outcome::result<bool> VerifyEcSignature(BytesIn digest, BytesIn signature,
+  outcome::result<bool> VerifyEcSignature(BytesIn digest,
+                                          BytesIn signature,
                                           const std::shared_ptr<EC_KEY> &key) {
-    int result = ECDSA_verify(0, digest.data(), static_cast<int>(digest.size()),
+    int result = ECDSA_verify(0,
+                              digest.data(),
+                              static_cast<int>(digest.size()),
                               signature.data(),
-                              static_cast<int>(signature.size()), key.get());
+                              static_cast<int>(signature.size()),
+                              key.get());
     if (result < 0) {
       return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
     }

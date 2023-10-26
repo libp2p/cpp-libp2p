@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MULTIADDRESS_HPP
-#define LIBP2P_MULTIADDRESS_HPP
+#pragma once
 
 #include <functional>
 #include <list>
@@ -13,11 +13,11 @@
 #include <string_view>
 #include <unordered_map>
 
-#include <span>
 #include <boost/optional.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <span>
 
 namespace libp2p::multi {
 
@@ -202,5 +202,3 @@ namespace std {
 }  // namespace std
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::multi, Multiaddress::Error)
-
-#endif  // LIBP2P_MULTIADDRESS_HPP

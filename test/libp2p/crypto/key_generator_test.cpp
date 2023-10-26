@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -48,9 +49,13 @@ class KeyGenTest {
         ecdsa_provider_{std::make_shared<EcdsaProviderImpl>()},
         secp256k1_provider_{std::make_shared<Secp256k1ProviderImpl>()},
         hmac_provider_{std::make_shared<HmacProviderImpl>()},
-        crypto_provider_{std::make_shared<CryptoProviderImpl>(
-            random_, ed25519_provider_, rsa_provider_, ecdsa_provider_,
-            secp256k1_provider_, hmac_provider_)} {}
+        crypto_provider_{
+            std::make_shared<CryptoProviderImpl>(random_,
+                                                 ed25519_provider_,
+                                                 rsa_provider_,
+                                                 ecdsa_provider_,
+                                                 secp256k1_provider_,
+                                                 hmac_provider_)} {}
 
  protected:
   std::shared_ptr<CSPRNG> random_;
@@ -107,8 +112,10 @@ TEST_P(KeyGeneratorTest, DerivePublicKeySuccess) {
   ASSERT_EQ(keys.publicKey.data, derived.data);
 }
 
-INSTANTIATE_TEST_SUITE_P(TestAllKeyTypes, KeyGeneratorTest,
-                         ::testing::Values(Key::Type::RSA, Key::Type::Ed25519,
+INSTANTIATE_TEST_SUITE_P(TestAllKeyTypes,
+                         KeyGeneratorTest,
+                         ::testing::Values(Key::Type::RSA,
+                                           Key::Type::Ed25519,
                                            Key::Type::Secp256k1,
                                            Key::Type::ECDSA));
 
@@ -118,7 +125,8 @@ class KeyLengthTest
           std::tuple<Key::Type, const uint32_t, const uint32_t>> {};
 
 INSTANTIATE_TEST_SUITE_P(
-    TestSomeKeyLengths, KeyLengthTest,
+    TestSomeKeyLengths,
+    KeyLengthTest,
     ::testing::Values(std::tuple(Key::Type::Ed25519, 32, 32),
                       std::tuple(Key::Type::Secp256k1, 32, 33),
                       std::tuple(Key::Type::ECDSA, 121, 91)));

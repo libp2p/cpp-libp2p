@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,14 +9,10 @@
 namespace libp2p::storage {
 
   SQLite::SQLite(const std::string &db_file)
-      : db_(db_file),
-        db_file_(db_file),
-        log_(log::createLogger(kLoggerTag)) {}
+      : db_(db_file), db_file_(db_file), log_(log::createLogger(kLoggerTag)) {}
 
   SQLite::SQLite(const std::string &db_file, const std::string &logger_tag)
-      : db_(db_file),
-        db_file_(db_file),
-        log_(log::createLogger(logger_tag)) {}
+      : db_(db_file), db_file_(db_file), log_(log::createLogger(logger_tag)) {}
 
   SQLite::~SQLite() {
     // without the following, all the prepared statements
@@ -33,7 +30,7 @@ namespace libp2p::storage {
     int ec{getErrorCode()};
     return (0 == ec) ? std::string()
                      : std::string(sqlite3_errstr(ec)) + ": "
-            + sqlite3_errmsg(db_.connection().get());
+                           + sqlite3_errmsg(db_.connection().get());
   }
 
   SQLite::StatementHandle SQLite::createStatement(const std::string &sql) {

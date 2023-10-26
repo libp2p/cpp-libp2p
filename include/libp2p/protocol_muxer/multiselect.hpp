@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_MUXER_MULTISELECT_HPP
-#define LIBP2P_PROTOCOL_MUXER_MULTISELECT_HPP
+#pragma once
 
 #include <unordered_set>
 #include <vector>
@@ -25,19 +25,20 @@ namespace libp2p::protocol_muxer::multiselect {
     /// Implements ProtocolMuxer API
     void selectOneOf(std::span<const peer::ProtocolName> protocols,
                      std::shared_ptr<basic::ReadWriter> connection,
-                     bool is_initiator, bool negotiate_multiselect,
+                     bool is_initiator,
+                     bool negotiate_multiselect,
                      ProtocolHandlerFunc cb) override;
 
     /// Simple single stream negotiate procedure
     void simpleStreamNegotiate(
         const std::shared_ptr<connection::Stream> &stream,
         const peer::ProtocolName &protocol_id,
-        std::function<
-            void(outcome::result<std::shared_ptr<connection::Stream>>)>
-            cb) override;
+        std::function<void(
+            outcome::result<std::shared_ptr<connection::Stream>>)> cb) override;
 
     /// Called from instance on close
-    void instanceClosed(Instance instance, const ProtocolHandlerFunc &cb,
+    void instanceClosed(Instance instance,
+                        const ProtocolHandlerFunc &cb,
                         outcome::result<peer::ProtocolName> result);
 
    private:
@@ -52,5 +53,3 @@ namespace libp2p::protocol_muxer::multiselect {
   };
 
 }  // namespace libp2p::protocol_muxer::multiselect
-
-#endif  // LIBP2P_PROTOCOL_MUXER_MULTISELECT_HPP

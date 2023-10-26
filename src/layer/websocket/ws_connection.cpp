@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -96,8 +97,8 @@ namespace libp2p::connection {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         reinterpret_cast<const uint8_t *>(&ping_counter_),
         sizeof(ping_counter_));
-    if (std::equal(payload.begin(), payload.end(), expected.begin(),
-                   expected.end())) {
+    if (std::equal(
+            payload.begin(), payload.end(), expected.begin(), expected.end())) {
       SL_DEBUG(log_, "Correct pong has received for ping");
       ping_timeout_handle_.cancel();
       std::ignore = ping_handle_.reschedule(config_.ping_interval);
@@ -126,14 +127,16 @@ namespace libp2p::connection {
     return connection_->close();
   }
 
-  void WsConnection::read(BytesOut out, size_t bytes,
+  void WsConnection::read(BytesOut out,
+                          size_t bytes,
                           libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     SL_TRACE(log_, "read {} bytes", bytes);
     readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
-  void WsConnection::readSome(BytesOut out, size_t bytes,
+  void WsConnection::readSome(BytesOut out,
+                              size_t bytes,
                               libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     SL_TRACE(log_, "read some upto {} bytes", bytes);
@@ -152,16 +155,16 @@ namespace libp2p::connection {
     ws_.async_read_some(asioBuffer(out), std::move(on_read));
   }
 
-  void WsConnection::write(BytesIn in,  //
-                           size_t bytes,         //
+  void WsConnection::write(BytesIn in,    //
+                           size_t bytes,  //
                            libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
     SL_TRACE(log_, "write {} bytes", bytes);
     ws_.async_write(asioBuffer(in), toAsioCbSize(std::move(cb)));
   }
 
-  void WsConnection::writeSome(BytesIn in,  //
-                               size_t bytes,         //
+  void WsConnection::writeSome(BytesIn in,    //
+                               size_t bytes,  //
                                libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
     SL_TRACE(log_, "write some upto {} bytes", bytes);

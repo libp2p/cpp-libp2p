@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -145,8 +146,10 @@ namespace libp2p::multi {
 
     const auto &this_bytes = bytes_;
     const auto &other_bytes = bytes;
-    auto bytes_pos = std::find_end(this_bytes.begin(), this_bytes.end(),
-                                   other_bytes.begin(), other_bytes.end());
+    auto bytes_pos = std::find_end(this_bytes.begin(),
+                                   this_bytes.end(),
+                                   other_bytes.begin(),
+                                   other_bytes.end());
     bytes_ = ByteBuffer{this_bytes.begin(), bytes_pos};
 
     return true;
@@ -181,7 +184,8 @@ namespace libp2p::multi {
     if (proto == Protocol::Code::P2P) {  // ipfs and p2p are equivalent
       auto ipfs_occurences =
           findSubstringOccurrences(stringified_address_, "/ipfs"s);
-      proto_positions.insert(proto_positions.end(), ipfs_occurences.begin(),
+      proto_positions.insert(proto_positions.end(),
+                             ipfs_occurences.begin(),
                              ipfs_occurences.end());
     }
 

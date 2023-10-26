@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -44,8 +45,8 @@ class TransportManagerTest : public testing::Test {
 TEST_F(TransportManagerTest, CreateFromVector) {
   TransportManagerImpl manager{kTransports};
   auto actual = manager.getAll();
-  auto is_equal = std::equal(actual.begin(), actual.end(), kTransports.begin(),
-                             kTransports.end());
+  auto is_equal = std::equal(
+      actual.begin(), actual.end(), kTransports.begin(), kTransports.end());
   ASSERT_TRUE(is_equal);
 }
 
@@ -69,8 +70,8 @@ TEST_F(TransportManagerTest, AddTransport) {
 TEST_F(TransportManagerTest, AddTransports) {
   TransportManagerImpl manager{kTransports};
   auto actual = manager.getAll();
-  auto is_equal = std::equal(actual.begin(), actual.end(), kTransports.begin(),
-                             kTransports.end());
+  auto is_equal = std::equal(
+      actual.begin(), actual.end(), kTransports.begin(), kTransports.end());
   ASSERT_TRUE(is_equal);
 }
 

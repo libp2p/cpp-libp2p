@@ -1,17 +1,17 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_TRANSPORT_MANAGER_HPP
-#define LIBP2P_TRANSPORT_MANAGER_HPP
+#pragma once
 
 #include <memory>
 
-#include <span>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_info.hpp>
 #include <libp2p/transport/transport_adaptor.hpp>
+#include <span>
 
 namespace libp2p::network {
 
@@ -55,5 +55,3 @@ namespace libp2p::network {
   };
 
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_TRANSPORT_MANAGER_HPP

@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_RSA_PROVIDER_IMPL_HPP
-#define LIBP2P_CRYPTO_RSA_PROVIDER_IMPL_HPP
+#pragma once
 
 #include <memory>
 
@@ -25,8 +25,7 @@ namespace libp2p::crypto::rsa {
         const PrivateKey &private_key) const override;
 
     outcome::result<Signature> sign(
-        BytesIn message,
-        const PrivateKey &private_key) const override;
+        BytesIn message, const PrivateKey &private_key) const override;
 
     outcome::result<bool> verify(BytesIn message,
                                  const Signature &signature,
@@ -42,5 +41,3 @@ namespace libp2p::crypto::rsa {
         const PublicKey &input_key);
   };
 };  // namespace libp2p::crypto::rsa
-
-#endif  // LIBP2P_CRYPTO_RSA_PROVIDER_IMPL_HPP

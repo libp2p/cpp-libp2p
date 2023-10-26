@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_PROTOCOL_KADEMLIA_COMMON
-#define LIBP2P_PROTOCOL_KADEMLIA_COMMON
+#pragma once
 
 #include <chrono>
 
@@ -32,5 +32,3 @@ namespace libp2p::protocol::kademlia {
   using FoundValueHandler = std::function<void(outcome::result<Value>)>;
 
 }  // namespace libp2p::protocol::kademlia
-
-#endif  // LIBP2P_PROTOCOL_KADEMLIA_COMMON

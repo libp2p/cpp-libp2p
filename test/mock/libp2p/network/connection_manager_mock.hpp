@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONNECTION_MANAGER_MOCK_HPP
-#define LIBP2P_CONNECTION_MANAGER_MOCK_HPP
+#pragma once
 
 #include <libp2p/network/connection_manager.hpp>
 
@@ -30,11 +30,10 @@ namespace libp2p::network {
 
     MOCK_METHOD0(collectGarbage, void());
 
-    MOCK_METHOD2(onConnectionClosed, void(
-        const peer::PeerId &peer_id,
-        const std::shared_ptr<connection::CapableConnection> &conn));
+    MOCK_METHOD2(
+        onConnectionClosed,
+        void(const peer::PeerId &peer_id,
+             const std::shared_ptr<connection::CapableConnection> &conn));
   };
 
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_CONNECTION_MANAGER_MOCK_HPP

@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CRYPTO_RANDOM_BOOST_GENERATOR_HPP
-#define LIBP2P_CRYPTO_RANDOM_BOOST_GENERATOR_HPP
+#pragma once
 
 #include <boost/nondet_random.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
@@ -42,5 +42,3 @@ namespace libp2p::crypto::random {
     boost::random::uniform_int_distribution<uint8_t> distribution_;
   };
 }  // namespace libp2p::crypto::random
-
-#endif  // LIBP2P_CRYPTO_RANDOM_BOOST_GENERATOR_HPP

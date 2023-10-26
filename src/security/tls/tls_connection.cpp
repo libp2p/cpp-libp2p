@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -29,7 +30,8 @@ namespace libp2p::connection {
   TlsConnection::TlsConnection(
       std::shared_ptr<LayerConnection> original_connection,
       std::shared_ptr<boost::asio::ssl::context> ssl_context,
-      const peer::IdentityManager &idmgr, tcp_socket_t &tcp_socket,
+      const peer::IdentityManager &idmgr,
+      tcp_socket_t &tcp_socket,
       boost::optional<peer::PeerId> remote_peer)
       : local_peer_(idmgr.getId()),
         original_connection_(std::move(original_connection)),
@@ -44,16 +46,18 @@ namespace libp2p::connection {
 
     socket_.async_handshake(is_client ? boost::asio::ssl::stream_base::client
                                       : boost::asio::ssl::stream_base::server,
-                            [self = shared_from_this(), cb = std::move(cb),
+                            [self = shared_from_this(),
+                             cb = std::move(cb),
                              key_marshaller = std::move(key_marshaller)](
                                 const boost::system::error_code &error) {
-                              self->onHandshakeResult(error, cb,
-                                                      *key_marshaller);
+                              self->onHandshakeResult(
+                                  error, cb, *key_marshaller);
                             });
   }
 
   void TlsConnection::onHandshakeResult(
-      const boost::system::error_code &error, const HandshakeCallback &cb,
+      const boost::system::error_code &error,
+      const HandshakeCallback &cb,
       const crypto::marshaller::KeyMarshaller &key_marshaller) {
     std::error_code ec = error;
     while (!ec) {
@@ -71,8 +75,10 @@ namespace libp2p::connection {
       auto &id = id_res.value();
       if (remote_peer_.has_value()) {
         if (remote_peer_.value() != id.peer_id) {
-          SL_DEBUG(log(), "peer ids mismatch: expected={}, got={}",
-                   remote_peer_.value().toBase58(), id.peer_id.toBase58());
+          SL_DEBUG(log(),
+                   "peer ids mismatch: expected={}, got={}",
+                   remote_peer_.value().toBase58(),
+                   id.peer_id.toBase58());
           ec = TlsError::TLS_UNEXPECTED_PEER_ID;
           break;
         }
@@ -81,7 +87,8 @@ namespace libp2p::connection {
       }
       remote_pubkey_ = std::move(id.public_key);
 
-      SL_DEBUG(log(), "handshake success for {}bound connection to {}",
+      SL_DEBUG(log(),
+               "handshake success for {}bound connection to {}",
                (original_connection_->isInitiator() ? "out" : "in"),
                remote_peer_->toBase58());
       return cb(shared_from_this());
@@ -140,14 +147,16 @@ namespace libp2p::connection {
     };
   }
 
-  void TlsConnection::read(BytesOut out, size_t bytes,
+  void TlsConnection::read(BytesOut out,
+                           size_t bytes,
                            Reader::ReadCallbackFunc f) {
     ambigousSize(out, bytes);
     SL_TRACE(log(), "reading {} bytes", bytes);
     readReturnSize(shared_from_this(), out, std::move(f));
   }
 
-  void TlsConnection::readSome(BytesOut out, size_t bytes,
+  void TlsConnection::readSome(BytesOut out,
+                               size_t bytes,
                                Reader::ReadCallbackFunc cb) {
     SL_TRACE(log(), "reading some up to {} bytes", bytes);
     socket_.async_read_some(makeBuffer(out, bytes),
@@ -159,14 +168,16 @@ namespace libp2p::connection {
     original_connection_->deferReadCallback(res, std::move(cb));
   }
 
-  void TlsConnection::write(BytesIn in, size_t bytes,
+  void TlsConnection::write(BytesIn in,
+                            size_t bytes,
                             Writer::WriteCallbackFunc cb) {
     SL_TRACE(log(), "writing {} bytes", bytes);
-    boost::asio::async_write(socket_, makeBuffer(in, bytes),
-                             closeOnError(*this, std::move(cb)));
+    boost::asio::async_write(
+        socket_, makeBuffer(in, bytes), closeOnError(*this, std::move(cb)));
   }
 
-  void TlsConnection::writeSome(BytesIn in, size_t bytes,
+  void TlsConnection::writeSome(BytesIn in,
+                                size_t bytes,
                                 Writer::WriteCallbackFunc cb) {
     SL_TRACE(log(), "writing some up to {} bytes", bytes);
     socket_.async_write_some(makeBuffer(in, bytes),

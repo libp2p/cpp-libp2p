@@ -1,13 +1,11 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_WEBSOCKET
-#define LIBP2P_WEBSOCKET
+#pragma once
 
 #include <libp2p/layer/websocket/ws_adaptor.hpp>
 #include <libp2p/layer/websocket/ws_connection.hpp>
 #include <libp2p/layer/websocket/wss_adaptor.hpp>
-
-#endif  // LIBP2P_WEBSOCKET

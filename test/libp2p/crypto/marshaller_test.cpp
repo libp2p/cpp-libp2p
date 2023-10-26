@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -129,8 +130,10 @@ auto makeTestCases() {
   // clang-format on
 }
 
-INSTANTIATE_TEST_SUITE_P(Marshaller, Pubkey,
+INSTANTIATE_TEST_SUITE_P(Marshaller,
+                         Pubkey,
                          ::testing::ValuesIn(makeTestCases<PublicKey>()));
 
-INSTANTIATE_TEST_SUITE_P(Marshaller, Privkey,
+INSTANTIATE_TEST_SUITE_P(Marshaller,
+                         Privkey,
                          ::testing::ValuesIn(makeTestCases<PrivateKey>()));

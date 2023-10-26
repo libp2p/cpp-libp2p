@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASIC_SCHEDULER_HPP
-#define LIBP2P_BASIC_SCHEDULER_HPP
+#pragma once
 
 #include <chrono>
 #include <functional>
@@ -235,5 +235,3 @@ namespace libp2p::basic {
 }  // namespace libp2p::basic
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::basic, Scheduler::Error)
-
-#endif  // LIBP2P_BASIC_SCHEDULER_HPP

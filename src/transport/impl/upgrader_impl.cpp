@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -25,9 +26,10 @@ namespace {
   std::shared_ptr<AdaptorType> findAdaptor(
       const std::vector<std::shared_ptr<AdaptorType>> &adaptors,
       const libp2p::peer::ProtocolName &proto) {
-    auto adaptor = std::find_if(
-        adaptors.begin(), adaptors.end(),
-        [&proto](const auto &a) { return proto == a->getProtocolId(); });
+    auto adaptor =
+        std::find_if(adaptors.begin(), adaptors.end(), [&proto](const auto &a) {
+          return proto == a->getProtocolId();
+        });
 
     if (adaptor != adaptors.end()) {
       return *adaptor;
@@ -48,7 +50,8 @@ namespace libp2p::transport {
         muxer_adaptors_{std::move(muxer_adaptors)} {
     BOOST_ASSERT(protocol_muxer_ != nullptr);
 
-    BOOST_ASSERT(std::all_of(layer_adaptors_.begin(), layer_adaptors_.end(),
+    BOOST_ASSERT(std::all_of(layer_adaptors_.begin(),
+                             layer_adaptors_.end(),
                              [](auto &&ptr) { return ptr != nullptr; }));
 
     BOOST_ASSERT_MSG(!security_adaptors_.empty(),
@@ -59,32 +62,37 @@ namespace libp2p::transport {
 
     BOOST_ASSERT_MSG(!muxer_adaptors_.empty(),
                      "upgrader got no muxer adaptors");
-    BOOST_ASSERT(std::all_of(muxer_adaptors_.begin(), muxer_adaptors_.end(),
+    BOOST_ASSERT(std::all_of(muxer_adaptors_.begin(),
+                             muxer_adaptors_.end(),
                              [](auto &&ptr) { return ptr != nullptr; }));
 
     // so that we don't need to extract lists of supported protocols every time
     std::transform(
-        security_adaptors_.begin(), security_adaptors_.end(),
+        security_adaptors_.begin(),
+        security_adaptors_.end(),
         std::back_inserter(security_protocols_),
         [](const auto &adaptor) { return adaptor->getProtocolId(); });
 
     std::transform(
-        muxer_adaptors_.begin(), muxer_adaptors_.end(),
+        muxer_adaptors_.begin(),
+        muxer_adaptors_.end(),
         std::back_inserter(muxer_protocols_),
         [](const auto &adaptor) { return adaptor->getProtocolId(); });
   }
 
-  void UpgraderImpl::upgradeLayersInbound(RawSPtr conn, ProtoAddrVec layers,
+  void UpgraderImpl::upgradeLayersInbound(RawSPtr conn,
+                                          ProtoAddrVec layers,
                                           OnLayerCallbackFunc cb) {
-    upgradeToNextLayerInbound(std::move(conn), std::move(layers), 0,
-                              std::move(cb));
+    upgradeToNextLayerInbound(
+        std::move(conn), std::move(layers), 0, std::move(cb));
   }
 
   void UpgraderImpl::upgradeLayersOutbound(const multi::Multiaddress &address,
-                                           RawSPtr conn, ProtoAddrVec layers,
+                                           RawSPtr conn,
+                                           ProtoAddrVec layers,
                                            OnLayerCallbackFunc cb) {
-    upgradeToNextLayerOutbound(address, std::move(conn), std::move(layers), 0,
-                               std::move(cb));
+    upgradeToNextLayerOutbound(
+        address, std::move(conn), std::move(layers), 0, std::move(cb));
   }
 
   void UpgraderImpl::upgradeToNextLayerInbound(LayerSPtr conn,
@@ -101,7 +109,8 @@ namespace libp2p::transport {
     const auto &protocol = layers[layer_index];
 
     auto adaptor_it =
-        std::find_if(layer_adaptors_.begin(), layer_adaptors_.end(),
+        std::find_if(layer_adaptors_.begin(),
+                     layer_adaptors_.end(),
                      [&](const auto &adaptor) {
                        return adaptor->getProtocol() == protocol.first.code;
                      });
@@ -114,7 +123,9 @@ namespace libp2p::transport {
 
     return adaptor->upgradeInbound(
         conn,
-        [self{shared_from_this()}, layers = std::move(layers), layer_index,
+        [self{shared_from_this()},
+         layers = std::move(layers),
+         layer_index,
          cb{std::move(cb)}](
             outcome::result<LayerSPtr> next_layer_conn_res) mutable {
           if (next_layer_conn_res.has_error()) {
@@ -123,14 +134,18 @@ namespace libp2p::transport {
           auto next_layer_conn = std::move(next_layer_conn_res.value());
 
           self->upgradeToNextLayerInbound(std::move(next_layer_conn),
-                                          std::move(layers), layer_index + 1,
+                                          std::move(layers),
+                                          layer_index + 1,
                                           std::move(cb));
         });
   }
 
   void UpgraderImpl::upgradeToNextLayerOutbound(
-      const multi::Multiaddress &address, LayerSPtr conn, ProtoAddrVec layers,
-      size_t layer_index, OnLayerCallbackFunc cb) {
+      const multi::Multiaddress &address,
+      LayerSPtr conn,
+      ProtoAddrVec layers,
+      size_t layer_index,
+      OnLayerCallbackFunc cb) {
     BOOST_ASSERT_MSG(conn->isInitiator(),
                      "connection is NOT initiator, and upgrade of outbound is "
                      "called (should be upgrade of inbound)");
@@ -141,7 +156,8 @@ namespace libp2p::transport {
     const auto &protocol = layers[layer_index];
 
     auto adaptor_it =
-        std::find_if(layer_adaptors_.begin(), layer_adaptors_.end(),
+        std::find_if(layer_adaptors_.begin(),
+                     layer_adaptors_.end(),
                      [&](const auto &adaptor) {
                        return adaptor->getProtocol() == protocol.first.code;
                      });
@@ -153,16 +169,21 @@ namespace libp2p::transport {
     const auto &adaptor = *adaptor_it;
 
     return adaptor->upgradeOutbound(
-        address, conn,
-        [=, self{shared_from_this()}, layers = std::move(layers),
+        address,
+        conn,
+        [=,
+         self{shared_from_this()},
+         layers = std::move(layers),
          cb{std::move(cb)}](
             outcome::result<LayerSPtr> next_layer_conn_res) mutable {
           if (next_layer_conn_res.has_error()) {
             return cb(next_layer_conn_res.error());
           }
           auto &next_layer_conn = next_layer_conn_res.value();
-          self->upgradeToNextLayerOutbound(address, std::move(next_layer_conn),
-                                           std::move(layers), layer_index + 1,
+          self->upgradeToNextLayerOutbound(address,
+                                           std::move(next_layer_conn),
+                                           std::move(layers),
+                                           layer_index + 1,
                                            std::move(cb));
         });
   }
@@ -174,9 +195,12 @@ namespace libp2p::transport {
                      "called (should be upgrade for outbound)");
 
     protocol_muxer_->selectOneOf(
-        security_protocols_, conn, conn->isInitiator(), true,
-        [self{shared_from_this()}, cb = std::move(cb),
-         conn](outcome::result<peer::ProtocolName> proto_res) mutable {
+        security_protocols_,
+        conn,
+        conn->isInitiator(),
+        true,
+        [self{shared_from_this()}, cb = std::move(cb), conn](
+            outcome::result<peer::ProtocolName> proto_res) mutable {
           if (!proto_res) {
             return cb(proto_res.error());
           }
@@ -199,9 +223,12 @@ namespace libp2p::transport {
                      "called (should be upgrade for inbound)");
 
     protocol_muxer_->selectOneOf(
-        security_protocols_, conn, conn->isInitiator(), true,
-        [self{shared_from_this()}, cb = std::move(cb), conn,
-         remoteId](outcome::result<peer::ProtocolName> proto_res) mutable {
+        security_protocols_,
+        conn,
+        conn->isInitiator(),
+        true,
+        [self{shared_from_this()}, cb = std::move(cb), conn, remoteId](
+            outcome::result<peer::ProtocolName> proto_res) mutable {
           if (!proto_res) {
             return cb(proto_res.error());
           }
@@ -212,16 +239,19 @@ namespace libp2p::transport {
             return cb(Error::NO_ADAPTOR_FOUND);
           }
 
-          return adaptor->secureOutbound(std::move(conn), remoteId,
-                                         std::move(cb));
+          return adaptor->secureOutbound(
+              std::move(conn), remoteId, std::move(cb));
         });
   }
 
   void UpgraderImpl::upgradeToMuxed(SecSPtr conn, OnMuxedCallbackFunc cb) {
     return protocol_muxer_->selectOneOf(
-        muxer_protocols_, conn, conn->isInitiator(), true,
-        [self{shared_from_this()}, cb = std::move(cb),
-         conn](outcome::result<peer::ProtocolName> proto_res) mutable {
+        muxer_protocols_,
+        conn,
+        conn->isInitiator(),
+        true,
+        [self{shared_from_this()}, cb = std::move(cb), conn](
+            outcome::result<peer::ProtocolName> proto_res) mutable {
           if (!proto_res) {
             return cb(proto_res.error());
           }

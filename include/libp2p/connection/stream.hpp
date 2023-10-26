@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_CONNECTION_STREAM_HPP
-#define LIBP2P_CONNECTION_STREAM_HPP
+#pragma once
 
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/connection/capable_connection.hpp>
@@ -120,5 +120,3 @@ namespace libp2p::connection {
 }  // namespace libp2p::connection
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::connection, Stream::Error)
-
-#endif  // LIBP2P_CONNECTION_STREAM_HPP

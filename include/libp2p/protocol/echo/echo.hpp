@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ECHO_IMPL_HPP
-#define LIBP2P_ECHO_IMPL_HPP
+#pragma once
 
 #include <libp2p/log/logger.hpp>
 #include <libp2p/peer/protocol.hpp>
@@ -40,5 +40,3 @@ namespace libp2p::protocol {
   };
 
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_ECHO_IMPL_HPP

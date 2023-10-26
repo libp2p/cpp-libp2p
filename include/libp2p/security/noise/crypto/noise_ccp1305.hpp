@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_NOISE_CCP1305_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_NOISE_CCP1305_HPP
+#pragma once
 
 #include <libp2p/crypto/chachapoly/chachapoly_impl.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
@@ -15,13 +15,14 @@ namespace libp2p::security::noise {
     NoiseCCP1305Impl(Key32 key);
 
     outcome::result<Bytes> encrypt(BytesIn precompiled_out,
-                                       uint64_t nonce,
-                                       BytesIn plaintext, BytesIn aad) override;
+                                   uint64_t nonce,
+                                   BytesIn plaintext,
+                                   BytesIn aad) override;
 
     outcome::result<Bytes> decrypt(BytesIn precompiled_out,
-                                       uint64_t nonce,
-                                       BytesIn ciphertext,
-                                       BytesIn aad) override;
+                                   uint64_t nonce,
+                                   BytesIn ciphertext,
+                                   BytesIn aad) override;
 
    private:
     std::unique_ptr<crypto::chachapoly::ChaCha20Poly1305> ccp_;
@@ -36,5 +37,3 @@ namespace libp2p::security::noise {
     std::string cipherName() const override;
   };
 }  // namespace libp2p::security::noise
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_NOISE_CCP1305_HPP

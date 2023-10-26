@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_MPLEXED_CONNECTION_HPP
-#define LIBP2P_MPLEXED_CONNECTION_HPP
+#pragma once
 
 #include <queue>
 #include <unordered_map>
@@ -64,14 +64,10 @@ namespace libp2p::connection {
 
     /// usage of these four methods is highly not recommended or even forbidden:
     /// use stream over this connection instead
-    void read(BytesOut out, size_t bytes,
-              ReadCallbackFunc cb) override;
-    void readSome(BytesOut out, size_t bytes,
-                  ReadCallbackFunc cb) override;
-    void write(BytesIn in, size_t bytes,
-               WriteCallbackFunc cb) override;
-    void writeSome(BytesIn in, size_t bytes,
-                   WriteCallbackFunc cb) override;
+    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
+    void write(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
+    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
@@ -187,7 +183,8 @@ namespace libp2p::connection {
      * bytes written or error
      */
     void streamWrite(MplexStream::StreamId stream_id,
-                     BytesIn in, size_t bytes,
+                     BytesIn in,
+                     size_t bytes,
                      basic::Writer::WriteCallbackFunc cb);
 
     /**
@@ -207,5 +204,3 @@ namespace libp2p::connection {
     void streamReset(MplexStream::StreamId stream_id);
   };
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_MPLEXED_CONNECTION_HPP

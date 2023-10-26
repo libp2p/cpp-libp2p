@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "libp2p/crypto/aes_ctr/aes_ctr_impl.hpp"
@@ -11,8 +12,8 @@
 
 using namespace libp2p::crypto;
 using namespace libp2p::common;
-using libp2p::BytesIn;
 using libp2p::Bytes;
+using libp2p::BytesIn;
 
 class AesTest : public testing::Test {
  protected:
@@ -140,9 +141,9 @@ TEST_F(AesTest, Stream) {
   ASSERT_EQ(plain_text_256.size(),
             result_part_1.value().size() + result_part_2.value().size());
   Bytes out;
-  out.insert(out.end(), result_part_1.value().begin(),
-             result_part_1.value().end());
-  out.insert(out.end(), result_part_2.value().begin(),
-             result_part_2.value().end());
+  out.insert(
+      out.end(), result_part_1.value().begin(), result_part_1.value().end());
+  out.insert(
+      out.end(), result_part_2.value().begin(), result_part_2.value().end());
   ASSERT_EQ(plain_text_256, out);
 }

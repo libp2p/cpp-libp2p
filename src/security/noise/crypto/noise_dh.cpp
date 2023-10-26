@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -15,8 +16,8 @@ namespace libp2p::security::noise {
     return DHKey{.priv = std::move(priv), .pub = std::move(pub)};
   }
 
-  outcome::result<Bytes> NoiseDiffieHellmanImpl::dh(
-      const Bytes &private_key, const Bytes &public_key) {
+  outcome::result<Bytes> NoiseDiffieHellmanImpl::dh(const Bytes &private_key,
+                                                    const Bytes &public_key) {
     crypto::x25519::PrivateKey priv;
     crypto::x25519::PublicKey pub;
     if (private_key.size() != priv.size() or public_key.size() != pub.size()) {

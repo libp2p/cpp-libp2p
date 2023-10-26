@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_YAMUXED_CONNECTION_HPP
-#define LIBP2P_YAMUXED_CONNECTION_HPP
+#pragma once
 
 #include <unordered_map>
 
@@ -97,8 +97,7 @@ namespace libp2p::connection {
     // YamuxStreamFeedback interface overrides
 
     /// Stream transfers data to connection
-    void writeStreamData(uint32_t stream_id, BytesIn data,
-                         bool some) override;
+    void writeStreamData(uint32_t stream_id, BytesIn data, bool some) override;
 
     /// Stream acknowledges received bytes
     void ackReceivedBytes(uint32_t stream_id, uint32_t bytes) override;
@@ -113,14 +112,10 @@ namespace libp2p::connection {
 
     /// usage of these four methods is highly not recommended or even forbidden:
     /// use stream over this connection instead
-    void read(BytesOut out, size_t bytes,
-              ReadCallbackFunc cb) override;
-    void readSome(BytesOut out, size_t bytes,
-                  ReadCallbackFunc cb) override;
-    void write(BytesIn in, size_t bytes,
-               WriteCallbackFunc cb) override;
-    void writeSome(BytesIn in, size_t bytes,
-                   WriteCallbackFunc cb) override;
+    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
+    void write(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
+    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     /// Initiates async readSome on connection
     void continueReading();
@@ -166,7 +161,8 @@ namespace libp2p::connection {
     void doWrite(WriteQueueItem packet);
 
     /// Write callback
-    void onDataWritten(outcome::result<size_t> res, StreamId stream_id,
+    void onDataWritten(outcome::result<size_t> res,
+                       StreamId stream_id,
                        bool some);
 
     /// Creates new yamux stream
@@ -246,5 +242,3 @@ namespace libp2p::connection {
   };
 
 }  // namespace libp2p::connection
-
-#endif  // LIBP2P_YAMUX_IMPL_HPP

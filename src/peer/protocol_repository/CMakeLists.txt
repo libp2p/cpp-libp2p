@@ -1,5 +1,8 @@
-# Copyright Soramitsu Co., Ltd. All Rights Reserved.
+#
+# Copyright Quadrivium LLC
+# All Rights Reserved
 # SPDX-License-Identifier: Apache-2.0
+#
 
 libp2p_add_library(p2p_inmem_protocol_repository
     inmem_protocol_repository.cpp

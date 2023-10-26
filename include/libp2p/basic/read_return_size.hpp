@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASIC_READ_RETURN_SIZE_HPP
-#define LIBP2P_BASIC_READ_RETURN_SIZE_HPP
+#pragma once
 
 #include <libp2p/basic/read.hpp>
 
@@ -13,7 +13,8 @@ namespace libp2p {
   inline void readReturnSize(const std::shared_ptr<basic::Reader> &reader,
                              BytesOut out,
                              basic::Reader::ReadCallbackFunc cb) {
-    read(reader, out,
+    read(reader,
+         out,
          [n{out.size()}, cb{std::move(cb)}](outcome::result<void> r) {
            if (r.has_error()) {
              cb(r.error());
@@ -23,5 +24,3 @@ namespace libp2p {
          });
   }
 }  // namespace libp2p
-
-#endif  // LIBP2P_BASIC_READ_RETURN_SIZE_HPP

@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -47,7 +48,8 @@ namespace libp2p::layer {
     auto ws = std::make_shared<connection::WsConnection>(
         config_, io_context_, std::move(conn), scheduler_);
     ws->ws_.async_handshake(
-        host, "/",
+        host,
+        "/",
         [=, cb{std::move(cb)}](boost::system::error_code ec) mutable {
           if (ec) {
             return cb(ec);

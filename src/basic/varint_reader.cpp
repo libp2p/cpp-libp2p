@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -24,7 +25,9 @@ namespace libp2p::basic {
   void VarintReader::readVarint(
       std::shared_ptr<ReadWriter> conn,
       std::function<void(outcome::result<multi::UVarint>)> cb) {
-    readVarint(std::move(conn), std::move(cb), 0,
+    readVarint(std::move(conn),
+               std::move(cb),
+               0,
                std::make_shared<std::vector<uint8_t>>(kMaximumVarintLength, 0));
   }
 
@@ -41,21 +44,25 @@ namespace libp2p::basic {
     }
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    conn->read(std::span(varint_buf->data() + current_length, 1), 1,
-               [c = std::move(conn), cb = std::move(cb), current_length,
-                varint_buf](auto &&res) mutable {
-                 if (not res.has_value()) {
-                   return cb(res.error());
-                 }
+    conn->read(
+        std::span(varint_buf->data() + current_length, 1),
+        1,
+        [c = std::move(conn), cb = std::move(cb), current_length, varint_buf](
+            auto &&res) mutable {
+          if (not res.has_value()) {
+            return cb(res.error());
+          }
 
-                 auto varint_opt = multi::UVarint::create(
-                     std::span(varint_buf->data(), current_length + 1));
-                 if (varint_opt) {
-                   return cb(*varint_opt);
-                 }
+          auto varint_opt = multi::UVarint::create(
+              std::span(varint_buf->data(), current_length + 1));
+          if (varint_opt) {
+            return cb(*varint_opt);
+          }
 
-                 readVarint(std::move(c), std::move(cb), ++current_length,
-                            std::move(varint_buf));
-               });
+          readVarint(std::move(c),
+                     std::move(cb),
+                     ++current_length,
+                     std::move(varint_buf));
+        });
   }
 }  // namespace libp2p::basic

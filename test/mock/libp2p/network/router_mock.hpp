@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_ROUTER_MOCK_HPP
-#define LIBP2P_ROUTER_MOCK_HPP
+#pragma once
 
 #include <libp2p/network/router.hpp>
 
@@ -17,7 +17,8 @@ namespace libp2p::network {
     MOCK_METHOD3(setProtocolHandler,
                  void(StreamProtocols, StreamAndProtocolCb, ProtocolPredicate));
 
-    MOCK_CONST_METHOD0(getSupportedProtocols, std::vector<peer::ProtocolName>());
+    MOCK_CONST_METHOD0(getSupportedProtocols,
+                       std::vector<peer::ProtocolName>());
 
     MOCK_METHOD1(removeProtocolHandlers, void(const peer::ProtocolName &));
 
@@ -28,5 +29,3 @@ namespace libp2p::network {
                                        std::shared_ptr<connection::Stream>));
   };
 }  // namespace libp2p::network
-
-#endif  // LIBP2P_ROUTER_MOCK_HPP

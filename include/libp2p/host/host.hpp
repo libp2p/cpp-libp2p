@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_HOST_HPP
-#define LIBP2P_HOST_HPP
+#pragma once
 
 #include <chrono>
 #include <functional>
@@ -231,5 +231,3 @@ namespace libp2p {
     virtual event::Bus &getBus() = 0;
   };
 }  // namespace libp2p
-
-#endif  // LIBP2P_HOST_HPP

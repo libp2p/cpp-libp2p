@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_MESSAGE_MARSHALLER_IMPL_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_MESSAGE_MARSHALLER_IMPL_HPP
+#pragma once
 
 #include <vector>
 
@@ -25,11 +25,11 @@ namespace libp2p::security::noise {
     outcome::result<protobuf::NoiseHandshakePayload> handyToProto(
         const HandshakeMessage &msg) const override;
 
-    outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>> protoToHandy(
+    outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>>
+    protoToHandy(
         const protobuf::NoiseHandshakePayload &proto_msg) const override;
 
-    outcome::result<Bytes> marshal(
-        const HandshakeMessage &msg) const override;
+    outcome::result<Bytes> marshal(const HandshakeMessage &msg) const override;
 
     outcome::result<std::pair<HandshakeMessage, crypto::ProtobufKey>> unmarshal(
         BytesIn msg_bytes) const override;
@@ -41,5 +41,3 @@ namespace libp2p::security::noise {
 
 OUTCOME_HPP_DECLARE_ERROR(libp2p::security::noise,
                           HandshakeMessageMarshallerImpl::Error);
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_HANDSHAKE_MESSAGE_MARSHALLER_IMPL_HPP

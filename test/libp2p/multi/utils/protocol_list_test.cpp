@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -43,7 +44,8 @@ TEST(ProtocolList, getByCode) {
 TEST(ProtocolList, getProtocols) {
   auto &protocols = ProtocolList::getProtocols();
   static_assert(protocols.size() == ProtocolList::kProtocolsNum);
-  auto it = std::find_if(protocols.begin(), protocols.end(),
-                         [](auto &p) { return p.name == "ip4"; });
+  auto it = std::find_if(protocols.begin(), protocols.end(), [](auto &p) {
+    return p.name == "ip4";
+  });
   ASSERT_NE(it, protocols.end());
 }

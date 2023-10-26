@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_MESSAGE_PATTERNS_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_MESSAGE_PATTERNS_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -32,7 +32,7 @@ namespace libp2p::security::noise {
 
   using MP = MessagePattern;
 
-  const inline HandshakePattern handshakeXX{
+  inline const HandshakePattern handshakeXX{
       .name = "XX",
       .initiatorPreMessages = {},
       .responderPreMessages = {},
@@ -40,5 +40,3 @@ namespace libp2p::security::noise {
           {MP::E}, {MP::E, MP::DHEE, MP::S, MP::DHES}, {MP::S, MP::DHSE}}};
 
 }  // namespace libp2p::security::noise
-
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_MESSAGE_PATTERNS_HPP

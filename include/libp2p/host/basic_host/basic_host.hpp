@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_BASIC_HOST_HPP
-#define LIBP2P_BASIC_HOST_HPP
+#pragma once
 
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
@@ -52,14 +52,17 @@ namespace libp2p::host {
 
     void disconnect(const peer::PeerId &peer_id) override;
 
-    void setProtocolHandler(StreamProtocols protocols, StreamAndProtocolCb cb,
+    void setProtocolHandler(StreamProtocols protocols,
+                            StreamAndProtocolCb cb,
                             ProtocolPredicate predicate) override;
 
-    void newStream(const peer::PeerInfo &peer_info, StreamProtocols protocols,
+    void newStream(const peer::PeerInfo &peer_info,
+                   StreamProtocols protocols,
                    StreamAndProtocolOrErrorCb cb,
                    std::chrono::milliseconds timeout = {}) override;
 
-    void newStream(const peer::PeerId &peer_id, StreamProtocols protocols,
+    void newStream(const peer::PeerId &peer_id,
+                   StreamProtocols protocols,
                    StreamAndProtocolOrErrorCb cb) override;
 
     outcome::result<void> listen(const multi::Multiaddress &ma) override;
@@ -93,5 +96,3 @@ namespace libp2p::host {
   };
 
 }  // namespace libp2p::host
-
-#endif  // LIBP2P_BASIC_HOST_HPP

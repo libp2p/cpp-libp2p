@@ -18,7 +18,7 @@ cmake_policy(SET CMP0135 NEW)
 
 include("cmake/Hunter/init.cmake")
 
-project(libp2p VERSION 0.1.15 LANGUAGES C CXX)
+project(libp2p VERSION 0.1.17 LANGUAGES C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -94,6 +94,7 @@ if (CLANG_TIDY)
   include(cmake/clang-tidy.cmake)
 endif ()
 if (CLANG_FORMAT)
+    set(RECOMMENDED_CLANG_FORMAT_VERSION 15)
   include(cmake/clang-format.cmake)
 endif ()
 

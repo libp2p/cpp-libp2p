@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -19,10 +20,11 @@ using libp2p::Bytes;
 namespace {
 
   void forwardTestMessage(std::shared_ptr<g::LocalSubscriptions> subs,
-                          g::TopicId topic, uint64_t seq) {
+                          g::TopicId topic,
+                          uint64_t seq) {
     std::string body = fmt::format("{}:{}", seq, topic);
-    auto msg = std::make_shared<g::TopicMessage>(testutil::randomPeerId(), seq,
-                                                 g::fromString(body), topic);
+    auto msg = std::make_shared<g::TopicMessage>(
+        testutil::randomPeerId(), seq, g::fromString(body), topic);
     subs->forwardMessage(msg);
   }
 
@@ -30,8 +32,9 @@ namespace {
       g::LocalSubscriptions::OnSubscriptionSetChange cb = {}) {
     if (!cb) {
       cb = [](bool subscribe, const g::TopicId &topic) {
-        if (VERBOSE)
+        if (VERBOSE) {
           fmt::print("{}{}\n", (subscribe ? "+" : "-"), topic);
+        }
       };
     }
     return std::make_shared<g::LocalSubscriptions>(std::move(cb));
@@ -59,8 +62,9 @@ namespace {
         received.insert(d->data);
       });
 
-      if (VERBOSE)
+      if (VERBOSE) {
         fmt::print("subscribed to {}\n", fmt::join(topics, ","));
+      }
     }
 
     void unsubscribe() {

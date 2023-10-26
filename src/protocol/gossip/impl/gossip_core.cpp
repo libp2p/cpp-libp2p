@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,13 +21,16 @@
 namespace libp2p::protocol::gossip {
 
   std::shared_ptr<Gossip> create(
-      std::shared_ptr<basic::Scheduler> scheduler, std::shared_ptr<Host> host,
+      std::shared_ptr<basic::Scheduler> scheduler,
+      std::shared_ptr<Host> host,
       std::shared_ptr<peer::IdentityManager> idmgr,
       std::shared_ptr<crypto::CryptoProvider> crypto_provider,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
       Config config) {
-    return std::make_shared<GossipCore>(std::move(config), std::move(scheduler),
-                                        std::move(host), std::move(idmgr),
+    return std::make_shared<GossipCore>(std::move(config),
+                                        std::move(scheduler),
+                                        std::move(host),
+                                        std::move(idmgr),
                                         std::move(crypto_provider),
                                         std::move(key_marshaller));
   }
@@ -199,12 +203,15 @@ namespace libp2p::protocol::gossip {
     return outcome::success();
   }
 
-  void GossipCore::onSubscription(const PeerContextPtr &peer, bool subscribe,
+  void GossipCore::onSubscription(const PeerContextPtr &peer,
+                                  bool subscribe,
                                   const TopicId &topic) {
     assert(started_);
 
-    log_.debug("peer {} {}subscribed, topic {}", peer->str,
-               (subscribe ? "" : "un"), topic);
+    log_.debug("peer {} {}subscribed, topic {}",
+               peer->str,
+               (subscribe ? "" : "un"),
+               topic);
     if (subscribe) {
       remote_subscriptions_->onPeerSubscribed(peer, topic);
     } else {
@@ -212,7 +219,8 @@ namespace libp2p::protocol::gossip {
     }
   }
 
-  void GossipCore::onIHave(const PeerContextPtr &from, const TopicId &topic,
+  void GossipCore::onIHave(const PeerContextPtr &from,
+                           const TopicId &topic,
                            const MessageId &msg_id) {
     assert(started_);
 
@@ -229,8 +237,8 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::onIWant(const PeerContextPtr &from,
                            const MessageId &msg_id) {
-    log_.debug("peer {} wants message {}", from->str,
-               common::hex_lower(msg_id));
+    log_.debug(
+        "peer {} wants message {}", from->str, common::hex_lower(msg_id));
 
     auto msg_found = msg_cache_.getMessage(msg_id);
     if (msg_found) {
@@ -249,7 +257,8 @@ namespace libp2p::protocol::gossip {
     remote_subscriptions_->onGraft(from, topic);
   }
 
-  void GossipCore::onPrune(const PeerContextPtr &from, const TopicId &topic,
+  void GossipCore::onPrune(const PeerContextPtr &from,
+                           const TopicId &topic,
                            uint64_t backoff_time) {
     assert(started_);
 

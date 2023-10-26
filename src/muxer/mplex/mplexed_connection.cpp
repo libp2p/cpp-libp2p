@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -67,8 +68,8 @@ namespace libp2p::connection {
     auto new_stream_frame =
         createFrameBytes(MplexFrame::Flag::NEW_STREAM, new_stream_id.number);
     write({std::move(new_stream_frame),
-           [self{shared_from_this()}, cb{std::move(cb)},
-            new_stream_id](auto &&create_res) {
+           [self{shared_from_this()}, cb{std::move(cb)}, new_stream_id](
+               auto &&create_res) {
              if (!create_res) {
                self->log_->error("stream creation failed: {}",
                                  create_res.error().message());
@@ -122,22 +123,26 @@ namespace libp2p::connection {
     return !is_active_ || connection_->isClosed();
   }
 
-  void MplexedConnection::read(BytesOut out, size_t bytes,
+  void MplexedConnection::read(BytesOut out,
+                               size_t bytes,
                                ReadCallbackFunc cb) {
     connection_->read(out, bytes, std::move(cb));
   }
 
-  void MplexedConnection::readSome(BytesOut out, size_t bytes,
+  void MplexedConnection::readSome(BytesOut out,
+                                   size_t bytes,
                                    ReadCallbackFunc cb) {
     connection_->readSome(out, bytes, std::move(cb));
   }
 
-  void MplexedConnection::write(BytesIn in, size_t bytes,
+  void MplexedConnection::write(BytesIn in,
+                                size_t bytes,
                                 WriteCallbackFunc cb) {
     connection_->write(in, bytes, std::move(cb));
   }
 
-  void MplexedConnection::writeSome(BytesIn in, size_t bytes,
+  void MplexedConnection::writeSome(BytesIn in,
+                                    size_t bytes,
                                     WriteCallbackFunc cb) {
     connection_->writeSome(in, bytes, std::move(cb));
   }
@@ -173,7 +178,8 @@ namespace libp2p::connection {
     is_writing_ = true;
     const auto &write_data = write_queue_.front();
     return connection_->write(
-        write_data.data, write_data.data.size(),
+        write_data.data,
+        write_data.data.size(),
         [self{shared_from_this()}](auto &&res) {
           self->onWriteCompleted(std::forward<decltype(res)>(res));
         });
@@ -212,9 +218,9 @@ namespace libp2p::connection {
     // we are initiators of this connection, if the other side is a receiver of
     // this connection (o rly?)
     auto this_side_is_initiator = (frame.flag != Flag::NEW_STREAM)
-        && (frame.flag == Flag::MESSAGE_RECEIVER
-            || frame.flag == Flag::CLOSE_RECEIVER
-            || frame.flag == Flag::RESET_RECEIVER);
+                               && (frame.flag == Flag::MESSAGE_RECEIVER
+                                   || frame.flag == Flag::CLOSE_RECEIVER
+                                   || frame.flag == Flag::RESET_RECEIVER);
     StreamId stream_id{frame.stream_number, this_side_is_initiator};
 
     switch (frame.flag) {
@@ -273,7 +279,8 @@ namespace libp2p::connection {
     auto commit_res = stream->commitData(frame.data, frame.data.size());
     if (!commit_res) {
       return log_->error("failed to commit data for stream {}: {}",
-                         stream_id.toString(), commit_res.error().message());
+                         stream_id.toString(),
+                         commit_res.error().message());
     }
   }
 
@@ -346,13 +353,16 @@ namespace libp2p::connection {
     }
   }
 
-  void MplexedConnection::streamWrite(StreamId stream_id, BytesIn in, size_t bytes,
+  void MplexedConnection::streamWrite(StreamId stream_id,
+                                      BytesIn in,
+                                      size_t bytes,
                                       basic::Writer::WriteCallbackFunc cb) {
     Bytes data{in.begin(), in.begin() + bytes};
     auto data_frame = createFrameBytes(stream_id.initiator
                                            ? MplexFrame::Flag::MESSAGE_INITIATOR
                                            : MplexFrame::Flag::MESSAGE_RECEIVER,
-                                       stream_id.number, std::move(data));
+                                       stream_id.number,
+                                       std::move(data));
     write({std::move(data_frame), [cb{std::move(cb)}, bytes](auto &&write_res) {
              if (!write_res) {
                return cb(write_res.error());

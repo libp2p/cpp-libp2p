@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INMEM_PROTOCOL_REPOSITORY_HPP
-#define LIBP2P_INMEM_PROTOCOL_REPOSITORY_HPP
+#pragma once
 
 #include <set>
 #include <unordered_map>
@@ -21,8 +21,8 @@ namespace libp2p::peer {
    public:
     ~InmemProtocolRepository() override = default;
 
-    outcome::result<void> addProtocols(const PeerId &p,
-                                       std::span<const ProtocolName> ms) override;
+    outcome::result<void> addProtocols(
+        const PeerId &p, std::span<const ProtocolName> ms) override;
 
     outcome::result<void> removeProtocols(
         const PeerId &p, std::span<const ProtocolName> ms) override;
@@ -31,7 +31,8 @@ namespace libp2p::peer {
         const PeerId &p) const override;
 
     outcome::result<std::vector<ProtocolName>> supportsProtocols(
-        const PeerId &p, const std::set<ProtocolName> &protocols) const override;
+        const PeerId &p,
+        const std::set<ProtocolName> &protocols) const override;
 
     void clear(const PeerId &p) override;
 
@@ -50,5 +51,3 @@ namespace libp2p::peer {
   };
 
 }  // namespace libp2p::peer
-
-#endif  // LIBP2P_INMEM_PROTOCOL_REPOSITORY_HPP

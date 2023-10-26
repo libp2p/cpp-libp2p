@@ -1,16 +1,15 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_IDENTIFY_MSG_PROCESSOR_HPP
-#define LIBP2P_IDENTIFY_MSG_PROCESSOR_HPP
+#pragma once
 
 #include <memory>
 #include <optional>
 #include <string>
 
-#include <span>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/host/host.hpp>
@@ -21,6 +20,7 @@
 #include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/identify/observed_addresses.hpp>
+#include <span>
 
 namespace identify::pb {
   class Identify;
@@ -38,7 +38,8 @@ namespace libp2p::protocol {
     using IdentifyCallback = void(const peer::PeerId &);
 
     IdentifyMessageProcessor(
-        Host &host, network::ConnectionManager &conn_manager,
+        Host &host,
+        network::ConnectionManager &conn_manager,
         peer::IdentityManager &identity_manager,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
@@ -141,5 +142,3 @@ namespace libp2p::protocol {
     log::Logger log_ = log::createLogger("IdentifyMsgProcessor");
   };
 }  // namespace libp2p::protocol
-
-#endif  // LIBP2P_IDENTIFY_MSG_PROCESSOR_HPP

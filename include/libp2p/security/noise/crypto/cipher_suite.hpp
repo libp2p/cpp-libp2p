@@ -1,10 +1,10 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_CIPHER_SUITE_HPP
-#define LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_CIPHER_SUITE_HPP
+#pragma once
 
 #include <libp2p/security/noise/crypto/interfaces.hpp>
 
@@ -19,7 +19,7 @@ namespace libp2p::security::noise {
     outcome::result<DHKey> generate() override;
 
     outcome::result<Bytes> dh(const Bytes &private_key,
-                                  const Bytes &public_key) override;
+                              const Bytes &public_key) override;
 
     int dhSize() const override;
 
@@ -42,4 +42,3 @@ namespace libp2p::security::noise {
   };
 
 }  // namespace libp2p::security::noise
-#endif  // LIBP2P_INCLUDE_LIBP2P_SECURITY_NOISE_CRYPTO_CIPHER_SUITE_HPP

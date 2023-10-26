@@ -1,5 +1,6 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -28,7 +29,8 @@
 namespace libp2p::connection {
   NoiseConnection::NoiseConnection(
       std::shared_ptr<LayerConnection> original_connection,
-      crypto::PublicKey localPubkey, crypto::PublicKey remotePubkey,
+      crypto::PublicKey localPubkey,
+      crypto::PublicKey remotePubkey,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
       std::shared_ptr<security::noise::CipherState> encoder,
       std::shared_ptr<security::noise::CipherState> decoder)
@@ -38,8 +40,7 @@ namespace libp2p::connection {
         key_marshaller_{std::move(key_marshaller)},
         encoder_cs_{std::move(encoder)},
         decoder_cs_{std::move(decoder)},
-        frame_buffer_{
-            std::make_shared<Bytes>(security::noise::kMaxMsgLen)},
+        frame_buffer_{std::make_shared<Bytes>(security::noise::kMaxMsgLen)},
         framer_{std::make_shared<security::noise::InsecureReadWriter>(
             connection_, frame_buffer_)} {
     BOOST_ASSERT(connection_);
@@ -59,7 +60,8 @@ namespace libp2p::connection {
     return connection_->close();
   }
 
-  void NoiseConnection::read(BytesOut out, size_t bytes,
+  void NoiseConnection::read(BytesOut out,
+                             size_t bytes,
                              libp2p::basic::Reader::ReadCallbackFunc cb) {
     OperationContext context{.bytes_served = 0,
                              .total_bytes = bytes,
@@ -67,23 +69,27 @@ namespace libp2p::connection {
     read(out, bytes, context, std::move(cb));
   }
 
-  void NoiseConnection::read(BytesOut out, size_t bytes,
-                             OperationContext ctx, ReadCallbackFunc cb) {
+  void NoiseConnection::read(BytesOut out,
+                             size_t bytes,
+                             OperationContext ctx,
+                             ReadCallbackFunc cb) {
     BOOST_ASSERT(out.size() >= bytes);
     if (0 == bytes) {
       BOOST_ASSERT(ctx.bytes_served == ctx.total_bytes);
       return cb(ctx.bytes_served);
     }
-    readSome(out, bytes,
-             [self{shared_from_this()}, out, bytes, cb{std::move(cb)},
-              ctx](auto _n) mutable {
+    readSome(out,
+             bytes,
+             [self{shared_from_this()}, out, bytes, cb{std::move(cb)}, ctx](
+                 auto _n) mutable {
                OUTCOME_CB(n, _n);
                ctx.bytes_served += n;
                self->read(out.subspan(n), bytes - n, ctx, std::move(cb));
              });
   }
 
-  void NoiseConnection::readSome(BytesOut out, size_t bytes,
+  void NoiseConnection::readSome(BytesOut out,
+                                 size_t bytes,
                                  libp2p::basic::Reader::ReadCallbackFunc cb) {
     OperationContext context{.bytes_served = 0,
                              .total_bytes = bytes,
@@ -91,8 +97,10 @@ namespace libp2p::connection {
     readSome(out, bytes, context, std::move(cb));
   }
 
-  void NoiseConnection::readSome(BytesOut out, size_t bytes,
-                                 OperationContext ctx, ReadCallbackFunc cb) {
+  void NoiseConnection::readSome(BytesOut out,
+                                 size_t bytes,
+                                 OperationContext ctx,
+                                 ReadCallbackFunc cb) {
     if (not frame_buffer_->empty()) {
       auto n{std::min(bytes, frame_buffer_->size())};
       auto begin{frame_buffer_->begin()};
@@ -101,16 +109,18 @@ namespace libp2p::connection {
       frame_buffer_->erase(begin, end);
       return cb(n);
     }
-    framer_->read([self{shared_from_this()}, out, bytes, cb{std::move(cb)},
-                   ctx](auto _data) mutable {
-      OUTCOME_CB(data, _data);
-      OUTCOME_CB(decrypted, self->decoder_cs_->decrypt({}, *data, {}));
-      self->frame_buffer_->assign(decrypted.begin(), decrypted.end());
-      self->readSome(out, bytes, ctx, std::move(cb));
-    });
+    framer_->read(
+        [self{shared_from_this()}, out, bytes, cb{std::move(cb)}, ctx](
+            auto _data) mutable {
+          OUTCOME_CB(data, _data);
+          OUTCOME_CB(decrypted, self->decoder_cs_->decrypt({}, *data, {}));
+          self->frame_buffer_->assign(decrypted.begin(), decrypted.end());
+          self->readSome(out, bytes, ctx, std::move(cb));
+        });
   }
 
-  void NoiseConnection::write(BytesIn in, size_t bytes,
+  void NoiseConnection::write(BytesIn in,
+                              size_t bytes,
                               libp2p::basic::Writer::WriteCallbackFunc cb) {
     OperationContext context{.bytes_served = 0,
                              .total_bytes = bytes,
@@ -118,7 +128,8 @@ namespace libp2p::connection {
     write(in, bytes, context, std::move(cb));
   }
 
-  void NoiseConnection::write(BytesIn in, size_t bytes,
+  void NoiseConnection::write(BytesIn in,
+                              size_t bytes,
                               NoiseConnection::OperationContext ctx,
                               basic::Writer::WriteCallbackFunc cb) {
     auto *self{this};  // for OUTCOME_CB
@@ -136,17 +147,20 @@ namespace libp2p::connection {
           write_buffers_.emplace(write_buffers_.end(), dummy_size, dummy_value);
     }
     ctx.write_buffer->swap(encrypted);
-    framer_->write(
-        *ctx.write_buffer,
-        [self{shared_from_this()}, in{in.subspan(static_cast<int64_t>(n))},
-         bytes{bytes - n}, cb{std::move(cb)}, ctx](auto _n) mutable {
-          OUTCOME_CB(n, _n);
-          ctx.bytes_served += n;
-          self->write(in, bytes, ctx, std::move(cb));
-        });
+    framer_->write(*ctx.write_buffer,
+                   [self{shared_from_this()},
+                    in{in.subspan(static_cast<int64_t>(n))},
+                    bytes{bytes - n},
+                    cb{std::move(cb)},
+                    ctx](auto _n) mutable {
+                     OUTCOME_CB(n, _n);
+                     ctx.bytes_served += n;
+                     self->write(in, bytes, ctx, std::move(cb));
+                   });
   }
 
-  void NoiseConnection::writeSome(BytesIn in, size_t bytes,
+  void NoiseConnection::writeSome(BytesIn in,
+                                  size_t bytes,
                                   libp2p::basic::Writer::WriteCallbackFunc cb) {
     write(in, bytes, std::move(cb));
   }
