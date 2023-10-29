@@ -9,6 +9,9 @@
 #include <algorithm>
 
 #include <arpa/inet.h>
+#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
 #include <libp2p/crypto/error.hpp>
@@ -197,48 +200,8 @@ namespace libp2p::connection {
   void SecioConnection::read(BytesOut out,
                              size_t bytes,
                              basic::Reader::ReadCallbackFunc cb) {
-    // TODO(107): Reentrancy
-
-    if (!isInitialized()) {
-      log_->error("Reading on unintialized connection");
-      cb(Error::CONN_NOT_INITIALIZED);
-      return;
-    }
-
-    // the line below is due to std::span.size() has signed return type
-    if (out.size() < bytes) {
-      log_->error(
-          "Provided buffer is too short. Buffer size is {} when {} required",
-          out.size(),
-          bytes);
-      cb(Error::TOO_SHORT_BUFFER);
-      return;
-    }
-
-    if (user_data_buffer_.size() >= bytes) {
-      popUserData(out, bytes);
-      SL_TRACE(log_, "Successfully read {} bytes", bytes);
-      cb(bytes);
-      return;
-    }
-
-    ReadCallbackFunc cb_wrapper =
-        [self{shared_from_this()}, user_cb{cb}, out, bytes](
-            outcome::result<size_t> size_read_res) -> void {
-      if (not size_read_res) {
-        // in case of error, propagate it to the caller
-        user_cb(size_read_res);
-        return;
-      }
-      /* No error occurred.
-       * Initiate one more read to check if there is enough decrypted bytes to
-       * return to the caller.
-       * If no, let's read one more SECIO frame */
-      self->read(out, bytes, user_cb);
-    };
-
-    // this populates user_data_buffer_ when read successful
-    readNextMessage(cb_wrapper);
+    ambigousSize(out, bytes);
+    libp2p::readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
   void SecioConnection::readSome(BytesOut out,
@@ -350,6 +313,13 @@ namespace libp2p::connection {
   void SecioConnection::write(BytesIn in,
                               size_t bytes,
                               basic::Writer::WriteCallbackFunc cb) {
+    ambigousSize(in, bytes);
+    writeReturnSize(shared_from_this(), in, std::move(cb));
+  }
+
+  void SecioConnection::writeSome(BytesIn in,
+                                  size_t bytes,
+                                  basic::Writer::WriteCallbackFunc cb) {
     // TODO(107): Reentrancy
 
     if (!isInitialized()) {
@@ -382,12 +352,6 @@ namespace libp2p::connection {
           user_cb(bytes);
         };
     original_connection_->write(frame_buffer, frame_buffer.size(), cb_wrapper);
-  }
-
-  void SecioConnection::writeSome(BytesIn in,
-                                  size_t bytes,
-                                  basic::Writer::WriteCallbackFunc cb) {
-    write(in, bytes, std::move(cb));
   }
 
   bool SecioConnection::isClosed() const {

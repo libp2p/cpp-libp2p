@@ -7,6 +7,7 @@
 #include <libp2p/layer/websocket/ws_connection.hpp>
 
 #include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/asio_buffer.hpp>
 #include <libp2p/common/asio_cb.hpp>
@@ -160,7 +161,7 @@ namespace libp2p::connection {
                            libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
     SL_TRACE(log_, "write {} bytes", bytes);
-    ws_.async_write(asioBuffer(in), toAsioCbSize(std::move(cb)));
+    writeReturnSize(shared_from_this(), in, std::move(cb));
   }
 
   void WsConnection::writeSome(BytesIn in,    //

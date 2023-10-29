@@ -29,10 +29,10 @@ namespace libp2p::basic {
     size_t unsentBytes() const;
 
     /// Enqueues data
-    void enqueue(DataRef data, bool some, basic::Writer::WriteCallbackFunc cb);
+    void enqueue(DataRef data, basic::Writer::WriteCallbackFunc cb);
 
     /// Returns new window size
-    size_t dequeue(size_t window_size, DataRef &out, bool &some);
+    size_t dequeue(size_t window_size, DataRef &out);
 
     struct AckResult {
       // callback to be called to ack data was sent
@@ -45,7 +45,7 @@ namespace libp2p::basic {
       bool data_consistent = true;
     };
 
-    /// Calls write callback if full message was sent (or some),
+    /// Calls write callback if full message was sent,
     /// returns callback to ack + true if ok or false on inconsistency
     [[nodiscard]] AckResult ackDataSent(size_t size);
 
@@ -69,9 +69,6 @@ namespace libp2p::basic {
 
       // remaining bytes to dequeue
       size_t unsent;
-
-      // allows to send at least 1 byte to complete operation
-      bool some;
 
       // callback
       basic::Writer::WriteCallbackFunc cb;

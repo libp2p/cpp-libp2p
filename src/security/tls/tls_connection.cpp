@@ -8,6 +8,7 @@
 #include "tls_details.hpp"
 
 #include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 
 namespace libp2p::connection {
@@ -171,9 +172,9 @@ namespace libp2p::connection {
   void TlsConnection::write(BytesIn in,
                             size_t bytes,
                             Writer::WriteCallbackFunc cb) {
+    ambigousSize(in, bytes);
     SL_TRACE(log(), "writing {} bytes", bytes);
-    boost::asio::async_write(
-        socket_, makeBuffer(in, bytes), closeOnError(*this, std::move(cb)));
+    writeReturnSize(shared_from_this(), in, std::move(cb));
   }
 
   void TlsConnection::writeSome(BytesIn in,

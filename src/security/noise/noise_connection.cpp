@@ -6,6 +6,9 @@
 
 #include <libp2p/security/noise/noise_connection.hpp>
 
+#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/crypto/x25519_provider/x25519_provider_impl.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
 
@@ -63,29 +66,8 @@ namespace libp2p::connection {
   void NoiseConnection::read(BytesOut out,
                              size_t bytes,
                              libp2p::basic::Reader::ReadCallbackFunc cb) {
-    OperationContext context{.bytes_served = 0,
-                             .total_bytes = bytes,
-                             .write_buffer = write_buffers_.end()};
-    read(out, bytes, context, std::move(cb));
-  }
-
-  void NoiseConnection::read(BytesOut out,
-                             size_t bytes,
-                             OperationContext ctx,
-                             ReadCallbackFunc cb) {
-    BOOST_ASSERT(out.size() >= bytes);
-    if (0 == bytes) {
-      BOOST_ASSERT(ctx.bytes_served == ctx.total_bytes);
-      return cb(ctx.bytes_served);
-    }
-    readSome(out,
-             bytes,
-             [self{shared_from_this()}, out, bytes, cb{std::move(cb)}, ctx](
-                 auto _n) mutable {
-               OUTCOME_CB(n, _n);
-               ctx.bytes_served += n;
-               self->read(out.subspan(n), bytes - n, ctx, std::move(cb));
-             });
+    ambigousSize(out, bytes);
+    readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
   void NoiseConnection::readSome(BytesOut out,
@@ -122,10 +104,8 @@ namespace libp2p::connection {
   void NoiseConnection::write(BytesIn in,
                               size_t bytes,
                               libp2p::basic::Writer::WriteCallbackFunc cb) {
-    OperationContext context{.bytes_served = 0,
-                             .total_bytes = bytes,
-                             .write_buffer = write_buffers_.end()};
-    write(in, bytes, context, std::move(cb));
+    ambigousSize(in, bytes);
+    writeReturnSize(shared_from_this(), in, std::move(cb));
   }
 
   void NoiseConnection::write(BytesIn in,
@@ -162,7 +142,12 @@ namespace libp2p::connection {
   void NoiseConnection::writeSome(BytesIn in,
                                   size_t bytes,
                                   libp2p::basic::Writer::WriteCallbackFunc cb) {
-    write(in, bytes, std::move(cb));
+    OperationContext context{
+        .bytes_served = 0,
+        .total_bytes = bytes,
+        .write_buffer = write_buffers_.end(),
+    };
+    write(in, bytes, context, std::move(cb));
   }
 
   void NoiseConnection::deferReadCallback(outcome::result<size_t> res,
