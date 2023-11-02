@@ -269,7 +269,7 @@ namespace libp2p::connection {
     assert(n <= raw_read_buffer_->size());
 
     if (n < raw_read_buffer_->size()) {
-      bytes_read = bytes_read.first(ssize_t(n));
+      bytes_read = bytes_read.first(n);
     }
 
     reading_state_.onDataReceived(bytes_read);
@@ -410,7 +410,7 @@ namespace libp2p::connection {
       SL_DEBUG(log(), "received SYN with stream id of wrong direction");
       ok = false;
 
-    } else if (streams_.count(frame.stream_id) != 0) {
+    } else if (streams_.contains(frame.stream_id)) {
       SL_DEBUG(log(), "received SYN on existing stream id");
       ok = false;
 
@@ -443,7 +443,7 @@ namespace libp2p::connection {
     enqueue(ackStreamMsg(frame.stream_id));
 
     // handler will be called after all inbound bytes processed
-    fresh_streams_.push_back({frame.stream_id, StreamHandlerFunc{}});
+    fresh_streams_.emplace_back(frame.stream_id, StreamHandlerFunc{});
 
     return true;
   }
@@ -465,7 +465,7 @@ namespace libp2p::connection {
     } else {
       auto it = pending_outbound_streams_.find(frame.stream_id);
       if (it == pending_outbound_streams_.end()) {
-        if (streams_.count(frame.stream_id) != 0) {
+        if (streams_.contains(frame.stream_id)) {
           // Stream was opened in optimistic manner
           SL_DEBUG(log(),
                    "ignoring received ACK on existing stream id {}",
@@ -524,8 +524,6 @@ namespace libp2p::connection {
     if (result == YamuxStream::kRemoveStream) {
       eraseStream(stream_id);
     }
-
-    return;
   }
 
   void YamuxedConnection::processRst(StreamId stream_id) {
