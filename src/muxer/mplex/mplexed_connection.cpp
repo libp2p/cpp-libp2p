@@ -7,6 +7,7 @@
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 #include <boost/assert.hpp>
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/muxer/mplex/mplex_frame.hpp>
 
 namespace libp2p::connection {
@@ -177,10 +178,8 @@ namespace libp2p::connection {
 
     is_writing_ = true;
     const auto &write_data = write_queue_.front();
-    return connection_->write(
-        write_data.data,
-        write_data.data.size(),
-        [self{shared_from_this()}](auto &&res) {
+    return writeReturnSize(
+        connection_, write_data.data, [self{shared_from_this()}](auto &&res) {
           self->onWriteCompleted(std::forward<decltype(res)>(res));
         });
   }

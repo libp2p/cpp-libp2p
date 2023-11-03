@@ -94,6 +94,7 @@ namespace libp2p::connection {
   }
 
   void MplexStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
+    ambigousSize(in, bytes);
     // TODO(107): Reentrancy
 
     if (is_reset_) {
@@ -135,7 +136,7 @@ namespace libp2p::connection {
           if (not self->write_queue_.empty()) {
             auto [in, bytes, cb] = self->write_queue_.front();
             self->write_queue_.pop_front();
-            self->write(in, bytes, cb);
+            writeReturnSize(self, in, cb);
           }
         });
   }

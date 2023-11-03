@@ -351,7 +351,7 @@ namespace libp2p::connection {
           }
           user_cb(bytes);
         };
-    original_connection_->write(frame_buffer, frame_buffer.size(), cb_wrapper);
+    writeReturnSize(original_connection_, frame_buffer, cb_wrapper);
   }
 
   bool SecioConnection::isClosed() const {

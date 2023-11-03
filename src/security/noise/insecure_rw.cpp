@@ -8,6 +8,7 @@
 
 #include <libp2p/security/noise/insecure_rw.hpp>
 
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/security/noise/crypto/state.hpp>
 
@@ -73,6 +74,6 @@ namespace libp2p::security::noise {
       }
       cb(written_bytes - kLengthPrefixSize);
     };
-    connection_->write(outbuf_, outbuf_.size(), std::move(write_cb));
+    writeReturnSize(connection_, outbuf_, std::move(write_cb));
   }
 }  // namespace libp2p::security::noise

@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include <boost/di/extension/scopes/shared.hpp>
 
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/injector/host_injector.hpp>
 
 #define TRACE_ENABLED 1
@@ -190,8 +191,9 @@ namespace libp2p::regression {
         return behavior_(*this);
       }
       // clang-format off
-      stream->write(
-          *write_buf_, write_buf_->size(),
+      writeReturnSize(
+          stream,
+          *write_buf_,
           [wptr = weak_from_this(), buf = write_buf_] (auto res) {
             auto self = wptr.lock();
             if (self) {  self->onWrite(res); }

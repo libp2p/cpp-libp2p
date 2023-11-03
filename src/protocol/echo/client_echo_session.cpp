@@ -8,6 +8,7 @@
 
 #include <boost/assert.hpp>
 
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/log/logger.hpp>
 
 namespace libp2p::protocol {
@@ -32,7 +33,7 @@ namespace libp2p::protocol {
 
     auto self{shared_from_this()};
 
-    stream_->write(buf_, buf_.size(), [self](outcome::result<size_t> rw) {
+    writeReturnSize(stream_, buf_, [self](outcome::result<size_t> rw) {
       if (!rw && !self->ec_) {
         self->ec_ = rw.error();
         self->completed();

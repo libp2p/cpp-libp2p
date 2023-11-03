@@ -12,6 +12,7 @@
 #include <boost/optional.hpp>
 #include <libp2p/basic/message_read_writer_error.hpp>
 #include <libp2p/basic/varint_reader.hpp>
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/multi/uvarint.hpp>
 
 namespace libp2p::basic {
@@ -59,16 +60,16 @@ namespace libp2p::basic {
                       std::make_move_iterator(varint_len.toVector().end()));
     msg_bytes->insert(msg_bytes->end(), buffer.begin(), buffer.end());
 
-    conn_->write(*msg_bytes,
-                 msg_bytes->size(),
-                 [cb = std::move(cb),
-                  varint_size = varint_len.size(),
-                  msg_bytes](auto &&res) {
-                   if (!res) {
-                     return cb(res.error());
-                   }
-                   // hide a written varint from the user of the method
-                   cb(res.value() - varint_size);
-                 });
+    writeReturnSize(conn_,
+                    *msg_bytes,
+                    [cb = std::move(cb),
+                     varint_size = varint_len.size(),
+                     msg_bytes](auto &&res) {
+                      if (!res) {
+                        return cb(res.error());
+                      }
+                      // hide a written varint from the user of the method
+                      cb(res.value() - varint_size);
+                    });
   }
 }  // namespace libp2p::basic

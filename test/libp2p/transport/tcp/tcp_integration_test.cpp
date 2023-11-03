@@ -12,6 +12,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/transport/tcp.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
@@ -142,8 +143,8 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
         *buf, buf->size(), [&counter, conn, buf, context](auto &&res) {
           ASSERT_TRUE(res) << res.error().message();
 
-          conn->write(
-              *buf, buf->size(), [&counter, conn, buf, context](auto &&res) {
+          libp2p::writeReturnSize(
+              conn, *buf, [&counter, conn, buf, context](auto &&res) {
                 ASSERT_TRUE(res) << res.error().message();
                 EXPECT_EQ(res.value(), buf->size());
                 counter++;
@@ -175,8 +176,8 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
 
         EXPECT_TRUE(conn->isInitiator());
 
-        conn->write(
-            *buf, buf->size(), [conn, readback, buf, context](auto &&res) {
+        libp2p::writeReturnSize(
+            conn, *buf, [conn, readback, buf, context](auto &&res) {
               ASSERT_TRUE(res) << res.error().message();
               ASSERT_EQ(res.value(), buf->size());
               conn->read(*readback,
@@ -305,10 +306,10 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
     EXPECT_FALSE(conn->isInitiator());
 
     auto buf = std::make_shared<std::vector<uint8_t>>(kSize, 0);
-    conn->readSome(*buf, kSize, [kSize, &counter, conn, buf](auto &&res) {
+    conn->readSome(*buf, kSize, [&counter, conn, buf](auto &&res) {
       ASSERT_TRUE(res) << res.error().message();
 
-      conn->write(*buf, kSize, [&counter, buf, conn](auto &&res) {
+      libp2p::writeReturnSize(conn, *buf, [&counter, buf, conn](auto &&res) {
         ASSERT_TRUE(res) << res.error().message();
         EXPECT_EQ(res.value(), buf->size());
         counter++;
@@ -334,15 +335,16 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
 
         EXPECT_TRUE(conn->isInitiator());
 
-        conn->write(*buf, kSize, [conn, kSize, readback, buf](auto &&res) {
-          ASSERT_TRUE(res) << res.error().message();
-          ASSERT_EQ(res.value(), buf->size());
-          conn->read(*readback, kSize, [conn, readback, buf](auto &&res) {
-            ASSERT_TRUE(res) << res.error().message();
-            ASSERT_EQ(res.value(), readback->size());
-            ASSERT_EQ(*buf, *readback);
-          });
-        });
+        libp2p::writeReturnSize(
+            conn, *buf, [conn, kSize, readback, buf](auto &&res) {
+              ASSERT_TRUE(res) << res.error().message();
+              ASSERT_EQ(res.value(), buf->size());
+              conn->read(*readback, kSize, [conn, readback, buf](auto &&res) {
+                ASSERT_TRUE(res) << res.error().message();
+                ASSERT_EQ(res.value(), readback->size());
+                ASSERT_EQ(*buf, *readback);
+              });
+            });
       });
 
   context->run_for(100ms);

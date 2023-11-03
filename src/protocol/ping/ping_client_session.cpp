@@ -8,6 +8,7 @@
 
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/assert.hpp>
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/protocol/ping/common.hpp>
 
 namespace libp2p::protocol {
@@ -46,16 +47,14 @@ namespace libp2p::protocol {
       return;
     }
 
-    auto rand_buf = rand_gen_->randomBytes(config_.message_size);
-    std::move(rand_buf.begin(), rand_buf.end(), write_buffer_.begin());
-    stream_->write(write_buffer_,
-                   config_.message_size,
-                   [self{shared_from_this()}](auto &&write_res) {
-                     if (!write_res) {
-                       self->last_error_ = write_res.error();
-                     }
-                     self->last_op_completed_ = true;
-                   });
+    write_buffer_ = rand_gen_->randomBytes(config_.message_size);
+    writeReturnSize(
+        stream_, write_buffer_, [self{shared_from_this()}](auto &&write_res) {
+          if (!write_res) {
+            self->last_error_ = write_res.error();
+          }
+          self->last_op_completed_ = true;
+        });
 
     timer_.async_wait([self{shared_from_this()}](auto &&ec) {
       self->writeCompleted(std::forward<decltype(ec)>(ec));

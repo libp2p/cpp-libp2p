@@ -86,7 +86,7 @@ TEST_F(PingTest, PingServer) {
     return std::equal(
         actual.begin(), actual.end(), expected.begin(), expected.end());
   };
-  EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _))
+  EXPECT_CALL(*stream_, writeSome(Truly(if_eq_buf), kPingMsgSize, _))
       .WillOnce(InvokeArgument<2>(buffer_.size()));
 
   EXPECT_CALL(*stream_, isClosedForWrite()).WillOnce(Return(false));
@@ -117,7 +117,7 @@ TEST_F(PingTest, PingClient) {
     return std::equal(
         actual.begin(), actual.end(), expected.begin(), expected.end());
   };
-  EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _))
+  EXPECT_CALL(*stream_, writeSome(Truly(if_eq_buf), kPingMsgSize, _))
       .WillOnce(InvokeArgument<2>(buffer_.size()))
       .WillOnce(  // no second write
           InvokeArgument<2>(outcome::failure(boost::system::error_code{
@@ -156,7 +156,7 @@ TEST_F(PingTest, PingClientTimeoutExpired) {
     return std::equal(
         actual.begin(), actual.end(), expected.begin(), expected.end());
   };
-  EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _));
+  EXPECT_CALL(*stream_, writeSome(Truly(if_eq_buf), kPingMsgSize, _));
 
   EXPECT_CALL(*stream_, isClosedForWrite()).WillOnce(Return(false));
 
