@@ -15,7 +15,6 @@ namespace libp2p::basic {
    public:
     ~WriterMock() override = default;
 
-    MOCK_METHOD2(write, void(BytesIn, Writer::WriteCallbackFunc));
     MOCK_METHOD2(writeSome, void(BytesIn, Writer::WriteCallbackFunc));
   };
 }  // namespace libp2p::basic

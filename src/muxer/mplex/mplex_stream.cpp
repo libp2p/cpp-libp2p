@@ -88,11 +88,6 @@ namespace libp2p::connection {
     }
   }
 
-  void MplexStream::write(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
-    writeReturnSize(shared_from_this(), in, std::move(cb));
-  }
-
   void MplexStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
     // TODO(107): Reentrancy

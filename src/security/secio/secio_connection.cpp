@@ -310,13 +310,6 @@ namespace libp2p::connection {
         });
   }
 
-  void SecioConnection::write(BytesIn in,
-                              size_t bytes,
-                              basic::Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
-    writeReturnSize(shared_from_this(), in, std::move(cb));
-  }
-
   void SecioConnection::writeSome(BytesIn in,
                                   size_t bytes,
                                   basic::Writer::WriteCallbackFunc cb) {
