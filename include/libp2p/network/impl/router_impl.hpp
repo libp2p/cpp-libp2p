@@ -8,6 +8,7 @@
 
 #include <tsl/htrie_map.h>
 #include <libp2p/network/router.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::network {
 

@@ -17,6 +17,7 @@
 #include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/node_id.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::protocol::kademlia {
 

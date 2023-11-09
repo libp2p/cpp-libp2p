@@ -39,14 +39,14 @@ namespace libp2p::crypto::aes {
                                          const EVP_CIPHER *cipher) {
     ctx_ = EVP_CIPHER_CTX_new();
     if (nullptr == ctx_) {
-      return OpenSslError::FAILED_INITIALIZE_CONTEXT;
+      return Q_ERROR(OpenSslError::FAILED_INITIALIZE_CONTEXT);
     }
 
     int mode{Mode::ENCRYPT == mode_ ? 1 : 0};
     if (1
         != EVP_CipherInit_ex(
             ctx_, cipher, nullptr, key.data(), iv.data(), mode)) {
-      return OpenSslError::FAILED_INITIALIZE_OPERATION;
+      return Q_ERROR(OpenSslError::FAILED_INITIALIZE_OPERATION);
     }
 
     return outcome::success();
@@ -67,9 +67,9 @@ namespace libp2p::crypto::aes {
             ctx_, out_buffer.data(), &out_len, data.data(), data.size())) {
       switch (mode_) {
         case Mode::ENCRYPT:
-          return OpenSslError::FAILED_ENCRYPT_UPDATE;
+          return Q_ERROR(OpenSslError::FAILED_ENCRYPT_UPDATE);
         case Mode::DECRYPT:
-          return OpenSslError::FAILED_DECRYPT_UPDATE;
+          return Q_ERROR(OpenSslError::FAILED_DECRYPT_UPDATE);
       }
     }
     out_buffer.resize(out_len);
@@ -80,7 +80,7 @@ namespace libp2p::crypto::aes {
     if (initialization_error_.has_error()) {
       return initialization_error_.error();
     }
-    initialization_error_ = OpenSslError::STREAM_FINALIZED;
+    initialization_error_ = Q_ERROR(OpenSslError::STREAM_FINALIZED);
 
     Bytes out_buffer;
     out_buffer.resize(AES_BLOCK_SIZE);
@@ -89,9 +89,9 @@ namespace libp2p::crypto::aes {
     if (1 != EVP_CipherFinal_ex(ctx_, out_buffer.data(), &out_len)) {
       switch (mode_) {
         case Mode::ENCRYPT:
-          return OpenSslError::FAILED_ENCRYPT_FINALIZE;
+          return Q_ERROR(OpenSslError::FAILED_ENCRYPT_FINALIZE);
         case Mode::DECRYPT:
-          return OpenSslError::FAILED_DECRYPT_FINALIZE;
+          return Q_ERROR(OpenSslError::FAILED_DECRYPT_FINALIZE);
       }
     }
 

@@ -86,13 +86,13 @@ namespace libp2p::connection {
     feedback_.deferCall([wptr = weak_from_this(), ec, cb = std::move(cb)]() {
       auto self = wptr.lock();
       if (self && !self->no_more_callbacks_) {
-        cb(ec);
+        cb(Q_ERROR(ec));
       }
     });
   }
 
   bool YamuxStream::isClosed() const noexcept {
-    return close_reason_.value() != 0;
+    return close_reason_.has_value();
   }
 
   void YamuxStream::close(VoidResultHandlerFunc cb) {
@@ -101,7 +101,7 @@ namespace libp2p::connection {
         feedback_.deferCall([wptr{weak_from_this()}, cb{std::move(cb)}] {
           auto self = wptr.lock();
           if (self) {
-            cb(self->close_reason_);
+            cb(*self->close_reason_);
           }
         });
       }
@@ -124,9 +124,9 @@ namespace libp2p::connection {
     std::pair<VoidResultHandlerFunc, outcome::result<void>> p{
         VoidResultHandlerFunc{}, outcome::success()};
     if (!close_reason_) {
-      close_reason_ = Error::STREAM_CLOSED_BY_HOST;
-    } else if (close_reason_ != Error::STREAM_CLOSED_BY_HOST) {
-      p.second = close_reason_;
+      close_reason_ = Q_ERROR(Error::STREAM_CLOSED_BY_HOST);
+    } else if (not close_reason_->ec(Error::STREAM_CLOSED_BY_HOST)) {
+      p.second = *close_reason_;
     }
     if (close_cb_) {
       p.first.swap(close_cb_);
@@ -145,18 +145,18 @@ namespace libp2p::connection {
   void YamuxStream::reset() {
     no_more_callbacks_ = true;
     feedback_.resetStream(stream_id_);
-    doClose(Error::STREAM_RESET_BY_HOST, true);
+    doClose(Q_ERROR(Error::STREAM_RESET_BY_HOST), true);
   }
 
   void YamuxStream::adjustWindowSize(uint32_t new_size,
                                      VoidResultHandlerFunc cb) {
-    std::error_code ec = close_reason_;
+    auto ec = close_reason_;
     if (!ec) {
       if (!is_readable_) {
-        ec = Error::STREAM_NOT_READABLE;
+        ec = Q_ERROR(Error::STREAM_NOT_READABLE);
       } else if (new_size > maximum_window_size_
                  || new_size < peers_window_size_) {
-        ec = Error::STREAM_INVALID_WINDOW_SIZE;
+        ec = Q_ERROR(Error::STREAM_INVALID_WINDOW_SIZE);
       }
     }
 
@@ -180,7 +180,7 @@ namespace libp2p::connection {
         if (!ec) {
           cb(outcome::success());
         } else {
-          cb(ec);
+          cb(*ec);
         }
       });
     }
@@ -285,7 +285,7 @@ namespace libp2p::connection {
     }
 
     if (overflow) {
-      doClose(Error::STREAM_RECEIVE_OVERFLOW, false);
+      doClose(Q_ERROR(Error::STREAM_RECEIVE_OVERFLOW), false);
     } else if (bytes_consumed > 0) {
       feedback_.ackReceivedBytes(stream_id_, bytes_consumed);
       TRACE("stream {} receive window increased by {} to {}",
@@ -309,7 +309,7 @@ namespace libp2p::connection {
     is_readable_ = false;
 
     if (!is_writable_) {
-      doClose(Error::STREAM_CLOSED_BY_HOST, true);
+      doClose(Q_ERROR(Error::STREAM_CLOSED_BY_HOST), true);
 
       // connection will remove stream
       return kRemoveStream;
@@ -333,7 +333,7 @@ namespace libp2p::connection {
       return;
     }
 
-    doClose(Error::STREAM_RESET_BY_PEER, true);
+    doClose(Q_ERROR(Error::STREAM_RESET_BY_PEER), true);
   }
 
   void YamuxStream::onDataWritten(size_t bytes) {
@@ -341,7 +341,7 @@ namespace libp2p::connection {
     if (!result.data_consistent) {
       log()->error("write queue ack failed, stream {}", stream_id_);
       feedback_.resetStream(stream_id_);
-      doClose(Error::STREAM_INTERNAL_ERROR, true);
+      doClose(Q_ERROR(Error::STREAM_INTERNAL_ERROR), true);
       return;
     }
 
@@ -350,19 +350,17 @@ namespace libp2p::connection {
     }
   }
 
-  void YamuxStream::closedByConnection(std::error_code ec) {
-    doClose(ec, true);
+  void YamuxStream::closedByConnection(qtils::Errors errors) {
+    doClose(std::move(errors), true);
   }
 
-  void YamuxStream::doClose(std::error_code ec, bool notify_read_side) {
-    assert(ec);
-
+  void YamuxStream::doClose(qtils::Errors errors, bool notify_read_side) {
     if (close_reason_) {
       // already closed
       return;
     }
 
-    close_reason_ = ec;
+    close_reason_ = errors;
     is_readable_ = false;
     is_writable_ = false;
 
@@ -401,14 +399,14 @@ namespace libp2p::connection {
     }
 
     for (const auto &cb : write_callbacks) {
-      cb(ec);
+      cb(errors);
       if (wptr.expired() || no_more_callbacks_) {
         return;
       }
     }
 
     if (window_size_cb) {
-      window_size_cb(ec);
+      window_size_cb(errors);
     }
 
     if (wptr.expired() || no_more_callbacks_) {
@@ -425,7 +423,8 @@ namespace libp2p::connection {
 
     if (!cb || bytes == 0 || out.empty()
         || static_cast<size_t>(out.size()) < bytes) {
-      return deferReadCallback(Error::STREAM_INVALID_ARGUMENT, std::move(cb));
+      return deferReadCallback(Q_ERROR(Error::STREAM_INVALID_ARGUMENT),
+                               std::move(cb));
     }
 
     // If something is still in read buffer, the client can consume these bytes
@@ -443,16 +442,18 @@ namespace libp2p::connection {
     }
 
     if (close_reason_) {
-      return deferReadCallback(close_reason_, std::move(cb));
+      return deferReadCallback(*close_reason_, std::move(cb));
     }
 
     if (is_reading_) {
-      return deferReadCallback(Error::STREAM_IS_READING, std::move(cb));
+      return deferReadCallback(Q_ERROR(Error::STREAM_IS_READING),
+                               std::move(cb));
     }
 
     if (!is_readable_) {
       // half closed
-      return deferReadCallback(Error::STREAM_NOT_READABLE, std::move(cb));
+      return deferReadCallback(Q_ERROR(Error::STREAM_NOT_READABLE),
+                               std::move(cb));
     }
 
     is_reading_ = true;
@@ -480,10 +481,10 @@ namespace libp2p::connection {
         r.first.swap(read_cb_);
         if (!is_readable_) {
           if (close_reason_) {
-            r.second = close_reason_;
+            r.second = *close_reason_;
           } else {
             // FIN received, but not yet closed
-            r.second = Error::STREAM_CLOSED_BY_PEER;
+            r.second = Q_ERROR(Error::STREAM_CLOSED_BY_PEER);
           }
         }
       }
@@ -522,7 +523,7 @@ namespace libp2p::connection {
       }
 
       if (!is_readable_) {
-        doClose(Error::STREAM_CLOSED_BY_HOST, false);
+        doClose(Q_ERROR(Error::STREAM_CLOSED_BY_HOST), false);
       } else {
         // let bytes be consumed with peers FIN even if no reader (???)
         peers_window_size_ = maximum_window_size_;
@@ -540,7 +541,10 @@ namespace libp2p::connection {
     }
 
     if (close_reason_) {
-      return deferWriteCallback(close_reason_, std::move(cb));
+      return deferWriteCallback(
+          std::error_code{},
+          [cb{std::move(cb)}, res{*close_reason_}](
+              outcome::result<size_t>) mutable { cb(std::move(res)); });
     }
 
     if (!write_queue_.canEnqueue(bytes)) {

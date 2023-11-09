@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <boost/asio/error.hpp>
 #include <libp2p/basic/reader.hpp>
 #include <memory>
 
@@ -37,7 +38,7 @@ namespace libp2p {
           // read remaining bytes
           auto reader = weak.lock();
           if (not reader) {
-            return cb(std::errc::operation_canceled);
+            return cb(Q_ERROR(boost::asio::error::operation_aborted));
           }
           read(reader, out.subspan(n), std::move(cb));
         });

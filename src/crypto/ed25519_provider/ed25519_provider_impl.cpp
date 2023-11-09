@@ -21,17 +21,17 @@ namespace libp2p::crypto::ed25519 {
 
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr);
     if (nullptr == pctx) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     FinalAction free_pctx([pctx] { EVP_PKEY_CTX_free(pctx); });
 
     if (1 != EVP_PKEY_keygen_init(pctx)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     EVP_PKEY *pkey{nullptr};  // it is mandatory to nullify the pointer!
     if (1 != EVP_PKEY_keygen(pctx, &pkey)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     FinalAction free_pkey([pkey] { EVP_PKEY_free(pkey); });
 
@@ -41,12 +41,12 @@ namespace libp2p::crypto::ed25519 {
     if (1
         != EVP_PKEY_get_raw_private_key(
             pkey, keypair.private_key.data(), &priv_len)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     if (1
         != EVP_PKEY_get_raw_public_key(
             pkey, keypair.public_key.data(), &pub_len)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     return keypair;
@@ -63,7 +63,7 @@ namespace libp2p::crypto::ed25519 {
     if (1
         != EVP_PKEY_get_raw_public_key(
             evp_pkey.get(), public_key.data(), &pub_len)) {
-      return KeyGeneratorError::KEY_DERIVATION_FAILED;
+      return Q_ERROR(KeyGeneratorError::KEY_DERIVATION_FAILED);
     }
 
     return public_key;
@@ -79,13 +79,13 @@ namespace libp2p::crypto::ed25519 {
 
     std::shared_ptr<EVP_MD_CTX> mctx{EVP_MD_CTX_new(), EVP_MD_CTX_free};
     if (nullptr == mctx) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     if (1
         != EVP_DigestSignInit(
             mctx.get(), nullptr, nullptr, nullptr, evp_pkey.get())) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     Signature signature;
@@ -96,7 +96,7 @@ namespace libp2p::crypto::ed25519 {
                           &signature_len,
                           message.data(),
                           message.size())) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     return signature;
   }
@@ -112,13 +112,13 @@ namespace libp2p::crypto::ed25519 {
 
     std::shared_ptr<EVP_MD_CTX> mctx{EVP_MD_CTX_new(), EVP_MD_CTX_free};
     if (nullptr == mctx) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     if (1
         != EVP_DigestVerifyInit(
             mctx.get(), nullptr, nullptr, nullptr, evp_pkey.get())) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     int valid = EVP_DigestVerify(mctx.get(),
                                  signature.data(),
@@ -129,6 +129,6 @@ namespace libp2p::crypto::ed25519 {
       return valid;
     }
 
-    return FAILED;
+    return Q_ERROR(FAILED);
   }
 }  // namespace libp2p::crypto::ed25519

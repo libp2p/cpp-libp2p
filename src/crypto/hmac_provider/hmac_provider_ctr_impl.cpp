@@ -53,35 +53,35 @@ namespace libp2p::crypto::hmac {
 
   outcome::result<void> HmacProviderCtrImpl::write(BytesIn data) {
     if (not initialized_) {
-      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+      return Q_ERROR(HmacProviderError::FAILED_INITIALIZE_CONTEXT);
     }
     if (1 != HMAC_Update(hmac_ctx_, data.data(), data.size())) {
-      return HmacProviderError::FAILED_UPDATE_DIGEST;
+      return Q_ERROR(HmacProviderError::FAILED_UPDATE_DIGEST);
     }
     return outcome::success();
   }
 
   outcome::result<void> HmacProviderCtrImpl::digestOut(BytesOut out) const {
     if (not initialized_) {
-      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+      return Q_ERROR(HmacProviderError::FAILED_INITIALIZE_CONTEXT);
     }
     if (out.size() != digestSize()) {
-      return HmacProviderError::WRONG_DIGEST_SIZE;
+      return Q_ERROR(HmacProviderError::WRONG_DIGEST_SIZE);
     }
     HMAC_CTX *ctx_copy = HMAC_CTX_new();
     if (nullptr == ctx_copy) {
-      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+      return Q_ERROR(HmacProviderError::FAILED_INITIALIZE_CONTEXT);
     }
     if (1 != HMAC_CTX_copy(ctx_copy, hmac_ctx_)) {
-      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+      return Q_ERROR(HmacProviderError::FAILED_INITIALIZE_CONTEXT);
     }
     FinalAction free_ctx_copy([ctx_copy] { HMAC_CTX_free(ctx_copy); });
     unsigned len{0};
     if (1 != HMAC_Final(ctx_copy, out.data(), &len)) {
-      return HmacProviderError::FAILED_FINALIZE_DIGEST;
+      return Q_ERROR(HmacProviderError::FAILED_FINALIZE_DIGEST);
     }
     if (len != digestSize()) {
-      return HmacProviderError::WRONG_DIGEST_SIZE;
+      return Q_ERROR(HmacProviderError::WRONG_DIGEST_SIZE);
     }
     return outcome::success();
   }
@@ -96,7 +96,7 @@ namespace libp2p::crypto::hmac {
                                static_cast<int>(key_.size()),
                                hash_st_,
                                nullptr)) {
-      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+      return Q_ERROR(HmacProviderError::FAILED_INITIALIZE_CONTEXT);
     }
     initialized_ = true;
     return outcome::success();

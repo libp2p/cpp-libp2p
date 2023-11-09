@@ -113,7 +113,7 @@ namespace libp2p::transport {
 
     /// Called from network part with close errors
     /// or from close() if is closing by the host
-    void close(std::error_code reason);
+    void close(qtils::Errors reason);
 
     // TODO (artem) make RawConnection::id()->string or str() or whatever
     const std::string &str() const {
@@ -134,7 +134,7 @@ namespace libp2p::transport {
     bool closed_by_host_ = false;
 
     /// Close reason, is set on close to respond to further calls
-    std::error_code close_reason_;
+    std::optional<qtils::Errors> close_reason_;
 
     boost::optional<multi::Multiaddress> remote_multiaddress_;
     boost::optional<multi::Multiaddress> local_multiaddress_;

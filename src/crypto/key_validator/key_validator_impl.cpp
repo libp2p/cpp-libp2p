@@ -51,7 +51,7 @@ namespace libp2p::crypto::validator {
       case Key::Type::ECDSA:
         return validateEcdsa(key);
       default:
-        return KeyValidatorError::UNKNOWN_CRYPTO_ALGORYTHM;
+        return Q_ERROR(KeyValidatorError::UNKNOWN_CRYPTO_ALGORYTHM);
     }
   }
 
@@ -68,13 +68,13 @@ namespace libp2p::crypto::validator {
       case Key::Type::ECDSA:
         return validateEcdsa(key);
       default:
-        return KeyValidatorError::UNKNOWN_CRYPTO_ALGORYTHM;
+        return Q_ERROR(KeyValidatorError::UNKNOWN_CRYPTO_ALGORYTHM);
     }
   }
 
   outcome::result<void> KeyValidatorImpl::validate(const KeyPair &keys) const {
     if (keys.privateKey.type != keys.publicKey.type) {
-      return KeyValidatorError::DIFFERENT_KEY_TYPES;
+      return Q_ERROR(KeyValidatorError::DIFFERENT_KEY_TYPES);
     }
 
     if (keys.privateKey.type == Key::Type::UNSPECIFIED) {
@@ -86,7 +86,7 @@ namespace libp2p::crypto::validator {
 
     OUTCOME_TRY(public_key, crypto_provider_->derivePublicKey(keys.privateKey));
     if (public_key != keys.publicKey) {
-      return KeyValidatorError::KEYS_DONT_MATCH;
+      return Q_ERROR(KeyValidatorError::KEYS_DONT_MATCH);
     }
 
     return outcome::success();
@@ -97,12 +97,12 @@ namespace libp2p::crypto::validator {
     const unsigned char *data_pointer = key.data.data();
     RSA *rsa = d2i_RSAPrivateKey(nullptr, &data_pointer, key.data.size());
     if (nullptr == rsa) {
-      return KeyValidatorError::INVALID_PRIVATE_KEY;
+      return Q_ERROR(KeyValidatorError::INVALID_PRIVATE_KEY);
     }
     FinalAction cleanup_rsa([rsa]() { RSA_free(rsa); });
     int bits = RSA_bits(rsa);
     if (bits < kMinimumRSABitsCount) {
-      return KeyValidatorError::INVALID_PRIVATE_KEY;
+      return Q_ERROR(KeyValidatorError::INVALID_PRIVATE_KEY);
     }
 
     return outcome::success();
@@ -113,12 +113,12 @@ namespace libp2p::crypto::validator {
     const unsigned char *data_pointer = key.data.data();
     RSA *rsa = d2i_RSA_PUBKEY(nullptr, &data_pointer, key.data.size());
     if (nullptr == rsa) {
-      return KeyValidatorError::INVALID_PUBLIC_KEY;
+      return Q_ERROR(KeyValidatorError::INVALID_PUBLIC_KEY);
     }
     FinalAction cleanup_rsa([rsa]() { RSA_free(rsa); });
     int bits = RSA_bits(rsa);
     if (bits < kMinimumRSABitsCount) {
-      return KeyValidatorError::INVALID_PUBLIC_KEY;
+      return Q_ERROR(KeyValidatorError::INVALID_PUBLIC_KEY);
     }
 
     return outcome::success();
@@ -127,7 +127,7 @@ namespace libp2p::crypto::validator {
   outcome::result<void> KeyValidatorImpl::validateEd25519(
       const PrivateKey &key) const {
     if (key.data.size() != ED25519_PRIVATE_KEY_SIZE) {
-      return KeyValidatorError::WRONG_PRIVATE_KEY_SIZE;
+      return Q_ERROR(KeyValidatorError::WRONG_PRIVATE_KEY_SIZE);
     }
 
     return outcome::success();
@@ -136,7 +136,7 @@ namespace libp2p::crypto::validator {
   outcome::result<void> KeyValidatorImpl::validateEd25519(
       const PublicKey &key) const {
     if (key.data.size() != ED25519_PUBLIC_KEY_SIZE) {
-      return KeyValidatorError::WRONG_PUBLIC_KEY_SIZE;
+      return Q_ERROR(KeyValidatorError::WRONG_PUBLIC_KEY_SIZE);
     }
 
     return outcome::success();
@@ -145,7 +145,7 @@ namespace libp2p::crypto::validator {
   outcome::result<void> KeyValidatorImpl::validateSecp256k1(
       const PrivateKey &key) const {
     if (key.data.size() != SECP256K1_PRIVATE_KEY_SIZE) {
-      return KeyValidatorError::WRONG_PRIVATE_KEY_SIZE;
+      return Q_ERROR(KeyValidatorError::WRONG_PRIVATE_KEY_SIZE);
     }
 
     return outcome::success();
@@ -154,7 +154,7 @@ namespace libp2p::crypto::validator {
   outcome::result<void> KeyValidatorImpl::validateSecp256k1(
       const PublicKey &key) const {
     if (key.data.size() != SECP256K1_PUBLIC_KEY_SIZE) {
-      return KeyValidatorError::WRONG_PUBLIC_KEY_SIZE;
+      return Q_ERROR(KeyValidatorError::WRONG_PUBLIC_KEY_SIZE);
     }
 
     auto prefix = key.data[0];
@@ -163,7 +163,7 @@ namespace libp2p::crypto::validator {
     // must start with 0x02 or 0x03 byte prefix
     if (prefix != SECP256K1_PUBLIC_KEY_EVEN_PREFIX
         && prefix != SECP256K1_PUBLIC_KEY_ODD_PREFIX) {
-      return KeyValidatorError::INVALID_PUBLIC_KEY;
+      return Q_ERROR(KeyValidatorError::INVALID_PUBLIC_KEY);
     }
 
     return outcome::success();

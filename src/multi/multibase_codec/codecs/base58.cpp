@@ -178,7 +178,7 @@ namespace libp2p::multi::detail {
     if (decoded_bytes) {
       return Bytes{*decoded_bytes};
     }
-    return BaseError::INVALID_BASE58_INPUT;
+    return Q_ERROR(BaseError::INVALID_BASE58_INPUT);
   }
 
 }  // namespace libp2p::multi::detail

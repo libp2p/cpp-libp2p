@@ -7,7 +7,7 @@
 #pragma once
 
 #include <libp2p/common/types.hpp>
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/outcome.hpp>
 
 /**
  * Encode/decode to/from base32 format

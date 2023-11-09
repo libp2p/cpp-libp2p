@@ -52,8 +52,7 @@ int main(int argc, char *argv[]) {
       auto sz = static_cast<size_t>(n);
       jumbo_message.reserve(sz + 9);
       while (jumbo_message.size() < sz) {
-        jumbo_message.append(
-            fmt::format("[{:08}]", jumbo_message.size() + 10));
+        jumbo_message.append(fmt::format("[{:08}]", jumbo_message.size() + 10));
       }
       jumbo_message.resize(sz);
       message.swap(jumbo_message);
@@ -106,14 +105,17 @@ int main(int argc, char *argv[]) {
   auto sch = injector.create<std::shared_ptr<libp2p::basic::Scheduler>>();
 
   context->post(
-      [log, host{std::move(host)}, &echo, &message,
+      [log,
+       host{std::move(host)},
+       &echo,
+       &message,
        argv,  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
        sch] {
         auto server_ma_res =
             libp2p::multi::Multiaddress::create(argv[1]);  // NOLINT
         if (!server_ma_res) {
           log->error("unable to create server multiaddress: {}",
-                     server_ma_res.error().message());
+                     server_ma_res.error());
           std::exit(EXIT_FAILURE);
         }
         const auto &server_ma = server_ma_res.value();
@@ -128,7 +130,7 @@ int main(int argc, char *argv[]) {
             libp2p::peer::PeerId::fromBase58(*server_peer_id_str);
         if (!server_peer_id_res) {
           log->error("Unable to decode peer id from base 58: {}",
-                     server_peer_id_res.error().message());
+                     server_peer_id_res.error());
           std::exit(EXIT_FAILURE);
         }
 
@@ -138,11 +140,11 @@ int main(int argc, char *argv[]) {
 
         // create Host object and open a stream through it
         host->newStream(
-            peer_info, {echo.getProtocolId()},
+            peer_info,
+            {echo.getProtocolId()},
             [log, &echo, &message, sch](auto &&stream_res) {
               if (!stream_res) {
-                log->error("Cannot connect to server: {}",
-                           stream_res.error().message());
+                log->error("Cannot connect to server: {}", stream_res.error());
                 std::exit(EXIT_FAILURE);
               }
 
@@ -164,7 +166,7 @@ int main(int argc, char *argv[]) {
                          stream = std::move(stream)](auto &&response_result) {
                           if (response_result.has_error()) {
                             log->info("Error happened: {}",
-                                      response_result.error().message());
+                                      response_result.error());
                             stream->close(
                                 [log](auto &&) { std::exit(EXIT_SUCCESS); });
                             return;

@@ -149,7 +149,7 @@ namespace libp2p::multi::detail {
       }
       int c = decode_char(coded[block], mode);
       if (c < 0) {
-        return BaseError::INVALID_BASE32_INPUT;
+        return Q_ERROR(BaseError::INVALID_BASE32_INPUT);
       }
 
       plain[byte] |= shift_left(c, bit);

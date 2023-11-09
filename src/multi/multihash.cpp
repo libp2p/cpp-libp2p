@@ -82,7 +82,7 @@ namespace libp2p::multi {
 
   outcome::result<Multihash> Multihash::create(HashType type, BytesIn hash) {
     if (hash.size() > kMaxHashLength) {
-      return Error::INPUT_TOO_LONG;
+      return Q_ERROR(Error::INPUT_TOO_LONG);
     }
 
     return Multihash{type, hash};
@@ -95,28 +95,28 @@ namespace libp2p::multi {
 
   outcome::result<Multihash> Multihash::createFromBytes(BytesIn b) {
     if (b.size() < kHeaderSize) {
-      return Error::INPUT_TOO_SHORT;
+      return Q_ERROR(Error::INPUT_TOO_SHORT);
     }
 
     basic::VarintPrefixReader vr;
     if (vr.consume(b) != basic::VarintPrefixReader::kReady) {
-      return Error::INPUT_TOO_SHORT;
+      return Q_ERROR(Error::INPUT_TOO_SHORT);
     }
 
     const auto type = static_cast<HashType>(vr.value());
     if (b.empty()) {
-      return Error::INPUT_TOO_SHORT;
+      return Q_ERROR(Error::INPUT_TOO_SHORT);
     }
 
     const uint8_t length = b[0];
     BytesIn hash = b.subspan(1);
 
     if (length == 0) {
-      return Error::ZERO_INPUT_LENGTH;
+      return Q_ERROR(Error::ZERO_INPUT_LENGTH);
     }
 
     if (hash.size() != length) {
-      return Error::INCONSISTENT_LENGTH;
+      return Q_ERROR(Error::INCONSISTENT_LENGTH);
     }
 
     return Multihash::create(type, hash);

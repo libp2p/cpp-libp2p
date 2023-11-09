@@ -228,7 +228,7 @@ namespace libp2p::protocol::kademlia {
     if (not upsert_res) {
       log_.debug("{} was skipped at addind to peer routing table: {}",
                  peer_info.id.toBase58(),
-                 upsert_res.error().message());
+                 upsert_res.error());
       return;
     }
 
@@ -237,7 +237,7 @@ namespace libp2p::protocol::kademlia {
     if (not update_res) {
       log_.debug("{} was not added to peer routing table: {}",
                  peer_info.id.toBase58(),
-                 update_res.error().message());
+                 update_res.error());
       return;
     }
     if (update_res.value()) {
@@ -295,7 +295,7 @@ namespace libp2p::protocol::kademlia {
         onPing(session, std::move(msg));
         break;
       default:
-        session->close(Error::UNEXPECTED_MESSAGE_TYPE);
+        session->close(Q_ERROR(Error::UNEXPECTED_MESSAGE_TYPE));
         return;
     }
   }
@@ -312,21 +312,20 @@ namespace libp2p::protocol::kademlia {
 
     auto validation_res = validator_->validate(key, value);
     if (not validation_res) {
-      log_.warn("incoming PutValue failed: {}",
-                validation_res.error().message());
+      log_.warn("incoming PutValue failed: {}", validation_res.error());
       return;
     }
 
     auto res = putValue(key, value);
     if (!res) {
-      log_.warn("incoming PutValue failed: {}", res.error().message());
+      log_.warn("incoming PutValue failed: {}", res.error());
       return;
     }
 
     // echo request
     auto buffer = std::make_shared<std::vector<uint8_t>>();
     if (not msg.serialize(*buffer)) {
-      session->close(Error::MESSAGE_SERIALIZE_ERROR);
+      session->close(Q_ERROR(Error::MESSAGE_SERIALIZE_ERROR));
       BOOST_UNREACHABLE_RETURN();
     }
 
@@ -371,7 +370,7 @@ namespace libp2p::protocol::kademlia {
 
     auto buffer = std::make_shared<std::vector<uint8_t>>();
     if (not msg.serialize(*buffer)) {
-      session->close(Error::MESSAGE_SERIALIZE_ERROR);
+      session->close(Q_ERROR(Error::MESSAGE_SERIALIZE_ERROR));
       BOOST_UNREACHABLE_RETURN();
     }
 
@@ -458,7 +457,7 @@ namespace libp2p::protocol::kademlia {
 
     auto buffer = std::make_shared<std::vector<uint8_t>>();
     if (not msg.serialize(*buffer)) {
-      session->close(Error::MESSAGE_SERIALIZE_ERROR);
+      session->close(Q_ERROR(Error::MESSAGE_SERIALIZE_ERROR));
       BOOST_UNREACHABLE_RETURN();
     }
 
@@ -513,7 +512,7 @@ namespace libp2p::protocol::kademlia {
 
     auto buffer = std::make_shared<std::vector<uint8_t>>();
     if (not msg.serialize(*buffer)) {
-      session->close(Error::MESSAGE_SERIALIZE_ERROR);
+      session->close(Q_ERROR(Error::MESSAGE_SERIALIZE_ERROR));
       BOOST_UNREACHABLE_RETURN();
     }
 
@@ -526,7 +525,7 @@ namespace libp2p::protocol::kademlia {
 
     auto buffer = std::make_shared<std::vector<uint8_t>>();
     if (not msg.serialize(*buffer)) {
-      session->close(Error::MESSAGE_SERIALIZE_ERROR);
+      session->close(Q_ERROR(Error::MESSAGE_SERIALIZE_ERROR));
       BOOST_UNREACHABLE_RETURN();
     }
 

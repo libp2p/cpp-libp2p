@@ -79,7 +79,7 @@ namespace libp2p::crypto {
       case Key::Type::ECDSA:
         return generateEcdsa();
       default:
-        return KeyGeneratorError::UNSUPPORTED_KEY_TYPE;
+        return Q_ERROR(KeyGeneratorError::UNSUPPORTED_KEY_TYPE);
     }
   }
 
@@ -146,9 +146,9 @@ namespace libp2p::crypto {
       case Key::Type::ECDSA:
         return deriveEcdsa(private_key);
       case Key::Type::UNSPECIFIED:
-        return KeyGeneratorError::WRONG_KEY_TYPE;
+        return Q_ERROR(KeyGeneratorError::WRONG_KEY_TYPE);
     }
-    return KeyGeneratorError::UNSUPPORTED_KEY_TYPE;
+    return Q_ERROR(KeyGeneratorError::UNSUPPORTED_KEY_TYPE);
   }
 
   outcome::result<PublicKey> CryptoProviderImpl::deriveRsa(
@@ -204,9 +204,9 @@ namespace libp2p::crypto {
       case Key::Type::ECDSA:
         return signEcdsa(message, private_key);
       case Key::Type::UNSPECIFIED:
-        return KeyGeneratorError::WRONG_KEY_TYPE;
+        return Q_ERROR(KeyGeneratorError::WRONG_KEY_TYPE);
       default:
-        return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+        return Q_ERROR(CryptoProviderError::SIGNATURE_GENERATION_FAILED);
     }
   }
 
@@ -262,9 +262,9 @@ namespace libp2p::crypto {
       case Key::Type::ECDSA:
         return verifyEcdsa(message, signature, public_key);
       case Key::Type::UNSPECIFIED:
-        return KeyGeneratorError::WRONG_KEY_TYPE;
+        return Q_ERROR(KeyGeneratorError::WRONG_KEY_TYPE);
       default:
-        return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+        return Q_ERROR(CryptoProviderError::SIGNATURE_VERIFICATION_FAILED);
     }
   }
 
@@ -338,36 +338,36 @@ namespace libp2p::crypto {
         private_key_length_in_bytes = 66;  // 66 * 8 = 528 > 521
         break;
       default:
-        return KeyGeneratorError::UNSUPPORTED_CURVE_TYPE;
+        return Q_ERROR(KeyGeneratorError::UNSUPPORTED_CURVE_TYPE);
     }
 
     // allocate key
     EC_KEY *key = EC_KEY_new();
     if (nullptr == key) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     FinalAction free_private_key([key] { EC_KEY_free(key); });
 
     // create curve
     EC_GROUP *curve_group = EC_GROUP_new_by_curve_name(nid);
     if (nullptr == curve_group) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     FinalAction free_curve_group([curve_group] { EC_GROUP_free(curve_group); });
 
     // assign curve to the key
     if (1 != EC_KEY_set_group(key, curve_group)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     // generate the key
     if (1 != EC_KEY_generate_key(key)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     // check that private key field is set
     const BIGNUM *private_key_bignum = EC_KEY_get0_private_key(key);
     if (nullptr == private_key_bignum) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     // serialize private key bytes and move them later to shared secret
@@ -378,7 +378,7 @@ namespace libp2p::crypto {
                      private_bytes.data(),
                      private_key_length_in_bytes)
         < 0) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     // check that public key field is also set
@@ -400,10 +400,10 @@ namespace libp2p::crypto {
                           nullptr,
                           nullptr,
                           nullptr)) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
       if (1 != EC_KEY_set_public_key(key, computed_public_key_point)) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
     }
 
@@ -424,7 +424,7 @@ namespace libp2p::crypto {
                                    POINT_CONVERSION_UNCOMPRESSED,
                                    &pubkey_bytes_buffer,
                                    nullptr))) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     auto pubkey_span = std::span(pubkey_bytes_buffer, pubkey_bytes_length);
@@ -445,7 +445,7 @@ namespace libp2p::crypto {
       // init curve
       EC_GROUP *curve_group = EC_GROUP_new_by_curve_name(curve_nid);
       if (nullptr == curve_group) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
       FinalAction free_curve_group(
           [curve_group] { EC_GROUP_free(curve_group); });
@@ -453,13 +453,13 @@ namespace libp2p::crypto {
       // create empty key
       EC_KEY *their_key = EC_KEY_new();
       if (nullptr == their_key) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
       FinalAction free_their_key([their_key] { EC_KEY_free(their_key); });
 
       // assign curve type to the key
       if (1 != EC_KEY_set_group(their_key, curve_group)) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
 
       // restore their epubkey from bytes
@@ -467,24 +467,24 @@ namespace libp2p::crypto {
       if (nullptr
           == o2i_ECPublicKey(
               &their_key, &their_epubkey_buffer, their_epubkey.size())) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
 
       // get pubkey in format of point for future computations
       const EC_POINT *their_pubkey_point{EC_KEY_get0_public_key(their_key)};
       if (nullptr == their_pubkey_point) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
 
       if (1 != EC_POINT_is_on_curve(curve_group, their_pubkey_point, nullptr)) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
 
       // restore private key bignum from bytes
       // create new bignum for storing private key
       BIGNUM *private_bignum = BN_new();
       if (nullptr == private_bignum) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
       // auto cleanup for bignum
       FinalAction free_private_bignum(
@@ -494,18 +494,18 @@ namespace libp2p::crypto {
       if (nullptr
           == BN_bin2bn(
               private_key_buffer, private_bytes.size(), private_bignum)) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
 
       EC_KEY *our_private_key = EC_KEY_new_by_curve_name(curve_nid);
       if (nullptr == our_private_key) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
       FinalAction free_our_private_key(
           [our_private_key] { EC_KEY_free(our_private_key); });
 
       if (1 != EC_KEY_set_private_key(our_private_key, private_bignum)) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
 
       // calculate the size of the buffer for the shared secret
@@ -513,7 +513,7 @@ namespace libp2p::crypto {
       int secret_len{(field_size + 7) / 8};
       uint8_t *secret_buffer{(uint8_t *)OPENSSL_malloc(secret_len)};  // NOLINT
       if (nullptr == secret_buffer) {
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
 
       secret_len = ECDH_compute_key(secret_buffer,
@@ -526,7 +526,7 @@ namespace libp2p::crypto {
         // ^ comment to the condition above:
         // doc says it might be negative when error,
         // openssl sources show it will be zero when error
-        return FAILED;
+        return Q_ERROR(FAILED);
       }
 
       auto secret_span = std::span(secret_buffer, secret_len);
@@ -552,7 +552,7 @@ namespace libp2p::crypto {
         iv_size = 16;
         break;
       default:
-        return Error::UNKNOWN_CIPHER_TYPE;
+        return Q_ERROR(Error::UNKNOWN_CIPHER_TYPE);
     }
 
     constexpr size_t hmac_key_size{20};

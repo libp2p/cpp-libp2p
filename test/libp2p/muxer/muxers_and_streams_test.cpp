@@ -157,7 +157,7 @@ namespace libp2p::regression {
         TRACE("({}): Cannot listen to multiaddress {}, {}",
               stats_.node_id,
               listen_to.getStringAddress(),
-              listen_res.error().message());
+              listen_res.error());
         stats_.put(Stats::FATAL_ERROR);
         return behavior_(*this);
       }
@@ -260,9 +260,7 @@ namespace libp2p::regression {
 
     void onConnected(StreamAndProtocolOrError rstream) {
       if (!rstream) {
-        TRACE("({}): connect error: {}",
-              stats_.node_id,
-              rstream.error().message());
+        TRACE("({}): connect error: {}", stats_.node_id, rstream.error());
         stats_.put(Stats::CONNECT_FAILURE);
       } else {
         TRACE("({}): connected", stats_.node_id);

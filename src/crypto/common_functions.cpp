@@ -24,21 +24,21 @@ namespace libp2p::crypto {
      */
     std::shared_ptr<EC_KEY> key{EC_KEY_new_by_curve_name(nid), EC_KEY_free};
     if (nullptr == key) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     // turn private key bytes into big number
     BIGNUM *private_bignum{BN_bin2bn(
         private_key.data(), static_cast<int>(private_key.size()), nullptr)};
     if (nullptr == private_bignum) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     FinalAction free_private_bignum(
         [private_bignum] { BN_free(private_bignum); });
 
     // set private key to the resulting key structure
     if (1 != EC_KEY_set_private_key(key.get(), private_bignum)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     // EC_KEY that has a private key but do not has public key assumed invalid
@@ -46,7 +46,7 @@ namespace libp2p::crypto {
     const EC_GROUP *group = EC_KEY_get0_group(key.get());
     EC_POINT *public_key_point{EC_POINT_new(group)};
     if (nullptr == public_key_point) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     FinalAction free_public_key_point(
         [public_key_point] { EC_POINT_free(public_key_point); });
@@ -59,24 +59,24 @@ namespace libp2p::crypto {
                         nullptr,
                         nullptr,
                         nullptr)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     // check the public key
     if (1
         != EC_POINT_is_on_curve(
             EC_KEY_get0_group(key.get()), public_key_point, nullptr)) {
-      return KeyValidatorError::INVALID_PUBLIC_KEY;
+      return Q_ERROR(KeyValidatorError::INVALID_PUBLIC_KEY);
     }
 
     // set public key to the resulting key structure
     if (1 != EC_KEY_set_public_key(key.get(), public_key_point)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     // final check
     if (1 != EC_KEY_check_key(key.get())) {
-      return KeyValidatorError::INVALID_PRIVATE_KEY;
+      return Q_ERROR(KeyValidatorError::INVALID_PRIVATE_KEY);
     }
 
     return key;
@@ -90,7 +90,7 @@ namespace libp2p::crypto {
         EVP_PKEY_free};
 
     if (nullptr == key) {
-      return KeyGeneratorError::INTERNAL_ERROR;
+      return Q_ERROR(KeyGeneratorError::INTERNAL_ERROR);
     }
     return key;
   }
@@ -105,11 +105,11 @@ namespace libp2p::crypto {
             digest.data(), static_cast<int>(digest.size()), key.get()),
         ECDSA_SIG_free};
     if (signature == nullptr) {
-      return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+      return Q_ERROR(CryptoProviderError::SIGNATURE_GENERATION_FAILED);
     }
     int signature_length = i2d_ECDSA_SIG(signature.get(), nullptr);
     if (signature_length < 0) {
-      return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+      return Q_ERROR(CryptoProviderError::SIGNATURE_GENERATION_FAILED);
     }
     std::vector<uint8_t> signature_bytes;
     signature_bytes.resize(signature_length);
@@ -128,7 +128,7 @@ namespace libp2p::crypto {
                               static_cast<int>(signature.size()),
                               key.get());
     if (result < 0) {
-      return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+      return Q_ERROR(CryptoProviderError::SIGNATURE_VERIFICATION_FAILED);
     }
     return result == 1;
   }

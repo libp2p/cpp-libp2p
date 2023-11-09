@@ -127,10 +127,9 @@ TEST(CidTest, MultibaseStringOfBaseCIDV0InvalidBase) {
   ContentIdentifier cid(ContentIdentifier::Version::V0,
                         MulticodecType::Code::DAG_PB,
                         reference_multihash);
-  EXPECT_OUTCOME_FALSE(error,
-                       ContentIdentifierCodec::toStringOfBase(
-                           cid, MultibaseCodec::Encoding::BASE32_LOWER))
-  ASSERT_EQ(error, ContentIdentifierCodec::EncodeError::INVALID_BASE_ENCODING);
+  EXPECT_EC(ContentIdentifierCodec::toStringOfBase(
+                cid, MultibaseCodec::Encoding::BASE32_LOWER),
+            ContentIdentifierCodec::EncodeError::INVALID_BASE_ENCODING);
 }
 
 /**
@@ -180,8 +179,8 @@ TEST(CidTest, MultibaseFromStringSuccessCIDV0) {
 TEST(CidTest, MultibaseFromStringShortCid) {
   const std::string short_string = "*";
 
-  EXPECT_OUTCOME_FALSE(error, ContentIdentifierCodec::fromString(short_string))
-  ASSERT_EQ(error, ContentIdentifierCodec::DecodeError::CID_TOO_SHORT);
+  EXPECT_EC(ContentIdentifierCodec::fromString(short_string),
+            ContentIdentifierCodec::DecodeError::CID_TOO_SHORT);
 }
 
 /**
@@ -248,11 +247,6 @@ TEST(CidTest, CompareDifferentHashes) {
   ASSERT_FALSE(c2 < c2);
 }
 
-class CidEncodeTest
-    : public testing::TestWithParam<
-          std::pair<ContentIdentifier,
-                    libp2p::outcome::result<std::vector<uint8_t>>>> {};
-
 TEST(CidTest, Create) {
   ContentIdentifier c(ContentIdentifier::Version::V0,
                       MulticodecType::Code::IDENTITY,
@@ -260,26 +254,23 @@ TEST(CidTest, Create) {
   ASSERT_EQ(c.content_address, EXAMPLE_MULTIHASH);
 }
 
-TEST_P(CidEncodeTest, Encode) {
-  auto [cid, expectation] = GetParam();
-  auto bytes = ContentIdentifierCodec::encode(cid);
-  if (expectation) {
-    auto bytes_value = bytes.value();
-    auto expectation_value = expectation.value();
-    ASSERT_TRUE(std::equal(bytes_value.begin(),
-                           bytes_value.end(),
-                           expectation_value.begin(),
-                           expectation_value.end()))
-        << libp2p::common::hex_lower(bytes_value);
-  } else {
-    ASSERT_EQ(bytes.error(), expectation.error()) << bytes.error().message();
-  }
+TEST(CidEncodeTest, Encode) {
+  EXPECT_EC(ContentIdentifierCodec::encode(
+                ContentIdentifier(ContentIdentifier::Version::V0,
+                                  MulticodecType::Code::SHA1,
+                                  ZERO_MULTIHASH)),
+            ContentIdentifierCodec::EncodeError::INVALID_CONTENT_TYPE);
+
+  EXPECT_EQ(ContentIdentifierCodec::encode(
+                ContentIdentifier(ContentIdentifier::Version::V0,
+                                  MulticodecType::Code::DAG_PB,
+                                  ZERO_MULTIHASH))
+                .value(),
+            ZERO_MULTIHASH.toBuffer());
 }
 
-class CidDecodeTest
-    : public testing::TestWithParam<
-          std::pair<std::vector<uint8_t>,
-                    libp2p::outcome::result<ContentIdentifier>>> {
+class CidDecodeTest : public testing::TestWithParam<
+                          std::pair<std::vector<uint8_t>, ContentIdentifier>> {
  public:
   void SetUp() {
     base_codec = std::make_shared<MultibaseCodecImpl>();
@@ -291,11 +282,7 @@ class CidDecodeTest
 TEST_P(CidDecodeTest, Decode) {
   auto [cid_bytes, expectation] = GetParam();
   auto cid = ContentIdentifierCodec::decode(cid_bytes);
-  if (expectation) {
-    ASSERT_EQ(cid.value(), expectation.value());
-  } else {
-    ASSERT_EQ(cid.error(), expectation.error()) << cid.error().message();
-  }
+  ASSERT_EQ(cid.value(), expectation);
 }
 
 class CidEncodeDecodeTest : public testing::TestWithParam<ContentIdentifier> {};
@@ -307,23 +294,7 @@ TEST_P(CidEncodeDecodeTest, DecodedMatchesOriginal) {
   ASSERT_EQ(cid, dec_cid);
 }
 
-const std::vector<
-    std::pair<ContentIdentifier, libp2p::outcome::result<std::vector<uint8_t>>>>
-    encodeSuite{{ContentIdentifier(ContentIdentifier::Version::V0,
-                                   MulticodecType::Code::SHA1,
-                                   ZERO_MULTIHASH),
-                 ContentIdentifierCodec::EncodeError::INVALID_CONTENT_TYPE},
-                {ContentIdentifier(ContentIdentifier::Version::V0,
-                                   MulticodecType::Code::DAG_PB,
-                                   ZERO_MULTIHASH),
-                 ZERO_MULTIHASH.toBuffer()}};
-
-INSTANTIATE_TEST_SUITE_P(EncodeTests,
-                         CidEncodeTest,
-                         testing::ValuesIn(encodeSuite));
-
-const std::vector<
-    std::pair<std::vector<uint8_t>, libp2p::outcome::result<ContentIdentifier>>>
+const std::vector<std::pair<std::vector<uint8_t>, ContentIdentifier>>
     decodeSuite{{EXAMPLE_MULTIHASH.toBuffer(),
                  ContentIdentifier(ContentIdentifier::Version::V0,
                                    MulticodecType::Code::DAG_PB,

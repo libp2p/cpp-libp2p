@@ -42,7 +42,7 @@ namespace libp2p::protocol::kademlia {
     outcome::result<Message::Peer> assign_peer(const pb::Message_Peer &src) {
       if (static_cast<ConnStatus>(src.connection())
           > ConnStatus::CAN_NOT_CONNECT) {
-        return Message::Error::INVALID_CONNECTEDNESS;
+        return Q_ERROR(Message::Error::INVALID_CONNECTEDNESS);
       }
 
       auto peer_id_res = PeerId::fromBytes(BytesIn(
@@ -50,7 +50,7 @@ namespace libp2p::protocol::kademlia {
           reinterpret_cast<const uint8_t *>(src.id().data()),
           src.id().size()));
       if (!peer_id_res) {
-        return Message::Error::INVALID_PEER_ID;
+        return Q_ERROR(Message::Error::INVALID_PEER_ID);
       }
 
       std::vector<multi::Multiaddress> addresses;
@@ -60,7 +60,7 @@ namespace libp2p::protocol::kademlia {
             reinterpret_cast<const uint8_t *>(addr.data()),
             addr.size()));
         if (!res) {
-          return Message::Error::INVALID_ADDRESSES;
+          return Q_ERROR(Message::Error::INVALID_ADDRESSES);
         }
         addresses.push_back(res.value());
       }
@@ -124,12 +124,13 @@ namespace libp2p::protocol::kademlia {
     }
     auto closer_res = assign_peers(closer_peers, pb_msg.closerpeers());
     if (not closer_res) {
-      error_message_ = "Bad closer peers: " + closer_res.error().message();
+      error_message_ = fmt::format("Bad closer peers: {}", closer_res.error());
       return false;
     }
     auto provider_res = assign_peers(provider_peers, pb_msg.providerpeers());
     if (not provider_res) {
-      error_message_ = "Bad provider peers: " + provider_res.error().message();
+      error_message_ =
+          fmt::format("Bad provider peers: {}", provider_res.error());
       return false;
     }
     return true;

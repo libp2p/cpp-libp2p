@@ -13,7 +13,7 @@
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/common_functions.hpp>
 #include <libp2p/crypto/hasher.hpp>
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::security::noise {
 

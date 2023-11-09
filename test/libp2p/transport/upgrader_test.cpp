@@ -40,8 +40,7 @@ using testing::NiceMock;
 using testing::Return;
 using testing::Truly;
 
-using libp2p::outcome::failure;
-using libp2p::outcome::success;
+using outcome::success;
 
 class UpgraderTest : public testing::Test {
  protected:
@@ -126,7 +125,7 @@ class UpgraderTest : public testing::Test {
 TEST_F(UpgraderTest, UpgradeLayersInitiator) {
   setAllOutbound();
 
-  ASSERT_OUTCOME_SUCCESS(
+  EXPECT_OUTCOME_TRUE(
       address,
       libp2p::multi::Multiaddress::create(
           "/ip4/127.0.0.1/tcp/1234/_dummy_proto_1/_dummy_proto_2"
@@ -146,7 +145,7 @@ TEST_F(UpgraderTest, UpgradeLayersInitiator) {
 
   upgrader_->upgradeLayersOutbound(
       address, raw_conn_, layers, [this](auto &&upgraded_conn_res) {
-        ASSERT_OUTCOME_SUCCESS(upgraded_conn, upgraded_conn_res);
+        EXPECT_OUTCOME_TRUE(upgraded_conn, upgraded_conn_res);
         ASSERT_EQ(upgraded_conn, layer2_conn_);
       });
 }
@@ -154,7 +153,7 @@ TEST_F(UpgraderTest, UpgradeLayersInitiator) {
 TEST_F(UpgraderTest, UpgradeLayersNotInitiator) {
   setAllInbound();
 
-  ASSERT_OUTCOME_SUCCESS(
+  EXPECT_OUTCOME_TRUE(
       address,
       libp2p::multi::Multiaddress::create(
           "/ip4/127.0.0.1/tcp/1234/_dummy_proto_1/_dummy_proto_2"
@@ -250,7 +249,7 @@ TEST_F(UpgraderTest, UpgradeSecureFail) {
                           false,
                           true,
                           _))
-      .WillOnce(Arg4CallbackWithArg(failure(std::error_code())));
+      .WillOnce(Arg4CallbackWithArg(Q_ERROR(std::error_code())));
 
   upgrader_->upgradeToSecureInbound(layer2_conn_, [](auto &&upgraded_conn_res) {
     ASSERT_FALSE(upgraded_conn_res);
@@ -299,7 +298,7 @@ TEST_F(UpgraderTest, UpgradeMuxFail) {
                           true,
                           true,
                           _))
-      .WillOnce(Arg4CallbackWithArg(failure(std::error_code())));
+      .WillOnce(Arg4CallbackWithArg(Q_ERROR(std::error_code())));
 
   upgrader_->upgradeToMuxed(sec_conn_, [](auto &&upgraded_conn_res) {
     ASSERT_FALSE(upgraded_conn_res);

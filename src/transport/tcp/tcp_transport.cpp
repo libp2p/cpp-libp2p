@@ -26,7 +26,7 @@ namespace libp2p::transport {
     if (!canDial(address)) {
       // TODO(107): Reentrancy
 
-      return handler(std::errc::address_family_not_supported);
+      return handler(Q_ERROR(std::errc::address_family_not_supported));
     }
 
     auto conn = std::make_shared<TcpConnection>(*context_);
@@ -40,7 +40,7 @@ namespace libp2p::transport {
                     handler{std::move(handler)},
                     layers = std::move(layers)](auto ec, auto r) mutable {
       if (ec) {
-        return handler(ec);
+        return handler(Q_ERROR(ec));
       }
 
       conn->connect(
@@ -49,7 +49,7 @@ namespace libp2p::transport {
               auto ec, auto &e) mutable {
             if (ec) {
               std::ignore = conn->close();
-              return handler(ec);
+              return handler(Q_ERROR(ec));
             }
 
             auto session = std::make_shared<UpgraderSession>(

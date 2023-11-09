@@ -65,13 +65,13 @@ namespace libp2p::multi {
 
     } else if (cid.version == ContentIdentifier::Version::V0) {
       if (cid.content_type != MulticodecType::Code::DAG_PB) {
-        return EncodeError::INVALID_CONTENT_TYPE;
+        return Q_ERROR(EncodeError::INVALID_CONTENT_TYPE);
       }
       if (cid.content_address.getType() != HashType::sha256) {
-        return EncodeError::INVALID_HASH_TYPE;
+        return Q_ERROR(EncodeError::INVALID_HASH_TYPE);
       }
       if (cid.content_address.getHash().size() != 32) {
-        return EncodeError::INVALID_HASH_LENGTH;
+        return Q_ERROR(EncodeError::INVALID_HASH_LENGTH);
       }
       const auto &hash = cid.content_address.toBuffer();
       common::append(bytes, hash);
@@ -120,7 +120,7 @@ namespace libp2p::multi {
     }
     auto version_opt = UVarint::create(bytes);
     if (!version_opt) {
-      return DecodeError::EMPTY_VERSION;
+      return Q_ERROR(DecodeError::EMPTY_VERSION);
     }
     auto version = version_opt.value().toUInt64();
     if (version == 1) {
@@ -128,7 +128,7 @@ namespace libp2p::multi {
       auto multicodec_opt = UVarint::create(
           bytes.subspan(static_cast<ptrdiff_t>(version_length)));
       if (!multicodec_opt) {
-        return DecodeError::EMPTY_MULTICODEC;
+        return Q_ERROR(DecodeError::EMPTY_MULTICODEC);
       }
       auto multicodec_length = UVarint::calculateSize(
           bytes.subspan(static_cast<ptrdiff_t>(version_length)));
@@ -141,9 +141,9 @@ namespace libp2p::multi {
           std::move(hash));
     }
     if (version <= 0) {
-      return DecodeError::MALFORMED_VERSION;
+      return Q_ERROR(DecodeError::MALFORMED_VERSION);
     }
-    return DecodeError::RESERVED_VERSION;
+    return Q_ERROR(DecodeError::RESERVED_VERSION);
   }
 
   outcome::result<std::string> ContentIdentifierCodec::toString(
@@ -159,7 +159,7 @@ namespace libp2p::multi {
             cid_bytes, MultibaseCodec::Encoding::BASE32_LOWER);
         break;
       default:
-        return EncodeError::VERSION_UNSUPPORTED;
+        return Q_ERROR(EncodeError::VERSION_UNSUPPORTED);
     }
     return result;
   }
@@ -171,7 +171,7 @@ namespace libp2p::multi {
     switch (cid.version) {
       case ContentIdentifier::Version::V0:
         if (base != MultibaseCodec::Encoding::BASE58) {
-          return EncodeError::INVALID_BASE_ENCODING;
+          return Q_ERROR(EncodeError::INVALID_BASE_ENCODING);
         }
         result = detail::encodeBase58(cid_bytes);
         break;
@@ -179,7 +179,7 @@ namespace libp2p::multi {
         result = MultibaseCodecImpl().encode(cid_bytes, base);
         break;
       default:
-        return EncodeError::VERSION_UNSUPPORTED;
+        return Q_ERROR(EncodeError::VERSION_UNSUPPORTED);
     }
     return result;
   }
@@ -187,7 +187,7 @@ namespace libp2p::multi {
   outcome::result<ContentIdentifier> ContentIdentifierCodec::fromString(
       const std::string &str) {
     if (str.size() < 2) {
-      return DecodeError::CID_TOO_SHORT;
+      return Q_ERROR(DecodeError::CID_TOO_SHORT);
     }
 
     if (str.size() == 46 && str.substr(0, 2) == "Qm") {

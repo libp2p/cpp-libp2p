@@ -41,7 +41,7 @@ namespace libp2p::security::plaintext {
     OUTCOME_TRY(proto_pubkey_bytes, marshaller_->marshal(msg.pubkey));
     if (!exchange_msg.mutable_pubkey()->ParseFromArray(
             proto_pubkey_bytes.key.data(), proto_pubkey_bytes.key.size())) {
-      return Error::PUBLIC_KEY_SERIALIZING_ERROR;
+      return Q_ERROR(Error::PUBLIC_KEY_SERIALIZING_ERROR);
     }
 
     auto id = msg.peer_id.toMultihash().toBuffer();
@@ -57,7 +57,7 @@ namespace libp2p::security::plaintext {
         proto_msg.pubkey().ByteSizeLong());
     if (!proto_msg.pubkey().SerializeToArray(pubkey_message_bytes.data(),
                                              pubkey_message_bytes.size())) {
-      return Error::PUBLIC_KEY_SERIALIZING_ERROR;
+      return Q_ERROR(Error::PUBLIC_KEY_SERIALIZING_ERROR);
     }
     crypto::ProtobufKey proto_pubkey{pubkey_message_bytes};
     OUTCOME_TRY(pubkey, marshaller_->unmarshalPublicKey(proto_pubkey));
@@ -76,7 +76,7 @@ namespace libp2p::security::plaintext {
 
     std::vector<uint8_t> out_msg(exchange_msg.ByteSizeLong());
     if (!exchange_msg.SerializeToArray(out_msg.data(), out_msg.size())) {
-      return Error::MESSAGE_SERIALIZING_ERROR;
+      return Q_ERROR(Error::MESSAGE_SERIALIZING_ERROR);
     }
     return out_msg;
   }
@@ -85,7 +85,7 @@ namespace libp2p::security::plaintext {
   ExchangeMessageMarshallerImpl::unmarshal(BytesIn msg_bytes) const {
     plaintext::protobuf::Exchange exchange_msg;
     if (!exchange_msg.ParseFromArray(msg_bytes.data(), msg_bytes.size())) {
-      return Error::PUBLIC_KEY_DESERIALIZING_ERROR;
+      return Q_ERROR(Error::PUBLIC_KEY_DESERIALIZING_ERROR);
     }
 
     return protoToHandy(exchange_msg);

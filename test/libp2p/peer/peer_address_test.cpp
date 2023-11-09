@@ -49,7 +49,7 @@ class PeerAddressTest : public ::testing::Test {
  * @then creation is successful
  */
 TEST_F(PeerAddressTest, FromStringSuccess) {
-  ASSERT_OUTCOME_SUCCESS(address, PeerAddress::create(kAddressString))
+  EXPECT_OUTCOME_TRUE(address, PeerAddress::create(kAddressString))
   EXPECT_EQ(address.toString(), kAddressString);
   EXPECT_EQ(address.getId(), kDefaultPeerId);
   EXPECT_EQ(address.getAddress(), kDefaultAddress);

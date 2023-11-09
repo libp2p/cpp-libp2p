@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::security {
 
@@ -14,4 +14,4 @@ namespace libp2p::security {
 
 }
 
-OUTCOME_HPP_DECLARE_ERROR(libp2p::security::SecurityError);
+OUTCOME_HPP_DECLARE_ERROR(libp2p::security, SecurityError);

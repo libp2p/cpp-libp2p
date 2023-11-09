@@ -10,7 +10,7 @@
 
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/peer/protocol.hpp>
-#include <span>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::protocol_muxer {
   /**

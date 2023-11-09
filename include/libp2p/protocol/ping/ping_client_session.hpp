@@ -64,7 +64,7 @@ namespace libp2p::protocol {
     boost::asio::deadline_timer timer_;
 
     bool last_op_completed_ = false;
-    std::error_code last_error_;
+    std::optional<qtils::Errors> last_error_;
 
     bool is_started_ = false;
   };

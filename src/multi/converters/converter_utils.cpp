@@ -22,7 +22,6 @@
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
 #include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 using libp2p::common::hex_upper;
 using libp2p::common::unhex;
@@ -31,12 +30,12 @@ namespace libp2p::multi::converters {
 
   outcome::result<Bytes> multiaddrToBytes(std::string_view str) {
     if (str.empty() || str[0] != '/') {
-      return ConversionError::ADDRESS_DOES_NOT_BEGIN_WITH_SLASH;
+      return Q_ERROR(ConversionError::ADDRESS_DOES_NOT_BEGIN_WITH_SLASH);
     }
 
     str.remove_prefix(1);
     if (str.empty()) {
-      return ConversionError::EMPTY_PROTOCOL;
+      return Q_ERROR(ConversionError::EMPTY_PROTOCOL);
     }
 
     if (str.back() == '/') {
@@ -57,7 +56,7 @@ namespace libp2p::multi::converters {
     for (auto &word : tokens) {
       if (type == WordType::PROTOCOL) {
         if (word.empty()) {
-          return ConversionError::EMPTY_PROTOCOL;
+          return Q_ERROR(ConversionError::EMPTY_PROTOCOL);
         }
         protx = ProtocolList::get(word);
         if (protx != nullptr) {
@@ -69,11 +68,11 @@ namespace libp2p::multi::converters {
             type = WordType::ADDRESS;  // Since the next word will be an address
           }
         } else {
-          return ConversionError::NO_SUCH_PROTOCOL;
+          return Q_ERROR(ConversionError::NO_SUCH_PROTOCOL);
         }
       } else {
         if (word.empty()) {
-          return ConversionError::EMPTY_ADDRESS;
+          return Q_ERROR(ConversionError::EMPTY_ADDRESS);
         }
         OUTCOME_TRY(bytes, addressToBytes(*protx, word));
         for (auto byte : bytes) {
@@ -86,7 +85,7 @@ namespace libp2p::multi::converters {
     }
 
     if (type == WordType::ADDRESS) {
-      return ConversionError::EMPTY_ADDRESS;
+      return Q_ERROR(ConversionError::EMPTY_ADDRESS);
     }
 
     return processed;
@@ -126,9 +125,9 @@ namespace libp2p::multi::converters {
       case Protocol::Code::P2P_STARDUST:
       case Protocol::Code::P2P_WEBRTC_DIRECT:
       case Protocol::Code::P2P_CIRCUIT:
-        return ConversionError::NOT_IMPLEMENTED;
+        return Q_ERROR(ConversionError::NOT_IMPLEMENTED);
       default:
-        return ConversionError::NO_SUCH_PROTOCOL;
+        return Q_ERROR(ConversionError::NO_SUCH_PROTOCOL);
     }
   }
 
@@ -157,7 +156,7 @@ namespace libp2p::multi::converters {
       const Protocol *protocol =
           ProtocolList::get(static_cast<Protocol::Code>(protocol_int));
       if (protocol == nullptr) {
-        return ConversionError::NO_SUCH_PROTOCOL;
+        return Q_ERROR(ConversionError::NO_SUCH_PROTOCOL);
       }
 
       if (protocol->code != Protocol::Code::P2P) {
@@ -201,7 +200,7 @@ namespace libp2p::multi::converters {
                     return std::isalnum(c) || c == '-' || c == '.';
                   });
               if (i != domain_name.end()) {
-                return ConversionError::INVALID_ADDRESS;
+                return Q_ERROR(ConversionError::INVALID_ADDRESS);
               }
               break;
             }
@@ -259,10 +258,10 @@ namespace libp2p::multi::converters {
               break;
 
             default:
-              return ConversionError::NOT_IMPLEMENTED;
+              return Q_ERROR(ConversionError::NOT_IMPLEMENTED);
           }
         } catch (const std::exception &e) {
-          return ConversionError::INVALID_ADDRESS;
+          return Q_ERROR(ConversionError::INVALID_ADDRESS);
         }
 
       } else {

@@ -36,11 +36,11 @@ namespace libp2p::muxer {
                             CapConnCallbackFunc cb) const {
     if (conn == nullptr || conn->isClosed()) {
       log::createLogger("Yamux")->error("dead connection passed to muxer");
-      return cb(std::errc::not_connected);
+      return cb(Q_ERROR(std::errc::not_connected));
     }
     if (auto res = conn->remotePeer(); res.has_error()) {
       log::createLogger("Yamux")->error(
-          "inactive connection passed to muxer: {}", res.error().message());
+          "inactive connection passed to muxer: {}", res.error());
       return cb(res.error());
     }
     cb(std::make_shared<connection::YamuxedConnection>(

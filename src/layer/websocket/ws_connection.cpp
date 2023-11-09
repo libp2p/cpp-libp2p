@@ -144,7 +144,7 @@ namespace libp2p::connection {
     auto on_read = [weak{weak_from_this()}, out, cb{std::move(cb)}](
                        boost::system::error_code ec, size_t n) mutable {
       if (ec) {
-        cb(ec);
+        cb(Q_ERROR(ec));
       } else if (n != 0) {
         cb(n);
       } else if (auto self = weak.lock()) {

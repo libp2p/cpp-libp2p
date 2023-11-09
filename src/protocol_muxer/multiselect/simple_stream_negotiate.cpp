@@ -29,9 +29,9 @@ namespace libp2p::protocol_muxer::multiselect {
 
     void failed(const StreamPtr &stream,
                 const Callback &cb,
-                std::error_code ec) {
+                qtils::Errors errors) {
       stream->reset();
-      cb(ec);
+      cb(std::move(errors));
     }
 
     void completed(StreamPtr stream,
@@ -41,7 +41,7 @@ namespace libp2p::protocol_muxer::multiselect {
       if (buffers.read == buffers.written) {
         return cb(std::move(stream));
       }
-      failed(stream, cb, ProtocolMuxer::Error::NEGOTIATION_FAILED);
+      failed(stream, cb, Q_ERROR(ProtocolMuxer::Error::NEGOTIATION_FAILED));
     }
 
     void onLastBytesRead(StreamPtr stream,
@@ -66,7 +66,8 @@ namespace libp2p::protocol_muxer::multiselect {
       }
 
       if (res.value() != kMaxVarintSize) {
-        return failed(stream, cb, ProtocolMuxer::Error::INTERNAL_ERROR);
+        return failed(
+            stream, cb, Q_ERROR(ProtocolMuxer::Error::INTERNAL_ERROR));
       }
 
       auto total_sz = buffers->written.size();
@@ -104,7 +105,8 @@ namespace libp2p::protocol_muxer::multiselect {
       }
 
       if (res.value() != buffers->written.size()) {
-        return failed(stream, cb, ProtocolMuxer::Error::INTERNAL_ERROR);
+        return failed(
+            stream, cb, Q_ERROR(ProtocolMuxer::Error::INTERNAL_ERROR));
       }
 
       BytesOut span(buffers->read);
@@ -127,7 +129,9 @@ namespace libp2p::protocol_muxer::multiselect {
     auto res = detail::createMessage(a, false);
     if (!res) {
       return stream->deferWriteCallback(
-          res.error(), [cb = std::move(cb)](auto res) { cb(res.error()); });
+          std::error_code{},
+          [cb{std::move(cb)}, res{std::move(res.error())}](
+              outcome::result<size_t>) mutable { cb(std::move(res)); });
     }
 
     auto buffers = std::make_shared<Buffers>();

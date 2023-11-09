@@ -18,19 +18,19 @@ using libp2p::multi::converters::bytesToMultiaddrString;
 using libp2p::multi::converters::ConversionError;
 using libp2p::multi::converters::multiaddrToBytes;
 
-#define EXAMINE_STR_TO_BYTES(str_addr, hex_bytes)               \
-  do {                                                          \
-    ASSERT_OUTCOME_SUCCESS(actual, multiaddrToBytes(str_addr)); \
-    ASSERT_OUTCOME_SUCCESS(expected, unhex(hex_bytes));         \
-    ASSERT_EQ(actual, expected);                                \
+#define EXAMINE_STR_TO_BYTES(str_addr, hex_bytes)            \
+  do {                                                       \
+    EXPECT_OUTCOME_TRUE(actual, multiaddrToBytes(str_addr)); \
+    EXPECT_OUTCOME_TRUE(expected, unhex(hex_bytes));         \
+    ASSERT_EQ(actual, expected);                             \
   } while (false)
 
-#define EXAMINE_BYTES_TO_STR(str_addr, hex_bytes)                  \
-  do {                                                             \
-    auto &expected = str_addr;                                     \
-    ASSERT_OUTCOME_SUCCESS(bytes, unhex(hex_bytes));               \
-    ASSERT_OUTCOME_SUCCESS(actual, bytesToMultiaddrString(bytes)); \
-    ASSERT_EQ(actual, expected);                                   \
+#define EXAMINE_BYTES_TO_STR(str_addr, hex_bytes)               \
+  do {                                                          \
+    auto &expected = str_addr;                                  \
+    EXPECT_OUTCOME_TRUE(bytes, unhex(hex_bytes));               \
+    EXPECT_OUTCOME_TRUE(actual, bytesToMultiaddrString(bytes)); \
+    ASSERT_EQ(actual, expected);                                \
   } while (false)
 
 /**
@@ -125,21 +125,17 @@ TEST(AddressConverter, BytesToString) {
 }
 
 TEST(AddressConverter, InvalidAddresses) {
-  ASSERT_OUTCOME_ERROR(multiaddrToBytes("ip4/127.0.0.1"),
-                       ConversionError::ADDRESS_DOES_NOT_BEGIN_WITH_SLASH);
-  ASSERT_OUTCOME_ERROR(multiaddrToBytes("/"), ConversionError::EMPTY_PROTOCOL);
-  ASSERT_OUTCOME_ERROR(multiaddrToBytes("/ip4/8.8.8.8//"),
-                       ConversionError::EMPTY_PROTOCOL);
-  ASSERT_OUTCOME_ERROR(multiaddrToBytes("/fake"),
-                       ConversionError::NO_SUCH_PROTOCOL);
-  ASSERT_OUTCOME_ERROR(multiaddrToBytes("/80/tcp"),
-                       ConversionError::NO_SUCH_PROTOCOL);
-  ASSERT_OUTCOME_ERROR(multiaddrToBytes("/ip4/127.0.0.1/tcp"),
-                       ConversionError::EMPTY_ADDRESS);
-  ASSERT_OUTCOME_ERROR(multiaddrToBytes("/ip4/254.255.256.257/"),
-                       ConversionError::INVALID_ADDRESS);
-  ASSERT_OUTCOME_ERROR(multiaddrToBytes("/tcp/77777"),
-                       ConversionError::INVALID_ADDRESS);
-  ASSERT_OUTCOME_ERROR(multiaddrToBytes("/tcp/udp"),
-                       ConversionError::INVALID_ADDRESS);
+  EXPECT_EC(multiaddrToBytes("ip4/127.0.0.1"),
+            ConversionError::ADDRESS_DOES_NOT_BEGIN_WITH_SLASH);
+  EXPECT_EC(multiaddrToBytes("/"), ConversionError::EMPTY_PROTOCOL);
+  EXPECT_EC(multiaddrToBytes("/ip4/8.8.8.8//"),
+            ConversionError::EMPTY_PROTOCOL);
+  EXPECT_EC(multiaddrToBytes("/fake"), ConversionError::NO_SUCH_PROTOCOL);
+  EXPECT_EC(multiaddrToBytes("/80/tcp"), ConversionError::NO_SUCH_PROTOCOL);
+  EXPECT_EC(multiaddrToBytes("/ip4/127.0.0.1/tcp"),
+            ConversionError::EMPTY_ADDRESS);
+  EXPECT_EC(multiaddrToBytes("/ip4/254.255.256.257/"),
+            ConversionError::INVALID_ADDRESS);
+  EXPECT_EC(multiaddrToBytes("/tcp/77777"), ConversionError::INVALID_ADDRESS);
+  EXPECT_EC(multiaddrToBytes("/tcp/udp"), ConversionError::INVALID_ADDRESS);
 }

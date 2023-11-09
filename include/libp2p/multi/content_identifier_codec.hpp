@@ -8,6 +8,7 @@
 
 #include <libp2p/multi/content_identifier.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base58.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::multi {
 

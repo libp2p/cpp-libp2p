@@ -49,10 +49,10 @@ namespace libp2p::protocol::kademlia {
 
   outcome::result<void> AddProviderExecutor::start() {
     if (started_) {
-      return Error::IN_PROGRESS;
+      return Q_ERROR(Error::IN_PROGRESS);
     }
     if (done_) {
-      return Error::FULFILLED;
+      return Q_ERROR(Error::FULFILLED);
     }
     started_ = true;
 
@@ -63,7 +63,7 @@ namespace libp2p::protocol::kademlia {
     Message request = createAddProviderRequest(std::move(self_peer_info), key_);
     if (!request.serialize(*serialized_request_)) {
       done_ = true;
-      return Error::MESSAGE_SERIALIZE_ERROR;
+      return Q_ERROR(Error::MESSAGE_SERIALIZE_ERROR);
     }
 
     log_.debug("started");
@@ -136,7 +136,7 @@ namespace libp2p::protocol::kademlia {
           [holder] {
             if (holder->first) {
               holder->second.cancel();
-              holder->first->onConnected(Error::TIMEOUT);
+              holder->first->onConnected(Q_ERROR(Error::TIMEOUT));
               holder->first.reset();
             }
           },
@@ -165,7 +165,7 @@ namespace libp2p::protocol::kademlia {
       --requests_in_progress_;
 
       log_.debug("cannot connect to peer: {}; done {}, active {}, in queue {}",
-                 stream_res.error().message(),
+                 stream_res.error(),
                  requests_succeed_,
                  requests_in_progress_,
                  queue_.size());

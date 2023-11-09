@@ -116,7 +116,7 @@ namespace libp2p::transport {
                      });
 
     if (adaptor_it == layer_adaptors_.end()) {
-      return cb(multi::converters::ConversionError::NOT_IMPLEMENTED);
+      return cb(Q_ERROR(multi::converters::ConversionError::NOT_IMPLEMENTED));
     }
 
     const auto &adaptor = *adaptor_it;
@@ -163,7 +163,7 @@ namespace libp2p::transport {
                      });
 
     if (adaptor_it == layer_adaptors_.end()) {
-      return cb(multi::converters::ConversionError::NOT_IMPLEMENTED);
+      return cb(Q_ERROR(multi::converters::ConversionError::NOT_IMPLEMENTED));
     }
 
     const auto &adaptor = *adaptor_it;
@@ -208,7 +208,7 @@ namespace libp2p::transport {
           auto adaptor =
               findAdaptor(self->security_adaptors_, proto_res.value());
           if (adaptor == nullptr) {
-            return cb(Error::NO_ADAPTOR_FOUND);
+            return cb(Q_ERROR(Error::NO_ADAPTOR_FOUND));
           }
 
           return adaptor->secureInbound(std::move(conn), std::move(cb));
@@ -236,7 +236,7 @@ namespace libp2p::transport {
           auto adaptor =
               findAdaptor(self->security_adaptors_, proto_res.value());
           if (adaptor == nullptr) {
-            return cb(Error::NO_ADAPTOR_FOUND);
+            return cb(Q_ERROR(Error::NO_ADAPTOR_FOUND));
           }
 
           return adaptor->secureOutbound(
@@ -258,7 +258,7 @@ namespace libp2p::transport {
 
           auto adaptor = findAdaptor(self->muxer_adaptors_, proto_res.value());
           if (!adaptor) {
-            return cb(Error::NO_ADAPTOR_FOUND);
+            return cb(Q_ERROR(Error::NO_ADAPTOR_FOUND));
           }
 
           return adaptor->muxConnection(

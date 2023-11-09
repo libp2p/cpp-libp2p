@@ -17,7 +17,7 @@ namespace libp2p::multi::converters {
     boost::system::error_code ec;
     auto address = boost::asio::ip::make_address_v4(addr, ec);
     if (ec) {
-      return ConversionError::INVALID_ADDRESS;
+      return Q_ERROR(ConversionError::INVALID_ADDRESS);
     }
     uint32_t iip = address.to_uint();
     auto hex = common::int_to_hex(iip);
@@ -29,7 +29,7 @@ namespace libp2p::multi::converters {
     boost::system::error_code ec;
     auto address = boost::asio::ip::make_address_v4(addr, ec);
     if (ec) {
-      return ConversionError::INVALID_ADDRESS;
+      return Q_ERROR(ConversionError::INVALID_ADDRESS);
     }
     auto ip_bytes = address.to_bytes();
     return Bytes(ip_bytes.begin(), ip_bytes.end());

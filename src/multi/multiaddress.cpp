@@ -74,7 +74,7 @@ namespace libp2p::multi {
   Multiaddress::FactoryResult Multiaddress::create(BytesIn bytes) {
     auto conversion_res = converters::bytesToMultiaddrString(bytes);
     if (!conversion_res) {
-      return Error::INVALID_INPUT;
+      return Q_ERROR(Error::INVALID_INPUT);
     }
 
     std::string s = conversion_res.value();
@@ -256,7 +256,7 @@ namespace libp2p::multi {
     // solution
     auto vec = getValuesForProtocol(proto);
     if (vec.empty()) {
-      return Error::PROTOCOL_NOT_FOUND;
+      return Q_ERROR(Error::PROTOCOL_NOT_FOUND);
     }
 
     return vec[0];

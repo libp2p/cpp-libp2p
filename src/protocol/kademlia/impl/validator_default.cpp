@@ -18,7 +18,7 @@ namespace libp2p::protocol::kademlia {
   outcome::result<size_t> ValidatorDefault::select(
       const Key &key, const std::vector<Value> &values) {
     if (values.empty()) {
-      return Error::VALUE_NOT_FOUND;
+      return Q_ERROR(Error::VALUE_NOT_FOUND);
     }
     return 0;
   }

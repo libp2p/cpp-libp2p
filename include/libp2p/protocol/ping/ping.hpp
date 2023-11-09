@@ -12,7 +12,6 @@
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
 #include <libp2p/protocol/ping/ping_config.hpp>
 

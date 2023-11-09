@@ -191,13 +191,13 @@ namespace libp2p::multi::detail {
 
   outcome::result<Bytes> decodeBase64(std::string_view string) {
     if (!isValidBase64(string)) {
-      return BaseError::INVALID_BASE64_INPUT;
+      return Q_ERROR(BaseError::INVALID_BASE64_INPUT);
     }
 
     auto decoded_bytes = decodeImpl(string);
 
     if (!decoded_bytes) {
-      return BaseError::INVALID_BASE64_INPUT;
+      return Q_ERROR(BaseError::INVALID_BASE64_INPUT);
     }
     return Bytes{std::move(*decoded_bytes)};
   }

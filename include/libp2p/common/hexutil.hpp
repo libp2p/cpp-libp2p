@@ -7,12 +7,12 @@
 #pragma once
 
 #include <string_view>
-#include <vector>
 
 #include <boost/algorithm/hex.hpp>
 
 #include <libp2p/common/types.hpp>
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/enum_error_code.hpp>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::common {
 

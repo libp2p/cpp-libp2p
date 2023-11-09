@@ -53,7 +53,7 @@ namespace libp2p::network {
             return 0 == line.rfind("dnsaddr=", 0);
           });
       if (not prefixed) {
-        cb(Error::MALFORMED_RESPONSE);
+        cb(Q_ERROR(Error::MALFORMED_RESPONSE));
         return;
       }
       std::transform(lines.begin(),
@@ -67,7 +67,7 @@ namespace libp2p::network {
       for (const auto &line : lines) {
         auto res = multi::Multiaddress::create(line);
         if (res.has_error()) {
-          cb(Error::BAD_ADDR_IN_RESPONSE);
+          cb(Q_ERROR(Error::BAD_ADDR_IN_RESPONSE));
           return;
         }
         addresses.emplace_back(std::move(res.value()));
@@ -81,7 +81,7 @@ namespace libp2p::network {
   outcome::result<std::string> DnsaddrResolverImpl::dnsaddrUriFromMultiaddr(
       const multi::Multiaddress &address) {
     if (not address.hasProtocol(kDnsaddr)) {
-      return Error::INVALID_DNSADDR;
+      return Q_ERROR(Error::INVALID_DNSADDR);
     }
     OUTCOME_TRY(hostname, address.getFirstValueForProtocol(kDnsaddr));
     return "_dnsaddr." + hostname;

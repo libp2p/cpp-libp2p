@@ -16,7 +16,6 @@
 #include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/hmac_provider.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, SecioConnection::Error, e) {
   using E = libp2p::connection::SecioConnection::Error;
@@ -46,31 +45,19 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, SecioConnection::Error, e) {
   }
 }
 
-#ifndef UNIQUE_NAME
-#define UNIQUE_NAME(base) base##__LINE__
-#endif  // UNIQUE_NAME
-
-#define IO_OUTCOME_TRY_NAME(var, val, res, cb) \
-  auto && (var) = (res);                       \
-  if ((var).has_error()) {                     \
-    cb((var).error());                         \
-    return;                                    \
-  }                                            \
-  auto && (val) = (var).value();
-
 #define IO_OUTCOME_TRY(name, res, cb) \
-  IO_OUTCOME_TRY_NAME(UNIQUE_NAME(name), name, res, cb)
+  Q_CB_TRY(cb, auto &&name, res, Q_ERROR(nullptr))
 
 namespace {
   template <typename AesSecretType>
-  libp2p::outcome::result<AesSecretType> initAesSecret(
-      const libp2p::Bytes &key, const libp2p::Bytes &iv) {
+  outcome::result<AesSecretType> initAesSecret(const libp2p::Bytes &key,
+                                               const libp2p::Bytes &iv) {
     AesSecretType secret{};
     if (key.size() != secret.key.size()) {
-      return libp2p::crypto::OpenSslError::WRONG_KEY_SIZE;
+      return Q_ERROR(libp2p::crypto::OpenSslError::WRONG_KEY_SIZE);
     }
     if (iv.size() != secret.iv.size()) {
-      return libp2p::crypto::OpenSslError::WRONG_IV_SIZE;
+      return Q_ERROR(libp2p::crypto::OpenSslError::WRONG_IV_SIZE);
     }
     std::copy(key.begin(), key.end(), secret.key.begin());
     std::copy(iv.begin(), iv.end(), secret.iv.begin());
@@ -108,7 +95,7 @@ namespace libp2p::connection {
 
   outcome::result<void> SecioConnection::init() {
     if (isInitialized()) {
-      return Error::CONN_ALREADY_INITIALIZED;
+      return Q_ERROR(Error::CONN_ALREADY_INITIALIZED);
     }
 
     using CT = crypto::common::CipherType;
@@ -140,7 +127,7 @@ namespace libp2p::connection {
       remote_decryptor_ = std::make_unique<crypto::aes::AesCtrImpl>(
           remote_256, AesCtrMode::DECRYPT);
     } else {
-      return Error::UNSUPPORTED_CIPHER;
+      return Q_ERROR(Error::UNSUPPORTED_CIPHER);
     }
 
     read_buffer_ = std::make_shared<Bytes>(kMaxFrameSize);
@@ -210,7 +197,7 @@ namespace libp2p::connection {
     // TODO(107): Reentrancy
 
     if (!isInitialized()) {
-      cb(Error::CONN_NOT_INITIALIZED);
+      cb(Q_ERROR(Error::CONN_NOT_INITIALIZED));
       return;
     }
 
@@ -247,13 +234,13 @@ namespace libp2p::connection {
         kLenMarkerSize,
         [self{shared_from_this()}, buffer = read_buffer_, cb{std::move(cb)}](
             outcome::result<size_t> read_bytes_res) mutable {
-          IO_OUTCOME_TRY(len_marker_size, read_bytes_res, cb)
+          IO_OUTCOME_TRY(len_marker_size, read_bytes_res, cb);
           if (len_marker_size != kLenMarkerSize) {
             self->log_->error(
                 "Cannot read frame header. Read {} bytes when {} expected",
                 len_marker_size,
                 kLenMarkerSize);
-            cb(Error::STREAM_IS_BROKEN);
+            cb(Q_ERROR(Error::STREAM_IS_BROKEN));
             return;
           }
           uint32_t frame_len{
@@ -262,7 +249,7 @@ namespace libp2p::connection {
             self->log_->error("Frame size {} exceeds maximum allowed size {}",
                               frame_len,
                               kMaxFrameSize);
-            cb(Error::OVERSIZED_FRAME);
+            cb(Q_ERROR(Error::OVERSIZED_FRAME));
             return;
           }
           SL_TRACE(self->log_, "Expecting frame of size {}.", frame_len);
@@ -271,27 +258,27 @@ namespace libp2p::connection {
               frame_len,
               [self, buffer, frame_len, cb{cb}](
                   outcome::result<size_t> read_bytes) mutable {
-                IO_OUTCOME_TRY(read_frame_bytes, read_bytes, cb)
+                IO_OUTCOME_TRY(read_frame_bytes, read_bytes, cb);
                 if (frame_len != read_frame_bytes) {
                   self->log_->error(
                       "Unable to read expected amount of bytes. Read {} when "
                       "{} expected",
                       read_frame_bytes,
                       frame_len);
-                  cb(Error::STREAM_IS_BROKEN);
+                  cb(Q_ERROR(Error::STREAM_IS_BROKEN));
                   return;
                 }
                 SL_TRACE(
                     self->log_, "Received frame with len {}", read_frame_bytes);
-                IO_OUTCOME_TRY(mac_size, self->macSize(), cb)
+                IO_OUTCOME_TRY(mac_size, self->macSize(), cb);
                 const auto data_size{frame_len - mac_size};
                 auto data_span{std::span(buffer->data(), data_size)};
                 auto mac_span{std::span(*buffer).subspan(data_size, mac_size)};
-                IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb)
+                IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb);
                 if (BytesIn(remote_mac) != BytesIn(mac_span)) {
                   self->log_->error(
                       "Signature does not validate for the received frame");
-                  cb(Error::INVALID_MAC);
+                  cb(Q_ERROR(Error::INVALID_MAC));
                   return;
                 }
                 IO_OUTCOME_TRY(decrypted_bytes,
@@ -323,7 +310,7 @@ namespace libp2p::connection {
     // TODO(107): Reentrancy
 
     if (!isInitialized()) {
-      cb(Error::CONN_NOT_INITIALIZED);
+      cb(Q_ERROR(Error::CONN_NOT_INITIALIZED));
     }
     IO_OUTCOME_TRY(mac_size, macSize(), cb);
     size_t frame_len{bytes + mac_size};
@@ -347,7 +334,7 @@ namespace libp2p::connection {
             return user_cb(res);  // pulling out the error occurred
           }
           if (res.value() != raw_bytes) {
-            return user_cb(Error::STREAM_IS_BROKEN);
+            return user_cb(Q_ERROR(Error::STREAM_IS_BROKEN));
           }
           user_cb(bytes);
         };
@@ -370,7 +357,7 @@ namespace libp2p::connection {
       case HT::SHA512:
         return 64;
       default:
-        return Error::UNSUPPORTED_HASH;
+        return Q_ERROR(Error::UNSUPPORTED_HASH);
     }
   }
 

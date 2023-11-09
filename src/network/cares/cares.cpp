@@ -6,6 +6,7 @@
 
 #include <libp2p/network/cares/cares.hpp>
 
+#include <arpa/nameser.h>
 #include <cstring>
 #include <stdexcept>
 #include <thread>
@@ -138,7 +139,7 @@ namespace libp2p::network::c_ares {
       worker.detach();
     } catch (const std::runtime_error &e) {
       log()->error("Ares unable to start worker thread - {}", e.what());
-      request->callback(Error::THREAD_FAILED);
+      request->callback(Q_ERROR(Error::THREAD_FAILED));
     }
   }
 
@@ -147,7 +148,8 @@ namespace libp2p::network::c_ares {
       Ares::TxtCallback callback,
       Ares::Error error) {
     if (auto ctx = io_context.lock()) {
-      ctx->post([callback{std::move(callback)}, error] { callback(error); });
+      ctx->post(
+          [callback{std::move(callback)}, error] { callback(Q_ERROR(error)); });
       return;
     }
     SL_DEBUG(log(), "IO context has expired");

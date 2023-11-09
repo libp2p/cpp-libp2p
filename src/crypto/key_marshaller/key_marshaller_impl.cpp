@@ -28,10 +28,10 @@ namespace libp2p::crypto::marshaller {
         case Key::Type::ECDSA:
           return protobuf::KeyType::ECDSA;
         case Key::Type::UNSPECIFIED:
-          return CryptoProviderError::INVALID_KEY_TYPE;
+          return Q_ERROR(CryptoProviderError::INVALID_KEY_TYPE);
       }
 
-      return CryptoProviderError::UNKNOWN_KEY_TYPE;
+      return Q_ERROR(CryptoProviderError::UNKNOWN_KEY_TYPE);
     }
 
     /**
@@ -50,7 +50,7 @@ namespace libp2p::crypto::marshaller {
         case protobuf::KeyType::ECDSA:
           return Key::Type::ECDSA;
         default:
-          return CryptoProviderError::UNKNOWN_KEY_TYPE;
+          return Q_ERROR(CryptoProviderError::UNKNOWN_KEY_TYPE);
       }
     }
   }  // namespace
@@ -86,7 +86,7 @@ namespace libp2p::crypto::marshaller {
     protobuf::PublicKey protobuf_key;
     if (!protobuf_key.ParseFromArray(proto_key.key.data(),
                                      static_cast<int>(proto_key.key.size()))) {
-      return CryptoProviderError::FAILED_UNMARSHAL_DATA;
+      return Q_ERROR(CryptoProviderError::FAILED_UNMARSHAL_DATA);
     }
 
     OUTCOME_TRY(type, unmarshalKeyType(protobuf_key.type()));
@@ -103,7 +103,7 @@ namespace libp2p::crypto::marshaller {
     protobuf::PublicKey protobuf_key;
     if (!protobuf_key.ParseFromArray(proto_key.key.data(),
                                      static_cast<int>(proto_key.key.size()))) {
-      return CryptoProviderError::FAILED_UNMARSHAL_DATA;
+      return Q_ERROR(CryptoProviderError::FAILED_UNMARSHAL_DATA);
     }
 
     OUTCOME_TRY(type, unmarshalKeyType(protobuf_key.type()));

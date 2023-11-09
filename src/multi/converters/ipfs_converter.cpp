@@ -14,7 +14,6 @@
 #include <libp2p/multi/converters/conversion_error.hpp>
 #include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 using std::string_literals::operator""s;
 
@@ -29,7 +28,7 @@ namespace libp2p::multi::converters {
     MultibaseCodecImpl codec;
     auto decoded_res = codec.decode(encoded);
     if (decoded_res.has_error()) {
-      return ConversionError::INVALID_ADDRESS;
+      return Q_ERROR(ConversionError::INVALID_ADDRESS);
     }
     auto &decoded = decoded_res.value();
 
@@ -49,7 +48,7 @@ namespace libp2p::multi::converters {
     MultibaseCodecImpl codec;
     auto decoded_res = codec.decode(encoded);
     if (decoded_res.has_error()) {
-      return ConversionError::INVALID_ADDRESS;
+      return Q_ERROR(ConversionError::INVALID_ADDRESS);
     }
     auto &decoded = decoded_res.value();
 

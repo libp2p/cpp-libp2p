@@ -8,6 +8,7 @@
 
 #include <libp2p/host/host.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::protocol::kademlia {
 

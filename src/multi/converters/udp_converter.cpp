@@ -16,32 +16,32 @@ namespace libp2p::multi::converters {
       std::string_view addr) {
     for (auto c : addr) {
       if (std::isdigit(c) == 0) {
-        return ConversionError::INVALID_ADDRESS;
+        return Q_ERROR(ConversionError::INVALID_ADDRESS);
       }
     }
     int64_t port_int = 0;
     try {
       port_int = std::stoi(std::string(addr));
     } catch (std::exception &e) {
-      return ConversionError::INVALID_ADDRESS;
+      return Q_ERROR(ConversionError::INVALID_ADDRESS);
     }
     if (port_int >= 0 and port_int <= 65535) {
       return common::int_to_hex(port_int, 4);
     }
-    return ConversionError::INVALID_ADDRESS;
+    return Q_ERROR(ConversionError::INVALID_ADDRESS);
   }
 
   outcome::result<Bytes> UdpConverter::addressToBytes(std::string_view addr) {
     for (auto c : addr) {
       if (std::isdigit(c) == 0) {
-        return ConversionError::INVALID_ADDRESS;
+        return Q_ERROR(ConversionError::INVALID_ADDRESS);
       }
     }
     int64_t port_int = 0;
     try {
       port_int = std::stoi(std::string(addr));
     } catch (std::exception &e) {
-      return ConversionError::INVALID_ADDRESS;
+      return Q_ERROR(ConversionError::INVALID_ADDRESS);
     }
     if (port_int >= 0 and port_int <= 65535) {
       auto port_int16 = static_cast<uint16_t>(port_int);
@@ -49,7 +49,7 @@ namespace libp2p::multi::converters {
       common::putUint16BE(bytes, port_int16);
       return std::move(bytes);
     }
-    return ConversionError::INVALID_ADDRESS;
+    return Q_ERROR(ConversionError::INVALID_ADDRESS);
   }
 
 }  // namespace libp2p::multi::converters

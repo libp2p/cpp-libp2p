@@ -37,10 +37,10 @@ namespace libp2p::connection {
 
   outcome::result<std::shared_ptr<Stream>> MplexedConnection::newStream() {
     if (!is_active_) {
-      return Error::CONNECTION_NOT_ACTIVE;
+      return Q_ERROR(Error::CONNECTION_NOT_ACTIVE);
     }
     if (streams_.size() >= config_.maximum_streams) {
-      return Error::CONNECTION_TOO_MANY_STREAMS;
+      return Q_ERROR(Error::CONNECTION_TOO_MANY_STREAMS);
     }
 
     StreamId new_stream_id{last_issued_stream_number_++, true};
@@ -58,10 +58,10 @@ namespace libp2p::connection {
     // TODO(107): Reentrancy
 
     if (!is_active_) {
-      return cb(Error::CONNECTION_NOT_ACTIVE);
+      return cb(Q_ERROR(Error::CONNECTION_NOT_ACTIVE));
     }
     if (streams_.size() >= config_.maximum_streams) {
-      return cb(Error::CONNECTION_TOO_MANY_STREAMS);
+      return cb(Q_ERROR(Error::CONNECTION_TOO_MANY_STREAMS));
     }
 
     StreamId new_stream_id{last_issued_stream_number_++, true};
@@ -72,7 +72,7 @@ namespace libp2p::connection {
                auto &&create_res) {
              if (!create_res) {
                self->log_->error("stream creation failed: {}",
-                                 create_res.error().message());
+                                 create_res.error());
                return cb(create_res.error());
              }
 
@@ -187,7 +187,7 @@ namespace libp2p::connection {
 
   void MplexedConnection::onWriteCompleted(outcome::result<size_t> write_res) {
     if (!write_res) {
-      log_->error("data write failed: {}", write_res.error().message());
+      log_->error("data write failed: {}", write_res.error());
     }
 
     write_queue_.front().cb(std::forward<decltype(write_res)>(write_res));
@@ -204,7 +204,7 @@ namespace libp2p::connection {
               [self{shared_from_this()}](auto &&frame_res) mutable {
                 if (!frame_res) {
                   self->log_->error("cannot read frame from the connection: {}",
-                                    frame_res.error().message());
+                                    frame_res.error());
                   return self->closeSession();
                 }
 
@@ -280,7 +280,7 @@ namespace libp2p::connection {
     if (!commit_res) {
       return log_->error("failed to commit data for stream {}: {}",
                          stream_id.toString(),
-                         commit_res.error().message());
+                         commit_res.error());
     }
   }
 
@@ -329,7 +329,7 @@ namespace libp2p::connection {
              if (!reset_res) {
                self->log_->error("cannot reset stream {}: {}",
                                  stream_id.toString(),
-                                 reset_res.error().message());
+                                 reset_res.error());
              }
            }});
   }
@@ -348,8 +348,7 @@ namespace libp2p::connection {
 
     auto close_res = close();
     if (!close_res) {
-      log_->error("cannot close the connection: {}",
-                  close_res.error().message());
+      log_->error("cannot close the connection: {}", close_res.error());
     }
   }
 

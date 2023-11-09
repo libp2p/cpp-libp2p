@@ -7,6 +7,7 @@
 #pragma once
 
 #include <libp2p/multi/multibase_codec.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::multi {
   /**

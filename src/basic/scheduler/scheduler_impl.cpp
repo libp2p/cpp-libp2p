@@ -61,7 +61,7 @@ namespace libp2p::basic {
       Handle::Ticket ticket,
       std::chrono::milliseconds delay_from_now) noexcept {
     if (delay_from_now.count() <= 0) {
-      return Error::kInvalidArgument;
+      return Q_ERROR(Error::kInvalidArgument);
     }
 
     std::chrono::milliseconds abs_time = now() + delay_from_now;
@@ -74,7 +74,7 @@ namespace libp2p::basic {
     // deferred callback becomes timed
     auto cb = deferred_callbacks_.cancel(ticket.second);
     if (!cb) {
-      return Error::kItemNotFound;
+      return Q_ERROR(Error::kItemNotFound);
     }
     timed_callbacks_.push(
         abs_time, ++seq_number_, std::move(cb), weak_from_this());
@@ -416,7 +416,7 @@ namespace libp2p::basic {
     auto seq = ticket.second;
 
     if (abs_time < ticket.first || seq == 0 || new_seq <= seq) {
-      return Scheduler::Error::kInvalidArgument;
+      return Q_ERROR(Scheduler::Error::kInvalidArgument);
     }
 
     Ticket new_ticket(abs_time, new_seq);
@@ -424,7 +424,7 @@ namespace libp2p::basic {
     if (seq != seq_in_process_) {
       auto it = items_.find(ticket);
       if (it == items_.end()) {
-        return Scheduler::Error::kItemNotFound;
+        return Q_ERROR(Scheduler::Error::kItemNotFound);
       }
       auto cb = std::move(it->second);
       items_.erase(it);

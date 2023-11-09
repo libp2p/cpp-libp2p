@@ -79,7 +79,7 @@ namespace libp2p::protocol::gossip {
     OUTCOME_TRY(ma, libp2p::multi::Multiaddress::create(address));
     auto peer_id_str = ma.getPeerId();
     if (!peer_id_str) {
-      return multi::Multiaddress::Error::INVALID_INPUT;
+      return Q_ERROR(multi::Multiaddress::Error::INVALID_INPUT);
     }
     OUTCOME_TRY(peer_id, peer::PeerId::fromBase58(*peer_id_str));
     addBootstrapPeer(peer_id, {std::move(ma)});
@@ -172,7 +172,7 @@ namespace libp2p::protocol::gossip {
     if (config_.sign_messages) {
       auto res = signMessage(*msg);
       if (!res) {
-        log_.warn("signMessage error: {}", res.error().message());
+        log_.warn("signMessage error: {}", res.error());
       }
     }
 
@@ -338,7 +338,7 @@ namespace libp2p::protocol::gossip {
 
     auto res = heartbeat_timer_.reschedule(config_.heartbeat_interval_msec);
     if (!res) {
-      log_.error("Heartbeat reschedule error: {}", res.error().message());
+      log_.error("Heartbeat reschedule error: {}", res.error());
     }
   }
 

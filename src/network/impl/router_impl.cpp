@@ -53,7 +53,7 @@ namespace libp2p::network {
     // but a predicate one, it still will save the resources
     auto matched_proto = proto_handlers_.longest_prefix(p);
     if (matched_proto == proto_handlers_.end()) {
-      return Error::NO_HANDLER_FOUND;
+      return Q_ERROR(Error::NO_HANDLER_FOUND);
     }
 
     const auto &[predicate, cb] = matched_proto.value();
@@ -80,7 +80,7 @@ namespace libp2p::network {
     }
 
     if (longest_match == matched_protos.second) {
-      return Error::NO_HANDLER_FOUND;
+      return Q_ERROR(Error::NO_HANDLER_FOUND);
     }
     longest_match->handler(
         StreamAndProtocol{std::move(stream), longest_match.key()});

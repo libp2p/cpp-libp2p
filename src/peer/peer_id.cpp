@@ -50,7 +50,7 @@ namespace libp2p::peer {
 
     if (hash.getType() != multi::HashType::sha256
         && hash.toBuffer().size() > kMaxInlineKeyLength) {
-      return FactoryError::SHA256_EXPECTED;
+      return Q_ERROR(FactoryError::SHA256_EXPECTED);
     }
 
     return PeerId{std::move(hash)};
@@ -59,7 +59,7 @@ namespace libp2p::peer {
   PeerId::FactoryResult PeerId::fromHash(const Multihash &hash) {
     if (hash.getType() != multi::HashType::sha256
         && hash.toBuffer().size() > kMaxInlineKeyLength) {
-      return FactoryError::SHA256_EXPECTED;
+      return Q_ERROR(FactoryError::SHA256_EXPECTED);
     }
 
     return PeerId{hash};

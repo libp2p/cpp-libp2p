@@ -38,7 +38,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
                                               const String &protocol) {
     auto msg_size = protocol.size() + 1;
     if (msg_size > kMaxMessageSize - kMaxVarintSize) {
-      return ProtocolMuxer::Error::INTERNAL_ERROR;
+      return Q_ERROR(ProtocolMuxer::Error::INTERNAL_ERROR);
     }
     appendVarint(buffer, msg_size);
     buffer.insert(buffer.end(), protocol.begin(), protocol.end());
@@ -46,7 +46,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
     if (buffer.size() <= kMaxMessageSize) {
       return outcome::success();
     }
-    return ProtocolMuxer::Error::INTERNAL_ERROR;
+    return Q_ERROR(ProtocolMuxer::Error::INTERNAL_ERROR);
   }
 
   /// Creates simple protocol message (one string)
@@ -74,7 +74,7 @@ namespace libp2p::protocol_muxer::multiselect::detail {
 
     } catch (const std::bad_alloc &e) {
       // static tmp buffer throws this on oversize
-      return ProtocolMuxer::Error::INTERNAL_ERROR;
+      return Q_ERROR(ProtocolMuxer::Error::INTERNAL_ERROR);
     }
 
     return outcome::success();

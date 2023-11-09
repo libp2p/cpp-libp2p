@@ -8,7 +8,7 @@
 
 #include <functional>
 
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::basic {
 

@@ -44,7 +44,7 @@ namespace libp2p::multi::detail {
     // we need this check, because Boost can unhex any kind of base16 with one
     // func, but the base must be specified correctly
     if (!encodingCaseIsUpper(string)) {
-      return BaseError::NON_UPPERCASE_INPUT;
+      return Q_ERROR(BaseError::NON_UPPERCASE_INPUT);
     }
     OUTCOME_TRY(bytes, unhex(string));
     return Bytes{std::move(bytes)};
@@ -54,7 +54,7 @@ namespace libp2p::multi::detail {
     // we need this check, because Boost can unhex any kind of base16 with one
     // func, but the base must be specified correctly
     if (encodingCaseIsUpper(string)) {
-      return BaseError::NON_LOWERCASE_INPUT;
+      return Q_ERROR(BaseError::NON_LOWERCASE_INPUT);
     }
     OUTCOME_TRY(bytes, unhex(string));
     return Bytes{std::move(bytes)};

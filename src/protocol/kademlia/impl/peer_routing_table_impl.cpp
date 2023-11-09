@@ -200,7 +200,7 @@ namespace libp2p::protocol::kademlia {
                                       event::Bus &bus) {
       const auto removed = bucket.removeReplaceableItem();
       if (!removed.has_value()) {
-        return PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY;
+        return Q_ERROR(PeerRoutingTableImpl::Error::PEER_REJECTED_NO_CAPACITY);
       }
       bus.getChannel<event::protocol::kademlia::PeerRemovedChannel>().publish(
           removed.value());

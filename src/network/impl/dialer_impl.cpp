@@ -45,8 +45,9 @@ namespace libp2p::network {
     // did user supply its addresses in {@param p}?
     if (p.addresses.empty()) {
       // we don't have addresses of peer p
-      scheduler_->schedule(
-          [cb{std::move(cb)}] { cb(std::errc::destination_address_required); });
+      scheduler_->schedule([cb{std::move(cb)}] {
+        cb(Q_ERROR(std::errc::destination_address_required));
+      });
       return;
     }
 
@@ -68,7 +69,7 @@ namespace libp2p::network {
     auto &&ctx = ctx_found->second;
 
     if (ctx.addresses.empty() and not ctx.dialled) {
-      completeDial(peer_id, std::errc::address_family_not_supported);
+      completeDial(peer_id, Q_ERROR(std::errc::address_family_not_supported));
       return;
     }
     if (ctx.addresses.empty() and ctx.result.has_value()) {
@@ -77,7 +78,7 @@ namespace libp2p::network {
     }
     if (ctx.addresses.empty()) {
       // this would never happen. Previous if-statement should work instead'
-      completeDial(peer_id, std::errc::host_unreachable);
+      completeDial(peer_id, Q_ERROR(std::errc::host_unreachable));
       return;
     }
 
@@ -189,7 +190,7 @@ namespace libp2p::network {
     auto conn = cmgr_->getBestConnectionForPeer(peer_id);
     if (!conn) {
       scheduler_->schedule(
-          [cb{std::move(cb)}] { cb(std::errc::not_connected); });
+          [cb{std::move(cb)}] { cb(Q_ERROR(std::errc::not_connected)); });
       return;
     }
     newStream(std::move(conn), std::move(protocols), std::move(cb));

@@ -60,11 +60,14 @@ namespace libp2p::connection {
       const boost::system::error_code &error,
       const HandshakeCallback &cb,
       const crypto::marshaller::KeyMarshaller &key_marshaller) {
-    std::error_code ec = error;
+    std::optional<qtils::Errors> ec;
+    if (error) {
+      ec = Q_ERROR(error);
+    }
     while (!ec) {
       X509 *cert = SSL_get_peer_certificate(socket_.native_handle());
       if (cert == nullptr) {
-        ec = TlsError::TLS_NO_CERTIFICATE;
+        ec = Q_ERROR(TlsError::TLS_NO_CERTIFICATE);
         break;
       }
       auto id_res = security::tls_details::verifyPeerAndExtractIdentity(
@@ -80,7 +83,7 @@ namespace libp2p::connection {
                    "peer ids mismatch: expected={}, got={}",
                    remote_peer_.value().toBase58(),
                    id.peer_id.toBase58());
-          ec = TlsError::TLS_UNEXPECTED_PEER_ID;
+          ec = Q_ERROR(TlsError::TLS_UNEXPECTED_PEER_ID);
           break;
         }
       } else {
@@ -97,12 +100,11 @@ namespace libp2p::connection {
 
     assert(ec);
 
-    log()->info("handshake error: {}", ec.message());
+    log()->info("handshake error: {}", *ec);
     if (auto close_res = close(); !close_res) {
-      log()->info("cannot close raw connection: {}",
-                  close_res.error().message());
+      log()->info("cannot close raw connection: {}", close_res.error());
     }
-    return cb(ec);
+    return cb(*ec);
   }
 
   outcome::result<peer::PeerId> TlsConnection::localPeer() const {
@@ -111,14 +113,14 @@ namespace libp2p::connection {
 
   outcome::result<peer::PeerId> TlsConnection::remotePeer() const {
     if (!remote_peer_) {
-      return TlsError::TLS_REMOTE_PEER_NOT_AVAILABLE;
+      return Q_ERROR(TlsError::TLS_REMOTE_PEER_NOT_AVAILABLE);
     }
     return remote_peer_.value();
   }
 
   outcome::result<crypto::PublicKey> TlsConnection::remotePublicKey() const {
     if (!remote_pubkey_) {
-      return TlsError::TLS_REMOTE_PUBKEY_NOT_AVAILABLE;
+      return Q_ERROR(TlsError::TLS_REMOTE_PUBKEY_NOT_AVAILABLE);
     }
     return remote_pubkey_.value();
   }
@@ -142,7 +144,7 @@ namespace libp2p::connection {
       if (ec) {
         SL_DEBUG(log(), "connection async op error {}", ec.message());
         std::ignore = conn->close();
-        return cb(std::forward<decltype(ec)>(ec));
+        return cb(Q_ERROR(ec));
       }
       cb(std::forward<decltype(result)>(result));
     };

@@ -11,6 +11,7 @@
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/security/plaintext/exchange_message.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::crypto::protobuf {
   class PublicKey;

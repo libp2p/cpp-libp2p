@@ -12,10 +12,6 @@
 #include <libp2p/crypto/x25519_provider/x25519_provider_impl.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
 
-#ifndef UNIQUE_NAME
-#define UNIQUE_NAME(base) base##__LINE__
-#endif  // UNIQUE_NAME
-
 #define OUTCOME_CB_I(var, res)                \
   auto && (var) = (res);                      \
   if ((var).has_error()) {                    \
@@ -27,7 +23,7 @@
   OUTCOME_CB_I(var, res)                 \
   auto && (val) = (var).value();
 
-#define OUTCOME_CB(name, res) OUTCOME_CB_NAME_I(UNIQUE_NAME(name), name, res)
+#define OUTCOME_CB(name, res) OUTCOME_CB_NAME_I(OUTCOME_UNIQUE, name, res)
 
 namespace libp2p::connection {
   NoiseConnection::NoiseConnection(

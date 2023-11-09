@@ -49,13 +49,13 @@ namespace libp2p::common {
       return blob;
 
     } catch (const boost::algorithm::not_enough_input &e) {
-      return UnhexError::NOT_ENOUGH_INPUT;
+      return Q_ERROR(UnhexError::NOT_ENOUGH_INPUT);
 
     } catch (const boost::algorithm::non_hex_input &e) {
-      return UnhexError::NON_HEX_INPUT;
+      return Q_ERROR(UnhexError::NON_HEX_INPUT);
 
     } catch (const std::exception &e) {
-      return UnhexError::UNKNOWN;
+      return Q_ERROR(UnhexError::UNKNOWN);
     }
   }
 }  // namespace libp2p::common

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <boost/asio/error.hpp>
 #include <libp2p/basic/writer.hpp>
 #include <memory>
 
@@ -37,7 +38,7 @@ namespace libp2p {
           // write remaining bytes
           auto writer = weak.lock();
           if (not writer) {
-            return cb(std::errc::operation_canceled);
+            return cb(Q_ERROR(boost::asio::error::operation_aborted));
           }
           write(writer, in.subspan(n), std::move(cb));
         });

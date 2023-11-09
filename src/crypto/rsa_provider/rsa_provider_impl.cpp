@@ -20,8 +20,8 @@ using libp2p::common::FinalAction;
 namespace {
   /// encode cryptographic key in `ASN.1 DER` format
   template <class KeyStructure, class Function>
-  libp2p::outcome::result<std::vector<uint8_t>> encodeKeyDer(
-      KeyStructure *ks, Function *function) {
+  outcome::result<std::vector<uint8_t>> encodeKeyDer(KeyStructure *ks,
+                                                     Function *function) {
     unsigned char *buffer = nullptr;
     FinalAction cleanup([pptr = &buffer] {
       if (*pptr != nullptr) {
@@ -31,7 +31,7 @@ namespace {
 
     int length = function(ks, &buffer);
     if (length < 0) {
-      return libp2p::crypto::KeyGeneratorError::KEY_GENERATION_FAILED;
+      return Q_ERROR(libp2p::crypto::KeyGeneratorError::KEY_GENERATION_FAILED);
     }
 
     auto span = std::span(buffer, length);
@@ -88,14 +88,14 @@ namespace libp2p::crypto::rsa {
     bne = BN_new();
     ret = BN_set_word(bne, exp);
     if (ret != 1) {
-      return KeyGeneratorError::KEY_GENERATION_FAILED;
+      return Q_ERROR(KeyGeneratorError::KEY_GENERATION_FAILED);
     }
 
     // 2. generate keys
     rsa = RSA_new();
     ret = RSA_generate_key_ex(rsa, bits, bne, nullptr);
     if (ret != 1) {
-      return KeyGeneratorError::KEY_GENERATION_FAILED;
+      return Q_ERROR(KeyGeneratorError::KEY_GENERATION_FAILED);
     }
 
     OUTCOME_TRY(private_bytes, encodeKeyDer(rsa, i2d_RSAPrivateKey));
@@ -110,7 +110,7 @@ namespace libp2p::crypto::rsa {
     RSA *rsa = d2i_RSAPrivateKey(
         nullptr, &data_pointer, static_cast<long>(private_key.size()));
     if (nullptr == rsa) {
-      return KeyGeneratorError::KEY_DERIVATION_FAILED;
+      return Q_ERROR(KeyGeneratorError::KEY_DERIVATION_FAILED);
     }
     FinalAction cleanup_rsa([rsa]() { RSA_free(rsa); });
 
@@ -127,7 +127,7 @@ namespace libp2p::crypto::rsa {
             nullptr, &data_pointer, static_cast<long>(private_key.size())),
         RSA_free};
     if (nullptr == rsa) {
-      return KeyValidatorError::INVALID_PRIVATE_KEY;
+      return Q_ERROR(KeyValidatorError::INVALID_PRIVATE_KEY);
     }
     return rsa;
   }
@@ -145,7 +145,7 @@ namespace libp2p::crypto::rsa {
                     signature.data(),
                     &signature_size,
                     rsa.get())) {
-      return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
+      return Q_ERROR(CryptoProviderError::SIGNATURE_GENERATION_FAILED);
     }
 
     return signature;
@@ -175,7 +175,7 @@ namespace libp2p::crypto::rsa {
     X509_PUBKEY *key_ptr = key.get();
     if (d2i_X509_PUBKEY(&key_ptr, &bytes, static_cast<long>(input_key.size()))
         == nullptr) {
-      return KeyValidatorError::INVALID_PUBLIC_KEY;
+      return Q_ERROR(KeyValidatorError::INVALID_PUBLIC_KEY);
     }
     return key;
   }

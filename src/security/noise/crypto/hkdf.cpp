@@ -25,7 +25,7 @@ namespace libp2p::security::noise {
                                    BytesIn chaining_key,
                                    BytesIn input_key_material) {
     if (0 == outputs or outputs > 3) {
-      return HKDFError::ILLEGAL_OUTPUTS_NUMBER;
+      return Q_ERROR(HKDFError::ILLEGAL_OUTPUTS_NUMBER);
     }
     HKDFResult result;
 

@@ -16,7 +16,7 @@ namespace libp2p::crypto::chachapoly {
 #define IF1(expr, err, result) \
   if (1 != (expr)) {           \
     log_->error((err));        \
-    return (result);           \
+    return Q_ERROR(result);    \
   }
 
   ChaCha20Poly1305Impl::ChaCha20Poly1305Impl(Key key)
@@ -36,7 +36,7 @@ namespace libp2p::crypto::chachapoly {
     result.reserve(plaintext.size() + block_size_ + 16);
     auto *ctx = EVP_CIPHER_CTX_new();
     if (nullptr == ctx) {
-      return OpenSslError::FAILED_INITIALIZE_CONTEXT;
+      return Q_ERROR(OpenSslError::FAILED_INITIALIZE_CONTEXT);
     }
     FinalAction free_ctx([ctx] { EVP_CIPHER_CTX_free(ctx); });
 

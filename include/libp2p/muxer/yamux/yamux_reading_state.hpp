@@ -8,7 +8,7 @@
 
 #include <libp2p/basic/read_buffer.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::connection {
 

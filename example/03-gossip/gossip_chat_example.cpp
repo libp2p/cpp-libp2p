@@ -97,9 +97,10 @@ int main(int argc, char *argv[]) {
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
 
   // make peer uri of local node
-  auto local_address_str =
-      fmt::format("/ip4/{}/tcp/{}/p2p/{}", utility::getLocalIP(*io),
-                    options->port, host->getId().toBase58());
+  auto local_address_str = fmt::format("/ip4/{}/tcp/{}/p2p/{}",
+                                       utility::getLocalIP(*io),
+                                       options->port,
+                                       host->getId().toBase58());
 
   // local address -> peer info
   auto peer_info = utility::str2peerInfo(local_address_str);
@@ -113,7 +114,8 @@ int main(int argc, char *argv[]) {
 
   // create gossip node
   auto gossip = libp2p::protocol::gossip::create(
-      injector.create<std::shared_ptr<libp2p::basic::Scheduler>>(), host,
+      injector.create<std::shared_ptr<libp2p::basic::Scheduler>>(),
+      host,
       injector.create<std::shared_ptr<libp2p::peer::IdentityManager>>(),
       injector.create<std::shared_ptr<libp2p::crypto::CryptoProvider>>(),
       injector
@@ -144,9 +146,10 @@ int main(int argc, char *argv[]) {
   io->post([&] {
     auto listen_res = host->listen(peer_info->addresses[0]);
     if (!listen_res) {
-      std::cerr << "Cannot listen to multiaddress "
-                << peer_info->addresses[0].getStringAddress() << ", "
-                << listen_res.error().message() << "\n";
+      fmt::println(std::cerr,
+                   "Cannot listen to multiaddress {}, {}",
+                   peer_info->addresses[0].getStringAddress(),
+                   listen_res.error());
       io->stop();
       return;
     }

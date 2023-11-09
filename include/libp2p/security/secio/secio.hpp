@@ -16,6 +16,7 @@
 #include <libp2p/security/secio/exchange_message_marshaller.hpp>
 #include <libp2p/security/secio/propose_message_marshaller.hpp>
 #include <libp2p/security/security_adaptor.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::security {
 
@@ -81,7 +82,7 @@ namespace libp2p::security {
 
     void closeConnection(
         const std::shared_ptr<libp2p::connection::LayerConnection> &conn,
-        const std::error_code &err) const;
+        const qtils::Errors &err) const;
 
     std::shared_ptr<crypto::random::CSPRNG> csprng_;
     std::shared_ptr<crypto::CryptoProvider> crypto_provider_;
