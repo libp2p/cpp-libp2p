@@ -72,11 +72,6 @@ namespace libp2p::connection {
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
    private:
-    void read(BytesOut out,
-              size_t bytes,
-              OperationContext ctx,
-              ReadCallbackFunc cb);
-
     void readSome(BytesOut out,
                   size_t bytes,
                   OperationContext ctx,

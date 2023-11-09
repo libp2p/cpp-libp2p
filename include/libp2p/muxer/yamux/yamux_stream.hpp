@@ -21,9 +21,7 @@ namespace libp2p::connection {
     virtual ~YamuxStreamFeedback() = default;
 
     /// Stream transfers data to connection
-    virtual void writeStreamData(uint32_t stream_id,
-                                 BytesIn data,
-                                 bool some) = 0;
+    virtual void writeStreamData(uint32_t stream_id, BytesIn data) = 0;
 
     /// Stream acknowledges received bytes
     virtual void ackReceivedBytes(uint32_t stream_id, uint32_t bytes) = 0;
@@ -118,7 +116,7 @@ namespace libp2p::connection {
     void doClose(std::error_code ec, bool notify_read_side);
 
     /// Called by read*() functions
-    void doRead(BytesOut out, size_t bytes, ReadCallbackFunc cb, bool some);
+    void doRead(BytesOut out, size_t bytes, ReadCallbackFunc cb);
 
     /// Completes the read operation if any, clears read state
     [[nodiscard]] std::pair<ReadCallbackFunc, outcome::result<size_t>>
@@ -128,7 +126,7 @@ namespace libp2p::connection {
     void doWrite();
 
     /// Called by write*() functions
-    void doWrite(BytesIn in, size_t bytes, WriteCallbackFunc cb, bool some);
+    void doWrite(BytesIn in, size_t bytes, WriteCallbackFunc cb);
 
     /// Clears close callback state
     [[nodiscard]] std::pair<VoidResultHandlerFunc, outcome::result<void>>
@@ -175,9 +173,6 @@ namespace libp2p::connection {
 
     /// True if read operation is active
     bool is_reading_ = false;
-
-    /// Read operation is readSome()
-    bool reading_some_ = false;
 
     /// Read callback, it is non-zero during async data receive
     ReadCallbackFunc read_cb_;

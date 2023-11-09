@@ -55,8 +55,6 @@ namespace libp2p::connection {
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
    private:
-    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb, bool some);
-
     libp2p::peer::PeerInfo own_peer_info_;
     std::shared_ptr<boost::asio::io_context> io_context_;
 

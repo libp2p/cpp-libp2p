@@ -8,6 +8,9 @@
 
 #include <cassert>
 
+#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 
 #define TRACE_ENABLED 0
@@ -43,11 +46,12 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::read(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
-    doRead(out, bytes, std::move(cb), false);
+    ambigousSize(out, bytes);
+    readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
   void YamuxStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
-    doRead(out, bytes, std::move(cb), true);
+    doRead(out, bytes, std::move(cb));
   }
 
   void YamuxStream::deferReadCallback(outcome::result<size_t> res,
@@ -65,11 +69,12 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::write(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
-    doWrite(in, bytes, std::move(cb), false);
+    ambigousSize(in, bytes);
+    writeReturnSize(shared_from_this(), in, std::move(cb));
   }
 
   void YamuxStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
-    doWrite(in, bytes, std::move(cb), true);
+    doWrite(in, bytes, std::move(cb));
   }
 
   void YamuxStream::deferWriteCallback(std::error_code ec,
@@ -247,10 +252,8 @@ namespace libp2p::connection {
           external_read_buffer_.subspan(static_cast<ptrdiff_t>(bytes_consumed));
 
       read_completed = external_read_buffer_.empty();
-      if (reading_some_) {
-        read_message_size_ = bytes_consumed;
-        read_completed = true;
-      }
+      read_message_size_ = bytes_consumed;
+      read_completed = true;
 
       if (read_completed) {
         read_cb_and_res = readCompleted();
@@ -417,10 +420,7 @@ namespace libp2p::connection {
     }
   }
 
-  void YamuxStream::doRead(BytesOut out,
-                           size_t bytes,
-                           ReadCallbackFunc cb,
-                           bool some) {
+  void YamuxStream::doRead(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
     assert(cb);
 
     if (!cb || bytes == 0 || out.empty()
@@ -430,7 +430,7 @@ namespace libp2p::connection {
 
     // If something is still in read buffer, the client can consume these bytes
     auto bytes_available_now = internal_read_buffer_.size();
-    if (bytes_available_now >= bytes || (some && bytes_available_now > 0)) {
+    if (bytes_available_now > 0) {
       out = out.first(static_cast<ptrdiff_t>(bytes));
       size_t consumed = internal_read_buffer_.consume(out);
 
@@ -459,7 +459,6 @@ namespace libp2p::connection {
     read_cb_ = std::move(cb);
     external_read_buffer_ = out;
     read_message_size_ = bytes;
-    reading_some_ = some;
     external_read_buffer_ =
         external_read_buffer_.first(static_cast<ptrdiff_t>(read_message_size_));
 
@@ -477,7 +476,6 @@ namespace libp2p::connection {
     if (is_reading_) {
       is_reading_ = false;
       read_message_size_ = 0;
-      reading_some_ = false;
       if (read_cb_) {
         r.first.swap(read_cb_);
         if (!is_readable_) {
@@ -497,9 +495,8 @@ namespace libp2p::connection {
     size_t initial_window_size = window_size_;
 
     BytesIn data;
-    bool some = false;
     while (!close_reason_) {
-      window_size_ = write_queue_.dequeue(window_size_, data, some);
+      window_size_ = write_queue_.dequeue(window_size_, data);
       if (data.empty()) {
         break;
       }
@@ -507,7 +504,7 @@ namespace libp2p::connection {
             stream_id_,
             data.size(),
             write_queue_.unsentBytes() + data.size());
-      feedback_.writeStreamData(stream_id_, data, some);
+      feedback_.writeStreamData(stream_id_, data);
     }
 
     if (initial_window_size != window_size_) {
@@ -533,10 +530,7 @@ namespace libp2p::connection {
     }
   }
 
-  void YamuxStream::doWrite(BytesIn in,
-                            size_t bytes,
-                            WriteCallbackFunc cb,
-                            bool some) {
+  void YamuxStream::doWrite(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
     if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
       return deferWriteCallback(Error::STREAM_INVALID_ARGUMENT, std::move(cb));
     }
@@ -553,8 +547,7 @@ namespace libp2p::connection {
       return deferWriteCallback(Error::STREAM_WRITE_OVERFLOW, std::move(cb));
     }
 
-    write_queue_.enqueue(
-        in.first(static_cast<ptrdiff_t>(bytes)), some, std::move(cb));
+    write_queue_.enqueue(in.first(bytes), std::move(cb));
     doWrite();
   }
 

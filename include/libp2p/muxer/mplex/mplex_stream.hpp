@@ -88,12 +88,10 @@ namespace libp2p::connection {
       BytesOut out;
       size_t bytes;
       ReadCallbackFunc cb;
-      bool some;
     };
 
     void readDone(outcome::result<size_t> res);
     bool readTry();
-    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb, bool some);
 
     std::weak_ptr<MplexedConnection> connection_;
     StreamId stream_id_;

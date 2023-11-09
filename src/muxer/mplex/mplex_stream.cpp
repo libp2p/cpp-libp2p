@@ -9,6 +9,9 @@
 #include <algorithm>
 
 #include <boost/container_hash/hash.hpp>
+#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 #define TRY_GET_CONNECTION(conn_var_name) \
@@ -32,11 +35,8 @@ namespace libp2p::connection {
       : connection_{std::move(connection)}, stream_id_{stream_id} {}
 
   void MplexStream::read(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
-    read(out, bytes, std::move(cb), false);
-  }
-
-  void MplexStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
-    read(out, bytes, std::move(cb), true);
+    ambigousSize(out, bytes);
+    readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
   void MplexStream::readDone(outcome::result<size_t> res) {
@@ -47,14 +47,8 @@ namespace libp2p::connection {
 
   bool MplexStream::readTry() {
     auto size{std::min(read_buffer_.size(), reading_->bytes)};
-    if (reading_->some) {
-      if (size == 0) {
-        return false;
-      }
-    } else {
-      if (size != reading_->bytes) {
-        return false;
-      }
+    if (size == 0) {
+      return false;
     }
     if (boost::asio::buffer_copy(
             boost::asio::buffer(reading_->out.data(), size),
@@ -70,10 +64,7 @@ namespace libp2p::connection {
     return true;
   }
 
-  void MplexStream::read(BytesOut out,
-                         size_t bytes,
-                         ReadCallbackFunc cb,
-                         bool some) {
+  void MplexStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
     if (is_reset_) {
       return cb(Error::STREAM_RESET_BY_PEER);
     }
@@ -87,7 +78,7 @@ namespace libp2p::connection {
       return cb(Error::STREAM_IS_READING);
     }
 
-    reading_.emplace(Reading{out, bytes, std::move(cb), some});
+    reading_.emplace(Reading{out, bytes, std::move(cb)});
     if (readTry()) {
       return;
     }
@@ -98,6 +89,11 @@ namespace libp2p::connection {
   }
 
   void MplexStream::write(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
+    ambigousSize(in, bytes);
+    writeReturnSize(shared_from_this(), in, std::move(cb));
+  }
+
+  void MplexStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
     // TODO(107): Reentrancy
 
     if (is_reset_) {
@@ -160,10 +156,6 @@ namespace libp2p::connection {
       return cb(Error::STREAM_RESET_BY_HOST);
     }
     connection_.lock()->deferWriteCallback(ec, std::move(cb));
-  }
-
-  void MplexStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
-    write(in, bytes, std::move(cb));
   }
 
   bool MplexStream::isClosed() const noexcept {

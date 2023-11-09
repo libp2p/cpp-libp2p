@@ -8,6 +8,9 @@
 
 #include <boost/asio/error.hpp>
 
+#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/log/logger.hpp>
 
 namespace libp2p::connection {
@@ -266,7 +269,7 @@ namespace libp2p::connection {
     assert(n <= raw_read_buffer_->size());
 
     if (n < raw_read_buffer_->size()) {
-      bytes_read = bytes_read.first(ssize_t(n));
+      bytes_read = bytes_read.first(n);
     }
 
     reading_state_.onDataReceived(bytes_read);
@@ -407,7 +410,7 @@ namespace libp2p::connection {
       SL_DEBUG(log(), "received SYN with stream id of wrong direction");
       ok = false;
 
-    } else if (streams_.count(frame.stream_id) != 0) {
+    } else if (streams_.contains(frame.stream_id)) {
       SL_DEBUG(log(), "received SYN on existing stream id");
       ok = false;
 
@@ -440,7 +443,7 @@ namespace libp2p::connection {
     enqueue(ackStreamMsg(frame.stream_id));
 
     // handler will be called after all inbound bytes processed
-    fresh_streams_.push_back({frame.stream_id, StreamHandlerFunc{}});
+    fresh_streams_.emplace_back(frame.stream_id, StreamHandlerFunc{});
 
     return true;
   }
@@ -462,7 +465,7 @@ namespace libp2p::connection {
     } else {
       auto it = pending_outbound_streams_.find(frame.stream_id);
       if (it == pending_outbound_streams_.end()) {
-        if (streams_.count(frame.stream_id) != 0) {
+        if (streams_.contains(frame.stream_id)) {
           // Stream was opened in optimistic manner
           SL_DEBUG(log(),
                    "ignoring received ACK on existing stream id {}",
@@ -521,8 +524,6 @@ namespace libp2p::connection {
     if (result == YamuxStream::kRemoveStream) {
       eraseStream(stream_id);
     }
-
-    return;
   }
 
   void YamuxedConnection::processRst(StreamId stream_id) {
@@ -601,21 +602,12 @@ namespace libp2p::connection {
     }
   }
 
-  void YamuxedConnection::writeStreamData(uint32_t stream_id,
-                                          BytesIn data,
-                                          bool some) {
-    if (some) {
-      // header must be written not partially, even some == true
-      enqueue(dataMsg(stream_id, data.size(), false));
-      enqueue(Buffer(data.begin(), data.end()), stream_id, true);
-    } else {
-      // if !some then we can write a whole packet
-      auto packet = dataMsg(stream_id, data.size(), true);
+  void YamuxedConnection::writeStreamData(uint32_t stream_id, BytesIn data) {
+    auto packet = dataMsg(stream_id, data.size(), true);
 
-      // will add support for vector writes some time
-      packet.insert(packet.end(), data.begin(), data.end());
-      enqueue(std::move(packet), stream_id);
-    }
+    // will add support for vector writes some time
+    packet.insert(packet.end(), data.begin(), data.end());
+    enqueue(std::move(packet), stream_id);
   }
 
   void YamuxedConnection::ackReceivedBytes(uint32_t stream_id, uint32_t bytes) {
@@ -655,39 +647,31 @@ namespace libp2p::connection {
     }
   }
 
-  void YamuxedConnection::enqueue(Buffer packet,
-                                  StreamId stream_id,
-                                  bool some) {
+  void YamuxedConnection::enqueue(Buffer packet, StreamId stream_id) {
     if (is_writing_) {
-      write_queue_.push_back(
-          WriteQueueItem{std::move(packet), stream_id, some});
+      write_queue_.push_back(WriteQueueItem{std::move(packet), stream_id});
     } else {
-      doWrite(WriteQueueItem{std::move(packet), stream_id, some});
+      doWrite(WriteQueueItem{std::move(packet), stream_id});
     }
   }
 
   void YamuxedConnection::doWrite(WriteQueueItem packet) {
     assert(!is_writing_);
 
-    auto write_func =
-        packet.some ? &CapableConnection::writeSome : &CapableConnection::write;
     auto span = BytesIn(packet.packet);
-    auto sz = packet.packet.size();
     auto cb = [wptr{weak_from_this()},
                packet = std::move(packet)](outcome::result<size_t> res) {
-      auto self = wptr.lock();
-      if (self) {
-        self->onDataWritten(res, packet.stream_id, packet.some);
+      if (auto self = wptr.lock()) {
+        self->onDataWritten(res, packet.stream_id);
       }
     };
 
     is_writing_ = true;
-    ((connection_.get())->*write_func)(span, sz, std::move(cb));
+    writeReturnSize(connection_, span, cb);
   }
 
   void YamuxedConnection::onDataWritten(outcome::result<size_t> res,
-                                        StreamId stream_id,
-                                        bool some) {
+                                        StreamId stream_id) {
     if (!res) {
       // write error
       close(res.error(), boost::none);
@@ -701,13 +685,11 @@ namespace libp2p::connection {
       // pass write ack to stream about data size written except header size
 
       auto sz = res.value();
-      if (!some) {
-        if (sz < YamuxFrame::kHeaderLength) {
-          log()->error("onDataWritten : too small size arrived: {}", sz);
-          sz = 0;
-        } else {
-          sz -= YamuxFrame::kHeaderLength;
-        }
+      if (sz < YamuxFrame::kHeaderLength) {
+        log()->error("onDataWritten : too small size arrived: {}", sz);
+        sz = 0;
+      } else {
+        sz -= YamuxFrame::kHeaderLength;
       }
 
       if (sz > 0) {
