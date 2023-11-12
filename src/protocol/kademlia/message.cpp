@@ -10,6 +10,7 @@
 
 #include <generated/protocol/kademlia/protobuf/kademlia.pb.h>
 #include <libp2p/multi/uvarint.hpp>
+#include <qtils/bytestr.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia, Message::Error, e) {
   using E = libp2p::protocol::kademlia::Message::Error;
@@ -45,20 +46,14 @@ namespace libp2p::protocol::kademlia {
         return Q_ERROR(Message::Error::INVALID_CONNECTEDNESS);
       }
 
-      auto peer_id_res = PeerId::fromBytes(BytesIn(
-          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<const uint8_t *>(src.id().data()),
-          src.id().size()));
+      auto peer_id_res = PeerId::fromBytes(qtils::str2byte(src.id()));
       if (!peer_id_res) {
         return Q_ERROR(Message::Error::INVALID_PEER_ID);
       }
 
       std::vector<multi::Multiaddress> addresses;
       for (const auto &addr : src.addrs()) {
-        auto res = multi::Multiaddress::create(BytesIn(
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            reinterpret_cast<const uint8_t *>(addr.data()),
-            addr.size()));
+        auto res = multi::Multiaddress::create(qtils::str2byte(addr));
         if (!res) {
           return Q_ERROR(Message::Error::INVALID_ADDRESSES);
         }

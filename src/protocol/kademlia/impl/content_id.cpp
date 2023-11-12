@@ -9,13 +9,11 @@
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/multi/content_identifier.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
+#include <qtils/bytestr.hpp>
 
 namespace libp2p::protocol::kademlia {
   ContentId makeKeySha256(std::string_view str) {
-    auto digest_res = crypto::sha256(std::span(
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        reinterpret_cast<const uint8_t *>(str.data()),
-        str.size()));
+    auto digest_res = crypto::sha256(qtils::str2byte(str));
     BOOST_ASSERT(digest_res.has_value());
 
     auto mhash_res = libp2p::multi::Multihash::create(

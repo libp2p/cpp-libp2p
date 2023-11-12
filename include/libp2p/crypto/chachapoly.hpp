@@ -14,7 +14,6 @@
 #include <qtils/outcome.hpp>
 
 namespace libp2p::crypto::chachapoly {
-  using libp2p::Bytes;
   using Key = std::array<uint8_t, 32>;
   using Nonce = std::array<uint8_t, 12>;
 

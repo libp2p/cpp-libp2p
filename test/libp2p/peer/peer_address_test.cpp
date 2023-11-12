@@ -7,7 +7,7 @@
 #include <libp2p/peer/peer_address.hpp>
 
 #include <gtest/gtest.h>
-#include <libp2p/common/hexutil.hpp>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
 #include <libp2p/peer/peer_id.hpp>
@@ -18,6 +18,7 @@ using namespace libp2p::common;
 using namespace libp2p::multi;
 using namespace libp2p::peer;
 using namespace libp2p::common;
+using libp2p::common::operator""_unhex;
 
 class PeerAddressTest : public ::testing::Test {
  public:
@@ -25,8 +26,7 @@ class PeerAddressTest : public ::testing::Test {
       std::make_shared<MultibaseCodecImpl>();
 
   Bytes hash =
-      unhex("af85e416fa66390b3c834cb6b7aeafb8b4b484e7245fd9a9d81e7f3f5f95714f")
-          .value();
+      "af85e416fa66390b3c834cb6b7aeafb8b4b484e7245fd9a9d81e7f3f5f95714f"_unhex;
 
   const Multihash kDefaultMultihash =
       Multihash::create(HashType::sha256, hash).value();

@@ -22,7 +22,6 @@ namespace libp2p::security::noise {
   using libp2p::crypto::asVector;
 
   using crypto::common::HashType;
-  using libp2p::Bytes;
   struct HKDFResult {
     Bytes one;
     Bytes two;

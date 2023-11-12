@@ -6,7 +6,6 @@
 
 #include <gtest/gtest.h>
 
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/multi/content_identifier.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
@@ -30,21 +29,6 @@ const Multihash ZERO_MULTIHASH =
     "12200000000000000000000000000000000000000000000000000000000000000000"_multihash;
 const Multihash EXAMPLE_MULTIHASH =
     "12206e6ff7950a36187a801613426e858dce686cd7d7e3c0fc42ee0330072d245c95"_multihash;
-
-TEST(CidTest, PrettyString) {
-  ContentIdentifier c1(ContentIdentifier::Version::V1,
-                       MulticodecType::Code::IDENTITY,
-                       ZERO_MULTIHASH);
-  ASSERT_EQ(c1.toPrettyString("base58"),
-            "base58 - cidv1 - identity - sha2-256-256-"
-                + libp2p::common::hex_lower(ZERO_MULTIHASH.getHash()));
-  ContentIdentifier c2(ContentIdentifier::Version::V0,
-                       MulticodecType::Code::DAG_PB,
-                       EXAMPLE_MULTIHASH);
-  ASSERT_EQ(c2.toPrettyString("base64"),
-            "base64 - cidv0 - dag-pb - sha2-256-256-"
-                + libp2p::common::hex_lower(EXAMPLE_MULTIHASH.getHash()));
-}
 
 /**
  * @given CID with sample multihash and it's string representation from

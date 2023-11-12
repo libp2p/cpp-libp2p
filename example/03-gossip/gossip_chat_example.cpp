@@ -12,6 +12,7 @@
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/protocol/gossip/gossip.hpp>
+#include <qtils/bytestr.hpp>
 
 #include "console_async_reader.hpp"
 #include "utility.hpp"
@@ -133,7 +134,7 @@ int main(int argc, char *argv[]) {
           return;
         }
         std::cerr << utility::formatPeerId(m->from) << ": "
-                  << utility::toString(m->data) << "\n";
+                  << qtils::byte2str(m->data) << "\n";
       });
 
   // tell gossip to connect to remote peer, only if specified

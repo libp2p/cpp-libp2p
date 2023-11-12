@@ -32,6 +32,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/HunterGate.cmake)
 
 HunterGate(
     URL  https://github.com/qdrvm/hunter/archive/refs/heads/turuslan/qtils.zip
-    SHA1 da40c5dc049199f1236e5aec2fe850eec990db49
+    SHA1 550c7c3a2cbcbd070c6d26c55122e09abbbb11c6
     LOCAL
 )

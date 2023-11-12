@@ -16,6 +16,7 @@
 #include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/hmac_provider.hpp>
+#include <qtils/bytecmp.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, SecioConnection::Error, e) {
   using E = libp2p::connection::SecioConnection::Error;

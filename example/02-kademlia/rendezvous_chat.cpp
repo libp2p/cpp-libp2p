@@ -11,11 +11,13 @@
 
 #include <boost/beast.hpp>
 
-#include <libp2p/common/hexutil.hpp>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/injector/kademlia_injector.hpp>
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/log/sublogger.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
+
+using libp2p::common::operator""_unhex;
 
 class Session;
 
@@ -196,11 +198,11 @@ int main(int argc, char *argv[]) {
       // clang-format off
       .publicKey = {{
         .type = libp2p::crypto::Key::Type::Ed25519,
-        .data = libp2p::common::unhex("48453469c62f4885373099421a7365520b5ffb0d93726c124166be4b81d852e6").value()
+        .data = "48453469c62f4885373099421a7365520b5ffb0d93726c124166be4b81d852e6"_unhex,
       }},
       .privateKey = {{
         .type = libp2p::crypto::Key::Type::Ed25519,
-        .data = libp2p::common::unhex("4a9361c525840f7086b893d584ebbe475b4ec7069951d2e897e8bceb0a3f35ce").value()
+        .data = "4a9361c525840f7086b893d584ebbe475b4ec7069951d2e897e8bceb0a3f35ce"_unhex,
       }},
       // clang-format on
   };

@@ -16,6 +16,7 @@
 #include <libp2p/network/network.hpp>
 #include <libp2p/peer/address_repository.hpp>
 #include <libp2p/protocol/identify/utils.hpp>
+#include <qtils/bytestr.hpp>
 
 using libp2p::BytesIn;
 
@@ -24,15 +25,12 @@ namespace {
   inline std::string fromMultiaddrToString(
       const libp2p::multi::Multiaddress &ma) {
     const auto &addr = ma.getBytesAddress();
-    return {addr.begin(), addr.end()};
+    return std::string{qtils::byte2str(addr)};
   }
 
   inline outcome::result<libp2p::multi::Multiaddress> fromStringToMultiaddr(
       const std::string &addr) {
-    return libp2p::multi::Multiaddress::create(BytesIn(
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        reinterpret_cast<const uint8_t *>(addr.data()),
-        addr.size()));
+    return libp2p::multi::Multiaddress::create(qtils::str2byte(addr));
   }
 }  // namespace
 

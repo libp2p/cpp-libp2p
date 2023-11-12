@@ -8,7 +8,6 @@
 
 #include <cctype>
 
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/trace.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
@@ -130,8 +129,6 @@ namespace libp2p::protocol_muxer::multiselect {
 
     auto span = BytesIn(*packet);
 
-    SL_TRACE(log(), "sending {}", common::dumpBin(span));
-
     connection_->write(
         span,
         span.size(),
@@ -223,8 +220,6 @@ namespace libp2p::protocol_muxer::multiselect {
     BytesIn span(*read_buffer_);
     span = span.first(static_cast<Parser::IndexType>(bytes_read));
 
-    SL_TRACE(log(), "received {}", common::dumpBin(span));
-
     boost::optional<outcome::result<std::string>> got_result;
 
     auto state = parser_.consume(span);
@@ -264,15 +259,9 @@ namespace libp2p::protocol_muxer::multiselect {
           result = handleNA();
           break;
         case Message::kWrongProtocolVersion: {
-          SL_DEBUG(log(),
-                   "Received unsupported protocol version: {}",
-                   common::dumpBin(msg.content));
           result = Q_ERROR(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
         } break;
         default: {
-          SL_DEBUG(log(),
-                   "Received invalid message: {}",
-                   common::dumpBin(msg.content));
           result = Q_ERROR(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
         } break;
       }
@@ -297,10 +286,6 @@ namespace libp2p::protocol_muxer::multiselect {
           return MaybeResult(std::string(protocol));
         }
       }
-
-      SL_DEBUG(log(),
-               "Unexpected message received by client: {}",
-               common::dumpBin(protocol));
       return MaybeResult(Q_ERROR(ProtocolMuxer::Error::PROTOCOL_VIOLATION));
     }
 

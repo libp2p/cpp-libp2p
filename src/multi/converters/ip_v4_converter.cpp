@@ -7,24 +7,9 @@
 #include <libp2p/multi/converters/ip_v4_converter.hpp>
 
 #include <boost/asio/ip/address_v4.hpp>
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/multi/converters/conversion_error.hpp>
 
 namespace libp2p::multi::converters {
-
-  outcome::result<std::string> IPv4Converter::addressToHex(
-      std::string_view addr) {
-    boost::system::error_code ec;
-    auto address = boost::asio::ip::make_address_v4(addr, ec);
-    if (ec) {
-      return Q_ERROR(ConversionError::INVALID_ADDRESS);
-    }
-    uint32_t iip = address.to_uint();
-    auto hex = common::int_to_hex(iip);
-    hex = std::string(8 - hex.length(), '0') + hex;
-    return hex;
-  }
-
   outcome::result<Bytes> IPv4Converter::addressToBytes(std::string_view addr) {
     boost::system::error_code ec;
     auto address = boost::asio::ip::make_address_v4(addr, ec);

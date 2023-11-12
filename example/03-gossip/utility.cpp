@@ -9,12 +9,6 @@
 #include <boost/asio.hpp>
 
 namespace libp2p::protocol::example::utility {
-
-  std::string toString(const std::vector<uint8_t> &buf) {
-    // NOLINTNEXTLINE
-    return std::string(reinterpret_cast<const char *>(buf.data()), buf.size());
-  }
-
   std::vector<uint8_t> fromString(const std::string &s) {
     std::vector<uint8_t> ret{};
     auto sz = s.size();

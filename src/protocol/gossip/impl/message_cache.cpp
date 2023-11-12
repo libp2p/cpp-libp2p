@@ -12,8 +12,6 @@
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
 
-#include <libp2p/common/hexutil.hpp>
-
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
 
@@ -36,9 +34,8 @@ namespace libp2p::protocol::gossip {
     auto &idx = table_->get<ById>();
     auto it = idx.find(id);
     if (it == idx.end()) {
-      TRACE("MessageCache: {} not found, current size {}",
-            common::hex_upper(id),
-            table_->size());
+      TRACE(
+          "MessageCache: {:x} not found, current size {}", id, table_->size());
       return boost::none;
     }
     return it->message;

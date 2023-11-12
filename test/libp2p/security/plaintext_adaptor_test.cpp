@@ -7,7 +7,6 @@
 #include "libp2p/security/plaintext/plaintext.hpp"
 
 #include <gtest/gtest.h>
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <testutil/gmock_actions.hpp>
 #include <testutil/outcome.hpp>

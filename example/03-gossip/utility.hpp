@@ -17,9 +17,6 @@ namespace libp2p::protocol::example::utility {
   /// log level: 'd' for debug, 'i' for info, 'w' for warning, 'e' for error
   void setupLoggers(char level);
 
-  /// Helper bytes->string
-  std::string toString(const std::vector<uint8_t> &buf);
-
   /// Helper string->bytes
   std::vector<uint8_t> fromString(const std::string &s);
 

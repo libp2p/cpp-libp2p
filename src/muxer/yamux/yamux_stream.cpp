@@ -223,9 +223,6 @@ namespace libp2p::connection {
     }
 
     TRACE("stream {} read {} bytes", stream_id_, sz);
-    if (sz < 80) {
-      TRACE("{}", common::dumpBin(bytes));
-    }
 
     bool overflow = false;
     bool read_completed = false;

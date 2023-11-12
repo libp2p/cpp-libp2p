@@ -22,7 +22,7 @@ namespace libp2p::multi::detail {
    * @param bytes to be encoded
    * @return encoded string
    */
-  std::string encodeBase64(const Bytes &bytes);
+  std::string encodeBase64(BytesIn bytes);
 
   /**
    * Decode base64 string to bytes

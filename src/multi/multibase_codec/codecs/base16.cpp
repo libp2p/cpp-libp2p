@@ -9,8 +9,9 @@
 #include <algorithm>
 #include <cctype>
 
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base_error.hpp>
+#include <qtils/hex.hpp>
+#include <qtils/unhex.hpp>
 
 namespace {
   /**
@@ -27,17 +28,12 @@ namespace {
 }  // namespace
 
 namespace libp2p::multi::detail {
-
-  using common::hex_lower;
-  using common::hex_upper;
-  using common::unhex;
-
-  std::string encodeBase16Upper(const Bytes &bytes) {
-    return hex_upper(bytes);
+  std::string encodeBase16Upper(BytesIn bytes) {
+    return fmt::format("{:X}", bytes);
   }
 
-  std::string encodeBase16Lower(const Bytes &bytes) {
-    return hex_lower(bytes);
+  std::string encodeBase16Lower(BytesIn bytes) {
+    return fmt::format("{:x}", bytes);
   }
 
   outcome::result<Bytes> decodeBase16Upper(std::string_view string) {
@@ -46,8 +42,7 @@ namespace libp2p::multi::detail {
     if (!encodingCaseIsUpper(string)) {
       return Q_ERROR(BaseError::NON_UPPERCASE_INPUT);
     }
-    OUTCOME_TRY(bytes, unhex(string));
-    return Bytes{std::move(bytes)};
+    return qtils::unhex(string);
   }
 
   outcome::result<Bytes> decodeBase16Lower(std::string_view string) {
@@ -56,8 +51,7 @@ namespace libp2p::multi::detail {
     if (encodingCaseIsUpper(string)) {
       return Q_ERROR(BaseError::NON_LOWERCASE_INPUT);
     }
-    OUTCOME_TRY(bytes, unhex(string));
-    return Bytes{std::move(bytes)};
+    return qtils::unhex(string);
   }
 
 }  // namespace libp2p::multi::detail

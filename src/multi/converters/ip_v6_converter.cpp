@@ -7,7 +7,6 @@
 #include <libp2p/multi/converters/ip_v6_converter.hpp>
 
 #include <boost/asio/ip/address_v6.hpp>
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/multi/converters/conversion_error.hpp>
 
 namespace libp2p::multi::converters {

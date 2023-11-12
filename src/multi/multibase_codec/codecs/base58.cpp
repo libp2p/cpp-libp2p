@@ -169,7 +169,7 @@ namespace libp2p::multi::detail {
     return vch;
   }
 
-  std::string encodeBase58(const Bytes &bytes) {
+  std::string encodeBase58(BytesIn bytes) {
     return encodeImpl(bytes.begin().base(), bytes.end().base());
   }
 

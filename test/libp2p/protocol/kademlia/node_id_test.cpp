@@ -10,8 +10,8 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 #include <iostream>
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/literals.hpp>
+#include <qtils/hex.hpp>
 #include "testutil/libp2p/peer.hpp"
 
 using namespace libp2p::common;
@@ -65,9 +65,10 @@ void print(NodeId from, std::vector<BucketPeerInfo> &pids) {
   }
   std::cout << "peers: \n";
   for (auto &p : pids) {
-    std::cout << "pid: " << p.peer_id.toHex()
-              << " nodeId: " << hex_upper(p.node_id.getData())
-              << " distance: " << hex_upper(from.distance(p.node_id)) << "\n";
+    fmt::print("pid: {:x} nodeId: {:x} distance: {:x}",
+               p.peer_id.toVector(),
+               p.node_id.getData(),
+               from.distance(p.node_id));
   }
 }
 

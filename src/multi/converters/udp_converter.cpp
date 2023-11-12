@@ -7,30 +7,9 @@
 #include <libp2p/multi/converters/udp_converter.hpp>
 
 #include <libp2p/common/byteutil.hpp>
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/multi/converters/conversion_error.hpp>
 
 namespace libp2p::multi::converters {
-
-  outcome::result<std::string> UdpConverter::addressToHex(
-      std::string_view addr) {
-    for (auto c : addr) {
-      if (std::isdigit(c) == 0) {
-        return Q_ERROR(ConversionError::INVALID_ADDRESS);
-      }
-    }
-    int64_t port_int = 0;
-    try {
-      port_int = std::stoi(std::string(addr));
-    } catch (std::exception &e) {
-      return Q_ERROR(ConversionError::INVALID_ADDRESS);
-    }
-    if (port_int >= 0 and port_int <= 65535) {
-      return common::int_to_hex(port_int, 4);
-    }
-    return Q_ERROR(ConversionError::INVALID_ADDRESS);
-  }
-
   outcome::result<Bytes> UdpConverter::addressToBytes(std::string_view addr) {
     for (auto c : addr) {
       if (std::isdigit(c) == 0) {
