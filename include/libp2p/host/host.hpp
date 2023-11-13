@@ -16,7 +16,6 @@
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/network/network.hpp>
 #include <libp2p/network/router.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/peer_info.hpp>
 #include <libp2p/peer/peer_repository.hpp>

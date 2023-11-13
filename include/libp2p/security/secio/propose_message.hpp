@@ -7,6 +7,7 @@
 #pragma once
 
 #include <libp2p/common/types.hpp>
+#include <string>
 
 namespace libp2p::security::secio {
 

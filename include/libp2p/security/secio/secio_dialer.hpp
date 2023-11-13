@@ -11,7 +11,6 @@
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/secio/exchange_message.hpp>
 #include <libp2p/security/secio/propose_message.hpp>
 #include <libp2p/security/secio/propose_message_marshaller.hpp>

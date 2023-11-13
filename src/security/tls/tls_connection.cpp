@@ -60,7 +60,10 @@ namespace libp2p::connection {
       const boost::system::error_code &error,
       const HandshakeCallback &cb,
       const crypto::marshaller::KeyMarshaller &key_marshaller) {
-    std::error_code ec = error;
+    std::optional<std::error_code> ec;
+    if (error) {
+      ec = error;
+    }
     while (!ec) {
       X509 *cert = SSL_get_peer_certificate(socket_.native_handle());
       if (cert == nullptr) {
@@ -97,12 +100,11 @@ namespace libp2p::connection {
 
     assert(ec);
 
-    log()->info("handshake error: {}", ec.message());
+    log()->info("handshake error: {}", *ec);
     if (auto close_res = close(); !close_res) {
-      log()->info("cannot close raw connection: {}",
-                  close_res.error().message());
+      log()->info("cannot close raw connection: {}", close_res.error());
     }
-    return cb(ec);
+    return cb(*ec);
   }
 
   outcome::result<peer::PeerId> TlsConnection::localPeer() const {
@@ -142,7 +144,7 @@ namespace libp2p::connection {
       if (ec) {
         SL_DEBUG(log(), "connection async op error {}", ec.message());
         std::ignore = conn->close();
-        return cb(std::forward<decltype(ec)>(ec));
+        return cb(ec);
       }
       cb(std::forward<decltype(result)>(result));
     };

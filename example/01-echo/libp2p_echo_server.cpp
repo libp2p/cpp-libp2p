@@ -49,7 +49,8 @@ struct SecureAdaptorProxy : libp2p::security::SecurityAdaptor {
 
   void secureOutbound(
       std::shared_ptr<libp2p::connection::LayerConnection> outbound,
-      const libp2p::peer::PeerId &p, SecConnCallbackFunc cb) override {
+      const libp2p::peer::PeerId &p,
+      SecConnCallbackFunc cb) override {
     return impl->secureOutbound(outbound, p, cb);
   }
 
@@ -176,7 +177,7 @@ dPtse4GVRA2swbXcZX5iFVi/V8poIpdVrgn5iMadkQnYf9APWJuGcebK
     auto listen_res = host->listen(ma);
     if (!listen_res) {
       log->error("host cannot listen the given multiaddress: {}",
-                 listen_res.error().message());
+                 listen_res.error());
       std::exit(EXIT_FAILURE);
     }
 
@@ -184,7 +185,8 @@ dPtse4GVRA2swbXcZX5iFVi/V8poIpdVrgn5iMadkQnYf9APWJuGcebK
     log->info("Server started");
     log->info("Listening on: {}", ma.getStringAddress());
     log->info("Peer id: {}", host->getPeerInfo().id.toBase58());
-    log->info("Connection string: {}/p2p/{}", ma.getStringAddress(),
+    log->info("Connection string: {}/p2p/{}",
+              ma.getStringAddress(),
               host->getPeerInfo().id.toBase58());
   });
 

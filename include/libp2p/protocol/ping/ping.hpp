@@ -8,11 +8,10 @@
 
 #include <memory>
 
-#include <boost/asio/io_service.hpp>
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
 #include <libp2p/protocol/ping/ping_config.hpp>
 
@@ -40,7 +39,7 @@ namespace libp2p::protocol {
      */
     Ping(Host &host,
          event::Bus &bus,
-         boost::asio::io_context &io_context,
+         std::shared_ptr<basic::Scheduler> scheduler,
          std::shared_ptr<crypto::random::RandomGenerator> rand_gen,
          PingConfig config = PingConfig{});
 
@@ -61,7 +60,7 @@ namespace libp2p::protocol {
    private:
     Host &host_;
     event::Bus &bus_;
-    boost::asio::io_context &io_context_;
+    std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<crypto::random::RandomGenerator> rand_gen_;
     PingConfig config_;
   };

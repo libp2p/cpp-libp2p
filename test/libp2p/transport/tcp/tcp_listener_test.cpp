@@ -55,11 +55,7 @@ struct TcpListenerTest : public ::testing::Test {
  */
 TEST_F(TcpListenerTest, ListenCloseListen) {
   EXPECT_CALL(cb, Call(_)).WillRepeatedly(Invoke([](CapConnResult c) {
-    if (!c) {
-      ASSERT_EQ(c.error().value(), (int)std::errc::operation_canceled);
-    } else {
-      ADD_FAILURE();
-    }
+    EXPECT_EC(c, boost::asio::error::operation_aborted);
   }));
 
   EXPECT_OUTCOME_TRUE_1(listener->listen(ma));
@@ -83,7 +79,7 @@ TEST_F(TcpListenerTest, ListenCloseListen) {
 TEST_F(TcpListenerTest, DoubleClose) {
   EXPECT_CALL(cb, Call(_)).WillOnce(Invoke([](CapConnResult c) {
     if (!c) {
-      ASSERT_EQ(c.error().value(), (int)std::errc::operation_canceled);
+      EXPECT_EC(c, boost::asio::error::operation_aborted);
     }
   }));
 

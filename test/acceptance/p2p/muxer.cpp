@@ -132,7 +132,7 @@ struct Server : public std::enable_shared_from_this<Server> {
                 || rread.error() == Stream::Error::STREAM_RESET_BY_HOST) {
               return;
             }
-            this->println("readSome error: ", rread.error().message());
+            this->println(fmt::format("readSome error: {}", rread.error()));
           }
 
           EXPECT_OUTCOME_TRUE(read, rread)

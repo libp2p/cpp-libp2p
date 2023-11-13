@@ -10,8 +10,6 @@
 
 #include <gmock/gmock.h>
 
-#include <libp2p/common/hexutil.hpp>
-
 namespace libp2p::basic {
   class ReaderMock : public Reader {
    public:
@@ -21,9 +19,3 @@ namespace libp2p::basic {
     MOCK_METHOD2(readSome, void(BytesOut, Reader::ReadCallbackFunc));
   };
 }  // namespace libp2p::basic
-
-inline std::ostream &operator<<(std::ostream &s,
-                                const std::vector<unsigned char> &v) {
-  s << common::hex_upper(v) << "\n";
-  return s;
-}

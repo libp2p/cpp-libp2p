@@ -10,8 +10,6 @@
 #include <libp2p/protocol/kademlia/peer_routing.hpp>
 #include <libp2p/protocol/kademlia/value_store.hpp>
 
-#include <libp2p/outcome/outcome.hpp>
-
 namespace libp2p::protocol::kademlia {
 
   class Routing : public ValueStore, public ContentRouting, public PeerRouting {

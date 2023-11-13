@@ -6,11 +6,10 @@
 
 #include <libp2p/multi/converters/converter_utils.hpp>
 
-#include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/asio/ip/address_v6.hpp>
-#include <libp2p/common/hexutil.hpp>
+#include <boost/endian/conversion.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/converters/conversion_error.hpp>
 #include <libp2p/multi/converters/dns_converter.hpp>
@@ -20,12 +19,16 @@
 #include <libp2p/multi/converters/tcp_converter.hpp>
 #include <libp2p/multi/converters/udp_converter.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
-#include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
+#include <libp2p/multi/multibase_codec/codecs/base58.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
-using libp2p::common::hex_upper;
-using libp2p::common::unhex;
+// TODO(turuslan): qtils
+namespace qtils {
+  inline std::string_view byte2str(const libp2p::BytesIn &s) {
+    // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    return {reinterpret_cast<const char *>(s.data()), s.size()};
+  }
+}  // namespace qtils
 
 namespace libp2p::multi::converters {
 
@@ -132,164 +135,106 @@ namespace libp2p::multi::converters {
     }
   }
 
-  outcome::result<std::string> addressToHex(const Protocol &protocol,
-                                            std::string_view addr) {
-    OUTCOME_TRY(bytes, addressToBytes(protocol, addr));
-    std::string hex;
-    hex.reserve(bytes.size() * 2);
-    boost::algorithm::hex_lower(
-        bytes.begin(), bytes.end(), std::back_inserter(hex));
-    return std::move(hex);
-  }
-
   outcome::result<std::string> bytesToMultiaddrString(BytesIn bytes) {
+    auto read = [&](size_t n) -> outcome::result<BytesIn> {
+      if (n > bytes.size()) {
+        return ConversionError::INVALID_ADDRESS;
+      }
+      auto r = bytes.first(n);
+      bytes = bytes.subspan(n);
+      return r;
+    };
+    auto uvar = [&]() -> outcome::result<uint64_t> {
+      auto var = UVarint::create(bytes);
+      if (not var) {
+        return ConversionError::INVALID_ADDRESS;
+      }
+      bytes = bytes.subspan(var->size());
+      return var->toUInt64();
+    };
+    auto read_uvar = [&]() -> outcome::result<BytesIn> {
+      OUTCOME_TRY(n, uvar());
+      return read(n);
+    };
     std::string results;
-
-    size_t lastpos = 0;
-
-    // set up variables
-    const std::string hex = hex_upper(bytes);
-
-    // Process Hex String
-    while (lastpos < bytes.size() * 2) {
-      BytesIn pid_bytes{bytes};
-      auto protocol_int = UVarint(pid_bytes.subspan(lastpos / 2)).toUInt64();
+    while (not bytes.empty()) {
+      OUTCOME_TRY(protocol_num, uvar());
       const Protocol *protocol =
-          ProtocolList::get(static_cast<Protocol::Code>(protocol_int));
+          ProtocolList::get(static_cast<Protocol::Code>(protocol_num));
       if (protocol == nullptr) {
         return ConversionError::NO_SUCH_PROTOCOL;
       }
-
-      if (protocol->code != Protocol::Code::P2P) {
-        lastpos += (UVarint::calculateSize(pid_bytes.subspan(lastpos / 2)) * 2);
-        std::string address;
-        address = hex.substr(lastpos, protocol->size / 4);
-
-        lastpos = lastpos + (protocol->size / 4);
-
-        results += "/";
-        results += protocol->name;
-
-        if (protocol->size == 0) {
-          continue;
+      results += "/";
+      results += protocol->name;
+      if (protocol->size == 0) {
+        continue;
+      }
+      switch (protocol->code) {
+        case Protocol::Code::P2P: {
+          OUTCOME_TRY(data, read_uvar());
+          results += "/";
+          results += detail::encodeBase58(data);
+          break;
         }
 
-        try {
-          switch (protocol->code) {
-            case Protocol::Code::DNS:
-            case Protocol::Code::DNS4:
-            case Protocol::Code::DNS6:
-            case Protocol::Code::DNS_ADDR: {
-              // fetch the size of the address based on the varint prefix
-              auto prefixedvarint = hex.substr(lastpos, 2);
-              OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
-
-              auto addrsize = UVarint(prefixBytes).toUInt64();
-
-              // get the ipfs address as hex values
-              auto hex_domain_name = hex.substr(lastpos + 2, addrsize * 2);
-              OUTCOME_TRY(domain_name, unhex(hex_domain_name));
-
-              lastpos += addrsize * 2 + 2;
-
-              // Add domain name
-              results += "/";
-              results += std::string(domain_name.begin(), domain_name.end());
-
-              auto i = std::find_if_not(
-                  domain_name.begin(), domain_name.end(), [](auto c) {
-                    return std::isalnum(c) || c == '-' || c == '.';
-                  });
-              if (i != domain_name.end()) {
-                return ConversionError::INVALID_ADDRESS;
-              }
-              break;
-            }
-
-            case Protocol::Code::X_PARITY_WS:
-            case Protocol::Code::X_PARITY_WSS: {
-              // fetch the size of the address based on the varint prefix
-              auto prefixedvarint = hex.substr(lastpos, 2);
-              OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
-
-              auto addrsize = UVarint(prefixBytes).toUInt64();
-
-              // get the ipfs address as hex values
-              auto hex_domain_name = hex.substr(lastpos + 2, addrsize * 2);
-              OUTCOME_TRY(domain_name, unhex(hex_domain_name));
-
-              lastpos += addrsize * 2 + 2;
-
-              results += "/";
-              results += std::string(domain_name.begin(), domain_name.end());
-              break;
-            }
-
-            case Protocol::Code::IP4: {
-              // Add IP
-              results += "/";
-              results += boost::asio::ip::make_address_v4(
-                             std::stoul(address, nullptr, 16))
-                             .to_string();
-              break;
-            }
-
-            case Protocol::Code::IP6: {
-              // Add IP
-              OUTCOME_TRY(addr_bytes, unhex(address));
-              std::array<uint8_t, 16> arr{};
-              std::copy_n(addr_bytes.begin(), 16, arr.begin());
-              results += "/";
-              results += boost::asio::ip::make_address_v6(arr).to_string();
-              break;
-            }
-
-            case Protocol::Code::TCP:
-            case Protocol::Code::UDP: {
-              // Add port
-              results += "/";
-              results += std::to_string(std::stoul(address, nullptr, 16));
-              break;
-            }
-
-            case Protocol::Code::QUIC:
-            case Protocol::Code::WS:
-            case Protocol::Code::WSS:
-              // No details
-              break;
-
-            default:
-              return ConversionError::NOT_IMPLEMENTED;
+        case Protocol::Code::DNS:
+        case Protocol::Code::DNS4:
+        case Protocol::Code::DNS6:
+        case Protocol::Code::DNS_ADDR: {
+          OUTCOME_TRY(data, read_uvar());
+          auto name = qtils::byte2str(data);
+          auto i = std::find_if_not(name.begin(), name.end(), [](auto c) {
+            return std::isalnum(c) || c == '-' || c == '.';
+          });
+          if (i != name.end()) {
+            return ConversionError::INVALID_ADDRESS;
           }
-        } catch (const std::exception &e) {
-          return ConversionError::INVALID_ADDRESS;
+          results += "/";
+          results += name;
+          break;
         }
 
-      } else {
-        lastpos = lastpos + 4;
-        // fetch the size of the address based on the varint prefix
-        auto prefixedvarint = hex.substr(lastpos, 2);
-        OUTCOME_TRY(prefixBytes, unhex(prefixedvarint));
+        case Protocol::Code::X_PARITY_WS:
+        case Protocol::Code::X_PARITY_WSS: {
+          OUTCOME_TRY(data, read_uvar());
+          results += "/";
+          // TODO(turuslan): percent encoding
+          // https://github.com/multiformats/rust-multiaddr/blob/3c7e813c3b1fdd4187a9ca9ff67e10af0e79231d/src/protocol.rs#L613-L622
+          results += qtils::byte2str(data);
+          break;
+        }
 
-        auto addrsize = UVarint(prefixBytes).toUInt64();
-        // get the ipfs address as hex values
-        auto ipfsAddr = hex.substr(lastpos + 2, addrsize * 2);
+        case Protocol::Code::IP4: {
+          std::array<uint8_t, 4> arr{};
+          OUTCOME_TRY(data, read(arr.size()));
+          std::copy(data.begin(), data.end(), arr.begin());
+          results += "/";
+          results += boost::asio::ip::make_address_v4(arr).to_string();
+          break;
+        }
 
-        // convert the address from hex values to a binary array
-        OUTCOME_TRY(addrbuf, unhex(ipfsAddr));
-        auto encode_res = MultibaseCodecImpl{}.encode(
-            addrbuf, MultibaseCodecImpl::Encoding::BASE58);
-        encode_res.erase(0, 1);  // because multibase contains a char that
-                                 // denotes which base is used
-        results += "/p2p/" + encode_res;
-        lastpos += addrsize * 2 + 2;
+        case Protocol::Code::IP6: {
+          std::array<uint8_t, 16> arr{};
+          OUTCOME_TRY(data, read(arr.size()));
+          std::copy(data.begin(), data.end(), arr.begin());
+          results += "/";
+          results += boost::asio::ip::make_address_v6(arr).to_string();
+          break;
+        }
+
+        case Protocol::Code::TCP:
+        case Protocol::Code::UDP: {
+          OUTCOME_TRY(data, read(sizeof(uint16_t)));
+          results += "/";
+          results += std::to_string(boost::endian::load_big_u16(data.data()));
+          break;
+        }
+
+        default:
+          return ConversionError::NOT_IMPLEMENTED;
       }
     }
 
     return results;
-  }
-
-  outcome::result<std::string> bytesToMultiaddrString(const Bytes &bytes) {
-    return bytesToMultiaddrString(BytesIn(bytes));
   }
 }  // namespace libp2p::multi::converters

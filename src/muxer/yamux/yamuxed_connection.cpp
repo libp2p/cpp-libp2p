@@ -140,13 +140,13 @@ namespace libp2p::connection {
   void YamuxedConnection::newStream(StreamHandlerFunc cb) {
     if (!started_) {
       return connection_->deferWriteCallback(
-          Error::CONNECTION_NOT_ACTIVE,
+          std::error_code{},
           [cb = std::move(cb)](auto) { cb(Error::CONNECTION_NOT_ACTIVE); });
     }
 
     if (streams_.size() >= config_.maximum_streams) {
       return connection_->deferWriteCallback(
-          Error::CONNECTION_TOO_MANY_STREAMS, [cb = std::move(cb)](auto) {
+          std::error_code{}, [cb = std::move(cb)](auto) {
             cb(Error::CONNECTION_TOO_MANY_STREAMS);
           });
     }
@@ -253,11 +253,10 @@ namespace libp2p::connection {
     }
 
     if (!res) {
-      std::error_code ec = res.error();
-      if (ec.value() == boost::asio::error::eof) {
-        ec = Error::CONNECTION_CLOSED_BY_PEER;
+      if (res.error() == make_error_code(boost::asio::error::eof)) {
+        res.error() = Error::CONNECTION_CLOSED_BY_PEER;
       }
-      close(ec, boost::none);
+      close(std::move(res.error()), boost::none);
       return;
     }
 
@@ -574,8 +573,7 @@ namespace libp2p::connection {
 
     started_ = false;
 
-    SL_DEBUG(
-        log(), "closing connection, reason: {}", notify_streams_code.message());
+    SL_DEBUG(log(), "closing connection, reason: {}", notify_streams_code);
 
     write_queue_.clear();
 

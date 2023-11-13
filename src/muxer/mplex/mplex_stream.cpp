@@ -14,11 +14,11 @@
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
-#define TRY_GET_CONNECTION(conn_var_name) \
-  if (connection_.expired()) {            \
-    return Error::STREAM_RESET_BY_HOST;   \
-  }                                       \
-  auto(conn_var_name) = connection_.lock();
+#define TRY_GET_CONNECTION(tmp)         \
+  auto tmp = connection_.lock();        \
+  if (tmp == nullptr) {                 \
+    return Error::STREAM_RESET_BY_HOST; \
+  }
 
 namespace libp2p::connection {
   std::string MplexStream::StreamId::toString() const {
@@ -125,7 +125,7 @@ namespace libp2p::connection {
           if (!write_res) {
             self->log_->error("write for stream {} failed: {}",
                               self->stream_id_.toString(),
-                              write_res.error().message());
+                              write_res.error());
           }
           cb(std::forward<decltype(write_res)>(write_res));
 
@@ -172,7 +172,7 @@ namespace libp2p::connection {
           if (!close_res) {
             self->log_->error("cannot close stream {} for writes: {}",
                               self->stream_id_.toString(),
-                              close_res.error().message());
+                              close_res.error());
             return cb(close_res.error());
           }
 

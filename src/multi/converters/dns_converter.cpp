@@ -6,23 +6,9 @@
 
 #include <libp2p/multi/converters/dns_converter.hpp>
 
-#include <boost/algorithm/hex.hpp>
-
 #include <libp2p/multi/uvarint.hpp>
 
 namespace libp2p::multi::converters {
-
-  outcome::result<std::string> DnsConverter::addressToHex(
-      std::string_view addr) {
-    outcome::result<std::string> res = outcome::success();  // NRVO
-    auto &hex = res.value();
-    hex = UVarint(addr.size()).toHex();
-    hex.reserve(hex.size() + addr.size() * 2);
-    boost::algorithm::hex_lower(
-        addr.begin(), addr.end(), std::back_inserter(hex));
-    return res;
-  }
-
   outcome::result<Bytes> DnsConverter::addressToBytes(std::string_view addr) {
     outcome::result<Bytes> res = outcome::success();  // NRVO
     auto &bytes = res.value();

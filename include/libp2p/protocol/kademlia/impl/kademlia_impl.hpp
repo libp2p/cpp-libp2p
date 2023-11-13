@@ -16,7 +16,6 @@
 #include <libp2p/event/bus.hpp>
 #include <libp2p/host/host.hpp>
 #include <libp2p/log/sublogger.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/kademlia/config.hpp>
 #include <libp2p/protocol/kademlia/impl/content_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>

@@ -29,9 +29,6 @@ function(addtest_part test_name)
   target_sources(${test_name} PUBLIC
       ${ARGN}
       )
-  target_link_libraries(${test_name}
-      GTest::gtest
-      )
 endfunction()
 
 # conditionally applies flag. If flag is supported by current compiler, it will be added to compile options.

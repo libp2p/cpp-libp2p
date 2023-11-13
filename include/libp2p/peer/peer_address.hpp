@@ -7,11 +7,9 @@
 #pragma once
 
 #include <memory>
-#include <string>
 #include <string_view>
 
 #include <libp2p/multi/multiaddress.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_info.hpp>
 
 namespace libp2p::peer {

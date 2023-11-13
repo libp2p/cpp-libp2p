@@ -8,13 +8,10 @@
 
 #include <set>
 #include <unordered_set>
-#include <vector>
 
 #include <libp2p/basic/garbage_collectable.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/peer/protocol.hpp>
-#include <span>
 
 namespace libp2p::peer {
 

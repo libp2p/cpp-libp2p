@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/stream_protocols.hpp>
 #include <libp2p/protocol/kademlia/common.hpp>
 

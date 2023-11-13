@@ -76,7 +76,7 @@ namespace libp2p::transport {
     boost::system::error_code ec;
     acceptor_.close(ec);
     if (ec) {
-      return outcome::failure(ec);
+      return ec;
     }
     return outcome::success();
   }

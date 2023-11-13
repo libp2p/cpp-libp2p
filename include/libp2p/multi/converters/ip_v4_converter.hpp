@@ -17,10 +17,6 @@ namespace libp2p::multi::converters {
    */
   class IPv4Converter {
    public:
-    [[deprecated("Use `common::hex_lower(addressToBytes(...))` instead")]]  //
-    static outcome::result<std::string>
-    addressToHex(std::string_view addr);
-
     static outcome::result<Bytes> addressToBytes(std::string_view addr);
   };
 

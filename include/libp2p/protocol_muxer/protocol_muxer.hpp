@@ -10,7 +10,6 @@
 
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/peer/protocol.hpp>
-#include <span>
 
 namespace libp2p::protocol_muxer {
   /**

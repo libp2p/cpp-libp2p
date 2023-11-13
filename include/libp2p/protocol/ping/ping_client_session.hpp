@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-#include <boost/asio/io_service.hpp>
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/random_generator.hpp>
 #include <libp2p/event/bus.hpp>
@@ -33,7 +33,7 @@ namespace libp2p::protocol {
   class PingClientSession
       : public std::enable_shared_from_this<PingClientSession> {
    public:
-    PingClientSession(boost::asio::io_service &io_service,
+    PingClientSession(std::shared_ptr<basic::Scheduler> scheduler,
                       libp2p::event::Bus &bus,
                       std::shared_ptr<connection::Stream> stream,
                       std::shared_ptr<crypto::random::RandomGenerator> rand_gen,
@@ -46,13 +46,15 @@ namespace libp2p::protocol {
    private:
     void write();
 
-    void writeCompleted(const boost::system::error_code &ec);
+    void writeCompleted(outcome::result<size_t> r);
 
     void read();
 
-    void readCompleted(const boost::system::error_code &ec);
+    void readCompleted(outcome::result<size_t> r);
 
-    boost::asio::io_service &io_service_;
+    void close();
+
+    std::shared_ptr<basic::Scheduler> scheduler_;
     libp2p::event::Bus &bus_;
     decltype(bus_.getChannel<event::protocol::PeerIsDeadChannel>()) channel_;
 
@@ -61,10 +63,8 @@ namespace libp2p::protocol {
     PingConfig config_;
 
     std::vector<uint8_t> write_buffer_, read_buffer_;
-    boost::asio::deadline_timer timer_;
-
-    bool last_op_completed_ = false;
-    std::error_code last_error_;
+    basic::Scheduler::Handle timer_;
+    bool closed_ = false;
 
     bool is_started_ = false;
   };

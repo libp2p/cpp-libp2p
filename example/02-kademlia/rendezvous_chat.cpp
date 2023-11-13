@@ -11,11 +11,13 @@
 
 #include <boost/beast.hpp>
 
-#include <libp2p/common/hexutil.hpp>
+#include <libp2p/common/literals.hpp>
 #include <libp2p/injector/kademlia_injector.hpp>
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/log/sublogger.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
+
+using libp2p::common::operator""_unhex;
 
 class Session;
 
@@ -43,8 +45,9 @@ class Session : public std::enable_shared_from_this<Session> {
     }
 
     stream_->readSome(
-        *incoming_, incoming_->size(),
-        [self = shared_from_this()](libp2p::outcome::result<size_t> result) {
+        *incoming_,
+        incoming_->size(),
+        [self = shared_from_this()](outcome::result<size_t> result) {
           if (not result) {
             self->close();
             std::cout << self->stream_->remotePeerId().value().toBase58()
@@ -67,9 +70,9 @@ class Session : public std::enable_shared_from_this<Session> {
     }
 
     stream_->write(
-        *buffer, buffer->size(),
-        [self = shared_from_this(),
-         buffer](libp2p::outcome::result<size_t> result) {
+        *buffer,
+        buffer->size(),
+        [self = shared_from_this(), buffer](outcome::result<size_t> result) {
           if (not result) {
             self->close();
             std::cout << self->stream_->remotePeerId().value().toBase58()
@@ -91,7 +94,7 @@ class Session : public std::enable_shared_from_this<Session> {
 
   bool operator<(const Session &other) {
     return stream_->remotePeerId().value()
-        < other.stream_->remotePeerId().value();
+         < other.stream_->remotePeerId().value();
   }
 
  private:
@@ -126,8 +129,8 @@ void handleIncomingStream(libp2p::StreamAndProtocol stream_and_protocol) {
 
 void handleOutgoingStream(libp2p::StreamAndProtocolOrError stream_res) {
   if (not stream_res) {
-    std::cerr << " ! outgoing connection failed: "
-              << stream_res.error().message() << std::endl;
+    fmt::println(
+        std::cerr, " ! outgoing connection failed: {}", stream_res.error());
     return;
   }
   auto &stream = stream_res.value().stream;
@@ -195,11 +198,11 @@ int main(int argc, char *argv[]) {
       // clang-format off
       .publicKey = {{
         .type = libp2p::crypto::Key::Type::Ed25519,
-        .data = libp2p::common::unhex("48453469c62f4885373099421a7365520b5ffb0d93726c124166be4b81d852e6").value()
+        .data = "48453469c62f4885373099421a7365520b5ffb0d93726c124166be4b81d852e6"_unhex,
       }},
       .privateKey = {{
         .type = libp2p::crypto::Key::Type::Ed25519,
-        .data = libp2p::common::unhex("4a9361c525840f7086b893d584ebbe475b4ec7069951d2e897e8bceb0a3f35ce").value()
+        .data = "4a9361c525840f7086b893d584ebbe475b4ec7069951d2e897e8bceb0a3f35ce"_unhex,
       }},
       // clang-format on
   };
@@ -286,15 +289,14 @@ int main(int argc, char *argv[]) {
 
     std::function<void()> find_providers = [&] {
       [[maybe_unused]] auto res1 = kademlia->findProviders(
-          content_id, 0,
-          [&](libp2p::outcome::result<std::vector<libp2p::peer::PeerInfo>>
-                  res) {
+          content_id,
+          0,
+          [&](outcome::result<std::vector<libp2p::peer::PeerInfo>> res) {
             scheduler.schedule(std::function{find_providers},
                                kademlia_config.randomWalk.interval);
 
             if (not res) {
-              std::cerr << "Cannot find providers: " << res.error().message()
-                        << std::endl;
+              fmt::println(std::cerr, "Cannot find providers: {}", res.error());
               return;
             }
 
@@ -316,8 +318,10 @@ int main(int argc, char *argv[]) {
     io->post([&] {
       auto listen = host->listen(ma);
       if (not listen) {
-        std::cerr << "Cannot listen address " << ma.getStringAddress().data()
-                  << ". Error: " << listen.error().message() << std::endl;
+        fmt::println(std::cerr,
+                     "Cannot listen address {}. Error: {}",
+                     ma.getStringAddress(),
+                     listen.error());
         std::exit(EXIT_FAILURE);
       }
 
@@ -350,7 +354,8 @@ int main(int argc, char *argv[]) {
     // same content id
     std::function<void()> read_from_console = [&] {
       in.async_read_some(boost::asio::buffer(buffer), [&](auto ec, auto size) {
-        auto i = std::find_if(buffer.begin(), buffer.begin() + size + 1,
+        auto i = std::find_if(buffer.begin(),
+                              buffer.begin() + size + 1,
                               [](auto c) { return c == '\n'; });
 
         if (i != buffer.begin() + size + 1) {

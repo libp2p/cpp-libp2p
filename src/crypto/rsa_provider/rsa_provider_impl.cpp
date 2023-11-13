@@ -20,8 +20,8 @@ using libp2p::common::FinalAction;
 namespace {
   /// encode cryptographic key in `ASN.1 DER` format
   template <class KeyStructure, class Function>
-  libp2p::outcome::result<std::vector<uint8_t>> encodeKeyDer(
-      KeyStructure *ks, Function *function) {
+  outcome::result<std::vector<uint8_t>> encodeKeyDer(KeyStructure *ks,
+                                                     Function *function) {
     unsigned char *buffer = nullptr;
     FinalAction cleanup([pptr = &buffer] {
       if (*pptr != nullptr) {

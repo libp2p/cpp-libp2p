@@ -15,7 +15,6 @@
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
 #include <libp2p/security/security_adaptor.hpp>
 #include <libp2p/transport/upgrader.hpp>
-#include <span>
 
 namespace libp2p::transport {
   class UpgraderImpl : public Upgrader,

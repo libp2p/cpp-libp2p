@@ -9,16 +9,12 @@
 #include <atomic>
 #include <functional>
 #include <list>
-#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include <ares.h>
-#include <arpa/nameser.h>
-#include <sys/select.h>
 #include <boost/asio.hpp>
-#include <boost/optional.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/outcome/outcome.hpp>
 

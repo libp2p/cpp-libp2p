@@ -6,14 +6,11 @@
 
 #pragma once
 
-#include <cstdint>
-#include <string>
 #include <utility>
 
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/hash_type.hpp>
 #include <libp2p/outcome/outcome.hpp>
-#include <span>
 
 namespace libp2p::multi {
 

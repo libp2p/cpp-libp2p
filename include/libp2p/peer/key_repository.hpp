@@ -7,7 +7,6 @@
 #pragma once
 
 #include <unordered_set>
-#include <vector>
 
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/outcome/outcome.hpp>

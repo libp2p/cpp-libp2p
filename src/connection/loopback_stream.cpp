@@ -13,11 +13,11 @@
 namespace libp2p::connection {
 
   namespace {
-    template <typename Callback, typename Arg>
+    template <typename Callback>
     void deferCallback(boost::asio::io_context &ctx,
                        std::weak_ptr<LoopbackStream> wptr,
                        Callback cb,
-                       Arg arg) {
+                       outcome::result<size_t> arg) {
       // defers callback to the next event loop cycle,
       // cb will be called iff Loopbackstream is still exists
       boost::asio::post(
@@ -114,7 +114,7 @@ namespace libp2p::connection {
     buffer_.commit(bytes);
 
     // intentionally used deferReadCallback, since it acquires bytes written
-    deferReadCallback(outcome::success(bytes), std::move(cb));
+    deferReadCallback(bytes, std::move(cb));
     /* The whole approach with such methods (deferReadCallback and
      * deferWriteCallback) is going to be avoided in the near future, thus we do
      * not remove  from the source code the counting of bytes written */
@@ -182,7 +182,8 @@ namespace libp2p::connection {
 
   void LoopbackStream::deferReadCallback(outcome::result<size_t> res,
                                          basic::Reader::ReadCallbackFunc cb) {
-    deferCallback(*io_context_, weak_from_this(), std::move(cb), res);
+    deferCallback(
+        *io_context_, weak_from_this(), std::move(cb), std::move(res));
   }
 
   void LoopbackStream::deferWriteCallback(std::error_code ec,

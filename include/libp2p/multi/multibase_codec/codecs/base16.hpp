@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <optional>
-
 #include <libp2p/common/types.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -21,13 +19,13 @@ namespace libp2p::multi::detail {
    * @param bytes to be encoded
    * @return encoded string
    */
-  std::string encodeBase16Upper(const Bytes &bytes);
+  std::string encodeBase16Upper(BytesIn bytes);
   /**
    * Encode bytes to base16 lowercase string
    * @param bytes to be encoded
    * @return encoded string
    */
-  std::string encodeBase16Lower(const Bytes &bytes);
+  std::string encodeBase16Lower(BytesIn bytes);
 
   /**
    * Decode base16 uppercase to bytes

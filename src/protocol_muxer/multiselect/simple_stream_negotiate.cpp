@@ -6,7 +6,6 @@
 
 #include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
 
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
@@ -14,11 +13,6 @@
 namespace libp2p::protocol_muxer::multiselect {
 
   namespace {
-    const log::Logger &log() {
-      static log::Logger logger = log::createLogger("Multiselect(simple)");
-      return logger;
-    }
-
     using StreamPtr = std::shared_ptr<connection::Stream>;
     using Callback = std::function<void(outcome::result<StreamPtr>)>;
 
@@ -51,9 +45,6 @@ namespace libp2p::protocol_muxer::multiselect {
       if (!res) {
         return failed(stream, cb, res.error());
       }
-
-      SL_TRACE(log(), "received {}", common::dumpBin(BytesIn(buffers.read)));
-
       completed(std::move(stream), cb, buffers);
     }
 
@@ -76,8 +67,6 @@ namespace libp2p::protocol_muxer::multiselect {
       }
 
       assert(total_sz > kMaxVarintSize);
-
-      SL_TRACE(log(), "read {}", common::dumpBin(BytesOut(buffers->read)));
 
       size_t remaining_bytes = total_sz - kMaxVarintSize;
 
@@ -127,7 +116,9 @@ namespace libp2p::protocol_muxer::multiselect {
     auto res = detail::createMessage(a, false);
     if (!res) {
       return stream->deferWriteCallback(
-          res.error(), [cb = std::move(cb)](auto res) { cb(res.error()); });
+          std::error_code{},
+          [cb{std::move(cb)}, res{std::move(res.error())}](
+              outcome::result<size_t>) mutable { cb(std::move(res)); });
     }
 
     auto buffers = std::make_shared<Buffers>();
@@ -137,8 +128,6 @@ namespace libp2p::protocol_muxer::multiselect {
     assert(buffers->written.size() >= kMaxVarintSize);
 
     BytesIn span(buffers->written);
-
-    SL_TRACE(log(), "sending {}", common::dumpBin(span));
 
     stream->write(
         span,
