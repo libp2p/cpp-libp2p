@@ -7,6 +7,13 @@
 #pragma once
 
 #include <boost/di.hpp>
+#include <string_view>
+#include <boost/asio/ssl.hpp>
+#include <openssl/ssl.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/evp.h>
+#include <nexus/quic/settings.hpp>
 
 // implementations
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
@@ -42,6 +49,7 @@
 #include <libp2p/security/tls.hpp>
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp.hpp>
+#include <libp2p/transport/quic.hpp>
 
 // clang-format off
 /**
@@ -136,6 +144,94 @@
 
 namespace libp2p::injector {
 
+ /*   BOOST_DI_INJECT(QuicConfig, (named = "ssl_context"_s) const boost::asio::ssl::context &ssl, \
+                              (named = "quic_settings"_s ) const nexus::quic::settings& s \
+                              (named = "key_path"_s ) const std::string_view& key_path \
+                              (named = "cert_path"_s ) const std::string_view& cert_path   ); */
+
+/*    
+return di::make_injector(    
+   di::bind<nexus::quic::settings>.named("quic_settings"sv).to(s),
+   di::bind<std::string_view>.named("key_path"sv).to(key_path),
+   di::bind<std::string_view>.named("cert_path"sv).to(cert_path)
+);*/
+
+
+/* this can be use by clients
+
+    use a random generated keypair to create a (unsigned) certificate,
+    but load a ca_file to verify the server with
+*/
+/*
+inline auto useQuicConfig(  const std::string_view& ca_path ) // crypto::KeyPair& keypair,
+{
+std::shared_ptr< libp2p::transport::QuicConfig>  config 
+= std::make_shared<libp2p::transport::QuicConfig>(  ca_path); // keypair,
+
+return boost::di::make_injector(
+   boost::di::bind<libp2p::transport::QuicConfig>.to( 
+    [cfg{std::move(config)}]() ->libp2p::transport::QuicConfig&
+   {
+      return *cfg;
+   } ).in(boost::di::singleton)[boost::di::override] 
+);
+}
+*/
+
+
+inline auto useQuicConfig(// const nexus::quic::settings& server_settings,
+                          // const nexus::quic::settings& client_settings,
+                          const std::string_view& key_path,
+                          const std::string_view& cert_path,
+                          const std::string_view& ca_path
+                          )
+{using namespace std::literals::string_view_literals;
+  using namespace std::string_literals;
+  using namespace boost;
+
+
+return di::make_injector(    
+ //  di::bind<nexus::quic::settings>.named( _server_settings).to(server_settings),
+//  di::bind<nexus::quic::settings>.named( _client_settings).to(client_settings),
+   di::bind<std::string_view>.named(_key_path).to(key_path),
+   di::bind<std::string_view>.named(_cert_path).to(cert_path),
+   di::bind<std::string_view>.named(_ca_path).to(ca_path)
+);
+
+}
+
+/*
+inline auto useQuicConfig( const boost::asio::ssl::context &ssl,
+                          const nexus::quic::settings& s                          
+                          )
+{
+  using namespace std::string_literals;
+  using namespace boost;
+  using namespace std::literals::string_view_literals;
+ 
+return di::make_injector(    
+  di::bind<asio::ssl::context>.named("ssl_context"s).to(ssl),
+   di::bind<nexus::quic::settings>.named("quic_settings"s).to(s)   
+);
+  }
+  */
+inline auto get_key_type(EVP_PKEY *pkey) {
+    int type = EVP_PKEY_base_id(pkey);
+
+    switch (type) {
+        case EVP_PKEY_RSA:
+        return libp2p::crypto::Key::Type::RSA;
+            break;
+        case EVP_PKEY_ED25519:
+            return libp2p::crypto::Key::Type::Ed25519;
+            break;
+        // Add more cases for other key types as needed
+        default:
+          return libp2p::crypto::Key::Type::UNSPECIFIED;
+    }
+}
+
+
   /**
    * @brief Instruct injector to use this keypair. Can be used once.
    *
@@ -149,6 +245,89 @@ namespace libp2p::injector {
   inline auto useKeyPair(const crypto::KeyPair &key_pair) {
     return boost::di::bind<crypto::KeyPair>().template to(
         key_pair)[boost::di::override];
+  }
+
+/*! \brief retrieve private and public key from .pem encoded file
+
+ this can be used by servers
+  \param key_path path to private key file
+  \param cert_path path to pem encoded x509 certificate containing the public key
+  \todo check that key and cert match
+*/
+  inline auto useKeyPairPEM( const std::string_view& key_path ,
+                               const std::string_view& cert_path )
+  {
+    using cbase= boost::asio::ssl::context_base;
+    boost::asio::ssl::context ssl(  cbase::tlsv13 );
+
+  ssl.use_certificate_chain_file(cert_path.data());
+  ssl.use_private_key_file(key_path.data(), boost::asio::ssl::context::file_format::pem);
+
+
+  crypto::KeyPair fileKeys;
+
+// Extract the X509 certificate from the SSL context
+    X509 *cert = ::SSL_CTX_get0_certificate(ssl.native_handle() );
+    if (!cert) {
+      throw std::runtime_error("invalid certificate file");
+        // Handle error
+        // ERR_print_errors_fp(stderr);
+        // SSL_CTX_free(ctx);
+        // return 1;
+    }
+
+    // Retrieve the public key from the X509 certificate
+    EVP_PKEY *public_key = ::X509_get_pubkey(cert);
+    if (!public_key) {
+      throw std::runtime_error( "invalid certificate file");
+        // Handle error
+        // ERR_print_errors_fp(stderr);
+        // X509_free(cert);
+        // SSL_CTX_free(ctx);
+        //return 1;
+    }
+    fileKeys.publicKey.type = get_key_type( public_key);
+
+// Get the raw bytes of the public key
+    unsigned char *public_key_bytes = NULL;
+    size_t public_key_size = ::i2d_PUBKEY(public_key, &public_key_bytes);
+    if( public_key_size)
+    {
+      fileKeys.publicKey.data.resize(public_key_size,0);
+      std::memcpy( fileKeys.publicKey.data.data(), (uint8_t*)public_key_bytes, public_key_size );
+    }else
+    {
+
+    
+    size_t len=0;
+    size_t raw_len = ::EVP_PKEY_get_raw_public_key(public_key, NULL, &len);
+    if (raw_len > 0) {
+        
+        fileKeys.publicKey.data.resize(raw_len,0);        
+            ::EVP_PKEY_get_raw_public_key(public_key, fileKeys.publicKey.data.data(),&len );
+        
+    }
+    }
+
+    // Retrieve the private key from the context
+    EVP_PKEY *private_key = SSL_CTX_get0_privatekey(ssl.native_handle());
+    if (!private_key) {
+        
+        throw std::runtime_error("invalid private key file");
+    }
+
+    fileKeys.privateKey.type = get_key_type( private_key );
+
+    // Get the raw bytes of the private key
+    const unsigned char *private_key_bytes = (const unsigned char* ) EVP_PKEY_get0(private_key);
+    size_t private_key_size = EVP_PKEY_size(private_key);
+
+    fileKeys.privateKey.data.resize(private_key_size,0);
+    std::memcpy( fileKeys.privateKey.data.data(), private_key_bytes, private_key_size );
+
+
+
+  return boost::di::bind<crypto::KeyPair>().template to( std::move(fileKeys ))[boost::di::override];
   }
 
   /**
@@ -343,7 +522,7 @@ namespace libp2p::injector {
         di::bind<layer::LayerAdaptor *[]>().template to<layer::WsAdaptor, layer::WssAdaptor>(),  // NOLINT
         di::bind<security::SecurityAdaptor *[]>().template to<security::Plaintext, security::Secio, security::Noise, security::TlsAdaptor>(),  // NOLINT
         di::bind<muxer::MuxerAdaptor *[]>().template to<muxer::Yamux, muxer::Mplex>(),  // NOLINT
-        di::bind<transport::TransportAdaptor *[]>().template to<transport::TcpTransport>(),  // NOLINT
+        di::bind<transport::TransportAdaptor *[]>().template to<transport::QuicTransport,transport::TcpTransport>(),  // NOLINT
 
         // user-defined overrides...
         std::forward<decltype(args)>(args)...

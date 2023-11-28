@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
+#cmake_configure_log()
 
 find_program(CCACHE_FOUND ccache)
 if (CCACHE_FOUND)
@@ -20,7 +21,11 @@ include("cmake/Hunter/init.cmake")
 
 project(libp2p VERSION 0.1.17 LANGUAGES C CXX)
 
+add_compile_definitions(OPENSSL_IS_BORINGSSL)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+option(BUILD_SHARED_LIBS "Build shared libs" ON )
 
 option(TESTING "Build tests" ON)
 option(EXAMPLES "Build examples" ON)

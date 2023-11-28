@@ -3,8 +3,10 @@
  * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
-
+#include <ranges>
+#include <string_view>
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <memory>
 
@@ -40,6 +42,28 @@ int main(int argc, char *argv[]) {
   using libp2p::crypto::PrivateKey;
   using libp2p::crypto::PublicKey;
   using libp2p::common::operator""_unhex;
+
+
+
+   auto get_arg = [&](const std::string_view arg) ->std::optional<std::string_view> 
+    {
+    auto args = std::span(argv, argc).subspan(1);
+    auto match = std::ranges::find_if(args,
+    [&arg]( const std::string_view& token )
+    { return token.find(arg) != std::string::npos; } );
+
+    if(match == args.end() )
+    {
+      return std::nullopt;
+    } else if( *match == arg) // perfect match (no '=') -> value must be next token
+    {
+      return *(++match);
+    } else 
+    {
+      auto pos = std::string_view(*match).find("=");
+      return std::string_view(*match).substr(pos+1);
+    }
+    }; 
 
   auto run_duration = std::chrono::seconds(5);
 
@@ -96,7 +120,12 @@ int main(int argc, char *argv[]) {
   libp2p::protocol::Echo echo{libp2p::protocol::EchoConfig{1}};
 
   // create a default Host via an injector
-  auto injector = libp2p::injector::makeHostInjector();
+  auto injector = libp2p::injector::makeHostInjector(
+   /* libp2p::injector::useQuicConfig( *get_arg("key_path") , 
+                                      *get_arg("cert_path") ,
+                                      *get_arg("ca_path") ) // use keypair from file */
+ //   libp2p::injector::useQuicConfig(*get_arg("ca_path" ) ) // use random keypair (doesnt compile -> boost::di complains)
+  );
 
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
 

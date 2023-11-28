@@ -34,7 +34,7 @@ namespace libp2p::transport {
     // TODO(@warchant): replace with parser PRE-129
     using namespace boost::asio;  // NOLINT
     try {
-      OUTCOME_TRY(endpoint, detail::makeEndpoint(address));
+      OUTCOME_TRY(endpoint, detail::makeTcpEndpoint(address));
 
       // setup acceptor, throws
       acceptor_.open(endpoint.protocol());

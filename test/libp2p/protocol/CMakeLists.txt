@@ -29,6 +29,7 @@ addtest(observed_addresses_test
 target_link_libraries(observed_addresses_test
     p2p_identify
     p2p_literals
+    p2p_identify
     )
 
 addtest(echo_test

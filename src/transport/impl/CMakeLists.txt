@@ -12,6 +12,7 @@ libp2p_add_library(p2p_transport_parser
 target_link_libraries(p2p_transport_parser
     Boost::boost
     p2p_multiaddress
+    OpenSSL::SSL
     )
 
 libp2p_add_library(p2p_upgrader
