@@ -11,6 +11,7 @@
 namespace libp2p::protocol_muxer::multiselect::detail {
 
   constexpr size_t kMaxRecursionDepth = 3;
+  constexpr size_t kMaxLenBytes = 2;
 
   size_t Parser::bytesNeeded() const {
     size_t n = 0;
@@ -44,9 +45,17 @@ namespace libp2p::protocol_muxer::multiselect::detail {
       if (expected_msg_size_ == 0) {
         auto s = varint_reader_.consume(data);
         if (s == VarintPrefixReader::kUnderflow) {
+          if (varint_reader_.size() >= kMaxLenBytes) {
+            state_ = kOverflow;
+            break;
+          }
           continue;
         }
         if (s != VarintPrefixReader::kReady) {
+          state_ = kOverflow;
+          break;
+        }
+        if (varint_reader_.size() > kMaxLenBytes) {
           state_ = kOverflow;
           break;
         }
