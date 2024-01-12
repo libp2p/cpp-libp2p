@@ -44,18 +44,18 @@ namespace libp2p::protocol_muxer::multiselect::detail {
 
       if (expected_msg_size_ == 0) {
         auto s = varint_reader_.consume(data);
+        if (varint_reader_.size() > kMaxLenBytes) {
+          state_ = kOverflow;
+          break;
+        }
         if (s == VarintPrefixReader::kUnderflow) {
-          if (varint_reader_.size() >= kMaxLenBytes) {
+          if (varint_reader_.size() == kMaxLenBytes) {
             state_ = kOverflow;
             break;
           }
           continue;
         }
         if (s != VarintPrefixReader::kReady) {
-          state_ = kOverflow;
-          break;
-        }
-        if (varint_reader_.size() > kMaxLenBytes) {
           state_ = kOverflow;
           break;
         }
