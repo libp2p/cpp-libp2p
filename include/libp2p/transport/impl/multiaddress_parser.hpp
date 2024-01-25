@@ -9,6 +9,7 @@
 #include <boost/asio/ip/address.hpp>
 #include <boost/variant.hpp>
 #include <libp2p/multi/multiaddress.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::transport {
 

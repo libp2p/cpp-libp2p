@@ -12,8 +12,6 @@
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 #include <libp2p/multi/multiaddress.hpp>
-#include <libp2p/outcome/outcome.hpp>
-#include <span>
 
 namespace libp2p::transport::detail {
   template <typename T>
@@ -47,7 +45,7 @@ namespace libp2p::transport::detail {
 
       return multi::Multiaddress::create(s.str());
     } catch (const boost::system::system_error &e) {
-      return e.code();
+      return Q_ERROR(e.code());
     }
   }
 
@@ -123,23 +121,23 @@ namespace libp2p::transport::detail {
       auto v = ma.getProtocolsWithValues();
       auto it = v.begin();
       if (it->first.code != P::IP4 && it->first.code != P::IP6) {
-        return std::errc::address_family_not_supported;
+        return Q_ERROR(std::errc::address_family_not_supported);
       }
 
       auto addr = ip::make_address(it->second);
       ++it;
 
       if (it->first.code != P::TCP) {
-        return std::errc::address_family_not_supported;
+        return Q_ERROR(std::errc::address_family_not_supported);
       }
 
       auto port = boost::lexical_cast<uint16_t>(it->second);
 
       return ip::tcp::endpoint{addr, port};
     } catch (const boost::system::system_error &e) {
-      return e.code();
+      return Q_ERROR(e.code());
     } catch (const boost::bad_lexical_cast & /* ignored */) {
-      return multi::Multiaddress::Error::INVALID_PROTOCOL_VALUE;
+      return Q_ERROR(multi::Multiaddress::Error::INVALID_PROTOCOL_VALUE);
     }
   }
 }  // namespace libp2p::transport::detail

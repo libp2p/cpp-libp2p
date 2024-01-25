@@ -90,12 +90,12 @@ namespace libp2p::multi {
   outcome::result<Bytes> MultibaseCodecImpl::decode(
       std::string_view string) const {
     if (string.length() < 2) {
-      return Error::INPUT_TOO_SHORT;
+      return Q_ERROR(Error::INPUT_TOO_SHORT);
     }
 
     auto encoding_base = encodingByChar(string.front());
     if (!encoding_base) {
-      return Error::UNSUPPORTED_BASE;
+      return Q_ERROR(Error::UNSUPPORTED_BASE);
     }
 
     return codecs.at(*encoding_base).decode(string.substr(1));

@@ -169,7 +169,7 @@ namespace libp2p::multi::detail {
     return vch;
   }
 
-  std::string encodeBase58(const Bytes &bytes) {
+  std::string encodeBase58(BytesIn bytes) {
     return encodeImpl(bytes.begin().base(), bytes.end().base());
   }
 
@@ -178,7 +178,7 @@ namespace libp2p::multi::detail {
     if (decoded_bytes) {
       return Bytes{*decoded_bytes};
     }
-    return BaseError::INVALID_BASE58_INPUT;
+    return Q_ERROR(BaseError::INVALID_BASE58_INPUT);
   }
 
 }  // namespace libp2p::multi::detail

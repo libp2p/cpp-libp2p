@@ -21,7 +21,7 @@ namespace libp2p::security::noise {
     crypto::x25519::PrivateKey priv;
     crypto::x25519::PublicKey pub;
     if (private_key.size() != priv.size() or public_key.size() != pub.size()) {
-      return crypto::OpenSslError::WRONG_KEY_SIZE;
+      return Q_ERROR(crypto::OpenSslError::WRONG_KEY_SIZE);
     }
     std::copy_n(private_key.begin(), priv.size(), priv.begin());
     std::copy_n(public_key.begin(), pub.size(), pub.begin());

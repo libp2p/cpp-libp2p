@@ -6,12 +6,11 @@
 
 #pragma once
 
-#include <functional>
 #include <memory>
 
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::basic {
   class VarintReader {

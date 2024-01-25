@@ -7,6 +7,7 @@
 #pragma once
 
 #include <libp2p/security/secio/propose_message_marshaller.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::security::secio {
 

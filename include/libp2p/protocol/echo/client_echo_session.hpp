@@ -36,7 +36,7 @@ namespace libp2p::protocol {
     std::shared_ptr<connection::Stream> stream_;
     std::vector<uint8_t> buf_;
     std::vector<uint8_t> recv_buf_;
-    std::error_code ec_;
+    std::optional<qtils::Errors> ec_;
     size_t bytes_read_ = 0;
     Then then_;
   };

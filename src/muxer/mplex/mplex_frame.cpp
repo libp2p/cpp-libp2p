@@ -62,7 +62,7 @@ namespace libp2p::connection {
         flag = Flag::RESET_INITIATOR;
         break;
       default:
-        return RawConnection::Error::CONNECTION_PROTOCOL_ERROR;
+        return Q_ERROR(RawConnection::Error::CONNECTION_PROTOCOL_ERROR);
     }
 
     return MplexFrame{flag,

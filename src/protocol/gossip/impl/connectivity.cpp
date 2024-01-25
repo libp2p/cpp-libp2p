@@ -149,7 +149,7 @@ namespace libp2p::protocol::gossip {
     // no remote peer id means dead stream
     auto peer_res = stream->remotePeerId();
     if (!peer_res) {
-      log_.info("ignoring dead stream: {}", peer_res.error().message());
+      log_.info("ignoring dead stream: {}", peer_res.error());
       return;
     }
 
@@ -272,8 +272,7 @@ namespace libp2p::protocol::gossip {
     assert(!ctx->outbound_stream);
 
     if (!rstream) {
-      log_.info("outbound connection failed, error={}",
-                rstream.error().message());
+      log_.info("outbound connection failed, error={}", rstream.error());
       if (started_) {
         banOrForget(ctx);
       }
@@ -290,7 +289,7 @@ namespace libp2p::protocol::gossip {
     // no remote peer id means dead stream
     auto peer_res = stream->remotePeerId();
     if (!peer_res) {
-      log_.info("ignoring dead stream: {}", peer_res.error().message());
+      log_.info("ignoring dead stream: {}", peer_res.error());
       banOrForget(ctx);
       return;
     }
@@ -390,7 +389,7 @@ namespace libp2p::protocol::gossip {
       // do nothing at the moment, keep it connected
       return;
     }
-    log_.info("stream error='{}', peer={}", event.error().message(), from->str);
+    log_.info("stream error='{}', peer={}", event.error(), from->str);
 
     // TODO(artem): ban incoming peers for protocol violations etc. - v.1.1
 

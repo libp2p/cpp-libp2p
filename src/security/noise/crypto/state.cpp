@@ -46,7 +46,7 @@ namespace libp2p::security::noise {
   outcome::result<Key32> bytesToKey32(BytesIn key) {
     Key32 result;
     if (static_cast<size_t>(key.size()) != result.size()) {
-      return Error::WRONG_KEY32_SIZE;
+      return Q_ERROR(Error::WRONG_KEY32_SIZE);
     }
     std::copy_n(key.begin(), result.size(), result.begin());
     return result;
@@ -100,7 +100,7 @@ namespace libp2p::security::noise {
   outcome::result<void> SymmetricState::initializeSymmetric(
       BytesIn handshake_name) {
     if (handshake_name.empty()) {
-      return Error::EMPTY_HANDSHAKE_NAME;
+      return Q_ERROR(Error::EMPTY_HANDSHAKE_NAME);
     }
     auto hasher = cipher_suite_->hash();
     // static cast is 100% safe here
@@ -170,7 +170,7 @@ namespace libp2p::security::noise {
     if (po_size > ct_size) {
       // the same gonna happen in go-libp2p, moreover it is not anyhow checked
       // and handled there!
-      return Error::INTERNAL_ERROR;
+      return Q_ERROR(Error::INTERNAL_ERROR);
     }
     Bytes seed(ct_size - po_size);
     std::copy_n(ciphertext.begin() + po_size, seed.size(), seed.begin());
@@ -300,7 +300,7 @@ namespace libp2p::security::noise {
     std::string psk_modifier;
     if (not preshared_key_.empty()) {
       if (32 != preshared_key_.size()) {
-        return Error::WRONG_PRESHARED_KEY_SIZE;
+        return Q_ERROR(Error::WRONG_PRESHARED_KEY_SIZE);
       }
       psk_modifier = "psk" + std::to_string(preshared_key_placement);
       if (0 == preshared_key_placement) {
@@ -353,13 +353,13 @@ namespace libp2p::security::noise {
       BytesIn precompiled_out, BytesIn payload) {
     OUTCOME_TRY(isInitialized());
     if (not should_write_) {
-      return Error::UNEXPECTED_WRITE_CALL;
+      return Q_ERROR(Error::UNEXPECTED_WRITE_CALL);
     }
     if (message_idx_ > static_cast<int64_t>(message_patterns_.size()) - 1) {
-      return Error::NO_HANDSHAKE_MESSAGE;
+      return Q_ERROR(Error::NO_HANDSHAKE_MESSAGE);
     }
     if (payload.size() > static_cast<int64_t>(kMaxMsgLen)) {
-      return Error::MESSAGE_TOO_LONG;
+      return Q_ERROR(Error::MESSAGE_TOO_LONG);
     }
     auto out = spanToVec(precompiled_out);
     for (const auto &message : message_patterns_[message_idx_]) {
@@ -417,7 +417,7 @@ namespace libp2p::security::noise {
 
   outcome::result<void> HandshakeState::writeMessageS(Bytes &out) {
     if (local_static_kp_.pub.empty()) {
-      return Error::NO_PUBLIC_KEY;
+      return Q_ERROR(Error::NO_PUBLIC_KEY);
     }
     OUTCOME_TRY(output,
                 symmetric_state_->encryptAndHash(out, local_static_kp_.pub));
@@ -479,10 +479,10 @@ namespace libp2p::security::noise {
       BytesIn precompiled_out, BytesIn message) {
     OUTCOME_TRY(isInitialized());
     if (should_write_) {
-      return Error::UNEXPECTED_READ_CALL;
+      return Q_ERROR(Error::UNEXPECTED_READ_CALL);
     }
     if (message_idx_ > static_cast<int64_t>(message_patterns_.size()) - 1) {
-      return Error::NO_HANDSHAKE_MESSAGE;
+      return Q_ERROR(Error::NO_HANDSHAKE_MESSAGE);
     }
     symmetric_state_->checkpoint();
     auto msg = spanToVec(message);
@@ -533,7 +533,7 @@ namespace libp2p::security::noise {
   outcome::result<void> HandshakeState::readMessageE(Bytes &message) {
     auto expected = symmetric_state_->cipherSuite()->dhSize();
     if (static_cast<int64_t>(message.size()) < expected) {
-      return Error::MESSAGE_TOO_SHORT;
+      return Q_ERROR(Error::MESSAGE_TOO_SHORT);
     }
     remote_ephemeral_pubkey_ =
         Bytes{message.begin(), message.begin() + expected};
@@ -551,10 +551,10 @@ namespace libp2p::security::noise {
       expected += 16;
     }
     if (static_cast<int64_t>(message.size()) < expected) {
-      return Error::MESSAGE_TOO_SHORT;
+      return Q_ERROR(Error::MESSAGE_TOO_SHORT);
     }
     if (not remote_static_pubkey_.empty()) {
-      return Error::REMOTE_KEY_ALREADY_SET;
+      return Q_ERROR(Error::REMOTE_KEY_ALREADY_SET);
     }
     auto decrypted = symmetric_state_->decryptAndHash(
         {}, std::span(message.data(), expected));
@@ -646,7 +646,7 @@ namespace libp2p::security::noise {
     if (is_initialized_) {
       return outcome::success();
     }
-    return Error::NOT_INITIALIZED;
+    return Q_ERROR(Error::NOT_INITIALIZED);
   }
 
 }  // namespace libp2p::security::noise

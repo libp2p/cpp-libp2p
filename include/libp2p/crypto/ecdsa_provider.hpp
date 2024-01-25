@@ -8,7 +8,7 @@
 
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/ecdsa_types.hpp>
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::crypto::ecdsa {
   class EcdsaProvider {

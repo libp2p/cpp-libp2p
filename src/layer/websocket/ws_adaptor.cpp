@@ -33,7 +33,7 @@ namespace libp2p::layer {
     ws->ws_.async_accept(
         [=, cb{std::move(cb)}](boost::system::error_code ec) mutable {
           if (ec) {
-            return cb(ec);
+            return cb(Q_ERROR(ec));
           }
           ws->start();
           cb(std::move(ws));
@@ -52,7 +52,7 @@ namespace libp2p::layer {
         "/",
         [=, cb{std::move(cb)}](boost::system::error_code ec) mutable {
           if (ec) {
-            return cb(ec);
+            return cb(Q_ERROR(ec));
           }
           ws->start();
           cb(std::move(ws));

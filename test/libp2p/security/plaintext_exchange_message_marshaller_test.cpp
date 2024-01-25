@@ -86,8 +86,8 @@ TEST_F(ExchangeMessageMarshallerTest, UnmarshalError) {
   EXPECT_CALL(*key_marshaller, marshal(pk))
       .WillOnce(Return(ProtobufKey{pubkey_bytes}));
   EXPECT_CALL(*key_marshaller, unmarshalPublicKey(_))
-      .WillOnce(
-          Return(libp2p::crypto::CryptoProviderError::FAILED_UNMARSHAL_DATA));
+      .WillOnce(Return(
+          Q_ERROR(libp2p::crypto::CryptoProviderError::FAILED_UNMARSHAL_DATA)));
   EXPECT_OUTCOME_TRUE(pid, PeerId::fromPublicKey(ProtobufKey{pk.data}))
   ExchangeMessage msg{.pubkey = pk, .peer_id = pid};
   EXPECT_OUTCOME_TRUE(bytes, marshaller->marshal(msg));

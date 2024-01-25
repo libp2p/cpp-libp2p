@@ -58,7 +58,7 @@ namespace libp2p::protocol::kademlia {
     auto &idx = table_->get<ByKey>();
     auto it = idx.find(key);
     if (it == idx.end()) {
-      return Error::VALUE_NOT_FOUND;
+      return Q_ERROR(Error::VALUE_NOT_FOUND);
     }
     OUTCOME_TRY(value, backend_->getValue(key));
     return {value, it->expire_time};

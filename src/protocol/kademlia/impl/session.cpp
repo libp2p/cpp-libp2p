@@ -34,7 +34,7 @@ namespace libp2p::protocol::kademlia {
 
   bool Session::read() {
     if (stream_->isClosedForRead()) {
-      close(Error::STREAM_RESET);
+      close(Q_ERROR(Error::STREAM_RESET));
       return false;
     }
 
@@ -55,7 +55,7 @@ namespace libp2p::protocol::kademlia {
       const std::shared_ptr<std::vector<uint8_t>> &buffer,
       const std::shared_ptr<ResponseHandler> &response_handler) {
     if (stream_->isClosedForWrite()) {
-      close(Error::STREAM_RESET);
+      close(Q_ERROR(Error::STREAM_RESET));
       return false;
     }
 
@@ -83,7 +83,7 @@ namespace libp2p::protocol::kademlia {
     closed_ = true;
 
     if (reason.has_value()) {
-      reason = Error::SESSION_CLOSED;
+      reason = Q_ERROR(Error::SESSION_CLOSED);
     }
 
     for (auto &pair : response_handlers_) {
@@ -103,7 +103,7 @@ namespace libp2p::protocol::kademlia {
 
   void Session::onLengthRead(outcome::result<multi::UVarint> varint) {
     if (stream_->isClosedForRead()) {
-      close(Error::STREAM_RESET);
+      close(Q_ERROR(Error::STREAM_RESET));
       return;
     }
 
@@ -142,13 +142,13 @@ namespace libp2p::protocol::kademlia {
     }
 
     if (inner_buffer_.size() != res.value()) {
-      close(Error::MESSAGE_PARSE_ERROR);
+      close(Q_ERROR(Error::MESSAGE_PARSE_ERROR));
       return;
     }
 
     Message msg;
     if (!msg.deserialize(inner_buffer_.data(), inner_buffer_.size())) {
-      close(Error::MESSAGE_DESERIALIZE_ERROR);
+      close(Q_ERROR(Error::MESSAGE_DESERIALIZE_ERROR));
       return;
     }
 
@@ -172,7 +172,7 @@ namespace libp2p::protocol::kademlia {
         log_.debug("Incoming Ping message");
         break;
       default:
-        close(Error::UNEXPECTED_MESSAGE_TYPE);
+        close(Q_ERROR(Error::UNEXPECTED_MESSAGE_TYPE));
         return;
     }
 
@@ -234,14 +234,14 @@ namespace libp2p::protocol::kademlia {
 
     auto scheduler = scheduler_.lock();
     if (not scheduler) {
-      close(Error::INTERNAL_ERROR);
+      close(Q_ERROR(Error::INTERNAL_ERROR));
       return;
     }
 
     reading_timeout_handle_ = scheduler->scheduleWithHandle(
         [wp = weak_from_this()] {
           if (auto self = wp.lock()) {
-            self->close(Error::TIMEOUT);
+            self->close(Q_ERROR(Error::TIMEOUT));
           }
         },
         operations_timeout_);
@@ -263,7 +263,7 @@ namespace libp2p::protocol::kademlia {
 
     auto scheduler = scheduler_.lock();
     if (not scheduler) {
-      close(Error::INTERNAL_ERROR);
+      close(Q_ERROR(Error::INTERNAL_ERROR));
       return;
     }
 
@@ -274,7 +274,7 @@ namespace libp2p::protocol::kademlia {
               if (auto self = wp.lock()) {
                 if (response_handler) {
                   self->cancelResponseTimeout(response_handler);
-                  response_handler->onResult(self, Error::TIMEOUT);
+                  response_handler->onResult(self, Q_ERROR(Error::TIMEOUT));
                   self->close();
                 }
               }

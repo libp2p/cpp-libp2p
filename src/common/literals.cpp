@@ -6,11 +6,11 @@
 
 #include <libp2p/common/literals.hpp>
 
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/multi/multihash.hpp>
 #include <libp2p/peer/peer_id.hpp>
+#include <qtils/unhex.hpp>
 
 #include <algorithm>
 
@@ -33,7 +33,7 @@ namespace libp2p::common {
   }
 
   std::vector<uint8_t> operator""_unhex(const char *c, std::size_t s) {
-    return libp2p::common::unhex(std::string_view(c, s)).value();
+    return qtils::unhex(std::string_view(c, s)).value();
   }
 
   libp2p::multi::Multiaddress operator""_multiaddr(const char *c,

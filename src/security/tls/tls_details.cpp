@@ -34,9 +34,7 @@ namespace libp2p::security::tls_details {
       }
     };
 
-#define COMBINE0(X, Y) X##Y
-#define COMBINE(X, Y) COMBINE0(X, Y)
-#define CLEANUP_PTR(P, F) Cleanup COMBINE(cleanup, __LINE__){P, F};
+#define CLEANUP_PTR(P, F) Cleanup OUTCOME_UNIQUE{P, F};
 
   }  // namespace
 
@@ -340,7 +338,7 @@ namespace libp2p::security::tls_details {
       int index = X509_get_ext_by_OBJ(peer_certificate, obj, -1);
       if (index < 0) {
         log()->info("cannot find libp2p certificate extension");
-        return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
+        return Q_ERROR(TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION);
       }
 
       X509_EXTENSION *ext = X509_get_ext(peer_certificate, index);
@@ -354,7 +352,7 @@ namespace libp2p::security::tls_details {
                                          os->data + os->length));  // NOLINT
       if (!ks_binary) {
         log()->info("cannot unmarshal libp2p certificate extension");
-        return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
+        return Q_ERROR(TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION);
       }
 
       return std::move(ks_binary.value());
@@ -391,13 +389,13 @@ namespace libp2p::security::tls_details {
       if (!verify_res) {
         log()->info("peer {} verification failed, {}",
                     peer_id.toBase58(),
-                    verify_res.error().message());
-        return TlsError::TLS_PEER_VERIFY_FAILED;
+                    verify_res.error());
+        return Q_ERROR(TlsError::TLS_PEER_VERIFY_FAILED);
       }
 
       if (!verify_res.value()) {
         log()->info("peer {} verification failed", peer_id.toBase58());
-        return TlsError::TLS_PEER_VERIFY_FAILED;
+        return Q_ERROR(TlsError::TLS_PEER_VERIFY_FAILED);
       }
 
       return outcome::success();
@@ -417,18 +415,18 @@ namespace libp2p::security::tls_details {
     auto peer_id_res = peer::PeerId::fromPublicKey(pub_key_bytes);
     if (!peer_id_res) {
       log()->info("cannot unmarshal remote peer id");
-      return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
+      return Q_ERROR(TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION);
     }
 
     auto peer_pubkey_res = key_marshaller.unmarshalPublicKey(pub_key_bytes);
     if (!peer_pubkey_res) {
       log()->info("cannot unmarshal remote public key");
-      return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
+      return Q_ERROR(TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION);
     }
 
     if (peer_pubkey_res.value().type != crypto::Key::Type::Ed25519) {
       log()->info("remote peer's public key wrong type");
-      return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;
+      return Q_ERROR(TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION);
     }
 
     // 3. Verify

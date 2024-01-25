@@ -51,7 +51,7 @@ namespace libp2p::peer {
 
   PeerAddress::FactoryResult PeerAddress::create(const PeerInfo &peer_info) {
     if (peer_info.addresses.empty()) {
-      return FactoryError::NO_ADDRESSES;
+      return Q_ERROR(FactoryError::NO_ADDRESSES);
     }
 
     return PeerAddress{peer_info.id, *peer_info.addresses.begin()};

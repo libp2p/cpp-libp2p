@@ -4,10 +4,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-addtest(node_id
+addtest(node_id_test
     node_id_test.cpp
     )
-target_link_libraries(node_id
+target_link_libraries(node_id_test
     p2p_sha
     p2p_testutil_peer
     p2p_literals

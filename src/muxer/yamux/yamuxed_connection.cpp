@@ -122,11 +122,11 @@ namespace libp2p::connection {
 
   outcome::result<std::shared_ptr<Stream>> YamuxedConnection::newStream() {
     if (!started_) {
-      return Error::CONNECTION_NOT_ACTIVE;
+      return Q_ERROR(Error::CONNECTION_NOT_ACTIVE);
     }
 
     if (streams_.size() >= config_.maximum_streams) {
-      return Error::CONNECTION_TOO_MANY_STREAMS;
+      return Q_ERROR(Error::CONNECTION_TOO_MANY_STREAMS);
     }
 
     auto stream_id = new_stream_id_;
@@ -140,14 +140,15 @@ namespace libp2p::connection {
   void YamuxedConnection::newStream(StreamHandlerFunc cb) {
     if (!started_) {
       return connection_->deferWriteCallback(
-          Error::CONNECTION_NOT_ACTIVE,
-          [cb = std::move(cb)](auto) { cb(Error::CONNECTION_NOT_ACTIVE); });
+          std::error_code{}, [cb = std::move(cb)](auto) {
+            cb(Q_ERROR(Error::CONNECTION_NOT_ACTIVE));
+          });
     }
 
     if (streams_.size() >= config_.maximum_streams) {
       return connection_->deferWriteCallback(
-          Error::CONNECTION_TOO_MANY_STREAMS, [cb = std::move(cb)](auto) {
-            cb(Error::CONNECTION_TOO_MANY_STREAMS);
+          std::error_code{}, [cb = std::move(cb)](auto) {
+            cb(Q_ERROR(Error::CONNECTION_TOO_MANY_STREAMS));
           });
     }
 
@@ -188,7 +189,8 @@ namespace libp2p::connection {
   }
 
   outcome::result<void> YamuxedConnection::close() {
-    close(Error::CONNECTION_CLOSED_BY_HOST, YamuxFrame::GoAwayError::NORMAL);
+    close(Q_ERROR(Error::CONNECTION_CLOSED_BY_HOST),
+          YamuxFrame::GoAwayError::NORMAL);
     return outcome::success();
   }
 
@@ -200,14 +202,16 @@ namespace libp2p::connection {
                                size_t bytes,
                                ReadCallbackFunc cb) {
     log()->error("YamuxedConnection::read : invalid direct call");
-    deferReadCallback(Error::CONNECTION_DIRECT_IO_FORBIDDEN, std::move(cb));
+    deferReadCallback(Q_ERROR(Error::CONNECTION_DIRECT_IO_FORBIDDEN),
+                      std::move(cb));
   }
 
   void YamuxedConnection::readSome(BytesOut out,
                                    size_t bytes,
                                    ReadCallbackFunc cb) {
     log()->error("YamuxedConnection::readSome : invalid direct call");
-    deferReadCallback(Error::CONNECTION_DIRECT_IO_FORBIDDEN, std::move(cb));
+    deferReadCallback(Q_ERROR(Error::CONNECTION_DIRECT_IO_FORBIDDEN),
+                      std::move(cb));
   }
 
   void YamuxedConnection::write(BytesIn in,
@@ -253,11 +257,10 @@ namespace libp2p::connection {
     }
 
     if (!res) {
-      std::error_code ec = res.error();
-      if (ec.value() == boost::asio::error::eof) {
-        ec = Error::CONNECTION_CLOSED_BY_PEER;
+      if (res.error().ec(boost::asio::error::eof)) {
+        res.error() = Q_ERROR(Error::CONNECTION_CLOSED_BY_PEER);
       }
-      close(ec, boost::none);
+      close(std::move(res.error()), boost::none);
       return;
     }
 
@@ -313,7 +316,7 @@ namespace libp2p::connection {
 
     if (!header) {
       SL_DEBUG(log(), "cannot parse yamux frame: corrupted");
-      close(Error::CONNECTION_PROTOCOL_ERROR,
+      close(Q_ERROR(Error::CONNECTION_PROTOCOL_ERROR),
             YamuxFrame::GoAwayError::PROTOCOL_ERROR);
       return false;
     }
@@ -392,7 +395,7 @@ namespace libp2p::connection {
 
   void YamuxedConnection::processGoAway(const YamuxFrame &frame) {
     SL_DEBUG(log(), "closed by remote peer, code={}", frame.length);
-    close(Error::CONNECTION_CLOSED_BY_PEER, boost::none);
+    close(Q_ERROR(Error::CONNECTION_CLOSED_BY_PEER), boost::none);
   }
 
   bool YamuxedConnection::processSyn(const YamuxFrame &frame) {
@@ -426,13 +429,13 @@ namespace libp2p::connection {
 
     } else if (!new_stream_handler_) {
       log()->error("new stream handler not set");
-      close(Error::CONNECTION_INTERNAL_ERROR,
+      close(Q_ERROR(Error::CONNECTION_INTERNAL_ERROR),
             YamuxFrame::GoAwayError::INTERNAL_ERROR);
       return false;
     }
 
     if (!ok) {
-      close(Error::CONNECTION_PROTOCOL_ERROR,
+      close(Q_ERROR(Error::CONNECTION_PROTOCOL_ERROR),
             YamuxFrame::GoAwayError::PROTOCOL_ERROR);
       return false;
     }
@@ -482,7 +485,7 @@ namespace libp2p::connection {
     }
 
     if (!ok) {
-      close(Error::CONNECTION_PROTOCOL_ERROR,
+      close(Q_ERROR(Error::CONNECTION_PROTOCOL_ERROR),
             YamuxFrame::GoAwayError::PROTOCOL_ERROR);
       return false;
     }
@@ -512,7 +515,7 @@ namespace libp2p::connection {
               log(), "received FIN to pending outbound stream {}", stream_id);
           auto cb = std::move(it2->second);
           erasePendingOutboundStream(it2);
-          cb(Stream::Error::STREAM_RESET_BY_PEER);
+          cb(Q_ERROR(Stream::Error::STREAM_RESET_BY_PEER));
           return;
         }
       }
@@ -539,7 +542,7 @@ namespace libp2p::connection {
 
           auto cb = std::move(it2->second);
           erasePendingOutboundStream(it2);
-          cb(Stream::Error::STREAM_RESET_BY_PEER);
+          cb(Q_ERROR(Stream::Error::STREAM_RESET_BY_PEER));
           return;
         }
       }
@@ -566,7 +569,7 @@ namespace libp2p::connection {
   }
 
   void YamuxedConnection::close(
-      std::error_code notify_streams_code,
+      qtils::Errors notify_streams_code,
       boost::optional<YamuxFrame::GoAwayError> reply_to_peer_code) {
     if (!started_) {
       return;
@@ -574,8 +577,7 @@ namespace libp2p::connection {
 
     started_ = false;
 
-    SL_DEBUG(
-        log(), "closing connection, reason: {}", notify_streams_code.message());
+    SL_DEBUG(log(), "closing connection, reason: {}", notify_streams_code);
 
     write_queue_.clear();
 
@@ -758,7 +760,8 @@ namespace libp2p::connection {
   void YamuxedConnection::onExpireTimer() {
     if (streams_.empty() && pending_outbound_streams_.empty()) {
       SL_DEBUG(log(), "closing expired connection");
-      close(Error::CONNECTION_NOT_ACTIVE, YamuxFrame::GoAwayError::NORMAL);
+      close(Q_ERROR(Error::CONNECTION_NOT_ACTIVE),
+            YamuxFrame::GoAwayError::NORMAL);
     }
   }
 

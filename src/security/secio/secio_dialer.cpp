@@ -121,21 +121,21 @@ namespace libp2p::security::secio {
     if (chosen_algorithm_) {
       return chosen_algorithm_->curve;
     }
-    return Error::NO_COMMON_EC_ALGO;
+    return Q_ERROR(Error::NO_COMMON_EC_ALGO);
   }
 
   outcome::result<crypto::common::CipherType> Dialer::chosenCipher() const {
     if (chosen_algorithm_) {
       return chosen_algorithm_->cipher;
     }
-    return Error::NO_COMMON_CIPHER_ALGO;
+    return Q_ERROR(Error::NO_COMMON_CIPHER_ALGO);
   }
 
   outcome::result<crypto::common::HashType> Dialer::chosenHash() const {
     if (chosen_algorithm_) {
       return chosen_algorithm_->hash;
     }
-    return Error::NO_COMMON_HASH_ALGO;
+    return Q_ERROR(Error::NO_COMMON_HASH_ALGO);
   }
 
   outcome::result<crypto::PublicKey> Dialer::remotePublicKey(
@@ -143,7 +143,7 @@ namespace libp2p::security::secio {
       const std::shared_ptr<ProposeMessageMarshaller> &propose_marshaller)
       const {
     if (!remote_peer_proposal_bytes_) {
-      return Error::INTERNAL_FAILURE;
+      return Q_ERROR(Error::INTERNAL_FAILURE);
     }
 
     OUTCOME_TRY(remote_propose,
@@ -159,7 +159,7 @@ namespace libp2p::security::secio {
   outcome::result<crypto::Buffer> Dialer::generateSharedSecret(
       crypto::Buffer remote_ephemeral_public_key) const {
     if (not ekey_pair_) {
-      return Error::INTERNAL_FAILURE;
+      return Q_ERROR(Error::INTERNAL_FAILURE);
     }
     OUTCOME_TRY(shared_secret,
                 ekey_pair_.get().shared_secret_generator(
@@ -172,7 +172,7 @@ namespace libp2p::security::secio {
       return (*local_peer_is_preferred_ ? stretched_keys_->first
                                         : stretched_keys_->second);
     }
-    return Error::INTERNAL_FAILURE;
+    return Q_ERROR(Error::INTERNAL_FAILURE);
   }
 
   outcome::result<crypto::StretchedKey> Dialer::remoteStretchedKey() const {
@@ -180,7 +180,7 @@ namespace libp2p::security::secio {
       return (*local_peer_is_preferred_ ? stretched_keys_->second
                                         : stretched_keys_->first);
     }
-    return Error::INTERNAL_FAILURE;
+    return Q_ERROR(Error::INTERNAL_FAILURE);
   }
 
   outcome::result<bool> Dialer::determineRoles(const ProposeMessage &local,
@@ -198,7 +198,7 @@ namespace libp2p::security::secio {
     OUTCOME_TRY(oh2, crypto::sha256(corpus2));
 
     if (oh1 == oh2) {
-      return Error::PEER_COMMUNICATING_ITSELF;
+      return Q_ERROR(Error::PEER_COMMUNICATING_ITSELF);
     }
 
     bool local_is_preferred{oh1 > oh2};
@@ -215,7 +215,7 @@ namespace libp2p::security::secio {
     const auto curve{
         BestMatch(local.exchanges, remote.exchanges, local_is_preferred)};
     if (!curve) {
-      return Error::NO_COMMON_EC_ALGO;
+      return Q_ERROR(Error::NO_COMMON_EC_ALGO);
     }
     if (*curve == "P-256") {
       match.curve = curveT::P256;
@@ -224,34 +224,34 @@ namespace libp2p::security::secio {
     } else if (*curve == "P-521") {
       match.curve = curveT::P521;
     } else {
-      return Error::INTERNAL_FAILURE;
+      return Q_ERROR(Error::INTERNAL_FAILURE);
     }
 
     using cipherT = crypto::common::CipherType;
     const auto cipher{
         BestMatch(local.ciphers, remote.ciphers, local_is_preferred)};
     if (!cipher) {
-      return Error::NO_COMMON_CIPHER_ALGO;
+      return Q_ERROR(Error::NO_COMMON_CIPHER_ALGO);
     }
     if (*cipher == "AES-256") {
       match.cipher = cipherT::AES256;
     } else if (*cipher == "AES-128") {
       match.cipher = cipherT::AES128;
     } else {
-      return Error::INTERNAL_FAILURE;
+      return Q_ERROR(Error::INTERNAL_FAILURE);
     }
 
     using hashT = crypto::common::HashType;
     const auto hash{BestMatch(local.hashes, remote.hashes, local_is_preferred)};
     if (!hash) {
-      return Error::NO_COMMON_HASH_ALGO;
+      return Q_ERROR(Error::NO_COMMON_HASH_ALGO);
     }
     if (*hash == "SHA256") {
       match.hash = hashT::SHA256;
     } else if (*hash == "SHA512") {
       match.hash = hashT::SHA512;
     } else {
-      return Error::INTERNAL_FAILURE;
+      return Q_ERROR(Error::INTERNAL_FAILURE);
     }
     return match;
   }
@@ -259,7 +259,7 @@ namespace libp2p::security::secio {
   outcome::result<std::vector<uint8_t>> Dialer::getCorpus(
       bool for_local_peer, BytesIn ephemeral_public_key) const {
     if (!(local_peer_proposal_bytes_ && remote_peer_proposal_bytes_)) {
-      return Error::INTERNAL_FAILURE;
+      return Q_ERROR(Error::INTERNAL_FAILURE);
     }
 
     size_t corpus_len{local_peer_proposal_bytes_->size()

@@ -6,12 +6,9 @@
 
 #pragma once
 
-#include <vector>
-
 #include <libp2p/event/bus.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/network/router.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
 
 namespace libp2p::event::network {

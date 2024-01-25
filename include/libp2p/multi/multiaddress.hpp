@@ -16,8 +16,8 @@
 #include <boost/optional.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
-#include <libp2p/outcome/outcome.hpp>
-#include <span>
+#include <qtils/enum_error_code.hpp>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::multi {
 
@@ -168,7 +168,7 @@ namespace libp2p::multi {
       try {
         return caster(val);
       } catch (...) {
-        return Error::INVALID_PROTOCOL_VALUE;
+        return Q_ERROR(Error::INVALID_PROTOCOL_VALUE);
       }
     }
 

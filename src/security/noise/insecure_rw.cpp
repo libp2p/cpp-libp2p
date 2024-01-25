@@ -11,20 +11,8 @@
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/security/noise/crypto/state.hpp>
 
-#ifndef UNIQUE_NAME
-#define UNIQUE_NAME(base) base##__LINE__
-#endif  // UNIQUE_NAME
-
-#define IO_OUTCOME_TRY_NAME(var, val, res, cb) \
-  auto && (var) = (res);                       \
-  if ((var).has_error()) {                     \
-    cb((var).error());                         \
-    return;                                    \
-  }                                            \
-  auto && (val) = (var).value();
-
 #define IO_OUTCOME_TRY(name, res, cb) \
-  IO_OUTCOME_TRY_NAME(UNIQUE_NAME(name), name, res, cb)
+  Q_CB_TRY(cb, auto &&name, res, Q_ERROR(nullptr))
 
 namespace libp2p::security::noise {
   InsecureReadWriter::InsecureReadWriter(
@@ -38,7 +26,7 @@ namespace libp2p::security::noise {
                        outcome::result<size_t> result) mutable {
       IO_OUTCOME_TRY(read_bytes, result, cb);
       if (kLengthPrefixSize != read_bytes) {
-        return cb(std::errc::broken_pipe);
+        return cb(Q_ERROR(std::errc::broken_pipe));
       }
       uint16_t frame_len{
           ntohs(common::convert<uint16_t>(self->buffer_->data()))};  // NOLINT
@@ -46,7 +34,7 @@ namespace libp2p::security::noise {
                          outcome::result<size_t> result) {
         IO_OUTCOME_TRY(read_bytes, result, cb);
         if (frame_len != read_bytes) {
-          return cb(std::errc::broken_pipe);
+          return cb(Q_ERROR(std::errc::broken_pipe));
         }
         self->buffer_->resize(read_bytes);
         cb(self->buffer_);
@@ -59,7 +47,7 @@ namespace libp2p::security::noise {
   void InsecureReadWriter::write(BytesIn buffer,
                                  basic::Writer::WriteCallbackFunc cb) {
     if (buffer.size() > static_cast<int64_t>(kMaxMsgLen)) {
-      return cb(std::errc::message_size);
+      return cb(Q_ERROR(std::errc::message_size));
     }
     outbuf_.clear();
     outbuf_.reserve(kLengthPrefixSize + buffer.size());
@@ -69,7 +57,7 @@ namespace libp2p::security::noise {
                      cb{std::move(cb)}](outcome::result<size_t> result) {
       IO_OUTCOME_TRY(written_bytes, result, cb);
       if (self->outbuf_.size() != written_bytes) {
-        return cb(std::errc::broken_pipe);
+        return cb(Q_ERROR(std::errc::broken_pipe));
       }
       cb(written_bytes - kLengthPrefixSize);
     };

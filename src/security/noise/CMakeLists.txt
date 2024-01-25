@@ -24,7 +24,6 @@ target_link_libraries(p2p_noise
     p2p_x25519_provider
     p2p_hmac_provider
     p2p_chachapoly_provider
-    p2p_hexutil
     )
 
 libp2p_add_library(p2p_noise_handshake_message_marshaller

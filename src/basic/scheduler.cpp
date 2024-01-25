@@ -35,7 +35,7 @@ namespace libp2p::basic {
   outcome::result<void> Scheduler::Handle::reschedule(
       std::chrono::milliseconds delay_from_now) noexcept {
     if (delay_from_now.count() <= 0) {
-      return Scheduler::Error::kInvalidArgument;
+      return Q_ERROR(Scheduler::Error::kInvalidArgument);
     }
     auto sch = scheduler_.lock();
     if (sch) {
@@ -47,7 +47,7 @@ namespace libp2p::basic {
       ticket_ = std::move(res.value());
       return outcome::success();
     }
-    return Scheduler::Error::kHandleDetached;
+    return Q_ERROR(Scheduler::Error::kHandleDetached);
   }
 
 }  // namespace libp2p::basic

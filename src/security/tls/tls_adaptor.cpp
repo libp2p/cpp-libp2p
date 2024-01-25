@@ -77,7 +77,7 @@ namespace libp2p::security {
     } catch (const std::exception &e) {
       ssl_context_.reset();
       log()->error("context init failed: {}", e.what());
-      return TlsError::TLS_CTX_INIT_FAILED;
+      return Q_ERROR(TlsError::TLS_CTX_INIT_FAILED);
     }
 
     return outcome::success();
@@ -96,7 +96,7 @@ namespace libp2p::security {
       SL_DEBUG(log(), "securing inbound connection");
     }
 
-    std::error_code ec;
+    std::optional<qtils::Errors> ec;
     if (!ssl_context_) {
       auto res = setupContext();
       if (!res) {
@@ -109,7 +109,7 @@ namespace libp2p::security {
     if (!ec) {
       tcp_conn = dynamic_cast<transport::TcpConnection *>(conn.get());
       if (tcp_conn == nullptr) {
-        ec = TlsError::TLS_INCOMPATIBLE_TRANSPORT;
+        ec = Q_ERROR(TlsError::TLS_INCOMPATIBLE_TRANSPORT);
       } else {
         auto tls_conn = std::make_shared<TlsConnection>(std::move(conn),
                                                         ssl_context_,
@@ -121,7 +121,7 @@ namespace libp2p::security {
     }
 
     if (ec) {
-      io_context_->post([cb, ec] { cb(ec); });  // NOLINT
+      io_context_->post([cb, ec] { cb(*ec); });
     }
   }
 

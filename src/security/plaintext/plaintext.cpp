@@ -18,10 +18,6 @@
 #pragma GCC diagnostic ignored "-Wparentheses"
 #endif
 
-#ifndef UNIQUE_NAME
-#define UNIQUE_NAME(base) base##__LINE__
-#endif  // UNIQUE_NAME
-
 #define PLAINTEXT_OUTCOME_TRY_VOID_I(var, res, conn, cb) \
   auto && (var) = (res);                                 \
   if ((var).has_error()) {                               \
@@ -35,10 +31,10 @@
   auto && (val) = (var).value();
 
 #define PLAINTEXT_OUTCOME_TRY(name, res, conn, cb) \
-  PLAINTEXT_OUTCOME_TRY_NAME_I(UNIQUE_NAME(name), name, res, conn, cb)
+  PLAINTEXT_OUTCOME_TRY_NAME_I(OUTCOME_UNIQUE, name, res, conn, cb)
 
 #define PLAINTEXT_OUTCOME_VOID_TRY(res, conn, cb) \
-  PLAINTEXT_OUTCOME_TRY_VOID_I(UNIQUE_NAME(void_var), res, conn, cb)
+  PLAINTEXT_OUTCOME_TRY_VOID_I(OUTCOME_UNIQUE, res, conn, cb)
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, Plaintext::Error, e) {
   using E = libp2p::security::Plaintext::Error;
@@ -109,8 +105,8 @@ namespace libp2p::security {
         proto_exchange_msg,
         [self{shared_from_this()}, cb{std::move(cb)}, conn](auto &&res) {
           if (res.has_error()) {
-            self->closeConnection(conn, Error::EXCHANGE_SEND_ERROR);
-            return cb(Error::EXCHANGE_SEND_ERROR);
+            self->closeConnection(conn, Q_ERROR(Error::EXCHANGE_SEND_ERROR));
+            return cb(Q_ERROR(Error::EXCHANGE_SEND_ERROR));
           }
         });
   }
@@ -160,7 +156,7 @@ namespace libp2p::security {
     auto derived_pid_res = peer::PeerId::fromPublicKey(in_exchange_msg.second);
     if (!derived_pid_res) {
       log_->error("cannot create a PeerId from the received public key: {}",
-                  derived_pid_res.error().message());
+                  derived_pid_res.error());
       return cb(derived_pid_res.error());
     }
     auto derived_pid = std::move(derived_pid_res.value());
@@ -171,16 +167,16 @@ namespace libp2p::security {
           "derived from the public key ({}), differ",
           received_pid.toBase58(),
           derived_pid.toBase58());
-      closeConnection(conn, Error::INVALID_PEER_ID);
-      return cb(Error::INVALID_PEER_ID);
+      closeConnection(conn, Q_ERROR(Error::INVALID_PEER_ID));
+      return cb(Q_ERROR(Error::INVALID_PEER_ID));
     }
     if (p.has_value()) {
       if (received_pid != p.value()) {
         auto s = p.value().toBase58();
         log_->error(
             "received_pid={}, p.value()={}", received_pid.toBase58(), s);
-        closeConnection(conn, Error::INVALID_PEER_ID);
-        return cb(Error::INVALID_PEER_ID);
+        closeConnection(conn, Q_ERROR(Error::INVALID_PEER_ID));
+        return cb(Q_ERROR(Error::INVALID_PEER_ID));
       }
     }
 
@@ -193,12 +189,12 @@ namespace libp2p::security {
 
   void Plaintext::closeConnection(
       const std::shared_ptr<libp2p::connection::LayerConnection> &conn,
-      const std::error_code &err) const {
+      const qtils::Errors &err) const {
     log_->error("error happened while establishing a Plaintext session: {}",
-                err.message());
+                err);
     if (auto close_res = conn->close(); !close_res) {
       log_->error("connection close attempt ended with error: {}",
-                  close_res.error().message());
+                  close_res.error());
     }
   }
 

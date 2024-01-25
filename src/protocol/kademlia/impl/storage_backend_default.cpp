@@ -19,7 +19,7 @@ namespace libp2p::protocol::kademlia {
     if (auto it = values_.find(key); it != values_.end()) {
       return it->second;
     }
-    return Error::VALUE_NOT_FOUND;
+    return Q_ERROR(Error::VALUE_NOT_FOUND);
   }
 
   outcome::result<void> StorageBackendDefault::erase(const Key &key) {

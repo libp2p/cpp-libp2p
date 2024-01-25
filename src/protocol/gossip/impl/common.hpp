@@ -10,6 +10,7 @@
 #include <memory>
 
 #include <libp2p/protocol/gossip/gossip.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::protocol::gossip {
 

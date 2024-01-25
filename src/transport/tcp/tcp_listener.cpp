@@ -22,11 +22,11 @@ namespace libp2p::transport {
   outcome::result<void> TcpListener::listen(
       const multi::Multiaddress &address) {
     if (!canListen(address)) {
-      return std::errc::address_family_not_supported;
+      return Q_ERROR(std::errc::address_family_not_supported);
     }
 
     if (acceptor_.is_open()) {
-      return std::errc::already_connected;
+      return Q_ERROR(std::errc::already_connected);
     }
 
     layers_ = detail::getLayers(address);
@@ -51,7 +51,7 @@ namespace libp2p::transport {
           ->error("Cannot listen to {}: {}",
                   address.getStringAddress(),
                   e.code().message());
-      return e.code();
+      return Q_ERROR(e.code());
     }
   }
 
@@ -63,7 +63,7 @@ namespace libp2p::transport {
     boost::system::error_code ec;
     auto endpoint = acceptor_.local_endpoint(ec);
     if (ec) {
-      return ec;
+      return Q_ERROR(ec);
     }
     return detail::makeAddress(endpoint, &layers_);
   }
@@ -76,7 +76,7 @@ namespace libp2p::transport {
     boost::system::error_code ec;
     acceptor_.close(ec);
     if (ec) {
-      return outcome::failure(ec);
+      return Q_ERROR(ec);
     }
     return outcome::success();
   }
@@ -93,7 +93,7 @@ namespace libp2p::transport {
         [self{this->shared_from_this()}](const boost::system::error_code &ec,
                                          ip::tcp::socket sock) {
           if (ec) {
-            return self->handle_(ec);
+            return self->handle_(Q_ERROR(ec));
           }
 
           auto conn =

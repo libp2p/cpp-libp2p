@@ -40,7 +40,7 @@ namespace libp2p::basic {
       // TODO(107): Reentrancy here, defer callback
       // to the moment we read more bytes than varint may contain and still no
       // valid varint was parsed
-      return cb(Error::NO_VARINT);
+      return cb(Q_ERROR(Error::NO_VARINT));
     }
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)

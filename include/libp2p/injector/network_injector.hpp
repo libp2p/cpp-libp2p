@@ -163,7 +163,7 @@ namespace libp2p::injector {
       } else {
         SL_WARN(log::createLogger("libp2p::injector::useWssPem"),
                 "{}",
-                cert_res.error().message());
+                cert_res.error());
       }
     }
     return boost::di::bind<layer::WssCertificate>.template to(

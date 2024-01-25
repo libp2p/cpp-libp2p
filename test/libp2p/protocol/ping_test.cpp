@@ -79,7 +79,7 @@ TEST_F(PingTest, PingServer) {
   EXPECT_CALL(*stream_, read(_, kPingMsgSize, _))
       .WillOnce(ReadPut(buffer_))
       .WillOnce(  // no second read
-          InvokeArgument<2>(outcome::failure(boost::system::error_code{})));
+          InvokeArgument<2>(Q_ERROR(boost::system::error_code{})));
 
   auto if_eq_buf = [&](BytesIn actual) {
     auto expected = BytesIn(buffer_);
@@ -120,8 +120,7 @@ TEST_F(PingTest, PingClient) {
   EXPECT_CALL(*stream_, write(Truly(if_eq_buf), kPingMsgSize, _))
       .WillOnce(InvokeArgument<2>(buffer_.size()))
       .WillOnce(  // no second write
-          InvokeArgument<2>(outcome::failure(boost::system::error_code{
-              boost::asio::error::invalid_argument})));
+          InvokeArgument<2>(Q_ERROR(boost::asio::error::invalid_argument)));
   EXPECT_CALL(*stream_, read(_, kPingMsgSize, _)).WillOnce(ReadPut(buffer_));
 
   EXPECT_CALL(*stream_, isClosedForWrite())

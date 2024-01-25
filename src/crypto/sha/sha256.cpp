@@ -22,24 +22,24 @@ namespace libp2p::crypto {
 
   outcome::result<void> Sha256::write(BytesIn data) {
     if (not initialized_) {
-      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+      return Q_ERROR(HmacProviderError::FAILED_INITIALIZE_CONTEXT);
     }
     if (1 != SHA256_Update(&ctx_, data.data(), data.size())) {
-      return HmacProviderError::FAILED_UPDATE_DIGEST;
+      return Q_ERROR(HmacProviderError::FAILED_UPDATE_DIGEST);
     }
     return outcome::success();
   }
 
   outcome::result<void> Sha256::digestOut(BytesOut out) const {
     if (not initialized_) {
-      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+      return Q_ERROR(HmacProviderError::FAILED_INITIALIZE_CONTEXT);
     }
     if (out.size() != digestSize()) {
-      return HmacProviderError::WRONG_DIGEST_SIZE;
+      return Q_ERROR(HmacProviderError::WRONG_DIGEST_SIZE);
     }
     SHA256_CTX ctx = ctx_;
     if (1 != SHA256_Final(out.data(), &ctx)) {
-      return HmacProviderError::FAILED_FINALIZE_DIGEST;
+      return Q_ERROR(HmacProviderError::FAILED_FINALIZE_DIGEST);
     }
     return outcome::success();
   }
@@ -47,7 +47,7 @@ namespace libp2p::crypto {
   outcome::result<void> Sha256::reset() {
     sinkCtx();
     if (1 != SHA256_Init(&ctx_)) {
-      return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
+      return Q_ERROR(HmacProviderError::FAILED_INITIALIZE_CONTEXT);
     }
     initialized_ = true;
     return outcome::success();

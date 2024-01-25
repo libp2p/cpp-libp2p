@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/outcome.hpp>
 
 namespace libp2p {
   inline auto toAsioCbSize(std::function<void(outcome::result<size_t>)> cb) {
     return [cb{std::move(cb)}](boost::system::error_code ec, size_t n) {
       if (ec) {
-        cb(ec);
+        cb(Q_ERROR(ec));
       } else {
         cb(n);
       }

@@ -10,6 +10,7 @@
 
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/security/noise/handshake_message_marshaller.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::security::noise {
   class HandshakeMessageMarshallerImpl : public HandshakeMessageMarshaller {

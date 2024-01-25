@@ -7,11 +7,10 @@
 #pragma once
 
 #include <unordered_set>
-#include <vector>
 
 #include <libp2p/crypto/key.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_id.hpp>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::peer {
 

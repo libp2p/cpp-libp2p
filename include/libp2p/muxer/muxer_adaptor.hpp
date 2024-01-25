@@ -11,7 +11,7 @@
 #include <libp2p/basic/adaptor.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/connection/secure_connection.hpp>
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::muxer {
   /**

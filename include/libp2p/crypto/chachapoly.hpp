@@ -11,11 +11,9 @@
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/crypto/common.hpp>
-#include <libp2p/outcome/outcome.hpp>
-#include <span>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::crypto::chachapoly {
-  using libp2p::Bytes;
   using Key = std::array<uint8_t, 32>;
   using Nonce = std::array<uint8_t, 12>;
 

@@ -21,17 +21,17 @@ namespace libp2p::crypto::x25519 {
 
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_X25519, nullptr);
     if (nullptr == pctx) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     FinalAction free_pctx([pctx] { EVP_PKEY_CTX_free(pctx); });
 
     if (1 != EVP_PKEY_keygen_init(pctx)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     EVP_PKEY *pkey{nullptr};  // it is mandatory to nullify the pointer!
     if (1 != EVP_PKEY_keygen(pctx, &pkey)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     FinalAction free_pkey([pkey] { EVP_PKEY_free(pkey); });
 
@@ -41,12 +41,12 @@ namespace libp2p::crypto::x25519 {
     if (1
         != EVP_PKEY_get_raw_private_key(
             pkey, keypair.private_key.data(), &priv_len)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     if (1
         != EVP_PKEY_get_raw_public_key(
             pkey, keypair.public_key.data(), &pub_len)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     return keypair;
@@ -63,7 +63,7 @@ namespace libp2p::crypto::x25519 {
     if (1
         != EVP_PKEY_get_raw_public_key(
             evp_pkey.get(), public_key.data(), &pub_len)) {
-      return KeyGeneratorError::KEY_DERIVATION_FAILED;
+      return Q_ERROR(KeyGeneratorError::KEY_DERIVATION_FAILED);
     }
 
     return public_key;
@@ -81,28 +81,28 @@ namespace libp2p::crypto::x25519 {
                     EVP_PKEY_X25519, public_key, EVP_PKEY_new_raw_public_key));
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new(evp_pkey.get(), nullptr);
     if (nullptr == pctx) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     FinalAction free_pctx([pctx] { EVP_PKEY_CTX_free(pctx); });
 
     if (1 != EVP_PKEY_derive_init(pctx)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     if (1 != EVP_PKEY_derive_set_peer(pctx, evp_peerkey.get())) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
     size_t shared_secret_len{0};
 
     if (1 != EVP_PKEY_derive(pctx, nullptr, &shared_secret_len)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     std::vector<uint8_t> shared_secret;
     shared_secret.resize(shared_secret_len, 0);
 
     if (1 != EVP_PKEY_derive(pctx, shared_secret.data(), &shared_secret_len)) {
-      return FAILED;
+      return Q_ERROR(FAILED);
     }
 
     return shared_secret;

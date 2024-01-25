@@ -11,8 +11,7 @@
 #include <boost/filesystem.hpp>
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key.hpp>
-#include <libp2p/outcome/outcome.hpp>
-#include <span>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::crypto {
   /**

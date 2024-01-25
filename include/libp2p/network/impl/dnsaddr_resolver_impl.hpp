@@ -13,6 +13,7 @@
 
 #include <boost/asio.hpp>
 #include <libp2p/network/cares/cares.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::network {
 

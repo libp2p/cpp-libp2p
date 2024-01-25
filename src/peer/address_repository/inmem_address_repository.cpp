@@ -118,7 +118,7 @@ namespace libp2p::peer {
       const PeerId &p, Milliseconds ttl) {
     auto peer_it = db_.find(p);
     if (peer_it == db_.end()) {
-      return PeerError::NOT_FOUND;
+      return Q_ERROR(PeerError::NOT_FOUND);
     }
     auto &addresses = *peer_it->second;
 
@@ -134,7 +134,7 @@ namespace libp2p::peer {
   InmemAddressRepository::getAddresses(const PeerId &p) const {
     auto peer_it = db_.find(p);
     if (peer_it == db_.end()) {
-      return PeerError::NOT_FOUND;
+      return Q_ERROR(PeerError::NOT_FOUND);
     }
     auto &addresses = *peer_it->second;
 

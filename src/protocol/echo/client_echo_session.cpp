@@ -26,7 +26,7 @@ namespace libp2p::protocol {
 
     buf_ = std::vector<uint8_t>(send.begin(), send.end());
     recv_buf_.resize(buf_.size());
-    ec_.clear();
+    ec_.reset();
     bytes_read_ = 0;
     then_ = std::move(then);
 
@@ -72,7 +72,7 @@ namespace libp2p::protocol {
       auto then = decltype(then_){};
       then_.swap(then);
       if (ec_) {
-        then(ec_);
+        then(*ec_);
       } else {
         if (not std::equal(
                 recv_buf_.begin(), recv_buf_.end(), buf_.begin(), buf_.end())) {

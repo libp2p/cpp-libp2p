@@ -9,8 +9,8 @@
 #include <functional>
 #include <memory>
 
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/protocol.hpp>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::connection {
   class Stream;

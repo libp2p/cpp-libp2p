@@ -6,13 +6,9 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
-#include <libp2p/outcome/outcome.hpp>
-#include <span>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::multi::converters {
 
@@ -23,15 +19,6 @@ namespace libp2p::multi::converters {
    */
   outcome::result<Bytes> addressToBytes(const Protocol &protocol,
                                         std::string_view addr);
-
-  /**
-   * Converts the given address string of the specified protocol
-   * to a hex string that represents the address, if both
-   * address and protocol were valid
-   */
-  [[deprecated("Use `common::hex_lower(addressToBytes(...))` instead")]]  //
-  outcome::result<std::string>
-  addressToHex(const Protocol &protocol, std::string_view addr);
 
   /**
    * Converts the given multiaddr string to a byte sequence representing
@@ -45,14 +32,6 @@ namespace libp2p::multi::converters {
    * a multiaddr to a string containing the multiaddr in a human-readable
    * format, if the provided byte sequence was a valid multiaddr
    */
-  auto bytesToMultiaddrString(const Bytes &bytes)
-      -> outcome::result<std::string>;
-
-  /**
-   * Converts the given byte sequence representing
-   * a multiaddr to a string containing the multiaddr in a human-readable
-   * format, if the provided byte sequence was a valid multiaddr
-   */
-  auto bytesToMultiaddrString(BytesIn bytes) -> outcome::result<std::string>;
+  outcome::result<std::string> bytesToMultiaddrString(BytesIn bytes);
 
 }  // namespace libp2p::multi::converters

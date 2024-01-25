@@ -109,11 +109,11 @@ namespace libp2p::connection {
     void onDataWritten(size_t bytes);
 
     /// Connection closed by network error
-    void closedByConnection(std::error_code ec);
+    void closedByConnection(qtils::Errors errors);
 
    private:
     /// Performs close-related cleanup and notifications
-    void doClose(std::error_code ec, bool notify_read_side);
+    void doClose(qtils::Errors errors, bool notify_read_side);
 
     /// Called by read*() functions
     void doRead(BytesOut out, size_t bytes, ReadCallbackFunc cb);
@@ -154,7 +154,7 @@ namespace libp2p::connection {
     bool fin_sent_ = false;
 
     /// Non zero reason means that stream is closed and the reason of it
-    std::error_code close_reason_;
+    std::optional<qtils::Errors> close_reason_;
 
     /// Max bytes allowed to send
     size_t window_size_;

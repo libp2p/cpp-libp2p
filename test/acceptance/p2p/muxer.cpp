@@ -128,11 +128,12 @@ struct Server : public std::enable_shared_from_this<Server> {
     stream->readSome(
         *buf, buf->size(), [buf, stream, this](outcome::result<size_t> rread) {
           if (!rread) {
-            if (rread.error() == RawConnection::Error::CONNECTION_CLOSED_BY_PEER
-                || rread.error() == Stream::Error::STREAM_RESET_BY_HOST) {
+            if (rread.error().ec(
+                    RawConnection::Error::CONNECTION_CLOSED_BY_PEER)
+                || rread.error().ec(Stream::Error::STREAM_RESET_BY_HOST)) {
               return;
             }
-            this->println("readSome error: ", rread.error().message());
+            this->println(fmt::format("readSome error: {}", rread.error()));
           }
 
           EXPECT_OUTCOME_TRUE(read, rread)

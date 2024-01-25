@@ -21,14 +21,6 @@ namespace libp2p::transport {
       static auto logger = log::createLogger("TcpConnection");
       return *logger;
     }
-
-    inline std::error_code convert(boost::system::errc::errc_t ec) {
-      return {static_cast<int>(ec), std::system_category()};
-    }
-
-    inline std::error_code convert(std::error_code ec) {
-      return ec;
-    }
   }  // namespace
 
   TcpConnection::TcpConnection(boost::asio::io_context &ctx,
@@ -48,17 +40,14 @@ namespace libp2p::transport {
 
   outcome::result<void> TcpConnection::close() {
     closed_by_host_ = true;
-    close(convert(boost::system::errc::connection_aborted));
+    close(Q_ERROR(boost::system::errc::connection_aborted));
     return outcome::success();
   }
 
-  void TcpConnection::close(std::error_code reason) {
-    assert(reason);
-
+  void TcpConnection::close(qtils::Errors reason) {
     if (!close_reason_) {
       close_reason_ = reason;
-      log().debug(
-          "{} closing with reason: {}", debug_str_, close_reason_.message());
+      log().debug("{} closing with reason: {}", debug_str_, *close_reason_);
     }
     if (socket_.is_open()) {
       boost::system::error_code ec;
@@ -99,12 +88,12 @@ namespace libp2p::transport {
     auto closeOnError(TcpConnection &conn, Callback cb) {
       return [cb{std::move(cb)}, wptr{conn.weak_from_this()}](auto ec,
                                                               auto result) {
-        if (!wptr.expired()) {
+        if (auto self = wptr.lock()) {
           if (ec) {
-            wptr.lock()->close(convert(ec));
-            return cb(std::forward<decltype(ec)>(ec));
+            self->close(Q_ERROR(ec));
+            return cb(Q_ERROR(ec));
           }
-          TRACE("{} {}", wptr.lock()->str(), result);
+          TRACE("{} {}", self->str(), result);
           cb(result);
         } else {
           log().debug("connection wptr expired");
@@ -292,7 +281,7 @@ namespace libp2p::transport {
                   weak_from_this(),
                   std::ref(closed_by_host_),
                   std::move(cb),
-                  ec);
+                  Q_ERROR(ec));
   }
 
   outcome::result<void> TcpConnection::saveMultiaddresses() {
@@ -313,10 +302,10 @@ namespace libp2p::transport {
         }
       }
     } else {
-      return convert(boost::system::errc::not_connected);
+      return Q_ERROR(boost::system::errc::not_connected);
     }
     if (ec) {
-      return convert(ec);
+      return Q_ERROR(ec);
     }
 #ifndef NDEBUG
     debug_str_ = fmt::format("{} {} {}",

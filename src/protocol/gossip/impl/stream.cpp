@@ -76,7 +76,7 @@ namespace libp2p::protocol::gossip {
     TRACE("reading {} bytes from {}:{}", msg_len, peer_->str, stream_id_);
 
     if (msg_len > max_message_size_) {
-      feedback_(peer_, Error::MESSAGE_SIZE_ERROR);
+      feedback_(peer_, Q_ERROR(Error::MESSAGE_SIZE_ERROR));
       return;
     }
 
@@ -108,13 +108,13 @@ namespace libp2p::protocol::gossip {
     TRACE("read {} bytes from {}:{}", res.value(), peer_->str, stream_id_);
 
     if (read_buffer_->size() != res.value()) {
-      feedback_(peer_, Error::MESSAGE_PARSE_ERROR);
+      feedback_(peer_, Q_ERROR(Error::MESSAGE_PARSE_ERROR));
       return;
     }
 
     MessageParser parser;
     if (!parser.parse(*read_buffer_)) {
-      feedback_(peer_, Error::MESSAGE_PARSE_ERROR);
+      feedback_(peer_, Q_ERROR(Error::MESSAGE_PARSE_ERROR));
       return;
     }
 
@@ -182,7 +182,7 @@ namespace libp2p::protocol::gossip {
             if (self_wptr.expired() || closed_) {
               return;
             }
-            feedback_(peer_, Error::WRITER_TIMEOUT);
+            feedback_(peer_, Q_ERROR(Error::WRITER_TIMEOUT));
           },
           timeout_);
     }
@@ -201,7 +201,7 @@ namespace libp2p::protocol::gossip {
     TRACE("written {} bytes to {}:{}", res.value(), peer_->str, stream_id_);
 
     if (writing_bytes_ != res.value()) {
-      feedback_(peer_, Error::MESSAGE_WRITE_ERROR);
+      feedback_(peer_, Q_ERROR(Error::MESSAGE_WRITE_ERROR));
       return;
     }
 
@@ -220,7 +220,7 @@ namespace libp2p::protocol::gossip {
       if (self_wptr.expired() || closed_) {
         return;
       }
-      feedback_(peer_, error);
+      feedback_(peer_, Q_ERROR(error));
     });
   }
 

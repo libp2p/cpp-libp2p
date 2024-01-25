@@ -6,13 +6,12 @@
 
 #include <libp2p/protocol/identify.hpp>
 
-#include <vector>
-
 #include <generated/protocol/identify/protobuf/identify.pb.h>
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/multi/uvarint.hpp>
 #include <libp2p/network/connection_manager.hpp>
+#include <qtils/bytecmp.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"

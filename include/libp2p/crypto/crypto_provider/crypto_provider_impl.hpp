@@ -7,6 +7,7 @@
 #pragma once
 
 #include <libp2p/crypto/crypto_provider.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::crypto {
   namespace random {

@@ -65,7 +65,7 @@ namespace libp2p::peer {
   InmemProtocolRepository::getProtocolSet(const PeerId &p) const {
     auto it = db_.find(p);
     if (it == db_.end()) {
-      return PeerError::NOT_FOUND;
+      return Q_ERROR(PeerError::NOT_FOUND);
     }
 
     return it->second;

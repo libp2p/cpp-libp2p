@@ -18,11 +18,11 @@ namespace libp2p::layer {
                              boost::asio::ssl::context::file_format::pem,
                              ec);
     if (ec) {
-      return ec;
+      return Q_ERROR(ec);
     }
     context->use_certificate_chain(boost::asio::buffer(pem), ec);
     if (ec) {
-      return ec;
+      return Q_ERROR(ec);
     }
     return WssCertificate{context};
   }
@@ -44,7 +44,7 @@ namespace libp2p::layer {
       std::shared_ptr<connection::LayerConnection> conn,
       LayerAdaptor::LayerConnCallbackFunc cb) const {
     if (not server_certificate_.context) {
-      return cb(std::errc::address_family_not_supported);
+      return cb(Q_ERROR(std::errc::address_family_not_supported));
     }
     auto ssl = std::make_shared<connection::SslConnection>(
         io_context_, std::move(conn), server_certificate_.context);
@@ -53,7 +53,7 @@ namespace libp2p::layer {
         [=, ws{ws_adaptor_}, cb{std::move(cb)}](
             boost::system::error_code ec) mutable {
           if (ec) {
-            return cb(ec);
+            return cb(Q_ERROR(ec));
           }
           ws->upgradeInbound(std::move(ssl), std::move(cb));
         });
@@ -70,7 +70,7 @@ namespace libp2p::layer {
         [=, ws{ws_adaptor_}, cb{std::move(cb)}](
             boost::system::error_code ec) mutable {
           if (ec) {
-            return cb(ec);
+            return cb(Q_ERROR(ec));
           }
           ws->upgradeOutbound(address, std::move(ssl), std::move(cb));
         });

@@ -149,7 +149,7 @@ namespace libp2p::connection {
     bool processWindowUpdate(const YamuxFrame &frame);
 
     /// Closes everything, notifies streams and handlers
-    void close(std::error_code notify_streams_code,
+    void close(qtils::Errors notify_streams_code,
                boost::optional<YamuxFrame::GoAwayError> reply_to_peer_code);
 
     /// Writes data to underlying connection or (if is_writing_) enqueues them

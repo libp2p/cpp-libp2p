@@ -8,7 +8,6 @@
 
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include "testutil/outcome.hpp"
 
 using libp2p::multi::Multiaddress;

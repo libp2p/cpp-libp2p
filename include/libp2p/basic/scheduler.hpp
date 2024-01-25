@@ -10,7 +10,8 @@
 #include <functional>
 #include <memory>
 
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/enum_error_code.hpp>
+#include <qtils/outcome.hpp>
 
 namespace libp2p::basic {
 

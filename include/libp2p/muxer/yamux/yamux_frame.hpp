@@ -7,7 +7,6 @@
 #pragma once
 
 #include <boost/optional.hpp>
-#include <span>
 
 #include <libp2p/common/types.hpp>
 

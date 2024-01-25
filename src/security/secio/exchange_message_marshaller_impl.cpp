@@ -47,7 +47,7 @@ namespace libp2p::security::secio {
 
     std::vector<uint8_t> out_msg(exchange_msg.ByteSizeLong());
     if (!exchange_msg.SerializeToArray(out_msg.data(), out_msg.size())) {
-      return Error::MESSAGE_SERIALIZING_ERROR;
+      return Q_ERROR(Error::MESSAGE_SERIALIZING_ERROR);
     }
     return out_msg;
   }
@@ -56,7 +56,7 @@ namespace libp2p::security::secio {
       BytesIn msg_bytes) const {
     protobuf::Exchange exchange_msg;
     if (!exchange_msg.ParseFromArray(msg_bytes.data(), msg_bytes.size())) {
-      return Error::MESSAGE_DESERIALIZING_ERROR;
+      return Q_ERROR(Error::MESSAGE_DESERIALIZING_ERROR);
     }
 
     return protoToHandy(exchange_msg);

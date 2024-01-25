@@ -10,6 +10,7 @@
 
 #include <libp2p/security/noise/crypto/interfaces.hpp>
 #include <libp2p/security/noise/crypto/message_patterns.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::security::noise {
 

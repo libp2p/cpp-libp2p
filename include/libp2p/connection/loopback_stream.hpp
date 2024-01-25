@@ -10,7 +10,6 @@
 #include <libp2p/connection/stream.hpp>
 
 #include <libp2p/log/logger.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_info.hpp>
 
 namespace libp2p::connection {

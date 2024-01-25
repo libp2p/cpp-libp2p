@@ -48,7 +48,7 @@ namespace libp2p::basic {
                                          Writer::WriteCallbackFunc cb) {
     if (buffer.empty()) {
       // TODO(107): Reentrancy
-      return cb(MessageReadWriterError::BUFFER_IS_EMPTY);
+      return cb(Q_ERROR(MessageReadWriterError::BUFFER_IS_EMPTY));
     }
 
     std::vector<uint8_t> raw_buf;

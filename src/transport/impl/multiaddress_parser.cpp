@@ -53,7 +53,7 @@ namespace libp2p::transport {
                                     });
                               });
     if (entry == kSupportedProtocols.end()) {
-      return Error::PROTOCOLS_UNSUPPORTED;
+      return Q_ERROR(Error::PROTOCOLS_UNSUPPORTED);
     }
     // calculate the index of this entry in the supported protocols list
     entry_idx = std::distance(std::begin(kSupportedProtocols), entry);
@@ -76,7 +76,7 @@ namespace libp2p::transport {
         return ParseResult{*entry, std::make_pair(addr.to_v6(), port)};
       }
       default:
-        return Error::PROTOCOLS_UNSUPPORTED;
+        return Q_ERROR(Error::PROTOCOLS_UNSUPPORTED);
     }
   }
 
@@ -85,7 +85,7 @@ namespace libp2p::transport {
     try {
       return lexical_cast<uint16_t>(value);
     } catch (boost::bad_lexical_cast &) {
-      return Error::INVALID_ADDR_VALUE;
+      return Q_ERROR(Error::INVALID_ADDR_VALUE);
     }
   }
 
@@ -96,7 +96,7 @@ namespace libp2p::transport {
     if (!ec) {
       return addr;
     }
-    return Error::INVALID_ADDR_VALUE;
+    return Q_ERROR(Error::INVALID_ADDR_VALUE);
   }
 
 }  // namespace libp2p::transport

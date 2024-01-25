@@ -12,7 +12,6 @@
 #include <libp2p/connection/layer_connection.hpp>
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/connection/secure_connection.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::transport {
 

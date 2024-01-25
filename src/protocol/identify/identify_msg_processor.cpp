@@ -16,6 +16,7 @@
 #include <libp2p/network/network.hpp>
 #include <libp2p/peer/address_repository.hpp>
 #include <libp2p/protocol/identify/utils.hpp>
+#include <qtils/bytestr.hpp>
 
 using libp2p::BytesIn;
 
@@ -24,15 +25,12 @@ namespace {
   inline std::string fromMultiaddrToString(
       const libp2p::multi::Multiaddress &ma) {
     const auto &addr = ma.getBytesAddress();
-    return {addr.begin(), addr.end()};
+    return std::string{qtils::byte2str(addr)};
   }
 
-  inline libp2p::outcome::result<libp2p::multi::Multiaddress>
-  fromStringToMultiaddr(const std::string &addr) {
-    return libp2p::multi::Multiaddress::create(BytesIn(
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        reinterpret_cast<const uint8_t *>(addr.data()),
-        addr.size()));
+  inline outcome::result<libp2p::multi::Multiaddress> fromStringToMultiaddr(
+      const std::string &addr) {
+    return libp2p::multi::Multiaddress::create(qtils::str2byte(addr));
   }
 }  // namespace
 
@@ -80,7 +78,7 @@ namespace libp2p::protocol {
       log_->critical(
           "cannot marshal public key, which was provided to us by the identity "
           "manager: {}",
-          marshalled_pubkey_res.error().message());
+          marshalled_pubkey_res.error());
     } else {
       auto &&marshalled_pubkey = marshalled_pubkey_res.value();
       msg.set_publickey(marshalled_pubkey.key.data(),
@@ -108,7 +106,7 @@ namespace libp2p::protocol {
       log_->error("cannot write identify message to stream to peer {}, {}: {}",
                   peer_id,
                   peer_addr,
-                  written_bytes.error().message());
+                  written_bytes.error());
       return stream->reset();
     }
 
@@ -120,10 +118,8 @@ namespace libp2p::protocol {
                    p = std::move(peer_id),
                    a = std::move(peer_addr)](auto &&res) {
       if (!res) {
-        self->log_->error("cannot close the stream to peer {}, {}: {}",
-                          p,
-                          a,
-                          res.error().message());
+        self->log_->error(
+            "cannot close the stream to peer {}, {}: {}", p, a, res.error());
       }
     });
   }
@@ -169,10 +165,8 @@ namespace libp2p::protocol {
                    p = std::move(peer_id_str),
                    a = std::move(peer_addr_str)](auto &&res) {
       if (!res) {
-        self->log_->error("cannot close the stream to peer {}, {}: {}",
-                          p,
-                          a,
-                          res.error().message());
+        self->log_->error(
+            "cannot close the stream to peer {}, {}: {}", p, a, res.error());
       }
     });
 
@@ -198,7 +192,7 @@ namespace libp2p::protocol {
     if (!add_res) {
       log_->error("cannot add protocols to peer {}: {}",
                   peer_id.toBase58(),
-                  add_res.error().message());
+                  add_res.error());
     }
 
     if (msg.has_observedaddr()) {
@@ -245,7 +239,7 @@ namespace libp2p::protocol {
     if (!pubkey_res) {
       log_->info("cannot unmarshal public key for peer {}: {}",
                  stream_peer_id ? stream_peer_id->toBase58() : "",
-                 pubkey_res.error().message());
+                 pubkey_res.error());
       return stream_peer_id;
     }
     pubkey = std::move(pubkey_res.value());
@@ -256,7 +250,7 @@ namespace libp2p::protocol {
         peer::PeerId::fromPublicKey(crypto::ProtobufKey{pubkey_buf});
     if (!msg_peer_id_res) {
       log_->info("cannot derive PeerId from the received key: {}",
-                 msg_peer_id_res.error().message());
+                 msg_peer_id_res.error());
       return stream_peer_id;
     }
     auto msg_peer_id = std::move(msg_peer_id_res.value());
@@ -269,7 +263,7 @@ namespace libp2p::protocol {
       if (!add_res) {
         log_->error("cannot add key to the repo of peer {}: {}",
                     msg_peer_id.toBase58(),
-                    add_res.error().message());
+                    add_res.error());
       }
       return msg_peer_id;
     }
@@ -288,7 +282,7 @@ namespace libp2p::protocol {
     if (!add_res) {
       log_->error("cannot add key to the repo of peer {}: {}",
                   stream_peer_id->toBase58(),
-                  add_res.error().message());
+                  add_res.error());
     }
     return stream_peer_id;
   }
@@ -377,7 +371,7 @@ namespace libp2p::protocol {
       SL_DEBUG(log_,
                "cannot update listen addresses of the peer {}: {}",
                peer_id.toBase58(),
-               update_res.error().message());
+               update_res.error());
     }
 
     // memorize the addresses
@@ -398,7 +392,7 @@ namespace libp2p::protocol {
     if (!upsert_res) {
       log_->error("cannot add addresses to peer {}: {}",
                   peer_id.toBase58(),
-                  upsert_res.error().message());
+                  upsert_res.error());
     }
   }
 }  // namespace libp2p::protocol

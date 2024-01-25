@@ -23,7 +23,7 @@ namespace libp2p::crypto::ecdsa {
         EC_KEY_new_by_curve_name(NID_X9_62_prime256v1), EC_KEY_free};
     EC_KEY_set_asn1_flag(ec_key.get(), OPENSSL_EC_NAMED_CURVE);
     if (EC_KEY_generate_key(ec_key.get()) != 1) {
-      return KeyGeneratorError::KEY_GENERATION_FAILED;
+      return Q_ERROR(KeyGeneratorError::KEY_GENERATION_FAILED);
     }
     OUTCOME_TRY(private_key,
                 convertEcKeyToBytes<PrivateKey>(ec_key, i2d_ECPrivateKey));
@@ -45,10 +45,10 @@ namespace libp2p::crypto::ecdsa {
                      nullptr,
                      nullptr)
         != 1) {
-      return KeyGeneratorError::KEY_GENERATION_FAILED;
+      return Q_ERROR(KeyGeneratorError::KEY_GENERATION_FAILED);
     }
     if (EC_KEY_set_public_key(ec_key.get(), ec_point) != 1) {
-      return KeyGeneratorError::KEY_GENERATION_FAILED;
+      return Q_ERROR(KeyGeneratorError::KEY_GENERATION_FAILED);
     }
     OUTCOME_TRY(public_key,
                 convertEcKeyToBytes<PublicKey>(ec_key, i2d_EC_PUBKEY));
@@ -92,12 +92,12 @@ namespace libp2p::crypto::ecdsa {
     KeyType key{};
     int generated_size = converter(ec_key.get(), nullptr);
     if (generated_size != key.size()) {
-      return KeyValidatorError::DIFFERENT_KEY_TYPES;
+      return Q_ERROR(KeyValidatorError::DIFFERENT_KEY_TYPES);
     }
     uint8_t *key_ptr = key.data();
     generated_size = converter(ec_key.get(), &key_ptr);
     if (generated_size != key.size()) {
-      return KeyGeneratorError::INTERNAL_ERROR;
+      return Q_ERROR(KeyGeneratorError::INTERNAL_ERROR);
     }
     return key;
   }
@@ -112,10 +112,10 @@ namespace libp2p::crypto::ecdsa {
     std::shared_ptr<EC_KEY> ec_key{converter(nullptr, &key_ptr, key.size()),
                                    EC_KEY_free};
     if (ec_key == nullptr) {
-      return KeyValidatorError::DIFFERENT_KEY_TYPES;
+      return Q_ERROR(KeyValidatorError::DIFFERENT_KEY_TYPES);
     }
     if (EC_KEY_check_key(ec_key.get()) != 1) {
-      return KeyGeneratorError::INTERNAL_ERROR;
+      return Q_ERROR(KeyGeneratorError::INTERNAL_ERROR);
     }
     return ec_key;
   }

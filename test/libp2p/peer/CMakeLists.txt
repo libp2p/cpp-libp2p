@@ -20,6 +20,7 @@ addtest(peer_address_test
     )
 target_link_libraries(peer_address_test
     p2p_peer_address
+    p2p_literals
     )
 
 add_subdirectory(address_repository)

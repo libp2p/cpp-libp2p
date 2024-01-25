@@ -72,7 +72,7 @@ namespace libp2p::network {
       }
     }
 
-    return std::errc::invalid_argument;
+    return Q_ERROR(std::errc::invalid_argument);
   }
 
   outcome::result<void> ListenerManagerImpl::removeListener(
@@ -83,7 +83,7 @@ namespace libp2p::network {
       return outcome::success();
     }
 
-    return std::errc::invalid_argument;
+    return Q_ERROR(std::errc::invalid_argument);
   };
 
   // starts listening on all provided multiaddresses
@@ -133,13 +133,13 @@ namespace libp2p::network {
     auto tr = this->tmgr_->findBest(ma);
     if (tr == nullptr) {
       // can not listen on this address
-      return std::errc::address_family_not_supported;
+      return Q_ERROR(std::errc::address_family_not_supported);
     }
 
     auto it = listeners_.find(ma);
     if (it != listeners_.end()) {
       // this address is already used
-      return std::errc::address_in_use;
+      return Q_ERROR(std::errc::address_in_use);
     }
 
     auto listener = tr->createListener(
@@ -181,15 +181,14 @@ namespace libp2p::network {
   void ListenerManagerImpl::onConnection(
       outcome::result<std::shared_ptr<connection::CapableConnection>> rconn) {
     if (!rconn) {
-      log()->warn("can not accept valid connection, {}",
-                  rconn.error().message());
+      log()->warn("can not accept valid connection, {}", rconn.error());
       return;  // ignore
     }
     auto &&conn = rconn.value();
 
     auto rid = conn->remotePeer();
     if (!rid) {
-      log()->warn("can not get remote peer id, {}", rid.error().message());
+      log()->warn("can not get remote peer id, {}", rid.error());
       return;  // ignore
     }
     auto &&id = rid.value();
@@ -198,7 +197,7 @@ namespace libp2p::network {
     conn->onStream(
         [this](outcome::result<std::shared_ptr<connection::Stream>> rstream) {
           if (!rstream) {
-            log()->warn("can not accept stream, {}", rstream.error().message());
+            log()->warn("can not accept stream, {}", rstream.error());
             return;  // ignore
           }
           auto &&stream = rstream.value();
@@ -221,7 +220,7 @@ namespace libp2p::network {
 
                 if (!rproto) {
                   log()->warn("can not negotiate protocols, {}",
-                              rproto.error().message());
+                              rproto.error());
                   success = false;
                 } else {
                   auto &&proto = rproto.value();
@@ -229,7 +228,7 @@ namespace libp2p::network {
                   auto rhandle = this->router_->handle(proto, stream);
                   if (!rhandle) {
                     log()->warn("no protocol handler found, {}",
-                                rhandle.error().message());
+                                rhandle.error());
                     success = false;
                   }
                 }

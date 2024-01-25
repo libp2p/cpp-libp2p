@@ -30,6 +30,7 @@ addtest(ecdsa_test
     ecdsa_provider_test.cpp
     )
 target_link_libraries(ecdsa_test
+    fmt::fmt
     p2p_ecdsa_provider
     )
 
@@ -53,6 +54,7 @@ addtest(marshaller_test
     marshaller_test.cpp
     )
 target_link_libraries(marshaller_test
+    fmt::fmt
     p2p_key_marshaller
     )
 
@@ -68,6 +70,7 @@ addtest(key_validator_test
     key_validator_test.cpp
     )
 target_link_libraries(key_validator_test
+    fmt::fmt
     p2p_key_validator
     )
 
@@ -75,6 +78,7 @@ addtest(rsa_provider_test
     rsa_provider_test.cpp
     )
 target_link_libraries(rsa_provider_test
+    fmt::fmt
     p2p_rsa_provider
     )
 
@@ -82,6 +86,7 @@ addtest(secp256k1_test
     secp256k1_test.cpp
     )
 target_link_libraries(secp256k1_test
+    fmt::fmt
     p2p_secp256k1_provider
     p2p_multibase_codec
     )

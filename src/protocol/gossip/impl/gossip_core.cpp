@@ -8,10 +8,10 @@
 
 #include <cassert>
 
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/peer/identity_manager.hpp>
+#include <qtils/hex.hpp>
 
 #include "connectivity.hpp"
 #include "local_subscriptions.hpp"
@@ -79,7 +79,7 @@ namespace libp2p::protocol::gossip {
     OUTCOME_TRY(ma, libp2p::multi::Multiaddress::create(address));
     auto peer_id_str = ma.getPeerId();
     if (!peer_id_str) {
-      return multi::Multiaddress::Error::INVALID_INPUT;
+      return Q_ERROR(multi::Multiaddress::Error::INVALID_INPUT);
     }
     OUTCOME_TRY(peer_id, peer::PeerId::fromBase58(*peer_id_str));
     addBootstrapPeer(peer_id, {std::move(ma)});
@@ -172,7 +172,7 @@ namespace libp2p::protocol::gossip {
     if (config_.sign_messages) {
       auto res = signMessage(*msg);
       if (!res) {
-        log_.warn("signMessage error: {}", res.error().message());
+        log_.warn("signMessage error: {}", res.error());
       }
     }
 
@@ -228,7 +228,7 @@ namespace libp2p::protocol::gossip {
 
     if (remote_subscriptions_->hasTopic(topic)
         && !msg_cache_.contains(msg_id)) {
-      log_.debug("requesting msg id {}", common::hex_lower(msg_id));
+      log_.debug("requesting msg id {:x}", msg_id);
 
       from->message_builder->addIWant(msg_id);
       connectivity_->peerIsWritable(from, false);
@@ -237,8 +237,7 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::onIWant(const PeerContextPtr &from,
                            const MessageId &msg_id) {
-    log_.debug(
-        "peer {} wants message {}", from->str, common::hex_lower(msg_id));
+    log_.debug("peer {} wants message {:x}", from->str, msg_id);
 
     auto msg_found = msg_cache_.getMessage(msg_id);
     if (msg_found) {
@@ -279,7 +278,7 @@ namespace libp2p::protocol::gossip {
     }
 
     MessageId msg_id = create_message_id_(msg->from, msg->seq_no, msg->data);
-    log_.debug("message arrived, msg id={}", common::hex_lower(msg_id));
+    log_.debug("message arrived, msg id={:x}", msg_id);
 
     if (msg_cache_.contains(msg_id)) {
       // already there, ignore
@@ -338,7 +337,7 @@ namespace libp2p::protocol::gossip {
 
     auto res = heartbeat_timer_.reschedule(config_.heartbeat_interval_msec);
     if (!res) {
-      log_.error("Heartbeat reschedule error: {}", res.error().message());
+      log_.error("Heartbeat reschedule error: {}", res.error());
     }
   }
 

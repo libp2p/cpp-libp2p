@@ -16,7 +16,6 @@ using namespace basic;
 using namespace connection;
 using namespace multi;
 
-using libp2p::Bytes;
 using testing::_;
 using testing::Return;
 

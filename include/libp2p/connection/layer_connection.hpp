@@ -8,6 +8,7 @@
 
 #include <libp2p/basic/readwritecloser.hpp>
 #include <libp2p/multi/multiaddress.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::connection {
 

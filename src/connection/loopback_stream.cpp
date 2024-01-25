@@ -13,11 +13,11 @@
 namespace libp2p::connection {
 
   namespace {
-    template <typename Callback, typename Arg>
+    template <typename Callback>
     void deferCallback(boost::asio::io_context &ctx,
                        std::weak_ptr<LoopbackStream> wptr,
                        Callback cb,
-                       Arg arg) {
+                       outcome::result<size_t> arg) {
       // defers callback to the next event loop cycle,
       // cb will be called iff Loopbackstream is still exists
       boost::asio::post(
@@ -114,7 +114,7 @@ namespace libp2p::connection {
     buffer_.commit(bytes);
 
     // intentionally used deferReadCallback, since it acquires bytes written
-    deferReadCallback(outcome::success(bytes), std::move(cb));
+    deferReadCallback(bytes, std::move(cb));
     /* The whole approach with such methods (deferReadCallback and
      * deferWriteCallback) is going to be avoided in the near future, thus we do
      * not remove  from the source code the counting of bytes written */
@@ -128,13 +128,15 @@ namespace libp2p::connection {
                                 size_t bytes,
                                 libp2p::basic::Reader::ReadCallbackFunc cb) {
     if (is_reset_) {
-      return deferReadCallback(Error::STREAM_RESET_BY_HOST, std::move(cb));
+      return deferReadCallback(Q_ERROR(Error::STREAM_RESET_BY_HOST),
+                               std::move(cb));
     }
     if (!is_readable_) {
-      return deferReadCallback(Error::STREAM_NOT_READABLE, std::move(cb));
+      return deferReadCallback(Q_ERROR(Error::STREAM_NOT_READABLE),
+                               std::move(cb));
     }
     if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
-      return cb(Error::STREAM_INVALID_ARGUMENT);
+      return cb(Q_ERROR(Error::STREAM_INVALID_ARGUMENT));
     }
 
     // this lambda checks, if there's enough data in our read buffer, and gives
@@ -156,7 +158,7 @@ namespace libp2p::connection {
                                      self->buffer_.data(),
                                      to_read)
             != to_read) {
-          return self->deferReadCallback(Error::STREAM_INTERNAL_ERROR,
+          return self->deferReadCallback(Q_ERROR(Error::STREAM_INTERNAL_ERROR),
                                          std::move(cb));
         }
 
@@ -182,12 +184,13 @@ namespace libp2p::connection {
 
   void LoopbackStream::deferReadCallback(outcome::result<size_t> res,
                                          basic::Reader::ReadCallbackFunc cb) {
-    deferCallback(*io_context_, weak_from_this(), std::move(cb), res);
+    deferCallback(
+        *io_context_, weak_from_this(), std::move(cb), std::move(res));
   }
 
   void LoopbackStream::deferWriteCallback(std::error_code ec,
                                           basic::Writer::WriteCallbackFunc cb) {
-    deferCallback(*io_context_, weak_from_this(), std::move(cb), ec);
+    deferCallback(*io_context_, weak_from_this(), std::move(cb), Q_ERROR(ec));
   };
 
 }  // namespace libp2p::connection

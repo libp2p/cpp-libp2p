@@ -13,10 +13,6 @@
 #include <libp2p/security/secio/secio_connection.hpp>
 #include <libp2p/security/secio/secio_dialer.hpp>
 
-#ifndef UNIQUE_NAME
-#define UNIQUE_NAME(base) base##__LINE__
-#endif  // UNIQUE_NAME
-
 #define SECIO_OUTCOME_TRY_VOID_I(var, res, conn, cb) \
   auto && (var) = (res);                             \
   if ((var).has_error()) {                           \
@@ -30,10 +26,10 @@
   auto && (val) = (var).value();
 
 #define SECIO_OUTCOME_TRY(name, res, conn, cb) \
-  SECIO_OUTCOME_TRY_NAME_I(UNIQUE_NAME(name), name, res, conn, cb)
+  SECIO_OUTCOME_TRY_NAME_I(OUTCOME_UNIQUE, name, res, conn, cb)
 
 #define SECIO_OUTCOME_VOID_TRY(res, conn, cb) \
-  SECIO_OUTCOME_TRY_VOID_I(UNIQUE_NAME(void_var), res, conn, cb)
+  SECIO_OUTCOME_TRY_VOID_I(OUTCOME_UNIQUE, res, conn, cb)
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, Secio::Error, e) {
   using E = libp2p::security::Secio::Error;
@@ -213,7 +209,7 @@ namespace libp2p::security {
               conn,
               cb)
           if (!verify_res) {
-            const auto error{Error::REMOTE_PEER_SIGNATURE_IS_INVALID};
+            const auto error{Q_ERROR(Error::REMOTE_PEER_SIGNATURE_IS_INVALID)};
             self->closeConnection(conn, error);
             cb(error);
             return;
@@ -260,7 +256,7 @@ namespace libp2p::security {
               [self, conn, cb, secio_conn](auto &&write_res) {
                 SECIO_OUTCOME_TRY(written_bytes, write_res, conn, cb)
                 if (written_bytes != self->remote_peer_rand_.size()) {
-                  return cb(Error::INITIAL_PACKET_VERIFICATION_FAILED);
+                  return cb(Q_ERROR(Error::INITIAL_PACKET_VERIFICATION_FAILED));
                 }
                 const auto kToRead{self->propose_message_.rand.size()};
                 auto buffer = std::make_shared<Bytes>(kToRead);
@@ -271,7 +267,8 @@ namespace libp2p::security {
                       SECIO_OUTCOME_TRY(read_bytes, read_res, conn, cb)
                       if (read_bytes != buffer->size()
                           or *buffer != self->propose_message_.rand) {
-                        return cb(Error::INITIAL_PACKET_VERIFICATION_FAILED);
+                        return cb(
+                            Q_ERROR(Error::INITIAL_PACKET_VERIFICATION_FAILED));
                       }
                       SL_TRACE(self->log_, "connection initialized");
                       cb(secio_conn);
@@ -282,11 +279,11 @@ namespace libp2p::security {
 
   void Secio::closeConnection(
       const std::shared_ptr<libp2p::connection::LayerConnection> &conn,
-      const std::error_code &err) const {
-    log_->error("error happened, closing connection: {}", err.message());
+      const qtils::Errors &err) const {
+    log_->error("error happened, closing connection: {}", err);
     if (auto close_res = conn->close(); !close_res) {
       log_->error("connection close attempt ended with error: {}",
-                  close_res.error().message());
+                  close_res.error());
     }
   }
 

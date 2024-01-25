@@ -14,11 +14,11 @@
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
-#define TRY_GET_CONNECTION(conn_var_name) \
-  if (connection_.expired()) {            \
-    return Error::STREAM_RESET_BY_HOST;   \
-  }                                       \
-  auto(conn_var_name) = connection_.lock();
+#define TRY_GET_CONNECTION(tmp)                  \
+  auto tmp = connection_.lock();                 \
+  if (tmp == nullptr) {                          \
+    return Q_ERROR(Error::STREAM_RESET_BY_HOST); \
+  }
 
 namespace libp2p::connection {
   std::string MplexStream::StreamId::toString() const {
@@ -55,7 +55,7 @@ namespace libp2p::connection {
             read_buffer_.data(),
             size)
         != size) {
-      readDone(Error::STREAM_INTERNAL_ERROR);
+      readDone(Q_ERROR(Error::STREAM_INTERNAL_ERROR));
       return true;
     }
     read_buffer_.consume(size);
@@ -66,16 +66,16 @@ namespace libp2p::connection {
 
   void MplexStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
     if (is_reset_) {
-      return cb(Error::STREAM_RESET_BY_PEER);
+      return cb(Q_ERROR(Error::STREAM_RESET_BY_PEER));
     }
     if (!is_readable_) {
-      return cb(Error::STREAM_NOT_READABLE);
+      return cb(Q_ERROR(Error::STREAM_NOT_READABLE));
     }
     if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
-      return cb(Error::STREAM_INVALID_ARGUMENT);
+      return cb(Q_ERROR(Error::STREAM_INVALID_ARGUMENT));
     }
     if (reading_.has_value()) {
-      return cb(Error::STREAM_IS_READING);
+      return cb(Q_ERROR(Error::STREAM_IS_READING));
     }
 
     reading_.emplace(Reading{out, bytes, std::move(cb)});
@@ -84,7 +84,7 @@ namespace libp2p::connection {
     }
 
     if (connection_.expired()) {
-      return readDone(Error::STREAM_RESET_BY_HOST);
+      return readDone(Q_ERROR(Error::STREAM_RESET_BY_HOST));
     }
   }
 
@@ -97,13 +97,13 @@ namespace libp2p::connection {
     // TODO(107): Reentrancy
 
     if (is_reset_) {
-      return cb(Error::STREAM_RESET_BY_PEER);
+      return cb(Q_ERROR(Error::STREAM_RESET_BY_PEER));
     }
     if (!is_writable_) {
-      return cb(Error::STREAM_NOT_WRITABLE);
+      return cb(Q_ERROR(Error::STREAM_NOT_WRITABLE));
     }
     if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
-      return cb(Error::STREAM_INVALID_ARGUMENT);
+      return cb(Q_ERROR(Error::STREAM_INVALID_ARGUMENT));
     }
     if (is_writing_) {
       std::vector<uint8_t> in_vector(in.begin(), in.end());
@@ -112,7 +112,7 @@ namespace libp2p::connection {
       return;
     }
     if (connection_.expired()) {
-      return cb(Error::STREAM_RESET_BY_HOST);
+      return cb(Q_ERROR(Error::STREAM_RESET_BY_HOST));
     }
 
     is_writing_ = true;
@@ -125,7 +125,7 @@ namespace libp2p::connection {
           if (!write_res) {
             self->log_->error("write for stream {} failed: {}",
                               self->stream_id_.toString(),
-                              write_res.error().message());
+                              write_res.error());
           }
           cb(std::forward<decltype(write_res)>(write_res));
 
@@ -144,7 +144,7 @@ namespace libp2p::connection {
                                       ReadCallbackFunc cb) {
     if (connection_.expired()) {
       // TODO(107) Reentrancy here, defer callback
-      return cb(Error::STREAM_RESET_BY_HOST);
+      return cb(Q_ERROR(Error::STREAM_RESET_BY_HOST));
     }
     connection_.lock()->deferReadCallback(res, std::move(cb));
   }
@@ -153,7 +153,7 @@ namespace libp2p::connection {
                                        WriteCallbackFunc cb) {
     if (connection_.expired()) {
       // TODO(107) Reentrancy here, defer callback
-      return cb(Error::STREAM_RESET_BY_HOST);
+      return cb(Q_ERROR(Error::STREAM_RESET_BY_HOST));
     }
     connection_.lock()->deferWriteCallback(ec, std::move(cb));
   }
@@ -164,7 +164,7 @@ namespace libp2p::connection {
 
   void MplexStream::close(VoidResultHandlerFunc cb) {
     if (connection_.expired()) {
-      return cb(Error::STREAM_RESET_BY_HOST);
+      return cb(Q_ERROR(Error::STREAM_RESET_BY_HOST));
     }
     connection_.lock()->streamClose(
         stream_id_,
@@ -172,7 +172,7 @@ namespace libp2p::connection {
           if (!close_res) {
             self->log_->error("cannot close stream {} for writes: {}",
                               self->stream_id_.toString(),
-                              close_res.error().message());
+                              close_res.error());
             return cb(close_res.error());
           }
 
@@ -202,7 +202,7 @@ namespace libp2p::connection {
   void MplexStream::adjustWindowSize(uint32_t new_size,
                                      VoidResultHandlerFunc cb) {
     if (new_size == 0) {
-      return cb(Error::STREAM_INVALID_WINDOW_SIZE);
+      return cb(Q_ERROR(Error::STREAM_INVALID_WINDOW_SIZE));
     }
     receive_window_size_ = new_size;
     cb(outcome::success());
@@ -233,22 +233,22 @@ namespace libp2p::connection {
     if (data_size == 0) {
       is_reset_ = true;
       if (reading_.has_value()) {
-        readDone(Error::STREAM_RESET_BY_HOST);
+        readDone(Q_ERROR(Error::STREAM_RESET_BY_HOST));
       }
-      return Error::STREAM_RESET_BY_HOST;
+      return Q_ERROR(Error::STREAM_RESET_BY_HOST);
     }
 
     if (data_size > receive_window_size_) {
       // we have received more data, than we can handle
       reset();
-      return Error::STREAM_RECEIVE_OVERFLOW;
+      return Q_ERROR(Error::STREAM_RECEIVE_OVERFLOW);
     }
 
     if (boost::asio::buffer_copy(
             read_buffer_.prepare(data_size),
             boost::asio::const_buffer(data.data(), data_size))
         != data_size) {
-      return Error::STREAM_INTERNAL_ERROR;
+      return Q_ERROR(Error::STREAM_INTERNAL_ERROR);
     }
     read_buffer_.commit(data_size);
     receive_window_size_ -= data_size;

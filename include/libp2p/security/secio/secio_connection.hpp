@@ -16,6 +16,7 @@
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/log/logger.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::crypto {
   namespace aes {

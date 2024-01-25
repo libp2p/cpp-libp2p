@@ -9,7 +9,7 @@
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include <libp2p/multi/multihash.hpp>
-#include <libp2p/outcome/outcome.hpp>
+#include <qtils/enum_error_code.hpp>
 
 namespace libp2p::peer {
 

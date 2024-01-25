@@ -11,8 +11,8 @@
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/asio_buffer.hpp>
 #include <libp2p/common/asio_cb.hpp>
-#include <libp2p/common/bytestr.hpp>
 #include <libp2p/log/logger.hpp>
+#include <qtils/bytestr.hpp>
 
 namespace libp2p::connection {
   WsConnection::WsConnection(
@@ -46,7 +46,7 @@ namespace libp2p::connection {
               return;
             }
             if (auto self = weak.lock()) {
-              self->onPong(bytestr(payload));
+              self->onPong(qtils::str2byte(payload));
             }
           });
 
@@ -144,7 +144,7 @@ namespace libp2p::connection {
     auto on_read = [weak{weak_from_this()}, out, cb{std::move(cb)}](
                        boost::system::error_code ec, size_t n) mutable {
       if (ec) {
-        cb(ec);
+        cb(Q_ERROR(ec));
       } else if (n != 0) {
         cb(n);
       } else if (auto self = weak.lock()) {

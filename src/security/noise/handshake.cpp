@@ -18,20 +18,8 @@
 #include <libp2p/security/noise/handshake_message.hpp>
 #include <libp2p/security/noise/noise_connection.hpp>
 
-#ifndef UNIQUE_NAME
-#define UNIQUE_NAME(base) base##__LINE__
-#endif  // UNIQUE_NAME
-
-#define IO_OUTCOME_TRY_NAME(var, val, res, cb) \
-  auto && (var) = (res);                       \
-  if ((var).has_error()) {                     \
-    cb((var).error());                         \
-    return;                                    \
-  }                                            \
-  auto && (val) = (var).value();
-
 #define IO_OUTCOME_TRY(name, res, cb) \
-  IO_OUTCOME_TRY_NAME(UNIQUE_NAME(name), name, res, cb)
+  Q_CB_TRY(cb, auto &&name, res, Q_ERROR(nullptr))
 
 namespace libp2p::security::noise {
 
@@ -149,7 +137,7 @@ namespace libp2p::security::noise {
                "Remote peer id mismatches already known, expected {}, got {}",
                remote_peer_id_->toHex(),
                remote_id.toHex());
-      return std::errc::bad_address;
+      return Q_ERROR(std::errc::bad_address);
     }
     Bytes to_verify;
     to_verify.reserve(kPayloadPrefix.size()
@@ -167,7 +155,7 @@ namespace libp2p::security::noise {
             to_verify, handy_payload.identity_sig, handy_payload.identity_key));
     if (not signature_correct) {
       SL_TRACE(log_, "Remote peer's payload signature verification failed");
-      return std::errc::owner_dead;
+      return Q_ERROR(std::errc::owner_dead);
     }
     remote_peer_id_ = remote_id;
     remote_peer_pubkey_ = handy_payload.identity_key;
@@ -197,7 +185,7 @@ namespace libp2p::security::noise {
           [self{shared_from_this()}, payload{std::move(payload)}](auto result) {
             IO_OUTCOME_TRY(bytes_written, result, self->hscb);
             if (0 == bytes_written) {
-              return self->hscb(std::errc::bad_message);
+              return self->hscb(Q_ERROR(std::errc::bad_message));
             }
             //
             // Outgoing connection. Stage 1
@@ -265,16 +253,16 @@ namespace libp2p::security::noise {
 
   void Handshake::hscb(outcome::result<bool> secured) {
     if (secured.has_error()) {
-      log_->error("handshake failed, {}", secured.error().message());
+      log_->error("handshake failed, {}", secured.error());
       return connection_cb_(secured.error());
     }
     if (not secured.value()) {
       log_->error("handshake failed for unknown reason");
-      return connection_cb_(std::errc::io_error);
+      return connection_cb_(Q_ERROR(std::errc::io_error));
     }
     if (not remote_peer_pubkey_) {
       log_->error("Remote peer static pubkey remains unknown");
-      return connection_cb_(std::errc::connection_aborted);
+      return connection_cb_(Q_ERROR(std::errc::connection_aborted));
     }
 
     auto secured_connection = std::make_shared<connection::NoiseConnection>(

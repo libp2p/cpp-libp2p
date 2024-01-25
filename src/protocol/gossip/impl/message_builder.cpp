@@ -7,19 +7,11 @@
 #include "message_builder.hpp"
 
 #include <libp2p/multi/uvarint.hpp>
+#include <qtils/bytestr.hpp>
 
 #include <generated/protocol/gossip/protobuf/rpc.pb.h>
 
 namespace libp2p::protocol::gossip {
-
-  namespace {
-    // helper needed since protobuf doesn't have a blob type
-    inline const char *toString(const Bytes &bytes) {
-      // NOLINTNEXTLINE
-      return reinterpret_cast<const char *>(bytes.data());
-    }
-  }  // namespace
-
   MessageBuilder::MessageBuilder() : empty_(true), control_not_empty_(false) {}
 
   MessageBuilder::~MessageBuilder() = default;
@@ -62,14 +54,14 @@ namespace libp2p::protocol::gossip {
       auto *ih = control_pb_msg_->add_ihave();
       ih->set_topicid(topic);
       for (auto &mid : message_ids) {
-        ih->add_messageids(toString(mid), mid.size());
+        ih->add_messageids(std::string{qtils::byte2str(mid)});
       }
     }
 
     if (!iwant_.empty()) {
       auto *iw = control_pb_msg_->add_iwant();
       for (auto &mid : iwant_) {
-        iw->add_messageids(toString(mid), mid.size());
+        iw->add_messageids(std::string{qtils::byte2str(mid)});
       }
     }
 
@@ -105,7 +97,7 @@ namespace libp2p::protocol::gossip {
     if (success) {
       return buffer;
     }
-    return outcome::failure(Error::MESSAGE_SERIALIZE_ERROR);
+    return Q_ERROR(Error::MESSAGE_SERIALIZE_ERROR);
   }
 
   void MessageBuilder::addSubscription(bool subscribe, const TopicId &topic) {
@@ -184,7 +176,7 @@ namespace libp2p::protocol::gossip {
     std::copy(kPrefix.begin(), kPrefix.end(), signable.begin());
     if (!pb_msg.SerializeToArray(&signable[kPrefix.size()],
                                  static_cast<int>(size))) {
-      return outcome::failure(Error::MESSAGE_SERIALIZE_ERROR);
+      return Q_ERROR(Error::MESSAGE_SERIALIZE_ERROR);
     }
     return signable;
   }
