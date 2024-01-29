@@ -12,6 +12,7 @@
 #include <gtest/gtest.h>
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
 #include <libp2p/basic/scheduler/scheduler_impl.hpp>
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
@@ -144,9 +145,10 @@ struct Server : public std::enable_shared_from_this<Server> {
           this->streamReads++;
 
           // 01-echo back read data
-          stream->write(
+          buf->resize(read);
+          writeReturnSize(
+              stream,
               *buf,
-              read,
               [buf, read, stream, this](outcome::result<size_t> rwrite) {
                 EXPECT_OUTCOME_TRUE(write, rwrite)
                 this->println("write ", write, " bytes");
@@ -242,9 +244,9 @@ struct Client : public std::enable_shared_from_this<Client> {
     }
 
     auto buf = randomBuffer();
-    stream->write(
+    writeReturnSize(
+        stream,
         *buf,
-        buf->size(),
         [round, streamId, buf, stream, this](outcome::result<size_t> rwrite) {
           EXPECT_OUTCOME_TRUE(write, rwrite);
           this->println(streamId, " write ", write, " bytes");

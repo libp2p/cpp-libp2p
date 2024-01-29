@@ -11,6 +11,7 @@
 
 #include <boost/beast.hpp>
 
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/injector/kademlia_injector.hpp>
 #include <libp2p/log/configurator.hpp>
@@ -43,7 +44,8 @@ class Session : public std::enable_shared_from_this<Session> {
     }
 
     stream_->readSome(
-        *incoming_, incoming_->size(),
+        *incoming_,
+        incoming_->size(),
         [self = shared_from_this()](libp2p::outcome::result<size_t> result) {
           if (not result) {
             self->close();
@@ -66,8 +68,9 @@ class Session : public std::enable_shared_from_this<Session> {
       return false;
     }
 
-    stream_->write(
-        *buffer, buffer->size(),
+    libp2p::writeReturnSize(
+        stream_,
+        *buffer,
         [self = shared_from_this(),
          buffer](libp2p::outcome::result<size_t> result) {
           if (not result) {
@@ -91,7 +94,7 @@ class Session : public std::enable_shared_from_this<Session> {
 
   bool operator<(const Session &other) {
     return stream_->remotePeerId().value()
-        < other.stream_->remotePeerId().value();
+         < other.stream_->remotePeerId().value();
   }
 
  private:
@@ -286,7 +289,8 @@ int main(int argc, char *argv[]) {
 
     std::function<void()> find_providers = [&] {
       [[maybe_unused]] auto res1 = kademlia->findProviders(
-          content_id, 0,
+          content_id,
+          0,
           [&](libp2p::outcome::result<std::vector<libp2p::peer::PeerInfo>>
                   res) {
             scheduler.schedule(std::function{find_providers},
@@ -350,7 +354,8 @@ int main(int argc, char *argv[]) {
     // same content id
     std::function<void()> read_from_console = [&] {
       in.async_read_some(boost::asio::buffer(buffer), [&](auto ec, auto size) {
-        auto i = std::find_if(buffer.begin(), buffer.begin() + size + 1,
+        auto i = std::find_if(buffer.begin(),
+                              buffer.begin() + size + 1,
                               [](auto c) { return c == '\n'; });
 
         if (i != buffer.begin() + size + 1) {

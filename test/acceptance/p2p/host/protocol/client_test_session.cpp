@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <boost/assert.hpp>
+#include <libp2p/basic/write_return_size.hpp>
 #include "libp2p/crypto/random_generator/boost_generator.hpp"
 
 namespace libp2p::protocol {
@@ -35,16 +36,16 @@ namespace libp2p::protocol {
 
     write_buf_ = random_generator_->randomBytes(buffer_size_);
 
-    stream_->write(write_buf_,
-                   buffer_size_,
-                   [self = shared_from_this(),
-                    cb{std::move(cb)}](outcome::result<size_t> rw) mutable {
-                     if (!rw) {
-                       return cb(rw.error());
-                     }
+    writeReturnSize(stream_,
+                    write_buf_,
+                    [self = shared_from_this(),
+                     cb{std::move(cb)}](outcome::result<size_t> rw) mutable {
+                      if (!rw) {
+                        return cb(rw.error());
+                      }
 
-                     self->read(cb);
-                   });
+                      self->read(cb);
+                    });
   }
 
   void ClientTestSession::read(Callback cb) {

@@ -6,6 +6,7 @@
 
 #include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
 
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/hexutil.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
@@ -140,9 +141,9 @@ namespace libp2p::protocol_muxer::multiselect {
 
     SL_TRACE(log(), "sending {}", common::dumpBin(span));
 
-    stream->write(
+    writeReturnSize(
+        stream,
         span,
-        span.size(),
         [stream = stream, cb = std::move(cb), buffers = std::move(buffers)](
             outcome::result<size_t> res) mutable {
           onPacketWritten(

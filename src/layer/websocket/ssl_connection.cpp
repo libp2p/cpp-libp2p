@@ -7,7 +7,6 @@
 #include <libp2p/layer/websocket/ssl_connection.hpp>
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/asio_buffer.hpp>
 #include <libp2p/common/asio_cb.hpp>
@@ -56,13 +55,6 @@ namespace libp2p::connection {
                                libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     ssl_.async_read_some(asioBuffer(out), toAsioCbSize(std::move(cb)));
-  }
-
-  void SslConnection::write(BytesIn in,
-                            size_t bytes,
-                            libp2p::basic::Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
-    writeReturnSize(shared_from_this(), in, std::move(cb));
   }
 
   void SslConnection::writeSome(BytesIn in,

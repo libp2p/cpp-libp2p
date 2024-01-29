@@ -9,7 +9,6 @@
 #include <cassert>
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 
@@ -66,11 +65,6 @@ namespace libp2p::connection {
         cb(res);
       }
     });
-  }
-
-  void YamuxStream::write(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
-    writeReturnSize(shared_from_this(), in, std::move(cb));
   }
 
   void YamuxStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {

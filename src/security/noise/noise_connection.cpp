@@ -7,7 +7,6 @@
 #include <libp2p/security/noise/noise_connection.hpp>
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/crypto/x25519_provider/x25519_provider_impl.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
@@ -99,13 +98,6 @@ namespace libp2p::connection {
           self->frame_buffer_->assign(decrypted.begin(), decrypted.end());
           self->readSome(out, bytes, ctx, std::move(cb));
         });
-  }
-
-  void NoiseConnection::write(BytesIn in,
-                              size_t bytes,
-                              libp2p::basic::Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
-    writeReturnSize(shared_from_this(), in, std::move(cb));
   }
 
   void NoiseConnection::write(BytesIn in,

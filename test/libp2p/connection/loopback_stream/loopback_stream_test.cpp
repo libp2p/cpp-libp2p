@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 #include <boost/asio/io_context.hpp>  // clang-format puts it here, sorry ¯\_(ツ)_/¯
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base58.hpp>
 #include <testutil/outcome.hpp>
@@ -49,10 +50,8 @@ TEST_F(LoopbackStreamTest, Basic) {
   std::shared_ptr<libp2p::connection::Stream> stream =
       std::make_shared<LoopbackStream>(PeerInfo{peer_id, {}}, context);
   bool all_executed{false};
-  stream->write(
-      kBuffer,
-      kBuffer.size(),
-      [stream, buf = kBuffer, &all_executed](auto result) {
+  libp2p::writeReturnSize(
+      stream, kBuffer, [stream, buf = kBuffer, &all_executed](auto result) {
         EXPECT_OUTCOME_TRUE(bytes, result);
         ASSERT_EQ(bytes, kBufferSize);
         auto read_buf = std::make_shared<Buffer>(kBufferSize, 0);

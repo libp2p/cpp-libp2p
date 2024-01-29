@@ -135,7 +135,7 @@ TEST_F(IdentifyDeltaTest, Send) {
   };
 
   EXPECT_CALL(*stream_,
-              write(Truly(if_added), msg_added_protos_bytes_.size(), _))
+              writeSome(Truly(if_added), msg_added_protos_bytes_.size(), _))
       .WillOnce(InvokeArgument<2>(outcome::success()));
 
   id_delta_->start();
