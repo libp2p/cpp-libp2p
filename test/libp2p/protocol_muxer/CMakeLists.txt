@@ -13,6 +13,7 @@ target_link_libraries(multiselect_test
     p2p_peer_id
     p2p_yamux
     p2p_tcp
+    #p2p_quic
     p2p_plaintext
     p2p_testutil_peer
     p2p_literals

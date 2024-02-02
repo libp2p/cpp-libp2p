@@ -15,7 +15,55 @@
 #include <libp2p/outcome/outcome.hpp>
 #include <span>
 
-namespace libp2p::transport::detail {
+namespace libp2p::transport::detail
+{
+  template<typename T> // boost::asio::ip::tcp i.e.
+  inline outcome::result<T> makeEndpointImpl( const multi::Multiaddress& ma )
+  {
+       using P = multi::Protocol::Code;
+    using namespace boost::asio;  // NOLINT
+
+    try {
+      auto v = ma.getProtocolsWithValues();
+      auto it = v.begin();
+      if (it->first.code != P::IP4 && it->first.code != P::IP6) {
+        return std::errc::address_family_not_supported;
+      }
+
+      auto addr = ip::make_address(it->second);
+      ++it;
+
+      if constexpr ( std::is_same_v<T,boost::asio::ip::tcp> )
+      {  if(it->first.code != P::TCP) 
+          return std::errc::address_family_not_supported;
+      } else if (std::is_same_v<T, boost::asio::ip::udp> )
+      {
+        if( auto _code = it->first.code; _code != P::UDP || _code!=P::QUIC ) 
+          return std::errc::address_family_not_supported;
+      }
+      
+
+      auto port = boost::lexical_cast<uint16_t>(it->second);
+
+      return T{addr, port};
+    } catch (const boost::system::system_error &e) {
+      return e.code();
+    } catch (const boost::bad_lexical_cast & /* ignored */) {
+      return multi::Multiaddress::Error::INVALID_PROTOCOL_VALUE;
+    }
+  }
+
+
+  inline outcome::result<boost::asio::ip::udp::endpoint> makeUdpEndpoint(
+      const multi::Multiaddress &ma) {
+ return makeEndpointImpl<boost::asio::ip::udp::endpoint>( ma);
+  }
+
+  inline outcome::result<boost::asio::ip::tcp::endpoint> makeTcpEndpoint(
+      const multi::Multiaddress &ma) {
+ return makeEndpointImpl<boost::asio::ip::tcp::endpoint>( ma);
+  }
+
   template <typename T>
   inline outcome::result<multi::Multiaddress> makeAddress(
       T &&endpoint,
@@ -33,7 +81,12 @@ namespace libp2p::transport::detail {
         s << "/ip6/" << address.to_v6().to_string();
       }
 
-      s << "/tcp/" << port;
+      if constexpr( std::is_same_v<T,boost::asio::ip::tcp> )
+      {  s << "/tcp/" << port;}
+      else if ( std::is_same_v<T,boost::asio::ip::udp> )
+      {
+          s<<"/quic/" << port; // udp would be pointless because unreliable
+      }
 
       if (layers != nullptr and not layers->empty()) {
         auto &protocol = layers->at(0).first.code;
@@ -78,12 +131,23 @@ namespace libp2p::transport::detail {
     //  Issue: https://github.com/libp2p/cpp-libp2p/issues/97
   }
 
+    inline bool supportsIpQuic(const multi::Multiaddress &ma) {
+    using P = multi::Protocol::Code;
+    return (ma.hasProtocol(P::IP4) || ma.hasProtocol(P::IP6)
+            || ma.hasProtocol(P::DNS4) || ma.hasProtocol(P::DNS6)
+            || ma.hasProtocol(P::DNS))
+        && ma.hasProtocol(P::QUIC);
+
+    // TODO(xDimon): Support 'DNSADDR' addresses.
+    //  Issue: https://github.com/libp2p/cpp-libp2p/issues/97
+  }
+
   inline auto getFirstProtocol(const multi::Multiaddress &ma) {
     return ma.getProtocolsWithValues().front().first.code;
   }
 
   // Obtain host and port strings from provided address
-  inline std::pair<std::string, std::string> getHostAndTcpPort(
+  inline std::pair<std::string, std::string> getHostAndPort(
       const multi::Multiaddress &address) {
     auto v = address.getProtocolsWithValues();
 
@@ -93,7 +157,8 @@ namespace libp2p::transport::detail {
 
     // get port
     it++;
-    BOOST_ASSERT(it->first.code == multi::Protocol::Code::TCP);
+    BOOST_ASSERT(it->first.code == multi::Protocol::Code::TCP
+    || it->first.code == multi::Protocol::Code::QUIC );
     auto port = it->second;
 
     return {host, port};
@@ -114,32 +179,5 @@ namespace libp2p::transport::detail {
     return {begin, end};
   }
 
-  inline outcome::result<boost::asio::ip::tcp::endpoint> makeEndpoint(
-      const multi::Multiaddress &ma) {
-    using P = multi::Protocol::Code;
-    using namespace boost::asio;  // NOLINT
-
-    try {
-      auto v = ma.getProtocolsWithValues();
-      auto it = v.begin();
-      if (it->first.code != P::IP4 && it->first.code != P::IP6) {
-        return std::errc::address_family_not_supported;
-      }
-
-      auto addr = ip::make_address(it->second);
-      ++it;
-
-      if (it->first.code != P::TCP) {
-        return std::errc::address_family_not_supported;
-      }
-
-      auto port = boost::lexical_cast<uint16_t>(it->second);
-
-      return ip::tcp::endpoint{addr, port};
-    } catch (const boost::system::system_error &e) {
-      return e.code();
-    } catch (const boost::bad_lexical_cast & /* ignored */) {
-      return multi::Multiaddress::Error::INVALID_PROTOCOL_VALUE;
-    }
-  }
+  
 }  // namespace libp2p::transport::detail

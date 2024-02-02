@@ -23,5 +23,6 @@ target_link_libraries(p2p_yamuxed_connection
     p2p_peer_id
     p2p_read_buffer
     p2p_write_queue
+    p2p_basic_scheduler
     p2p_connection_error
     )

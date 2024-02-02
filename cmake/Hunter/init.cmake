@@ -28,6 +28,9 @@ set(
     "Binary cache server"
 )
 
+set(HUNTER_BUILD_SHARED_LIBS 1) # to build everything SHARED
+#set(HUNTER_foo_CMAKE_ARGS <PACKAGE_ARGS> )  # to apply flags only to foo package
+
 include(${CMAKE_CURRENT_LIST_DIR}/HunterGate.cmake)
 
 HunterGate(

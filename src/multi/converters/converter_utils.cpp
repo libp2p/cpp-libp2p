@@ -103,6 +103,7 @@ namespace libp2p::multi::converters {
       case Protocol::Code::TCP:
         return TcpConverter::addressToBytes(addr);
       case Protocol::Code::UDP:
+      case Protocol::Code::QUIC:
         return UdpConverter::addressToBytes(addr);
       case Protocol::Code::P2P:
         return IpfsConverter::addressToBytes(addr);
@@ -118,8 +119,7 @@ namespace libp2p::multi::converters {
 
       case Protocol::Code::IP6_ZONE:
       case Protocol::Code::ONION3:
-      case Protocol::Code::GARLIC64:
-      case Protocol::Code::QUIC:
+      case Protocol::Code::GARLIC64:      
       case Protocol::Code::WS:
       case Protocol::Code::WSS:
       case Protocol::Code::P2P_WEBSOCKET_STAR:
@@ -245,6 +245,7 @@ namespace libp2p::multi::converters {
             }
 
             case Protocol::Code::TCP:
+            case Protocol::Code::QUIC:
             case Protocol::Code::UDP: {
               // Add port
               results += "/";
@@ -252,7 +253,7 @@ namespace libp2p::multi::converters {
               break;
             }
 
-            case Protocol::Code::QUIC:
+            
             case Protocol::Code::WS:
             case Protocol::Code::WSS:
               // No details

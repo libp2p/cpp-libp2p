@@ -37,5 +37,6 @@ libp2p_add_library(p2p_crypto_common
     common_functions.cpp
     )
 target_link_libraries(p2p_crypto_common
-    p2p_crypto_error
+    p2p_crypto_error   
     )
+target_include_directories(p2p_crypto_common PUBLIC ${OPEN_SSL_INCLUDE_DIR} )

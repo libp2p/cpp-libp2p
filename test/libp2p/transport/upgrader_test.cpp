@@ -13,7 +13,7 @@
 #include "libp2p/multi/multiaddress.hpp"
 #include "libp2p/multi/multiaddress_protocol_list.hpp"
 #include "libp2p/multi/multihash.hpp"
-#include "libp2p/transport/tcp/tcp_util.hpp"
+#include "libp2p/transport/impl/util.hpp"
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/layer_connection_mock.hpp"
 #include "mock/libp2p/connection/raw_connection_mock.hpp"

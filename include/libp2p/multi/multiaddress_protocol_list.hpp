@@ -149,7 +149,7 @@ namespace libp2p::multi {
         {Protocol::Code::ONION, 96, "onion"},
         {Protocol::Code::ONION3, 296, "onion3"},
         {Protocol::Code::GARLIC64, Protocol::kVarLen, "garlic64"},
-        {Protocol::Code::QUIC, 0, "quic"},
+        {Protocol::Code::QUIC, 16, "quic"},
         {Protocol::Code::HTTP, 0, "http"},
         {Protocol::Code::HTTPS, 0, "https"},
         {Protocol::Code::WS, 0, "ws"},

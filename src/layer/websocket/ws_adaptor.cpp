@@ -7,7 +7,7 @@
 #include <libp2p/layer/websocket/ws_adaptor.hpp>
 
 #include <libp2p/log/logger.hpp>
-#include <libp2p/transport/tcp/tcp_util.hpp>
+#include <libp2p/transport/impl/util.hpp>
 
 namespace libp2p::layer {
 
@@ -44,7 +44,7 @@ namespace libp2p::layer {
       const multi::Multiaddress &address,
       std::shared_ptr<connection::LayerConnection> conn,
       LayerAdaptor::LayerConnCallbackFunc cb) const {
-    auto host = transport::detail::getHostAndTcpPort(address).first;
+    auto host = transport::detail::getHostAndPort(address).first;
     auto ws = std::make_shared<connection::WsConnection>(
         config_, io_context_, std::move(conn), scheduler_);
     ws->ws_.async_handshake(

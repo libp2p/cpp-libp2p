@@ -15,3 +15,4 @@ target_link_libraries(p2p_tls
     p2p_logger
     p2p_security_error
     )
+target_include_directories(p2p_tls PUBLIC ${OPEN_SSL_INCLUDE_DIR})

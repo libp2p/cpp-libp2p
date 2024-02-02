@@ -8,7 +8,7 @@
 
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
-#include <libp2p/transport/tcp/tcp_util.hpp>
+#include <libp2p/transport/impl/util.hpp>
 
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>

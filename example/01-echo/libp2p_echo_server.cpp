@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <ranges>
 
 #include <libp2p/common/literals.hpp>
 #include <libp2p/host/basic_host.hpp>
@@ -68,10 +69,55 @@ int main(int argc, char **argv) {
     return std::find(args.begin(), args.end(), arg) != args.end();
   };
 
+   auto get_arg = [&](const std::string_view arg) ->std::optional<std::string_view> 
+    {
+    auto args = std::span(argv, argc).subspan(1);
+    auto match = std::ranges::find_if(args,
+    [&arg]( const std::string_view& token )
+    { return token.find(arg) != std::string::npos; } );
+
+    if(match == args.end() )
+    {
+      return std::nullopt;
+    } else if( *match == arg) // perfect match (no '=') -> value must be next token
+    {
+      return *(++match);
+    } else 
+    {
+      auto pos = std::string_view(*match).find("=");
+      return std::string_view(*match).substr(pos+1);
+    }
+    }; 
+
+    auto arg_eq = [&](const std::string_view& key, const std::string_view& test)
+    {
+      if(const auto& val = get_arg(key); val)
+      {
+        return *val == test;
+      } 
+      return false;
+    };
+
+    auto get_arg_or = [&](const std::string_view& key,
+                          const std::string_view &default_val)
+    {
+        if(const auto& val = get_arg(key); val )
+        {
+          return *val;
+        }else
+        {return default_val;
+        }
+    };
+
   if (has_arg("-h") or has_arg("--help")) {
     fmt::print("Options:\n");
     fmt::print("  -h, --help\n");
     fmt::print("    Print help\n");
+    fmt::print("  -l3proto=ip6|ip4\n");
+    fmt::print("  -l4proto=tcp|quic\n");
+    fmt::print("  -ca_path\n");
+    fmt::print("  -cert_path\n");
+    fmt::print("  -key_path\n");
     fmt::print("  -insecure\n");
     fmt::print("    Use plaintext protocol instead of noise\n");
     fmt::print("  --ws\n");
@@ -121,9 +167,27 @@ int main(int argc, char **argv) {
     log->info("Starting in secure mode");
   }
 
+  std::string_view key_path;
+  std::string_view cert_path ;
+
+if(arg_eq("l4proto","quic"))
+{  try{ 
+    key_path = *get_arg("key_path");
+    cert_path = *get_arg("cert_path") ;
+  }catch(const std::exception & e)
+  {
+    std::cout << "invalid key or cert path" << std::endl;
+    exit(1);
+
+  }
+}
+
   auto injector = libp2p::injector::makeHostInjector(
-      libp2p::injector::useKeyPair(keypair),
-      libp2p::injector::useSecurityAdaptors<SecureAdaptorProxy>(),
+ //   libp2p::injector::useQuicConfig( key_path ,cert_path, *get_arg("ca_path") ),
+ //   libp2p::injector::useKeyPairPEM(key_path,cert_path),
+      libp2p::injector::useKeyPair(keypair)
+
+      ,libp2p::injector::useSecurityAdaptors<SecureAdaptorProxy>(),
       libp2p::injector::useWssPem(R"(
 -----BEGIN CERTIFICATE-----
 MIIBODCB3qADAgECAghv+C53VY1w3TAKBggqhkjOPQQDAjAUMRIwEAYDVQQDDAls
@@ -163,11 +227,16 @@ dPtse4GVRA2swbXcZX5iFVi/V8poIpdVrgn5iMadkQnYf9APWJuGcebK
                              echo.handle(std::move(stream));
                            });
 
-  std::string _ma = "/ip4/127.0.0.1/tcp/40010";
+  std::string _ma = fmt::format("/{}/127.0.0.1/{}/40010",
+    get_arg_or("l3proto","ip4"),  get_arg_or("l4proto","quic") );
+
+  if( arg_eq("l4proto","tcp") ) // no websocket on top of quic ?!
+  {
   if (has_arg("--wss")) {
     _ma += "/wss";
   } else if (has_arg("--ws")) {
     _ma += "/ws";
+  }
   }
   auto ma = libp2p::multi::Multiaddress::create(_ma).value();
 

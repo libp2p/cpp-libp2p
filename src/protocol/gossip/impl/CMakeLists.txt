@@ -26,5 +26,6 @@ target_link_libraries(p2p_gossip
     subscription
     p2p_peer_id
     p2p_cid
+    p2p_basic_scheduler
     p2p_gossip_proto
     )

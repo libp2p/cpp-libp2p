@@ -31,7 +31,7 @@ namespace libp2p::transport {
 
     auto conn = std::make_shared<TcpConnection>(*context_);
 
-    auto [host, port] = detail::getHostAndTcpPort(address);
+    auto [host, port] = detail::getHostAndPort(address);
 
     auto layers = detail::getLayers(address);
 

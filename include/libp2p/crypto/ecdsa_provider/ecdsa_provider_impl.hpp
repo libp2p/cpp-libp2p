@@ -46,7 +46,7 @@ namespace libp2p::crypto::ecdsa {
     template <typename KeyType>
     outcome::result<KeyType> convertEcKeyToBytes(
         const std::shared_ptr<EC_KEY> &ec_key,
-        int (*converter)(EC_KEY *, uint8_t **)) const;
+        int (*converter)(const EC_KEY *, uint8_t **)) const;
 
     /**
      * @brief Convert bytes to EC_KEY
