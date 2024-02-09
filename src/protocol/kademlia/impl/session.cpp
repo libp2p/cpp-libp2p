@@ -7,6 +7,7 @@
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 
 #include <libp2p/basic/varint_reader.hpp>
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/protocol/kademlia/error.hpp>
 #include <libp2p/protocol/kademlia/impl/find_peer_executor.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
@@ -61,15 +62,14 @@ namespace libp2p::protocol::kademlia {
 
     ++writing_;
 
-    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-    stream_->write(*buffer,
-                   buffer->size(),
-                   [wp = weak_from_this(), buffer, response_handler](
-                       outcome::result<size_t> result) {
-                     if (auto self = wp.lock()) {
-                       self->onMessageWritten(result, response_handler);
-                     }
-                   });
+    writeReturnSize(stream_,
+                    *buffer,
+                    [wp = weak_from_this(), buffer, response_handler](
+                        outcome::result<size_t> result) {
+                      if (auto self = wp.lock()) {
+                        self->onMessageWritten(result, response_handler);
+                      }
+                    });
 
     setResponseTimeout(response_handler);
     return true;

@@ -8,7 +8,6 @@
 #include "tls_details.hpp"
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 
 namespace libp2p::connection {
@@ -142,7 +141,7 @@ namespace libp2p::connection {
     return [cb{std::move(cb)}, conn{conn.shared_from_this()}](auto &&ec,
                                                               auto &&result) {
       if (ec) {
-        SL_DEBUG(log(), "connection async op error {}", ec.message());
+        SL_DEBUG(log(), "connection async op error {}", ec);
         std::ignore = conn->close();
         return cb(ec);
       }
@@ -169,14 +168,6 @@ namespace libp2p::connection {
   void TlsConnection::deferReadCallback(outcome::result<size_t> res,
                                         Reader::ReadCallbackFunc cb) {
     original_connection_->deferReadCallback(res, std::move(cb));
-  }
-
-  void TlsConnection::write(BytesIn in,
-                            size_t bytes,
-                            Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
-    SL_TRACE(log(), "writing {} bytes", bytes);
-    writeReturnSize(shared_from_this(), in, std::move(cb));
   }
 
   void TlsConnection::writeSome(BytesIn in,

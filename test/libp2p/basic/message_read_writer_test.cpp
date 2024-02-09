@@ -72,7 +72,7 @@ ACTION_P2(CheckWrite, buf, varint) {
 }
 
 TEST_F(MessageReadWriterTest, Write) {
-  EXPECT_CALL(*conn_mock_, write(_, kMsgLength + 1, _))
+  EXPECT_CALL(*conn_mock_, writeSome(_, kMsgLength + 1, _))
       .WillOnce(CheckWrite(msg_with_varint_bytes_, len_varint_));
 
   msg_rw_->write(msg_bytes_, [this](auto &&res) {

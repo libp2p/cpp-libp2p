@@ -65,7 +65,7 @@ TEST(EchoTest, Server) {
       .WillOnce(Arg0CallbackWithArg(outcome::success()));
 
   EXPECT_CALL(*stream, readSome(_, _, _)).WillOnce(SetReadMsg(msg));
-  EXPECT_CALL(*stream, write(_, _, _)).WillOnce(WriteMsgAssertEqual(msg));
+  EXPECT_CALL(*stream, writeSome(_, _, _)).WillOnce(WriteMsgAssertEqual(msg));
 
   echo.handle(StreamAndProtocol{stream, {}});
 }
@@ -82,7 +82,7 @@ TEST(EchoTest, DISABLED_Client) {
 
   EXPECT_CALL(*stream, isClosedForWrite()).WillOnce(Return(false));
 
-  EXPECT_CALL(*stream, write(_, _, _)).WillOnce(WriteMsgAssertEqual(msg));
+  EXPECT_CALL(*stream, writeSome(_, _, _)).WillOnce(WriteMsgAssertEqual(msg));
   EXPECT_CALL(*stream, readSome(_, _, _)).WillOnce(WriteMsgAssertEqual(msg));
 
   bool executed = false;

@@ -8,6 +8,7 @@
 
 #include <generated/security/secio/protobuf/secio.pb.h>
 #include <libp2p/basic/protobuf_message_read_writer.hpp>
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/security/error.hpp>
 #include <libp2p/security/secio/secio_connection.hpp>
@@ -254,9 +255,9 @@ namespace libp2p::security {
               local_stretched_key,
               remote_stretched_key);
           SECIO_OUTCOME_VOID_TRY(secio_conn->init(), conn, cb)
-          secio_conn->write(
+          writeReturnSize(
+              secio_conn,
               self->remote_peer_rand_,
-              self->remote_peer_rand_.size(),
               [self, conn, cb, secio_conn](auto &&write_res) {
                 SECIO_OUTCOME_TRY(written_bytes, write_res, conn, cb)
                 if (written_bytes != self->remote_peer_rand_.size()) {

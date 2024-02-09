@@ -195,7 +195,7 @@ dPtse4GVRA2swbXcZX5iFVi/V8poIpdVrgn5iMadkQnYf9APWJuGcebK
     io_context->run();
     std::exit(EXIT_SUCCESS);
   } catch (const boost::system::error_code &ec) {
-    log->error("Server cannot run: {}", ec.message());
+    log->error("Server cannot run: {}", ec);
     std::exit(EXIT_FAILURE);
   } catch (...) {
     log->error("Unknown error happened");

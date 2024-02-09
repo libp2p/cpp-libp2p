@@ -7,7 +7,6 @@
 #include <libp2p/connection/loopback_stream.hpp>
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 
 namespace libp2p::connection {
@@ -83,13 +82,6 @@ namespace libp2p::connection {
                             libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     readReturnSize(shared_from_this(), out, std::move(cb));
-  }
-
-  void LoopbackStream::write(BytesIn in,
-                             size_t bytes,
-                             libp2p::basic::Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
-    writeReturnSize(shared_from_this(), in, std::move(cb));
   }
 
   void LoopbackStream::writeSome(BytesIn in,

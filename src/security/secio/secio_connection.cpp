@@ -309,13 +309,6 @@ namespace libp2p::connection {
         });
   }
 
-  void SecioConnection::write(BytesIn in,
-                              size_t bytes,
-                              basic::Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
-    writeReturnSize(shared_from_this(), in, std::move(cb));
-  }
-
   void SecioConnection::writeSome(BytesIn in,
                                   size_t bytes,
                                   basic::Writer::WriteCallbackFunc cb) {
@@ -350,7 +343,7 @@ namespace libp2p::connection {
           }
           user_cb(bytes);
         };
-    original_connection_->write(frame_buffer, frame_buffer.size(), cb_wrapper);
+    writeReturnSize(original_connection_, frame_buffer, cb_wrapper);
   }
 
   bool SecioConnection::isClosed() const {

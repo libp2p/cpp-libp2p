@@ -8,6 +8,8 @@
 
 #include <boost/assert.hpp>
 
+#include <libp2p/basic/write_return_size.hpp>
+
 namespace libp2p::protocol {
 
   ServerEchoSession::ServerEchoSession(
@@ -81,9 +83,9 @@ namespace libp2p::protocol {
         // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
         buf_.begin() + size);
     BytesIn span = write_buf;
-    stream_->write(
+    writeReturnSize(
+        stream_,
         span,
-        size,
         [self{shared_from_this()}, write_buf{std::move(write_buf)}](
             outcome::result<size_t> rwrite) { self->onWrite(rwrite); });
   }

@@ -9,6 +9,7 @@
 #include <cassert>
 
 #include <libp2p/basic/varint_reader.hpp>
+#include <libp2p/basic/write_return_size.hpp>
 
 #include "message_parser.hpp"
 #include "peer_context.hpp"
@@ -155,16 +156,15 @@ namespace libp2p::protocol::gossip {
   void Stream::beginWrite(SharedBuffer buffer) {
     assert(buffer);
 
-    const auto *data = buffer->data();
     writing_bytes_ = buffer->size();
 
     TRACE("writing {} bytes to {}:{}", writing_bytes_, peer_->str, stream_id_);
 
     // clang-format off
-    stream_->write(
-        std::span(data, ssize_t(writing_bytes_)),
-        writing_bytes_,
-
+    BytesIn span{*buffer};
+    writeReturnSize(
+        stream_,
+        span,
         [self_wptr = weak_from_this(), this, buffer = std::move(buffer)]
             (outcome::result<size_t> result)
         {

@@ -7,6 +7,7 @@
 #include <libp2p/security/plaintext/plaintext_connection.hpp>
 
 #include <gtest/gtest.h>
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/literals.hpp>
 #include <testutil/outcome.hpp>
 #include "mock/libp2p/connection/layer_connection_mock.hpp"
@@ -152,9 +153,9 @@ TEST_F(PlaintextConnectionTest, ReadSome) {
  */
 TEST_F(PlaintextConnectionTest, Write) {
   const int size = 100;
-  EXPECT_CALL(*connection_, write(_, _, _)).WillOnce(AsioSuccess(size));
+  EXPECT_CALL(*connection_, writeSome(_, _, _)).WillOnce(AsioSuccess(size));
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
-  secure_connection_->write(*buf, size, [size, buf](auto &&res) {
+  libp2p::writeReturnSize(secure_connection_, *buf, [size, buf](auto &&res) {
     EXPECT_OUTCOME_TRUE_1(res);
     ASSERT_EQ(res.value(), size);
   });

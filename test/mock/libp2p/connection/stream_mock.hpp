@@ -27,7 +27,6 @@ namespace libp2p::connection {
 
     MOCK_METHOD3(read, void(BytesOut, size_t, Reader::ReadCallbackFunc));
     MOCK_METHOD3(readSome, void(BytesOut, size_t, Reader::ReadCallbackFunc));
-    MOCK_METHOD3(write, void(BytesIn, size_t, Writer::WriteCallbackFunc));
     MOCK_METHOD3(writeSome, void(BytesIn, size_t, Writer::WriteCallbackFunc));
 
     MOCK_METHOD2(deferReadCallback,

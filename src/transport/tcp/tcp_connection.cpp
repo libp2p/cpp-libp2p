@@ -7,7 +7,6 @@
 #include <libp2p/transport/tcp/tcp_connection.hpp>
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/transport/tcp/tcp_util.hpp>
 
@@ -228,14 +227,6 @@ namespace libp2p::transport {
     TRACE("{} read some up to {}", debug_str_, bytes);
     socket_.async_read_some(detail::makeBuffer(out, bytes),
                             closeOnError(*this, std::move(cb)));
-  }
-
-  void TcpConnection::write(BytesIn in,
-                            size_t bytes,
-                            TcpConnection::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
-    TRACE("{} write {}", debug_str_, bytes);
-    writeReturnSize(shared_from_this(), in, std::move(cb));
   }
 
   void TcpConnection::writeSome(BytesIn in,

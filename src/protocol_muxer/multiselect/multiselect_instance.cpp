@@ -8,6 +8,7 @@
 
 #include <cctype>
 
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/trace.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
@@ -129,17 +130,16 @@ namespace libp2p::protocol_muxer::multiselect {
 
     auto span = BytesIn(*packet);
 
-    connection_->write(
-        span,
-        span.size(),
-        [wptr = weak_from_this(),
-         round = current_round_,
-         packet = std::move(packet)](outcome::result<size_t> res) {
-          auto self = wptr.lock();
-          if (self && self->current_round_ == round) {
-            self->onDataWritten(res);
-          }
-        });
+    writeReturnSize(connection_,
+                    span,
+                    [wptr = weak_from_this(),
+                     round = current_round_,
+                     packet = std::move(packet)](outcome::result<size_t> res) {
+                      auto self = wptr.lock();
+                      if (self && self->current_round_ == round) {
+                        self->onDataWritten(res);
+                      }
+                    });
 
     is_writing_ = true;
   }

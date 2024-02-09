@@ -7,6 +7,7 @@
 #include <libp2p/protocol/ping/ping_client_session.hpp>
 
 #include <boost/assert.hpp>
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/protocol/ping/common.hpp>
 
 namespace libp2p::protocol {
@@ -52,13 +53,12 @@ namespace libp2p::protocol {
         },
         config_.timeout);
 
-    auto rand_buf = rand_gen_->randomBytes(config_.message_size);
-    std::move(rand_buf.begin(), rand_buf.end(), write_buffer_.begin());
-    stream_->write(write_buffer_,
-                   config_.message_size,
-                   [self{shared_from_this()}](outcome::result<size_t> r) {
-                     self->writeCompleted(r);
-                   });
+    write_buffer_ = rand_gen_->randomBytes(config_.message_size);
+    writeReturnSize(stream_,
+                    write_buffer_,
+                    [self{shared_from_this()}](outcome::result<size_t> r) {
+                      self->writeCompleted(r);
+                    });
   }
 
   void PingClientSession::writeCompleted(outcome::result<size_t> r) {

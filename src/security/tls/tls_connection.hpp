@@ -90,9 +90,6 @@ namespace libp2p::connection {
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 
-    /// Async writes exactly the # of bytes given
-    void write(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
-
     /// Async writes up to the # of bytes given
     void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 

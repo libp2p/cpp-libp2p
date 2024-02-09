@@ -11,6 +11,7 @@
 
 #include <boost/beast.hpp>
 
+#include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/injector/kademlia_injector.hpp>
 #include <libp2p/log/configurator.hpp>
@@ -69,9 +70,9 @@ class Session : public std::enable_shared_from_this<Session> {
       return false;
     }
 
-    stream_->write(
+    libp2p::writeReturnSize(
+        stream_,
         *buffer,
-        buffer->size(),
         [self = shared_from_this(), buffer](outcome::result<size_t> result) {
           if (not result) {
             self->close();
