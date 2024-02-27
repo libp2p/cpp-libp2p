@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include <libp2p/basic/read_buffer.hpp>
 #include <libp2p/basic/write_queue.hpp>
 #include <libp2p/common/metrics/instance_count.hpp>

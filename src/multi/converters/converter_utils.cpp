@@ -22,13 +22,55 @@
 #include <libp2p/multi/multibase_codec/codecs/base58.hpp>
 #include <libp2p/multi/uvarint.hpp>
 
-// TODO(turuslan): qtils
+// TODO(turuslan): qtils, https://github.com/qdrvm/kagome/issues/1813
 namespace qtils {
   inline std::string_view byte2str(const libp2p::BytesIn &s) {
     // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const char *>(s.data()), s.size()};
   }
 }  // namespace qtils
+
+// https://github.com/multiformats/rust-multiaddr/blob/3c7e813c3b1fdd4187a9ca9ff67e10af0e79231d/src/protocol.rs#L613-L622
+inline void percentEncode(std::string &out, std::string_view str) {
+  constexpr uint32_t mask[4]{0xffffffff, 0xd000802d, 0x00000000, 0xa8000001};
+  for (auto &c : str) {
+    if ((mask[c / 32] & (1 << (c % 32))) != 0) {
+      fmt::format_to(std::back_inserter(out), "%{:02X}", c);
+    } else {
+      out += c;
+    }
+  }
+}
+
+// https://github.com/multiformats/rust-multiaddr/blob/3c7e813c3b1fdd4187a9ca9ff67e10af0e79231d/src/protocol.rs#L203-L212
+inline std::string percentDecode(std::string_view str) {
+  auto f = [&](char c) -> std::optional<uint8_t> {
+    if (c >= '0' && c <= '9') {
+      return c - '0';
+    }
+    if (c >= 'A' && c <= 'F') {
+      return c - 'A' + 10;
+    }
+    if (c >= 'a' && c <= 'f') {
+      return c - 'a' + 10;
+    }
+    return std::nullopt;
+  };
+  std::string out;
+  while (not str.empty()) {
+    if (str[0] == '%' and str.size() >= 3) {
+      auto x1 = f(str[1]), x2 = f(str[2]);
+      if (x1 and x2) {
+        out += (*x1 << 4) | *x2;
+        str.remove_prefix(3);
+        continue;
+      }
+    }
+    out += str[0];
+    str.remove_prefix(1);
+  }
+  return out;
+}
 
 namespace libp2p::multi::converters {
 
@@ -115,9 +157,10 @@ namespace libp2p::multi::converters {
       case Protocol::Code::DNS6:
       case Protocol::Code::DNS_ADDR:
       case Protocol::Code::UNIX:
+        return DnsConverter::addressToBytes(addr);
       case Protocol::Code::X_PARITY_WS:
       case Protocol::Code::X_PARITY_WSS:
-        return DnsConverter::addressToBytes(addr);
+        return DnsConverter::addressToBytes(percentDecode(addr));
 
       case Protocol::Code::IP6_ZONE:
       case Protocol::Code::ONION3:
@@ -198,9 +241,7 @@ namespace libp2p::multi::converters {
         case Protocol::Code::X_PARITY_WSS: {
           OUTCOME_TRY(data, read_uvar());
           results += "/";
-          // TODO(turuslan): percent encoding
-          // https://github.com/multiformats/rust-multiaddr/blob/3c7e813c3b1fdd4187a9ca9ff67e10af0e79231d/src/protocol.rs#L613-L622
-          results += qtils::byte2str(data);
+          percentEncode(results, qtils::byte2str(data));
           break;
         }
 

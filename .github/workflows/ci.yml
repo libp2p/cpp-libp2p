@@ -47,6 +47,8 @@ jobs:
         CXX: ${{ matrix.compiler.cxx }}
       run: cmake . -Bbuild
     - name: build
+      env:
+        CURL_SSL_BACKEND: SecureTransport
       run: cmake --build build -- -j4
     - name: test
       env:
