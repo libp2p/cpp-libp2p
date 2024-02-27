@@ -181,15 +181,14 @@ namespace libp2p::network {
   void ListenerManagerImpl::onConnection(
       outcome::result<std::shared_ptr<connection::CapableConnection>> rconn) {
     if (!rconn) {
-      log()->warn("can not accept valid connection, {}",
-                  rconn.error().message());
+      log()->warn("can not accept valid connection, {}", rconn.error());
       return;  // ignore
     }
     auto &&conn = rconn.value();
 
     auto rid = conn->remotePeer();
     if (!rid) {
-      log()->warn("can not get remote peer id, {}", rid.error().message());
+      log()->warn("can not get remote peer id, {}", rid.error());
       return;  // ignore
     }
     auto &&id = rid.value();
@@ -198,7 +197,7 @@ namespace libp2p::network {
     conn->onStream(
         [this](outcome::result<std::shared_ptr<connection::Stream>> rstream) {
           if (!rstream) {
-            log()->warn("can not accept stream, {}", rstream.error().message());
+            log()->warn("can not accept stream, {}", rstream.error());
             return;  // ignore
           }
           auto &&stream = rstream.value();
@@ -221,7 +220,7 @@ namespace libp2p::network {
 
                 if (!rproto) {
                   log()->warn("can not negotiate protocols, {}",
-                              rproto.error().message());
+                              rproto.error());
                   success = false;
                 } else {
                   auto &&proto = rproto.value();
@@ -229,7 +228,7 @@ namespace libp2p::network {
                   auto rhandle = this->router_->handle(proto, stream);
                   if (!rhandle) {
                     log()->warn("no protocol handler found, {}",
-                                rhandle.error().message());
+                                rhandle.error());
                     success = false;
                   }
                 }

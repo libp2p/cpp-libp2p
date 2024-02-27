@@ -56,13 +56,14 @@ namespace libp2p::multi {
       const ContentIdentifier &cid) {
     std::vector<uint8_t> bytes;
     if (cid.version == ContentIdentifier::Version::V1) {
+      auto append = [&](BytesIn x) {
+        bytes.insert(bytes.end(), x.begin(), x.end());
+      };
       UVarint version(static_cast<uint64_t>(cid.version));
-      common::append(bytes, version.toBytes());
+      append(version.toBytes());
       UVarint type(static_cast<uint64_t>(cid.content_type));
-      common::append(bytes, type.toBytes());
-      const auto &hash = cid.content_address.toBuffer();
-      common::append(bytes, hash);
-
+      append(type.toBytes());
+      append(cid.content_address.toBuffer());
     } else if (cid.version == ContentIdentifier::Version::V0) {
       if (cid.content_type != MulticodecType::Code::DAG_PB) {
         return EncodeError::INVALID_CONTENT_TYPE;
@@ -73,8 +74,7 @@ namespace libp2p::multi {
       if (cid.content_address.getHash().size() != 32) {
         return EncodeError::INVALID_HASH_LENGTH;
       }
-      const auto &hash = cid.content_address.toBuffer();
-      common::append(bytes, hash);
+      bytes = cid.content_address.toBuffer();
     }
     return bytes;
   }

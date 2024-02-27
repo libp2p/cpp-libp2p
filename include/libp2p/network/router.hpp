@@ -6,13 +6,9 @@
 
 #pragma once
 
-#include <functional>
-#include <vector>
-
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/connection/stream_and_protocol.hpp>
 #include <libp2p/event/bus.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/protocol.hpp>
 #include <libp2p/peer/protocol_predicate.hpp>
 #include <libp2p/peer/stream_protocols.hpp>

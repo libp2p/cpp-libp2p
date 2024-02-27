@@ -7,12 +7,10 @@
 #include "libp2p/multi/uvarint.hpp"
 
 #include <gtest/gtest.h>
-#include <span>
+#include <libp2p/common/literals.hpp>
 
-#include <libp2p/common/hexutil.hpp>
-
-using libp2p::common::hex_upper;
 using libp2p::multi::UVarint;
+using libp2p::common::operator""_unhex;
 
 /**
  * @given an unsigned integer
@@ -37,17 +35,17 @@ TEST(UVarint, CreateFromInt) {
  */
 TEST(UVarint, CorrectEncoding) {
   UVarint var(1);
-  ASSERT_EQ(hex_upper(var.toBytes()), "01");
+  ASSERT_EQ(var.toVector(), "01"_unhex);
   var = 127;
-  ASSERT_EQ(hex_upper(var.toBytes()), "7F");
+  ASSERT_EQ(var.toVector(), "7F"_unhex);
   var = 128;
-  ASSERT_EQ(hex_upper(var.toBytes()), "8001");
+  ASSERT_EQ(var.toVector(), "8001"_unhex);
   var = 255;
-  ASSERT_EQ(hex_upper(var.toBytes()), "FF01");
+  ASSERT_EQ(var.toVector(), "FF01"_unhex);
   var = 300;
-  ASSERT_EQ(hex_upper(var.toBytes()), "AC02");
+  ASSERT_EQ(var.toVector(), "AC02"_unhex);
   var = 16384;
-  ASSERT_EQ(hex_upper(var.toBytes()), "808001");
+  ASSERT_EQ(var.toVector(), "808001"_unhex);
 }
 
 /**

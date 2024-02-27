@@ -14,4 +14,4 @@ namespace libp2p::security {
 
 }
 
-OUTCOME_HPP_DECLARE_ERROR(libp2p::security::SecurityError);
+OUTCOME_HPP_DECLARE_ERROR(libp2p::security, SecurityError);

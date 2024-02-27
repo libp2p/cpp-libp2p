@@ -43,7 +43,7 @@ class Pubkey : public testing::TestWithParam<KeyCase<PublicKey>> {
  public:
   void SetUp() override {
     ON_CALL(*validator_, validate(::testing::An<const PublicKey &>()))
-        .WillByDefault(Return(libp2p::outcome::success()));
+        .WillByDefault(Return(outcome::success()));
   }
   std::shared_ptr<KeyValidatorMock> validator_ =
       std::make_shared<KeyValidatorMock>();
@@ -54,7 +54,7 @@ class Privkey : public testing::TestWithParam<KeyCase<PrivateKey>> {
  public:
   void SetUp() override {
     ON_CALL(*validator_, validate(::testing::An<const PrivateKey &>()))
-        .WillByDefault(Return(libp2p::outcome::success()));
+        .WillByDefault(Return(outcome::success()));
   }
 
   std::shared_ptr<KeyValidatorMock> validator_ =

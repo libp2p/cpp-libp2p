@@ -25,6 +25,8 @@ jobs:
         sudo python3 -m pip install scikit-build 
         sudo python3 -m pip install cmake requests gitpython gcovr pyyaml
     - name: run checks
+      env:
+        CURL_SSL_BACKEND: SecureTransport
       run: |
         #!/bin/bash
         LLVM_DIR=/usr/local/Cellar/llvm

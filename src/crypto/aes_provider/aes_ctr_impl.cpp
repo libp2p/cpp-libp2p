@@ -13,7 +13,6 @@
 
 namespace libp2p::crypto::aes {
 
-  using libp2p::Bytes;
   using libp2p::crypto::common::Aes128Secret;
   using libp2p::crypto::common::Aes256Secret;
 

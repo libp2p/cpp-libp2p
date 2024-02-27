@@ -160,7 +160,7 @@ namespace libp2p::security {
     auto derived_pid_res = peer::PeerId::fromPublicKey(in_exchange_msg.second);
     if (!derived_pid_res) {
       log_->error("cannot create a PeerId from the received public key: {}",
-                  derived_pid_res.error().message());
+                  derived_pid_res.error());
       return cb(derived_pid_res.error());
     }
     auto derived_pid = std::move(derived_pid_res.value());
@@ -195,10 +195,10 @@ namespace libp2p::security {
       const std::shared_ptr<libp2p::connection::LayerConnection> &conn,
       const std::error_code &err) const {
     log_->error("error happened while establishing a Plaintext session: {}",
-                err.message());
+                err);
     if (auto close_res = conn->close(); !close_res) {
       log_->error("connection close attempt ended with error: {}",
-                  close_res.error().message());
+                  close_res.error());
     }
   }
 

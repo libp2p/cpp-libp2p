@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include <libp2p/basic/read_buffer.hpp>
 #include <libp2p/basic/write_queue.hpp>
 #include <libp2p/common/metrics/instance_count.hpp>
@@ -152,7 +154,7 @@ namespace libp2p::connection {
     bool fin_sent_ = false;
 
     /// Non zero reason means that stream is closed and the reason of it
-    std::error_code close_reason_;
+    std::optional<std::error_code> close_reason_;
 
     /// Max bytes allowed to send
     size_t window_size_;

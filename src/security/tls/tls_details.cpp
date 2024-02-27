@@ -391,7 +391,7 @@ namespace libp2p::security::tls_details {
       if (!verify_res) {
         log()->info("peer {} verification failed, {}",
                     peer_id.toBase58(),
-                    verify_res.error().message());
+                    verify_res.error());
         return TlsError::TLS_PEER_VERIFY_FAILED;
       }
 

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <string>
 #include <functional>
+#include <string>
 
 #include <boost/asio.hpp>
 
@@ -39,4 +39,4 @@ namespace libp2p::protocol::example::utility {
     bool stopped_ = false;
   };
 
-} //namespace libp2p::protocol::example::utility
+}  // namespace libp2p::protocol::example::utility

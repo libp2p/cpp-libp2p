@@ -96,7 +96,7 @@ namespace libp2p::security {
       SL_DEBUG(log(), "securing inbound connection");
     }
 
-    std::error_code ec;
+    std::optional<std::error_code> ec;
     if (!ssl_context_) {
       auto res = setupContext();
       if (!res) {
@@ -121,7 +121,7 @@ namespace libp2p::security {
     }
 
     if (ec) {
-      io_context_->post([cb, ec] { cb(ec); });  // NOLINT
+      io_context_->post([cb, ec] { cb(*ec); });
     }
   }
 

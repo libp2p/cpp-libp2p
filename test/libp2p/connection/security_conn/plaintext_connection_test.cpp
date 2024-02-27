@@ -124,7 +124,7 @@ TEST_F(PlaintextConnectionTest, Read) {
   EXPECT_CALL(*connection_, read(_, _, _)).WillOnce(AsioSuccess(size));
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
   secure_connection_->read(*buf, size, [size, buf](auto &&res) {
-    ASSERT_TRUE(res) << res.error().message();
+    EXPECT_OUTCOME_TRUE_1(res);
     ASSERT_EQ(res.value(), size);
   });
 }
@@ -141,7 +141,7 @@ TEST_F(PlaintextConnectionTest, ReadSome) {
       .WillOnce(AsioSuccess(smaller /* less than 100 */));
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
   secure_connection_->readSome(*buf, smaller, [smaller, buf](auto &&res) {
-    ASSERT_TRUE(res) << res.error().message();
+    EXPECT_OUTCOME_TRUE_1(res);
     ASSERT_EQ(res.value(), smaller);
   });
 }
@@ -156,7 +156,7 @@ TEST_F(PlaintextConnectionTest, Write) {
   EXPECT_CALL(*connection_, writeSome(_, _, _)).WillOnce(AsioSuccess(size));
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
   libp2p::writeReturnSize(secure_connection_, *buf, [size, buf](auto &&res) {
-    ASSERT_TRUE(res) << res.error().message();
+    EXPECT_OUTCOME_TRUE_1(res);
     ASSERT_EQ(res.value(), size);
   });
 }
@@ -173,7 +173,7 @@ TEST_F(PlaintextConnectionTest, WriteSome) {
       .WillOnce(AsioSuccess(smaller /* less than 100 */));
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
   secure_connection_->writeSome(*buf, smaller, [smaller, buf](auto &&res) {
-    ASSERT_TRUE(res) << res.error().message();
+    EXPECT_OUTCOME_TRUE_1(res);
     ASSERT_EQ(res.value(), smaller);
   });
 }

@@ -9,13 +9,11 @@
 #include <chrono>
 #include <functional>
 #include <memory>
-#include <system_error>
 
 #include <libp2p/basic/adaptor.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/event/emitter.hpp>
 #include <libp2p/multi/multiaddress.hpp>
-#include <libp2p/outcome/outcome.hpp>  // for outcome::result
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/transport/transport_listener.hpp>
 

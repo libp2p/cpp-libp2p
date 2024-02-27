@@ -9,7 +9,6 @@
 #include <libp2p/basic/adaptor.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/connection/stream_and_protocol.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::protocol {
 

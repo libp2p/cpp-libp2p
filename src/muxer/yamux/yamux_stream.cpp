@@ -86,7 +86,7 @@ namespace libp2p::connection {
   }
 
   bool YamuxStream::isClosed() const noexcept {
-    return close_reason_.value() != 0;
+    return close_reason_.has_value();
   }
 
   void YamuxStream::close(VoidResultHandlerFunc cb) {
@@ -95,7 +95,7 @@ namespace libp2p::connection {
         feedback_.deferCall([wptr{weak_from_this()}, cb{std::move(cb)}] {
           auto self = wptr.lock();
           if (self) {
-            cb(self->close_reason_);
+            cb(*self->close_reason_);
           }
         });
       }
@@ -120,7 +120,7 @@ namespace libp2p::connection {
     if (!close_reason_) {
       close_reason_ = Error::STREAM_CLOSED_BY_HOST;
     } else if (close_reason_ != Error::STREAM_CLOSED_BY_HOST) {
-      p.second = close_reason_;
+      p.second = *close_reason_;
     }
     if (close_cb_) {
       p.first.swap(close_cb_);
@@ -144,7 +144,7 @@ namespace libp2p::connection {
 
   void YamuxStream::adjustWindowSize(uint32_t new_size,
                                      VoidResultHandlerFunc cb) {
-    std::error_code ec = close_reason_;
+    auto ec = close_reason_;
     if (!ec) {
       if (!is_readable_) {
         ec = Error::STREAM_NOT_READABLE;
@@ -174,7 +174,7 @@ namespace libp2p::connection {
         if (!ec) {
           cb(outcome::success());
         } else {
-          cb(ec);
+          cb(*ec);
         }
       });
     }
@@ -217,9 +217,6 @@ namespace libp2p::connection {
     }
 
     TRACE("stream {} read {} bytes", stream_id_, sz);
-    if (sz < 80) {
-      TRACE("{}", common::dumpBin(bytes));
-    }
 
     bool overflow = false;
     bool read_completed = false;
@@ -345,12 +342,10 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::closedByConnection(std::error_code ec) {
-    doClose(ec, true);
+    doClose(std::move(ec), true);
   }
 
   void YamuxStream::doClose(std::error_code ec, bool notify_read_side) {
-    assert(ec);
-
     if (close_reason_) {
       // already closed
       return;
@@ -437,7 +432,7 @@ namespace libp2p::connection {
     }
 
     if (close_reason_) {
-      return deferReadCallback(close_reason_, std::move(cb));
+      return deferReadCallback(*close_reason_, std::move(cb));
     }
 
     if (is_reading_) {
@@ -474,7 +469,7 @@ namespace libp2p::connection {
         r.first.swap(read_cb_);
         if (!is_readable_) {
           if (close_reason_) {
-            r.second = close_reason_;
+            r.second = *close_reason_;
           } else {
             // FIN received, but not yet closed
             r.second = Error::STREAM_CLOSED_BY_PEER;
@@ -534,7 +529,10 @@ namespace libp2p::connection {
     }
 
     if (close_reason_) {
-      return deferWriteCallback(close_reason_, std::move(cb));
+      return deferWriteCallback(
+          std::error_code{},
+          [cb{std::move(cb)}, res{*close_reason_}](
+              outcome::result<size_t>) mutable { cb(std::move(res)); });
     }
 
     if (!write_queue_.canEnqueue(bytes)) {

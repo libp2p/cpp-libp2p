@@ -38,8 +38,8 @@ using ::testing::Return;
 
 namespace {
   std::shared_ptr<CapableConnection> expectConnectionValid(
-      libp2p::outcome::result<std::shared_ptr<CapableConnection>> rconn) {
-    EXPECT_TRUE(rconn) << rconn.error();
+      outcome::result<std::shared_ptr<CapableConnection>> rconn) {
+    EXPECT_OUTCOME_TRUE_1(rconn);
     auto conn = rconn.value();
 
     EXPECT_OUTCOME_TRUE(mar, conn->remoteMultiaddr())
@@ -113,7 +113,7 @@ TEST(TCP, TwoListenersCantBindOnSamePort) {
 
   std::cout << "listener 2 starting...\n";
   auto r = listener2->listen(ma);
-  ASSERT_EQ(r.error().value(), (int)std::errc::address_in_use);
+  EXPECT_EC(r, boost::asio::error::address_in_use);
 
   using std::chrono_literals::operator""ms;
   context->run_for(50ms);
@@ -141,11 +141,11 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
     auto buf = std::make_shared<std::vector<uint8_t>>(kSize, 0);
     conn->readSome(
         *buf, buf->size(), [&counter, conn, buf, context](auto &&res) {
-          ASSERT_TRUE(res) << res.error().message();
+          EXPECT_OUTCOME_TRUE_1(res);
 
           libp2p::writeReturnSize(
               conn, *buf, [&counter, conn, buf, context](auto &&res) {
-                ASSERT_TRUE(res) << res.error().message();
+                EXPECT_OUTCOME_TRUE_1(res);
                 EXPECT_EQ(res.value(), buf->size());
                 counter++;
                 if (counter >= kClients) {
@@ -178,13 +178,13 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
 
         libp2p::writeReturnSize(
             conn, *buf, [conn, readback, buf, context](auto &&res) {
-              ASSERT_TRUE(res) << res.error().message();
+              EXPECT_OUTCOME_TRUE_1(res);
               ASSERT_EQ(res.value(), buf->size());
               conn->read(*readback,
                          readback->size(),
                          [conn, readback, buf, context](auto &&res) {
                            context->stop();
-                           ASSERT_TRUE(res) << res.error().message();
+                           EXPECT_OUTCOME_TRUE_1(res);
                            ASSERT_EQ(res.value(), readback->size());
                            ASSERT_EQ(*buf, *readback);
                          });
@@ -214,8 +214,7 @@ TEST(TCP, DialToNoServer) {
   auto ma = "/ip4/127.0.0.1/tcp/40003"_multiaddr;
 
   transport->dial(testutil::randomPeerId(), ma, [](auto &&rc) {
-    ASSERT_FALSE(rc);
-    ASSERT_EQ(rc.error().value(), (int)std::errc::connection_refused);
+    EXPECT_EC(rc, boost::asio::error::connection_refused);
   });
 
   using std::chrono_literals::operator""ms;
@@ -237,9 +236,7 @@ TEST(TCP, ClientClosesConnection) {
 
     auto buf = std::make_shared<std::vector<uint8_t>>(100, 0);
     conn->readSome(*buf, buf->size(), [conn, buf](auto &&res) {
-      ASSERT_FALSE(res);
-      ASSERT_EQ(res.error().value(), (int)boost::asio::error::eof)
-          << res.error().message();
+      EXPECT_EC(res, boost::asio::error::eof);
     });
   });
 
@@ -280,9 +277,7 @@ TEST(TCP, ServerClosesConnection) {
     EXPECT_TRUE(conn->isInitiator());
     auto buf = std::make_shared<std::vector<uint8_t>>(100, 0);
     conn->readSome(*buf, buf->size(), [conn, buf](auto &&res) {
-      ASSERT_FALSE(res);
-      ASSERT_EQ(res.error().value(), (int)boost::asio::error::eof)
-          << res.error().message();
+      EXPECT_EC(res, boost::asio::error::eof);
     });
   });
 
@@ -307,10 +302,10 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
 
     auto buf = std::make_shared<std::vector<uint8_t>>(kSize, 0);
     conn->readSome(*buf, kSize, [&counter, conn, buf](auto &&res) {
-      ASSERT_TRUE(res) << res.error().message();
+      EXPECT_OUTCOME_TRUE_1(res);
 
       libp2p::writeReturnSize(conn, *buf, [&counter, buf, conn](auto &&res) {
-        ASSERT_TRUE(res) << res.error().message();
+        EXPECT_OUTCOME_TRUE_1(res);
         EXPECT_EQ(res.value(), buf->size());
         counter++;
       });
@@ -337,10 +332,10 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
 
         libp2p::writeReturnSize(
             conn, *buf, [conn, kSize, readback, buf](auto &&res) {
-              ASSERT_TRUE(res) << res.error().message();
+              EXPECT_OUTCOME_TRUE_1(res);
               ASSERT_EQ(res.value(), buf->size());
               conn->read(*readback, kSize, [conn, readback, buf](auto &&res) {
-                ASSERT_TRUE(res) << res.error().message();
+                EXPECT_OUTCOME_TRUE_1(res);
                 ASSERT_EQ(res.value(), readback->size());
                 ASSERT_EQ(*buf, *readback);
               });

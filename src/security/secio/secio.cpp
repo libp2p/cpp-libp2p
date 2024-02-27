@@ -284,10 +284,10 @@ namespace libp2p::security {
   void Secio::closeConnection(
       const std::shared_ptr<libp2p::connection::LayerConnection> &conn,
       const std::error_code &err) const {
-    log_->error("error happened, closing connection: {}", err.message());
+    log_->error("error happened, closing connection: {}", err);
     if (auto close_res = conn->close(); !close_res) {
       log_->error("connection close attempt ended with error: {}",
-                  close_res.error().message());
+                  close_res.error());
     }
   }
 

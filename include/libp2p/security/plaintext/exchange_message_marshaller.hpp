@@ -7,12 +7,10 @@
 #pragma once
 
 #include <utility>
-#include <vector>
 
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/plaintext/exchange_message.hpp>
-#include <span>
 
 namespace libp2p::security::plaintext {
 

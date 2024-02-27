@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <libp2p/outcome/outcome.hpp>
-
 namespace libp2p::security {
 
   enum class TlsError : int {

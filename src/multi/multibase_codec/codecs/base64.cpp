@@ -91,7 +91,7 @@ namespace libp2p::multi::detail {
    * @param bytes to be encoded
    * @return how much chars are in the resulting string
    */
-  size_t encodeImpl(std::string &out, const Bytes &bytes) {
+  size_t encodeImpl(std::string &out, BytesIn bytes) {
     auto len = bytes.size();
     const auto tab = alphabet;
     size_t bytes_pos = 0u;
@@ -183,7 +183,7 @@ namespace libp2p::multi::detail {
     return out;
   }
 
-  std::string encodeBase64(const Bytes &bytes) {
+  std::string encodeBase64(BytesIn bytes) {
     std::string dest;
     dest.resize(encodeImpl(dest, bytes));
     return dest;

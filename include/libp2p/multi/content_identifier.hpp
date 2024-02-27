@@ -35,12 +35,6 @@ namespace libp2p::multi {
                       MulticodecType::Code content_type,
                       Multihash content_address);
 
-    /**
-     * @param base is a human-readable multibase prefix
-     * @returns human readable representation of the CID
-     */
-    std::string toPrettyString(const std::string &base) const;
-
     bool operator==(const ContentIdentifier &c) const;
     bool operator<(const ContentIdentifier &c) const;
 

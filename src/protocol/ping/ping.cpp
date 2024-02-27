@@ -13,12 +13,12 @@
 namespace libp2p::protocol {
   Ping::Ping(Host &host,
              libp2p::event::Bus &bus,
-             boost::asio::io_context &io_context,
+             std::shared_ptr<basic::Scheduler> scheduler,
              std::shared_ptr<crypto::random::RandomGenerator> rand_gen,
              PingConfig config)
       : host_{host},
         bus_{bus},
-        io_context_{io_context},
+        scheduler_{scheduler},
         rand_gen_{std::move(rand_gen)},
         config_{config} {}
 
@@ -49,7 +49,7 @@ namespace libp2p::protocol {
             return cb(stream_res.error());
           }
           auto session = std::make_shared<PingClientSession>(
-              self->io_context_,
+              self->scheduler_,
               self->bus_,
               std::move(stream_res.value().stream),
               self->rand_gen_,

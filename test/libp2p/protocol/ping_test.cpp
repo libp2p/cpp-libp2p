@@ -17,12 +17,15 @@
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/ping/common.hpp>
 
+#include "mock/libp2p/basic/scheduler_mock.hpp"
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/crypto/random_generator_mock.hpp"
 #include "mock/libp2p/host/host_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 
+using libp2p::basic::Scheduler;
+using libp2p::basic::SchedulerMock;
 using namespace libp2p;
 using namespace common;
 using namespace protocol;
@@ -39,19 +42,38 @@ using testing::Truly;
 
 using std::chrono_literals::operator""ms;
 
+constexpr auto kTimeout = 100ms;
+constexpr auto kInterval = 1ms;
+
 class PingTest : public testing::Test {
  public:
   static constexpr uint32_t kPingMsgSize = 32;
 
-  boost::asio::io_context io_context_;
+  void setTimer(bool timeout) {
+    EXPECT_CALL(*scheduler_, scheduleImplMockCall(_, kInterval, true))
+        .WillRepeatedly([](auto cb, auto, auto) {
+          cb();
+          return Scheduler::Handle{};
+        });
+    EXPECT_CALL(*scheduler_, scheduleImplMockCall(_, kTimeout, true))
+        .WillRepeatedly([timeout](auto cb, auto, auto) {
+          if (timeout) {
+            cb();
+          }
+          return Scheduler::Handle{};
+        });
+  }
+
+  std::shared_ptr<SchedulerMock> scheduler_ = std::make_shared<SchedulerMock>();
   libp2p::event::Bus bus_;
 
   HostMock host_;
   std::shared_ptr<RandomGeneratorMock> rand_gen_ =
       std::make_shared<RandomGeneratorMock>();
 
-  std::shared_ptr<Ping> ping_ = std::make_shared<Ping>(
-      host_, bus_, io_context_, rand_gen_, PingConfig{1, kPingMsgSize});
+  PingConfig config_{kTimeout, kInterval, kPingMsgSize};
+  std::shared_ptr<Ping> ping_ =
+      std::make_shared<Ping>(host_, bus_, scheduler_, rand_gen_, config_);
 
   std::shared_ptr<CapableConnectionMock> conn_ =
       std::make_shared<CapableConnectionMock>();
@@ -79,7 +101,7 @@ TEST_F(PingTest, PingServer) {
   EXPECT_CALL(*stream_, read(_, kPingMsgSize, _))
       .WillOnce(ReadPut(buffer_))
       .WillOnce(  // no second read
-          InvokeArgument<2>(outcome::failure(boost::system::error_code{})));
+          InvokeArgument<2>(std::error_code{}));
 
   auto if_eq_buf = [&](BytesIn actual) {
     auto expected = BytesIn(buffer_);
@@ -103,6 +125,8 @@ TEST_F(PingTest, PingServer) {
  * @then a Ping message is sent over that stream @and we expect to get it back
  */
 TEST_F(PingTest, PingClient) {
+  setTimer(false);
+
   EXPECT_CALL(*conn_, remotePeer()).WillOnce(Return(peer_id_));
   EXPECT_CALL(host_, getPeerRepository()).WillOnce(ReturnRef(peer_repo_));
   EXPECT_CALL(peer_repo_, getPeerInfo(peer_id_)).WillOnce(Return(peer_info_));
@@ -120,8 +144,8 @@ TEST_F(PingTest, PingClient) {
   EXPECT_CALL(*stream_, writeSome(Truly(if_eq_buf), kPingMsgSize, _))
       .WillOnce(InvokeArgument<2>(buffer_.size()))
       .WillOnce(  // no second write
-          InvokeArgument<2>(outcome::failure(boost::system::error_code{
-              boost::asio::error::invalid_argument})));
+          InvokeArgument<2>(
+              make_error_code(boost::asio::error::invalid_argument)));
   EXPECT_CALL(*stream_, read(_, kPingMsgSize, _)).WillOnce(ReadPut(buffer_));
 
   EXPECT_CALL(*stream_, isClosedForWrite())
@@ -130,11 +154,10 @@ TEST_F(PingTest, PingClient) {
   EXPECT_CALL(*stream_, isClosedForRead()).WillOnce(Return(false));
 
   EXPECT_CALL(*stream_, remotePeerId()).WillOnce(Return(peer_id_));
+  EXPECT_CALL(*stream_, reset());
 
   ping_->startPinging(conn_,
                       [](auto &&session_res) { ASSERT_TRUE(session_res); });
-
-  io_context_.run_for(100ms);
 }
 
 /**
@@ -144,6 +167,8 @@ TEST_F(PingTest, PingClient) {
  * @then PingIsDead event is emitted over the bus
  */
 TEST_F(PingTest, PingClientTimeoutExpired) {
+  setTimer(true);
+
   EXPECT_CALL(*conn_, remotePeer()).WillOnce(Return(peer_id_));
   EXPECT_CALL(host_, getPeerRepository()).WillOnce(ReturnRef(peer_repo_));
   EXPECT_CALL(peer_repo_, getPeerInfo(peer_id_)).WillOnce(Return(peer_info_));
@@ -161,6 +186,7 @@ TEST_F(PingTest, PingClientTimeoutExpired) {
   EXPECT_CALL(*stream_, isClosedForWrite()).WillOnce(Return(false));
 
   EXPECT_CALL(*stream_, remotePeerId()).WillOnce(Return(peer_id_));
+  EXPECT_CALL(*stream_, reset());
 
   boost::optional<peer::PeerId> dead_peer_id;
   auto h = bus_.getChannel<event::protocol::PeerIsDeadChannel>().subscribe(
@@ -168,8 +194,6 @@ TEST_F(PingTest, PingClientTimeoutExpired) {
 
   ping_->startPinging(conn_,
                       [](auto &&session_res) { ASSERT_TRUE(session_res); });
-
-  io_context_.run_for(100ms);
 
   ASSERT_TRUE(dead_peer_id);
   ASSERT_EQ(*dead_peer_id, peer_id_);

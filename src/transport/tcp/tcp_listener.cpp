@@ -48,9 +48,8 @@ namespace libp2p::transport {
       return outcome::success();
     } catch (const boost::system::system_error &e) {
       log::createLogger("Listener")
-          ->error("Cannot listen to {}: {}",
-                  address.getStringAddress(),
-                  e.code().message());
+          ->error(
+              "Cannot listen to {}: {}", address.getStringAddress(), e.code());
       return e.code();
     }
   }
@@ -76,7 +75,7 @@ namespace libp2p::transport {
     boost::system::error_code ec;
     acceptor_.close(ec);
     if (ec) {
-      return outcome::failure(ec);
+      return ec;
     }
     return outcome::success();
   }

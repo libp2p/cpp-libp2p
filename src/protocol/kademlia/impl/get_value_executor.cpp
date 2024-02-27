@@ -182,7 +182,7 @@ namespace libp2p::protocol::kademlia {
       --requests_in_progress_;
 
       log_.debug("cannot connect to peer: {}; active {}, in queue {}",
-                 stream_res.error().message(),
+                 stream_res.error(),
                  requests_in_progress_,
                  queue_.size());
 
@@ -242,7 +242,7 @@ namespace libp2p::protocol::kademlia {
     if (not msg_res) {
       log_.warn("Result from {} failed: {}; active {}, in queue {}",
                 session->stream()->remotePeerId().value().toBase58(),
-                msg_res.error().message(),
+                msg_res.error(),
                 requests_in_progress_,
                 queue_.size());
       return;

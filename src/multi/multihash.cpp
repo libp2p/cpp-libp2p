@@ -12,7 +12,6 @@
 #include <libp2p/common/types.hpp>
 #include <libp2p/log/logger.hpp>
 
-using libp2p::Bytes;
 using libp2p::common::hex_upper;
 using libp2p::common::unhex;
 

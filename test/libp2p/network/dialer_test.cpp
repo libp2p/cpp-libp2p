@@ -101,7 +101,7 @@ TEST_F(DialerTest, DialAllTheAddresses) {
       *transport,
       dial(pinfo_two_addrs.id, ma1, _, std::chrono::milliseconds::zero()))
       .WillOnce(
-          Arg2CallbackWithArg(outcome::failure(std::errc::connection_refused)));
+          Arg2CallbackWithArg(make_error_code(std::errc::connection_refused)));
 
   // transport->dial returns valid connection for the second address
   EXPECT_CALL(
@@ -172,8 +172,7 @@ TEST_F(DialerTest, DialNoAddresses) {
   peer::PeerInfo pinfo = {pid, {}};
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    EXPECT_OUTCOME_FALSE(e, rconn);
-    EXPECT_EQ(e.value(), (int)std::errc::destination_address_required);
+    EXPECT_EC(rconn, std::errc::destination_address_required);
     executed = true;
   });
 
@@ -200,8 +199,7 @@ TEST_F(DialerTest, DialNoTransports) {
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    EXPECT_OUTCOME_FALSE(e, rconn);
-    EXPECT_EQ(e.value(), (int)std::errc::address_family_not_supported);
+    EXPECT_EC(rconn, std::errc::address_family_not_supported);
     executed = true;
   });
 
@@ -254,13 +252,11 @@ TEST_F(DialerTest, NewStreamFailed) {
 
   // report random error.
   // we simulate a case when "newStream" gets error
-  outcome::result<std::shared_ptr<Stream>> r = std::errc::io_error;
-  EXPECT_CALL(*connection, newStream()).WillOnce(Return(r));
+  EXPECT_CALL(*connection, newStream()).WillOnce(Return(std::errc::io_error));
 
   bool executed = false;
   dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
-    EXPECT_OUTCOME_FALSE(e, rstream);
-    EXPECT_EQ(e.value(), (int)std::errc::io_error);
+    EXPECT_EC(rstream, std::errc::io_error);
     executed = true;
   });
 
@@ -284,7 +280,7 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
   // newStream returns valid stream
   EXPECT_CALL(*connection, newStream()).WillOnce(Return(stream));
 
-  auto r = std::make_error_code(std::errc::io_error);
+  auto r = std::errc::io_error;
 
   auto if_protocols = [&](std::span<const peer::ProtocolName> actual) {
     auto expected = std::span<const peer::ProtocolName>(protocols);
@@ -293,12 +289,11 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
   };
 
   EXPECT_CALL(*proto_muxer, selectOneOf(Truly(if_protocols), _, _, _, _))
-      .WillOnce(InvokeArgument<4>(r));
+      .WillOnce(InvokeArgument<4>(make_error_code(r)));
 
   bool executed = false;
   dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
-    EXPECT_OUTCOME_FALSE(e, rstream);
-    EXPECT_EQ(e, r);
+    EXPECT_EC(rstream, r);
     executed = true;
   });
 

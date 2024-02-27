@@ -5,7 +5,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <libp2p/outcome/outcome.hpp>
 #include "libp2p/crypto/common.hpp"
 #include "libp2p/crypto/key.hpp"
 

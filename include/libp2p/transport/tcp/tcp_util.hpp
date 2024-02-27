@@ -12,8 +12,6 @@
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 #include <libp2p/multi/multiaddress.hpp>
-#include <libp2p/outcome/outcome.hpp>
-#include <span>
 
 namespace libp2p::transport::detail {
   template <typename T>

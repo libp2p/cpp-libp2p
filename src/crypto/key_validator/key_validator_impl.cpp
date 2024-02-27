@@ -8,7 +8,6 @@
 
 #include <openssl/x509.h>
 #include <libp2p/common/final_action.hpp>
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/crypto/error.hpp>
 
 using libp2p::common::FinalAction;

@@ -69,8 +69,8 @@ TEST_F(InmemAddressRepository_Test, GarbageCollection) {
 
   // @when no collectGarbage is called
   {
-    EXPECT_OUTCOME_TRUE_2(v1, db->getAddresses(p1));
-    EXPECT_OUTCOME_TRUE_2(v2, db->getAddresses(p2));
+    EXPECT_OUTCOME_TRUE(v1, db->getAddresses(p1));
+    EXPECT_OUTCOME_TRUE(v2, db->getAddresses(p2));
 
     // @then initial state is initial
     EXPECT_EQ(v1.size(), 4);
@@ -81,8 +81,8 @@ TEST_F(InmemAddressRepository_Test, GarbageCollection) {
   collectGarbage();
 
   {
-    EXPECT_OUTCOME_TRUE_2(v1, db->getAddresses(p1));
-    EXPECT_OUTCOME_TRUE_2(v2, db->getAddresses(p2));
+    EXPECT_OUTCOME_TRUE(v1, db->getAddresses(p1));
+    EXPECT_OUTCOME_TRUE(v2, db->getAddresses(p2));
 
     // @then no addresses are evicted
     EXPECT_EQ(v1.size(), 4);
@@ -96,14 +96,13 @@ TEST_F(InmemAddressRepository_Test, GarbageCollection) {
 
   {
     // @then p1 has evicted 2 addresses
-    EXPECT_OUTCOME_TRUE_2(v1, db->getAddresses(p1));
+    EXPECT_OUTCOME_TRUE(v1, db->getAddresses(p1));
     EXPECT_EQ(v1.size(), 2);
 
     // @and p2 has been evicted completely
     auto v2 = db->getAddresses(p2);
-    EXPECT_FALSE(v2);
     // peers without addresses are removed... so we can't find this peer
-    EXPECT_EQ(v2.error().value(), (int)PeerError::NOT_FOUND);
+    EXPECT_EC(v2, PeerError::NOT_FOUND);
   }
 
   // @when clear p1 addresses
@@ -113,13 +112,12 @@ TEST_F(InmemAddressRepository_Test, GarbageCollection) {
     // @then p1 is not evicted, but all its addresses are
     // since we intentionally cleared addresses of this peer, we do not evict
     // this peer from the list of known peers up to the next garbage collection
-    EXPECT_OUTCOME_TRUE_2(v1, db->getAddresses(p1));
+    EXPECT_OUTCOME_TRUE(v1, db->getAddresses(p1));
     EXPECT_EQ(v1.size(), 0);
 
     // @and p2 is still evicted
     auto v2 = db->getAddresses(p2);
-    EXPECT_FALSE(v2);
-    EXPECT_EQ(v2.error().value(), (int)PeerError::NOT_FOUND);
+    EXPECT_EC(v2, PeerError::NOT_FOUND);
   }
 
   // @when third collect garbage is called
@@ -130,8 +128,7 @@ TEST_F(InmemAddressRepository_Test, GarbageCollection) {
     // last garbage collection removed all peers that do not have addresses
     for (const auto &it : {p1, p2}) {
       auto v = db->getAddresses(it);
-      EXPECT_FALSE(v);
-      EXPECT_EQ(v.error().value(), (int)PeerError::NOT_FOUND);
+      EXPECT_EC(v, PeerError::NOT_FOUND);
     }
   }
 }
@@ -148,7 +145,7 @@ TEST_F(InmemAddressRepository_Test, UpdateAddress) {
       db->upsertAddresses(p1, std::vector<Multiaddress>{ma1}, 1000ms));
 
   {
-    EXPECT_OUTCOME_TRUE_2(v, db->getAddresses(p1));
+    EXPECT_OUTCOME_TRUE(v, db->getAddresses(p1));
     EXPECT_EQ(v.size(), 1);
   }
 
@@ -156,7 +153,7 @@ TEST_F(InmemAddressRepository_Test, UpdateAddress) {
   collectGarbage();
 
   // ma1 is updated
-  EXPECT_OUTCOME_TRUE_2(v, db->getAddresses(p1));
+  EXPECT_OUTCOME_TRUE(v, db->getAddresses(p1));
   EXPECT_EQ(v.size(), 1);
 }
 
@@ -172,7 +169,7 @@ TEST_F(InmemAddressRepository_Test, InsertAddress) {
       db->upsertAddresses(p1, std::vector<Multiaddress>{ma2}, 1000ms));
 
   {
-    EXPECT_OUTCOME_TRUE_2(v, db->getAddresses(p1));
+    EXPECT_OUTCOME_TRUE(v, db->getAddresses(p1));
     EXPECT_EQ(v.size(), 2);
   }
 
@@ -180,7 +177,7 @@ TEST_F(InmemAddressRepository_Test, InsertAddress) {
   collectGarbage();
 
   // ma1 is evicted, ma2 is not
-  EXPECT_OUTCOME_TRUE_2(v, db->getAddresses(p1));
+  EXPECT_OUTCOME_TRUE(v, db->getAddresses(p1));
   EXPECT_EQ(v.size(), 1);
   EXPECT_EQ(v.front(), ma2);
 }

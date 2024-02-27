@@ -12,7 +12,6 @@
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/outcome/outcome.hpp>
-#include <span>
 
 namespace libp2p::crypto {
   /**

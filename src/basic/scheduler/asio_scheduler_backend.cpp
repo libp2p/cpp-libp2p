@@ -38,7 +38,7 @@ namespace libp2p::basic {
     if (ec) {
       // this should never happen
       auto log = log::createLogger("Scheduler", "scheduler");
-      log->critical("cannot set timer: {}", ec.message());
+      log->critical("cannot set timer: {}", ec);
       boost::asio::detail::throw_error(ec, "setTimer");
     }
 

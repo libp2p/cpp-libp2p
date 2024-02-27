@@ -105,7 +105,7 @@ namespace libp2p::protocol::gossip {
     if (success) {
       return buffer;
     }
-    return outcome::failure(Error::MESSAGE_SERIALIZE_ERROR);
+    return Error::MESSAGE_SERIALIZE_ERROR;
   }
 
   void MessageBuilder::addSubscription(bool subscribe, const TopicId &topic) {
@@ -184,7 +184,7 @@ namespace libp2p::protocol::gossip {
     std::copy(kPrefix.begin(), kPrefix.end(), signable.begin());
     if (!pb_msg.SerializeToArray(&signable[kPrefix.size()],
                                  static_cast<int>(size))) {
-      return outcome::failure(Error::MESSAGE_SERIALIZE_ERROR);
+      return Error::MESSAGE_SERIALIZE_ERROR;
     }
     return signable;
   }

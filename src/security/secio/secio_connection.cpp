@@ -16,7 +16,6 @@
 #include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/hmac_provider.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, SecioConnection::Error, e) {
   using E = libp2p::connection::SecioConnection::Error;
@@ -63,8 +62,8 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, SecioConnection::Error, e) {
 
 namespace {
   template <typename AesSecretType>
-  libp2p::outcome::result<AesSecretType> initAesSecret(
-      const libp2p::Bytes &key, const libp2p::Bytes &iv) {
+  outcome::result<AesSecretType> initAesSecret(const libp2p::Bytes &key,
+                                               const libp2p::Bytes &iv) {
     AesSecretType secret{};
     if (key.size() != secret.key.size()) {
       return libp2p::crypto::OpenSslError::WRONG_KEY_SIZE;
@@ -247,7 +246,7 @@ namespace libp2p::connection {
         kLenMarkerSize,
         [self{shared_from_this()}, buffer = read_buffer_, cb{std::move(cb)}](
             outcome::result<size_t> read_bytes_res) mutable {
-          IO_OUTCOME_TRY(len_marker_size, read_bytes_res, cb)
+          IO_OUTCOME_TRY(len_marker_size, read_bytes_res, cb);
           if (len_marker_size != kLenMarkerSize) {
             self->log_->error(
                 "Cannot read frame header. Read {} bytes when {} expected",
@@ -271,7 +270,7 @@ namespace libp2p::connection {
               frame_len,
               [self, buffer, frame_len, cb{cb}](
                   outcome::result<size_t> read_bytes) mutable {
-                IO_OUTCOME_TRY(read_frame_bytes, read_bytes, cb)
+                IO_OUTCOME_TRY(read_frame_bytes, read_bytes, cb);
                 if (frame_len != read_frame_bytes) {
                   self->log_->error(
                       "Unable to read expected amount of bytes. Read {} when "
@@ -283,11 +282,11 @@ namespace libp2p::connection {
                 }
                 SL_TRACE(
                     self->log_, "Received frame with len {}", read_frame_bytes);
-                IO_OUTCOME_TRY(mac_size, self->macSize(), cb)
+                IO_OUTCOME_TRY(mac_size, self->macSize(), cb);
                 const auto data_size{frame_len - mac_size};
                 auto data_span{std::span(buffer->data(), data_size)};
                 auto mac_span{std::span(*buffer).subspan(data_size, mac_size)};
-                IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb)
+                IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb);
                 if (BytesIn(remote_mac) != BytesIn(mac_span)) {
                   self->log_->error(
                       "Signature does not validate for the received frame");

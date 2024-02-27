@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <optional>
-
 #include <libp2p/common/types.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -23,7 +21,7 @@ namespace libp2p::multi::detail {
    * @param bytes to be encoded
    * @return encoded string
    */
-  std::string encodeBase58(const Bytes &bytes);
+  std::string encodeBase58(BytesIn bytes);
 
   /**
    * Decode base58 string to bytes

@@ -7,11 +7,8 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
 #include <libp2p/basic/readwriter.hpp>
-#include <libp2p/outcome/outcome.hpp>
-#include <span>
 
 namespace libp2p::basic {
   /**

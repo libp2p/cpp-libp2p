@@ -51,9 +51,7 @@ namespace libp2p::multi {
   }
 
   BytesIn UVarint::toBytes() const & {
-    return std::span(bytes_.data(),
-                     // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-                     bytes_.size());
+    return bytes_;
   }
 
   const std::vector<uint8_t> &UVarint::toVector() const {

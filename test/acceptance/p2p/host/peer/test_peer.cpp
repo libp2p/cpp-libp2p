@@ -51,10 +51,8 @@ Peer::Peer(Peer::Duration timeout, bool secure)
           std::make_shared<basic::AsioSchedulerBackend>(context_),
           basic::Scheduler::Config{})},
       secure_{secure} {
-  EXPECT_OUTCOME_TRUE_MSG(
-      keys,
-      crypto_provider_->generateKeys(crypto::Key::Type::Ed25519),
-      "failed to generate keys");
+  EXPECT_OUTCOME_TRUE(
+      keys, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519));
   host_ = makeHost(keys);
 
   auto handler = [this](StreamAndProtocol stream) { echo_->handle(stream); };
@@ -64,7 +62,7 @@ Peer::Peer(Peer::Duration timeout, bool secure)
 void Peer::startServer(const multi::Multiaddress &address,
                        std::shared_ptr<std::promise<peer::PeerInfo>> promise) {
   context_->post([this, address, p = std::move(promise)] {
-    EXPECT_OUTCOME_TRUE_MSG_1(host_->listen(address), "failed to start server");
+    EXPECT_OUTCOME_TRUE_1(host_->listen(address));
     host_->start();
     p->set_value(host_->getPeerInfo());
   });
@@ -88,8 +86,7 @@ void Peer::startClient(const peer::PeerInfo &pinfo,
          counter =
              std::move(counter)](StreamAndProtocolOrError rstream) mutable {
           // get stream
-          EXPECT_OUTCOME_TRUE_MSG(
-              stream, rstream, "failed to connect to server: " + server_id);
+          EXPECT_OUTCOME_TRUE(stream, rstream);
           // make client session
           auto client = std::make_shared<protocol::ClientTestSession>(
               stream.stream, ping_times);
@@ -102,10 +99,7 @@ void Peer::startClient(const peer::PeerInfo &pinfo,
                 // count message exchange
                 counter->tick();
                 // ensure message returned
-                EXPECT_OUTCOME_TRUE_MSG(
-                    vec,
-                    res,
-                    "failed to receive response from server: " + server_id);
+                EXPECT_OUTCOME_TRUE(vec, res);
                 // ensure message is correct
                 ASSERT_EQ(vec.size(), client->bufferSize());  // NOLINT
               });

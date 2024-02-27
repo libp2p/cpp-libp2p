@@ -10,7 +10,7 @@ addtest(uvarint_test
 
 target_link_libraries(uvarint_test
     p2p_uvarint
-    p2p_hexutil
+    p2p_literals
     )
 
 addtest(protocol_list_test

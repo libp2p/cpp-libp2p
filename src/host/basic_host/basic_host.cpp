@@ -7,7 +7,6 @@
 #include <libp2p/host/basic_host/basic_host.hpp>
 
 #include <boost/assert.hpp>
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 
 namespace libp2p::host {
