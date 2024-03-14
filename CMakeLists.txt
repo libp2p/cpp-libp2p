@@ -15,6 +15,8 @@ set(CMAKE_TOOLCHAIN_FILE
 
 cmake_policy(SET CMP0048 NEW)
 cmake_policy(SET CMP0135 NEW)
+cmake_policy(SET CMP0144 NEW)
+cmake_policy(SET CMP0153 OLD)
 
 include("cmake/Hunter/init.cmake")
 
