@@ -6,6 +6,8 @@
 
 #include <libp2p/multi/converters/converter_utils.hpp>
 
+#include <optional>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/asio/ip/address_v6.hpp>
