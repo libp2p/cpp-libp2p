@@ -29,11 +29,11 @@ namespace libp2p::transport {
       return handler(std::errc::address_family_not_supported);
     }
 
-    auto conn = std::make_shared<TcpConnection>(*context_);
-
     auto [host, port] = detail::getHostAndTcpPort(address);
 
     auto layers = detail::getLayers(address);
+
+    auto conn = std::make_shared<TcpConnection>(*context_, layers);
 
     auto connect = [=,
                     self{shared_from_this()},
