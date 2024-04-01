@@ -18,9 +18,7 @@
 namespace libp2p::transport::detail {
   template <typename T>
   inline outcome::result<multi::Multiaddress> makeAddress(
-      T &&endpoint,
-      const std::vector<std::pair<multi::Protocol, std::string>> *layers =
-          nullptr) {
+      T &&endpoint, const ProtoAddrVec *layers = nullptr) {
     try {
       auto address = endpoint.address();
       auto port = endpoint.port();
@@ -98,8 +96,6 @@ namespace libp2p::transport::detail {
 
     return {host, port};
   }
-
-  using ProtoAddrVec = std::vector<std::pair<multi::Protocol, std::string>>;
 
   // Obtain layers string from provided address
   inline ProtoAddrVec getLayers(const multi::Multiaddress &address) {

@@ -20,8 +20,6 @@ namespace libp2p::transport {
   class TcpListener : public TransportListener,
                       public std::enable_shared_from_this<TcpListener> {
    public:
-    using ProtoAddrVec = std::vector<std::pair<multi::Protocol, std::string>>;
-
     ~TcpListener() override = default;
 
     TcpListener(boost::asio::io_context &context,

@@ -198,6 +198,8 @@ namespace libp2p::connection {
     /// True if waiting for current write operation to complete
     bool is_writing_ = false;
 
+    std::shared_ptr<Bytes> writing_buf_ = std::make_shared<Bytes>();
+
     /// Write queue
     std::deque<WriteQueueItem> write_queue_;
 

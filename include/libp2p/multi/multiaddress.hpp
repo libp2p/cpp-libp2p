@@ -19,6 +19,10 @@
 #include <libp2p/outcome/outcome.hpp>
 #include <span>
 
+namespace libp2p {
+  using ProtoAddrVec = std::vector<std::pair<multi::Protocol, std::string>>;
+}  // namespace libp2p
+
 namespace libp2p::multi {
 
   /**
@@ -148,8 +152,7 @@ namespace libp2p::multi {
      * @return list of pairs with a protocol as the first element and the value
      * as the second one
      */
-    std::vector<std::pair<Protocol, std::string>> getProtocolsWithValues()
-        const;
+    ProtoAddrVec getProtocolsWithValues() const;
 
     bool operator==(const Multiaddress &other) const;
 
