@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <optional>
 
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
