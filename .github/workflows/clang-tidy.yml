@@ -10,7 +10,8 @@ on:
 
 jobs:
   build:
-    runs-on: macOS-latest
+    runs-on: ubuntu-latest
+    container: qdrvm/kagome-dev@sha256:2d70246c32418a3dd45c246d3f5c2dd99bdafde145b903271849affe476c4cfc
     steps:
     - uses: actions/checkout@v1
       name: checkout
@@ -18,26 +19,10 @@ jobs:
         submodules: true
         clean: true
         fetch-depth: 1
-    - name: install
-      run: |
-        brew install ninja llvm
-        sudo python3 -m pip install --upgrade pip
-        sudo python3 -m pip install scikit-build 
-        sudo python3 -m pip install cmake requests gitpython gcovr pyyaml
     - name: run checks
-      env:
-        CURL_SSL_BACKEND: SecureTransport
       run: |
-        #!/bin/bash
-        LLVM_DIR=/usr/local/Cellar/llvm
-        test -d $LLVM_DIR || echo $(echo "llvm is absent, cannot continue" && exit 1)
-        VER_COUNT=$(ls -1 ${LLVM_DIR} | wc -l)
-        test ${VER_COUNT} -eq 0 && echo "no llvm version detected" && exit 1
-        test $VER_COUNT -gt 1 && echo "wrong llvm installation" && exit 1
-        LLVM_VER=$(ls -1 ${LLVM_DIR})
-        export LLVM_ROOT=${LLVM_DIR}/${LLVM_VER}
-        export PATH=${LLVM_ROOT}/bin:${LLVM_ROOT}/share/clang:${PATH}
-        cmake . -GNinja -Bbuild
-        cmake --build build --target generated
-        housekeeping/clang-tidy.sh build
+        export BUILD_DIR=build
+        cmake -G Ninja -B $BUILD_DIR .
+        cmake --build $BUILD_DIR --target generated
+        ./housekeeping/clang-tidy-diff.sh
 
