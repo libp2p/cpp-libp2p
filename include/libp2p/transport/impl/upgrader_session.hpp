@@ -19,7 +19,6 @@ namespace libp2p::transport {
    */
   struct UpgraderSession
       : public std::enable_shared_from_this<UpgraderSession> {
-    using ProtoAddrVec = std::vector<std::pair<multi::Protocol, std::string>>;
     using ConnectionCallback =
         void(outcome::result<std::shared_ptr<connection::CapableConnection>>);
     using HandlerFunc = std::function<ConnectionCallback>;

@@ -23,16 +23,20 @@ namespace libp2p::transport {
   }  // namespace
 
   TcpConnection::TcpConnection(boost::asio::io_context &ctx,
+                               ProtoAddrVec layers,
                                boost::asio::ip::tcp::socket &&socket)
       : context_(ctx),
+        layers_{std::move(layers)},
         socket_(std::move(socket)),
         connection_phase_done_{false},
         deadline_timer_(context_) {
     std::ignore = saveMultiaddresses();
   }
 
-  TcpConnection::TcpConnection(boost::asio::io_context &ctx)
+  TcpConnection::TcpConnection(boost::asio::io_context &ctx,
+                               ProtoAddrVec layers)
       : context_(ctx),
+        layers_{std::move(layers)},
         socket_(context_),
         connection_phase_done_{false},
         deadline_timer_(context_) {}
@@ -281,15 +285,15 @@ namespace libp2p::transport {
       if (!local_multiaddress_) {
         auto endpoint(socket_.local_endpoint(ec));
         if (!ec) {
-          OUTCOME_TRY(addr, detail::makeAddress(endpoint));
-          local_multiaddress_ = std::move(addr);
+          BOOST_OUTCOME_TRY(local_multiaddress_,
+                            detail::makeAddress(endpoint, &layers_));
         }
       }
       if (!remote_multiaddress_) {
         auto endpoint(socket_.remote_endpoint(ec));
         if (!ec) {
-          OUTCOME_TRY(addr, detail::makeAddress(endpoint));
-          remote_multiaddress_ = std::move(addr);
+          BOOST_OUTCOME_TRY(remote_multiaddress_,
+                            detail::makeAddress(endpoint, &layers_));
         }
       }
     } else {

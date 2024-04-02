@@ -22,8 +22,6 @@ namespace libp2p::transport {
    * and using the chosen protocols to actually upgrade the connections
    */
   struct Upgrader {
-    using ProtoAddrVec = std::vector<std::pair<multi::Protocol, std::string>>;
-
     using RawSPtr = std::shared_ptr<connection::RawConnection>;
     using LayerSPtr = std::shared_ptr<connection::LayerConnection>;
     using SecSPtr = std::shared_ptr<connection::SecureConnection>;

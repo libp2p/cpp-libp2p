@@ -39,9 +39,11 @@ namespace libp2p::transport {
     using ConnectCallback = void(const ErrorCode &, const Tcp::endpoint &);
     using ConnectCallbackFunc = std::function<ConnectCallback>;
 
-    explicit TcpConnection(boost::asio::io_context &ctx);
+    explicit TcpConnection(boost::asio::io_context &ctx, ProtoAddrVec layers);
 
-    TcpConnection(boost::asio::io_context &ctx, Tcp::socket &&socket);
+    TcpConnection(boost::asio::io_context &ctx,
+                  ProtoAddrVec layers,
+                  Tcp::socket &&socket);
 
     /**
      * @brief Resolve service name (DNS).
@@ -122,6 +124,7 @@ namespace libp2p::transport {
     outcome::result<void> saveMultiaddresses();
 
     boost::asio::io_context &context_;
+    ProtoAddrVec layers_;
     Tcp::socket socket_;
     bool initiator_ = false;
     bool connecting_with_timeout_ = false;

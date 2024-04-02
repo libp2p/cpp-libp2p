@@ -95,8 +95,8 @@ namespace libp2p::transport {
             return self->handle_(ec);
           }
 
-          auto conn =
-              std::make_shared<TcpConnection>(self->context_, std::move(sock));
+          auto conn = std::make_shared<TcpConnection>(
+              self->context_, self->layers_, std::move(sock));
 
           auto session = std::make_shared<UpgraderSession>(
               self->upgrader_, self->layers_, std::move(conn), self->handle_);

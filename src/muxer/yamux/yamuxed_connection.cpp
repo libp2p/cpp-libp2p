@@ -649,8 +649,9 @@ namespace libp2p::connection {
   void YamuxedConnection::doWrite(WriteQueueItem packet) {
     assert(!is_writing_);
 
-    auto span = BytesIn(packet.packet);
+    writing_buf_->assign(packet.packet.begin(), packet.packet.end());
     auto cb = [wptr{weak_from_this()},
+               buf{writing_buf_},
                packet = std::move(packet)](outcome::result<size_t> res) {
       if (auto self = wptr.lock()) {
         self->onDataWritten(res, packet.stream_id);
@@ -658,7 +659,7 @@ namespace libp2p::connection {
     };
 
     is_writing_ = true;
-    writeReturnSize(connection_, span, cb);
+    writeReturnSize(connection_, *writing_buf_, cb);
   }
 
   void YamuxedConnection::onDataWritten(outcome::result<size_t> res,
