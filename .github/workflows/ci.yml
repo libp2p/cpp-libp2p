@@ -46,7 +46,7 @@ jobs:
     steps:
     - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
     - name: venv
-      run: housekeeping/github_venv.sh /venv/bin/activate
+      run: housekeeping/github_venv.sh /venv
     - name: cmake
       env:
         CC: ${{ matrix.compiler.cc }}
