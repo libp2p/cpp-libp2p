@@ -15,18 +15,14 @@ jobs:
     - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
     - name: install
       run: |
-        python3 -m venv ~/venv
-        source ~/venv/bin/activate
-        sudo python3 -m pip install --upgrade pip
-        sudo python3 -m pip install scikit-build
-        sudo python3 -m pip install cmake==3.25 requests gitpython gcovr
+        python3 -m pip install --upgrade pip
+        python3 -m pip install scikit-build
+        python3 -m pip install cmake==3.25 requests gitpython gcovr
         brew install ninja
     - name: cmake
       env:
         CURL_SSL_BACKEND: SecureTransport
-      run: |
-        source ~/venv/bin/activate
-        cmake -G Ninja -B build .
+      run: cmake -G Ninja -B build .
     - name: build
       run: cmake --build build -- -j4
     - name: test
@@ -47,15 +43,15 @@ jobs:
           "cxx": "clang++"
         }]
     steps:
+    - name: venv
+      run: ./housekeeping/github_venv.sh
     - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
     - name: cmake
       env:
         CC: ${{ matrix.compiler.cc }}
         CXX: ${{ matrix.compiler.cxx }}
       shell: bash
-      run: |
-        source /venv/bin/activate
-        cmake -B build .
+      run: cmake -B build .
     - name: build
       run: cmake --build build -- -j4
     - name: test

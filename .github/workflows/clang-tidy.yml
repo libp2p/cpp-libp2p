@@ -25,7 +25,7 @@ jobs:
       shell: bash
       run: |
         source /venv/bin/activate
-        cmake -G Ninja -B $BUILD_DIR .
+        cmake -B $BUILD_DIR .
         cmake --build $BUILD_DIR --target generated
         ./housekeeping/clang-tidy-diff.sh
 
