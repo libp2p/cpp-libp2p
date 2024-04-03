@@ -36,8 +36,6 @@ jobs:
   Linux:
     runs-on: ubuntu-latest
     container: qdrvm/kagome-dev@sha256:2d70246c32418a3dd45c246d3f5c2dd99bdafde145b903271849affe476c4cfc
-  build:
-    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -54,8 +52,8 @@ jobs:
       env:
         CC: ${{ matrix.compiler.cc }}
         CXX: ${{ matrix.compiler.cxx }}
+      shell: bash
       run: |
-        #!/bin/bash -xe
         source /venv/bin/activate
         cmake -B build .
     - name: build
