@@ -17,6 +17,6 @@
 
 hunter_config(
     soralog
-    URL  https://github.com/qdrvm/soralog/archive/556f28c83c4c8f040b65f3a57a92bf2b77f91fec.zip
-    SHA1 0d25f6bd4edf454140b52e61c24d68dfc0ad0745
+    URL  https://github.com/qdrvm/soralog/archive/9f21b763ad7911a1398bf5644c6e5be890cbdba1.zip
+    SHA1 8dd612fa9370db704d9951d808e1d5ddce1ddfdd
 )
