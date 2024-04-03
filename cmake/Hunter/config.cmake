@@ -14,3 +14,9 @@
 #     SHA1 1234567890abcdef1234567890abcdef12345678
 #     CMAKE_ARGS "CMAKE_VARIABLE=value"
 # )
+
+hunter_config(
+    soralog
+    URL  https://github.com/qdrvm/soralog/archive/556f28c83c4c8f040b65f3a57a92bf2b77f91fec.zip
+    SHA1 0d25f6bd4edf454140b52e61c24d68dfc0ad0745
+)

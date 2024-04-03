@@ -32,7 +32,6 @@ addtest(secio_exchange_message_marshaller_test
     secio_exchange_message_marshaller_test.cpp
     )
 target_link_libraries(secio_exchange_message_marshaller_test
-    p2p_logger
     p2p_secio_exchange_message_marshaller
     )
 
