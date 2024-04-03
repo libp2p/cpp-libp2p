@@ -14,6 +14,8 @@ jobs:
     container: qdrvm/kagome-dev@sha256:2d70246c32418a3dd45c246d3f5c2dd99bdafde145b903271849affe476c4cfc
     steps:
     - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
+      with:
+        fetch-depth: 0
     - name: venv
       run: housekeeping/github_venv.sh /venv
     - name: run checks

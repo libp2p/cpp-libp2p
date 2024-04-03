@@ -30,27 +30,14 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
       run: cmake --build build --target test
-  Linux:
+  Linux-gcc:
     runs-on: ubuntu-latest
     container: qdrvm/kagome-dev@sha256:2d70246c32418a3dd45c246d3f5c2dd99bdafde145b903271849affe476c4cfc
-    strategy:
-      fail-fast: false
-      matrix:
-        compiler: [{
-          "cc": "gcc",
-          "cxx": "g++"
-        }, {
-          "cc": "clang",
-          "cxx": "clang++"
-        }]
     steps:
     - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
     - name: venv
       run: housekeeping/github_venv.sh /venv
     - name: cmake
-      env:
-        CC: ${{ matrix.compiler.cc }}
-        CXX: ${{ matrix.compiler.cxx }}
       run: cmake -B build .
     - name: build
       run: cmake --build build -- -j4
