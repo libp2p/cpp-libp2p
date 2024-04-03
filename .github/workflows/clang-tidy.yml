@@ -20,9 +20,11 @@ jobs:
         clean: true
         fetch-depth: 1
     - name: run checks
+      env:
+        BUILD_DIR: build
       run: |
+        #!/bin/bash -xe
         source /venv/bin/activate
-        export BUILD_DIR=build
         cmake -G Ninja -B $BUILD_DIR .
         cmake --build $BUILD_DIR --target generated
         ./housekeeping/clang-tidy-diff.sh

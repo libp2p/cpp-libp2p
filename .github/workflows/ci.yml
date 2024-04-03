@@ -9,13 +9,38 @@ on:
     - master
 
 jobs:
+  MacOS:
+    runs-on: macos-14
+    steps:
+    - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
+    - name: install
+      run: |
+        python3 -m venv ~/venv
+        source ~/venv/bin/activate
+        sudo python3 -m pip install --upgrade pip
+        sudo python3 -m pip install scikit-build
+        sudo python3 -m pip install cmake==3.25 requests gitpython gcovr
+        brew install ninja
+    - name: cmake
+      env:
+        CURL_SSL_BACKEND: SecureTransport
+      run: |
+        source ~/venv/bin/activate
+        cmake -G Ninja -B build .
+    - name: build
+      run: cmake --build build -- -j4
+    - name: test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+      run: cmake --build build --target test
+  Linux:
+    runs-on: ubuntu-latest
+    container: qdrvm/kagome-dev@sha256:2d70246c32418a3dd45c246d3f5c2dd99bdafde145b903271849affe476c4cfc
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        # 3 jobs in total
-        os: [ubuntu-latest, macos-14]
         compiler: [{
           "cc": "gcc",
           "cxx": "g++"
@@ -23,30 +48,16 @@ jobs:
           "cc": "clang",
           "cxx": "clang++"
         }]
-        exclude:
-          - os: macos-14
-            compiler:
-              cc: gcc
     steps:
-    - uses: actions/checkout@v1
-      name: checkout
-      with:
-        submodules: true
-        clean: true
-        fetch-depth: 1
-    - name: install dependencies
-      run: |
-        set -e
-
-        sudo python3 -m pip install --upgrade pip
-        sudo pip3 install scikit-build
-        sudo pip3 install cmake=="3.25.0" requests gitpython gcovr pyyaml
+    - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
     - name: cmake
       env:
         CC: ${{ matrix.compiler.cc }}
         CXX: ${{ matrix.compiler.cxx }}
-        CURL_SSL_BACKEND: SecureTransport
-      run: cmake . -Bbuild
+      run: |
+        #!/bin/bash -xe
+        source /venv/bin/activate
+        cmake -B build .
     - name: build
       run: cmake --build build -- -j4
     - name: test
