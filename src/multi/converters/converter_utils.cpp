@@ -24,19 +24,28 @@
 #include <libp2p/multi/multibase_codec/codecs/base58.hpp>
 #include <libp2p/multi/uvarint.hpp>
 
+// TODO: CLANG-TIDY TEST
+
 // TODO(turuslan): qtils, https://github.com/qdrvm/kagome/issues/1813
 namespace qtils {
   inline std::string_view byte2str(const libp2p::BytesIn &s) {
-    // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return {reinterpret_cast<const char *>(s.data()), s.size()};
   }
 }  // namespace qtils
 
 // https://github.com/multiformats/rust-multiaddr/blob/3c7e813c3b1fdd4187a9ca9ff67e10af0e79231d/src/protocol.rs#L613-L622
 inline void percentEncode(std::string &out, std::string_view str) {
-  constexpr uint32_t mask[4]{0xffffffff, 0xd000802d, 0x00000000, 0xa8000001};
-  for (auto &c : str) {
-    if ((mask[c / 32] & (1 << (c % 32))) != 0) {
+  constexpr std::array<uint32_t, 4> mask{
+      0xffffffff,
+      0xd000802d,
+      0x00000000,
+      0xa8000001,
+  };
+  for (const auto &c : str) {
+    if (static_cast<unsigned char>(c) > 0x7f
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        or (mask[c / 32] & (1 << (c % 32))) != 0) {
       fmt::format_to(std::back_inserter(out), "%{:02X}", c);
     } else {
       out += c;
@@ -63,12 +72,12 @@ inline std::string percentDecode(std::string_view str) {
     if (str[0] == '%' and str.size() >= 3) {
       auto x1 = f(str[1]), x2 = f(str[2]);
       if (x1 and x2) {
-        out += (*x1 << 4) | *x2;
+        out.push_back((*x1 << 4) | *x2);
         str.remove_prefix(3);
         continue;
       }
     }
-    out += str[0];
+    out.push_back(str[0]);
     str.remove_prefix(1);
   }
   return out;
@@ -228,9 +237,10 @@ namespace libp2p::multi::converters {
         case Protocol::Code::DNS_ADDR: {
           OUTCOME_TRY(data, read_uvar());
           auto name = qtils::byte2str(data);
-          auto i = std::find_if_not(name.begin(), name.end(), [](auto c) {
-            return std::isalnum(c) || c == '-' || c == '.';
-          });
+          const auto *i =
+              std::find_if_not(name.begin(), name.end(), [](auto c) {
+                return std::isalnum(c) || c == '-' || c == '.';
+              });
           if (i != name.end()) {
             return ConversionError::INVALID_ADDRESS;
           }
