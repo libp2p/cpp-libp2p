@@ -24,8 +24,6 @@
 #include <libp2p/multi/multibase_codec/codecs/base58.hpp>
 #include <libp2p/multi/uvarint.hpp>
 
-// TODO: CLANG-TIDY TEST
-
 // TODO(turuslan): qtils, https://github.com/qdrvm/kagome/issues/1813
 namespace qtils {
   inline std::string_view byte2str(const libp2p::BytesIn &s) {
