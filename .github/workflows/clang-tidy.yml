@@ -21,7 +21,6 @@ jobs:
     - name: run checks
       env:
         BUILD_DIR: build
-      shell: bash
       run: |
         cmake -B $BUILD_DIR .
         cmake --build $BUILD_DIR --target generated
