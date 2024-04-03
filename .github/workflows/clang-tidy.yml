@@ -13,19 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     container: qdrvm/kagome-dev@sha256:2d70246c32418a3dd45c246d3f5c2dd99bdafde145b903271849affe476c4cfc
     steps:
-    - uses: actions/checkout@v1
-      name: checkout
-      with:
-        submodules: true
-        clean: true
-        fetch-depth: 1
+    - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
+    - name: venv
+      run: housekeeping/github_venv.sh /venv/bin/activate
     - name: run checks
       env:
         BUILD_DIR: build
-      shell: bash
       run: |
-        source /venv/bin/activate
         cmake -B $BUILD_DIR .
         cmake --build $BUILD_DIR --target generated
-        ./housekeeping/clang-tidy-diff.sh
+        git config --global --add safe.directory $PWD
+        housekeeping/clang-tidy-diff.sh
 

@@ -13,11 +13,12 @@ jobs:
     runs-on: macos-14
     steps:
     - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
+    - name: venv
+      run: python3 -m venv --upgrade-deps ~/venv && housekeeping/github_venv.sh $_
     - name: install
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install scikit-build
-        python3 -m pip install cmake==3.25 requests gitpython gcovr
+        pip3 install scikit-build
+        pip3 install cmake==3.25 requests gitpython gcovr
         brew install ninja
     - name: cmake
       env:
@@ -38,19 +39,18 @@ jobs:
         compiler: [{
           "cc": "gcc",
           "cxx": "g++"
-         }, {
+        }, {
           "cc": "clang",
           "cxx": "clang++"
         }]
     steps:
-    - name: venv
-      run: ./housekeeping/github_venv.sh
     - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
+    - name: venv
+      run: housekeeping/github_venv.sh /venv/bin/activate
     - name: cmake
       env:
         CC: ${{ matrix.compiler.cc }}
         CXX: ${{ matrix.compiler.cxx }}
-      shell: bash
       run: cmake -B build .
     - name: build
       run: cmake --build build -- -j4
