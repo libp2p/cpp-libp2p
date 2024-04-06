@@ -34,7 +34,7 @@ namespace libp2p::protocol {
   void ServerEchoSession::stop() {
     stream_->close([self{shared_from_this()}](auto &&res) {
       if (!res) {
-        self->log_->error("cannot close the stream: {}", res.error().message());
+        self->log_->error("cannot close the stream: {}", res.error());
       }
     });
   }
@@ -55,7 +55,7 @@ namespace libp2p::protocol {
 
   void ServerEchoSession::onRead(outcome::result<size_t> rread) {
     if (!rread) {
-      log_->error("error happened during read: {}", rread.error().message());
+      log_->error("error happened during read: {}", rread.error());
       return stop();
     }
 
@@ -92,7 +92,7 @@ namespace libp2p::protocol {
 
   void ServerEchoSession::onWrite(outcome::result<size_t> rwrite) {
     if (!rwrite) {
-      log_->error("error happened during write: {}", rwrite.error().message());
+      log_->error("error happened during write: {}", rwrite.error());
       return stop();
     }
 

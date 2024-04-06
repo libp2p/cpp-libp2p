@@ -265,7 +265,7 @@ namespace libp2p::security::noise {
 
   void Handshake::hscb(outcome::result<bool> secured) {
     if (secured.has_error()) {
-      log_->error("handshake failed, {}", secured.error().message());
+      log_->error("handshake failed, {}", secured.error());
       return connection_cb_(secured.error());
     }
     if (not secured.value()) {

@@ -9,43 +9,36 @@ on:
     - master
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # 3 jobs in total
-        os: [ubuntu-latest, macos-latest]
-        compiler: [{
-          "cc": "gcc",
-          "cxx": "g++"
-         }, {
-          "cc": "clang",
-          "cxx": "clang++"
-        }]
-        exclude:
-          - os: macos-latest
-            compiler:
-              cc: gcc
+  MacOS:
+    runs-on: macos-14
     steps:
-    - uses: actions/checkout@v1
-      name: checkout
-      with:
-        submodules: true
-        clean: true
-        fetch-depth: 1
-    - name: install dependencies
+    - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
+    - name: venv
+      run: python3 -m venv --upgrade-deps ~/venv && housekeeping/github_venv.sh $_
+    - name: install
       run: |
-        set -e
-
-        sudo python3 -m pip install --upgrade pip
-        sudo pip3 install scikit-build
-        sudo pip3 install cmake=="3.25.0" requests gitpython gcovr pyyaml
+        pip3 install scikit-build
+        pip3 install cmake==3.25 requests gitpython gcovr
+        brew install ninja
     - name: cmake
       env:
-        CC: ${{ matrix.compiler.cc }}
-        CXX: ${{ matrix.compiler.cxx }}
-      run: cmake . -Bbuild
+        CURL_SSL_BACKEND: SecureTransport
+      run: cmake -G Ninja -B build .
+    - name: build
+      run: cmake --build build -- -j4
+    - name: test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+      run: cmake --build build --target test
+  Linux-gcc:
+    runs-on: ubuntu-latest
+    container: qdrvm/kagome-dev@sha256:2d70246c32418a3dd45c246d3f5c2dd99bdafde145b903271849affe476c4cfc
+    steps:
+    - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
+    - name: venv
+      run: housekeeping/github_venv.sh /venv
+    - name: cmake
+      run: cmake -B build .
     - name: build
       run: cmake --build build -- -j4
     - name: test

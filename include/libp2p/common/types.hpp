@@ -14,17 +14,6 @@
 #include <libp2p/cxx20/lexicographical_compare_three_way.hpp>
 
 namespace libp2p::common {
-
-  template <typename Collection, typename Item>
-  void append(Collection &c, Item &&g) {
-    c.insert(c.end(), g.begin(), g.end());
-  }
-
-  template <typename Collection>
-  void append(Collection &c, char g) {
-    c.push_back(g);
-  }
-
   /// Hash160 as a sequence of 20 bytes
   using Hash160 = std::array<uint8_t, 20u>;
   /// Hash256 as a sequence of 32 bytes

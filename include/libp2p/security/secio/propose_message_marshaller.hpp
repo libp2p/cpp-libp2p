@@ -6,11 +6,8 @@
 
 #pragma once
 
-#include <vector>
-
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/security/secio/propose_message.hpp>
-#include <span>
 
 namespace libp2p::security::secio {
 

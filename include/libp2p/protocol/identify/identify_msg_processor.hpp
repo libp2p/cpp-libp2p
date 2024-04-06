@@ -16,11 +16,9 @@
 #include <libp2p/log/logger.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/network/connection_manager.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/protocol/identify/observed_addresses.hpp>
-#include <span>
 
 namespace identify::pb {
   class Identify;

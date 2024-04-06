@@ -165,7 +165,7 @@ namespace libp2p::protocol::kademlia {
       --requests_in_progress_;
 
       log_.debug("cannot connect to peer: {}; done {}, active {}, in queue {}",
-                 stream_res.error().message(),
+                 stream_res.error(),
                  requests_succeed_,
                  requests_in_progress_,
                  queue_.size());

@@ -6,6 +6,7 @@
 
 #include <libp2p/network/cares/cares.hpp>
 
+#include <arpa/nameser.h>
 #include <cstring>
 #include <stdexcept>
 #include <thread>

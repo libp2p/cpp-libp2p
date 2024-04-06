@@ -6,10 +6,6 @@
 
 #include <libp2p/common/hexutil.hpp>
 
-#include <ios>
-
-#include <boost/algorithm/hex.hpp>
-
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::common, UnhexError, e) {
   using libp2p::common::UnhexError;
   switch (e) {
@@ -23,23 +19,6 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::common, UnhexError, e) {
 }
 
 namespace libp2p::common {
-
-  std::string int_to_hex(uint64_t n, size_t fixed_width) noexcept {
-    std::stringstream result;
-    result.width(static_cast<std::streamsize>(fixed_width));
-    result.fill('0');
-    result << std::hex << std::uppercase << n;
-    auto str = result.str();
-    if (str.length() % 2 != 0) {
-      str.push_back('\0');
-      for (int64_t i = static_cast<int64_t>(str.length()) - 2; i >= 0; --i) {
-        str[i + 1] = str[i];
-      }
-      str[0] = '0';
-    }
-    return str;
-  }
-
   outcome::result<std::vector<uint8_t>> unhex(std::string_view hex) {
     std::vector<uint8_t> blob;
     blob.reserve((hex.size() + 1) / 2);

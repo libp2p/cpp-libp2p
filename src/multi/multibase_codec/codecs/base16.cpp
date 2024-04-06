@@ -32,11 +32,11 @@ namespace libp2p::multi::detail {
   using common::hex_upper;
   using common::unhex;
 
-  std::string encodeBase16Upper(const Bytes &bytes) {
+  std::string encodeBase16Upper(BytesIn bytes) {
     return hex_upper(bytes);
   }
 
-  std::string encodeBase16Lower(const Bytes &bytes) {
+  std::string encodeBase16Lower(BytesIn bytes) {
     return hex_lower(bytes);
   }
 

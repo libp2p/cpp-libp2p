@@ -6,7 +6,6 @@
 
 #include <gtest/gtest.h>
 
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/multi/content_identifier.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
@@ -30,21 +29,6 @@ const Multihash ZERO_MULTIHASH =
     "12200000000000000000000000000000000000000000000000000000000000000000"_multihash;
 const Multihash EXAMPLE_MULTIHASH =
     "12206e6ff7950a36187a801613426e858dce686cd7d7e3c0fc42ee0330072d245c95"_multihash;
-
-TEST(CidTest, PrettyString) {
-  ContentIdentifier c1(ContentIdentifier::Version::V1,
-                       MulticodecType::Code::IDENTITY,
-                       ZERO_MULTIHASH);
-  ASSERT_EQ(c1.toPrettyString("base58"),
-            "base58 - cidv1 - identity - sha2-256-256-"
-                + libp2p::common::hex_lower(ZERO_MULTIHASH.getHash()));
-  ContentIdentifier c2(ContentIdentifier::Version::V0,
-                       MulticodecType::Code::DAG_PB,
-                       EXAMPLE_MULTIHASH);
-  ASSERT_EQ(c2.toPrettyString("base64"),
-            "base64 - cidv0 - dag-pb - sha2-256-256-"
-                + libp2p::common::hex_lower(EXAMPLE_MULTIHASH.getHash()));
-}
 
 /**
  * @given CID with sample multihash and it's string representation from
@@ -127,10 +111,9 @@ TEST(CidTest, MultibaseStringOfBaseCIDV0InvalidBase) {
   ContentIdentifier cid(ContentIdentifier::Version::V0,
                         MulticodecType::Code::DAG_PB,
                         reference_multihash);
-  EXPECT_OUTCOME_FALSE(error,
-                       ContentIdentifierCodec::toStringOfBase(
-                           cid, MultibaseCodec::Encoding::BASE32_LOWER))
-  ASSERT_EQ(error, ContentIdentifierCodec::EncodeError::INVALID_BASE_ENCODING);
+  EXPECT_EC(ContentIdentifierCodec::toStringOfBase(
+                cid, MultibaseCodec::Encoding::BASE32_LOWER),
+            ContentIdentifierCodec::EncodeError::INVALID_BASE_ENCODING);
 }
 
 /**
@@ -180,8 +163,8 @@ TEST(CidTest, MultibaseFromStringSuccessCIDV0) {
 TEST(CidTest, MultibaseFromStringShortCid) {
   const std::string short_string = "*";
 
-  EXPECT_OUTCOME_FALSE(error, ContentIdentifierCodec::fromString(short_string))
-  ASSERT_EQ(error, ContentIdentifierCodec::DecodeError::CID_TOO_SHORT);
+  EXPECT_EC(ContentIdentifierCodec::fromString(short_string),
+            ContentIdentifierCodec::DecodeError::CID_TOO_SHORT);
 }
 
 /**
@@ -248,11 +231,6 @@ TEST(CidTest, CompareDifferentHashes) {
   ASSERT_FALSE(c2 < c2);
 }
 
-class CidEncodeTest
-    : public testing::TestWithParam<
-          std::pair<ContentIdentifier,
-                    libp2p::outcome::result<std::vector<uint8_t>>>> {};
-
 TEST(CidTest, Create) {
   ContentIdentifier c(ContentIdentifier::Version::V0,
                       MulticodecType::Code::IDENTITY,
@@ -260,26 +238,23 @@ TEST(CidTest, Create) {
   ASSERT_EQ(c.content_address, EXAMPLE_MULTIHASH);
 }
 
-TEST_P(CidEncodeTest, Encode) {
-  auto [cid, expectation] = GetParam();
-  auto bytes = ContentIdentifierCodec::encode(cid);
-  if (expectation) {
-    auto bytes_value = bytes.value();
-    auto expectation_value = expectation.value();
-    ASSERT_TRUE(std::equal(bytes_value.begin(),
-                           bytes_value.end(),
-                           expectation_value.begin(),
-                           expectation_value.end()))
-        << libp2p::common::hex_lower(bytes_value);
-  } else {
-    ASSERT_EQ(bytes.error(), expectation.error()) << bytes.error().message();
-  }
+TEST(CidEncodeTest, Encode) {
+  EXPECT_EC(ContentIdentifierCodec::encode(
+                ContentIdentifier(ContentIdentifier::Version::V0,
+                                  MulticodecType::Code::SHA1,
+                                  ZERO_MULTIHASH)),
+            ContentIdentifierCodec::EncodeError::INVALID_CONTENT_TYPE);
+
+  EXPECT_EQ(ContentIdentifierCodec::encode(
+                ContentIdentifier(ContentIdentifier::Version::V0,
+                                  MulticodecType::Code::DAG_PB,
+                                  ZERO_MULTIHASH))
+                .value(),
+            ZERO_MULTIHASH.toBuffer());
 }
 
-class CidDecodeTest
-    : public testing::TestWithParam<
-          std::pair<std::vector<uint8_t>,
-                    libp2p::outcome::result<ContentIdentifier>>> {
+class CidDecodeTest : public testing::TestWithParam<
+                          std::pair<std::vector<uint8_t>, ContentIdentifier>> {
  public:
   void SetUp() {
     base_codec = std::make_shared<MultibaseCodecImpl>();
@@ -291,11 +266,7 @@ class CidDecodeTest
 TEST_P(CidDecodeTest, Decode) {
   auto [cid_bytes, expectation] = GetParam();
   auto cid = ContentIdentifierCodec::decode(cid_bytes);
-  if (expectation) {
-    ASSERT_EQ(cid.value(), expectation.value());
-  } else {
-    ASSERT_EQ(cid.error(), expectation.error()) << cid.error().message();
-  }
+  ASSERT_EQ(cid.value(), expectation);
 }
 
 class CidEncodeDecodeTest : public testing::TestWithParam<ContentIdentifier> {};
@@ -307,23 +278,7 @@ TEST_P(CidEncodeDecodeTest, DecodedMatchesOriginal) {
   ASSERT_EQ(cid, dec_cid);
 }
 
-const std::vector<
-    std::pair<ContentIdentifier, libp2p::outcome::result<std::vector<uint8_t>>>>
-    encodeSuite{{ContentIdentifier(ContentIdentifier::Version::V0,
-                                   MulticodecType::Code::SHA1,
-                                   ZERO_MULTIHASH),
-                 ContentIdentifierCodec::EncodeError::INVALID_CONTENT_TYPE},
-                {ContentIdentifier(ContentIdentifier::Version::V0,
-                                   MulticodecType::Code::DAG_PB,
-                                   ZERO_MULTIHASH),
-                 ZERO_MULTIHASH.toBuffer()}};
-
-INSTANTIATE_TEST_SUITE_P(EncodeTests,
-                         CidEncodeTest,
-                         testing::ValuesIn(encodeSuite));
-
-const std::vector<
-    std::pair<std::vector<uint8_t>, libp2p::outcome::result<ContentIdentifier>>>
+const std::vector<std::pair<std::vector<uint8_t>, ContentIdentifier>>
     decodeSuite{{EXAMPLE_MULTIHASH.toBuffer(),
                  ContentIdentifier(ContentIdentifier::Version::V0,
                                    MulticodecType::Code::DAG_PB,

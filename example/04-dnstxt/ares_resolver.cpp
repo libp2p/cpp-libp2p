@@ -11,7 +11,6 @@
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/network/cares/cares.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 namespace {
   const std::string logger_config(R"(
@@ -65,10 +64,11 @@ int main(int argc, char *argv[]) {
   auto work_guard = boost::asio::make_work_guard(*context);
   context->post([&] {
     ares.resolveTxt(
-        "_dnsaddr.bootstrap.libp2p.io", context,
-        [&](libp2p::outcome::result<std::vector<std::string>> result) -> void {
+        "_dnsaddr.bootstrap.libp2p.io",
+        context,
+        [&](outcome::result<std::vector<std::string>> result) -> void {
           if (result.has_error()) {
-            std::cout << result.error().message() << std::endl;
+            fmt::println("{}", result.error());
           } else {
             auto &&val = result.value();
             for (auto &record : val) {

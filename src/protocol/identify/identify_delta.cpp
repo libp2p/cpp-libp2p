@@ -66,7 +66,7 @@ namespace libp2p::protocol {
       log_->error("cannot read identify-delta message from peer {}, {}: {}",
                   peer_id_str,
                   peer_addr_str,
-                  msg_res.error().message());
+                  msg_res.error());
       return stream->reset();
     }
 
@@ -88,10 +88,8 @@ namespace libp2p::protocol {
                    p = std::move(peer_id_str),
                    a = std::move(peer_addr_str)](auto &&res) {
       if (!res) {
-        self->log_->error("cannot close stream to peer {}, {}: {}",
-                          p,
-                          a,
-                          res.error().message());
+        self->log_->error(
+            "cannot close stream to peer {}, {}: {}", p, a, res.error());
       }
     });
 
@@ -117,7 +115,7 @@ namespace libp2p::protocol {
       log_->error("cannot add new protocols of peer {}, {}: {}",
                   peer_id_str,
                   peer_addr_str,
-                  add_res.error().message());
+                  add_res.error());
     }
 
     std::vector<peer::ProtocolName> rm_protocols;
@@ -130,7 +128,7 @@ namespace libp2p::protocol {
       log_->error("cannot remove protocols of peer {}, {}: {}",
                   peer_id_str,
                   peer_addr_str,
-                  rm_res.error().message());
+                  rm_res.error());
     }
   }
 
@@ -166,7 +164,7 @@ namespace libp2p::protocol {
             self->log_->error("cannot write Identify-Delta to peer {}, {}: {}",
                               s->remotePeerId().value().toBase58(),
                               s->remoteMultiaddr().value().getStringAddress(),
-                              res.error().message());
+                              res.error());
           }
         });
   }

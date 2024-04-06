@@ -88,7 +88,7 @@ namespace libp2p::multi::detail {
     return 8;
   }
 
-  std::string encodeBase32(const Bytes &bytes, Base32Mode mode) {
+  std::string encodeBase32(BytesIn bytes, Base32Mode mode) {
     std::string result;
     if (bytes.size() % 5 == 0) {
       result = std::string(bytes.size() / 5 * 8, ' ');
@@ -109,11 +109,11 @@ namespace libp2p::multi::detail {
     return result;
   }
 
-  std::string encodeBase32Upper(const Bytes &bytes) {
+  std::string encodeBase32Upper(BytesIn bytes) {
     return encodeBase32(bytes, Base32Mode::UPPER);
   }
 
-  std::string encodeBase32Lower(const Bytes &bytes) {
+  std::string encodeBase32Lower(BytesIn bytes) {
     return encodeBase32(bytes, Base32Mode::LOWER);
   }
 

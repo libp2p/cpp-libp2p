@@ -53,9 +53,10 @@ namespace libp2p::multi {
       P2P_WEBRTC_STAR = 275,
       P2P_WEBRTC_DIRECT = 276,
       P2P_CIRCUIT = 290,
-      // Range for private use: 0x300000 – 0x3FFFFF
-      X_PARITY_WS = 0x300001,
-      X_PARITY_WSS = 0x300002,
+      // https://github.com/multiformats/rust-multiaddr/blob/3c7e813c3b1fdd4187a9ca9ff67e10af0e79231d/src/protocol.rs#L50-L53
+      X_PARITY_WS = 4770,
+      X_PARITY_WSS = 4780,
+    // Range for private use: 0x300000 – 0x3FFFFF
 #ifndef NDEBUG
       _DUMMY_PROTO_1 = 0x3DEAD1,
       _DUMMY_PROTO_2 = 0x3DEAD2,

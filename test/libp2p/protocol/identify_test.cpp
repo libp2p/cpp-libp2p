@@ -6,8 +6,6 @@
 
 #include <libp2p/protocol/identify.hpp>
 
-#include <vector>
-
 #include <generated/protocol/identify/protobuf/identify.pb.h>
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>

@@ -6,10 +6,6 @@
 
 #pragma once
 
-#include <functional>
-#include <vector>
-
-#include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_info.hpp>
 

@@ -172,7 +172,7 @@ namespace libp2p::protocol::gossip {
     if (config_.sign_messages) {
       auto res = signMessage(*msg);
       if (!res) {
-        log_.warn("signMessage error: {}", res.error().message());
+        log_.warn("signMessage error: {}", res.error());
       }
     }
 
@@ -338,7 +338,7 @@ namespace libp2p::protocol::gossip {
 
     auto res = heartbeat_timer_.reschedule(config_.heartbeat_interval_msec);
     if (!res) {
-      log_.error("Heartbeat reschedule error: {}", res.error().message());
+      log_.error("Heartbeat reschedule error: {}", res.error());
     }
   }
 

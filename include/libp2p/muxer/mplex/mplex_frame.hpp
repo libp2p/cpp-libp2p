@@ -6,15 +6,7 @@
 
 #pragma once
 
-#include <cstdint>
-#include <functional>
-#include <memory>
-
-#include <boost/optional.hpp>
-#include <libp2p/basic/readwriter.hpp>
-#include <libp2p/common/types.hpp>
 #include <libp2p/muxer/mplex/mplex_stream.hpp>
-#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::connection {
   /**

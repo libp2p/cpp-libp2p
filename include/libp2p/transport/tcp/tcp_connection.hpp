@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <optional>
 
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
@@ -135,7 +136,7 @@ namespace libp2p::transport {
     bool closed_by_host_ = false;
 
     /// Close reason, is set on close to respond to further calls
-    std::error_code close_reason_;
+    std::optional<std::error_code> close_reason_;
 
     boost::optional<multi::Multiaddress> remote_multiaddress_;
     boost::optional<multi::Multiaddress> local_multiaddress_;

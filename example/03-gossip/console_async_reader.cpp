@@ -21,7 +21,9 @@ namespace libp2p::protocol::example::utility {
   void ConsoleAsyncReader::read() {
     input_.consume(input_.data().size());
     boost::asio::async_read_until(
-        in_, input_, "\n",
+        in_,
+        input_,
+        "\n",
         [this](const boost::system::error_code &e, std::size_t size) {
           onRead(e, size);
         });

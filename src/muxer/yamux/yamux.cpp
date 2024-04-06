@@ -40,7 +40,7 @@ namespace libp2p::muxer {
     }
     if (auto res = conn->remotePeer(); res.has_error()) {
       log::createLogger("Yamux")->error(
-          "inactive connection passed to muxer: {}", res.error().message());
+          "inactive connection passed to muxer: {}", res.error());
       return cb(res.error());
     }
     cb(std::make_shared<connection::YamuxedConnection>(

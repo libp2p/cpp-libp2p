@@ -20,15 +20,7 @@ using namespace libp2p::crypto;
 struct InmemKeyRepositoryTest : ::testing::Test {
   static PeerId createPeerId(HashType type, Buffer b) {
     auto hash = Multihash::create(type, std::move(b));
-    if (!hash) {
-      throw std::invalid_argument(hash.error().message());
-    }
-
     auto r1 = PeerId::fromHash(hash.value());
-    if (!r1) {
-      throw std::invalid_argument(r1.error().message());
-    }
-
     return r1.value();
   }
 

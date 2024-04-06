@@ -17,7 +17,6 @@
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
 #include <libp2p/outcome/outcome.hpp>
-#include <span>
 
 namespace libp2p {
   using ProtoAddrVec = std::vector<std::pair<multi::Protocol, std::string>>;

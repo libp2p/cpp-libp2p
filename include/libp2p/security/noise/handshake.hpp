@@ -11,7 +11,6 @@
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/crypto/x25519_provider.hpp>
 #include <libp2p/log/logger.hpp>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
 #include <libp2p/security/noise/crypto/state.hpp>

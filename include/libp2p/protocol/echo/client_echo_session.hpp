@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <optional>
 #include <vector>
 
 #include <libp2p/connection/stream.hpp>
@@ -36,7 +37,7 @@ namespace libp2p::protocol {
     std::shared_ptr<connection::Stream> stream_;
     std::vector<uint8_t> buf_;
     std::vector<uint8_t> recv_buf_;
-    std::error_code ec_;
+    std::optional<std::error_code> ec_;
     size_t bytes_read_ = 0;
     Then then_;
   };

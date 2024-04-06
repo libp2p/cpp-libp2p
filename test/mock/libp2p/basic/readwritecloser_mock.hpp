@@ -10,8 +10,6 @@
 
 #include <gmock/gmock.h>
 
-#include <libp2p/common/hexutil.hpp>
-
 namespace libp2p::basic {
   class ReadWriteCloserMock : public ReadWriteCloser {
    public:
@@ -26,9 +24,3 @@ namespace libp2p::basic {
     MOCK_METHOD2(writeSome, void(BytesIn, Writer::WriteCallbackFunc));
   };
 }  // namespace libp2p::basic
-
-inline std::ostream &operator<<(std::ostream &s,
-                                const std::vector<unsigned char> &v) {
-  s << kagome::common::hex_upper(v) << "\n";
-  return s;
-}
