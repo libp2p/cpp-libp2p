@@ -85,6 +85,8 @@ namespace libp2p::protocol::gossip {
     /// Remote peer connected or disconnected
     void onPeerConnection(bool connected, const PeerContextPtr &ctx);
 
+    void setTimerHeartbeat();
+
     /// Configuration parameters
     const Config config_;
 

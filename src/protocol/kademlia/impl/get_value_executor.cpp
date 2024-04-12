@@ -146,7 +146,7 @@ namespace libp2p::protocol::kademlia {
       holder->second = scheduler_->scheduleWithHandle(
           [holder] {
             if (holder->first) {
-              holder->second.cancel();
+              holder->second.reset();
               holder->first->onConnected(Error::TIMEOUT);
               holder->first.reset();
             }
@@ -158,7 +158,7 @@ namespace libp2p::protocol::kademlia {
           config_.protocols,
           [holder](auto &&stream_res) {
             if (holder->first) {
-              holder->second.cancel();
+              holder->second.reset();
               holder->first->onConnected(stream_res);
               holder->first.reset();
             }

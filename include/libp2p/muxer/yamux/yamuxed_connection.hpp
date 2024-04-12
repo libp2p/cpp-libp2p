@@ -177,6 +177,9 @@ namespace libp2p::connection {
     /// Expire timer callback
     void onExpireTimer();
 
+    void setTimerCleanup();
+    void setTimerPing();
+
     /// Copy of config
     const muxer::MuxedConnectionConfig config_;
 
@@ -233,6 +236,8 @@ namespace libp2p::connection {
 
     /// Remote peer saved here
     peer::PeerId remote_peer_;
+
+    uint32_t ping_counter_ = 0;
 
    public:
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(

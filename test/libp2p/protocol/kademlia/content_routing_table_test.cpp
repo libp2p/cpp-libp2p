@@ -29,9 +29,8 @@ struct ContentRoutingTableTest : public ::testing::Test {
     config_ = std::make_unique<Config>();
 
     scheduler_ = std::make_shared<basic::SchedulerMock>();
-    EXPECT_CALL(*scheduler_, scheduleImplMockCall(_, _, _)).Times(AnyNumber());
-    EXPECT_CALL(*scheduler_, nowMockCall()).Times(AnyNumber());
-    EXPECT_CALL(*scheduler_, cancelMockCall(_)).Times(AnyNumber());
+    EXPECT_CALL(*scheduler_, scheduleImpl(_, _, _)).Times(AnyNumber());
+    EXPECT_CALL(*scheduler_, now()).Times(AnyNumber());
 
     bus_ = std::make_shared<Bus>();
 

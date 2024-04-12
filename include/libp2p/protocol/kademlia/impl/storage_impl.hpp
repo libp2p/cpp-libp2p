@@ -67,6 +67,7 @@ namespace libp2p::protocol::kademlia {
 
    private:
     void onRefreshTimer();
+    void setTimerRefresh();
 
     const Config &config_;
     std::shared_ptr<StorageBackend> backend_;

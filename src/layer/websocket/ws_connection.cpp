@@ -36,49 +36,7 @@ namespace libp2p::connection {
     started_ = true;
 
     if (config_.ping_interval != std::chrono::milliseconds::zero()) {
-      // Set pong handler
-      using boost::beast::websocket::frame_type;
-      ws_.control_callback(
-          [weak = weak_from_this()](frame_type type,
-                                    boost::beast::string_view payload) {
-            if (type != frame_type::pong) {
-              return;
-            }
-            if (auto self = weak.lock()) {
-              self->onPong(bytestr(payload));
-            }
-          });
-
-      ping_handle_ = scheduler_->scheduleWithHandle(
-          [wp = weak_from_this()]() mutable {
-            if (auto self = wp.lock(); self and self->started_) {
-              ++self->ping_counter_;
-
-              // Send ping
-              self->ws_.async_ping(
-                  {
-                      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-                      reinterpret_cast<const char *>(&self->ping_counter_),
-                      sizeof(self->ping_counter_),
-                  },
-                  [](boost::system::error_code) {});
-
-              // Start timer of pong waiting
-              self->ping_timeout_handle_ = self->scheduler_->scheduleWithHandle(
-                  [wp] {
-                    if (auto self = wp.lock()) {
-                      self->ws_.async_close(
-                          {
-                              boost::beast::websocket::close_code::policy_error,
-                              "Pong was not received on time",
-                          },
-                          [](boost::system::error_code) {});
-                    }
-                  },
-                  self->config_.ping_timeout);
-            }
-          },
-          config_.ping_interval);
+      setTimerPing();
     }
   }
 
@@ -88,8 +46,8 @@ namespace libp2p::connection {
       return;
     }
     started_ = false;
-    ping_handle_.cancel();
-    ping_timeout_handle_.cancel();
+    ping_handle_.reset();
+    ping_timeout_handle_.reset();
   }
 
   void WsConnection::onPong(BytesIn payload) {
@@ -100,8 +58,8 @@ namespace libp2p::connection {
     if (std::equal(
             payload.begin(), payload.end(), expected.begin(), expected.end())) {
       SL_DEBUG(log_, "Correct pong has received for ping");
-      ping_timeout_handle_.cancel();
-      std::ignore = ping_handle_.reschedule(config_.ping_interval);
+      ping_timeout_handle_.reset();
+      setTimerPing();
       return;
     }
     SL_DEBUG(log_, "Received unexpected pong. Ignoring");
@@ -171,5 +129,51 @@ namespace libp2p::connection {
   void WsConnection::deferWriteCallback(std::error_code ec,
                                         WriteCallbackFunc cb) {
     connection_->deferWriteCallback(ec, std::move(cb));
+  }
+
+  void WsConnection::setTimerPing() {
+    // Set pong handler
+    using boost::beast::websocket::frame_type;
+    ws_.control_callback(
+        [weak = weak_from_this()](frame_type type,
+                                  boost::beast::string_view payload) {
+          if (type != frame_type::pong) {
+            return;
+          }
+          if (auto self = weak.lock()) {
+            self->onPong(bytestr(payload));
+          }
+        });
+
+    ping_handle_ = scheduler_->scheduleWithHandle(
+        [wp = weak_from_this()]() mutable {
+          if (auto self = wp.lock(); self and self->started_) {
+            ++self->ping_counter_;
+
+            // Send ping
+            self->ws_.async_ping(
+                {
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+                    reinterpret_cast<const char *>(&self->ping_counter_),
+                    sizeof(self->ping_counter_),
+                },
+                [](boost::system::error_code) {});
+
+            // Start timer of pong waiting
+            self->ping_timeout_handle_ = self->scheduler_->scheduleWithHandle(
+                [wp] {
+                  if (auto self = wp.lock()) {
+                    self->ws_.async_close(
+                        {
+                            boost::beast::websocket::close_code::policy_error,
+                            "Pong was not received on time",
+                        },
+                        [](boost::system::error_code) {});
+                  }
+                },
+                self->config_.ping_timeout);
+          }
+        },
+        config_.ping_interval);
   }
 }  // namespace libp2p::connection

@@ -56,7 +56,6 @@ target_link_libraries(p2p_write_queue
     )
 
 libp2p_add_library(p2p_basic_scheduler
-    scheduler.cpp
     scheduler/scheduler_impl.cpp
     )
 target_link_libraries(p2p_basic_scheduler

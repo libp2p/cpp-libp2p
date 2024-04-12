@@ -7,11 +7,16 @@
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
 
 #include <libp2p/log/logger.hpp>
+#include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::basic {
   AsioSchedulerBackend::AsioSchedulerBackend(
       std::shared_ptr<boost::asio::io_context> io_context)
       : io_context_(std::move(io_context)), timer_(*io_context_) {}
+
+  void AsioSchedulerBackend::post(std::function<void()> &&cb) {
+    io_context_->post(std::move(cb));
+  }
 
   std::chrono::milliseconds AsioSchedulerBackend::now() const noexcept {
     return nowImpl();
@@ -20,18 +25,6 @@ namespace libp2p::basic {
   void AsioSchedulerBackend::setTimer(
       std::chrono::milliseconds abs_time,
       std::weak_ptr<SchedulerBackendFeedback> scheduler) {
-    if (abs_time == kZeroTime) {
-      io_context_->post([scheduler = std::move(scheduler)]() {
-        auto sch = scheduler.lock();
-        if (sch) {
-          sch->pulse(kZeroTime);
-        }
-      });
-      return;
-    }
-
-    assert(abs_time.count() > 0);
-
     boost::system::error_code ec;
     timer_.expires_at(decltype(timer_)::clock_type::time_point(abs_time), ec);
 
@@ -47,7 +40,7 @@ namespace libp2p::basic {
       if (!error) {
         auto sch = scheduler.lock();
         if (sch) {
-          sch->pulse(nowImpl());
+          sch->pulse();
         }
       }
     });

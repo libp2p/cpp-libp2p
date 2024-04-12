@@ -64,6 +64,7 @@ namespace libp2p::protocol::kademlia {
 
    private:
     void onCleanupTimer();
+    void setTimerCleanup();
 
     const Config &config_;
     basic::Scheduler &scheduler_;
