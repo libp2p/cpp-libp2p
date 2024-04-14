@@ -23,15 +23,21 @@ namespace libp2p {
   using Cancel = std::unique_ptr<CancelDtor>;
 
   template <typename F>
-  class CancelDtorFn : public CancelDtor {
+  class CancelDtorFn final : public CancelDtor {
     F f;
 
    public:
-    CancelDtorFn(F f) : f{std::move(f)} {}
+    explicit CancelDtorFn(F f) : f{std::move(f)} {}
 
     ~CancelDtorFn() override {
       f();
     }
+
+    // clang-tidy cppcoreguidelines-special-member-functions
+    CancelDtorFn(const CancelDtorFn &) = delete;
+    void operator=(const CancelDtorFn &) = delete;
+    CancelDtorFn(CancelDtorFn &&) = delete;
+    void operator=(CancelDtorFn &&) = delete;
   };
 
   Cancel cancelFn(auto fn) {
