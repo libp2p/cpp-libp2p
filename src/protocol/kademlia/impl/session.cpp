@@ -87,7 +87,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     for (auto &pair : response_handlers_) {
-      pair.second.cancel();
+      pair.second.reset();
       pair.first->onResult(shared_from_this(), reason.as_failure());
     }
     response_handlers_.clear();
@@ -184,7 +184,7 @@ namespace libp2p::protocol::kademlia {
       auto cit = it++;
       auto &[response_handler, timeout_handle] = *cit;
       if (response_handler->match(msg)) {
-        timeout_handle.cancel();
+        timeout_handle.reset();
         response_handler->onResult(shared_from_this(), msg);
         response_handlers_.erase(cit);
         pocessed = true;
@@ -248,7 +248,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   void Session::cancelReadingTimeout() {
-    reading_timeout_handle_.cancel();
+    reading_timeout_handle_.reset();
   }
 
   void Session::setResponseTimeout(
@@ -290,7 +290,7 @@ namespace libp2p::protocol::kademlia {
 
     if (auto it = response_handlers_.find(response_handler);
         it != response_handlers_.end()) {
-      it->second.cancel();
+      it->second.reset();
       response_handlers_.erase(it);
     }
   }

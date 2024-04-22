@@ -72,41 +72,10 @@ namespace libp2p::connection {
     }
     started_ = true;
 
-    static constexpr auto kCleanupInterval = std::chrono::seconds(150);
-    cleanup_handle_ = scheduler_->scheduleWithHandle(
-        [this]() {
-          if (started_) {
-            std::vector<StreamId> abandoned;
-            for (auto &[id, stream] : streams_) {
-              if (stream.use_count() == 1) {
-                abandoned.push_back(id);
-                enqueue(resetStreamMsg(id));
-              }
-            }
-            if (!abandoned.empty()) {
-              log()->info("cleaning up {} abandoned streams", abandoned.size());
-              for (const auto id : abandoned) {
-                streams_.erase(id);
-              }
-            }
-            std::ignore = cleanup_handle_.reschedule(kCleanupInterval);
-          }
-        },
-        kCleanupInterval);
+    setTimerCleanup();
 
     if (config_.ping_interval != std::chrono::milliseconds::zero()) {
-      ping_handle_ = scheduler_->scheduleWithHandle(
-          [this, ping_counter = 0u]() mutable {
-            if (started_) {
-              // dont send pings if something is being written
-              if (!is_writing_) {
-                enqueue(pingOutMsg(++ping_counter));
-                SL_TRACE(log(), "written ping message #{}", ping_counter);
-              }
-              std::ignore = ping_handle_.reschedule(config_.ping_interval);
-            }
-          },
-          config_.ping_interval);
+      setTimerPing();
     }
 
     continueReading();
@@ -155,7 +124,7 @@ namespace libp2p::connection {
     new_stream_id_ += 2;
     enqueue(newStreamMsg(stream_id));
     pending_outbound_streams_[stream_id] = std::move(cb);
-    inactivity_handle_.cancel();
+    inactivity_handle_.reset();
   }
 
   void YamuxedConnection::onStream(NewStreamHandlerFunc cb) {
@@ -718,7 +687,7 @@ namespace libp2p::connection {
                                       config_.maximum_window_size,
                                       basic::WriteQueue::kDefaultSizeLimit);
     streams_[stream_id] = stream;
-    inactivity_handle_.cancel();
+    inactivity_handle_.reset();
     return stream;
   }
 
@@ -736,7 +705,7 @@ namespace libp2p::connection {
   }
 
   void YamuxedConnection::adjustExpireTimer() {
-    if (config_.no_streams_interval > basic::kZeroTime && streams_.empty()
+    if (config_.no_streams_interval.count() > 0 && streams_.empty()
         && pending_outbound_streams_.empty()) {
       SL_DEBUG(log(),
                "scheduling expire timer to {} msec",
@@ -754,4 +723,53 @@ namespace libp2p::connection {
     }
   }
 
+  // TODO(turuslan): #240, yamux stream destructor
+  void YamuxedConnection::setTimerCleanup() {
+    static constexpr auto kCleanupInterval = std::chrono::seconds(150);
+    cleanup_handle_ = scheduler_->scheduleWithHandle(
+        [weak_self{weak_from_this()}] {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
+          }
+          if (not self->started_) {
+            return;
+          }
+          std::vector<StreamId> abandoned;
+          for (auto &[id, stream] : self->streams_) {
+            if (stream.use_count() == 1) {
+              abandoned.push_back(id);
+              self->enqueue(resetStreamMsg(id));
+            }
+          }
+          if (!abandoned.empty()) {
+            log()->info("cleaning up {} abandoned streams", abandoned.size());
+            for (const auto id : abandoned) {
+              self->streams_.erase(id);
+            }
+          }
+          self->setTimerCleanup();
+        },
+        kCleanupInterval);
+  }
+
+  void YamuxedConnection::setTimerPing() {
+    ping_handle_ = scheduler_->scheduleWithHandle(
+        [weak_self{weak_from_this()}] {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
+          }
+          if (not self->started_) {
+            return;
+          }
+          // dont send pings if something is being written
+          if (not self->is_writing_) {
+            self->enqueue(pingOutMsg(++self->ping_counter_));
+            SL_TRACE(log(), "written ping message #{}", self->ping_counter_);
+          }
+          self->setTimerPing();
+        },
+        config_.ping_interval);
+  }
 }  // namespace libp2p::connection

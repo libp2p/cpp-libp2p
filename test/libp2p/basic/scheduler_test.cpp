@@ -9,9 +9,13 @@
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
 #include <libp2p/basic/scheduler/manual_scheduler_backend.hpp>
 #include <libp2p/basic/scheduler/scheduler_impl.hpp>
+#include <libp2p/common/shared_fn.hpp>
 
 #include "testutil/outcome.hpp"
 #include "testutil/prepare_loggers.hpp"
+
+using libp2p::SharedFn;
+using libp2p::basic::Scheduler;
 
 namespace {
   auto &log() {
@@ -42,17 +46,12 @@ void shouldNotCompile() {
       []() { log().debug("deferred w/o handle called"); });
 
   // N.B. this comment left intentionally, must not compile (lvalue)
-  // scheduler->schedule(fn);
+  EXPECT_FALSE([&](auto &scheduler) {
+    return requires { scheduler.schedule(fn); };
+  }(*scheduler));
 }
 
-TEST(Scheduler, BasicThings) {
-  using namespace libp2p::basic;
-
-  auto io = std::make_shared<boost::asio::io_context>(1);
-  auto backend = std::make_shared<AsioSchedulerBackend>(io);
-  auto scheduler =
-      std::make_shared<SchedulerImpl>(std::move(backend), Scheduler::Config{});
-
+auto timers(std::shared_ptr<Scheduler> scheduler) {
   scheduler->schedule([]() { log().debug("deferred w/o handle called"); });
 
   scheduler->schedule([]() { log().debug("timed w/o handle called (155)"); },
@@ -65,41 +64,42 @@ TEST(Scheduler, BasicThings) {
       []() { log().debug("timed w/handle called (45)"); },
       std::chrono::milliseconds(45));
 
-  Scheduler::Handle h3;
-  h3 = scheduler->scheduleWithHandle(
-      [first_time = true, &h3]() mutable {
-        if (first_time) {
-          log().debug(
-              "timed w/handle called first time (98), rescheduling +70");
-          first_time = false;
-          EXPECT_OUTCOME_TRUE_1(h3.reschedule(std::chrono::milliseconds(70)));
-        } else {
-          log().debug("timed w/handle called second time, rescheduled");
-        }
-      },
+  auto h3 = scheduler->scheduleWithHandle(
+      [] { log().debug("timed w/handle called (98)"); },
       std::chrono::milliseconds(98));
 
-  Scheduler::Handle h4;
-  h4 = scheduler->scheduleWithHandle([first_time = true, &h4]() mutable {
-    if (first_time) {
-      log().debug("deferred w/handle called first time, rescheduling +120");
-      first_time = false;
-      EXPECT_OUTCOME_TRUE_1(h4.reschedule(std::chrono::milliseconds(120)));
-    } else {
-      log().debug("deferred->timed w/handle called second time, rescheduled");
-    }
-  });
+  auto h4 = scheduler->scheduleWithHandle(
+      [] { log().debug("deferred w/handle called"); });
 
   auto h5 = scheduler->scheduleWithHandle(
       []() { ASSERT_FALSE("h5 should not be called"); },
       std::chrono::milliseconds(78));
 
-  auto h6 = scheduler->scheduleWithHandle(
-      [&h5]() {
-        h5.cancel();
-        log().debug("h6 cancelled h5");
-      },
-      std::chrono::milliseconds(77));
+  auto h6 =
+      scheduler->scheduleWithHandle(SharedFn{[h5{std::move(h5)}]() mutable {
+                                      h5.reset();
+                                      log().debug("h6 cancelled h5");
+                                    }},
+                                    std::chrono::milliseconds(77));
+
+  return std::tuple{
+      std::move(h1),
+      std::move(h2),
+      std::move(h3),
+      std::move(h4),
+      std::move(h6),
+  };
+}
+
+TEST(Scheduler, BasicThings) {
+  using namespace libp2p::basic;
+
+  auto io = std::make_shared<boost::asio::io_context>(1);
+  auto backend = std::make_shared<AsioSchedulerBackend>(io);
+  auto scheduler =
+      std::make_shared<SchedulerImpl>(std::move(backend), Scheduler::Config{});
+
+  auto h = timers(scheduler);
 
   io->run_for(std::chrono::milliseconds(300));
 }
@@ -111,55 +111,7 @@ TEST(Scheduler, ManualScheduler) {
   auto scheduler =
       std::make_shared<SchedulerImpl>(backend, Scheduler::Config{});
 
-  scheduler->schedule([]() { log().debug("deferred w/o handle called"); });
+  auto h = timers(scheduler);
 
-  scheduler->schedule([]() { log().debug("timed w/o handle called (155)"); },
-                      std::chrono::milliseconds(155));
-
-  auto h1 = scheduler->scheduleWithHandle(
-      []() { log().debug("deferred w/handle called"); });
-
-  auto h2 = scheduler->scheduleWithHandle(
-      []() { log().debug("timed w/handle called (45)"); },
-      std::chrono::milliseconds(45));
-
-  Scheduler::Handle h3;
-  h3 = scheduler->scheduleWithHandle(
-      [first_time = true, &h3]() mutable {
-        if (first_time) {
-          log().debug(
-              "timed w/handle called first time (98), rescheduling +70");
-          first_time = false;
-          EXPECT_OUTCOME_TRUE_1(h3.reschedule(std::chrono::milliseconds(70)));
-        } else {
-          log().debug("timed w/handle called second time, rescheduled");
-        }
-      },
-      std::chrono::milliseconds(98));
-
-  Scheduler::Handle h4;
-  h4 = scheduler->scheduleWithHandle([first_time = true, &h4]() mutable {
-    if (first_time) {
-      log().debug("deferred w/handle called first time, rescheduling +120");
-      first_time = false;
-      EXPECT_OUTCOME_TRUE_1(h4.reschedule(std::chrono::milliseconds(120)));
-    } else {
-      log().debug("deferred->timed w/handle called second time, rescheduled");
-    }
-  });
-
-  auto h5 = scheduler->scheduleWithHandle(
-      []() { ASSERT_FALSE("h5 should not be called"); },
-      std::chrono::milliseconds(78));
-
-  auto h6 = scheduler->scheduleWithHandle(
-      [&h5]() {
-        h5.cancel();
-        log().debug("h6 cancelled h5");
-      },
-      std::chrono::milliseconds(77));
-
-  while (!backend->empty()) {
-    backend->shift(std::chrono::milliseconds(1));
-  }
+  backend->run();
 }

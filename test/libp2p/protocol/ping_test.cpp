@@ -50,12 +50,12 @@ class PingTest : public testing::Test {
   static constexpr uint32_t kPingMsgSize = 32;
 
   void setTimer(bool timeout) {
-    EXPECT_CALL(*scheduler_, scheduleImplMockCall(_, kInterval, true))
+    EXPECT_CALL(*scheduler_, scheduleImpl(_, kInterval, true))
         .WillRepeatedly([](auto cb, auto, auto) {
           cb();
           return Scheduler::Handle{};
         });
-    EXPECT_CALL(*scheduler_, scheduleImplMockCall(_, kTimeout, true))
+    EXPECT_CALL(*scheduler_, scheduleImpl(_, kTimeout, true))
         .WillRepeatedly([timeout](auto cb, auto, auto) {
           if (timeout) {
             cb();

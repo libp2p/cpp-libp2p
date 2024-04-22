@@ -226,7 +226,7 @@ namespace libp2p::protocol::gossip {
 
   void Stream::endWrite() {
     writing_bytes_ = 0;
-    timeout_handle_.cancel();
+    timeout_handle_.reset();
   }
 
   void Stream::close() {

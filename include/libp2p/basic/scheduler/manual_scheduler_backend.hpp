@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include <vector>
+#include <deque>
+#include <optional>
 
-#include <libp2p/basic/scheduler.hpp>
+#include <libp2p/basic/scheduler/backend.hpp>
 
 namespace libp2p::basic {
 
@@ -21,6 +22,8 @@ namespace libp2p::basic {
 
    public:
     ManualSchedulerBackend() : current_clock_(1) {}
+
+    void post(std::function<void()> &&) override;
 
     /**
      * @return Milliseconds since clock's epoch. Clock is set manually
@@ -54,24 +57,29 @@ namespace libp2p::basic {
      * @return true if no more events scheduled
      */
     bool empty() const {
-      return deferred_callbacks_.empty() && !timer_callback_;
+      return deferred_callbacks_.empty() and not timer_expires_;
+    }
+
+    void run() {
+      while (not empty()) {
+        shiftToTimer();
+      }
     }
 
    private:
+    void callDeferred();
+
     /// Current time, set manually
     std::chrono::milliseconds current_clock_;
 
     /// Callbacks deferred for the next cycle
-    std::vector<Callback> deferred_callbacks_;
-
-    /// Currently processed callback (reentrancy + rescheduling reasons here)
-    std::vector<Callback> in_process_;
+    std::deque<Callback> deferred_callbacks_;
 
     /// Timer callback
-    Callback timer_callback_;
+    std::weak_ptr<SchedulerBackendFeedback> scheduler_;
 
     /// Expiry of timer event
-    std::chrono::milliseconds timer_expires_{};
+    std::optional<std::chrono::milliseconds> timer_expires_;
   };
 
 }  // namespace libp2p::basic

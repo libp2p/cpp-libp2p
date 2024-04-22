@@ -28,6 +28,8 @@ namespace libp2p::protocol::kademlia {
 
     table_ = std::make_unique<Table>();
 
+    refresh_timer_ =
+        scheduler_->scheduleWithHandle([this] { setTimerRefresh(); });
     refresh_timer_ = scheduler_->scheduleWithHandle(
         [this] { onRefreshTimer(); }, config_.storageWipingInterval);
   }
@@ -101,7 +103,18 @@ namespace libp2p::protocol::kademlia {
       });
     }
 
-    std::ignore = refresh_timer_.reschedule(config_.storageRefreshInterval);
+    setTimerRefresh();
   }
 
+  void StorageImpl::setTimerRefresh() {
+    refresh_timer_ = scheduler_->scheduleWithHandle(
+        [weak_self{weak_from_this()}] {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
+          }
+          self->onRefreshTimer();
+        },
+        config_.storageRefreshInterval);
+  }
 }  // namespace libp2p::protocol::kademlia

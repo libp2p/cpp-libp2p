@@ -20,15 +20,8 @@ namespace libp2p::protocol::kademlia {
     BOOST_ASSERT(bus_ != nullptr);
     table_ = std::make_unique<Table>();
 
-    cleanup_timer_ = scheduler_.scheduleWithHandle([this] {
-      cleanup_timer_ = scheduler_.scheduleWithHandle(
-          [wp = weak_from_this()] {
-            if (auto self = wp.lock()) {
-              self->onCleanupTimer();
-            }
-          },
-          config_.providerWipingInterval);
-    });
+    cleanup_timer_ =
+        scheduler_.scheduleWithHandle([this] { setTimerCleanup(); });
   }
 
   ContentRoutingTableImpl::~ContentRoutingTableImpl() = default;
@@ -90,7 +83,18 @@ namespace libp2p::protocol::kademlia {
       idx.erase(ci);
     }
 
-    std::ignore = cleanup_timer_.reschedule(config_.providerWipingInterval);
+    setTimerCleanup();
   }
 
+  void ContentRoutingTableImpl::setTimerCleanup() {
+    cleanup_timer_ = scheduler_.scheduleWithHandle(
+        [weak_self{weak_from_this()}] {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
+          }
+          self->onCleanupTimer();
+        },
+        config_.providerWipingInterval);
+  }
 }  // namespace libp2p::protocol::kademlia

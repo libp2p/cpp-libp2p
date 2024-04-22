@@ -80,6 +80,7 @@ namespace libp2p::connection {
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
    private:
+    void setTimerPing();
     void onPong(BytesIn payload);
 
     /// Config

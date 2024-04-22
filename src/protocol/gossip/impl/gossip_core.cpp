@@ -117,8 +117,7 @@ namespace libp2p::protocol::gossip {
       remote_subscriptions_->onSelfSubscribed(true, topic);
     }
 
-    heartbeat_timer_ =
-        scheduler_->scheduleWithHandle([this] { onHeartbeat(); });
+    setTimerHeartbeat();
 
     connectivity_->start();
   }
@@ -130,7 +129,7 @@ namespace libp2p::protocol::gossip {
 
     started_ = false;
 
-    heartbeat_timer_.cancel();
+    heartbeat_timer_.reset();
 
     // it closes all senders and receivers
     connectivity_->stop();
@@ -336,10 +335,7 @@ namespace libp2p::protocol::gossip {
     connectivity_->onHeartbeat(broadcast_on_heartbeat_);
     broadcast_on_heartbeat_.clear();
 
-    auto res = heartbeat_timer_.reschedule(config_.heartbeat_interval_msec);
-    if (!res) {
-      log_.error("Heartbeat reschedule error: {}", res.error());
-    }
+    setTimerHeartbeat();
   }
 
   void GossipCore::onPeerConnection(bool connected, const PeerContextPtr &ctx) {
@@ -380,4 +376,15 @@ namespace libp2p::protocol::gossip {
     remote_subscriptions_->onSelfSubscribed(subscribe, topic);
   }
 
+  void GossipCore::setTimerHeartbeat() {
+    heartbeat_timer_ = scheduler_->scheduleWithHandle(
+        [weak_self{weak_from_this()}] {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
+          }
+          self->onHeartbeat();
+        },
+        config_.heartbeat_interval_msec);
+  }
 }  // namespace libp2p::protocol::gossip

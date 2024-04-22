@@ -9,7 +9,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/steady_timer.hpp>
 
-#include <libp2p/basic/scheduler.hpp>
+#include <libp2p/basic/scheduler/backend.hpp>
 
 namespace libp2p::basic {
 
@@ -26,6 +26,8 @@ namespace libp2p::basic {
      */
     explicit AsioSchedulerBackend(
         std::shared_ptr<boost::asio::io_context> io_context);
+
+    void post(std::function<void()> &&) override;
 
     /**
      * @return Milliseconds since steady clock's epoch

@@ -116,9 +116,7 @@ TEST_F(DialerTest, DialAllTheAddresses) {
     executed = true;
   });
 
-  while (!scheduler_backend->empty()) {
-    scheduler_backend->shift(std::chrono::milliseconds(1));
-  }
+  scheduler_backend->run();
 
   ASSERT_TRUE(executed);
 }
@@ -151,9 +149,7 @@ TEST_F(DialerTest, DialNewConnection) {
     executed = true;
   });
 
-  while (!scheduler_backend->empty()) {
-    scheduler_backend->shift(std::chrono::milliseconds(1));
-  }
+  scheduler_backend->run();
 
   ASSERT_TRUE(executed);
 }
@@ -176,9 +172,7 @@ TEST_F(DialerTest, DialNoAddresses) {
     executed = true;
   });
 
-  while (!scheduler_backend->empty()) {
-    scheduler_backend->shift(std::chrono::milliseconds(1));
-  }
+  scheduler_backend->run();
 
   ASSERT_TRUE(executed);
 }
@@ -203,9 +197,7 @@ TEST_F(DialerTest, DialNoTransports) {
     executed = true;
   });
 
-  while (!scheduler_backend->empty()) {
-    scheduler_backend->shift(std::chrono::milliseconds(1));
-  }
+  scheduler_backend->run();
 
   ASSERT_TRUE(executed);
 }
@@ -227,9 +219,7 @@ TEST_F(DialerTest, DialExistingConnection) {
     executed = true;
   });
 
-  while (!scheduler_backend->empty()) {
-    scheduler_backend->shift(std::chrono::milliseconds(1));
-  }
+  scheduler_backend->run();
 
   ASSERT_TRUE(executed);
 }
@@ -260,9 +250,7 @@ TEST_F(DialerTest, NewStreamFailed) {
     executed = true;
   });
 
-  while (!scheduler_backend->empty()) {
-    scheduler_backend->shift(std::chrono::milliseconds(1));
-  }
+  scheduler_backend->run();
 
   ASSERT_TRUE(executed);
 }
@@ -297,9 +285,7 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
     executed = true;
   });
 
-  while (!scheduler_backend->empty()) {
-    scheduler_backend->shift(std::chrono::milliseconds(1));
-  }
+  scheduler_backend->run();
 
   ASSERT_TRUE(executed);
 }
@@ -333,9 +319,7 @@ TEST_F(DialerTest, NewStreamSuccess) {
     executed = true;
   });
 
-  while (!scheduler_backend->empty()) {
-    scheduler_backend->shift(std::chrono::milliseconds(1));
-  }
+  scheduler_backend->run();
 
   ASSERT_TRUE(executed);
 }

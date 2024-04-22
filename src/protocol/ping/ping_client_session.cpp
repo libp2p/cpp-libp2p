@@ -62,7 +62,7 @@ namespace libp2p::protocol {
   }
 
   void PingClientSession::writeCompleted(outcome::result<size_t> r) {
-    timer_.cancel();
+    timer_.reset();
     if (r.has_error()) {
       // timeout passed or error happened; in any case, we cannot ping it
       // anymore
@@ -92,7 +92,7 @@ namespace libp2p::protocol {
   }
 
   void PingClientSession::readCompleted(outcome::result<size_t> r) {
-    timer_.cancel();
+    timer_.reset();
     if (r.has_error() || write_buffer_ != read_buffer_) {
       // again, in case of any error we cannot continue to ping the peer and
       // thus declare it dead
