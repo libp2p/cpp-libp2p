@@ -19,7 +19,7 @@ namespace libp2p::basic {
   }
 
   void ManualSchedulerBackend::shift(std::chrono::milliseconds delta) {
-    check();
+    callDeferred();
     current_clock_ += std::max(delta, std::chrono::milliseconds::zero());
     if (timer_expires_ and *timer_expires_ <= current_clock_) {
       timer_expires_.reset();
@@ -27,7 +27,7 @@ namespace libp2p::basic {
         scheduler->pulse();
       }
     }
-    check();
+    callDeferred();
   }
 
   void ManualSchedulerBackend::shiftToTimer() {
@@ -35,7 +35,7 @@ namespace libp2p::basic {
           - current_clock_);
   }
 
-  void ManualSchedulerBackend::check() {
+  void ManualSchedulerBackend::callDeferred() {
     while (not deferred_callbacks_.empty()) {
       auto cb = std::move(deferred_callbacks_.front());
       deferred_callbacks_.pop_front();

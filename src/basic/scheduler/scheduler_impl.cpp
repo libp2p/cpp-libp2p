@@ -85,10 +85,10 @@ namespace libp2p::basic {
   }
 
   void SchedulerImpl::pulse() noexcept {
-    check(Time::zero());
+    callReady(Time::zero());
     while (not callbacks_.empty()) {
       auto now = backend_->now();
-      if (check(now) != 0) {
+      if (callReady(now) != 0) {
         continue;
       }
       auto min = callbacks_.begin()->first;
@@ -101,7 +101,7 @@ namespace libp2p::basic {
     }
   }
 
-  size_t SchedulerImpl::check(Time now) {
+  size_t SchedulerImpl::callReady(Time now) {
     size_t removed = 0;
     while (not callbacks_.empty() and callbacks_.begin()->first <= now) {
       auto node = callbacks_.extract(callbacks_.begin());

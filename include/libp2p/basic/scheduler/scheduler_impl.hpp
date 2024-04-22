@@ -39,7 +39,7 @@ namespace libp2p::basic {
     void pulse() noexcept override;
 
    private:
-    size_t check(Time now);
+    size_t callReady(Time now);
 
     /// Backend implementation
     std::shared_ptr<SchedulerBackend> backend_;
