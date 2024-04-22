@@ -14,8 +14,9 @@ namespace libp2p {
    */
   class CancelDtor {
    public:
-    virtual ~CancelDtor() = default;
+    inline virtual ~CancelDtor() = 0;
   };
+  CancelDtor::~CancelDtor() {}
 
   /**
    * RAII object to cancel operation.
