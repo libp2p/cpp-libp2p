@@ -12,11 +12,12 @@ namespace libp2p {
   /**
    * Interface with destructor for `std::unique_ptr`.
    */
+  // NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
   class CancelDtor {
    public:
     inline virtual ~CancelDtor() = 0;
   };
-  CancelDtor::~CancelDtor() {}
+  CancelDtor::~CancelDtor() = default;
 
   /**
    * RAII object to cancel operation.
