@@ -43,9 +43,10 @@ namespace libp2p::common {
   template <typename F>
   struct MovableFinalAction {
     MovableFinalAction() = delete;
-    MovableFinalAction(MovableFinalAction &&func) = default;
+    MovableFinalAction(MovableFinalAction &&func)
+        : func{std::exchange(func.func, {})} {}
     MovableFinalAction(const MovableFinalAction &func) = delete;
-    MovableFinalAction &operator=(MovableFinalAction &&func) = default;
+    MovableFinalAction &operator=(MovableFinalAction &&func) = delete;
     MovableFinalAction &operator=(const MovableFinalAction &func) = delete;
 
     MovableFinalAction(F &&func) : func(std::forward<F>(func)) {}
