@@ -163,6 +163,7 @@ namespace libp2p::protocol::kademlia {
 
     // Random walk's auxiliary data
     struct {
+      size_t iteration = 0;
       basic::Scheduler::Handle handle{};
     } random_walking_;
 
