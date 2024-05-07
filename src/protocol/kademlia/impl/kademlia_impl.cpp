@@ -561,18 +561,9 @@ namespace libp2p::protocol::kademlia {
     // Doing walk
     [[maybe_unused]] auto result = findRandomPeer();
 
-    auto iteration = random_walking_.iteration++;
-
-    // if period end
-    Time delay = config_.randomWalk.delay;
-    if ((iteration % config_.randomWalk.queries_per_period) == 0) {
-      delay = config_.randomWalk.interval
-            - config_.randomWalk.delay * config_.randomWalk.queries_per_period;
-    }
-
     // Schedule next walking
-    random_walking_.handle =
-        scheduler_->scheduleWithHandle([this] { randomWalk(); }, delay);
+    random_walking_.handle = scheduler_->scheduleWithHandle(
+        [this] { randomWalk(); }, config_.randomWalk.interval);
   }
 
   std::shared_ptr<Session> KademliaImpl::openSession(

@@ -21,12 +21,6 @@ namespace libp2p::protocol::kademlia {
       bool enabled = true;
 
       /**
-       * Number of random walks for a period
-       * @note Default: 1
-       */
-      size_t queries_per_period = 1;
-
-      /**
        * Period of random walks' series
        * @note Default: 5min
        */
@@ -37,12 +31,6 @@ namespace libp2p::protocol::kademlia {
        * @note Default: 10s
        */
       std::chrono::seconds timeout = 10s;
-
-      /**
-       * Delay beetween random walks in serie
-       * @note Default: 10s
-       */
-      std::chrono::seconds delay = 10s;
     };
   }  // namespace
 
