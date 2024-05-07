@@ -533,8 +533,6 @@ namespace libp2p::protocol::kademlia {
   }
 
   outcome::result<void> KademliaImpl::findRandomPeer() {
-    BOOST_ASSERT(config_.randomWalk.enabled);
-
     common::Hash256 hash;
     random_generator_->fillRandomly(hash);
 
