@@ -26,6 +26,9 @@ namespace libp2p::protocol::kademlia {
     /// with relevant addresses.
     virtual outcome::result<void> findPeer(const PeerId &peer_id,
                                            FoundPeerInfoHandler handler) = 0;
+
+    /// Random walk step. Calls `findPeer` with random bytes as key.
+    virtual outcome::result<void> findRandomPeer() = 0;
   };
 
 }  // namespace libp2p::protocol::kademlia
