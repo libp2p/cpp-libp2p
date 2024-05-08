@@ -10,6 +10,8 @@
 #include <optional>
 #include <utility>
 
+#include <libp2p/common/option_take.hpp>
+
 namespace libp2p::common {
 
   template <typename F>
@@ -44,7 +46,7 @@ namespace libp2p::common {
   struct MovableFinalAction {
     MovableFinalAction() = delete;
     MovableFinalAction(MovableFinalAction &&func)
-        : func{std::exchange(func.func, {})} {}
+        : func{qtils::optionTake(func.func)} {}
     MovableFinalAction(const MovableFinalAction &func) = delete;
     MovableFinalAction &operator=(MovableFinalAction &&func) = delete;
     MovableFinalAction &operator=(const MovableFinalAction &func) = delete;
