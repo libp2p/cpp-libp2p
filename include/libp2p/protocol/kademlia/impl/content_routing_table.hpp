@@ -28,6 +28,8 @@ namespace libp2p::protocol::kademlia {
   struct ContentRoutingTable {
     virtual ~ContentRoutingTable() = default;
 
+    virtual void start() = 0;
+
     virtual void addProvider(const ContentId &key,
                              const peer::PeerId &peer) = 0;
 

@@ -57,6 +57,8 @@ namespace libp2p::protocol::kademlia {
 
     ~ContentRoutingTableImpl() override;
 
+    void start() override;
+
     std::vector<PeerId> getProvidersFor(const ContentId &key,
                                         size_t limit = 0) const override;
 
