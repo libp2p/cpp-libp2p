@@ -19,9 +19,10 @@ namespace libp2p::protocol::kademlia {
       : config_(config), scheduler_(scheduler), bus_(std::move(bus)) {
     BOOST_ASSERT(bus_ != nullptr);
     table_ = std::make_unique<Table>();
+  }
 
-    cleanup_timer_ =
-        scheduler_.scheduleWithHandle([this] { setTimerCleanup(); });
+  void ContentRoutingTableImpl::start() {
+    setTimerCleanup();
   }
 
   ContentRoutingTableImpl::~ContentRoutingTableImpl() = default;

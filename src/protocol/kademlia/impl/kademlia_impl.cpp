@@ -64,6 +64,8 @@ namespace libp2p::protocol::kademlia {
     }
     started_ = true;
 
+    content_routing_table_->start();
+
     // save himself into peer repo
     addPeer(host_->getPeerInfo(), true);
 
