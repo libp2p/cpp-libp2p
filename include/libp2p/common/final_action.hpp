@@ -10,7 +10,7 @@
 #include <optional>
 #include <utility>
 
-#include <libp2p/common/option_take.hpp>
+#include <qtils/option_take.hpp>
 
 namespace libp2p::common {
 

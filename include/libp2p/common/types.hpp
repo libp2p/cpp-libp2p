@@ -8,10 +8,9 @@
 
 #include <array>
 #include <cstdint>
+#include <qtils/cxx20/lexicographical_compare_three_way.hpp>
 #include <span>
 #include <vector>
-
-#include <libp2p/cxx20/lexicographical_compare_three_way.hpp>
 
 namespace libp2p::common {
   /// Hash160 as a sequence of 20 bytes
@@ -44,7 +43,7 @@ namespace libp2p {
 
   inline auto operator<=>(const SpanOfBytes auto &lhs,
                           const SpanOfBytes auto &rhs) {
-    return cxx20::lexicographical_compare_three_way(
+    return qtils::cxx20::lexicographical_compare_three_way(
         lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
   }
 

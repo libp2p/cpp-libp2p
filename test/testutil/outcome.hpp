@@ -26,10 +26,10 @@
   EXPECT_FALSE(var) << "Line " << __LINE__;
 
 #define EXPECT_OUTCOME_TRUE_1(expr) \
-  EXPECT_OUTCOME_TRUE_VOID(BOOST_OUTCOME_TRY_UNIQUE_NAME, expr)
+  EXPECT_OUTCOME_TRUE_VOID(OUTCOME_UNIQUE, expr)
 
 #define EXPECT_OUTCOME_FALSE_1(expr) \
-  EXPECT_OUTCOME_FALSE_VOID(BOOST_OUTCOME_TRY_UNIQUE_NAME, expr)
+  EXPECT_OUTCOME_FALSE_VOID(OUTCOME_UNIQUE, expr)
 
 /**
  * Use this macro in GTEST with 2 arguments to assert that getResult()
@@ -37,11 +37,10 @@
  * EXPECT_OUTCOME_TRUE(val, getResult());
  */
 #define EXPECT_OUTCOME_TRUE(val, expr) \
-  EXPECT_OUTCOME_TRUE_NAME(BOOST_OUTCOME_TRY_UNIQUE_NAME, val, expr)
+  EXPECT_OUTCOME_TRUE_NAME(OUTCOME_UNIQUE, val, expr)
 
 #define _EXPECT_EC(tmp, expr, expected) \
   auto &&tmp = expr;                    \
   EXPECT_TRUE(tmp.has_error());         \
   EXPECT_EQ(tmp.error(), make_error_code(expected));
-#define EXPECT_EC(expr, expected) \
-  _EXPECT_EC(BOOST_OUTCOME_TRY_UNIQUE_NAME, expr, expected)
+#define EXPECT_EC(expr, expected) _EXPECT_EC(OUTCOME_UNIQUE, expr, expected)

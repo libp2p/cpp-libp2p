@@ -6,11 +6,7 @@
 
 #include <libp2p/multi/uvarint.hpp>
 
-#include <libp2p/common/hexutil.hpp>
-
 namespace libp2p::multi {
-  using common::hex_upper;
-
   UVarint::UVarint(uint64_t number) {
     do {
       uint8_t byte = static_cast<uint8_t>(number) & 0x7f;
@@ -56,10 +52,6 @@ namespace libp2p::multi {
 
   const std::vector<uint8_t> &UVarint::toVector() const {
     return bytes_;
-  }
-
-  std::string UVarint::toHex() const {
-    return hex_upper(bytes_);
   }
 
   size_t UVarint::size() const {

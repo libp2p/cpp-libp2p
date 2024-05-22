@@ -7,13 +7,12 @@
 #include "libp2p/multi/converters/converter_utils.hpp"
 
 #include <gtest/gtest.h>
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/multi/converters/conversion_error.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
+#include <qtils/unhex.hpp>
 #include "testutil/outcome.hpp"
 
 using libp2p::Bytes;
-using libp2p::common::unhex;
 using libp2p::multi::converters::bytesToMultiaddrString;
 using libp2p::multi::converters::ConversionError;
 using libp2p::multi::converters::multiaddrToBytes;
@@ -21,14 +20,14 @@ using libp2p::multi::converters::multiaddrToBytes;
 #define EXAMINE_STR_TO_BYTES(str_addr, hex_bytes)            \
   do {                                                       \
     EXPECT_OUTCOME_TRUE(actual, multiaddrToBytes(str_addr)); \
-    EXPECT_OUTCOME_TRUE(expected, unhex(hex_bytes));         \
+    EXPECT_OUTCOME_TRUE(expected, qtils::unhex(hex_bytes));  \
     ASSERT_EQ(actual, expected);                             \
   } while (false)
 
 #define EXAMINE_BYTES_TO_STR(str_addr, hex_bytes)               \
   do {                                                          \
     auto &expected = str_addr;                                  \
-    EXPECT_OUTCOME_TRUE(bytes, unhex(hex_bytes));               \
+    EXPECT_OUTCOME_TRUE(bytes, qtils::unhex(hex_bytes));        \
     EXPECT_OUTCOME_TRUE(actual, bytesToMultiaddrString(bytes)); \
     ASSERT_EQ(actual, expected);                                \
   } while (false)

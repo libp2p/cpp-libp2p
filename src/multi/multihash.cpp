@@ -8,12 +8,10 @@
 
 #include <boost/container_hash/hash.hpp>
 #include <libp2p/basic/varint_prefix_reader.hpp>
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/log/logger.hpp>
-
-using libp2p::common::hex_upper;
-using libp2p::common::unhex;
+#include <qtils/hex.hpp>
+#include <qtils/unhex.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, Multihash::Error, e) {
   using E = libp2p::multi::Multihash::Error;
@@ -88,7 +86,7 @@ namespace libp2p::multi {
   }
 
   outcome::result<Multihash> Multihash::createFromHex(std::string_view hex) {
-    OUTCOME_TRY(buf, unhex(hex));
+    OUTCOME_TRY(buf, qtils::unhex(hex));
     return Multihash::createFromBytes(buf);
   }
 
@@ -131,7 +129,7 @@ namespace libp2p::multi {
   }
 
   std::string Multihash::toHex() const {
-    return hex_upper(data().bytes);
+    return fmt::format("{:X}", data().bytes);
   }
 
   const Bytes &Multihash::toBuffer() const {

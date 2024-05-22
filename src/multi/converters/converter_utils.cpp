@@ -23,14 +23,7 @@
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base58.hpp>
 #include <libp2p/multi/uvarint.hpp>
-
-// TODO(turuslan): qtils, https://github.com/qdrvm/kagome/issues/1813
-namespace qtils {
-  inline std::string_view byte2str(const libp2p::BytesIn &s) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    return {reinterpret_cast<const char *>(s.data()), s.size()};
-  }
-}  // namespace qtils
+#include <qtils/bytestr.hpp>
 
 // https://github.com/multiformats/rust-multiaddr/blob/3c7e813c3b1fdd4187a9ca9ff67e10af0e79231d/src/protocol.rs#L613-L622
 inline void percentEncode(std::string &out, std::string_view str) {
