@@ -6,7 +6,7 @@ Libp2p is a modular networking stack described in [spec](https://github.com/libp
 
 ## Dependencies
 
-All dependencies are managed using [Hunter](https://github.com/cpp-pm/hunter). It uses cmake to download required libraries and does not require downloading and installing packages manually.
+All dependencies are managed using [Hunter](https://github.com/qdrvm/hunter). It uses cmake to download required libraries and does not require downloading and installing packages manually.
 Target C++ compilers are:
 * GCC 7.4
 * Clang 6.0.1
