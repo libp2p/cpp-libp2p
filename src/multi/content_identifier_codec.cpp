@@ -11,6 +11,7 @@
 #include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
 #include <libp2p/multi/multicodec_type.hpp>
 #include <libp2p/multi/uvarint.hpp>
+#include <qtils/append.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi,
                             ContentIdentifierCodec::EncodeError,
@@ -56,14 +57,11 @@ namespace libp2p::multi {
       const ContentIdentifier &cid) {
     std::vector<uint8_t> bytes;
     if (cid.version == ContentIdentifier::Version::V1) {
-      auto append = [&](BytesIn x) {
-        bytes.insert(bytes.end(), x.begin(), x.end());
-      };
       UVarint version(static_cast<uint64_t>(cid.version));
-      append(version.toBytes());
+      qtils::append(bytes, version.toBytes());
       UVarint type(static_cast<uint64_t>(cid.content_type));
-      append(type.toBytes());
-      append(cid.content_address.toBuffer());
+      qtils::append(bytes, type.toBytes());
+      qtils::append(bytes, cid.content_address.toBuffer());
     } else if (cid.version == ContentIdentifier::Version::V0) {
       if (cid.content_type != MulticodecType::Code::DAG_PB) {
         return EncodeError::INVALID_CONTENT_TYPE;

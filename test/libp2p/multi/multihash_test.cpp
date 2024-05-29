@@ -6,11 +6,11 @@
 
 #include <gtest/gtest.h>
 
-#include <libp2p/common/hexutil.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multihash.hpp>
 #include <libp2p/multi/uvarint.hpp>
+#include <qtils/hex.hpp>
 
 using namespace libp2p;
 using namespace common;
@@ -48,7 +48,7 @@ TEST(Multihash, FromToHex) {
   ASSERT_NO_THROW({
     auto m = Multihash::create(HashType::blake2s128, hash).value();
     UVarint var(HashType::blake2s128);
-    auto hex_s = hex_upper(var.toBytes()) + "03" + hex_upper(hash);
+    auto hex_s = fmt::format("{:X}03{:X}", var.toBytes(), hash);
     ASSERT_EQ(m.toHex(), hex_s);
   });
 

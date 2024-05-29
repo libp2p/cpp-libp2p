@@ -57,8 +57,6 @@ namespace libp2p::multi {
 
     const std::vector<uint8_t> &toVector() const;
 
-    std::string toHex() const;
-
     /**
      * Assigns the varint to an unsigned integer, encoding the latter
      * @param n the integer to encode and store
