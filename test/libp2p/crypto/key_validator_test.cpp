@@ -52,7 +52,7 @@ struct BaseKeyTest {
   std::shared_ptr<RsaProvider> rsa = std::make_shared<RsaProviderImpl>();
   std::shared_ptr<EcdsaProvider> ecdsa = std::make_shared<EcdsaProviderImpl>();
   std::shared_ptr<Secp256k1Provider> secp256k1 =
-      std::make_shared<Secp256k1ProviderImpl>();
+      std::make_shared<Secp256k1ProviderImpl>(random);
   std::shared_ptr<HmacProvider> hmac_provider =
       std::make_shared<HmacProviderImpl>();
   std::shared_ptr<CryptoProvider> crypto_provider =

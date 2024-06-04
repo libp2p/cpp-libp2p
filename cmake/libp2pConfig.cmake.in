@@ -3,7 +3,7 @@
 include(CMakeFindDependencyMacro)
 
 find_dependency(Boost CONFIG REQUIRED random filesystem program_options)
-find_dependency(OpenSSL REQUIRED)
+find_dependency(OpenSSL CONFIG REQUIRED)
 find_dependency(Protobuf CONFIG REQUIRED)
 find_dependency(Threads)
 find_dependency(c-ares CONFIG REQUIRED)

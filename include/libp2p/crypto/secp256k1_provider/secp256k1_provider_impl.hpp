@@ -6,14 +6,20 @@
 
 #pragma once
 
+#include <secp256k1.h>
 #include <memory>
 
-#include <openssl/ec.h>
 #include <libp2p/crypto/secp256k1_provider.hpp>
+
+namespace libp2p::crypto::random {
+  class CSPRNG;
+}  // namespace libp2p::crypto::random
 
 namespace libp2p::crypto::secp256k1 {
   class Secp256k1ProviderImpl : public Secp256k1Provider {
    public:
+    Secp256k1ProviderImpl(std::shared_ptr<random::CSPRNG> random);
+
     outcome::result<KeyPair> generate() const override;
 
     outcome::result<PublicKey> derive(const PrivateKey &key) const override;
@@ -26,20 +32,7 @@ namespace libp2p::crypto::secp256k1 {
                                  const PublicKey &key) const override;
 
    private:
-    /**
-     * @brief Convert secp256k1 private key bytes to OpenSSL EC_KEY structure
-     * @param input - private key bytes
-     * @return OpenSSL EC_KEY structure or error code
-     */
-    static outcome::result<std::shared_ptr<EC_KEY>> bytesToPrivateKey(
-        const PrivateKey &input);
-
-    /**
-     * @brief Convert secp256k1 public key bytes to OpenSSL EC_KEY structure
-     * @param input - private key bytes
-     * @return OpenSSL EC_KEY structure or error code
-     */
-    static outcome::result<std::shared_ptr<EC_KEY>> bytesToPublicKey(
-        const PublicKey &input);
+    std::shared_ptr<random::CSPRNG> random_;
+    std::unique_ptr<secp256k1_context, void (*)(secp256k1_context *)> ctx_;
   };
 }  // namespace libp2p::crypto::secp256k1

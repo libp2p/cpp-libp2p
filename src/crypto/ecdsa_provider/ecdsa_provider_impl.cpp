@@ -87,8 +87,7 @@ namespace libp2p::crypto::ecdsa {
 
   template <typename KeyType>
   outcome::result<KeyType> EcdsaProviderImpl::convertEcKeyToBytes(
-      const std::shared_ptr<EC_KEY> &ec_key,
-      int (*converter)(EC_KEY *, uint8_t **)) const {
+      const std::shared_ptr<EC_KEY> &ec_key, auto converter) const {
     KeyType key{};
     int generated_size = converter(ec_key.get(), nullptr);
     if (generated_size != key.size()) {

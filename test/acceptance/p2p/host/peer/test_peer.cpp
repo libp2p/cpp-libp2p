@@ -38,7 +38,8 @@ Peer::Peer(Peer::Duration timeout, bool secure)
       rsa_provider_{std::make_shared<crypto::rsa::RsaProviderImpl>()},
       ecdsa_provider_{std::make_shared<crypto::ecdsa::EcdsaProviderImpl>()},
       secp256k1_provider_{
-          std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>()},
+          std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>(
+              random_provider_)},
       hmac_provider_{std::make_shared<crypto::hmac::HmacProviderImpl>()},
       crypto_provider_{
           std::make_shared<crypto::CryptoProviderImpl>(random_provider_,
