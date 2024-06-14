@@ -60,7 +60,7 @@ namespace libp2p::crypto::secp256k1 {
         == 0) {
       return CryptoProviderError::SIGNATURE_GENERATION_FAILED;
     }
-    uint8_t empty;
+    uint8_t empty = 0;
     size_t size = 0;
     secp256k1_ecdsa_signature_serialize_der(
         ctx_.get(), &empty, &size, &ffi_sig);
