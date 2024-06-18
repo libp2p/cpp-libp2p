@@ -20,12 +20,10 @@ namespace libp2p::security {
                         const unsigned char *in,
                         unsigned int inlen,
                         void *) {
-    int r = SSL_select_next_proto(const_cast<unsigned char **>(out),
-                                  outlen,
-                                  in,
-                                  inlen,
-                                  kAlpn.data(),
-                                  kAlpn.size());
+    uint8_t *out2 = nullptr;
+    int r = SSL_select_next_proto(
+        &out2, outlen, in, inlen, kAlpn.data(), kAlpn.size());
+    *out = out2;
     return r == OPENSSL_NPN_NEGOTIATED ? SSL_TLSEXT_ERR_OK
                                        : SSL_TLSEXT_ERR_ALERT_FATAL;
   }
@@ -46,9 +44,10 @@ namespace libp2p::security {
       ctx->set_verify_callback(&tls_details::verifyCallback);
       ctx->use_certificate(asioBuffer(r.certificate), context::asn1);
       ctx->use_private_key(asioBuffer(r.private_key), context::asn1);
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
       static FILE *keylog = [] {
         FILE *f = nullptr;
-        if (auto path = getenv("SSLKEYLOGFILE")) {
+        if (auto *path = getenv("SSLKEYLOGFILE")) {
           f = fopen(path, "a");
           setvbuf(f, nullptr, _IOLBF, 0);
         }

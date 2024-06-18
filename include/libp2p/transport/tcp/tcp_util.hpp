@@ -102,6 +102,7 @@ namespace libp2p::transport::detail {
       default:
         return std::errc::protocol_not_supported;
     }
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     auto r = std::from_chars(v.data(), v.data() + v.size(), addr.port);
     if (r.ec != std::errc{}) {
       return make_error_code(r.ec);
@@ -146,7 +147,8 @@ namespace libp2p::transport::detail {
     }
     auto &dns = std::get<Dns>(addr.ip);
     auto cb2 = [cb{std::forward<decltype(cb)>(cb)}](
-                   boost::system::error_code ec, T::results_type r) mutable {
+                   boost::system::error_code ec,
+                   typename T::results_type r) mutable {
       if (ec) {
         return cb(ec);
       }
