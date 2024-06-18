@@ -11,6 +11,7 @@
 #include "testutil/outcome.hpp"
 
 using libp2p::BytesOut;
+using libp2p::crypto::random::BoostRandomGenerator;
 using libp2p::crypto::secp256k1::PrivateKey;
 using libp2p::crypto::secp256k1::PublicKey;
 using libp2p::crypto::secp256k1::Secp256k1ProviderImpl;
@@ -53,7 +54,9 @@ class Secp256k1ProviderTest : public ::testing::Test {
   Signature sample_signature_{SAMPLE_SIGNATURE_BYTES};
   std::vector<uint8_t> data_{SAMPLE_MESSAGE_BYTES};
   BytesOut message_{data_};
-  Secp256k1ProviderImpl provider_;
+  std::shared_ptr<BoostRandomGenerator> random_ =
+      std::make_shared<BoostRandomGenerator>();
+  Secp256k1ProviderImpl provider_{random_};
 };
 
 /**
@@ -62,8 +65,7 @@ class Secp256k1ProviderTest : public ::testing::Test {
  * @then Derived public key must be the same as pre-generated
  */
 TEST_F(Secp256k1ProviderTest, PublicKeyDerivationSuccess) {
-  Secp256k1ProviderImpl provider;
-  EXPECT_OUTCOME_TRUE(derivedPublicKey, provider.derive(sample_private_key_));
+  EXPECT_OUTCOME_TRUE(derivedPublicKey, provider_.derive(sample_private_key_));
   ASSERT_EQ(derivedPublicKey, sample_public_key_);
 };
 

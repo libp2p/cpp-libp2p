@@ -15,8 +15,11 @@ hunter_add_package(Boost COMPONENTS random filesystem program_options)
 find_package(Boost CONFIG REQUIRED random filesystem program_options)
 
 # https://www.openssl.org/
-hunter_add_package(OpenSSL)
-find_package(OpenSSL REQUIRED)
+hunter_add_package(BoringSSL)
+find_package(OpenSSL CONFIG REQUIRED)
+
+hunter_add_package(libsecp256k1)
+find_package(libsecp256k1 CONFIG REQUIRED)
 
 # https://developers.google.com/protocol-buffers/
 hunter_add_package(Protobuf)

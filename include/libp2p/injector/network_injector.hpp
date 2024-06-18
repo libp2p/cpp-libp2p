@@ -285,7 +285,7 @@ namespace libp2p::injector {
     auto rsa_provider = std::make_shared<crypto::rsa::RsaProviderImpl>();
     auto ecdsa_provider = std::make_shared<crypto::ecdsa::EcdsaProviderImpl>();
     auto secp256k1_provider =
-        std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>();
+        std::make_shared<crypto::secp256k1::Secp256k1ProviderImpl>(csprng);
     auto hmac_provider = std::make_shared<crypto::hmac::HmacProviderImpl>();
     std::shared_ptr<crypto::CryptoProvider> crypto_provider =
         std::make_shared<crypto::CryptoProviderImpl>(csprng,

@@ -47,7 +47,7 @@ class KeyGenTest {
         ed25519_provider_{std::make_shared<Ed25519ProviderImpl>()},
         rsa_provider_{std::make_shared<RsaProviderImpl>()},
         ecdsa_provider_{std::make_shared<EcdsaProviderImpl>()},
-        secp256k1_provider_{std::make_shared<Secp256k1ProviderImpl>()},
+        secp256k1_provider_{std::make_shared<Secp256k1ProviderImpl>(random_)},
         hmac_provider_{std::make_shared<HmacProviderImpl>()},
         crypto_provider_{
             std::make_shared<CryptoProviderImpl>(random_,

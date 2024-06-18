@@ -8,8 +8,10 @@
 
 #include <exception>
 
+#include <openssl/ecdsa.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
+#include <openssl/mem.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
@@ -509,7 +511,7 @@ namespace libp2p::crypto {
       }
 
       // calculate the size of the buffer for the shared secret
-      int field_size{EC_GROUP_get_degree(curve_group)};
+      auto field_size = static_cast<int>(EC_GROUP_get_degree(curve_group));
       int secret_len{(field_size + 7) / 8};
       uint8_t *secret_buffer{(uint8_t *)OPENSSL_malloc(secret_len)};  // NOLINT
       if (nullptr == secret_buffer) {

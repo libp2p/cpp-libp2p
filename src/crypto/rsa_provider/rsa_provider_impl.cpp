@@ -9,6 +9,7 @@
 #include <memory>
 
 #include <openssl/err.h>
+#include <openssl/mem.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <libp2p/common/final_action.hpp>
@@ -171,13 +172,12 @@ namespace libp2p::crypto::rsa {
   outcome::result<std::shared_ptr<X509_PUBKEY>>
   RsaProviderImpl::getPublicKeyFromBytes(const PublicKey &input_key) {
     const uint8_t *bytes = input_key.data();
-    std::shared_ptr<X509_PUBKEY> key{X509_PUBKEY_new(), X509_PUBKEY_free};
-    X509_PUBKEY *key_ptr = key.get();
+    X509_PUBKEY *key_ptr = nullptr;
     if (d2i_X509_PUBKEY(&key_ptr, &bytes, static_cast<long>(input_key.size()))
         == nullptr) {
       return KeyValidatorError::INVALID_PUBLIC_KEY;
     }
-    return key;
+    return std::shared_ptr<X509_PUBKEY>{key_ptr, X509_PUBKEY_free};
   }
 
 };  // namespace libp2p::crypto::rsa
