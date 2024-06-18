@@ -7,6 +7,7 @@
 #include <libp2p/transport/tcp/tcp_transport.hpp>
 
 #include <libp2p/transport/impl/upgrader_session.hpp>
+#include <libp2p/transport/tcp/tcp_util.hpp>
 
 namespace libp2p::transport {
 
@@ -23,53 +24,42 @@ namespace libp2p::transport {
                           multi::Multiaddress address,
                           TransportAdaptor::HandlerFunc handler,
                           std::chrono::milliseconds timeout) {
-    if (!canDial(address)) {
-      // TODO(107): Reentrancy
-
-      return handler(std::errc::address_family_not_supported);
+    auto r = detail::asTcp(address);
+    if (not r) {
+      return handler(r.error());
     }
-
-    auto [host, port] = detail::getHostAndTcpPort(address);
-
-    auto layers = detail::getLayers(address);
-
+    auto &[info, layers] = r.value();
     auto conn = std::make_shared<TcpConnection>(*context_, layers);
+    auto connect =
+        [=,
+         self{shared_from_this()},
+         handler{std::move(handler)},
+         layers = std::move(layers)](
+            outcome::result<boost::asio::ip::tcp::resolver::results_type>
+                r) mutable {
+          if (not r) {
+            return handler(r.error());
+          }
+          conn->connect(
+              r.value(),
+              [=, handler{std::move(handler)}, layers = std::move(layers)](
+                  auto ec, auto &e) mutable {
+                if (ec) {
+                  std::ignore = conn->close();
+                  return handler(ec);
+                }
 
-    auto connect = [=,
-                    self{shared_from_this()},
-                    handler{std::move(handler)},
-                    layers = std::move(layers)](auto ec, auto r) mutable {
-      if (ec) {
-        return handler(ec);
-      }
+                auto session =
+                    std::make_shared<UpgraderSession>(self->upgrader_,
+                                                      std::move(layers),
+                                                      std::move(conn),
+                                                      handler);
 
-      conn->connect(
-          r,
-          [=, handler{std::move(handler)}, layers = std::move(layers)](
-              auto ec, auto &e) mutable {
-            if (ec) {
-              std::ignore = conn->close();
-              return handler(ec);
-            }
-
-            auto session = std::make_shared<UpgraderSession>(
-                self->upgrader_, std::move(layers), std::move(conn), handler);
-
-            session->upgradeOutbound(address, remoteId);
-          },
-          timeout);
-    };
-
-    using P = multi::Protocol::Code;
-    switch (detail::getFirstProtocol(address)) {
-      case P::DNS4:
-        return conn->resolve(boost::asio::ip::tcp::v4(), host, port, connect);
-      case P::DNS6:
-        return conn->resolve(boost::asio::ip::tcp::v6(), host, port, connect);
-      default:  // Could be only DNS, IP6 or IP4 as canDial already checked for
-                // that in the beginning of the method
-        return conn->resolve(host, port, connect);
-    }
+                session->upgradeOutbound(address, remoteId);
+              },
+              timeout);
+        };
+    resolve(resolver_, info, std::move(connect));
   }
 
   std::shared_ptr<TransportListener> TcpTransport::createListener(
@@ -79,12 +69,14 @@ namespace libp2p::transport {
   }
 
   bool TcpTransport::canDial(const multi::Multiaddress &ma) const {
-    return detail::supportsIpTcp(ma);
+    return detail::asTcp(ma).has_value();
   }
 
   TcpTransport::TcpTransport(std::shared_ptr<boost::asio::io_context> context,
                              std::shared_ptr<Upgrader> upgrader)
-      : context_(std::move(context)), upgrader_(std::move(upgrader)) {}
+      : context_{std::move(context)},
+        upgrader_{std::move(upgrader)},
+        resolver_{*context_} {}
 
   peer::ProtocolName TcpTransport::getProtocolId() const {
     return "/tcp/1.0.0";

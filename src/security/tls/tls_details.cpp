@@ -11,9 +11,8 @@
 
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
+#include <libp2p/security/tls/tls_details.hpp>
 #include <libp2p/security/tls/tls_errors.hpp>
-
-#include "tls_details.hpp"
 
 namespace libp2p::security::tls_details {
 
@@ -361,7 +360,7 @@ namespace libp2p::security::tls_details {
     }
 
     outcome::result<void> verifyExtensionSignature(
-        X509 *peer_certificate,
+        x509_st *peer_certificate,
         const crypto::PublicKey &peer_pubkey,
         const Signature &signature,
         const peer::PeerId &peer_id) {

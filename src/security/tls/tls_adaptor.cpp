@@ -7,11 +7,12 @@
 #include <libp2p/security/tls/tls_adaptor.hpp>
 
 #include <libp2p/peer/peer_id.hpp>
+#include <libp2p/security/tls/ssl_context.hpp>
+#include <libp2p/security/tls/tls_details.hpp>
 #include <libp2p/security/tls/tls_errors.hpp>
 #include <libp2p/transport/tcp/tcp_connection.hpp>
 
 #include "tls_connection.hpp"
-#include "tls_details.hpp"
 
 namespace libp2p::security {
 
@@ -21,10 +22,12 @@ namespace libp2p::security {
   TlsAdaptor::TlsAdaptor(
       std::shared_ptr<peer::IdentityManager> idmgr,
       std::shared_ptr<boost::asio::io_context> io_context,
+      const SslContext &ssl_context,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller)
       : idmgr_(std::move(idmgr)),
         io_context_(std::move(io_context)),
-        key_marshaller_(std::move(key_marshaller)) {
+        key_marshaller_{std::move(key_marshaller)},
+        ssl_context_{ssl_context.tls} {
     assert(idmgr_);
     assert(io_context_);
     assert(key_marshaller_);
@@ -47,42 +50,6 @@ namespace libp2p::security {
     asyncHandshake(std::move(outbound), p, std::move(cb));
   }
 
-  outcome::result<void> TlsAdaptor::setupContext() {
-    assert(!ssl_context_);
-    using cbase = boost::asio::ssl::context_base;
-
-    try {
-      ssl_context_ = std::make_shared<boost::asio::ssl::context>(cbase::tlsv13);
-      ssl_context_->set_options(cbase::no_compression | cbase::no_sslv2
-                                | cbase::no_sslv3 | cbase::no_tlsv1_1
-                                | cbase::no_tlsv1_2);
-      ssl_context_->set_verify_mode(
-          boost::asio::ssl::verify_peer
-          | boost::asio::ssl::verify_fail_if_no_peer_cert
-          | boost::asio::ssl::verify_client_once);
-      ssl_context_->set_verify_callback(&tls_details::verifyCallback);
-
-      auto ck =
-          tls_details::makeCertificate(idmgr_->getKeyPair(), *key_marshaller_);
-
-      ssl_context_->use_certificate(
-          boost::asio::const_buffer(ck.certificate.data(),
-                                    ck.certificate.size()),
-          boost::asio::ssl::context_base::asn1);
-
-      ssl_context_->use_private_key(
-          boost::asio::const_buffer(ck.private_key.data(),
-                                    ck.private_key.size()),
-          boost::asio::ssl::context_base::asn1);
-    } catch (const std::exception &e) {
-      ssl_context_.reset();
-      log()->error("context init failed: {}", e.what());
-      return TlsError::TLS_CTX_INIT_FAILED;
-    }
-
-    return outcome::success();
-  }
-
   void TlsAdaptor::asyncHandshake(
       std::shared_ptr<connection::LayerConnection> conn,
       boost::optional<peer::PeerId> remote_peer,
@@ -97,12 +64,6 @@ namespace libp2p::security {
     }
 
     std::optional<std::error_code> ec;
-    if (!ssl_context_) {
-      auto res = setupContext();
-      if (!res) {
-        ec = res.error();
-      }
-    }
 
     transport::TcpConnection *tcp_conn = nullptr;
 

@@ -15,7 +15,10 @@ namespace libp2p {
     return {s.data(), s.size()};
   }
 
-  inline boost::asio::mutable_buffer asioBuffer(BytesOut s) {
+  boost::asio::mutable_buffer asioBuffer(auto &&t)
+    requires(requires { BytesOut{t}; })
+  {
+    BytesOut s{t};
     return {s.data(), s.size()};
   }
 

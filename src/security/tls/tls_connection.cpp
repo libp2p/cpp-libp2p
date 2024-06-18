@@ -5,27 +5,16 @@
  */
 
 #include "tls_connection.hpp"
-#include "tls_details.hpp"
 
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
+#include <libp2p/common/asio_buffer.hpp>
+#include <libp2p/security/tls/tls_details.hpp>
 
 namespace libp2p::connection {
 
   using TlsError = security::TlsError;
   using security::tls_details::log;
-
-  namespace {
-    template <typename Span>
-    inline auto makeBuffer(Span s, size_t size) {
-      return boost::asio::buffer(s.data(), size);
-    }
-
-    template <typename Span>
-    inline auto makeBuffer(Span s) {
-      return boost::asio::buffer(s.data(), s.size());
-    }
-  }  // namespace
 
   TlsConnection::TlsConnection(
       std::shared_ptr<LayerConnection> original_connection,
@@ -160,8 +149,9 @@ namespace libp2p::connection {
   void TlsConnection::readSome(BytesOut out,
                                size_t bytes,
                                Reader::ReadCallbackFunc cb) {
+    ambigousSize(out, bytes);
     SL_TRACE(log(), "reading some up to {} bytes", bytes);
-    socket_.async_read_some(makeBuffer(out, bytes),
+    socket_.async_read_some(asioBuffer(out),
                             closeOnError(*this, std::move(cb)));
   }
 
@@ -173,8 +163,9 @@ namespace libp2p::connection {
   void TlsConnection::writeSome(BytesIn in,
                                 size_t bytes,
                                 Writer::WriteCallbackFunc cb) {
+    ambigousSize(in, bytes);
     SL_TRACE(log(), "writing some up to {} bytes", bytes);
-    socket_.async_write_some(makeBuffer(in, bytes),
+    socket_.async_write_some(asioBuffer(in),
                              closeOnError(*this, std::move(cb)));
   }
 

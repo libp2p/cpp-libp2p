@@ -8,6 +8,7 @@
 
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
+#include <libp2p/common/asio_buffer.hpp>
 #include <libp2p/transport/tcp/tcp_util.hpp>
 
 #define TRACE_ENABLED 0
@@ -105,51 +106,6 @@ namespace libp2p::transport {
     }
   }  // namespace
 
-  void TcpConnection::resolve(const TcpConnection::Tcp::endpoint &endpoint,
-                              TcpConnection::ResolveCallbackFunc cb) {
-    auto resolver = std::make_shared<Tcp::resolver>(context_);
-    resolver->async_resolve(
-        endpoint,
-        [wptr{weak_from_this()}, resolver, cb{std::move(cb)}](
-            const ErrorCode &ec, auto &&iterator) {
-          if (!wptr.expired()) {
-            cb(ec, std::forward<decltype(iterator)>(iterator));
-          }
-        });
-  }
-
-  void TcpConnection::resolve(const std::string &host_name,
-                              const std::string &port,
-                              TcpConnection::ResolveCallbackFunc cb) {
-    auto resolver = std::make_shared<Tcp::resolver>(context_);
-    resolver->async_resolve(
-        host_name,
-        port,
-        [wptr{weak_from_this()}, resolver, cb{std::move(cb)}](
-            const ErrorCode &ec, auto &&iterator) {
-          if (!wptr.expired()) {
-            cb(ec, std::forward<decltype(iterator)>(iterator));
-          }
-        });
-  }
-
-  void TcpConnection::resolve(const TcpConnection::Tcp &protocol,
-                              const std::string &host_name,
-                              const std::string &port,
-                              TcpConnection::ResolveCallbackFunc cb) {
-    auto resolver = std::make_shared<Tcp::resolver>(context_);
-    resolver->async_resolve(
-        protocol,
-        host_name,
-        port,
-        [wptr{weak_from_this()}, resolver, cb{std::move(cb)}](
-            const ErrorCode &ec, auto &&iterator) {
-          if (!wptr.expired()) {
-            cb(ec, std::forward<decltype(iterator)>(iterator));
-          }
-        });
-  }
-
   void TcpConnection::connect(
       const TcpConnection::ResolverResultsType &iterator,
       TcpConnection::ConnectCallbackFunc cb) {
@@ -228,16 +184,18 @@ namespace libp2p::transport {
   void TcpConnection::readSome(BytesOut out,
                                size_t bytes,
                                TcpConnection::ReadCallbackFunc cb) {
+    ambigousSize(out, bytes);
     TRACE("{} read some up to {}", debug_str_, bytes);
-    socket_.async_read_some(detail::makeBuffer(out, bytes),
+    socket_.async_read_some(asioBuffer(out),
                             closeOnError(*this, std::move(cb)));
   }
 
   void TcpConnection::writeSome(BytesIn in,
                                 size_t bytes,
                                 TcpConnection::WriteCallbackFunc cb) {
+    ambigousSize(in, bytes);
     TRACE("{} write some up to {}", debug_str_, bytes);
-    socket_.async_write_some(detail::makeBuffer(in, bytes),
+    socket_.async_write_some(asioBuffer(in),
                              closeOnError(*this, std::move(cb)));
   }
 
@@ -286,14 +244,14 @@ namespace libp2p::transport {
         auto endpoint(socket_.local_endpoint(ec));
         if (!ec) {
           BOOST_OUTCOME_TRY(local_multiaddress_,
-                            detail::makeAddress(endpoint, &layers_));
+                            detail::makeAddress(endpoint, layers_));
         }
       }
       if (!remote_multiaddress_) {
         auto endpoint(socket_.remote_endpoint(ec));
         if (!ec) {
           BOOST_OUTCOME_TRY(remote_multiaddress_,
-                            detail::makeAddress(endpoint, &layers_));
+                            detail::makeAddress(endpoint, layers_));
         }
       }
     } else {

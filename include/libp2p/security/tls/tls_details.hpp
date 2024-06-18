@@ -10,6 +10,12 @@
 #include <libp2p/log/logger.hpp>
 #include <libp2p/peer/peer_id.hpp>
 
+struct x509_st;
+
+namespace boost::asio::ssl {
+  class verify_context;
+}  // namespace boost::asio::ssl
+
 namespace libp2p::security::tls_details {
 
   /// Returns "tls" logger
@@ -51,7 +57,7 @@ namespace libp2p::security::tls_details {
   /// \param key_marshaller key marshaller (needed to deal with extension data)
   /// \return pubkey and peer id, or error
   outcome::result<PubkeyAndPeerId> verifyPeerAndExtractIdentity(
-      X509 *peer_certificate,
+      x509_st *peer_certificate,
       const crypto::marshaller::KeyMarshaller &key_marshaller);
 
 }  // namespace libp2p::security::tls_details

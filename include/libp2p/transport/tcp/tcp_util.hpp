@@ -6,134 +6,200 @@
 
 #pragma once
 
-#include <sstream>
-#include <system_error>  // for std::errc
-
-#include <boost/asio.hpp>
-#include <boost/lexical_cast.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ip/udp.hpp>
+#include <charconv>
 #include <libp2p/multi/multiaddress.hpp>
 
 namespace libp2p::transport::detail {
-  template <typename T>
-  inline outcome::result<multi::Multiaddress> makeAddress(
-      T &&endpoint, const ProtoAddrVec *layers = nullptr) {
-    try {
-      auto address = endpoint.address();
-      auto port = endpoint.port();
+  using P = multi::Protocol::Code;
 
-      // TODO(warchant): PRE-181 refactor to use builder instead
-      std::ostringstream s;
-      if (address.is_v4()) {
-        s << "/ip4/" << address.to_v4().to_string();
-      } else {
-        s << "/ip6/" << address.to_v6().to_string();
-      }
+  struct Dns {
+    std::optional<bool> v4;
+    std::string name;
+  };
+  using IpOrDns = std::variant<boost::asio::ip::address, Dns>;
 
-      s << "/tcp/" << port;
-
-      if (layers != nullptr and not layers->empty()) {
-        auto &protocol = layers->at(0).first.code;
-        using P = multi::Protocol::Code;
-        if (protocol == P::WS) {
-          s << "/ws";
-        } else if (protocol == P::WSS) {
-          s << "/wss";
+  static outcome::result<IpOrDns> readIpOrDns(ProtoAddrVec::iterator &it,
+                                              ProtoAddrVec::iterator end) {
+    if (it == end) {
+      return std::errc::protocol_not_supported;
+    }
+    auto &[p, v] = *it++;
+    switch (p.code) {
+      case P::IP4:
+      case P::IP6: {
+        boost::asio::ip::address ip;
+        boost::system::error_code ec;
+        switch (p.code) {
+          case P::IP4:
+            ip = boost::asio::ip::make_address_v4(v, ec);
+            break;
+          case P::IP6:
+            ip = boost::asio::ip::make_address_v6(v, ec);
+            break;
         }
+        if (ec) {
+          return ec;
+        }
+        return ip;
       }
-
-      return multi::Multiaddress::create(s.str());
-    } catch (const boost::system::system_error &e) {
-      return e.code();
+      case P::DNS:
+      case P::DNS4:
+      case P::DNS6: {
+        Dns dns{std::nullopt, v};
+        switch (p.code) {
+          case P::DNS4:
+            dns.v4 = true;
+            break;
+          case P::DNS6:
+            dns.v4 = false;
+            break;
+        }
+        return dns;
+      }
     }
+    return std::errc::protocol_not_supported;
   }
 
-  inline auto makeBuffer(BytesOut s) {
-    return boost::asio::buffer(s.data(), s.size());
+  struct TcpOrUdp {
+    IpOrDns ip;
+    uint16_t port = 0;
+    bool udp = false;
+
+    template <typename T>
+    outcome::result<T> as(bool udp) const {
+      auto ip = std::get_if<boost::asio::ip::address>(&this->ip);
+      if (this->udp != udp or not ip) {
+        return std::errc::protocol_not_supported;
+      }
+      return T{*ip, port};
+    }
+    auto asTcp() const {
+      return as<boost::asio::ip::tcp::endpoint>(false);
+    }
+    auto asUdp() const {
+      return as<boost::asio::ip::udp::endpoint>(true);
+    }
+  };
+
+  static outcome::result<TcpOrUdp> readTcpOrUdp(ProtoAddrVec::iterator &it,
+                                                ProtoAddrVec::iterator end) {
+    TcpOrUdp addr;
+    BOOST_OUTCOME_TRY(addr.ip, readIpOrDns(it, end));
+    if (it == end) {
+      return std::errc::protocol_not_supported;
+    }
+    auto &[p, v] = *it++;
+    switch (p.code) {
+      case P::TCP:
+        addr.udp = false;
+        break;
+      case P::UDP:
+        addr.udp = true;
+        break;
+      default:
+        return std::errc::protocol_not_supported;
+    }
+    auto r = std::from_chars(v.data(), v.data() + v.size(), addr.port);
+    if (r.ec != std::errc{}) {
+      return make_error_code(r.ec);
+    }
+    return addr;
   }
 
-  inline auto makeBuffer(BytesOut s, size_t size) {
-    return boost::asio::buffer(s.data(), size);
-  }
-
-  inline auto makeBuffer(BytesIn s) {
-    return boost::asio::buffer(s.data(), s.size());
-  }
-
-  inline auto makeBuffer(BytesIn s, size_t size) {
-    return boost::asio::buffer(s.data(), size);
-  }
-
-  inline bool supportsIpTcp(const multi::Multiaddress &ma) {
-    using P = multi::Protocol::Code;
-    return (ma.hasProtocol(P::IP4) || ma.hasProtocol(P::IP6)
-            || ma.hasProtocol(P::DNS4) || ma.hasProtocol(P::DNS6)
-            || ma.hasProtocol(P::DNS))
-        && ma.hasProtocol(P::TCP);
-
-    // TODO(xDimon): Support 'DNSADDR' addresses.
-    //  Issue: https://github.com/libp2p/cpp-libp2p/issues/97
-  }
-
-  inline auto getFirstProtocol(const multi::Multiaddress &ma) {
-    return ma.getProtocolsWithValues().front().first.code;
-  }
-
-  // Obtain host and port strings from provided address
-  inline std::pair<std::string, std::string> getHostAndTcpPort(
-      const multi::Multiaddress &address) {
-    auto v = address.getProtocolsWithValues();
-
-    // get host
+  inline outcome::result<std::pair<TcpOrUdp, ProtoAddrVec>> asTcp(
+      const Multiaddress &ma) {
+    auto v = ma.getProtocolsWithValues();
     auto it = v.begin();
-    auto host = it->second;
-
-    // get port
-    it++;
-    BOOST_ASSERT(it->first.code == multi::Protocol::Code::TCP);
-    auto port = it->second;
-
-    return {host, port};
-  }
-
-  // Obtain layers string from provided address
-  inline ProtoAddrVec getLayers(const multi::Multiaddress &address) {
-    auto v = address.getProtocolsWithValues();
-
-    auto begin = std::next(v.begin(), 2);  // skip host and port
-
-    auto end = std::find_if(begin, v.end(), [](const auto &p) {
-      return p.first.code == multi::Protocol::Code::P2P;
-    });
-
-    return {begin, end};
-  }
-
-  inline outcome::result<boost::asio::ip::tcp::endpoint> makeEndpoint(
-      const multi::Multiaddress &ma) {
-    using P = multi::Protocol::Code;
-    using namespace boost::asio;  // NOLINT
-
-    try {
-      auto v = ma.getProtocolsWithValues();
-      auto it = v.begin();
-      if (it->first.code != P::IP4 && it->first.code != P::IP6) {
-        return std::errc::address_family_not_supported;
-      }
-
-      auto addr = ip::make_address(it->second);
-      ++it;
-
-      if (it->first.code != P::TCP) {
-        return std::errc::address_family_not_supported;
-      }
-
-      auto port = boost::lexical_cast<uint16_t>(it->second);
-
-      return ip::tcp::endpoint{addr, port};
-    } catch (const boost::system::system_error &e) {
-      return e.code();
-    } catch (const boost::bad_lexical_cast & /* ignored */) {
-      return multi::Multiaddress::Error::INVALID_PROTOCOL_VALUE;
+    OUTCOME_TRY(addr, readTcpOrUdp(it, v.end()));
+    if (addr.udp) {
+      return std::errc::protocol_not_supported;
     }
+    auto end = std::find_if(
+        it, v.end(), [](const auto &p) { return p.first.code == P::P2P; });
+    return std::make_pair(addr, ProtoAddrVec{it, end});
+  }
+
+  inline outcome::result<TcpOrUdp> asQuic(const Multiaddress &ma) {
+    auto v = ma.getProtocolsWithValues();
+    auto it = v.begin();
+    OUTCOME_TRY(addr, readTcpOrUdp(it, v.end()));
+    if (not addr.udp) {
+      return std::errc::protocol_not_supported;
+    }
+    if (it == v.end()) {
+      return std::errc::protocol_not_supported;
+    }
+    if (it->first.code != P::QUIC_V1) {
+      return std::errc::protocol_not_supported;
+    }
+    return addr;
+  }
+
+  template <typename T>
+  void resolve(T &resolver, const TcpOrUdp &addr, auto &&cb) {
+    if (auto ip = std::get_if<boost::asio::ip::address>(&addr.ip)) {
+      return cb(T::results_type::create(
+          typename T::endpoint_type{*ip, addr.port}, "", ""));
+    }
+    auto &dns = std::get<Dns>(addr.ip);
+    auto cb2 = [cb{std::forward<decltype(cb)>(cb)}](
+                   boost::system::error_code ec, T::results_type r) mutable {
+      if (ec) {
+        return cb(ec);
+      }
+      cb(std::move(r));
+    };
+    if (dns.v4) {
+      resolver.async_resolve(
+          *dns.v4 ? T::protocol_type::v4() : T::protocol_type::v6(),
+          dns.name,
+          std::to_string(addr.port),
+          std::move(cb2));
+    } else {
+      resolver.async_resolve(
+          dns.name, std::to_string(addr.port), std::move(cb2));
+    }
+  }
+
+  template <typename T>
+  outcome::result<std::string> toMultiaddr(const T &endpoint) {
+    constexpr auto tcp = std::is_same_v<T, boost::asio::ip::tcp::endpoint>;
+    constexpr auto udp = std::is_same_v<T, boost::asio::ip::udp::endpoint>;
+    static_assert(tcp or udp);
+    auto ip = endpoint.address();
+    boost::system::error_code ec;
+    auto ip_str = ip.to_string(ec);
+    if (ec) {
+      return ec;
+    }
+    return fmt::format("/{}/{}/{}/{}",
+                       ip.is_v4() ? "ip4" : "ip6",
+                       ip_str,
+                       tcp ? "tcp" : "udp",
+                       endpoint.port());
+  }
+
+  inline outcome::result<Multiaddress> makeAddress(
+      const boost::asio::ip::tcp::endpoint &endpoint,
+      const ProtoAddrVec &layers) {
+    OUTCOME_TRY(s, toMultiaddr(endpoint));
+    if (not layers.empty()) {
+      auto &protocol = layers.at(0).first.code;
+      if (protocol == P::WS) {
+        s += "/ws";
+      } else if (protocol == P::WSS) {
+        s += "/wss";
+      }
+    }
+    return Multiaddress::create(s);
+  }
+
+  inline outcome::result<Multiaddress> makeQuicAddr(
+      const boost::asio::ip::udp::endpoint &endpoint) {
+    OUTCOME_TRY(s, toMultiaddr(endpoint));
+    s += "/quic-v1";
+    return Multiaddress::create(s);
   }
 }  // namespace libp2p::transport::detail

@@ -40,6 +40,7 @@
 #include <libp2p/security/secio/exchange_message_marshaller_impl.hpp>
 #include <libp2p/security/secio/propose_message_marshaller_impl.hpp>
 #include <libp2p/security/tls.hpp>
+#include <libp2p/security/tls/ssl_context.hpp>
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp.hpp>
 

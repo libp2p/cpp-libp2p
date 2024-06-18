@@ -194,7 +194,15 @@ namespace libp2p::multi {
 
     boost::optional<std::string> peer_id_;
   };
+
+  inline auto format_as(const Multiaddress &ma) {
+    return ma.getStringAddress();
+  }
 }  // namespace libp2p::multi
+
+namespace libp2p {
+  using multi::Multiaddress;
+}  // namespace libp2p
 
 namespace std {
   template <>

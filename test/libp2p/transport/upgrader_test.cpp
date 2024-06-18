@@ -130,7 +130,7 @@ TEST_F(UpgraderTest, UpgradeLayersInitiator) {
       libp2p::multi::Multiaddress::create(
           "/ip4/127.0.0.1/tcp/1234/_dummy_proto_1/_dummy_proto_2"
           "/p2p/12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV"));
-  auto layers = detail::getLayers(address);
+  auto layers = detail::asTcp(address).value().second;
 
   EXPECT_CALL(*std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[0]),
               upgradeOutbound(
@@ -158,7 +158,7 @@ TEST_F(UpgraderTest, UpgradeLayersNotInitiator) {
       libp2p::multi::Multiaddress::create(
           "/ip4/127.0.0.1/tcp/1234/_dummy_proto_1/_dummy_proto_2"
           "/p2p/12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV"));
-  auto layers = detail::getLayers(address);
+  auto layers = detail::asTcp(address).value().second;
 
   EXPECT_CALL(
       *std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[0]),
