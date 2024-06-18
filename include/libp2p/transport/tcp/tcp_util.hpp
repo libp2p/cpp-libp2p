@@ -10,6 +10,7 @@
 #include <boost/asio/ip/udp.hpp>
 #include <charconv>
 #include <libp2p/multi/multiaddress.hpp>
+#include <variant>
 
 namespace libp2p::transport::detail {
   using P = multi::Protocol::Code;
