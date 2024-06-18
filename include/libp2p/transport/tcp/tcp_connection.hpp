@@ -34,9 +34,6 @@ namespace libp2p::transport {
     using Tcp = boost::asio::ip::tcp;
     using ErrorCode = boost::system::error_code;
     using ResolverResultsType = Tcp::resolver::results_type;
-    using ResolveCallback = void(const ErrorCode &,
-                                 const ResolverResultsType &);
-    using ResolveCallbackFunc = std::function<ResolveCallback>;
     using ConnectCallback = void(const ErrorCode &, const Tcp::endpoint &);
     using ConnectCallbackFunc = std::function<ConnectCallback>;
 
@@ -45,33 +42,6 @@ namespace libp2p::transport {
     TcpConnection(boost::asio::io_context &ctx,
                   ProtoAddrVec layers,
                   Tcp::socket &&socket);
-
-    /**
-     * @brief Resolve service name (DNS).
-     * @param endpoint endpoint to resolve.
-     * @param cb callback executed on operation completion.
-     */
-    void resolve(const Tcp::endpoint &endpoint, ResolveCallbackFunc cb);
-
-    /**
-     * @brief Resolve service name (DNS).
-     * @param host_name host name to resolve
-     * @param cb callback executed on operation completion.
-     */
-    void resolve(const std::string &host_name,
-                 const std::string &port,
-                 ResolveCallbackFunc cb);
-
-    /**
-     * @brief Resolve service name (DNS).
-     * @param protocol is either Tcp::ip4 or Tcp::ip6 protocol
-     * @param host_name host name to resolve
-     * @param cb callback executed on operation completion.
-     */
-    void resolve(const Tcp &protocol,
-                 const std::string &host_name,
-                 const std::string &port,
-                 ResolveCallbackFunc cb);
 
     /**
      * @brief Connect to a remote service.

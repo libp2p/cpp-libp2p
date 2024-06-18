@@ -99,6 +99,10 @@ namespace libp2p::peer {
 
 }  // namespace libp2p::peer
 
+namespace libp2p {
+  using peer::PeerId;
+}  // namespace libp2p
+
 namespace std {
   template <>
   struct hash<libp2p::peer::PeerId> {

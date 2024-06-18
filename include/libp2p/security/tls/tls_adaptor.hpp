@@ -15,6 +15,7 @@
 #include <libp2p/security/tls/tls_errors.hpp>
 
 namespace libp2p::security {
+  struct SslContext;
 
   /// TLS 1.3 security adaptor
   class TlsAdaptor : public SecurityAdaptor,
@@ -27,6 +28,7 @@ namespace libp2p::security {
     TlsAdaptor(
         std::shared_ptr<peer::IdentityManager> idmgr,
         std::shared_ptr<boost::asio::io_context> io_context,
+        const SslContext &ssl_context,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
     /// Returns "/tls/1.0.0"
@@ -42,9 +44,6 @@ namespace libp2p::security {
                         SecConnCallbackFunc cb) override;
 
    private:
-    /// Creates shared SSL context, generates certificate and private key
-    outcome::result<void> setupContext();
-
     /// Creates TLSConnection and starts handshake
     void asyncHandshake(std::shared_ptr<connection::LayerConnection> conn,
                         boost::optional<peer::PeerId> remote_peer,

@@ -8,6 +8,7 @@
 
 #include <libp2p/log/logger.hpp>
 #include <libp2p/transport/impl/upgrader_session.hpp>
+#include <libp2p/transport/tcp/tcp_util.hpp>
 
 namespace libp2p::transport {
 
@@ -21,21 +22,16 @@ namespace libp2p::transport {
 
   outcome::result<void> TcpListener::listen(
       const multi::Multiaddress &address) {
-    if (!canListen(address)) {
-      return std::errc::address_family_not_supported;
-    }
-
+    OUTCOME_TRY(info, detail::asTcp(address));
     if (acceptor_.is_open()) {
       return std::errc::already_connected;
     }
-
-    layers_ = detail::getLayers(address);
+    layers_ = info.second;
+    OUTCOME_TRY(endpoint, info.first.asTcp());
 
     // TODO(@warchant): replace with parser PRE-129
     using namespace boost::asio;  // NOLINT
     try {
-      OUTCOME_TRY(endpoint, detail::makeEndpoint(address));
-
       // setup acceptor, throws
       acceptor_.open(endpoint.protocol());
       acceptor_.set_option(ip::tcp::acceptor::reuse_address(true));
@@ -55,7 +51,7 @@ namespace libp2p::transport {
   }
 
   bool TcpListener::canListen(const multi::Multiaddress &ma) const {
-    return detail::supportsIpTcp(ma);
+    return detail::asTcp(ma).has_value();
   }
 
   outcome::result<multi::Multiaddress> TcpListener::getListenMultiaddr() const {
@@ -64,7 +60,7 @@ namespace libp2p::transport {
     if (ec) {
       return ec;
     }
-    return detail::makeAddress(endpoint, &layers_);
+    return detail::makeAddress(endpoint, layers_);
   }
 
   bool TcpListener::isClosed() const {

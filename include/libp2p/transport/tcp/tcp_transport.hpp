@@ -6,9 +6,8 @@
 
 #pragma once
 
-#include <boost/asio.hpp>
+#include <boost/asio/ip/tcp.hpp>
 #include <libp2p/transport/tcp/tcp_listener.hpp>
-#include <libp2p/transport/tcp/tcp_util.hpp>
 #include <libp2p/transport/transport_adaptor.hpp>
 #include <libp2p/transport/upgrader.hpp>
 
@@ -44,6 +43,6 @@ namespace libp2p::transport {
    private:
     std::shared_ptr<boost::asio::io_context> context_;
     std::shared_ptr<Upgrader> upgrader_;
-  };  // namespace libp2p::transport
-
+    boost::asio::ip::tcp::resolver resolver_;
+  };
 }  // namespace libp2p::transport

@@ -44,7 +44,7 @@ namespace libp2p::layer {
       const multi::Multiaddress &address,
       std::shared_ptr<connection::LayerConnection> conn,
       LayerAdaptor::LayerConnCallbackFunc cb) const {
-    auto host = transport::detail::getHostAndTcpPort(address).first;
+    auto host = address.getProtocolsWithValues().begin()->second;
     auto ws = std::make_shared<connection::WsConnection>(
         config_, io_context_, std::move(conn), scheduler_);
     ws->ws_.async_handshake(

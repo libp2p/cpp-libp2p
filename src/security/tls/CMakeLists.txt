@@ -5,6 +5,7 @@
 #
 
 libp2p_add_library(p2p_tls
+    ssl_context.cpp
     tls_adaptor.cpp
     tls_connection.cpp
     tls_details.cpp

@@ -7,6 +7,7 @@
 #include "libp2p/injector/network_injector.hpp"
 
 #include <gtest/gtest.h>
+#include <qtils/unhex.hpp>
 #include <set>
 
 #include "mock/libp2p/layer/layer_adaptor_mock.hpp"
@@ -19,6 +20,7 @@ using namespace libp2p;
 using namespace network;
 using namespace injector;
 using namespace crypto;
+using qtils::operator""_unhex;
 
 using ::testing::_;
 using ::testing::NiceMock;
@@ -91,8 +93,10 @@ TEST(NetworkBuilder, CustomKeyPairBuilds) {
   testutil::prepareLoggers();
 
   KeyPair keyPair{
-      {{Key::Type::Ed25519, {1}}},
-      {{Key::Type::Ed25519, {2}}},
+      {Key::Type::Ed25519,
+       "48453469c62f4885373099421a7365520b5ffb0d93726c124166be4b81d852e6"_unhex},
+      {Key::Type::Ed25519,
+       "4a9361c525840f7086b893d584ebbe475b4ec7069951d2e897e8bceb0a3f35ce"_unhex},
   };
 
   auto injector = makeNetworkInjector(useKeyPair(keyPair));

@@ -271,7 +271,13 @@ namespace libp2p::multi {
     if (p == nullptr) {
       return false;
     }
-
+    if (p->size == 0 and stringified_address_.ends_with(p->name)) {
+      auto i = p->name.size() + 1;
+      if (i <= stringified_address_.size()
+          and stringified_address_[stringified_address_.size() - i]) {
+        return true;
+      }
+    }
     auto str = '/' + std::string(p->name) + '/';
     return this->stringified_address_.find(str) != std::string::npos;
   }
