@@ -48,6 +48,7 @@ namespace libp2p::security {
       static FILE *keylog = [] {
         FILE *f = nullptr;
         if (auto *path = getenv("SSLKEYLOGFILE")) {
+          // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
           f = fopen(path, "a");
           setvbuf(f, nullptr, _IOLBF, 0);
         }
