@@ -6,6 +6,8 @@
 
 #include <libp2p/crypto/common_functions.hpp>
 
+#include <openssl/bn.h>
+#include <openssl/ecdsa.h>
 #include <libp2p/common/final_action.hpp>
 #include <libp2p/crypto/error.hpp>
 

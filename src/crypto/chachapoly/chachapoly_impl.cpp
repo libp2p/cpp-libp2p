@@ -4,14 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/common/final_action.hpp>
+#include <openssl/aead.h>
 #include <libp2p/crypto/chachapoly/chachapoly_impl.hpp>
-#include <libp2p/crypto/common_functions.hpp>
 #include <libp2p/crypto/error.hpp>
 
-using libp2p::common::FinalAction;
-
 namespace libp2p::crypto::chachapoly {
+  constexpr size_t kTagSize = 16;
 
 #define IF1(expr, err, result) \
   if (1 != (expr)) {           \
@@ -21,125 +19,75 @@ namespace libp2p::crypto::chachapoly {
 
   ChaCha20Poly1305Impl::ChaCha20Poly1305Impl(Key key)
       : key_{key},
-        cipher_{EVP_chacha20_poly1305()},
-        block_size_{EVP_CIPHER_block_size(cipher_)} {}
+        aead_{EVP_aead_chacha20_poly1305()},
+        overhead_{EVP_AEAD_max_overhead(aead_)} {}
+
+  outcome::result<void> ChaCha20Poly1305Impl::init(EVP_AEAD_CTX *ctx,
+                                                   bool encrypt) {
+    IF1(EVP_AEAD_CTX_init_with_direction(
+            ctx,
+            aead_,
+            key_.data(),
+            key_.size(),
+            kTagSize,
+            encrypt ? evp_aead_seal : evp_aead_open),
+        "EVP_AEAD_CTX_init",
+        OpenSslError::FAILED_INITIALIZE_CONTEXT);
+    return outcome::success();
+  }
 
   outcome::result<Bytes> ChaCha20Poly1305Impl::encrypt(const Nonce &nonce,
                                                        BytesIn plaintext,
                                                        BytesIn aad) {
-    const auto init_failure = OpenSslError::FAILED_INITIALIZE_OPERATION;
-    std::vector<uint8_t> result;
+    bssl::ScopedEVP_AEAD_CTX ctx;
+    OUTCOME_TRY(init(ctx.get(), true));
+    Bytes result;
     // just reserving the space, possibly without actual memory allocation:
     // ciphertext length equals to plaintext length
     // one block size for EncryptFinal_ex (usually not required)
     // 16 bytes for the tag
-    result.reserve(plaintext.size() + block_size_ + 16);
-    auto *ctx = EVP_CIPHER_CTX_new();
-    if (nullptr == ctx) {
-      return OpenSslError::FAILED_INITIALIZE_CONTEXT;
-    }
-    FinalAction free_ctx([ctx] { EVP_CIPHER_CTX_free(ctx); });
-
-    IF1(EVP_EncryptInit_ex(ctx, cipher_, nullptr, nullptr, nullptr),
-        "Failed to initialize EVP encryption.",
-        init_failure)
-
-    IF1(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, 12, nullptr),
-        "Cannot set AEAD initialization vector length.",
-        init_failure)
-
-    IF1(EVP_EncryptInit_ex(ctx, nullptr, nullptr, key_.data(), nonce.data()),
-        "Cannot finalize init of encryption engine.",
-        init_failure)
-
-    int len{0};
-    IF1(EVP_EncryptUpdate(ctx, nullptr, &len, nullptr, plaintext.size()),
-        "Failed to calculate cipher text length.",
-        OpenSslError::FAILED_ENCRYPT_UPDATE)
-
-    // does actual memory allocation
-    result.resize(len + block_size_ + 16, 0u);
-    if (not aad.empty()) {
-      IF1(EVP_EncryptUpdate(ctx, nullptr, &len, aad.data(), aad.size()),
-          "Failed to apply additional authentication data during encryption.",
-          OpenSslError::FAILED_ENCRYPT_UPDATE)
-    }
-
-    IF1(EVP_EncryptUpdate(
-            ctx, result.data(), &len, plaintext.data(), plaintext.size()),
-        "Plaintext encryption failed.",
-        OpenSslError::FAILED_ENCRYPT_UPDATE)
-    int ciphertext_len = len;  // without tag size
-    IF1(EVP_EncryptFinal_ex(ctx, result.data() + len, &len),  // NOLINT
-        "Unable to finalize encryption.",
-        OpenSslError::FAILED_ENCRYPT_FINALIZE)
-
-    ciphertext_len += len;
-    IF1(EVP_CIPHER_CTX_ctrl(ctx,
-                            EVP_CTRL_AEAD_GET_TAG,
-                            EVP_CTRL_AEAD_GET_TAG,
-                            result.data() + ciphertext_len),  // NOLINT
-        "Failed to write tag.",
-        OpenSslError::FAILED_ENCRYPT_FINALIZE)
-
-    // remove the last block_size bytes if those were not used
-    result.resize(ciphertext_len + 16);
+    result.resize(plaintext.size() + overhead_);
+    size_t out_size = 0;
+    IF1(EVP_AEAD_CTX_seal(ctx.get(),
+                          result.data(),
+                          &out_size,
+                          result.size(),
+                          nonce.data(),
+                          nonce.size(),
+                          plaintext.data(),
+                          plaintext.size(),
+                          aad.data(),
+                          aad.size()),
+        "EVP_AEAD_CTX_seal",
+        OpenSslError::FAILED_ENCRYPT_UPDATE);
+    result.resize(out_size);
     return result;
   }
 
   outcome::result<Bytes> ChaCha20Poly1305Impl::decrypt(const Nonce &nonce,
                                                        BytesIn ciphertext,
                                                        BytesIn aad) {
+    bssl::ScopedEVP_AEAD_CTX ctx;
+    OUTCOME_TRY(init(ctx.get(), false));
     Bytes result;
     // plain text should take less bytes than cipher text,
     // at least it would not contain tag-length bytes (16).
     // single block size for the case when len(in) == len(out)
-    result.resize(ciphertext.size() + block_size_, 0u);
-    auto *ctx = EVP_CIPHER_CTX_new();
-    FinalAction free_ctx([ctx] { EVP_CIPHER_CTX_free(ctx); });
-
-    IF1(EVP_DecryptInit_ex(ctx, cipher_, nullptr, nullptr, nullptr),
-        "Failed to initialize decryption engine.",
-        OpenSslError::FAILED_INITIALIZE_OPERATION)
-
-    IF1(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, 12, nullptr),
-        "Cannot set AEAD initialization vector length.",
-        OpenSslError::FAILED_INITIALIZE_OPERATION)
-
-    IF1(EVP_CIPHER_CTX_ctrl(
-            ctx,
-            EVP_CTRL_AEAD_SET_TAG,
-            EVP_CTRL_AEAD_GET_TAG,
-            (uint8_t *)ciphertext.data() + ciphertext.size() - 16),  // NOLINT
-        "Failed to specify buffer for further tag reading.",
-        OpenSslError::FAILED_DECRYPT_UPDATE)
-
-    IF1(EVP_DecryptInit_ex(ctx, nullptr, nullptr, key_.data(), nonce.data()),
-        "Cannot finalize init of decryption engine.",
-        OpenSslError::FAILED_INITIALIZE_OPERATION)
-
-    int len{0};
-    if (not aad.empty()) {
-      IF1(EVP_DecryptUpdate(ctx, nullptr, &len, aad.data(), aad.size()),
-          "Failed to apply additional authentication data during decryption.",
-          OpenSslError::FAILED_DECRYPT_UPDATE)
-    }
-
-    IF1(EVP_DecryptUpdate(ctx,
+    result.resize(ciphertext.size());
+    size_t out_size = 0;
+    IF1(EVP_AEAD_CTX_open(ctx.get(),
                           result.data(),
-                          &len,
+                          &out_size,
+                          result.size(),
+                          nonce.data(),
+                          nonce.size(),
                           ciphertext.data(),
-                          ciphertext.size() - 16),
-        "Ciphertext decryption failed.",
-        OpenSslError::FAILED_DECRYPT_UPDATE)
-
-    IF1(EVP_DecryptFinal_ex(ctx,
-                            result.data() + len,  // NOLINT
-                            &len),
-        "Failed to finalize decryption.",
-        OpenSslError::FAILED_DECRYPT_FINALIZE);
-
-    result.resize(ciphertext.size() - 16);
+                          ciphertext.size(),
+                          aad.data(),
+                          aad.size()),
+        "EVP_AEAD_CTX_open",
+        OpenSslError::FAILED_DECRYPT_UPDATE);
+    result.resize(out_size);
     return result;
   }
 

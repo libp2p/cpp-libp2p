@@ -9,6 +9,7 @@ libp2p_add_library(p2p_secp256k1_provider
     )
 
 target_link_libraries(p2p_secp256k1_provider
+    libsecp256k1::secp256k1
     p2p_sha
     p2p_crypto_error
     p2p_crypto_common

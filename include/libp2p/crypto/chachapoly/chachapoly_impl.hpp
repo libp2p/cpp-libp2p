@@ -25,9 +25,11 @@ namespace libp2p::crypto::chachapoly {
                                    BytesIn aad) override;
 
    private:
+    outcome::result<void> init(EVP_AEAD_CTX *ctx, bool encrypt);
+
     const Key key_;
-    const EVP_CIPHER *cipher_;
-    const int block_size_;
+    const EVP_AEAD *aead_;
+    const size_t overhead_;
     libp2p::log::Logger log_ = libp2p::log::createLogger("ChaChaPoly");
   };
 
