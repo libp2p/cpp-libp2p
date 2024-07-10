@@ -20,12 +20,13 @@ namespace libp2p::connection {
       std::shared_ptr<LayerConnection> original_connection,
       std::shared_ptr<boost::asio::ssl::context> ssl_context,
       const peer::IdentityManager &idmgr,
-      tcp_socket_t &tcp_socket,
+      std::shared_ptr<boost::asio::io_context> io_context,
       boost::optional<peer::PeerId> remote_peer)
       : local_peer_(idmgr.getId()),
         original_connection_(std::move(original_connection)),
         ssl_context_(std::move(ssl_context)),
-        socket_(std::ref(tcp_socket), *ssl_context_),
+        socket_{AsAsioReadWrite{std::move(io_context), original_connection_},
+                *ssl_context_},
         remote_peer_(std::move(remote_peer)) {}
 
   void TlsConnection::asyncHandshake(

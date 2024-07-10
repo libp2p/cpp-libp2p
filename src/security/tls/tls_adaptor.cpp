@@ -10,7 +10,6 @@
 #include <libp2p/security/tls/ssl_context.hpp>
 #include <libp2p/security/tls/tls_details.hpp>
 #include <libp2p/security/tls/tls_errors.hpp>
-#include <libp2p/transport/tcp/tcp_connection.hpp>
 
 #include "tls_connection.hpp"
 
@@ -63,27 +62,12 @@ namespace libp2p::security {
       SL_DEBUG(log(), "securing inbound connection");
     }
 
-    std::optional<std::error_code> ec;
-
-    transport::TcpConnection *tcp_conn = nullptr;
-
-    if (!ec) {
-      tcp_conn = dynamic_cast<transport::TcpConnection *>(conn.get());
-      if (tcp_conn == nullptr) {
-        ec = TlsError::TLS_INCOMPATIBLE_TRANSPORT;
-      } else {
-        auto tls_conn = std::make_shared<TlsConnection>(std::move(conn),
-                                                        ssl_context_,
-                                                        *idmgr_,
-                                                        tcp_conn->socket_,
-                                                        std::move(remote_peer));
-        tls_conn->asyncHandshake(std::move(cb), key_marshaller_);
-      }
-    }
-
-    if (ec) {
-      io_context_->post([cb, ec] { cb(*ec); });
-    }
+    auto tls_conn = std::make_shared<TlsConnection>(std::move(conn),
+                                                    ssl_context_,
+                                                    *idmgr_,
+                                                    io_context_,
+                                                    std::move(remote_peer));
+    tls_conn->asyncHandshake(std::move(cb), key_marshaller_);
   }
 
 }  // namespace libp2p::security
