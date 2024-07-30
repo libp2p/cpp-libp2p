@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace libp2p::multi {
   /// TODO(Harrm) FIL-14: Hash types are a part of multicodec table, it would be
   /// good to move them there to avoid duplication and allow for extraction of
