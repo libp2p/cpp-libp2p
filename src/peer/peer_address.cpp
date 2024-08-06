@@ -67,11 +67,11 @@ namespace libp2p::peer {
          + id_.toBase58();
   }
 
-  const PeerId &PeerAddress::getId() const noexcept {
+  const PeerId &PeerAddress::getId() const {
     return id_;
   }
 
-  const multi::Multiaddress &PeerAddress::getAddress() const noexcept {
+  const multi::Multiaddress &PeerAddress::getAddress() const {
     return address_;
   }
 }  // namespace libp2p::peer

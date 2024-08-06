@@ -45,7 +45,7 @@ namespace {
    * @param c - char to be tested
    * @return true, if char is space, false otherwise
    */
-  constexpr bool isSpace(char c) noexcept {
+  constexpr bool isSpace(char c) {
     return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t'
         || c == '\v';
   }

@@ -45,7 +45,7 @@ namespace libp2p::connection {
     return remote_;
   }
 
-  bool PlaintextConnection::isInitiator() const noexcept {
+  bool PlaintextConnection::isInitiator() const {
     return original_connection_->isInitiator();
   }
 

@@ -23,7 +23,7 @@ namespace libp2p::connection {
             *ssl_context_,
         } {}
 
-  bool SslConnection::isInitiator() const noexcept {
+  bool SslConnection::isInitiator() const {
     return connection_->isInitiator();
   }
 

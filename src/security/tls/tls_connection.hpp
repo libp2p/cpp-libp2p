@@ -68,7 +68,7 @@ namespace libp2p::connection {
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
     /// Returns true if connection is outbound
-    bool isInitiator() const noexcept override;
+    bool isInitiator() const override;
 
     /// Returns local network address
     outcome::result<multi::Multiaddress> localMultiaddr() override;

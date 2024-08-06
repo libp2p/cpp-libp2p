@@ -101,7 +101,7 @@ namespace libp2p::connection {
     return connection_->remotePublicKey();
   }
 
-  bool MplexedConnection::isInitiator() const noexcept {
+  bool MplexedConnection::isInitiator() const {
     return connection_->isInitiator();
   }
 

@@ -144,7 +144,7 @@ namespace libp2p::connection {
     return connection_->remotePublicKey();
   }
 
-  bool YamuxedConnection::isInitiator() const noexcept {
+  bool YamuxedConnection::isInitiator() const {
     return connection_->isInitiator();
   }
 

@@ -114,7 +114,7 @@ namespace libp2p::connection {
     return remote_pubkey_.value();
   }
 
-  bool TlsConnection::isInitiator() const noexcept {
+  bool TlsConnection::isInitiator() const {
     return original_connection_->isInitiator();
   }
 

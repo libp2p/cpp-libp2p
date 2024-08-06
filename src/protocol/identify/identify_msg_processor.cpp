@@ -134,17 +134,17 @@ namespace libp2p::protocol {
         });
   }
 
-  Host &IdentifyMessageProcessor::getHost() const noexcept {
+  Host &IdentifyMessageProcessor::getHost() const {
     return host_;
   }
 
   network::ConnectionManager &IdentifyMessageProcessor::getConnectionManager()
-      const noexcept {
+      const {
     return conn_manager_;
   }
 
   const ObservedAddresses &IdentifyMessageProcessor::getObservedAddresses()
-      const noexcept {
+      const {
     return observed_addresses_;
   }
 

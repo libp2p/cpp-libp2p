@@ -25,7 +25,7 @@ namespace libp2p::connection {
                   std::shared_ptr<LayerConnection> connection,
                   std::shared_ptr<boost::asio::ssl::context> ssl_context);
 
-    bool isInitiator() const noexcept override;
+    bool isInitiator() const override;
     outcome::result<multi::Multiaddress> localMultiaddr() override;
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 

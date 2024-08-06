@@ -60,19 +60,19 @@ namespace libp2p::protocol {
      * Get a Host of this processor
      * @return Host
      */
-    Host &getHost() const noexcept;
+    Host &getHost() const;
 
     /**
      * Get a ConnectionManager of this processor
      * @return ConnectionManager
      */
-    network::ConnectionManager &getConnectionManager() const noexcept;
+    network::ConnectionManager &getConnectionManager() const;
 
     /**
      * Get an ObservedAddresses of this processor
      * @return ObservedAddresses
      */
-    const ObservedAddresses &getObservedAddresses() const noexcept;
+    const ObservedAddresses &getObservedAddresses() const;
 
    private:
     /**
