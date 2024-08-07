@@ -200,6 +200,9 @@ namespace libp2p::multi {
   }
 
   std::list<Protocol> Multiaddress::getProtocols() const {
+    if (stringified_address_.empty()) {
+      return {};
+    }
     std::string_view addr{stringified_address_};
     addr.remove_prefix(1);
 
@@ -219,6 +222,9 @@ namespace libp2p::multi {
 
   std::vector<std::pair<Protocol, std::string>>
   Multiaddress::getProtocolsWithValues() const {
+    if (stringified_address_.empty()) {
+      return {};
+    }
     std::string_view addr{stringified_address_};
     addr.remove_prefix(1);
     if (addr.back() == '/') {
