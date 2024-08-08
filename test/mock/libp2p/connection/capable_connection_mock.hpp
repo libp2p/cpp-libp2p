@@ -38,7 +38,7 @@ namespace libp2p::connection {
                  void(outcome::result<size_t>, Reader::ReadCallbackFunc));
     MOCK_METHOD2(deferWriteCallback,
                  void(std::error_code, Writer::WriteCallbackFunc));
-    bool isInitiator() const noexcept override {
+    bool isInitiator() const override {
       return true;  // TODO(artem): fix reuse connections in opposite direction
       // return isInitiator_hack();
     }
@@ -69,7 +69,7 @@ namespace libp2p::connection {
 
     MOCK_CONST_METHOD0(remotePublicKey, outcome::result<crypto::PublicKey>());
 
-    bool isInitiator() const noexcept override {
+    bool isInitiator() const override {
       return real_->isInitiator();
     }
 

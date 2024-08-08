@@ -28,7 +28,7 @@ namespace libp2p::connection {
     MOCK_METHOD2(deferWriteCallback,
                  void(std::error_code, Writer::WriteCallbackFunc));
 
-    bool isInitiator() const noexcept override {
+    bool isInitiator() const override {
       return isInitiator_hack();
     }
 

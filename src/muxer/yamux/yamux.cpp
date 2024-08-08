@@ -28,7 +28,7 @@ namespace libp2p::muxer {
     }
   }
 
-  peer::ProtocolName Yamux::getProtocolId() const noexcept {
+  peer::ProtocolName Yamux::getProtocolId() const {
     return "/yamux/1.0.0";
   }
 

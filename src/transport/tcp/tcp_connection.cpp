@@ -83,7 +83,7 @@ namespace libp2p::transport {
     return local_multiaddress_.value();
   }
 
-  bool TcpConnection::isInitiator() const noexcept {
+  bool TcpConnection::isInitiator() const {
     return initiator_;
   }
 

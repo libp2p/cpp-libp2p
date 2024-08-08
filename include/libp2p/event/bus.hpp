@@ -64,7 +64,7 @@ namespace libp2p::event {
      * Explicitly unsubscribe from channel before the lifetime
      * of this object expires
      */
-    void unsubscribe() noexcept {
+    void unsubscribe() {
       if (handle_.connected()) {
         try {
           handle_.disconnect();
@@ -78,7 +78,7 @@ namespace libp2p::event {
     Handle() = default;
 
     /// Cancels existing connection
-    Handle &operator=(Handle &&rhs) noexcept {
+    Handle &operator=(Handle &&rhs) {
       unsubscribe();
       handle_ = std::move(rhs.handle_);
 

@@ -18,7 +18,7 @@ namespace libp2p::basic {
     io_context_->post(std::move(cb));
   }
 
-  std::chrono::milliseconds AsioSchedulerBackend::now() const noexcept {
+  std::chrono::milliseconds AsioSchedulerBackend::now() const {
     return nowImpl();
   }
 

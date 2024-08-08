@@ -13,15 +13,12 @@
 namespace libp2p::basic {
 
   struct SchedulerMock : public Scheduler {
-    MOCK_METHOD(std::chrono::milliseconds,
-                now,
-                (),
-                (const, noexcept, override));
+    MOCK_METHOD(std::chrono::milliseconds, now, (), (const, override));
 
     MOCK_METHOD(Cancel,
                 scheduleImpl,
                 (Callback &&, std::chrono::milliseconds, bool),
-                (noexcept, override));
+                (override));
   };
 
 }  // namespace libp2p::basic

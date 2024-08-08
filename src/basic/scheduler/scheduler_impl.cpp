@@ -12,14 +12,14 @@ namespace libp2p::basic {
                                Scheduler::Config config)
       : backend_{std::move(backend)}, config_{config} {}
 
-  std::chrono::milliseconds SchedulerImpl::now() const noexcept {
+  std::chrono::milliseconds SchedulerImpl::now() const {
     return backend_->now();
   }
 
   Scheduler::Handle SchedulerImpl::scheduleImpl(
       Callback &&cb,
       std::chrono::milliseconds delay_from_now,
-      bool make_handle) noexcept {
+      bool make_handle) {
     if (not cb) {
       throw std::logic_error{"SchedulerImpl::scheduleImpl empty cb arg"};
     }
@@ -84,7 +84,7 @@ namespace libp2p::basic {
         });
   }
 
-  void SchedulerImpl::pulse() noexcept {
+  void SchedulerImpl::pulse() {
     callReady(Time::zero());
     while (not callbacks_.empty()) {
       auto now = backend_->now();

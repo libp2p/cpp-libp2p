@@ -18,7 +18,7 @@ namespace libp2p::protocol::kademlia {
           distance_(NodeId(peer_id).distance(NodeId(std::forward<T>(target)))) {
     }
 
-    bool operator<(const PeerIdWithDistance &other) const noexcept {
+    bool operator<(const PeerIdWithDistance &other) const {
       return std::memcmp(
                  distance_.data(), other.distance_.data(), distance_.size())
            < 0;

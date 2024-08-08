@@ -26,13 +26,13 @@ namespace libp2p::peer {
     }
 
     struct EqualByPeerId {
-      bool operator()(const PeerInfo &lhs, const PeerInfo &rhs) const noexcept {
+      bool operator()(const PeerInfo &lhs, const PeerInfo &rhs) const {
         return lhs.id == rhs.id;
       }
     };
 
     struct CompareByPeerId {
-      bool operator()(const PeerInfo &lhs, const PeerInfo &rhs) const noexcept {
+      bool operator()(const PeerInfo &lhs, const PeerInfo &rhs) const {
         return lhs.id.toVector() < rhs.id.toVector();
       }
     };

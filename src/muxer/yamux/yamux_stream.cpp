@@ -85,7 +85,7 @@ namespace libp2p::connection {
     });
   }
 
-  bool YamuxStream::isClosed() const noexcept {
+  bool YamuxStream::isClosed() const {
     return close_reason_.has_value();
   }
 
@@ -128,11 +128,11 @@ namespace libp2p::connection {
     return p;
   }
 
-  bool YamuxStream::isClosedForRead() const noexcept {
+  bool YamuxStream::isClosedForRead() const {
     return !is_readable_;
   }
 
-  bool YamuxStream::isClosedForWrite() const noexcept {
+  bool YamuxStream::isClosedForWrite() const {
     return !is_writable_;
   }
 

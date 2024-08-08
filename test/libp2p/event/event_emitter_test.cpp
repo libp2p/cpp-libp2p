@@ -87,8 +87,8 @@ TEST_F(EventEmitterTest, NonCopyableEvent) {
     explicit NonCopyableEvent(int i) : value(i) {}
     NonCopyableEvent(const NonCopyableEvent &other) = delete;
     NonCopyableEvent &operator=(const NonCopyableEvent &other) = delete;
-    NonCopyableEvent(NonCopyableEvent &&other) noexcept = default;
-    NonCopyableEvent &operator=(NonCopyableEvent &&other) noexcept = default;
+    NonCopyableEvent(NonCopyableEvent &&other) = default;
+    NonCopyableEvent &operator=(NonCopyableEvent &&other) = default;
 
     int value;
   };
@@ -114,8 +114,8 @@ TEST_F(EventEmitterTest, NonMovableEvent) {
     explicit NonMovableEvent(int v) : value(v) {}
     NonMovableEvent(const NonMovableEvent &other) = default;
     NonMovableEvent &operator=(const NonMovableEvent &other) = default;
-    NonMovableEvent(NonMovableEvent &&other) noexcept = delete;
-    NonMovableEvent &operator=(NonMovableEvent &&other) noexcept = delete;
+    NonMovableEvent(NonMovableEvent &&other) = delete;
+    NonMovableEvent &operator=(NonMovableEvent &&other) = delete;
 
     int value;
   };
@@ -141,10 +141,9 @@ TEST_F(EventEmitterTest, NonCopyableOrMovableEvent) {
     NonCopyableOrMovableEvent(const NonCopyableOrMovableEvent &other) = delete;
     NonCopyableOrMovableEvent &operator=(
         const NonCopyableOrMovableEvent &other) = delete;
-    NonCopyableOrMovableEvent(NonCopyableOrMovableEvent &&other) noexcept =
+    NonCopyableOrMovableEvent(NonCopyableOrMovableEvent &&other) = delete;
+    NonCopyableOrMovableEvent &operator=(NonCopyableOrMovableEvent &&other) =
         delete;
-    NonCopyableOrMovableEvent &operator=(
-        NonCopyableOrMovableEvent &&other) noexcept = delete;
 
     int value;
   };

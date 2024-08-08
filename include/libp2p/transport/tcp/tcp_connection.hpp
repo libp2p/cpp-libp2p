@@ -76,7 +76,7 @@ namespace libp2p::transport {
 
     outcome::result<multi::Multiaddress> localMultiaddr() override;
 
-    bool isInitiator() const noexcept override;
+    bool isInitiator() const override;
 
     outcome::result<void> close() override;
 

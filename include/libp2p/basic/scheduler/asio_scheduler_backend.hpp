@@ -32,7 +32,7 @@ namespace libp2p::basic {
     /**
      * @return Milliseconds since steady clock's epoch
      */
-    std::chrono::milliseconds now() const noexcept override;
+    std::chrono::milliseconds now() const override;
 
     /**
      * Sets the timer. Called by Scheduler implementation

@@ -28,7 +28,7 @@ namespace libp2p::basic {
     /**
      * @return Milliseconds since clock's epoch. Clock is set manually
      */
-    std::chrono::milliseconds now() const noexcept override {
+    std::chrono::milliseconds now() const override {
       return current_clock_;
     }
 

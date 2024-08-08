@@ -28,15 +28,15 @@ namespace libp2p::basic {
                   Scheduler::Config config);
 
     /// Returns current async
-    std::chrono::milliseconds now() const noexcept override;
+    std::chrono::milliseconds now() const override;
 
     /// Scheduler API impl
     Handle scheduleImpl(Callback &&cb,
                         std::chrono::milliseconds delay_from_now,
-                        bool make_handle) noexcept override;
+                        bool make_handle) override;
 
     /// Timer callback, called from SchedulerBackend
-    void pulse() noexcept override;
+    void pulse() override;
 
    private:
     size_t callReady(Time now);

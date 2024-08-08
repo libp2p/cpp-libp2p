@@ -32,8 +32,8 @@ namespace libp2p::connection {
 
     MplexedConnection(const MplexedConnection &other) = delete;
     MplexedConnection &operator=(const MplexedConnection &other) = delete;
-    MplexedConnection(MplexedConnection &&other) noexcept = delete;
-    MplexedConnection &operator=(MplexedConnection &&other) noexcept = delete;
+    MplexedConnection(MplexedConnection &&other) = delete;
+    MplexedConnection &operator=(MplexedConnection &&other) = delete;
     ~MplexedConnection() override = default;
 
     void start() override;
@@ -52,7 +52,7 @@ namespace libp2p::connection {
 
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
-    bool isInitiator() const noexcept override;
+    bool isInitiator() const override;
 
     outcome::result<multi::Multiaddress> localMultiaddr() override;
 

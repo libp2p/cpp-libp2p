@@ -152,7 +152,7 @@ namespace libp2p::connection {
     connection_->deferWriteCallback(ec, std::move(cb));
   }
 
-  bool NoiseConnection::isInitiator() const noexcept {
+  bool NoiseConnection::isInitiator() const {
     return connection_->isInitiator();
   }
 

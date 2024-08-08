@@ -30,7 +30,7 @@ namespace libp2p::connection {
 
     /// returns if this side is an initiator of this connection, or false if it
     /// was a server in that case
-    virtual bool isInitiator() const noexcept = 0;
+    virtual bool isInitiator() const = 0;
 
     /**
      * @brief Get local multiaddress for this connection.

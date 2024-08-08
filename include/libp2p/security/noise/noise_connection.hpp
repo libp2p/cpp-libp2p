@@ -57,7 +57,7 @@ namespace libp2p::connection {
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
-    bool isInitiator() const noexcept override;
+    bool isInitiator() const override;
 
     outcome::result<multi::Multiaddress> localMultiaddr() override;
 

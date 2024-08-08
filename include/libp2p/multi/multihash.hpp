@@ -23,8 +23,8 @@ namespace libp2p::multi {
    public:
     Multihash(const Multihash &other) = default;
     Multihash &operator=(const Multihash &other) = default;
-    Multihash(Multihash &&other) noexcept = default;
-    Multihash &operator=(Multihash &&other) noexcept = default;
+    Multihash(Multihash &&other) = default;
+    Multihash &operator=(Multihash &&other) = default;
     ~Multihash() = default;
 
     using Buffer = Bytes;

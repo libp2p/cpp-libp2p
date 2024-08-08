@@ -27,7 +27,7 @@ namespace libp2p::muxer {
           std::shared_ptr<basic::Scheduler> scheduler,
           std::shared_ptr<network::ConnectionManager> cmgr);
 
-    peer::ProtocolName getProtocolId() const noexcept override;
+    peer::ProtocolName getProtocolId() const override;
 
     void muxConnection(std::shared_ptr<connection::SecureConnection> conn,
                        CapConnCallbackFunc cb) const override;

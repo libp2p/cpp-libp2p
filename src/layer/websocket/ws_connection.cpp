@@ -65,7 +65,7 @@ namespace libp2p::connection {
     SL_DEBUG(log_, "Received unexpected pong. Ignoring");
   }
 
-  bool WsConnection::isInitiator() const noexcept {
+  bool WsConnection::isInitiator() const {
     return connection_->isInitiator();
   }
 

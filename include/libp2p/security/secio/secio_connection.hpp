@@ -90,7 +90,7 @@ namespace libp2p::connection {
 
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
-    bool isInitiator() const noexcept override;
+    bool isInitiator() const override;
 
     outcome::result<multi::Multiaddress> localMultiaddr() override;
 
