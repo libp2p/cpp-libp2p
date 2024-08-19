@@ -7,7 +7,7 @@
 
 #include "testutil/libp2p/message_read_writer_helper.hpp"
 
-#include "libp2p/multi/uvarint.hpp"
+#include <libp2p/multi/uvarint.hpp>
 
 ACTION_P(PutBytes, bytes) {  // NOLINT
   std::copy(bytes.begin(), bytes.end(), arg0.begin());

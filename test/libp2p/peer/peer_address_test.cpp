@@ -11,7 +11,7 @@
 #include <libp2p/common/types.hpp>
 #include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
 #include <libp2p/peer/peer_id.hpp>
-#include <testutil/outcome.hpp>
+#include <qtils/test/outcome.hpp>
 
 using libp2p::Bytes;
 using namespace libp2p::common;
@@ -49,7 +49,7 @@ class PeerAddressTest : public ::testing::Test {
  * @then creation is successful
  */
 TEST_F(PeerAddressTest, FromStringSuccess) {
-  EXPECT_OUTCOME_TRUE(address, PeerAddress::create(kAddressString))
+  auto address = EXPECT_OK(PeerAddress::create(kAddressString));
   EXPECT_EQ(address.toString(), kAddressString);
   EXPECT_EQ(address.getId(), kDefaultPeerId);
   EXPECT_EQ(address.getAddress(), kDefaultAddress);
@@ -103,8 +103,8 @@ TEST_F(PeerAddressTest, FromStringIdNotSha256) {
  * @then creation is successful
  */
 TEST_F(PeerAddressTest, FromInfoSuccess) {
-  EXPECT_OUTCOME_TRUE(
-      address, PeerAddress::create(PeerInfo{kDefaultPeerId, {kDefaultAddress}}))
+  auto address = EXPECT_OK(
+      PeerAddress::create(PeerInfo{kDefaultPeerId, {kDefaultAddress}}));
   EXPECT_EQ(address.toString(), kAddressString);
   EXPECT_EQ(address.getId(), kDefaultPeerId);
   EXPECT_EQ(address.getAddress(), kDefaultAddress);
@@ -125,8 +125,8 @@ TEST_F(PeerAddressTest, FromInfoNoAddresses) {
  * @then creation is successful
  */
 TEST_F(PeerAddressTest, FromDistinctSuccess) {
-  EXPECT_OUTCOME_TRUE(address,
-                      PeerAddress::create(kDefaultPeerId, kDefaultAddress))
+  auto address =
+      EXPECT_OK(PeerAddress::create(kDefaultPeerId, kDefaultAddress));
   EXPECT_EQ(address.toString(), kAddressString);
   EXPECT_EQ(address.getId(), kDefaultPeerId);
   EXPECT_EQ(address.getAddress(), kDefaultAddress);

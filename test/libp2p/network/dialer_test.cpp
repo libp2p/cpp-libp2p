@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/network/impl/dialer_impl.hpp"
-
 #include <gtest/gtest.h>
 #include <libp2p/basic/scheduler/manual_scheduler_backend.hpp>
 #include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/common/literals.hpp>
+#include <libp2p/network/impl/dialer_impl.hpp>
+#include <qtils/test/outcome.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/network/connection_manager_mock.hpp"
@@ -18,7 +18,6 @@
 #include "mock/libp2p/protocol_muxer/protocol_muxer_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
 #include "testutil/gmock_actions.hpp"
-#include "testutil/outcome.hpp"
 #include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
@@ -111,7 +110,7 @@ TEST_F(DialerTest, DialAllTheAddresses) {
 
   bool executed = false;
   dialer->dial(pinfo_two_addrs, [&](auto &&rconn) {
-    EXPECT_OUTCOME_TRUE(conn, rconn);
+    auto conn = EXPECT_OK(rconn);
     (void)conn;
     executed = true;
   });
@@ -144,7 +143,7 @@ TEST_F(DialerTest, DialNewConnection) {
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    EXPECT_OUTCOME_TRUE(conn, rconn);
+    auto conn = EXPECT_OK(rconn);
     (void)conn;
     executed = true;
   });
@@ -214,7 +213,7 @@ TEST_F(DialerTest, DialExistingConnection) {
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    EXPECT_OUTCOME_TRUE(conn, rconn);
+    auto conn = EXPECT_OK(rconn);
     (void)conn;
     executed = true;
   });
@@ -314,7 +313,7 @@ TEST_F(DialerTest, NewStreamSuccess) {
 
   bool executed = false;
   dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
-    EXPECT_OUTCOME_TRUE(s, rstream);
+    auto s = EXPECT_OK(rstream);
     (void)s;
     executed = true;
   });

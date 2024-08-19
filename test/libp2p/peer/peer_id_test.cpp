@@ -4,13 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/peer/peer_id.hpp"
-
 #include <gtest/gtest.h>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/multi/multibase_codec/codecs/base58.hpp>
-#include <testutil/outcome.hpp>
+#include <libp2p/peer/peer_id.hpp>
+#include <qtils/test/outcome.hpp>
 
 using namespace libp2p::crypto;
 using namespace libp2p::peer;
@@ -34,11 +33,10 @@ TEST_F(PeerIdTest, FromPubkeySuccess) {
   pubkey.data = kBuffer;
 
   auto hash = libp2p::crypto::sha256(pubkey.data).value();
-  EXPECT_OUTCOME_TRUE(multihash,
-                      Multihash::create(libp2p::multi::sha256,
-                                        Buffer{hash.begin(), hash.end()}))
+  auto multihash = EXPECT_OK(Multihash::create(
+      libp2p::multi::sha256, Buffer{hash.begin(), hash.end()}));
 
-  EXPECT_OUTCOME_TRUE(peer_id, PeerId::fromPublicKey(ProtobufKey{pubkey.data}))
+  auto peer_id = EXPECT_OK(PeerId::fromPublicKey(ProtobufKey{pubkey.data}));
   EXPECT_EQ(peer_id.toBase58(), encodeBase58(multihash.toBuffer()));
   EXPECT_EQ(peer_id.toMultihash(), multihash);
 }
@@ -49,10 +47,10 @@ TEST_F(PeerIdTest, FromPubkeySuccess) {
  * @then creation is successful
  */
 TEST_F(PeerIdTest, FromBase58Success) {
-  EXPECT_OUTCOME_TRUE(hash, Multihash::create(libp2p::multi::sha256, kBuffer));
+  auto hash = EXPECT_OK(Multihash::create(libp2p::multi::sha256, kBuffer));
   auto hash_b58 = encodeBase58(hash.toBuffer());
 
-  EXPECT_OUTCOME_TRUE(peer_id, PeerId::fromBase58(hash_b58))
+  auto peer_id = EXPECT_OK(PeerId::fromBase58(hash_b58));
   EXPECT_EQ(peer_id.toBase58(), hash_b58);
   EXPECT_EQ(peer_id.toMultihash(), hash);
 }
@@ -83,7 +81,7 @@ TEST_F(PeerIdTest, FromBase58IcorrectHash) {
  * @then creation fails
  */
 TEST_F(PeerIdTest, FromBase58NotSha256) {
-  EXPECT_OUTCOME_TRUE(hash, Multihash::create(libp2p::multi::sha512, kBuffer))
+  auto hash = EXPECT_OK(Multihash::create(libp2p::multi::sha512, kBuffer));
   auto hash_b58 = encodeBase58(hash.toBuffer());
 
   EXPECT_FALSE(PeerId::fromBase58(hash_b58));
@@ -95,10 +93,10 @@ TEST_F(PeerIdTest, FromBase58NotSha256) {
  * @then creation is successful
  */
 TEST_F(PeerIdTest, FromHashSuccess) {
-  EXPECT_OUTCOME_TRUE(hash, Multihash::create(libp2p::multi::sha256, kBuffer));
+  auto hash = EXPECT_OK(Multihash::create(libp2p::multi::sha256, kBuffer));
   auto hash_b58 = encodeBase58(hash.toBuffer());
 
-  EXPECT_OUTCOME_TRUE(peer_id, PeerId::fromHash(hash))
+  auto peer_id = EXPECT_OK(PeerId::fromHash(hash));
   EXPECT_EQ(peer_id.toBase58(), hash_b58);
   EXPECT_EQ(peer_id.toMultihash(), hash);
 }
@@ -109,7 +107,7 @@ TEST_F(PeerIdTest, FromHashSuccess) {
  * @then creation fails
  */
 TEST_F(PeerIdTest, FromHashNotSha256) {
-  EXPECT_OUTCOME_TRUE(hash, Multihash::create(libp2p::multi::sha512, kBuffer))
+  auto hash = EXPECT_OK(Multihash::create(libp2p::multi::sha512, kBuffer));
 
   EXPECT_FALSE(PeerId::fromHash(hash));
 }

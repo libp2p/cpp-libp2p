@@ -4,12 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/security/plaintext/plaintext_connection.hpp>
-
 #include <gtest/gtest.h>
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/literals.hpp>
-#include <testutil/outcome.hpp>
+#include <libp2p/security/plaintext/plaintext_connection.hpp>
+#include <qtils/test/outcome.hpp>
 #include "mock/libp2p/connection/layer_connection_mock.hpp"
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
 #include "testutil/gmock_actions.hpp"
@@ -96,7 +95,7 @@ TEST_F(PlaintextConnectionTest, LocalMultiaddr) {
 
   EXPECT_CALL(*connection_, localMultiaddr())
       .WillOnce(Return(kDefaultMultiaddr));
-  EXPECT_OUTCOME_TRUE(ma, secure_connection_->localMultiaddr())
+  auto ma = EXPECT_OK(secure_connection_->localMultiaddr());
   ASSERT_EQ(ma.getStringAddress(), kDefaultMultiaddr.getStringAddress());
 }
 
@@ -110,7 +109,7 @@ TEST_F(PlaintextConnectionTest, RemoteMultiaddr) {
 
   EXPECT_CALL(*connection_, remoteMultiaddr())
       .WillOnce(Return(kDefaultMultiaddr));
-  EXPECT_OUTCOME_TRUE(ma, secure_connection_->remoteMultiaddr())
+  auto ma = EXPECT_OK(secure_connection_->remoteMultiaddr());
   ASSERT_EQ(ma.getStringAddress(), kDefaultMultiaddr.getStringAddress());
 }
 
@@ -124,7 +123,7 @@ TEST_F(PlaintextConnectionTest, Read) {
   EXPECT_CALL(*connection_, read(_, _, _)).WillOnce(AsioSuccess(size));
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
   secure_connection_->read(*buf, size, [size, buf](auto &&res) {
-    EXPECT_OUTCOME_TRUE_1(res);
+    EXPECT_OK(res);
     ASSERT_EQ(res.value(), size);
   });
 }
@@ -141,7 +140,7 @@ TEST_F(PlaintextConnectionTest, ReadSome) {
       .WillOnce(AsioSuccess(smaller /* less than 100 */));
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
   secure_connection_->readSome(*buf, smaller, [smaller, buf](auto &&res) {
-    EXPECT_OUTCOME_TRUE_1(res);
+    EXPECT_OK(res);
     ASSERT_EQ(res.value(), smaller);
   });
 }
@@ -156,7 +155,7 @@ TEST_F(PlaintextConnectionTest, Write) {
   EXPECT_CALL(*connection_, writeSome(_, _, _)).WillOnce(AsioSuccess(size));
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
   libp2p::writeReturnSize(secure_connection_, *buf, [size, buf](auto &&res) {
-    EXPECT_OUTCOME_TRUE_1(res);
+    EXPECT_OK(res);
     ASSERT_EQ(res.value(), size);
   });
 }
@@ -173,7 +172,7 @@ TEST_F(PlaintextConnectionTest, WriteSome) {
       .WillOnce(AsioSuccess(smaller /* less than 100 */));
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
   secure_connection_->writeSome(*buf, smaller, [smaller, buf](auto &&res) {
-    EXPECT_OUTCOME_TRUE_1(res);
+    EXPECT_OK(res);
     ASSERT_EQ(res.value(), smaller);
   });
 }

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/event/emitter.hpp"
+#include <libp2p/event/emitter.hpp>
 
 #include <gtest/gtest.h>
 

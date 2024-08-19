@@ -4,12 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 #include <libp2p/common/literals.hpp>
+#include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
 #include <libp2p/crypto/ed25519_provider/ed25519_provider_impl.hpp>
 #include <libp2p/crypto/error.hpp>
@@ -17,7 +16,7 @@
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
-#include <testutil/outcome.hpp>
+#include <qtils/test/outcome.hpp>
 
 using libp2p::Bytes;
 using libp2p::crypto::CryptoProvider;
@@ -77,7 +76,7 @@ class KeyGeneratorTest : public KeyGenTest,
  */
 TEST_P(KeyGeneratorTest, GenerateKeyPairSuccess) {
   auto key_type = GetParam();
-  EXPECT_OUTCOME_TRUE(val, crypto_provider_->generateKeys(key_type))
+  auto val = EXPECT_OK(crypto_provider_->generateKeys(key_type));
   ASSERT_EQ(val.privateKey.type, key_type);
   ASSERT_EQ(val.publicKey.type, key_type);
 }
@@ -89,8 +88,8 @@ TEST_P(KeyGeneratorTest, GenerateKeyPairSuccess) {
  */
 TEST_P(KeyGeneratorTest, TwoKeysAreDifferent) {
   auto key_type = GetParam();
-  EXPECT_OUTCOME_TRUE(val1, crypto_provider_->generateKeys(key_type));
-  EXPECT_OUTCOME_TRUE(val2, crypto_provider_->generateKeys(key_type));
+  auto val1 = EXPECT_OK(crypto_provider_->generateKeys(key_type));
+  auto val2 = EXPECT_OK(crypto_provider_->generateKeys(key_type));
   ASSERT_NE(val1.privateKey.data, val2.privateKey.data);
   ASSERT_NE(val1.publicKey.data, val2.privateKey.data);
 }
@@ -105,9 +104,8 @@ TEST_P(KeyGeneratorTest, TwoKeysAreDifferent) {
 TEST_P(KeyGeneratorTest, DerivePublicKeySuccess) {
   auto key_type = GetParam();
 
-  EXPECT_OUTCOME_TRUE(keys, crypto_provider_->generateKeys(key_type));
-  EXPECT_OUTCOME_TRUE(derived,
-                      crypto_provider_->derivePublicKey(keys.privateKey));
+  auto keys = EXPECT_OK(crypto_provider_->generateKeys(key_type));
+  auto derived = EXPECT_OK(crypto_provider_->derivePublicKey(keys.privateKey));
   ASSERT_EQ(derived.type, key_type);
   ASSERT_EQ(keys.publicKey.data, derived.data);
 }
@@ -140,7 +138,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(KeyLengthTest, KeyLengthCorrect) {
   auto [key_type, private_key_length, public_key_length] = GetParam();
 
-  EXPECT_OUTCOME_TRUE(val, crypto_provider_->generateKeys(key_type))
+  auto val = EXPECT_OK(crypto_provider_->generateKeys(key_type));
   ASSERT_EQ(val.privateKey.data.size(), private_key_length);
 }
 

@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp"
-
 #include <gtest/gtest.h>
-#include "testutil/outcome.hpp"
+#include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
+#include <qtils/test/outcome.hpp>
 
 using libp2p::crypto::ecdsa::EcdsaProviderImpl;
 using libp2p::crypto::ecdsa::PrivateKey;
@@ -70,7 +69,7 @@ class EcdsaProviderTest : public ::testing::Test {
  * @then Derived public must be the same as the pre-generated
  */
 TEST_F(EcdsaProviderTest, DerivePublicKeySuccess) {
-  EXPECT_OUTCOME_TRUE(derived_key, provider_.derive(private_key_));
+  auto derived_key = EXPECT_OK(provider_.derive(private_key_));
   ASSERT_EQ(public_key_, derived_key);
 }
 
@@ -80,12 +79,10 @@ TEST_F(EcdsaProviderTest, DerivePublicKeySuccess) {
  * @then Signature verification must be successful and signature must be valid
  */
 TEST_F(EcdsaProviderTest, SignVerifySuccess) {
-  EXPECT_OUTCOME_TRUE(key_pair, provider_.generate());
-  EXPECT_OUTCOME_TRUE(signature,
-                      provider_.sign(message_, key_pair.private_key));
-  EXPECT_OUTCOME_TRUE(
-      verify_result,
-      provider_.verify(message_, signature, key_pair.public_key));
+  auto key_pair = EXPECT_OK(provider_.generate());
+  auto signature = EXPECT_OK(provider_.sign(message_, key_pair.private_key));
+  auto verify_result =
+      EXPECT_OK(provider_.verify(message_, signature, key_pair.public_key));
   ASSERT_TRUE(verify_result);
 }
 
@@ -95,8 +92,8 @@ TEST_F(EcdsaProviderTest, SignVerifySuccess) {
  * @then Pre-generated signature must be valid
  */
 TEST_F(EcdsaProviderTest, SampleSignVerifySuccess) {
-  EXPECT_OUTCOME_TRUE(verify_result,
-                      provider_.verify(message_, signature_, public_key_));
+  auto verify_result =
+      EXPECT_OK(provider_.verify(message_, signature_, public_key_));
   ASSERT_TRUE(verify_result);
 }
 
@@ -106,10 +103,9 @@ TEST_F(EcdsaProviderTest, SampleSignVerifySuccess) {
  * @then Signature must be invalid
  */
 TEST_F(EcdsaProviderTest, VerifyInvalidPubKeyFailure) {
-  EXPECT_OUTCOME_TRUE(key_pair, provider_.generate());
-  EXPECT_OUTCOME_TRUE(
-      verify_result,
-      provider_.verify(message_, signature_, key_pair.public_key));
+  auto key_pair = EXPECT_OK(provider_.generate());
+  auto verify_result =
+      EXPECT_OK(provider_.verify(message_, signature_, key_pair.public_key));
   ASSERT_FALSE(verify_result);
 }
 
@@ -120,8 +116,7 @@ TEST_F(EcdsaProviderTest, VerifyInvalidPubKeyFailure) {
  */
 TEST_F(EcdsaProviderTest, VerifyInvalidMessageFailure) {
   std::array<uint8_t, 1> different_message{};
-  EXPECT_OUTCOME_TRUE(
-      verify_result,
-      provider_.verify(different_message, signature_, public_key_));
+  auto verify_result =
+      EXPECT_OK(provider_.verify(different_message, signature_, public_key_));
   ASSERT_FALSE(verify_result);
 }

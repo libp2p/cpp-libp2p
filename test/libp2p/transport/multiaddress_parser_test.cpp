@@ -4,11 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/transport/impl/multiaddress_parser.hpp"
+#include <libp2p/transport/impl/multiaddress_parser.hpp>
 
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
-#include "testutil/outcome.hpp"
 
 using libp2p::multi::Multiaddress;
 using libp2p::multi::Protocol;

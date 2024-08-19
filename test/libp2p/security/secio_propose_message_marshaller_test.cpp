@@ -5,9 +5,8 @@
  */
 
 #include <gtest/gtest.h>
-
 #include <libp2p/security/secio/propose_message_marshaller_impl.hpp>
-#include "testutil/outcome.hpp"
+#include <qtils/test/outcome.hpp>
 
 using namespace libp2p::security::secio;
 
@@ -27,8 +26,8 @@ TEST_F(ProposeMessageMarshallerTest, BasicCase) {
                         .exchanges = "think",
                         .ciphers = "of the",
                         .hashes = "rapture"};
-  EXPECT_OUTCOME_TRUE(bytes, marshaller.marshal(source));
-  EXPECT_OUTCOME_TRUE(derived, marshaller.unmarshal(bytes));
+  auto bytes = EXPECT_OK(marshaller.marshal(source));
+  auto derived = EXPECT_OK(marshaller.unmarshal(bytes));
   ASSERT_EQ(source.rand, derived.rand);
   ASSERT_EQ(source.pubkey, derived.pubkey);
   ASSERT_EQ(source.exchanges, derived.exchanges);

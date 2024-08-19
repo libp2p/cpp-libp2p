@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/basic/message_read_writer_error.hpp"
+#include <libp2p/basic/message_read_writer_error.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::basic, MessageReadWriterError, e) {
   using E = libp2p::basic::MessageReadWriterError;

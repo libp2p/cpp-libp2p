@@ -5,14 +5,13 @@
  */
 
 #include <gtest/gtest.h>
-
 #include <libp2p/common/literals.hpp>
 #include <libp2p/multi/content_identifier.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
 #include <libp2p/multi/multibase_codec/multibase_codec_impl.hpp>
 #include <libp2p/multi/multicodec_type.hpp>
 #include <libp2p/multi/uvarint.hpp>
-#include <testutil/outcome.hpp>
+#include <qtils/test/outcome.hpp>
 
 using libp2p::multi::ContentIdentifier;
 using libp2p::multi::ContentIdentifierCodec;
@@ -42,7 +41,7 @@ TEST(CidTest, MultibaseStringSuccess) {
   ContentIdentifier cid(ContentIdentifier::Version::V0,
                         MulticodecType::Code::DAG_PB,
                         reference_multihash);
-  EXPECT_OUTCOME_TRUE(cid_string, ContentIdentifierCodec::toString(cid))
+  auto cid_string = EXPECT_OK(ContentIdentifierCodec::toString(cid));
   ASSERT_EQ(cid_string, "QmYTYMTdkVyB8we45bdXfZuDu5vCjRVX8QNTFLhC7K8C7t");
 }
 
@@ -58,7 +57,7 @@ TEST(CidTest, MultibaseStringSuccessCIDV1) {
   ContentIdentifier cid(ContentIdentifier::Version::V1,
                         MulticodecType::Code::RAW,
                         reference_multihash);
-  EXPECT_OUTCOME_TRUE(cid_string, ContentIdentifierCodec::toString(cid))
+  auto cid_string = EXPECT_OK(ContentIdentifierCodec::toString(cid));
   ASSERT_EQ(cid_string,
             "bafkreibnlo34hl56ndafxtiqtweq3sriz2ybaw7vfhvbcepz56fujmqxxe");
 }
@@ -75,9 +74,8 @@ TEST(CidTest, MultibaseStringOfBaseSuccessCIDV1) {
   ContentIdentifier cid(ContentIdentifier::Version::V1,
                         MulticodecType::Code::RAW,
                         reference_multihash);
-  EXPECT_OUTCOME_TRUE(cid_string,
-                      ContentIdentifierCodec::toStringOfBase(
-                          cid, MultibaseCodec::Encoding::BASE58))
+  auto cid_string = EXPECT_OK(ContentIdentifierCodec::toStringOfBase(
+      cid, MultibaseCodec::Encoding::BASE58));
   ASSERT_EQ(cid_string, "zb2rhZhLextyrUiNJUcVUR143SaKDPvHxgpGyeB1N1nqdPzfi");
 }
 
@@ -93,9 +91,8 @@ TEST(CidTest, MultibaseStringOfBaseSuccessCIDV0) {
   ContentIdentifier cid(ContentIdentifier::Version::V0,
                         MulticodecType::Code::DAG_PB,
                         reference_multihash);
-  EXPECT_OUTCOME_TRUE(cid_string,
-                      ContentIdentifierCodec::toStringOfBase(
-                          cid, MultibaseCodec::Encoding::BASE58))
+  auto cid_string = EXPECT_OK(ContentIdentifierCodec::toStringOfBase(
+      cid, MultibaseCodec::Encoding::BASE58));
   ASSERT_EQ(cid_string, "QmYTYMTdkVyB8we45bdXfZuDu5vCjRVX8QNTFLhC7K8C7t");
 }
 
@@ -130,8 +127,8 @@ TEST(CidTest, MultibaseFromStringSuccessCIDV1) {
                                   reference_multihash);
   const std::string reference_string_cid =
       "bafkreibnlo34hl56ndafxtiqtweq3sriz2ybaw7vfhvbcepz56fujmqxxe";
-  EXPECT_OUTCOME_TRUE(cid,
-                      ContentIdentifierCodec::fromString(reference_string_cid));
+  auto cid =
+      EXPECT_OK(ContentIdentifierCodec::fromString(reference_string_cid));
   ASSERT_EQ(cid, reference_cid);
 }
 
@@ -150,8 +147,8 @@ TEST(CidTest, MultibaseFromStringSuccessCIDV0) {
   const std::string reference_string_cid =
       "QmYTYMTdkVyB8we45bdXfZuDu5vCjRVX8QNTFLhC7K8C7t";
 
-  EXPECT_OUTCOME_TRUE(cid,
-                      ContentIdentifierCodec::fromString(reference_string_cid));
+  auto cid =
+      EXPECT_OK(ContentIdentifierCodec::fromString(reference_string_cid));
   ASSERT_EQ(cid, reference_cid);
 }
 
@@ -273,8 +270,8 @@ class CidEncodeDecodeTest : public testing::TestWithParam<ContentIdentifier> {};
 
 TEST_P(CidEncodeDecodeTest, DecodedMatchesOriginal) {
   auto cid = GetParam();
-  EXPECT_OUTCOME_TRUE(bytes, ContentIdentifierCodec::encode(cid));
-  EXPECT_OUTCOME_TRUE(dec_cid, ContentIdentifierCodec::decode(bytes));
+  auto bytes = EXPECT_OK(ContentIdentifierCodec::encode(cid));
+  auto dec_cid = EXPECT_OK(ContentIdentifierCodec::decode(bytes));
   ASSERT_EQ(cid, dec_cid);
 }
 

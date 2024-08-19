@@ -3,15 +3,14 @@
  * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
-#include "libp2p/protocol/kademlia/impl/peer_routing_table_impl.hpp"
-
 #include <gtest/gtest.h>
+#include <libp2p/protocol/kademlia/impl/peer_routing_table_impl.hpp>
+#include <qtils/test/outcome.hpp>
 #include <unordered_set>
 
 #include <libp2p/common/literals.hpp>
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/outcome.hpp"
 #include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
@@ -72,7 +71,7 @@ TEST_F(PeerRoutingTableTest, BusWorks) {
   std::generate_n(std::back_inserter(peers), 1, testutil::randomPeerId);
 
   // table does not contain peer[0]
-  EXPECT_OUTCOME_TRUE_1(table_->update(peers[0], false));
+  EXPECT_OK(table_->update(peers[0], false));
   ASSERT_TRUE(hasPeer(peerset, peers[0])) << "should have this peer";
 
   table_->remove(peers[0]);
@@ -92,7 +91,7 @@ TEST_F(PeerRoutingTableTest, FindMultiple) {
   std::generate_n(std::back_inserter(peers), 18, testutil::randomPeerId);
 
   for (const auto &peer : peers) {
-    EXPECT_OUTCOME_TRUE_1(table_->update(peer, false));
+    EXPECT_OK(table_->update(peer, false));
   }
 
   auto found = table_->getNearestPeers(NodeId(peers[2]), 15);
@@ -134,14 +133,14 @@ TEST_F(PeerRoutingTableTest, RecyclingTest) {
     }
   }
 
-  EXPECT_OUTCOME_TRUE_1(table_->update(peers[0], false));
+  EXPECT_OK(table_->update(peers[0], false));
   ASSERT_TRUE(hasPeer(peerset, peers[0])) << "should have this peer";
 
-  EXPECT_OUTCOME_TRUE_1(table_->update(peers[1], false));
+  EXPECT_OK(table_->update(peers[1], false));
   ASSERT_FALSE(hasPeer(peerset, peers[0])) << "should have recycled peer";
   ASSERT_TRUE(hasPeer(peerset, peers[1])) << "should have this peer";
 
-  EXPECT_OUTCOME_TRUE_1(table_->update(peers[2], true));
+  EXPECT_OK(table_->update(peers[2], true));
   ASSERT_FALSE(hasPeer(peerset, peers[0])) << "should have recycled peer";
   ASSERT_FALSE(hasPeer(peerset, peers[1])) << "should have recycled peer";
   ASSERT_TRUE(hasPeer(peerset, peers[2])) << "should have this peer";
@@ -155,10 +154,10 @@ TEST_F(PeerRoutingTableTest, RecyclingTest) {
 
   // re-adding an existent peer should return false regardless of is permanent
   auto updateVal = table_->update(peers[2], true);
-  EXPECT_OUTCOME_TRUE_1(updateVal);
+  EXPECT_OK(updateVal);
   ASSERT_FALSE(updateVal.value());
   updateVal = table_->update(peers[2], false);
-  EXPECT_OUTCOME_TRUE_1(updateVal);
+  EXPECT_OK(updateVal);
   ASSERT_FALSE(updateVal.value());
 }
 
@@ -191,18 +190,18 @@ TEST_F(PeerRoutingTableTest, PreferLongLivedPeers) {
     }
   }
   // recycle FIFO; known peers but not connected dont get boost
-  EXPECT_OUTCOME_TRUE_1(table_->update(peers[0], false));
-  EXPECT_OUTCOME_TRUE_1(table_->update(peers[1], false));
-  EXPECT_OUTCOME_TRUE_1(table_->update(peers[0], false));
-  EXPECT_OUTCOME_TRUE_1(table_->update(peers[2], false));
+  EXPECT_OK(table_->update(peers[0], false));
+  EXPECT_OK(table_->update(peers[1], false));
+  EXPECT_OK(table_->update(peers[0], false));
+  EXPECT_OK(table_->update(peers[2], false));
 
   ASSERT_FALSE(hasPeer(peerset, peers[0]));
   ASSERT_TRUE(hasPeer(peerset, peers[1]));
   ASSERT_TRUE(hasPeer(peerset, peers[2]));
 
   // if connected; peer gets a boost
-  EXPECT_OUTCOME_TRUE_1(table_->update(peers[1], false, true));
-  EXPECT_OUTCOME_TRUE_1(table_->update(peers[0], false));
+  EXPECT_OK(table_->update(peers[1], false, true));
+  EXPECT_OK(table_->update(peers[0], false));
 
   ASSERT_TRUE(hasPeer(peerset, peers[0]));
   ASSERT_TRUE(hasPeer(peerset, peers[1]));
@@ -228,7 +227,7 @@ TEST_F(PeerRoutingTableTest, EldestRecycledIfNotPermanent) {
   for (size_t i = 0; i < peers.size(); i++) {
     if (i < config_->maxBucketSize) {
       // peers added till bucket filled are accepted
-      EXPECT_OUTCOME_TRUE_1(table_->update(peers[i], true));
+      EXPECT_OK(table_->update(peers[i], true));
     } else {
       // Remained are rejected
       EXPECT_EC(table_->update(peers[i], true),
@@ -256,7 +255,7 @@ TEST_F(PeerRoutingTableTest, EldestPrefferedIfPermanent) {
   for (size_t i = 0; i < peers.size(); i++) {
     if (i < config_->maxBucketSize) {
       // peers added till bucket filled are accepted
-      EXPECT_OUTCOME_TRUE_1(table_->update(peers[i], true));
+      EXPECT_OK(table_->update(peers[i], true));
     } else {
       // Remained are rejected
       EXPECT_EC(table_->update(peers[i], true),
@@ -307,7 +306,7 @@ TEST_F(PeerRoutingTableTest, Find) {
   std::generate_n(std::back_inserter(peers), nPeers, testutil::randomPeerId);
 
   for (const auto &peer : peers) {
-    EXPECT_OUTCOME_TRUE_1(table_->update(peer, false));
+    EXPECT_OK(table_->update(peer, false));
   }
   ASSERT_EQ(table_->size(), nPeers);
 

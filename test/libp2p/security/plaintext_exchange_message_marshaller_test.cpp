@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <gtest/gtest.h>
-
 #include <generated/security/plaintext/protobuf/plaintext.pb.h>
+#include <gtest/gtest.h>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
+#include <qtils/test/outcome.hpp>
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
-#include "testutil/outcome.hpp"
 
 using libp2p::crypto::Key;
 using libp2p::crypto::ProtobufKey;
@@ -54,10 +53,10 @@ TEST_F(ExchangeMessageMarshallerTest, ToProtobufAndBack) {
   EXPECT_CALL(*key_marshaller, marshal(pk))
       .WillOnce(Return(ProtobufKey{pubkey_bytes}));
   EXPECT_CALL(*key_marshaller, unmarshalPublicKey(_)).WillOnce(Return(pk));
-  EXPECT_OUTCOME_TRUE(pid, PeerId::fromPublicKey(ProtobufKey{pk.data}))
+  auto pid = EXPECT_OK(PeerId::fromPublicKey(ProtobufKey{pk.data}));
   ExchangeMessage msg{.pubkey = pk, .peer_id = pid};
-  EXPECT_OUTCOME_TRUE(bytes, marshaller->marshal(msg));
-  EXPECT_OUTCOME_TRUE(dec_msg, marshaller->unmarshal(bytes));
+  auto bytes = EXPECT_OK(marshaller->marshal(msg));
+  auto dec_msg = EXPECT_OK(marshaller->unmarshal(bytes));
   ASSERT_EQ(msg.peer_id, dec_msg.first.peer_id);
   ASSERT_EQ(msg.pubkey, dec_msg.first.pubkey);
 }
@@ -71,9 +70,9 @@ TEST_F(ExchangeMessageMarshallerTest, ToProtobufAndBack) {
 TEST_F(ExchangeMessageMarshallerTest, MarshalError) {
   EXPECT_CALL(*key_marshaller, marshal(pk))
       .WillOnce(Return(ProtobufKey{std::vector<uint8_t>(32, 1)}));
-  EXPECT_OUTCOME_TRUE(pid, PeerId::fromPublicKey(ProtobufKey{pk.data}))
+  auto pid = EXPECT_OK(PeerId::fromPublicKey(ProtobufKey{pk.data}));
   ExchangeMessage msg{.pubkey = pk, .peer_id = pid};
-  EXPECT_OUTCOME_FALSE_1(marshaller->marshal(msg));
+  EXPECT_HAS_ERROR(marshaller->marshal(msg));
 }
 
 /**
@@ -88,8 +87,8 @@ TEST_F(ExchangeMessageMarshallerTest, UnmarshalError) {
   EXPECT_CALL(*key_marshaller, unmarshalPublicKey(_))
       .WillOnce(
           Return(libp2p::crypto::CryptoProviderError::FAILED_UNMARSHAL_DATA));
-  EXPECT_OUTCOME_TRUE(pid, PeerId::fromPublicKey(ProtobufKey{pk.data}))
+  auto pid = EXPECT_OK(PeerId::fromPublicKey(ProtobufKey{pk.data}));
   ExchangeMessage msg{.pubkey = pk, .peer_id = pid};
-  EXPECT_OUTCOME_TRUE(bytes, marshaller->marshal(msg));
-  EXPECT_OUTCOME_FALSE_1(marshaller->unmarshal(bytes));
+  auto bytes = EXPECT_OK(marshaller->marshal(msg));
+  EXPECT_HAS_ERROR(marshaller->unmarshal(bytes));
 }

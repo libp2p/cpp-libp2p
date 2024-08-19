@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/crypto/rsa_provider/rsa_provider_impl.hpp"
-
 #include <gtest/gtest.h>
-#include "testutil/outcome.hpp"
+#include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
+#include <qtils/test/outcome.hpp>
 
 using libp2p::crypto::rsa::PrivateKey;
 using libp2p::crypto::rsa::PublicKey;
@@ -214,8 +213,7 @@ class RsaProviderTest : public ::testing::Test {
  * @then Pre-generated signature must be valid
  */
 TEST_F(RsaProviderTest, SignatureVerificationSuccess) {
-  EXPECT_OUTCOME_TRUE(result,
-                      provider_.verify(message_, signature_, public_key_));
+  auto result = EXPECT_OK(provider_.verify(message_, signature_, public_key_));
   ASSERT_TRUE(result);
 }
 
@@ -227,8 +225,8 @@ TEST_F(RsaProviderTest, SignatureVerificationSuccess) {
  */
 TEST_F(RsaProviderTest, InvalidSignatureVerificationFailure) {
   Signature different_signature{SAMPLE_RSA_INVALID_SIGNATURE_BYTES};
-  EXPECT_OUTCOME_TRUE(
-      result, provider_.verify(message_, different_signature, public_key_));
+  auto result =
+      EXPECT_OK(provider_.verify(message_, different_signature, public_key_));
   ASSERT_FALSE(result);
 }
 
@@ -241,8 +239,7 @@ TEST_F(RsaProviderTest, InvalidSignatureVerificationFailure) {
 TEST_F(RsaProviderTest, InvalidPublicKeySignatureVerificationFailure) {
   PublicKey invalid_key = public_key_;
   invalid_key[32] ^= 8;
-  EXPECT_OUTCOME_TRUE(result,
-                      provider_.verify(message_, signature_, invalid_key));
+  auto result = EXPECT_OK(provider_.verify(message_, signature_, invalid_key));
   ASSERT_FALSE(result);
 }
 
@@ -252,6 +249,6 @@ TEST_F(RsaProviderTest, InvalidPublicKeySignatureVerificationFailure) {
  * @then Generated signature matches pre-generated
  */
 TEST_F(RsaProviderTest, SigningSample) {
-  EXPECT_OUTCOME_TRUE(signature, provider_.sign(message_, private_key_));
+  auto signature = EXPECT_OK(provider_.sign(message_, private_key_));
   EXPECT_EQ(signature, signature_);
 }
