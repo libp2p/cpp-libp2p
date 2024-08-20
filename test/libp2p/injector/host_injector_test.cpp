@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/injector/host_injector.hpp"
+#include <libp2p/injector/host_injector.hpp>
 
 #include <gtest/gtest.h>
 #include "mock/libp2p/muxer/muxer_adaptor_mock.hpp"

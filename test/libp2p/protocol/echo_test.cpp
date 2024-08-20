@@ -4,12 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/protocol/echo.hpp"
-
 #include <gtest/gtest.h>
+#include <libp2p/protocol/echo.hpp>
+#include <qtils/test/outcome.hpp>
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "testutil/gmock_actions.hpp"
-#include "testutil/outcome.hpp"
 #include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
@@ -89,7 +88,7 @@ TEST(EchoTest, DISABLED_Client) {
 
   auto client = echo.createClient(stream);
   client->sendAnd(msg, [&](outcome::result<std::string> rm) {
-    EXPECT_OUTCOME_TRUE(m, rm);
+    auto m = EXPECT_OK(rm);
     ASSERT_EQ(m, msg);
     executed = true;
   });

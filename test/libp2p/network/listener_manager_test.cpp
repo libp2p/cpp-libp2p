@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/network/impl/listener_manager_impl.hpp"
-
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
+#include <libp2p/network/impl/listener_manager_impl.hpp>
+#include <qtils/test/outcome.hpp>
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/network/connection_manager_mock.hpp"
 #include "mock/libp2p/network/router_mock.hpp"
@@ -17,7 +17,6 @@
 #include "mock/libp2p/transport/transport_listener_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
 #include "testutil/gmock_actions.hpp"
-#include "testutil/outcome.hpp"
 
 using namespace libp2p;
 using namespace network;
@@ -71,7 +70,7 @@ TEST_F(ListenerManagerTest, ListenValidAddr) {
       .WillOnce(Return(transport_listener));
 
   auto supported = "/ip4/127.0.0.1/tcp/0"_multiaddr;
-  EXPECT_OUTCOME_TRUE_1(listener->listen(supported));
+  EXPECT_OK(listener->listen(supported));
 
   EXPECT_EQ(listener->getListenAddresses(),
             std::vector<multi::Multiaddress>{supported});
@@ -85,7 +84,7 @@ TEST_F(ListenerManagerTest, ListenValidAddr) {
             std::vector<multi::Multiaddress>{random_port_resolved});
 
   // do listen on the same addr
-  EXPECT_OUTCOME_FALSE_1(listener->listen(supported));
+  EXPECT_HAS_ERROR(listener->listen(supported));
 }
 
 /**
@@ -97,7 +96,7 @@ TEST_F(ListenerManagerTest, ListenInvalidAddr) {
   EXPECT_CALL(*tmgr, findBest(_)).WillOnce(Return(nullptr));
 
   auto unsupported = "/ip4/127.0.0.1/udp/0"_multiaddr;
-  EXPECT_OUTCOME_FALSE_1(listener->listen(unsupported));
+  EXPECT_HAS_ERROR(listener->listen(unsupported));
 
   EXPECT_TRUE(listener->getListenAddresses().empty());
 
@@ -121,7 +120,7 @@ TEST_F(ListenerManagerTest, StartStop) {
 
   // given 1 listener
   auto supported = "/ip4/127.0.0.1/tcp/0"_multiaddr;
-  EXPECT_OUTCOME_TRUE_1(listener->listen(supported));
+  EXPECT_OK(listener->listen(supported));
 
   // when start
   ASSERT_NO_FATAL_FAILURE(listener->start());

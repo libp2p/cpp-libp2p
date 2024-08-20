@@ -4,32 +4,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/multi/converters/converter_utils.hpp"
-
 #include <gtest/gtest.h>
 #include <libp2p/multi/converters/conversion_error.hpp>
+#include <libp2p/multi/converters/converter_utils.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
+#include <qtils/test/outcome.hpp>
 #include <qtils/unhex.hpp>
-#include "testutil/outcome.hpp"
 
 using libp2p::Bytes;
 using libp2p::multi::converters::bytesToMultiaddrString;
 using libp2p::multi::converters::ConversionError;
 using libp2p::multi::converters::multiaddrToBytes;
 
-#define EXAMINE_STR_TO_BYTES(str_addr, hex_bytes)            \
-  do {                                                       \
-    EXPECT_OUTCOME_TRUE(actual, multiaddrToBytes(str_addr)); \
-    EXPECT_OUTCOME_TRUE(expected, qtils::unhex(hex_bytes));  \
-    ASSERT_EQ(actual, expected);                             \
+#define EXAMINE_STR_TO_BYTES(str_addr, hex_bytes)        \
+  do {                                                   \
+    auto actual = EXPECT_OK(multiaddrToBytes(str_addr)); \
+    auto expected = EXPECT_OK(qtils::unhex(hex_bytes));  \
+    ASSERT_EQ(actual, expected);                         \
   } while (false)
 
-#define EXAMINE_BYTES_TO_STR(str_addr, hex_bytes)               \
-  do {                                                          \
-    auto &expected = str_addr;                                  \
-    EXPECT_OUTCOME_TRUE(bytes, qtils::unhex(hex_bytes));        \
-    EXPECT_OUTCOME_TRUE(actual, bytesToMultiaddrString(bytes)); \
-    ASSERT_EQ(actual, expected);                                \
+#define EXAMINE_BYTES_TO_STR(str_addr, hex_bytes)           \
+  do {                                                      \
+    auto &expected = str_addr;                              \
+    auto bytes = EXPECT_OK(qtils::unhex(hex_bytes));        \
+    auto actual = EXPECT_OK(bytesToMultiaddrString(bytes)); \
+    ASSERT_EQ(actual, expected);                            \
   } while (false)
 
 /**

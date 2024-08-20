@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/host/basic_host/basic_host.hpp>
-
 #include <gtest/gtest.h>
+#include <libp2p/host/basic_host/basic_host.hpp>
+#include <qtils/test/outcome.hpp>
 
 #include "mock/libp2p/connection/stream_mock.hpp"
 #include "mock/libp2p/network/dialer_mock.hpp"
@@ -19,7 +19,6 @@
 
 #include <libp2p/common/literals.hpp>
 #include "testutil/gmock_actions.hpp"
-#include "testutil/outcome.hpp"
 
 using namespace libp2p;
 using namespace common;
@@ -160,7 +159,7 @@ TEST_F(BasicHostTest, NewStream) {
 
   bool executed = false;
   host->newStream(pinfo, {protocol}, [&](auto &&result) {
-    EXPECT_OUTCOME_TRUE(stream, result);
+    auto stream = EXPECT_OK(result);
     (void)stream;
     executed = true;
   });

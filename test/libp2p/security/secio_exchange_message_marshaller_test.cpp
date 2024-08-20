@@ -5,9 +5,8 @@
  */
 
 #include <gtest/gtest.h>
-
 #include <libp2p/security/secio/exchange_message_marshaller_impl.hpp>
-#include "testutil/outcome.hpp"
+#include <qtils/test/outcome.hpp>
 
 using namespace libp2p::security::secio;
 
@@ -24,8 +23,8 @@ class ExchangeMessageMarshallerTest : public ::testing::Test {
 TEST_F(ExchangeMessageMarshallerTest, BasicCase) {
   ExchangeMessage source{.epubkey = {1, 2, 3, 4, 5},
                          .signature = {6, 7, 8, 9, 10}};
-  EXPECT_OUTCOME_TRUE(bytes, marshaller.marshal(source));
-  EXPECT_OUTCOME_TRUE(derived, marshaller.unmarshal(bytes));
+  auto bytes = EXPECT_OK(marshaller.marshal(source));
+  auto derived = EXPECT_OK(marshaller.unmarshal(bytes));
   ASSERT_EQ(source.epubkey, derived.epubkey);
   ASSERT_EQ(source.signature, derived.signature);
 }

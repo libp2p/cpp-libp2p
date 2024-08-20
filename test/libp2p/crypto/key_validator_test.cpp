@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/crypto/key_validator/key_validator_impl.hpp"
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <libp2p/crypto/crypto_provider/crypto_provider_impl.hpp>
@@ -16,7 +14,7 @@
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
-#include <testutil/outcome.hpp>
+#include <qtils/test/outcome.hpp>
 
 using ::testing::_;
 using ::testing::An;
@@ -77,10 +75,10 @@ class GeneratedKeysTest : public BaseKeyTest,
  */
 TEST_P(GeneratedKeysTest, GeneratedKeysAreValid) {
   Key::Type key_type = GetParam();
-  EXPECT_OUTCOME_TRUE(key_pair, crypto_provider->generateKeys(key_type))
-  EXPECT_OUTCOME_TRUE_1(validator->validate(key_pair.publicKey))
-  EXPECT_OUTCOME_TRUE_1(validator->validate(key_pair.privateKey))
-  EXPECT_OUTCOME_TRUE_1(validator->validate(key_pair))
+  auto key_pair = EXPECT_OK(crypto_provider->generateKeys(key_type));
+  EXPECT_OK(validator->validate(key_pair.publicKey));
+  EXPECT_OK(validator->validate(key_pair.privateKey));
+  EXPECT_OK(validator->validate(key_pair));
 }
 
 /**
@@ -97,10 +95,10 @@ TEST_P(GeneratedKeysTest, GeneratedKeysAreValid) {
 TEST_P(GeneratedKeysTest, ArbitraryKeyInvalid) {
   Key::Type key_type = GetParam();
   auto public_key = PublicKey{{key_type, random->randomBytes(64)}};
-  EXPECT_OUTCOME_FALSE_1(validator->validate(public_key))
+  EXPECT_HAS_ERROR(validator->validate(public_key));
 
   auto private_key = PrivateKey{{key_type, random->randomBytes(64)}};
-  EXPECT_OUTCOME_FALSE_1(validator->validate(private_key))
+  EXPECT_HAS_ERROR(validator->validate(private_key));
 }
 
 /**
@@ -117,11 +115,11 @@ TEST_P(GeneratedKeysTest, ArbitraryKeyInvalid) {
 TEST_P(GeneratedKeysTest, InvalidPublicKeyInvalidatesPair) {
   Key::Type key_type = GetParam();
 
-  EXPECT_OUTCOME_TRUE(key_pair, crypto_provider->generateKeys(key_type))
+  auto key_pair = EXPECT_OK(crypto_provider->generateKeys(key_type));
   auto public_key = PublicKey{{key_type, random->randomBytes(64)}};
-  EXPECT_OUTCOME_FALSE_1(validator->validate(public_key))
+  EXPECT_HAS_ERROR(validator->validate(public_key));
   auto invalid_pair = KeyPair{public_key, key_pair.privateKey};
-  EXPECT_OUTCOME_FALSE_1(validator->validate(invalid_pair))
+  EXPECT_HAS_ERROR(validator->validate(invalid_pair));
 }
 
 INSTANTIATE_TEST_SUITE_P(GeneratedValidKeysCases,
@@ -147,8 +145,8 @@ TEST_P(RandomKeyTest, Every32byteIsValidPrivateKey) {
   auto key_type = GetParam();
   auto sequence = random->randomBytes(32);
   auto private_key = PrivateKey{{key_type, sequence}};
-  EXPECT_OUTCOME_TRUE_1(validator->validate(private_key))
-  EXPECT_OUTCOME_TRUE_1(crypto_provider->derivePublicKey(private_key))
+  EXPECT_OK(validator->validate(private_key));
+  EXPECT_OK(crypto_provider->derivePublicKey(private_key));
 }
 
 INSTANTIATE_TEST_SUITE_P(RandomSequencesCases,
@@ -167,9 +165,9 @@ class UnspecifiedKeyTest : public BaseKeyTest, public ::testing::Test {};
 TEST_F(UnspecifiedKeyTest, UnspecifiedAlwaysValid) {
   auto private_key =
       PrivateKey{{Key::Type::UNSPECIFIED, random->randomBytes(64)}};
-  EXPECT_OUTCOME_TRUE_1(validator->validate(private_key))
+  EXPECT_OK(validator->validate(private_key));
   auto public_key =
       PublicKey{{Key::Type::UNSPECIFIED, random->randomBytes(64)}};
-  EXPECT_OUTCOME_TRUE_1(validator->validate(public_key))
-  EXPECT_OUTCOME_TRUE_1(validator->validate(KeyPair{public_key, private_key}));
+  EXPECT_OK(validator->validate(public_key));
+  EXPECT_OK(validator->validate(KeyPair{public_key, private_key}));
 }

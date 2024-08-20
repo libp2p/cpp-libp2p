@@ -20,6 +20,7 @@
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include <libp2p/security/secio/exchange_message_marshaller_impl.hpp>
 #include <libp2p/security/secio/propose_message_marshaller_impl.hpp>
+#include <qtils/test/outcome.hpp>
 #include "acceptance/p2p/host/peer/tick_counter.hpp"
 #include "acceptance/p2p/host/protocol/client_test_session.hpp"
 
@@ -52,8 +53,8 @@ Peer::Peer(Peer::Duration timeout, bool secure)
           std::make_shared<basic::AsioSchedulerBackend>(context_),
           basic::Scheduler::Config{})},
       secure_{secure} {
-  EXPECT_OUTCOME_TRUE(
-      keys, crypto_provider_->generateKeys(crypto::Key::Type::Ed25519));
+  auto keys =
+      EXPECT_OK(crypto_provider_->generateKeys(crypto::Key::Type::Ed25519));
   host_ = makeHost(keys);
 
   auto handler = [this](StreamAndProtocol stream) { echo_->handle(stream); };
@@ -63,7 +64,7 @@ Peer::Peer(Peer::Duration timeout, bool secure)
 void Peer::startServer(const multi::Multiaddress &address,
                        std::shared_ptr<std::promise<peer::PeerInfo>> promise) {
   context_->post([this, address, p = std::move(promise)] {
-    EXPECT_OUTCOME_TRUE_1(host_->listen(address));
+    EXPECT_OK(host_->listen(address));
     host_->start();
     p->set_value(host_->getPeerInfo());
   });
@@ -87,7 +88,7 @@ void Peer::startClient(const peer::PeerInfo &pinfo,
          counter =
              std::move(counter)](StreamAndProtocolOrError rstream) mutable {
           // get stream
-          EXPECT_OUTCOME_TRUE(stream, rstream);
+          auto stream = EXPECT_OK(rstream);
           // make client session
           auto client = std::make_shared<protocol::ClientTestSession>(
               stream.stream, ping_times);
@@ -100,7 +101,7 @@ void Peer::startClient(const peer::PeerInfo &pinfo,
                 // count message exchange
                 counter->tick();
                 // ensure message returned
-                EXPECT_OUTCOME_TRUE(vec, res);
+                auto vec = EXPECT_OK(res);
                 // ensure message is correct
                 ASSERT_EQ(vec.size(), client->bufferSize());  // NOLINT
               });

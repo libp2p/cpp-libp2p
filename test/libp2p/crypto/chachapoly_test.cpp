@@ -3,13 +3,12 @@
  * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
-#include "libp2p/crypto/chachapoly/chachapoly_impl.hpp"
-
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
+#include <libp2p/crypto/chachapoly/chachapoly_impl.hpp>
 #include <libp2p/crypto/common_functions.hpp>
-#include "testutil/outcome.hpp"
+#include <qtils/test/outcome.hpp>
 #include "testutil/prepare_loggers.hpp"
 
 using libp2p::crypto::chachapoly::ChaCha20Poly1305Impl;
@@ -131,8 +130,8 @@ class ChaChaPolyTest : public testing::Test {
 TEST_F(ChaChaPolyTest, Basic) {
   ChaCha20Poly1305Impl codec(key);
   Bytes data = "afafafdeadbeef"_unhex;
-  EXPECT_OUTCOME_TRUE(ciphertext, codec.encrypt(nonce, data, aad))
-  EXPECT_OUTCOME_TRUE(plaintext, codec.decrypt(nonce, ciphertext, aad))
+  auto ciphertext = EXPECT_OK(codec.encrypt(nonce, data, aad));
+  auto plaintext = EXPECT_OK(codec.decrypt(nonce, ciphertext, aad));
   ASSERT_EQ(data, plaintext);
 }
 
@@ -144,7 +143,7 @@ TEST_F(ChaChaPolyTest, Basic) {
 TEST_F(ChaChaPolyTest, Encrypt) {
   ChaCha20Poly1305Impl codec(key);
 
-  EXPECT_OUTCOME_TRUE(result, codec.encrypt(nonce, plaintext, aad));
+  auto result = EXPECT_OK(codec.encrypt(nonce, plaintext, aad));
   ASSERT_EQ(result, ciphertext);
 }
 
@@ -156,6 +155,6 @@ TEST_F(ChaChaPolyTest, Encrypt) {
 TEST_F(ChaChaPolyTest, Decrypt) {
   ChaCha20Poly1305Impl codec(key);
 
-  EXPECT_OUTCOME_TRUE(result, codec.decrypt(nonce, ciphertext, aad));
+  auto result = EXPECT_OK(codec.decrypt(nonce, ciphertext, aad));
   ASSERT_EQ(result, plaintext);
 }

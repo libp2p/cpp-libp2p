@@ -67,8 +67,8 @@ void print(NodeId from, std::vector<BucketPeerInfo> &pids) {
   for (auto &p : pids) {
     fmt::println("pid: {} nodeId: {:X} distance: {:X}",
                  p.peer_id.toHex(),
-                 p.node_id.getData(),
-                 from.distance(p.node_id));
+                 qtils::Hex{p.node_id.getData()},
+                 qtils::Hex{from.distance(p.node_id)});
   }
 }
 

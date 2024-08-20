@@ -11,7 +11,6 @@
 #include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/common/shared_fn.hpp>
 
-#include "testutil/outcome.hpp"
 #include "testutil/prepare_loggers.hpp"
 
 using libp2p::SharedFn;
