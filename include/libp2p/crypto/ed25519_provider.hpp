@@ -9,6 +9,7 @@
 #include <array>
 
 #include <libp2p/common/types.hpp>
+#include <libp2p/crypto/key_type.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
 namespace libp2p::crypto::ed25519 {
@@ -16,6 +17,7 @@ namespace libp2p::crypto::ed25519 {
   using PrivateKey = std::array<uint8_t, 32u>;
   using PublicKey = std::array<uint8_t, 32u>;
   struct Keypair {
+    static constexpr auto key_type = KeyType::Ed25519;
     PrivateKey private_key;
     PublicKey public_key;
   };

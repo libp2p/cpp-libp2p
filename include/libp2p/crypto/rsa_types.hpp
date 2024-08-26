@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <libp2p/crypto/common.hpp>
+#include <libp2p/crypto/key_type.hpp>
 
 namespace libp2p::crypto::rsa {
   /**
@@ -20,6 +21,7 @@ namespace libp2p::crypto::rsa {
   using libp2p::crypto::common::RSAKeyType;
 
   struct KeyPair {
+    static constexpr auto key_type = KeyType::RSA;
     PrivateKey private_key; /**< RSA private key */
     PublicKey public_key;   /**< RSA public key */
 

@@ -21,7 +21,7 @@ namespace libp2p::protocol::kademlia {
     bool operator<(const PeerIdWithDistance &other) const {
       return std::memcmp(
                  distance_.data(), other.distance_.data(), distance_.size())
-           < 0;
+           > 0;
     }
 
     const PeerId &operator*() const {

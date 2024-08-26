@@ -7,6 +7,7 @@
 #pragma once
 
 #include <array>
+#include <libp2p/crypto/key_type.hpp>
 #include <vector>
 
 namespace libp2p::crypto::ecdsa {
@@ -22,6 +23,7 @@ namespace libp2p::crypto::ecdsa {
    * @struct Key pair
    */
   struct KeyPair {
+    static constexpr auto key_type = KeyType::ECDSA;
     PrivateKey private_key; /**< ECDSA private key */
     PublicKey public_key;   /**< ECDSA public key */
 

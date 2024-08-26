@@ -8,6 +8,8 @@
 
 #include <numeric>
 
+#include <audi/replay.hpp>
+
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol::kademlia,
                             PeerRoutingTableImpl::Error,
                             e) {
@@ -153,7 +155,7 @@ namespace libp2p::protocol::kademlia {
     BOOST_ASSERT(identity_manager_ != nullptr);
     BOOST_ASSERT(bus_ != nullptr);
     BOOST_ASSERT(config_.maxBucketSize > 1);
-    buckets_.emplace_back();  // create initial bucket
+    buckets_.resize(256);
   }
 
   void PeerRoutingTableImpl::remove(const peer::PeerId &peer_id) {
@@ -219,6 +221,10 @@ namespace libp2p::protocol::kademlia {
 
     auto bucketId = getBucketId(buckets_, cpl);
     auto &bucket = buckets_.at(bucketId);
+
+    if (auto &writer = audi::replay_writer()) {
+      writer->peer(pid, cpl);
+    }
 
     // Trying to find and move to front if its a long lived connected peer
     if (is_connected) {

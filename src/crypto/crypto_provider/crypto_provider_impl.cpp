@@ -88,46 +88,22 @@ namespace libp2p::crypto {
   outcome::result<KeyPair> CryptoProviderImpl::generateRsa(
       common::RSAKeyType rsa_bitness) const {
     OUTCOME_TRY(rsa, rsa_provider_->generate(rsa_bitness));
-
-    auto &&pub = rsa.public_key;
-    auto &&priv = rsa.private_key;
-    return KeyPair{.publicKey = {{.type = Key::Type::RSA,
-                                  .data = {pub.begin(), pub.end()}}},
-                   .privateKey = {{.type = Key::Type::RSA,
-                                   .data = {priv.begin(), priv.end()}}}};
+    return KeyPair{rsa};
   }
 
   outcome::result<KeyPair> CryptoProviderImpl::generateEd25519() const {
     OUTCOME_TRY(ed, ed25519_provider_->generate());
-
-    auto &&pub = ed.public_key;
-    auto &&priv = ed.private_key;
-    return KeyPair{.publicKey = {{.type = Key::Type::Ed25519,
-                                  .data = {pub.begin(), pub.end()}}},
-                   .privateKey = {{.type = Key::Type::Ed25519,
-                                   .data = {priv.begin(), priv.end()}}}};
+    return KeyPair{ed};
   }
 
   outcome::result<KeyPair> CryptoProviderImpl::generateSecp256k1() const {
     OUTCOME_TRY(secp, secp256k1_provider_->generate());
-
-    auto &&pub = secp.public_key;
-    auto &&priv = secp.private_key;
-    return KeyPair{.publicKey = {{.type = Key::Type::Secp256k1,
-                                  .data = {pub.begin(), pub.end()}}},
-                   .privateKey = {{.type = Key::Type::Secp256k1,
-                                   .data = {priv.begin(), priv.end()}}}};
+    return KeyPair{secp};
   }
 
   outcome::result<KeyPair> CryptoProviderImpl::generateEcdsa() const {
     OUTCOME_TRY(ecdsa, ecdsa_provider_->generate());
-
-    auto &&pub = ecdsa.public_key;
-    auto &&priv = ecdsa.private_key;
-    return KeyPair{.publicKey = {{.type = Key::Type::ECDSA,
-                                  .data = {pub.begin(), pub.end()}}},
-                   .privateKey = {{.type = Key::Type::ECDSA,
-                                   .data = {priv.begin(), priv.end()}}}};
+    return KeyPair{ecdsa};
   }
 
   /* ###################################################################

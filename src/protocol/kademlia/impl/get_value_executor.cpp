@@ -17,6 +17,8 @@
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/message.hpp>
 
+#include <audi/replay.hpp>
+
 using libp2p::common::FinalAction;
 
 namespace libp2p::protocol::kademlia {
@@ -46,7 +48,7 @@ namespace libp2p::protocol::kademlia {
         validator_(std::move(validator)),
         key_(std::move(key)),
         handler_(std::move(handler)),
-        target_(key_),
+        target_{NodeId::hash(key_)},
         log_("KademliaExecutor", "kademlia", "GetValue", ++instance_number) {
     BOOST_ASSERT(host_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
@@ -58,6 +60,12 @@ namespace libp2p::protocol::kademlia {
 
     auto nearest_peer_ids = peer_routing_table->getNearestPeers(
         target_, config_.closerPeerCount * 2);
+
+    if (auto &writer = audi::replay_writer()) {
+      writer->query(key_,
+                    NodeId{host_->getId()}.commonPrefixLen(target_),
+                    nearest_peer_ids);
+    }
 
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));
@@ -137,6 +145,10 @@ namespace libp2p::protocol::kademlia {
                  peer_info.id.toBase58(),
                  requests_in_progress_,
                  queue_.size());
+
+      if (auto &writer = audi::replay_writer()) {
+        writer->request(key_, peer_info.id);
+      }
 
       auto holder =
           std::make_shared<std::pair<std::shared_ptr<GetValueExecutor>,
@@ -264,6 +276,20 @@ namespace libp2p::protocol::kademlia {
                remote_peer_id.toBase58(),
                requests_in_progress_,
                queue_.size());
+
+    if (auto &writer = audi::replay_writer()) {
+      std::vector<PeerId> peers;
+      if (msg.closer_peers) {
+        for (auto &peer : *msg.closer_peers) {
+          peers.emplace_back(peer.info.id);
+        }
+      }
+      writer->response(
+          key_,
+          remote_peer_id,
+          peers,
+          msg.record ? std::make_optional(msg.record->value) : std::nullopt);
+    }
 
     // Append gotten peer to queue
     if (msg.closer_peers) {

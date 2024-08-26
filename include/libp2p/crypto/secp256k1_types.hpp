@@ -7,6 +7,7 @@
 #pragma once
 
 #include <array>
+#include <libp2p/crypto/key_type.hpp>
 #include <vector>
 
 namespace libp2p::crypto::secp256k1 {
@@ -24,6 +25,7 @@ namespace libp2p::crypto::secp256k1 {
    * @struct Key pair
    */
   struct KeyPair {
+    static constexpr auto key_type = KeyType::Secp256k1;
     PrivateKey private_key; /**< Secp256k1 private key */
     PublicKey public_key;   /**< Secp256k1 public key */
 

@@ -28,6 +28,9 @@ find_package(Protobuf CONFIG REQUIRED)
 hunter_add_package(qtils)
 find_package(qtils CONFIG REQUIRED)
 
+hunter_add_package(scale)
+find_package(scale CONFIG REQUIRED)
+
 find_package(Threads)
 
 hunter_add_package(c-ares)

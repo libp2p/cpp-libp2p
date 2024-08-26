@@ -9,7 +9,9 @@
 #include <functional>
 
 #include <libp2p/common/types.hpp>
+#include <libp2p/crypto/key_type.hpp>
 #include <libp2p/outcome/outcome.hpp>
+#include <qtils/bytes.hpp>
 
 namespace libp2p::crypto {
 
@@ -19,13 +21,7 @@ namespace libp2p::crypto {
     /**
      * Supported types of all keys
      */
-    enum class Type {
-      UNSPECIFIED = 100,
-      RSA = 0,
-      Ed25519 = 1,
-      Secp256k1 = 2,
-      ECDSA = 3
-    };
+    using Type = KeyType;
 
     Type type = Type::UNSPECIFIED;  ///< key type
     std::vector<uint8_t> data{};    ///< key content
@@ -44,6 +40,12 @@ namespace libp2p::crypto {
   struct PrivateKey : public Key {};
 
   struct KeyPair {
+    template <typename T>
+      requires(requires { T::key_type; })
+    KeyPair(const T &v)
+        : publicKey{T::key_type, qtils::asVec(v.public_key)},
+          privateKey{T::key_type, qtils::asVec(v.private_key)} {}
+
     PublicKey publicKey;
     PrivateKey privateKey;
   };

@@ -434,7 +434,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     peer_ids = peer_routing_table_->getNearestPeers(
-        NodeId(msg.key), config_.closerPeerCount * 2);
+        NodeId::hash(msg.key), config_.closerPeerCount * 2);
 
     if (not peer_ids.empty()) {
       std::vector<Message::Peer> peers;
@@ -491,7 +491,7 @@ namespace libp2p::protocol::kademlia {
     log_.debug("MSG: FindNode ({})", multi::detail::encodeBase58(msg.key));
 
     auto ids = peer_routing_table_->getNearestPeers(
-        NodeId(msg.key), config_.closerPeerCount * 2);
+        NodeId::hash(msg.key), config_.closerPeerCount * 2);
 
     std::vector<Message::Peer> peers;
     peers.reserve(config_.closerPeerCount);
@@ -624,6 +624,7 @@ namespace libp2p::protocol::kademlia {
 
   std::shared_ptr<PutValueExecutor> KademliaImpl::createPutValueExecutor(
       ContentId key, ContentValue value, std::vector<PeerId> addressees) {
+    throw std::logic_error{"audi: unexpected PUT_VALUE"};
     return std::make_shared<PutValueExecutor>(config_,
                                               host_,
                                               scheduler_,
@@ -650,6 +651,7 @@ namespace libp2p::protocol::kademlia {
 
   std::shared_ptr<AddProviderExecutor> KademliaImpl::createAddProviderExecutor(
       ContentId content_id) {
+    throw std::logic_error{"audi: unexpected ADD_PROVIDER"};
     return std::make_shared<AddProviderExecutor>(config_,
                                                  host_,
                                                  scheduler_,
@@ -661,6 +663,7 @@ namespace libp2p::protocol::kademlia {
   std::shared_ptr<FindProvidersExecutor>
   KademliaImpl::createGetProvidersExecutor(ContentId content_id,
                                            FoundProvidersHandler handler) {
+    throw std::logic_error{"audi: unexpected GET_PROVIDERS"};
     return std::make_shared<FindProvidersExecutor>(config_,
                                                    host_,
                                                    scheduler_,
@@ -672,6 +675,7 @@ namespace libp2p::protocol::kademlia {
 
   std::shared_ptr<FindPeerExecutor> KademliaImpl::createFindPeerExecutor(
       PeerId peer_id, FoundPeerInfoHandler handler) {
+    throw std::logic_error{"audi: unexpected FIND_NODE"};
     return std::make_shared<FindPeerExecutor>(config_,
                                               host_,
                                               scheduler_,
