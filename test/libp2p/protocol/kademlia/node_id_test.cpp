@@ -80,9 +80,9 @@ TEST(KadDistance, SortsHashes) {
 
   std::vector<BucketPeerInfo> peers;
   std::generate_n(std::back_inserter(peers), peersTotal, []() {
-    return BucketPeerInfo(testutil::randomPeerId(), false);
+    return BucketPeerInfo(testutil::randomPeerId(), false, false);
   });
-  peers.emplace_back(us, false);
+  peers.emplace_back(us, false, false);
 
   ASSERT_EQ(peers.size(), peersTotal + 1);
   std::cout << "unsorted ";

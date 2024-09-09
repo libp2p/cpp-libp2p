@@ -23,9 +23,15 @@ namespace libp2p::protocol::kademlia {
   struct BucketPeerInfo {
     peer::PeerId peer_id;
     bool is_replaceable;
+    bool is_connected;
     NodeId node_id;
-    BucketPeerInfo(const peer::PeerId &peer_id, bool is_replaceable)
-        : peer_id(peer_id), is_replaceable(is_replaceable), node_id(peer_id) {}
+    BucketPeerInfo(const PeerId &peer_id,
+                   bool is_replaceable,
+                   bool is_connected)
+        : peer_id{peer_id},
+          is_replaceable{is_replaceable},
+          is_connected{is_connected},
+          node_id{peer_id} {}
   };
 
   struct XorDistanceComparator {
@@ -57,7 +63,9 @@ namespace libp2p::protocol::kademlia {
 
     bool moveToFront(const PeerId &pid);
 
-    void emplaceToFront(const PeerId &pid, bool is_replaceable);
+    void emplaceToFront(const PeerId &pid,
+                        bool is_replaceable,
+                        bool is_connected);
 
     boost::optional<PeerId> removeReplaceableItem();
 
