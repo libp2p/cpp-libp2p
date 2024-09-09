@@ -77,8 +77,6 @@ namespace libp2p::protocol::kademlia {
 
     bool remove(const peer::PeerId &p);
 
-    Bucket split(size_t commonLenPrefix, const NodeId &target);
-
    private:
     std::list<BucketPeerInfo> peers_;
   };
@@ -114,7 +112,7 @@ namespace libp2p::protocol::kademlia {
     size_t size() const override;
 
    private:
-    void nextBucket();
+    std::optional<size_t> getBucketIndex(const NodeId &key) const;
 
     const Config &config_;
     std::shared_ptr<peer::IdentityManager> identity_manager_;
