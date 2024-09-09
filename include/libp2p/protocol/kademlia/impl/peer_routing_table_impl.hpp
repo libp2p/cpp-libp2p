@@ -29,17 +29,7 @@ namespace libp2p::protocol::kademlia {
   };
 
   struct XorDistanceComparator {
-    explicit XorDistanceComparator(const peer::PeerId &from) {
-      hfrom = crypto::sha256(from.toVector()).value();
-    }
-
-    explicit XorDistanceComparator(const NodeId &from)
-        : hfrom(from.getData()) {}
-
-    explicit XorDistanceComparator(const Hash256 &hash) : hfrom(hash) {}
-
     bool operator()(const BucketPeerInfo &a, const BucketPeerInfo &b) {
-      NodeId from(hfrom);
       auto d1 = a.node_id.distance(from);
       auto d2 = b.node_id.distance(from);
       constexpr auto size = Hash256().size();
@@ -48,7 +38,7 @@ namespace libp2p::protocol::kademlia {
       return std::memcmp(d1.data(), d2.data(), size) < 0;
     }
 
-    Hash256 hfrom{};
+    NodeId from;
   };
 
   /**

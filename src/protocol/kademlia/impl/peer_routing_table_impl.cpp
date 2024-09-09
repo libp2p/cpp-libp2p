@@ -47,7 +47,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   void Bucket::sort(const NodeId &node_id) {
-    XorDistanceComparator cmp(node_id);
+    XorDistanceComparator cmp{node_id};
     peers_.sort(cmp);
   }
 
