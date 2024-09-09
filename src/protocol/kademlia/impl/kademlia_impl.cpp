@@ -99,9 +99,21 @@ namespace libp2p::protocol::kademlia {
                   addPeer(
                       peer::PeerInfo{std::move(remote_peer_res.value()),
                                      {std::move(remote_peer_addr_res.value())}},
-                      false);
+                      false,
+                      true);
                 }
               }
+            });
+    on_disconnected_ =
+        host_->getBus()
+            .getChannel<event::network::OnPeerDisconnectedChannel>()
+            .subscribe([weak_self{weak_from_this()}](const PeerId &peer) {
+              auto self = weak_self.lock();
+              if (not self) {
+                return;
+              }
+              std::ignore =
+                  self->peer_routing_table_->update(peer, false, false);
             });
 
     // start random walking
