@@ -53,22 +53,17 @@ namespace libp2p::protocol::kademlia {
    */
   class NodeId {
    public:
-    explicit NodeId(const Hash256 &h) : data_(h) {}
-
-    explicit NodeId(const void *bytes) {
-      memcpy(data_.data(), bytes, data_.size());
-    }
-
     explicit NodeId(const peer::PeerId &pid) {
       auto digest_res = crypto::sha256(pid.toVector());
       BOOST_ASSERT(digest_res.has_value());
       data_ = std::move(digest_res.value());
     }
 
-    explicit NodeId(const ContentId &content_id) {
-      auto digest_res = crypto::sha256(content_id);
-      BOOST_ASSERT(digest_res.has_value());
-      data_ = std::move(digest_res.value());
+    static NodeId prehashed(Hash256 hash) {
+      return NodeId{hash};
+    }
+    static NodeId hash(BytesIn key) {
+      return prehashed(crypto::sha256(key).value());
     }
 
     inline bool operator==(const NodeId &other) const {
@@ -106,6 +101,8 @@ namespace libp2p::protocol::kademlia {
     }
 
    private:
+    explicit NodeId(Hash256 hash) : data_{hash} {}
+
     Hash256 data_;
   };
 

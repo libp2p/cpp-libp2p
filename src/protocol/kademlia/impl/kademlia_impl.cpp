@@ -446,7 +446,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     peer_ids = peer_routing_table_->getNearestPeers(
-        NodeId(msg.key), config_.closerPeerCount * 2);
+        NodeId::hash(msg.key), config_.closerPeerCount * 2);
 
     if (not peer_ids.empty()) {
       std::vector<Message::Peer> peers;
@@ -503,7 +503,7 @@ namespace libp2p::protocol::kademlia {
     log_.debug("MSG: FindNode ({})", multi::detail::encodeBase58(msg.key));
 
     auto ids = peer_routing_table_->getNearestPeers(
-        NodeId(msg.key), config_.closerPeerCount * 2);
+        NodeId::hash(msg.key), config_.closerPeerCount * 2);
 
     std::vector<Message::Peer> peers;
     peers.reserve(config_.closerPeerCount);

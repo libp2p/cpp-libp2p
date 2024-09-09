@@ -33,7 +33,7 @@ namespace libp2p::protocol::kademlia {
         session_host_(std::move(session_host)),
         content_id_(std::move(content_id)),
         handler_(std::move(handler)),
-        target_(content_id_),
+        target_{NodeId::hash(content_id_)},
         log_("KademliaExecutor",
              "kademlia",
              "FindProviders",
