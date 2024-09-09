@@ -152,8 +152,7 @@ namespace libp2p::protocol::kademlia {
         local_([this] {
           BOOST_ASSERT(identity_manager_ != nullptr);
           return identity_manager_->getId();
-        }()),
-        log_("PeerRoutingTable", "kademlia") {
+        }()) {
     BOOST_ASSERT(identity_manager_ != nullptr);
     BOOST_ASSERT(bus_ != nullptr);
     BOOST_ASSERT(config_.maxBucketSize > 1);

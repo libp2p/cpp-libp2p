@@ -123,8 +123,6 @@ namespace libp2p::protocol::kademlia {
     const NodeId local_;
 
     std::vector<Bucket> buckets_;
-
-    log::SubLogger log_;
   };
 
 }  // namespace libp2p::protocol::kademlia
