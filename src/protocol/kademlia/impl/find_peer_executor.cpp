@@ -35,8 +35,8 @@ namespace libp2p::protocol::kademlia {
         target_(sought_peer_id_),
         handler_(std::move(handler)),
         log_("KademliaExecutor", "kademlia", "FindPeer", ++instance_number) {
-    auto nearest_peer_ids = peer_routing_table->getNearestPeers(
-        target_, config_.closerPeerCount * 2);
+    auto nearest_peer_ids =
+        peer_routing_table->getNearestPeers(target_, K_VALUE);
 
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));

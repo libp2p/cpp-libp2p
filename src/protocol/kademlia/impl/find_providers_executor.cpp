@@ -42,8 +42,8 @@ namespace libp2p::protocol::kademlia {
     BOOST_ASSERT(scheduler_ != nullptr);
     BOOST_ASSERT(session_host_ != nullptr);
 
-    auto nearest_peer_ids = peer_routing_table->getNearestPeers(
-        target_, config_.closerPeerCount * 2);
+    auto nearest_peer_ids =
+        peer_routing_table->getNearestPeers(target_, K_VALUE);
 
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));
