@@ -10,7 +10,10 @@
 #include <libp2p/protocol/kademlia/node_id.hpp>
 
 namespace libp2p::protocol::kademlia {
-
+  /**
+   * Used with `priority_queue<PeerIdWithDistance>`.
+   * `top()` must be minimal distance, so `operator<` is reversed.
+   */
   struct PeerIdWithDistance {
     template <typename T>
     PeerIdWithDistance(const PeerId &peer_id, T &&target)
@@ -21,7 +24,7 @@ namespace libp2p::protocol::kademlia {
     bool operator<(const PeerIdWithDistance &other) const {
       return std::memcmp(
                  distance_.data(), other.distance_.data(), distance_.size())
-           < 0;
+           > 0;
     }
 
     const PeerId &operator*() const {
