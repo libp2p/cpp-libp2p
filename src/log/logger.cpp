@@ -8,6 +8,8 @@
 
 #include <boost/assert.hpp>
 
+#include <set>
+
 namespace libp2p::log {
 
   namespace {
@@ -26,24 +28,36 @@ namespace libp2p::log {
     logging_system_ = std::move(logging_system);
   }
 
-  Logger createLogger(const std::string &tag) {
+  auto create(const std::string &tag, auto... a) {
     ensure_loger_system_is_initialized();
-    return std::dynamic_pointer_cast<soralog::LoggerFactory>(logging_system_)
-        ->getLogger(tag, defaultGroupName);
+    auto log =
+        std::dynamic_pointer_cast<soralog::LoggerFactory>(logging_system_)
+            ->getLogger(tag, a...);
+    static std::set<std::string> off{
+        "IdentifyMsgProcessor",
+        "ListenerManager",
+        "Noise",
+        "NoiseHandshake",
+        "YamuxConn",
+    };
+    if (off.contains(tag)) {
+      log->setLevel(soralog::Level::OFF);
+    }
+    return log;
+  }
+
+  Logger createLogger(const std::string &tag) {
+    return create(tag, defaultGroupName);
   }
 
   Logger createLogger(const std::string &tag, const std::string &group) {
-    ensure_loger_system_is_initialized();
-    return std::dynamic_pointer_cast<soralog::LoggerFactory>(logging_system_)
-        ->getLogger(tag, group);
+    return create(tag, group);
   }
 
   Logger createLogger(const std::string &tag,
                       const std::string &group,
                       Level level) {
-    ensure_loger_system_is_initialized();
-    return std::dynamic_pointer_cast<soralog::LoggerFactory>(logging_system_)
-        ->getLogger(tag, group, level);
+    return create(tag, group, level);
   }
 
   void setLevelOfGroup(const std::string &group_name, Level level) {

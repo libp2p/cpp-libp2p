@@ -134,3 +134,6 @@ install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/libp2pConfig.cmake
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
         )
+
+add_executable(subject include/subject.cpp)
+target_link_libraries(subject p2p p2p_kademlia p2p_identify p2p_ping)
