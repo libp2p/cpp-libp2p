@@ -91,6 +91,9 @@ namespace libp2p::transport {
       return debug_str_;
     }
 
+    static uint64_t getBytesRead();
+    static uint64_t getBytesWritten();
+
    private:
     outcome::result<void> saveMultiaddresses();
 
@@ -114,6 +117,9 @@ namespace libp2p::transport {
     friend class security::TlsAdaptor;
 
     std::string debug_str_;
+
+    inline static std::atomic<uint64_t> bytes_read_ = 0;
+    inline static std::atomic<uint64_t> bytes_written_ = 0;
 
    public:
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::transport::TcpConnection);

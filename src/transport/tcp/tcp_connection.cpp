@@ -184,6 +184,7 @@ namespace libp2p::transport {
   void TcpConnection::readSome(BytesOut out,
                                size_t bytes,
                                TcpConnection::ReadCallbackFunc cb) {
+    bytes_read_.fetch_add(bytes);
     ambigousSize(out, bytes);
     TRACE("{} read some up to {}", debug_str_, bytes);
     socket_.async_read_some(asioBuffer(out),
@@ -193,6 +194,7 @@ namespace libp2p::transport {
   void TcpConnection::writeSome(BytesIn in,
                                 size_t bytes,
                                 TcpConnection::WriteCallbackFunc cb) {
+    bytes_written_.fetch_add(bytes);
     ambigousSize(in, bytes);
     TRACE("{} write some up to {}", debug_str_, bytes);
     socket_.async_write_some(asioBuffer(in),
@@ -267,6 +269,14 @@ namespace libp2p::transport {
                              remote_multiaddress_->getStringAddress());
 #endif
     return outcome::success();
+  }
+
+  uint64_t TcpConnection::getBytesRead() {
+    return bytes_read_.load();
+  }
+
+  uint64_t TcpConnection::getBytesWritten() {
+    return bytes_written_.load();
   }
 
 }  // namespace libp2p::transport
