@@ -24,6 +24,9 @@ namespace libp2p::transport {
 
     ByteCounter(const ByteCounter &) = delete;
     ByteCounter &operator=(const ByteCounter &) = delete;
+
+    ByteCounter(ByteCounter &&) = delete;
+    ByteCounter &operator=(ByteCounter &&) = delete;
   };
 
 }  // namespace libp2p::transport
