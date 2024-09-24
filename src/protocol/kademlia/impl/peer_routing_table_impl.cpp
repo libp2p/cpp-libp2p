@@ -42,16 +42,20 @@ namespace libp2p::protocol::kademlia {
     peers_.sort(cmp);
   }
 
-  auto Bucket::find(const peer::PeerId &p) const {
-    return std::find_if(peers_.begin(), peers_.end(), [&p](const auto &i) {
+  auto findPeer(auto &peers, const peer::PeerId &p) {
+    return std::find_if(peers.begin(), peers.end(), [&p](const auto &i) {
       return i.peer_id == p;
     });
   }
 
+  auto Bucket::find(const peer::PeerId &p) const {
+    return findPeer(peers_, p);
+  }
+
   bool Bucket::moveToFront(const PeerId &pid) {
-    auto it = find(pid);
+    auto it = findPeer(peers_, pid);
     if (it != peers_.end()) {
-      const_cast<BucketPeerInfo &>(*it).is_connected = true;
+      it->is_connected = true;
       if (it != peers_.begin()) {
         peers_.splice(peers_.begin(), peers_, it);
       }
