@@ -19,7 +19,7 @@ namespace libp2p::network {
   void RouterImpl::setProtocolHandler(StreamProtocols protocols,
                                       StreamAndProtocolCb cb,
                                       ProtocolPredicate predicate) {
-    for (auto &protocol : protocols) {
+    for (auto &protocol : protocols.protocols) {
       proto_handlers_[protocol] = PredicateAndHandler{predicate, cb};
     }
   }

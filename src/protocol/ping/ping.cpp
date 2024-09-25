@@ -43,7 +43,7 @@ namespace libp2p::protocol {
     auto peer_info = host_.getPeerRepository().getPeerInfo(remote_peer.value());
     return host_.newStream(
         peer_info,
-        {detail::kPingProto},
+        {{detail::kPingProto}},
         [self{shared_from_this()}, cb = std::move(cb)](auto &&stream_res) {
           if (!stream_res) {
             return cb(stream_res.error());

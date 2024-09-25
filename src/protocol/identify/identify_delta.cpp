@@ -145,7 +145,7 @@ namespace libp2p::protocol {
     detail::streamToEachConnectedPeer(
         host_,
         conn_manager_,
-        {kIdentifyDeltaProtocol},
+        {{kIdentifyDeltaProtocol}},
         [self{shared_from_this()}, msg](auto s_res) {
           if (!s_res) {
             return;

@@ -58,7 +58,7 @@ Peer::Peer(Peer::Duration timeout, bool secure)
   host_ = makeHost(keys);
 
   auto handler = [this](StreamAndProtocol stream) { echo_->handle(stream); };
-  host_->setProtocolHandler({echo_->getProtocolId()}, handler);
+  host_->setProtocolHandler(libp2p::StreamProtocols{{echo_->getProtocolId()}}, handler);
 }
 
 void Peer::startServer(const multi::Multiaddress &address,
@@ -82,7 +82,7 @@ void Peer::startClient(const peer::PeerInfo &pinfo,
                   counter = std::move(counter)]() mutable {
     this->host_->newStream(
         pinfo,
-        {echo_->getProtocolId()},
+        libp2p::StreamProtocols{{echo_->getProtocolId()}},
         [server_id = std::move(server_id),
          ping_times = message_count,
          counter =

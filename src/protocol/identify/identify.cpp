@@ -10,16 +10,15 @@
 #include <tuple>
 
 #include <boost/assert.hpp>
-
-namespace {
-  const std::string kIdentifyProto = "/ipfs/id/1.0.0";
-}  // namespace
-
 namespace libp2p::protocol {
   Identify::Identify(Host &host,
                      std::shared_ptr<IdentifyMessageProcessor> msg_processor,
-                     event::Bus &event_bus)
-      : host_{host}, msg_processor_{std::move(msg_processor)}, bus_{event_bus} {
+                     event::Bus &event_bus,
+                     StreamProtocols protocols)
+      : host_{host},
+        msg_processor_{std::move(msg_processor)},
+        bus_{event_bus},
+        protocols_{protocols} {
     BOOST_ASSERT(msg_processor_);
   }
 
@@ -38,7 +37,7 @@ namespace libp2p::protocol {
   }
 
   peer::ProtocolName Identify::getProtocolId() const {
-    return kIdentifyProto;
+    return protocols_.protocols.empty() ? peer::ProtocolName{} : protocols_.protocols.front();
   }
 
   void Identify::handle(StreamAndProtocol stream) {
@@ -50,7 +49,7 @@ namespace libp2p::protocol {
     BOOST_ASSERT(!started_);
     started_ = true;
 
-    host_.setProtocolHandler({kIdentifyProto},
+    host_.setProtocolHandler(protocols_,
                              [wp = weak_from_this()](StreamAndProtocol stream) {
                                if (auto self = wp.lock()) {
                                  self->handle(std::move(stream));
@@ -86,9 +85,7 @@ namespace libp2p::protocol {
                                  std::move(remote_peer_addr_res.value())}};
 
     msg_processor_->getHost().newStream(
-        peer_info,
-        {kIdentifyProto},
-        [self{shared_from_this()}](auto &&stream_res) {
+        peer_info, protocols_, [self{shared_from_this()}](auto &&stream_res) {
           if (!stream_res) {
             return;
           }

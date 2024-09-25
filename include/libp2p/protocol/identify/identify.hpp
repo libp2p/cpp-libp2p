@@ -34,7 +34,8 @@ namespace libp2p::protocol {
      */
     Identify(Host &host,
              std::shared_ptr<IdentifyMessageProcessor> msg_processor,
-             event::Bus &event_bus);
+             event::Bus &event_bus,
+             StreamProtocols protocols);
 
     ~Identify() override = default;
 
@@ -81,7 +82,7 @@ namespace libp2p::protocol {
     std::shared_ptr<IdentifyMessageProcessor> msg_processor_;
     event::Bus &bus_;
     event::Handle sub_;  // will unsubscribe during destruction by itself
-
+    StreamProtocols protocols_;
     bool started_ = false;
   };
 }  // namespace libp2p::protocol
