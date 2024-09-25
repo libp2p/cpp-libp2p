@@ -43,9 +43,8 @@ namespace libp2p::protocol::kademlia {
   }
 
   auto findPeer(auto &peers, const peer::PeerId &p) {
-    return std::find_if(peers.begin(), peers.end(), [&p](const auto &i) {
-      return i.peer_id == p;
-    });
+    return std::ranges::find_if(peers,
+                                [&p](const auto &i) { return i.peer_id == p; });
   }
 
   auto Bucket::find(const peer::PeerId &p) const {
