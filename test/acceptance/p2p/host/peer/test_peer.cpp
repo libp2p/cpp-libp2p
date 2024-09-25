@@ -206,5 +206,6 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
                                            std::move(network),
                                            std::move(peer_repo),
                                            std::move(bus),
-                                           std::move(tmgr));
+                                           std::move(tmgr),
+                                           Libp2pClientVersion{});
 }

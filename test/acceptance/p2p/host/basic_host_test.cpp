@@ -48,7 +48,8 @@ struct BasicHostTest : public ::testing::Test {
       std::make_unique<network::NetworkMock>(),
       std::make_unique<peer::PeerRepositoryMock>(),
       std::make_shared<libp2p::event::Bus>(),
-      std::make_shared<libp2p::network::TransportManagerMock>());
+      std::make_shared<libp2p::network::TransportManagerMock>(),
+      Libp2pClientVersion{});
 
   peer::PeerRepositoryMock &repo =
       (peer::PeerRepositoryMock &)host->getPeerRepository();
