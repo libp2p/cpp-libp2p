@@ -157,7 +157,7 @@ namespace libp2p::protocol::kademlia {
     auto bucket_index = getBucketIndex(node_id);
     Bucket result;
     auto done = [&] { return result.size() >= count; };
-    auto append = [&](size_t i) { result.append(buckets_[i]); };
+    auto append = [&](size_t i) { result.append(buckets_.at(i)); };
     if (bucket_index) {
       if (auto i = *bucket_index) {
         append(i);
