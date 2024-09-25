@@ -16,6 +16,10 @@
 #include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
 
 namespace libp2p::injector {
+  inline auto useLibp2pClientVersion(Libp2pClientVersion version) {
+    return boost::di::bind<Libp2pClientVersion>().to(
+        std::move(version))[boost::di::override];
+  }
 
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
   inline auto makeHostInjector(Ts &&...args) {
@@ -30,6 +34,8 @@ namespace libp2p::injector {
         di::bind<peer::AddressRepository>.template to<peer::InmemAddressRepository>(),
         di::bind<peer::KeyRepository>.template to<peer::InmemKeyRepository>(),
         di::bind<peer::ProtocolRepository>.template to<peer::InmemProtocolRepository>(),
+
+        di::bind<Libp2pClientVersion>.template to(Libp2pClientVersion{"cpp-libp2p"}),
 
         di::bind<Host>.template to<host::BasicHost>(),
 
