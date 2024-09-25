@@ -149,7 +149,7 @@ namespace libp2p::injector {
    */
   inline auto useKeyPair(crypto::KeyPair key_pair) {
     return boost::di::bind<crypto::KeyPair>().template to(
-        std::make_shared<crypto::KeyPair>(key_pair))[boost::di::override];
+        std::move(key_pair))[boost::di::override];
   }
 
   /**
