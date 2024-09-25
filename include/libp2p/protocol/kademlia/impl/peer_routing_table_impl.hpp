@@ -19,6 +19,7 @@
 #include <libp2p/protocol/kademlia/node_id.hpp>
 
 namespace libp2p::protocol::kademlia {
+  constexpr size_t kBucketCount = 256;
 
   struct BucketPeerInfo {
     peer::PeerId peer_id;
@@ -120,7 +121,7 @@ namespace libp2p::protocol::kademlia {
 
     const NodeId local_;
 
-    std::vector<Bucket> buckets_;
+    std::array<Bucket, kBucketCount> buckets_;
   };
 
 }  // namespace libp2p::protocol::kademlia
