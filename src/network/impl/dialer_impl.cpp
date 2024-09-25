@@ -162,7 +162,7 @@ namespace libp2p::network {
     SL_TRACE(log_,
              "New stream to {} for {} (peer info)",
              p.id.toBase58().substr(46),
-             fmt::join(protocols.protocols, " "));
+             fmt::join(protocols, " "));
     dial(
         p,
         [self{shared_from_this()},
@@ -185,7 +185,7 @@ namespace libp2p::network {
     SL_TRACE(log_,
              "New stream to {} for {} (peer id)",
              peer_id.toBase58().substr(46),
-             fmt::join(protocols.protocols, " "));
+             fmt::join(protocols, " "));
     auto conn = cmgr_->getBestConnectionForPeer(peer_id);
     if (!conn) {
       scheduler_->schedule(
@@ -208,7 +208,7 @@ namespace libp2p::network {
     auto &&stream = stream_res.value();
     auto stream_copy = stream;
     multiselect_->selectOneOf(
-        protocols.protocols,
+        protocols,
         std::move(stream_copy),
         true,
         true,

@@ -55,7 +55,7 @@ namespace libp2p::protocol {
     detail::streamToEachConnectedPeer(
         msg_processor_->getHost(),
         msg_processor_->getConnectionManager(),
-        {{kIdentifyPushProtocol}},
+        {kIdentifyPushProtocol},
         [self{weak_from_this()}](auto &&s_res) {
           if (!s_res) {
             return;

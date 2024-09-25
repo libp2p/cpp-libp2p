@@ -280,8 +280,8 @@ int main(int argc, char *argv[]) {
             .create<std::shared_ptr<libp2p::protocol::kademlia::Kademlia>>();
 
     // Handle streams for observed protocol
-    host->setProtocolHandler({{"/chat/1.0.0"}}, handleIncomingStream);
-    host->setProtocolHandler({{"/chat/1.1.0"}}, handleIncomingStream);
+    host->setProtocolHandler({"/chat/1.0.0"}, handleIncomingStream);
+    host->setProtocolHandler({"/chat/1.1.0"}, handleIncomingStream);
 
     // Key for group of chat
     auto content_id = libp2p::protocol::kademlia::makeKeySha256("meet me here");
@@ -303,7 +303,7 @@ int main(int argc, char *argv[]) {
 
             auto &providers = res.value();
             for (auto &provider : providers) {
-              host->newStream(provider, {{"/chat/1.1.0"}}, handleOutgoingStream);
+              host->newStream(provider, {"/chat/1.1.0"}, handleOutgoingStream);
             }
           });
     };

@@ -16,11 +16,5 @@ namespace libp2p {
    * Used by `Host::newStream`, `Dialer::newStream`, `Host::setProtocolHandler`,
    * `Router::setProtocolHandler`.
    */
-  struct StreamProtocols {
-    std::vector<peer::ProtocolName> protocols;
-    bool operator ==(const StreamProtocols &rhs) const {
-      return protocols == rhs.protocols;
-    }
-  };
-
+  using StreamProtocols = std::vector<peer::ProtocolName>;
 }  // namespace libp2p

@@ -80,8 +80,7 @@ class IdentifyTest : public testing::Test {
 
     id_msg_processor_ = std::make_shared<IdentifyMessageProcessor>(
         host_, conn_manager_, id_manager_, key_marshaller_);
-    identify_ = std::make_shared<Identify>(
-        host_, id_msg_processor_, bus_, StreamProtocols{{kIdentifyProto}});
+    identify_ = std::make_shared<Identify>(host_, id_msg_processor_, bus_);
   }
 
   HostMock host_;
@@ -202,7 +201,7 @@ ACTION_P(ReadPut, buf) {
  * peer to be identified @and accepts the received message
  */
 TEST_F(IdentifyTest, Receive) {
-  EXPECT_CALL(host_, setProtocolHandler(StreamProtocols{{kIdentifyProto}}, _, _))
+  EXPECT_CALL(host_, setProtocolHandler(StreamProtocols{kIdentifyProto}, _, _))
       .WillOnce(Return());
 
   EXPECT_CALL(*connection_, remotePeer()).WillOnce(Return(kRemotePeerId));
@@ -210,7 +209,7 @@ TEST_F(IdentifyTest, Receive) {
       .WillOnce(Return(remote_multiaddr_));
 
   EXPECT_CALL(host_,
-              newStream(kRemotePeerInfo, StreamProtocols{{kIdentifyProto}}, _, _))
+              newStream(kRemotePeerInfo, StreamProtocols{kIdentifyProto}, _, _))
       .WillOnce(InvokeArgument<2>(StreamAndProtocol{stream_, kIdentifyProto}));
 
   EXPECT_CALL(*stream_, read(_, 1, _))

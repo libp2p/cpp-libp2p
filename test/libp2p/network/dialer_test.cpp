@@ -72,7 +72,7 @@ struct DialerTest : public ::testing::Test {
   multi::Multiaddress ma1 = "/ip4/127.0.0.1/tcp/1"_multiaddr;
   multi::Multiaddress ma2 = "/ip4/127.0.0.1/tcp/2"_multiaddr;
   peer::PeerId pid = "1"_peerid;
-  const StreamProtocols protocols = StreamProtocols{{"/protocol/1.0.0"}};
+  const StreamProtocols protocols = {"/protocol/1.0.0"};
 
   peer::PeerInfo pinfo{.id = pid, .addresses = {ma1}};
   peer::PeerInfo pinfo_two_addrs{.id = pid, .addresses = {ma1, ma2}};
@@ -270,7 +270,7 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
   auto r = std::errc::io_error;
 
   auto if_protocols = [&](std::span<const peer::ProtocolName> actual) {
-    auto expected = std::span<const peer::ProtocolName>(protocols.protocols);
+    auto expected = std::span<const peer::ProtocolName>(protocols);
     return std::equal(
         actual.begin(), actual.end(), expected.begin(), expected.end());
   };
@@ -303,13 +303,13 @@ TEST_F(DialerTest, NewStreamSuccess) {
   EXPECT_CALL(*connection, newStream()).WillOnce(Return(stream));
 
   auto if_protocols = [&](std::span<const peer::ProtocolName> actual) {
-    auto expected = std::span<const peer::ProtocolName>(protocols.protocols);
+    auto expected = std::span<const peer::ProtocolName>(protocols);
     return std::equal(
         actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
   EXPECT_CALL(*proto_muxer, selectOneOf(Truly(if_protocols), _, _, _, _))
-      .WillOnce(InvokeArgument<4>(protocols.protocols[0]));
+      .WillOnce(InvokeArgument<4>(protocols[0]));
 
   bool executed = false;
   dialer->newStream(pinfo, protocols, [&](auto &&rstream) {

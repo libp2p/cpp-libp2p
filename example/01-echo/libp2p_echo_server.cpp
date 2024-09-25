@@ -159,7 +159,7 @@ dPtse4GVRA2swbXcZX5iFVi/V8poIpdVrgn5iMadkQnYf9APWJuGcebK
           libp2p::protocol::EchoConfig::kInfiniteNumberOfRepeats,
       .max_recv_size =
           libp2p::muxer::MuxedConnectionConfig::kDefaultMaxWindowSize}};
-  host->setProtocolHandler({{echo.getProtocolId()}},
+  host->setProtocolHandler({echo.getProtocolId()},
                            [&echo](libp2p::StreamAndProtocol stream) {
                              echo.handle(std::move(stream));
                            });

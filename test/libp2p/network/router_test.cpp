@@ -42,7 +42,7 @@ class RouterTest : public ::testing::Test, public RouterImpl {
    * @param proto, for which the handler is to be set
    */
   void setHandlerWithFail(const ProtocolName &proto) {
-    this->setProtocolHandler(libp2p::StreamProtocols{{proto}}, [](auto &&) { FAIL(); });
+    this->setProtocolHandler({proto}, [](auto &&) { FAIL(); });
   }
 
   /**
@@ -66,7 +66,7 @@ class RouterTest : public ::testing::Test, public RouterImpl {
  * @then the corresponding handler is invoked
  */
 TEST_F(RouterTest, SetHandlerPerfect) {
-  this->setProtocolHandler(libp2p::StreamProtocols{{kDefaultProtocol}},
+  this->setProtocolHandler({kDefaultProtocol},
                            [this](libp2p::StreamAndProtocol stream) mutable {
                              stream_to_receive = std::move(stream.stream);
                            });
@@ -98,18 +98,18 @@ TEST_F(RouterTest, SetHandlerPerfectInvokeFail) {
 TEST_F(RouterTest, SetHandlerWithPredicate) {
   // this match is shorter, than the next two; must not be invoked
   this->setProtocolHandler(
-      libp2p::StreamProtocols{{kProtocolPrefix}}, [](auto &&) { FAIL(); }, [](auto &&) { return true; });
+      {kProtocolPrefix}, [](auto &&) { FAIL(); }, [](auto &&) { return true; });
 
   // this match is equal to the next one, but its handler will evaluate to
   // false; must not be invoked
   this->setProtocolHandler(
-      libp2p::StreamProtocols{{kVersionProtocolPrefix}},
+      {kVersionProtocolPrefix},
       [](auto &&) { FAIL(); },
       [](auto &&) { return false; });
 
   // this match must be invoked
   this->setProtocolHandler(
-      libp2p::StreamProtocols{{kVersionProtocolPrefix}},
+      {kVersionProtocolPrefix},
       [this](libp2p::StreamAndProtocol stream) mutable {
         stream_to_receive = std::move(stream.stream);
       },

@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
         // create Host object and open a stream through it
         host->newStream(
             peer_info,
-            {{echo.getProtocolId()}},
+            {echo.getProtocolId()},
             [log, &echo, &message, sch](auto &&stream_res) {
               if (!stream_res) {
                 log->error("Cannot connect to server: {}", stream_res.error());

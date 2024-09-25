@@ -57,7 +57,7 @@ namespace libp2p::protocol::kademlia {
      * @returns kademlia protocol ids
      * @note Default: "ipfs/kad/1.0"
      */
-    StreamProtocols protocols = {{peer::ProtocolName("/ipfs/kad/1.0.0")}};
+    StreamProtocols protocols = {"/ipfs/kad/1.0.0"};
 
     /**
      * True if application is not announce himself

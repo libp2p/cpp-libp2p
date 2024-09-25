@@ -143,7 +143,7 @@ namespace libp2p::regression {
       // clang-format off
       host_->newStream(
           connect_to,
-          StreamProtocols{{getProtocolId()}},
+          {getProtocolId()},
           [wptr = weak_from_this()] (auto rstream) {
             auto self = wptr.lock();
             if (self) {  self->onConnected(std::move(rstream)); }
@@ -235,7 +235,7 @@ namespace libp2p::regression {
       if (!started_) {
         // clang-format off
         host_->setProtocolHandler(
-            StreamProtocols{{getProtocolId()}},
+            {getProtocolId()},
             [wptr = weak_from_this()] (StreamAndProtocol stream) {
               auto self = wptr.lock();
               if (self) { self->onAccepted(std::move(stream)); }

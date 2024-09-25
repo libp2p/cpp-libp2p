@@ -153,13 +153,13 @@ TEST_F(BasicHostTest, NewStream) {
   EXPECT_CALL(network, getDialer()).WillOnce(ReturnRef(*dialer));
   EXPECT_CALL(*dialer,
               newStream(pinfo,
-                        StreamProtocols{{protocol}},
+                        StreamProtocols{protocol},
                         _,
                         std::chrono::milliseconds::zero()))
       .WillOnce(Arg2CallbackWithArg(StreamAndProtocol{stream, protocol}));
 
   bool executed = false;
-  host->newStream(pinfo, StreamProtocols{{protocol}}, [&](auto &&result) {
+  host->newStream(pinfo, {protocol}, [&](auto &&result) {
     auto stream = EXPECT_OK(result);
     (void)stream;
     executed = true;
