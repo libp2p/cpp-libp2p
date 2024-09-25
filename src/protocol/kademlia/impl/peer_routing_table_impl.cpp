@@ -148,6 +148,8 @@ namespace libp2p::protocol::kademlia {
   std::vector<peer::PeerId> PeerRoutingTableImpl::getNearestPeers(
       const NodeId &node_id, size_t count) {
     auto distance = local_.distance(node_id);
+    // check if distance bit is set
+    // https://github.com/libp2p/rust-libp2p/blob/3837e33cd4c40ae703138e6aed6f6c9d52928a80/protocols/kad/src/kbucket.rs#L409-L428
     auto bit = [&](size_t i) {
       auto j = 255 - i;
       return ((distance[j / 8] >> (7 - j % 8)) & 1) != 0;
