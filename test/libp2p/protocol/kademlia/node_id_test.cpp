@@ -76,13 +76,13 @@ TEST(KadDistance, SortsHashes) {
   size_t peersTotal = 1000;
   srand(0);  // make test deterministic
   PeerId us = "1"_peerid;
-  XorDistanceComparator comp(us);
+  XorDistanceComparator comp{NodeId{us}};
 
   std::vector<BucketPeerInfo> peers;
   std::generate_n(std::back_inserter(peers), peersTotal, []() {
-    return BucketPeerInfo(testutil::randomPeerId(), false);
+    return BucketPeerInfo(testutil::randomPeerId(), false, false);
   });
-  peers.emplace_back(us, false);
+  peers.emplace_back(us, false, false);
 
   ASSERT_EQ(peers.size(), peersTotal + 1);
   std::cout << "unsorted ";

@@ -28,10 +28,10 @@ namespace libp2p::protocol::kademlia {
         scheduler_(std::move(scheduler)),
         session_host_(std::move(session_host)),
         key_(std::move(key)),
-        target_(key_),
+        target_{NodeId::hash(key_)},
         log_("KademliaExecutor", "kademlia", "AddProvider", ++instance_number) {
-    auto nearest_peer_ids =
-        peer_routing_table->getNearestPeers(target_, config_.maxBucketSize);
+    auto nearest_peer_ids = peer_routing_table->getNearestPeers(
+        target_, config_.query_initial_peers);
 
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));

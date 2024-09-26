@@ -22,7 +22,6 @@
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/impl/session_host.hpp>
-#include <libp2p/protocol/kademlia/peer_routing.hpp>
 
 namespace libp2p::protocol::kademlia {
 
@@ -35,7 +34,6 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<Host> host,
         std::shared_ptr<basic::Scheduler> scheduler,
         std::shared_ptr<SessionHost> session_host,
-        std::shared_ptr<PeerRouting> peer_routing,
         const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
         PeerId peer_id,
         FoundPeerInfoHandler handler);
@@ -70,7 +68,6 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Host> host_;
     std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
-    std::shared_ptr<PeerRouting> peer_routing_;
 
     // Secondary
     const PeerId sought_peer_id_;

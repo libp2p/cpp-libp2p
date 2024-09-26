@@ -33,7 +33,7 @@ namespace libp2p::protocol::kademlia {
         session_host_(std::move(session_host)),
         content_id_(std::move(content_id)),
         handler_(std::move(handler)),
-        target_(content_id_),
+        target_{NodeId::hash(content_id_)},
         log_("KademliaExecutor",
              "kademlia",
              "FindProviders",
@@ -43,7 +43,7 @@ namespace libp2p::protocol::kademlia {
     BOOST_ASSERT(session_host_ != nullptr);
 
     auto nearest_peer_ids = peer_routing_table->getNearestPeers(
-        target_, config_.closerPeerCount * 2);
+        target_, config_.query_initial_peers);
 
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));

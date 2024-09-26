@@ -19,27 +19,24 @@
 #include <libp2p/protocol/kademlia/node_id.hpp>
 
 namespace libp2p::protocol::kademlia {
+  constexpr size_t kBucketCount = 256;
 
   struct BucketPeerInfo {
     peer::PeerId peer_id;
     bool is_replaceable;
+    bool is_connected;
     NodeId node_id;
-    BucketPeerInfo(const peer::PeerId &peer_id, bool is_replaceable)
-        : peer_id(peer_id), is_replaceable(is_replaceable), node_id(peer_id) {}
+    BucketPeerInfo(const PeerId &peer_id,
+                   bool is_replaceable,
+                   bool is_connected)
+        : peer_id{peer_id},
+          is_replaceable{is_replaceable},
+          is_connected{is_connected},
+          node_id{peer_id} {}
   };
 
   struct XorDistanceComparator {
-    explicit XorDistanceComparator(const peer::PeerId &from) {
-      hfrom = crypto::sha256(from.toVector()).value();
-    }
-
-    explicit XorDistanceComparator(const NodeId &from)
-        : hfrom(from.getData()) {}
-
-    explicit XorDistanceComparator(const Hash256 &hash) : hfrom(hash) {}
-
     bool operator()(const BucketPeerInfo &a, const BucketPeerInfo &b) {
-      NodeId from(hfrom);
       auto d1 = a.node_id.distance(from);
       auto d2 = b.node_id.distance(from);
       constexpr auto size = Hash256().size();
@@ -48,7 +45,7 @@ namespace libp2p::protocol::kademlia {
       return std::memcmp(d1.data(), d2.data(), size) < 0;
     }
 
-    Hash256 hfrom{};
+    NodeId from;
   };
 
   /**
@@ -67,7 +64,9 @@ namespace libp2p::protocol::kademlia {
 
     bool moveToFront(const PeerId &pid);
 
-    void emplaceToFront(const PeerId &pid, bool is_replaceable);
+    void emplaceToFront(const PeerId &pid,
+                        bool is_replaceable,
+                        bool is_connected);
 
     boost::optional<PeerId> removeReplaceableItem();
 
@@ -78,8 +77,6 @@ namespace libp2p::protocol::kademlia {
     bool contains(const peer::PeerId &p) const;
 
     bool remove(const peer::PeerId &p);
-
-    Bucket split(size_t commonLenPrefix, const NodeId &target);
 
    private:
     std::list<BucketPeerInfo> peers_;
@@ -116,7 +113,7 @@ namespace libp2p::protocol::kademlia {
     size_t size() const override;
 
    private:
-    void nextBucket();
+    std::optional<size_t> getBucketIndex(const NodeId &key) const;
 
     const Config &config_;
     std::shared_ptr<peer::IdentityManager> identity_manager_;
@@ -124,9 +121,7 @@ namespace libp2p::protocol::kademlia {
 
     const NodeId local_;
 
-    std::vector<Bucket> buckets_;
-
-    log::SubLogger log_;
+    std::array<Bucket, kBucketCount> buckets_;
   };
 
 }  // namespace libp2p::protocol::kademlia
