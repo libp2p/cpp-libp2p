@@ -18,7 +18,7 @@ namespace libp2p::transport {
     ByteCounter() = default;
 
    public:
-    static ByteCounter &getInstance();
+    ~ByteCounter() = default;
 
     void incrementBytesRead(uint64_t bytes);
 
@@ -27,6 +27,8 @@ namespace libp2p::transport {
     uint64_t getBytesRead() const;
 
     uint64_t getBytesWritten() const;
+
+    static ByteCounter &getInstance();
 
     ByteCounter(const ByteCounter &) = delete;
     ByteCounter &operator=(const ByteCounter &) = delete;
