@@ -47,6 +47,7 @@ namespace libp2p::security::tls_details {
   static const char *x509ErrorToStr(int error);
 
   // libp2p-specific extension's OID
+  // https://github.com/libp2p/rust-libp2p/blob/8ceadaac5aec4b462463ef4082d6af577a3158b1/transports/tls/src/certificate.rs#L34
   constexpr std::string_view extension_oid = "1.3.6.1.4.1.53594.1.1";
   auto *extensionOid() {
     static const ASN1_OBJECT *oid = OBJ_txt2obj(extension_oid.data(), 1);
