@@ -73,6 +73,10 @@ namespace libp2p::transport::lsquic {
   };
 
   using OnAccept = std::function<void(std::shared_ptr<QuicConnection>)>;
+
+  /**
+   * libp2p wrapper and adapter for lsquic server/client socket.
+   */
   class Engine : public std::enable_shared_from_this<Engine> {
    public:
     Engine(std::shared_ptr<boost::asio::io_context> io_context,
