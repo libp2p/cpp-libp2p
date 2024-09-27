@@ -117,7 +117,8 @@ namespace libp2p::transport::lsquic {
     bool started_ = false;
     std::optional<Connecting> connecting_;
     struct Reading {
-      qtils::BytesN<64 << 10> buf;
+      static constexpr size_t kMaxUdpPacketSize = 64 << 10;
+      qtils::BytesN<kMaxUdpPacketSize> buf;
       boost::asio::ip::udp::endpoint remote;
     };
     Reading reading_;
