@@ -21,7 +21,9 @@ namespace libp2p::transport {
         ssl_context_{ssl_context.quic},
         mux_config_{mux_config},
         key_codec_{std::move(key_codec)},
-        resolver_{*io_context_} {}
+        resolver_{*io_context_},
+        client4_{makeClient(boost::asio::ip::udp::v4())},
+        client6_{makeClient(boost::asio::ip::udp::v6())} {}
 
   void QuicTransport::dial(const PeerId &peer,
                            Multiaddress address,
@@ -46,18 +48,6 @@ namespace libp2p::transport {
           auto remote = r.value().begin()->endpoint();
           auto v4 = remote.protocol() == boost::asio::ip::udp::v4();
           auto &client = v4 ? self->client4_ : self->client6_;
-          if (not client) {
-            client =
-                std::make_shared<lsquic::Engine>(self->io_context_,
-                                                 self->ssl_context_,
-                                                 self->mux_config_,
-                                                 self->key_codec_,
-                                                 boost::asio::ip::udp::socket{
-                                                     *self->io_context_,
-                                                     remote.protocol(),
-                                                 },
-                                                 true);
-          }
           client->connect(
               remote,
               peer,
@@ -84,5 +74,18 @@ namespace libp2p::transport {
 
   peer::ProtocolName QuicTransport::getProtocolId() const {
     return "/quic/1.0.0";
+  }
+
+  std::shared_ptr<lsquic::Engine> QuicTransport::makeClient(
+      boost::asio::ip::udp protocol) const {
+    return std::make_shared<lsquic::Engine>(io_context_,
+                                            ssl_context_,
+                                            mux_config_,
+                                            key_codec_,
+                                            boost::asio::ip::udp::socket{
+                                                *io_context_,
+                                                protocol,
+                                            },
+                                            true);
   }
 }  // namespace libp2p::transport

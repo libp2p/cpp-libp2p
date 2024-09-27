@@ -52,6 +52,9 @@ namespace libp2p::transport {
     bool canDial(const Multiaddress &ma) const override;
 
    private:
+    std::shared_ptr<lsquic::Engine> makeClient(
+        boost::asio::ip::udp protocol) const;
+
     std::shared_ptr<boost::asio::io_context> io_context_;
     std::shared_ptr<boost::asio::ssl::context> ssl_context_;
     muxer::MuxedConnectionConfig mux_config_;
