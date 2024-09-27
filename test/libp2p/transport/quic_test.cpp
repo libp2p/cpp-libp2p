@@ -44,6 +44,13 @@ struct Peer {
   std::shared_ptr<Stream> stream;
 };
 
+/**
+ * Test quic transport, both client and server.
+ *
+ * Client connects to server and opens stream.
+ * Client writes request and reads response.
+ * Server reads request and writes response.
+ */
 TEST(Quic, Test) {
   testutil::prepareLoggers();
   std::string protocol = "/test";
