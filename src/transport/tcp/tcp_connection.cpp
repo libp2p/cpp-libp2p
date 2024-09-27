@@ -9,6 +9,7 @@
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/asio_buffer.hpp>
+#include <libp2p/transport/tcp/bytes_counter.hpp>
 #include <libp2p/transport/tcp/tcp_util.hpp>
 
 #define TRACE_ENABLED 0
@@ -184,6 +185,7 @@ namespace libp2p::transport {
   void TcpConnection::readSome(BytesOut out,
                                size_t bytes,
                                TcpConnection::ReadCallbackFunc cb) {
+    ByteCounter::getInstance().incrementBytesRead(bytes);
     ambigousSize(out, bytes);
     TRACE("{} read some up to {}", debug_str_, bytes);
     socket_.async_read_some(asioBuffer(out),
@@ -193,6 +195,7 @@ namespace libp2p::transport {
   void TcpConnection::writeSome(BytesIn in,
                                 size_t bytes,
                                 TcpConnection::WriteCallbackFunc cb) {
+    ByteCounter::getInstance().incrementBytesWritten(bytes);
     ambigousSize(in, bytes);
     TRACE("{} write some up to {}", debug_str_, bytes);
     socket_.async_write_some(asioBuffer(in),
@@ -267,6 +270,14 @@ namespace libp2p::transport {
                              remote_multiaddress_->getStringAddress());
 #endif
     return outcome::success();
+  }
+
+  uint64_t TcpConnection::getBytesRead() {
+    return ByteCounter::getInstance().getBytesRead();
+  }
+
+  uint64_t TcpConnection::getBytesWritten() {
+    return ByteCounter::getInstance().getBytesWritten();
   }
 
 }  // namespace libp2p::transport

@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-libp2p_add_library(p2p_tcp_connection tcp_connection.cpp)
+libp2p_add_library(p2p_tcp_connection tcp_connection.cpp bytes_counter.cpp)
 target_link_libraries(p2p_tcp_connection
     Boost::boost
     p2p_multiaddress
