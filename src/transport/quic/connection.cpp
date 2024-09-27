@@ -1,3 +1,9 @@
+/**
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <libp2p/transport/quic/connection.hpp>
 #include <libp2p/transport/quic/engine.hpp>
 #include <libp2p/transport/quic/error.hpp>

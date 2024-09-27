@@ -1,3 +1,9 @@
+/**
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <boost/asio/ssl/context.hpp>
 #include <libp2p/common/asio_buffer.hpp>
 #include <libp2p/common/asio_cb.hpp>

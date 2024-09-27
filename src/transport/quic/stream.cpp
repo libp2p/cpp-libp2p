@@ -1,3 +1,9 @@
+/**
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <lsquic.h>
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
