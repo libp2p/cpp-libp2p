@@ -91,6 +91,9 @@ namespace libp2p::transport {
       return debug_str_;
     }
 
+    static uint64_t getBytesRead();
+    static uint64_t getBytesWritten();
+
    private:
     outcome::result<void> saveMultiaddresses();
 
