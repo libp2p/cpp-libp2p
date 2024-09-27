@@ -48,11 +48,17 @@ namespace libp2p::transport::lsquic {
 
   using OnConnect =
       std::function<void(outcome::result<std::shared_ptr<QuicConnection>>)>;
+  /**
+   * Connect operation arguments.
+   */
   struct Connecting {
     boost::asio::ip::udp::endpoint remote;
     PeerId peer;
     OnConnect cb;
   };
+  /**
+   * `lsquic_conn_ctx_t` for libp2p connection.
+   */
   struct ConnCtx {
     Engine *engine;
     lsquic_conn_t *ls_conn;
@@ -61,10 +67,16 @@ namespace libp2p::transport::lsquic {
     std::weak_ptr<QuicConnection> conn{};
   };
 
+  /**
+   * `lsquic_stream_ctx_t` for libp2p stream.
+   */
   struct StreamCtx {
     Engine *engine;
     lsquic_stream_t *ls_stream;
     std::weak_ptr<QuicStream> stream{};
+    /**
+     * Stream read operation arguments.
+     */
     struct Reading {
       BytesOut out;
       std::function<void(outcome::result<size_t>)> cb;
