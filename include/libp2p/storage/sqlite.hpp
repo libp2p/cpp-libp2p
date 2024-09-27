@@ -63,8 +63,7 @@ namespace libp2p::storage {
      * @return number of rows affected, -1 in case of error
      */
     template <typename... Args>
-    inline int execCommand(StatementHandle st_handle,
-                           const Args &...args) noexcept {
+    inline int execCommand(StatementHandle st_handle, const Args &...args) {
       try {
         auto &st = getStatement(st_handle);
         bindArgs(st, args...);
@@ -91,7 +90,7 @@ namespace libp2p::storage {
     template <typename Sink, typename... Args>
     inline bool execQuery(StatementHandle st_handle,
                           Sink &&sink,
-                          const Args &...args) noexcept {
+                          const Args &...args) {
       try {
         auto &st = getStatement(st_handle);
         bindArgs(st, args...);

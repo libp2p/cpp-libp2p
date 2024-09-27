@@ -6,7 +6,7 @@
 
 #include <libp2p/peer/impl/identity_manager_impl.hpp>
 
-#include "libp2p/crypto/key_marshaller.hpp"
+#include <libp2p/crypto/key_marshaller.hpp>
 
 namespace libp2p::peer {
 

@@ -65,13 +65,13 @@ namespace libp2p::connection {
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
-    bool isClosed() const noexcept override;
+    bool isClosed() const override;
 
     void close(VoidResultHandlerFunc cb) override;
 
-    bool isClosedForRead() const noexcept override;
+    bool isClosedForRead() const override;
 
-    bool isClosedForWrite() const noexcept override;
+    bool isClosedForWrite() const override;
 
     void reset() override;
 

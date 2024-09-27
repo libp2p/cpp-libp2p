@@ -4,15 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <libp2p/multi/multiaddress.hpp>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
 #include <libp2p/common/literals.hpp>
 #include <libp2p/common/types.hpp>
+#include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/multi/multiaddress_protocol_list.hpp>
-#include "testutil/outcome.hpp"
+#include <qtils/test/outcome.hpp>
 
 using libp2p::multi::Multiaddress;
 using libp2p::multi::Protocol;
@@ -39,7 +37,7 @@ class MultiaddressTest : public ::testing::Test {
  * @then creation succeeds
  */
 TEST_F(MultiaddressTest, CreateFromStringValid) {
-  EXPECT_OUTCOME_TRUE(address, Multiaddress::create(valid_ip_udp));
+  auto address = EXPECT_OK(Multiaddress::create(valid_ip_udp));
   ASSERT_EQ(address.getStringAddress(), valid_ip_udp);
   ASSERT_EQ(address.getBytesAddress(), valid_ip_udp_bytes);
 }
@@ -147,7 +145,7 @@ TEST_F(MultiaddressTest, GetString) {
  * @then result is equal to the expected one
  */
 TEST_F(MultiaddressTest, GetBytes) {
-  EXPECT_OUTCOME_TRUE(address, Multiaddress::create(valid_ip_udp));
+  auto address = EXPECT_OK(Multiaddress::create(valid_ip_udp));
   ASSERT_EQ(address.getBytesAddress(), valid_ip_udp_bytes);
 }
 
@@ -253,7 +251,7 @@ TEST_F(MultiaddressTest, GetProtocolsWithValues) {
 TEST_F(MultiaddressTest, DnsAndIpfs) {
   auto addr =
       "/dns4/p2p.cc3-0.kusama.network/tcp/30100/p2p/12D3KooWDgtynm4S9M3m6ZZhXYu2RrWKdvkCSScc25xKDVSg1Sjd"s;
-  EXPECT_OUTCOME_TRUE(address, Multiaddress::create(addr));
+  auto address = EXPECT_OK(Multiaddress::create(addr));
   ASSERT_EQ(address.getStringAddress(), addr);
   auto peer_id_opt = address.getPeerId();
   ASSERT_TRUE(peer_id_opt);
@@ -268,6 +266,6 @@ TEST_F(MultiaddressTest, DnsAndIpfs) {
  */
 TEST_F(MultiaddressTest, ParityWss) {
   auto addr = "/dns/telemetry.polkadot.io/tcp/443/x-parity-wss/%2Fsubmit%2F"s;
-  EXPECT_OUTCOME_TRUE(address, Multiaddress::create(addr));
+  auto address = EXPECT_OK(Multiaddress::create(addr));
   ASSERT_EQ(address.getStringAddress(), addr);
 }

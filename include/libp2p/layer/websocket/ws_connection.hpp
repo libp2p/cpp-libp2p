@@ -55,7 +55,7 @@ namespace libp2p::connection {
                           std::shared_ptr<LayerConnection> connection,
                           std::shared_ptr<basic::Scheduler> scheduler);
 
-    bool isInitiator() const noexcept override;
+    bool isInitiator() const override;
 
     void start();
     void stop();

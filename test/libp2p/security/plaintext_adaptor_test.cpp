@@ -4,12 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/security/plaintext/plaintext.hpp"
-
 #include <gtest/gtest.h>
 #include <libp2p/peer/peer_id.hpp>
+#include <libp2p/security/plaintext/plaintext.hpp>
+#include <qtils/test/outcome.hpp>
 #include <testutil/gmock_actions.hpp>
-#include <testutil/outcome.hpp>
 #include "mock/libp2p/connection/layer_connection_mock.hpp"
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
@@ -105,16 +104,16 @@ TEST_F(PlaintextAdaptorTest, DISABLED_SecureInbound) {
 
   adaptor->secureInbound(
       conn, [this](outcome::result<std::shared_ptr<SecureConnection>> rc) {
-        EXPECT_OUTCOME_TRUE(sec, rc);
+        auto sec = EXPECT_OK(rc);
 
-        EXPECT_OUTCOME_TRUE(sec_remote_pubkey, sec->remotePublicKey());
+        auto sec_remote_pubkey = EXPECT_OK(sec->remotePublicKey());
         EXPECT_EQ(sec_remote_pubkey, remote_pubkey);
 
         EXPECT_CALL(*key_marshaller, marshal(sec_remote_pubkey))
             .WillOnce(Return(ProtobufKey{remote_pubkey.data}));
-        EXPECT_OUTCOME_TRUE(remote_id, sec->remotePeer());
-        EXPECT_OUTCOME_TRUE(
-            calculated, PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}))
+        auto remote_id = EXPECT_OK(sec->remotePeer());
+        auto calculated =
+            EXPECT_OK(PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}));
         EXPECT_EQ(remote_id, calculated);
       });
 }
@@ -150,16 +149,16 @@ TEST_F(PlaintextAdaptorTest, DISABLED_SecureOutbound) {
       conn,
       pid,
       [pid, this](outcome::result<std::shared_ptr<SecureConnection>> rc) {
-        EXPECT_OUTCOME_TRUE(sec, rc);
+        auto sec = EXPECT_OK(rc);
 
-        EXPECT_OUTCOME_TRUE(sec_remote_pubkey, sec->remotePublicKey());
+        auto sec_remote_pubkey = EXPECT_OK(sec->remotePublicKey());
         EXPECT_EQ(sec_remote_pubkey, remote_pubkey);
 
         EXPECT_CALL(*key_marshaller, marshal(sec_remote_pubkey))
             .WillOnce(Return(ProtobufKey{remote_pubkey.data}));
-        EXPECT_OUTCOME_TRUE(remote_id, sec->remotePeer());
-        EXPECT_OUTCOME_TRUE(
-            calculated, PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}))
+        auto remote_id = EXPECT_OK(sec->remotePeer());
+        auto calculated =
+            EXPECT_OK(PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}));
         EXPECT_EQ(remote_id, calculated);
         EXPECT_EQ(remote_id, pid);
       });

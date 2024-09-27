@@ -92,7 +92,7 @@ namespace libp2p::protocol::gossip {
         pb_msg_->SerializeToArray(buffer->data() + prefix_sz, msg_sz);
 
     if (control_not_empty_) {
-      pb_msg_->release_control();
+      std::ignore = pb_msg_->release_control();
     }
 
     static constexpr size_t kSizeThreshold = 8192;

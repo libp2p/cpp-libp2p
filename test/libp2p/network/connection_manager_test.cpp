@@ -7,10 +7,10 @@
 #include <gtest/gtest.h>
 
 #include <libp2p/common/literals.hpp>
-#include "libp2p/network/connection_manager.hpp"
-#include "libp2p/network/impl/connection_manager_impl.hpp"
-#include "libp2p/peer/errors.hpp"
-#include "libp2p/peer/peer_id.hpp"
+#include <libp2p/network/connection_manager.hpp>
+#include <libp2p/network/impl/connection_manager_impl.hpp>
+#include <libp2p/peer/errors.hpp>
+#include <libp2p/peer/peer_id.hpp>
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
 #include "testutil/libp2p/peer.hpp"

@@ -61,13 +61,13 @@ namespace libp2p::peer {
      * Get a PeerId in this address
      * @return peer id
      */
-    const PeerId &getId() const noexcept;
+    const PeerId &getId() const;
 
     /**
      * Get a Multiaddress in this address
      * @return multiaddress
      */
-    const multi::Multiaddress &getAddress() const noexcept;
+    const multi::Multiaddress &getAddress() const;
 
    private:
     /**

@@ -154,7 +154,7 @@ namespace libp2p::connection {
     connection_.lock()->deferWriteCallback(ec, std::move(cb));
   }
 
-  bool MplexStream::isClosed() const noexcept {
+  bool MplexStream::isClosed() const {
     return isClosedForRead() && isClosedForWrite();
   }
 
@@ -177,11 +177,11 @@ namespace libp2p::connection {
         });
   }
 
-  bool MplexStream::isClosedForRead() const noexcept {
+  bool MplexStream::isClosedForRead() const {
     return !is_readable_;
   }
 
-  bool MplexStream::isClosedForWrite() const noexcept {
+  bool MplexStream::isClosedForWrite() const {
     return !is_writable_;
   }
 

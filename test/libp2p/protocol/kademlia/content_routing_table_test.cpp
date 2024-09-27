@@ -3,7 +3,7 @@
  * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
-#include "libp2p/protocol/kademlia/impl/content_routing_table_impl.hpp"
+#include <libp2p/protocol/kademlia/impl/content_routing_table_impl.hpp>
 
 #include <gtest/gtest.h>
 #include <unordered_set>

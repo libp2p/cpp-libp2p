@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/protocol/identify/observed_addresses.hpp"
+#include <libp2p/protocol/identify/observed_addresses.hpp>
 
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>

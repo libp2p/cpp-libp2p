@@ -4,16 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/transport/impl/upgrader_impl.hpp"
-
-#include <unordered_map>
-
 #include <gtest/gtest.h>
+#include <libp2p/multi/multiaddress.hpp>
+#include <libp2p/multi/multiaddress_protocol_list.hpp>
+#include <libp2p/multi/multihash.hpp>
+#include <libp2p/transport/impl/upgrader_impl.hpp>
+#include <libp2p/transport/tcp/tcp_util.hpp>
+#include <qtils/test/outcome.hpp>
 #include <testutil/gmock_actions.hpp>
-#include "libp2p/multi/multiaddress.hpp"
-#include "libp2p/multi/multiaddress_protocol_list.hpp"
-#include "libp2p/multi/multihash.hpp"
-#include "libp2p/transport/tcp/tcp_util.hpp"
 #include "mock/libp2p/connection/capable_connection_mock.hpp"
 #include "mock/libp2p/connection/layer_connection_mock.hpp"
 #include "mock/libp2p/connection/raw_connection_mock.hpp"
@@ -23,7 +21,6 @@
 #include "mock/libp2p/protocol_muxer/protocol_muxer_mock.hpp"
 #include "mock/libp2p/security/security_adaptor_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
-#include "testutil/outcome.hpp"
 
 using namespace libp2p::transport;
 using namespace libp2p::muxer;
@@ -125,11 +122,9 @@ class UpgraderTest : public testing::Test {
 TEST_F(UpgraderTest, UpgradeLayersInitiator) {
   setAllOutbound();
 
-  EXPECT_OUTCOME_TRUE(
-      address,
-      libp2p::multi::Multiaddress::create(
-          "/ip4/127.0.0.1/tcp/1234/_dummy_proto_1/_dummy_proto_2"
-          "/p2p/12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV"));
+  auto address = EXPECT_OK(libp2p::multi::Multiaddress::create(
+      "/ip4/127.0.0.1/tcp/1234/_dummy_proto_1/_dummy_proto_2"
+      "/p2p/12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV"));
   auto layers = detail::asTcp(address).value().second;
 
   EXPECT_CALL(*std::static_pointer_cast<LayerAdaptorMock>(layer_adaptors_[0]),
@@ -145,7 +140,7 @@ TEST_F(UpgraderTest, UpgradeLayersInitiator) {
 
   upgrader_->upgradeLayersOutbound(
       address, raw_conn_, layers, [this](auto &&upgraded_conn_res) {
-        EXPECT_OUTCOME_TRUE(upgraded_conn, upgraded_conn_res);
+        auto upgraded_conn = EXPECT_OK(upgraded_conn_res);
         ASSERT_EQ(upgraded_conn, layer2_conn_);
       });
 }
@@ -153,11 +148,9 @@ TEST_F(UpgraderTest, UpgradeLayersInitiator) {
 TEST_F(UpgraderTest, UpgradeLayersNotInitiator) {
   setAllInbound();
 
-  EXPECT_OUTCOME_TRUE(
-      address,
-      libp2p::multi::Multiaddress::create(
-          "/ip4/127.0.0.1/tcp/1234/_dummy_proto_1/_dummy_proto_2"
-          "/p2p/12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV"));
+  auto address = EXPECT_OK(libp2p::multi::Multiaddress::create(
+      "/ip4/127.0.0.1/tcp/1234/_dummy_proto_1/_dummy_proto_2"
+      "/p2p/12D3KooWEgUjBV5FJAuBSoNMRYFRHjV7PjZwRQ7b43EKX9g7D6xV"));
   auto layers = detail::asTcp(address).value().second;
 
   EXPECT_CALL(

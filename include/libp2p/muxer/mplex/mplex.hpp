@@ -14,7 +14,7 @@ namespace libp2p::muxer {
    public:
     explicit Mplex(MuxedConnectionConfig config);
 
-    peer::ProtocolName getProtocolId() const noexcept override;
+    peer::ProtocolName getProtocolId() const override;
 
     void muxConnection(std::shared_ptr<connection::SecureConnection> conn,
                        CapConnCallbackFunc cb) const override;

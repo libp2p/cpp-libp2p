@@ -26,7 +26,6 @@
 #include <libp2p/protocol/kademlia/impl/peer_routing_table.hpp>
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 #include <libp2p/protocol/kademlia/impl/session_host.hpp>
-#include <libp2p/protocol/kademlia/peer_routing.hpp>
 #include <libp2p/protocol/kademlia/validator.hpp>
 
 namespace libp2p::protocol::kademlia {
@@ -40,7 +39,6 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<Host> host,
         std::shared_ptr<basic::Scheduler> scheduler,
         std::shared_ptr<SessionHost> session_host,
-        std::shared_ptr<PeerRouting> peer_routing,
         std::shared_ptr<ContentRoutingTable> content_routing_table,
         const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
         std::shared_ptr<ExecutorsFactory> executor_factory,
@@ -76,7 +74,6 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Host> host_;
     std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<SessionHost> session_host_;
-    std::shared_ptr<PeerRouting> peer_routing_;
     std::shared_ptr<ContentRoutingTable> content_routing_table_;
     std::shared_ptr<ExecutorsFactory> executor_factory_;
     std::shared_ptr<Validator> validator_;

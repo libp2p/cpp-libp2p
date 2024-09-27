@@ -4,13 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <algorithm>
-
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/crypto/common_functions.hpp>
 #include <libp2p/crypto/x25519_provider/x25519_provider_impl.hpp>
-#include <testutil/outcome.hpp>
+#include <qtils/test/outcome.hpp>
 
 using libp2p::crypto::x25519::PrivateKey;
 using libp2p::crypto::x25519::PublicKey;
@@ -41,7 +39,7 @@ class X25519Fixture : public ::testing::Test {
  * @then the public key bytes are equal to expected
  */
 TEST_F(X25519Fixture, GoKeyCompatibility) {
-  EXPECT_OUTCOME_TRUE(public_key, provider.derive(privkey));
+  auto public_key = EXPECT_OK(provider.derive(privkey));
   ASSERT_EQ(public_key, pubkey);
 }
 
@@ -51,7 +49,7 @@ TEST_F(X25519Fixture, GoKeyCompatibility) {
  * @then the result equals to the expected
  */
 TEST_F(X25519Fixture, GoDiffieHellmanCompatibility) {
-  EXPECT_OUTCOME_TRUE(shared_secret, provider.dh(privkey, pubkey));
+  auto shared_secret = EXPECT_OK(provider.dh(privkey, pubkey));
   ASSERT_EQ(shared_secret, secret);
 }
 
@@ -61,8 +59,8 @@ TEST_F(X25519Fixture, GoDiffieHellmanCompatibility) {
  * @then the shared secrets are the same
  */
 TEST_F(X25519Fixture, SharedSecret) {
-  EXPECT_OUTCOME_TRUE(peer, provider.generate());
-  EXPECT_OUTCOME_TRUE(secret1, provider.dh(privkey, peer.public_key));
-  EXPECT_OUTCOME_TRUE(secret2, provider.dh(peer.private_key, pubkey));
+  auto peer = EXPECT_OK(provider.generate());
+  auto secret1 = EXPECT_OK(provider.dh(privkey, peer.public_key));
+  auto secret2 = EXPECT_OK(provider.dh(peer.private_key, pubkey));
   ASSERT_EQ(secret1, secret2);
 }

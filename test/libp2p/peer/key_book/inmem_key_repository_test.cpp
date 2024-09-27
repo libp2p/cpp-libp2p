@@ -4,13 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <exception>
-
 #include <gtest/gtest.h>
 #include <libp2p/crypto/key.hpp>
 #include <libp2p/peer/key_repository.hpp>
 #include <libp2p/peer/key_repository/inmem_key_repository.hpp>
-#include "testutil/outcome.hpp"
+#include <qtils/test/outcome.hpp>
 
 using namespace libp2p::peer;
 using namespace libp2p::multi;
@@ -31,16 +29,16 @@ struct InmemKeyRepositoryTest : ::testing::Test {
 };
 
 TEST_F(InmemKeyRepositoryTest, PubkeyStore) {
-  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::Ed25519, {'a'}}}));
-  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::Ed25519, {'b'}}}));
+  EXPECT_OK(db_->addPublicKey(p1_, {{Key::Type::Ed25519, {'a'}}}));
+  EXPECT_OK(db_->addPublicKey(p1_, {{Key::Type::Ed25519, {'b'}}}));
   // insert same pubkey. it should not be inserted
-  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::Ed25519, {'b'}}}));
+  EXPECT_OK(db_->addPublicKey(p1_, {{Key::Type::Ed25519, {'b'}}}));
   // same pubkey but different type
-  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, {{Key::Type::RSA, {'b'}}}));
+  EXPECT_OK(db_->addPublicKey(p1_, {{Key::Type::RSA, {'b'}}}));
   // put pubkey to different peer
-  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p2_, {{Key::Type::RSA, {'c'}}}));
+  EXPECT_OK(db_->addPublicKey(p2_, {{Key::Type::RSA, {'c'}}}));
 
-  EXPECT_OUTCOME_TRUE(v, db_->getPublicKeys(p1_));
+  auto v = EXPECT_OK(db_->getPublicKeys(p1_));
   EXPECT_EQ(v->size(), 3);
 
   db_->clear(p1_);
@@ -52,9 +50,9 @@ TEST_F(InmemKeyRepositoryTest, KeyPairStore) {
   PublicKey pub = {{Key::Type::RSA, {'a'}}};
   PrivateKey priv = {{Key::Type::RSA, {'b'}}};
   KeyPair kp{pub, priv};
-  EXPECT_OUTCOME_TRUE_1(db_->addKeyPair({pub, priv}));
+  EXPECT_OK(db_->addKeyPair({pub, priv}));
 
-  EXPECT_OUTCOME_TRUE(v, db_->getKeyPairs());
+  auto v = EXPECT_OK(db_->getKeyPairs());
   EXPECT_EQ(v->size(), 1);
 
   EXPECT_EQ(*v, std::unordered_set<KeyPair>{kp});
@@ -69,8 +67,8 @@ TEST_F(InmemKeyRepositoryTest, GetPeers) {
   PublicKey z{};
   KeyPair kp{};
 
-  EXPECT_OUTCOME_TRUE_1(db_->addPublicKey(p1_, z));
-  EXPECT_OUTCOME_TRUE_1(db_->addKeyPair(kp));
+  EXPECT_OK(db_->addPublicKey(p1_, z));
+  EXPECT_OK(db_->addKeyPair(kp));
 
   auto s = db_->getPeers();
   EXPECT_EQ(s.size(), 1);

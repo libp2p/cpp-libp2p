@@ -5,11 +5,10 @@
  */
 
 #include <gtest/gtest.h>
-
 #include <libp2p/common/literals.hpp>
-#include "libp2p/transport/tcp/tcp_listener.hpp"
+#include <libp2p/transport/tcp/tcp_listener.hpp>
+#include <qtils/test/outcome.hpp>
 #include "testutil/gmock_actions.hpp"
-#include "testutil/outcome.hpp"
 
 #include "mock/libp2p/transport/upgrader_mock.hpp"
 
@@ -58,14 +57,14 @@ TEST_F(TcpListenerTest, ListenCloseListen) {
     EXPECT_EC(c, boost::asio::error::operation_aborted);
   }));
 
-  EXPECT_OUTCOME_TRUE_1(listener->listen(ma));
+  EXPECT_OK(listener->listen(ma));
   ASSERT_FALSE(listener->isClosed());
-  EXPECT_OUTCOME_TRUE_1(listener->close());
+  EXPECT_OK(listener->close());
   ASSERT_TRUE(listener->isClosed());
 
-  EXPECT_OUTCOME_TRUE_1(listener->listen(ma));
+  EXPECT_OK(listener->listen(ma));
   ASSERT_FALSE(listener->isClosed());
-  EXPECT_OUTCOME_TRUE_1(listener->close());
+  EXPECT_OK(listener->close());
   ASSERT_TRUE(listener->isClosed());
 
   context->run_for(50ms);
@@ -83,10 +82,10 @@ TEST_F(TcpListenerTest, DoubleClose) {
     }
   }));
 
-  EXPECT_OUTCOME_TRUE_1(listener->listen(ma));
+  EXPECT_OK(listener->listen(ma));
   ASSERT_FALSE(listener->isClosed());
-  EXPECT_OUTCOME_TRUE_1(listener->close());
-  EXPECT_OUTCOME_TRUE_1(listener->close());
+  EXPECT_OK(listener->close());
+  EXPECT_OK(listener->close());
   ASSERT_TRUE(listener->isClosed());
   context->run_for(50ms);
 }

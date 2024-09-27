@@ -165,7 +165,7 @@ namespace libp2p::connection {
     return remote_;
   }
 
-  bool SecioConnection::isInitiator() const noexcept {
+  bool SecioConnection::isInitiator() const {
     return original_connection_->isInitiator();
   }
 

@@ -40,7 +40,7 @@ namespace libp2p::basic {
      * Defers callback to be executed during the next IO loop cycle
      * @param cb callback
      */
-    void schedule(Callback &&cb) noexcept {
+    void schedule(Callback &&cb) {
       std::ignore = scheduleImpl(std::move(cb), Time::zero(), false);
     }
 
@@ -49,8 +49,7 @@ namespace libp2p::basic {
      * @param cb callback
      * @param delay_from_now time interval
      */
-    void schedule(Callback &&cb,
-                  std::chrono::milliseconds delay_from_now) noexcept {
+    void schedule(Callback &&cb, std::chrono::milliseconds delay_from_now) {
       std::ignore = scheduleImpl(std::move(cb), delay_from_now, false);
     }
 
@@ -60,7 +59,7 @@ namespace libp2p::basic {
      * @return handle which can be used for cancelling, rescheduling, and scoped
      * lifetime
      */
-    [[nodiscard]] Handle scheduleWithHandle(Callback &&cb) noexcept {
+    [[nodiscard]] Handle scheduleWithHandle(Callback &&cb) {
       return scheduleImpl(std::move(cb), Time::zero(), true);
     }
 
@@ -72,7 +71,7 @@ namespace libp2p::basic {
      * lifetime
      */
     [[nodiscard]] Handle scheduleWithHandle(
-        Callback &&cb, std::chrono::milliseconds delay_from_now) noexcept {
+        Callback &&cb, std::chrono::milliseconds delay_from_now) {
       return scheduleImpl(std::move(cb), delay_from_now, true);
     }
 
@@ -80,7 +79,7 @@ namespace libp2p::basic {
      * Backend's async
      * @return milliseconds since async's epoch
      */
-    virtual std::chrono::milliseconds now() const noexcept = 0;
+    virtual std::chrono::milliseconds now() const = 0;
 
     /**
      * Doesn't allow lvalue callbacks
@@ -99,6 +98,6 @@ namespace libp2p::basic {
      */
     virtual Handle scheduleImpl(Callback &&cb,
                                 std::chrono::milliseconds delay_from_now,
-                                bool make_handle) noexcept = 0;
+                                bool make_handle) = 0;
   };
 }  // namespace libp2p::basic

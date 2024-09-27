@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "libp2p/muxer/yamux/yamux_frame.hpp"
+#include <libp2p/muxer/yamux/yamux_frame.hpp>
 
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>

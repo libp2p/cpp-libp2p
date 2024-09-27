@@ -5,12 +5,11 @@
  */
 
 #include <gtest/gtest.h>
-
 #include <libp2p/common/literals.hpp>
 #include <libp2p/peer/errors.hpp>
 #include <libp2p/peer/protocol_repository.hpp>
 #include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
-#include "testutil/outcome.hpp"
+#include <qtils/test/outcome.hpp>
 
 using namespace libp2p::peer;
 using namespace libp2p::common;
@@ -47,9 +46,9 @@ struct InmemProtocolRepository_Test : public ::testing::Test {
  * @then two protocols added
  */
 TEST_F(InmemProtocolRepository_Test, Add) {
-  EXPECT_OUTCOME_TRUE_1(db->addProtocols(p1, vec(s1, s2)));
+  EXPECT_OK(db->addProtocols(p1, vec(s1, s2)));
   {
-    EXPECT_OUTCOME_TRUE(v, db->getProtocols(p1));
+    auto v = EXPECT_OK(db->getProtocols(p1));
     EXPECT_EQ(v.size(), 2);
 
     auto r = db->getProtocols(p2);
@@ -63,14 +62,14 @@ TEST_F(InmemProtocolRepository_Test, Add) {
  * @then they are evicted
  */
 TEST_F(InmemProtocolRepository_Test, CollectGarbage) {
-  EXPECT_OUTCOME_TRUE_1(db->addProtocols(p1, vec(s1, s2)));
-  EXPECT_OUTCOME_TRUE_1(db->addProtocols(p2, vec()));
+  EXPECT_OK(db->addProtocols(p1, vec(s1, s2)));
+  EXPECT_OK(db->addProtocols(p2, vec()));
 
   // no effect
   db->collectGarbage();
 
   {
-    EXPECT_OUTCOME_TRUE(v, db->getProtocols(p1));
+    auto v = EXPECT_OK(db->getProtocols(p1));
     EXPECT_EQ(v.size(), 2);
 
     auto r = db->getProtocols(p2);
@@ -97,30 +96,30 @@ TEST_F(InmemProtocolRepository_Test, CollectGarbage) {
  * @then expected protocols are returned
  */
 TEST_F(InmemProtocolRepository_Test, Supports) {
-  EXPECT_OUTCOME_TRUE_1(db->addProtocols(p1, vec(s1, s2)));
+  EXPECT_OK(db->addProtocols(p1, vec(s1, s2)));
 
   // one of
   {
-    EXPECT_OUTCOME_TRUE(v, db->supportsProtocols(p1, set(s1)));
+    auto v = EXPECT_OK(db->supportsProtocols(p1, set(s1)));
     EXPECT_EQ(v, vec(s1));
   }
 
   // forward order
   {
-    EXPECT_OUTCOME_TRUE(v, db->supportsProtocols(p1, set(s1, s2)));
+    auto v = EXPECT_OK(db->supportsProtocols(p1, set(s1, s2)));
     EXPECT_EQ(v, vec(s1, s2));
   }
 
   // reverse order
   {
-    EXPECT_OUTCOME_TRUE(v, db->supportsProtocols(p1, set(s2, s1)));
+    auto v = EXPECT_OK(db->supportsProtocols(p1, set(s2, s1)));
     EXPECT_EQ(v, vec(s1, s2));
   }
 
   // non existing
   {
-    EXPECT_OUTCOME_TRUE_1(db->removeProtocols(p1, vec(s1)));
-    EXPECT_OUTCOME_TRUE(v, db->supportsProtocols(p1, set(s1, s2)));
+    EXPECT_OK(db->removeProtocols(p1, vec(s1)));
+    auto v = EXPECT_OK(db->supportsProtocols(p1, set(s1, s2)));
     EXPECT_EQ(v, vec(s2));
   }
 }
@@ -131,9 +130,9 @@ TEST_F(InmemProtocolRepository_Test, Supports) {
  * @then protocol s1 is removed
  */
 TEST_F(InmemProtocolRepository_Test, Remove) {
-  EXPECT_OUTCOME_TRUE_1(db->addProtocols(p1, vec(s1, s2)));
-  EXPECT_OUTCOME_TRUE_1(db->removeProtocols(p1, vec(s1)));
-  EXPECT_OUTCOME_TRUE(v, db->getProtocols(p1));
+  EXPECT_OK(db->addProtocols(p1, vec(s1, s2)));
+  EXPECT_OK(db->removeProtocols(p1, vec(s1)));
+  auto v = EXPECT_OK(db->getProtocols(p1));
   EXPECT_EQ(v, vec(s2));
 }
 
@@ -143,9 +142,9 @@ TEST_F(InmemProtocolRepository_Test, Remove) {
  * @then get no error
  */
 TEST_F(InmemProtocolRepository_Test, RemoveNonExisting) {
-  EXPECT_OUTCOME_TRUE_1(db->addProtocols(p1, vec(s2)));
-  EXPECT_OUTCOME_TRUE_1(db->removeProtocols(p1, vec(s1)));
-  EXPECT_OUTCOME_TRUE(v, db->getProtocols(p1));
+  EXPECT_OK(db->addProtocols(p1, vec(s2)));
+  EXPECT_OK(db->removeProtocols(p1, vec(s1)));
+  auto v = EXPECT_OK(db->getProtocols(p1));
   EXPECT_EQ(v.size(), 1);
 }
 
@@ -155,11 +154,11 @@ TEST_F(InmemProtocolRepository_Test, RemoveNonExisting) {
  * @then 2 peers returned
  */
 TEST_F(InmemProtocolRepository_Test, GetPeers) {
-  EXPECT_OUTCOME_TRUE_1(db->addProtocols(p1, {}));
+  EXPECT_OK(db->addProtocols(p1, {}));
   auto s1 = db->getPeers();
   EXPECT_EQ(s1.size(), 1);
 
-  EXPECT_OUTCOME_TRUE_1(db->addProtocols(p2, {}));
+  EXPECT_OK(db->addProtocols(p2, {}));
   auto s = db->getPeers();
   EXPECT_EQ(s.size(), 2);
 }

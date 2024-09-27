@@ -25,7 +25,7 @@ namespace libp2p::protocol {
     Subscription(Subscription &&) = default;
 
     Subscription();
-    Subscription &operator=(Subscription &&) noexcept;
+    Subscription &operator=(Subscription &&);
     Subscription(uint64_t ticket, std::weak_ptr<Source> source);
     ~Subscription();
 

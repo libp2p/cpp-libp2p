@@ -546,8 +546,6 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, TlsError, e) {
   switch (e) {
     case E::TLS_CTX_INIT_FAILED:
       return "Cannot initialize SSL context";
-    case E::TLS_INCOMPATIBLE_TRANSPORT:
-      return "Incompatible underlying transport";
     case E::TLS_NO_CERTIFICATE:
       return "No peer certificate";
     case E::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION:

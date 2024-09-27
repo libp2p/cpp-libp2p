@@ -13,6 +13,9 @@ namespace libp2p::protocol::kademlia {
 
   using namespace std::chrono_literals;
 
+  // https://github.com/libp2p/rust-libp2p/blob/e63975d7742710d4498b941e151c5177e06392ce/protocols/kad/src/lib.rs#L93
+  constexpr size_t K_VALUE = 20;
+
   namespace {
     struct RandomWalk {
       /**
@@ -122,7 +125,7 @@ namespace libp2p::protocol::kademlia {
      * This is implementation specified property.
      * @note Default: 20
      */
-    size_t maxBucketSize = 20;
+    size_t maxBucketSize = K_VALUE;
 
     /**
      * Maximum time to waiting response
@@ -142,6 +145,9 @@ namespace libp2p::protocol::kademlia {
      * Random walk config
      */
     RandomWalk randomWalk{};
+
+    // https://github.com/libp2p/rust-libp2p/blob/c6cf7fec6913aa590622aeea16709fce6e9c99a5/protocols/kad/src/query/peers/closest.rs#L110-L120
+    size_t query_initial_peers = K_VALUE;
   };
 
 }  // namespace libp2p::protocol::kademlia

@@ -7,7 +7,7 @@
 #include <libp2p/security/plaintext/plaintext_connection.hpp>
 
 #include <boost/assert.hpp>
-#include "libp2p/crypto/protobuf/protobuf_key.hpp"
+#include <libp2p/crypto/protobuf/protobuf_key.hpp>
 
 namespace libp2p::connection {
 
@@ -45,7 +45,7 @@ namespace libp2p::connection {
     return remote_;
   }
 
-  bool PlaintextConnection::isInitiator() const noexcept {
+  bool PlaintextConnection::isInitiator() const {
     return original_connection_->isInitiator();
   }
 

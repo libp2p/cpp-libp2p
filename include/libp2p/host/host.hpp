@@ -25,6 +25,10 @@
 #include <libp2p/protocol/base_protocol.hpp>
 
 namespace libp2p {
+  struct Libp2pClientVersion {
+    std::string version;
+  };
+
   /**
    * Main class, which represents single peer in p2p network.
    *

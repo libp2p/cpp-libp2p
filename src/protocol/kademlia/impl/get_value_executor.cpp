@@ -29,7 +29,6 @@ namespace libp2p::protocol::kademlia {
       std::shared_ptr<Host> host,
       std::shared_ptr<basic::Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
-      std::shared_ptr<PeerRouting> peer_routing,
       std::shared_ptr<ContentRoutingTable> content_routing_table,
       const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
       std::shared_ptr<ExecutorsFactory> executor_factory,
@@ -40,24 +39,22 @@ namespace libp2p::protocol::kademlia {
         host_(std::move(host)),
         scheduler_(std::move(scheduler)),
         session_host_(std::move(session_host)),
-        peer_routing_(std::move(peer_routing)),
         content_routing_table_(std::move(content_routing_table)),
         executor_factory_(std::move(executor_factory)),
         validator_(std::move(validator)),
         key_(std::move(key)),
         handler_(std::move(handler)),
-        target_(key_),
+        target_{NodeId::hash(key_)},
         log_("KademliaExecutor", "kademlia", "GetValue", ++instance_number) {
     BOOST_ASSERT(host_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
     BOOST_ASSERT(session_host_ != nullptr);
-    BOOST_ASSERT(peer_routing_ != nullptr);
     BOOST_ASSERT(content_routing_table_ != nullptr);
     BOOST_ASSERT(executor_factory_ != nullptr);
     BOOST_ASSERT(validator_ != nullptr);
 
     auto nearest_peer_ids = peer_routing_table->getNearestPeers(
-        target_, config_.closerPeerCount * 2);
+        target_, config_.query_initial_peers);
 
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));

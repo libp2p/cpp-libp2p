@@ -67,8 +67,8 @@ void print(NodeId from, std::vector<BucketPeerInfo> &pids) {
   for (auto &p : pids) {
     fmt::println("pid: {} nodeId: {:X} distance: {:X}",
                  p.peer_id.toHex(),
-                 p.node_id.getData(),
-                 from.distance(p.node_id));
+                 qtils::Hex{p.node_id.getData()},
+                 qtils::Hex{from.distance(p.node_id)});
   }
 }
 
@@ -76,13 +76,13 @@ TEST(KadDistance, SortsHashes) {
   size_t peersTotal = 1000;
   srand(0);  // make test deterministic
   PeerId us = "1"_peerid;
-  XorDistanceComparator comp(us);
+  XorDistanceComparator comp{NodeId{us}};
 
   std::vector<BucketPeerInfo> peers;
   std::generate_n(std::back_inserter(peers), peersTotal, []() {
-    return BucketPeerInfo(testutil::randomPeerId(), false);
+    return BucketPeerInfo(testutil::randomPeerId(), false, false);
   });
-  peers.emplace_back(us, false);
+  peers.emplace_back(us, false, false);
 
   ASSERT_EQ(peers.size(), peersTotal + 1);
   std::cout << "unsorted ";

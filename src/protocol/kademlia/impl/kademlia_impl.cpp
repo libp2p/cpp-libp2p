@@ -99,9 +99,21 @@ namespace libp2p::protocol::kademlia {
                   addPeer(
                       peer::PeerInfo{std::move(remote_peer_res.value()),
                                      {std::move(remote_peer_addr_res.value())}},
-                      false);
+                      false,
+                      true);
                 }
               }
+            });
+    on_disconnected_ =
+        host_->getBus()
+            .getChannel<event::network::OnPeerDisconnectedChannel>()
+            .subscribe([weak_self{weak_from_this()}](const PeerId &peer) {
+              auto self = weak_self.lock();
+              if (not self) {
+                return;
+              }
+              std::ignore =
+                  self->peer_routing_table_->update(peer, false, false);
             });
 
     // start random walking
@@ -434,7 +446,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     peer_ids = peer_routing_table_->getNearestPeers(
-        NodeId(msg.key), config_.closerPeerCount * 2);
+        NodeId::hash(msg.key), config_.closerPeerCount * 2);
 
     if (not peer_ids.empty()) {
       std::vector<Message::Peer> peers;
@@ -491,7 +503,7 @@ namespace libp2p::protocol::kademlia {
     log_.debug("MSG: FindNode ({})", multi::detail::encodeBase58(msg.key));
 
     auto ids = peer_routing_table_->getNearestPeers(
-        NodeId(msg.key), config_.closerPeerCount * 2);
+        NodeId::hash(msg.key), config_.closerPeerCount * 2);
 
     std::vector<Message::Peer> peers;
     peers.reserve(config_.closerPeerCount);
@@ -639,7 +651,6 @@ namespace libp2p::protocol::kademlia {
                                               host_,
                                               scheduler_,
                                               shared_from_this(),
-                                              shared_from_this(),
                                               content_routing_table_,
                                               peer_routing_table_,
                                               shared_from_this(),
@@ -675,7 +686,6 @@ namespace libp2p::protocol::kademlia {
     return std::make_shared<FindPeerExecutor>(config_,
                                               host_,
                                               scheduler_,
-                                              shared_from_this(),
                                               shared_from_this(),
                                               peer_routing_table_,
                                               std::move(peer_id),

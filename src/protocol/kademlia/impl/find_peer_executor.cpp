@@ -24,7 +24,6 @@ namespace libp2p::protocol::kademlia {
       std::shared_ptr<Host> host,
       std::shared_ptr<basic::Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
-      std::shared_ptr<PeerRouting> peer_routing,
       const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
       PeerId sought_peer_id,
       FoundPeerInfoHandler handler)
@@ -32,13 +31,12 @@ namespace libp2p::protocol::kademlia {
         host_(std::move(host)),
         scheduler_(std::move(scheduler)),
         session_host_(std::move(session_host)),
-        peer_routing_(std::move(peer_routing)),
         sought_peer_id_(std::move(sought_peer_id)),
         target_(sought_peer_id_),
         handler_(std::move(handler)),
         log_("KademliaExecutor", "kademlia", "FindPeer", ++instance_number) {
     auto nearest_peer_ids = peer_routing_table->getNearestPeers(
-        target_, config_.closerPeerCount * 2);
+        target_, config_.query_initial_peers);
 
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));

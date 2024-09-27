@@ -21,7 +21,7 @@ namespace libp2p::basic {
     /**
      * Called from backend to fire callbacks
      */
-    virtual void pulse() noexcept = 0;
+    virtual void pulse() = 0;
   };
 
   /**
@@ -44,7 +44,7 @@ namespace libp2p::basic {
      * Current async
      * @return Milliseconds elapsed from async's epoch
      */
-    virtual std::chrono::milliseconds now() const noexcept = 0;
+    virtual std::chrono::milliseconds now() const = 0;
 
     /**
      * Implementation-defined defer or delay function.
