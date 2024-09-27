@@ -1,3 +1,9 @@
+/**
+ * Copyright Quadrivium LLC
+ * All Rights Reserved
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <libp2p/transport/tcp/bytes_counter.hpp>
 
 namespace libp2p::transport {
