@@ -523,39 +523,39 @@ TEST(StreamsRegression, YamuxStreamsGetNotifiedAboutEOF) {
   testStreamsGetNotifiedAboutEOF(
       false,
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
-          .template to<libp2p::muxer::Yamux>()[boost::di::override]);
+          .to<libp2p::muxer::Yamux>()[boost::di::override]);
 }
 
 TEST(StreamsRegression, YamuxStreamsGetNotifiedAboutEOFJumboMsg) {
   testStreamsGetNotifiedAboutEOF(
       true,
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
-          .template to<libp2p::muxer::Yamux>()[boost::di::override]);
+          .to<libp2p::muxer::Yamux>()[boost::di::override]);
 }
 
 TEST(StreamsRegression, MplexStreamsGetNotifiedAboutEOF) {
   testStreamsGetNotifiedAboutEOF(
       false,
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
-          .template to<libp2p::muxer::Mplex>()[boost::di::override]);
+          .to<libp2p::muxer::Mplex>()[boost::di::override]);
 }
 
 TEST(StreamsRegression, OutboundMplexConnectionAcceptsStreams) {
   testOutboundConnectionAcceptsStreams(
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
-          .template to<libp2p::muxer::Mplex>()[boost::di::override]);
+          .to<libp2p::muxer::Mplex>()[boost::di::override]);
 }
 
 TEST(StreamsRegression, OutboundYamuxConnectionAcceptsStreams) {
   testOutboundConnectionAcceptsStreams(
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
-          .template to<libp2p::muxer::Yamux>()[boost::di::override]);
+          .to<libp2p::muxer::Yamux>()[boost::di::override]);
 }
 
 TEST(StreamsRegression, OutboundYamuxTLSConnectionAcceptsStreams) {
   testOutboundConnectionAcceptsStreams(
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
-          .template to<libp2p::muxer::Yamux>()[boost::di::override],
+          .to<libp2p::muxer::Yamux>()[boost::di::override],
       libp2p::injector::useSecurityAdaptors<libp2p::security::TlsAdaptor>());
 }
 
@@ -563,14 +563,14 @@ TEST(StreamsRegression, YamuxTLSStreamsGetNotifiedAboutEOF) {
   testStreamsGetNotifiedAboutEOF(
       false,
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
-          .template to<libp2p::muxer::Yamux>()[boost::di::override],
+          .to<libp2p::muxer::Yamux>()[boost::di::override],
       libp2p::injector::useSecurityAdaptors<libp2p::security::TlsAdaptor>());
 }
 
 TEST(StreamsRegression, OutboundYamuxNoiseConnectionAcceptsStreams) {
   testOutboundConnectionAcceptsStreams(
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
-          .template to<libp2p::muxer::Yamux>()[boost::di::override],
+          .to<libp2p::muxer::Yamux>()[boost::di::override],
       libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>());
 }
 
@@ -578,7 +578,7 @@ TEST(StreamsRegression, YamuxNoiseStreamsGetNotifiedAboutEOF) {
   testStreamsGetNotifiedAboutEOF(
       false,
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
-          .template to<libp2p::muxer::Yamux>()[boost::di::override],
+          .to<libp2p::muxer::Yamux>()[boost::di::override],
       libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>());
 }
 
@@ -586,7 +586,7 @@ TEST(StreamsRegression, YamuxNoiseStreamsGetNotifiedAboutEOFJumboMsg) {
   testStreamsGetNotifiedAboutEOF(
       true,
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
-          .template to<libp2p::muxer::Yamux>()[boost::di::override],
+          .to<libp2p::muxer::Yamux>()[boost::di::override],
       libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>());
 }
 

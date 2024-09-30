@@ -70,7 +70,7 @@ namespace libp2p::injector {
       typename C = std::decay_t<T>,
       typename = std::enable_if<std::is_same_v<C, protocol::kademlia::Config>>>
   inline auto useKademliaConfig(T &&c) {
-    return boost::di::bind<C>().template to(
+    return boost::di::bind<C>().to(
         [c = std::forward<C>(c)](const auto &injector) mutable -> const C & {
           static C instance = std::move(c);
           return instance;
@@ -85,15 +85,15 @@ namespace libp2p::injector {
     return di::make_injector<InjectorConfig>(
         // clang-format off
 
-        di::bind<protocol::kademlia::Config>.template to<protocol::kademlia::Config>(),
-        di::bind<protocol::kademlia::ContentRoutingTable>.template to<protocol::kademlia::ContentRoutingTableImpl>(),
-        di::bind<protocol::kademlia::PeerRoutingTable>.template to<protocol::kademlia::PeerRoutingTableImpl>(),
-        di::bind<protocol::kademlia::StorageBackend>.template to<protocol::kademlia::StorageBackendDefault>(),
-        di::bind<protocol::kademlia::Storage>.template to<protocol::kademlia::StorageImpl>(),
-        di::bind<protocol::kademlia::Validator>.template to<protocol::kademlia::ValidatorDefault>(),
+        di::bind<protocol::kademlia::Config>.to<protocol::kademlia::Config>(),
+        di::bind<protocol::kademlia::ContentRoutingTable>.to<protocol::kademlia::ContentRoutingTableImpl>(),
+        di::bind<protocol::kademlia::PeerRoutingTable>.to<protocol::kademlia::PeerRoutingTableImpl>(),
+        di::bind<protocol::kademlia::StorageBackend>.to<protocol::kademlia::StorageBackendDefault>(),
+        di::bind<protocol::kademlia::Storage>.to<protocol::kademlia::StorageImpl>(),
+        di::bind<protocol::kademlia::Validator>.to<protocol::kademlia::ValidatorDefault>(),
 
-        di::bind<protocol::kademlia::MessageObserver>.template to<protocol::kademlia::KademliaImpl>(),
-        di::bind<protocol::kademlia::Kademlia>.template to<protocol::kademlia::KademliaImpl>(),
+        di::bind<protocol::kademlia::MessageObserver>.to<protocol::kademlia::KademliaImpl>(),
+        di::bind<protocol::kademlia::Kademlia>.to<protocol::kademlia::KademliaImpl>(),
 
         // user-defined overrides...
         std::forward<decltype(args)>(args)...

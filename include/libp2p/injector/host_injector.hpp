@@ -30,14 +30,14 @@ namespace libp2p::injector {
         makeNetworkInjector<InjectorConfig>(),
 
         // repositories
-        di::bind<peer::PeerRepository>.template to<peer::PeerRepositoryImpl>(),
-        di::bind<peer::AddressRepository>.template to<peer::InmemAddressRepository>(),
-        di::bind<peer::KeyRepository>.template to<peer::InmemKeyRepository>(),
-        di::bind<peer::ProtocolRepository>.template to<peer::InmemProtocolRepository>(),
+        di::bind<peer::PeerRepository>.to<peer::PeerRepositoryImpl>(),
+        di::bind<peer::AddressRepository>.to<peer::InmemAddressRepository>(),
+        di::bind<peer::KeyRepository>.to<peer::InmemKeyRepository>(),
+        di::bind<peer::ProtocolRepository>.to<peer::InmemProtocolRepository>(),
 
-        di::bind<Libp2pClientVersion>.template to(Libp2pClientVersion{"cpp-libp2p"}),
+        di::bind<Libp2pClientVersion>.to(Libp2pClientVersion{"cpp-libp2p"}),
 
-        di::bind<Host>.template to<host::BasicHost>(),
+        di::bind<Host>.to<host::BasicHost>(),
 
         // user-defined overrides...
         std::forward<decltype(args)>(args)...
