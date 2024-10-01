@@ -8,6 +8,7 @@
 
 #include <libp2p/basic/readwritecloser.hpp>
 #include <libp2p/multi/multiaddress.hpp>
+#include <optional>
 
 namespace libp2p::connection {
 

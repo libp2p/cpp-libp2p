@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <optional>
 #include <libp2p/basic/readwriter.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/multi/multiaddress.hpp>
