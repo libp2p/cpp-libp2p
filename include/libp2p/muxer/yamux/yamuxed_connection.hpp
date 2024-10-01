@@ -35,7 +35,7 @@ namespace libp2p::connection {
     YamuxedConnection &operator=(const YamuxedConnection &other) = delete;
     YamuxedConnection(YamuxedConnection &&other) = delete;
     YamuxedConnection &operator=(YamuxedConnection &&other) = delete;
-    ~YamuxedConnection() override = default;
+    ~YamuxedConnection() override;
 
     /**
      * Create a new YamuxedConnection instance
@@ -162,7 +162,7 @@ namespace libp2p::connection {
     void onDataWritten(outcome::result<size_t> res, StreamId stream_id);
 
     /// Creates new yamux stream
-    std::shared_ptr<Stream> createStream(StreamId stream_id);
+    std::shared_ptr<Stream> createStream(StreamId stream_id, bool out);
 
     /// Erases stream by id, may affect incactivity timer
     void eraseStream(StreamId stream_id);

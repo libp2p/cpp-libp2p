@@ -115,6 +115,8 @@ namespace libp2p::connection {
      * @return multiaddress or error
      */
     virtual outcome::result<multi::Multiaddress> remoteMultiaddr() const = 0;
+
+    std::optional<uint32_t> conn_id_;
   };
 }  // namespace libp2p::connection
 

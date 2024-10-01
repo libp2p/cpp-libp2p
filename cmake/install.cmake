@@ -16,6 +16,12 @@ install(
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 install(
+    FILES
+        ${CMAKE_SOURCE_DIR}/include/log_conn.hpp
+        ${CMAKE_SOURCE_DIR}/include/scale2.hpp
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+install(
     EXPORT libp2pTargets
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
     NAMESPACE p2p::

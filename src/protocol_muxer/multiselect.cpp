@@ -8,6 +8,8 @@
 #include <libp2p/protocol_muxer/multiselect/multiselect_instance.hpp>
 #include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
 
+#include <log_conn.hpp>
+
 namespace libp2p::protocol_muxer::multiselect {
 
   namespace {
@@ -26,6 +28,15 @@ namespace libp2p::protocol_muxer::multiselect {
                                 bool is_initiator,
                                 bool negotiate_multiselect,
                                 ProtocolHandlerFunc cb) {
+    if (auto stream = dynamic_cast<connection::Stream *>(connection.get())) {
+      cb = [cb{std::move(cb)},
+            conn_id{stream->conn_id_.value()}](outcome::result<std::string> r) {
+        if (r) {
+          log_conn::op::stream_protocol(conn_id, r.value());
+        }
+        cb(std::move(r));
+      };
+    }
     getInstance()->selectOneOf(protocols,
                                std::move(connection),
                                is_initiator,

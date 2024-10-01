@@ -12,6 +12,8 @@
 #include <libp2p/multi/multiaddress.hpp>
 #include <variant>
 
+#include <log_conn.hpp>
+
 namespace libp2p::transport::detail {
   using P = multi::Protocol::Code;
 
@@ -140,15 +142,17 @@ namespace libp2p::transport::detail {
   }
 
   template <typename T>
-  void resolve(T &resolver, const TcpOrUdp &addr, auto &&cb) {
+  void resolve(T &resolver, const TcpOrUdp &addr, auto &&cb, uint32_t conn_id) {
     if (auto ip = std::get_if<boost::asio::ip::address>(&addr.ip)) {
       return cb(T::results_type::create(
           typename T::endpoint_type{*ip, addr.port}, "", ""));
     }
     auto &dns = std::get<Dns>(addr.ip);
-    auto cb2 = [cb{std::forward<decltype(cb)>(cb)}](
+    auto op = log_conn::op::dns(conn_id);
+    auto cb2 = [cb{std::forward<decltype(cb)>(cb)}, op](
                    boost::system::error_code ec,
                    typename T::results_type r) mutable {
+      op(not ec);
       if (ec) {
         return cb(ec);
       }

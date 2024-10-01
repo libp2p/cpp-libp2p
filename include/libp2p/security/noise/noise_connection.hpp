@@ -32,7 +32,7 @@ namespace libp2p::connection {
       BufferList::iterator write_buffer;  /// temporary data storage
     };
 
-    ~NoiseConnection() override = default;
+    ~NoiseConnection() override;
 
     NoiseConnection(
         std::shared_ptr<LayerConnection> original_connection,

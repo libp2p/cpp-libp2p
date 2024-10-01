@@ -13,6 +13,8 @@
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/log/logger.hpp>
 
+#include <log_conn.hpp>
+
 namespace libp2p::connection {
 
   namespace {
@@ -63,6 +65,12 @@ namespace libp2p::connection {
 
     raw_read_buffer_->resize(YamuxFrame::kInitialWindowSize + 4096);
     new_stream_id_ = (connection_->isInitiator() ? 1 : 2);
+
+    conn_id_ = log_conn::op::yamux(connection_->conn_id_.value());
+  }
+
+  YamuxedConnection::~YamuxedConnection() {
+    LOG_CONN_DTOR(yamux);
   }
 
   void YamuxedConnection::start() {
@@ -103,7 +111,7 @@ namespace libp2p::connection {
     enqueue(newStreamMsg(stream_id));
 
     // Now we self-acked the new stream
-    return createStream(stream_id);
+    return createStream(stream_id, true);
   }
 
   void YamuxedConnection::newStream(StreamHandlerFunc cb) {
@@ -399,7 +407,7 @@ namespace libp2p::connection {
     }
 
     SL_DEBUG(log(), "creating inbound stream {}", frame.stream_id);
-    std::ignore = createStream(frame.stream_id);
+    std::ignore = createStream(frame.stream_id, false);
 
     enqueue(ackStreamMsg(frame.stream_id));
 
@@ -452,7 +460,7 @@ namespace libp2p::connection {
 
     SL_DEBUG(log(), "creating outbound stream {}", frame.stream_id);
 
-    std::ignore = createStream(frame.stream_id);
+    std::ignore = createStream(frame.stream_id, true);
 
     // handler will be called after all inbound bytes processed
     fresh_streams_.emplace_back(frame.stream_id, std::move(stream_handler));
@@ -529,6 +537,7 @@ namespace libp2p::connection {
   void YamuxedConnection::close(
       std::error_code notify_streams_code,
       boost::optional<YamuxFrame::GoAwayError> reply_to_peer_code) {
+    LOG_CONN_CLOSE(yamux);
     if (!started_) {
       return;
     }
@@ -679,13 +688,16 @@ namespace libp2p::connection {
     }
   }
 
-  std::shared_ptr<Stream> YamuxedConnection::createStream(StreamId stream_id) {
+  std::shared_ptr<Stream> YamuxedConnection::createStream(StreamId stream_id,
+                                                          bool out) {
     auto stream =
         std::make_shared<YamuxStream>(shared_from_this(),
                                       *this,
                                       stream_id,
                                       config_.maximum_window_size,
                                       basic::WriteQueue::kDefaultSizeLimit);
+    auto conn_id = log_conn::op::stream(conn_id_.value(), out);
+    stream->conn_id_ = conn_id;
     streams_[stream_id] = stream;
     inactivity_handle_.reset();
     return stream;

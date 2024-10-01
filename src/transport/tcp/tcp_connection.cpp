@@ -43,7 +43,12 @@ namespace libp2p::transport {
         connection_phase_done_{false},
         deadline_timer_(context_) {}
 
+  TcpConnection::~TcpConnection() {
+    LOG_CONN_DTOR(tcp);
+  }
+
   outcome::result<void> TcpConnection::close() {
+    LOG_CONN_CLOSE(tcp);
     closed_by_host_ = true;
     close(make_error_code(boost::system::errc::connection_aborted));
     return outcome::success();
@@ -122,7 +127,8 @@ namespace libp2p::transport {
       deadline_timer_.expires_from_now(
           boost::posix_time::milliseconds(timeout.count()));
       deadline_timer_.async_wait(
-          [wptr{weak_from_this()}, cb](const boost::system::error_code &error) {
+          [wptr{weak_from_this()}, cb, conn_id{conn_id_.value()}](
+              const boost::system::error_code &error) {
             auto self = wptr.lock();
             if (!self || self->closed_by_host_) {
               return;
@@ -131,6 +137,8 @@ namespace libp2p::transport {
             if (self->connection_phase_done_.compare_exchange_strong(expected,
                                                                      true)) {
               if (not error) {
+                log_conn::op::tcp_connect_timeout(conn_id);
+                ++log_conn::metrics::tcp_out_timeout;
                 // timeout happened, timer expired before connection was
                 // established
                 cb(boost::system::error_code{boost::system::errc::timed_out,
@@ -143,11 +151,14 @@ namespace libp2p::transport {
             }
           });
     }
+    auto op = log_conn::op::tcp_connect(conn_id_.value());
     boost::asio::async_connect(
         socket_,
         iterator,
-        [wptr{weak_from_this()}, cb{std::move(cb)}](
+        [wptr{weak_from_this()}, cb{std::move(cb)}, op](
             auto &&ec, const Tcp::endpoint &endpoint) {
+          op(not ec);
+          log_conn::metrics::tcp_out(not ec);
           auto self = wptr.lock();
           if (!self || self->closed_by_host_) {
             return;
@@ -188,8 +199,9 @@ namespace libp2p::transport {
     ByteCounter::getInstance().incrementBytesRead(bytes);
     ambigousSize(out, bytes);
     TRACE("{} read some up to {}", debug_str_, bytes);
+    LOG_CONN_READ;
     socket_.async_read_some(asioBuffer(out),
-                            closeOnError(*this, std::move(cb)));
+                            op.asio(closeOnError(*this, std::move(cb))));
   }
 
   void TcpConnection::writeSome(BytesIn in,
@@ -198,8 +210,9 @@ namespace libp2p::transport {
     ByteCounter::getInstance().incrementBytesWritten(bytes);
     ambigousSize(in, bytes);
     TRACE("{} write some up to {}", debug_str_, bytes);
+    LOG_CONN_WRITE;
     socket_.async_write_some(asioBuffer(in),
-                             closeOnError(*this, std::move(cb)));
+                             op.asio(closeOnError(*this, std::move(cb))));
   }
 
   namespace {

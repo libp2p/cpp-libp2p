@@ -18,6 +18,6 @@ addtest(tcp_listener_test
     tcp_listener_test.cpp
     )
 target_link_libraries(tcp_listener_test
-    p2p_tcp_listener
+    p2p_tcp
     p2p_literals
     )

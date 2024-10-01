@@ -13,6 +13,8 @@
 #include <libp2p/common/bytestr.hpp>
 #include <libp2p/log/logger.hpp>
 
+#include <log_conn.hpp>
+
 namespace libp2p::connection {
   WsConnection::WsConnection(
       layer::WsConnectionConfig config,
@@ -26,6 +28,10 @@ namespace libp2p::connection {
     BOOST_ASSERT(connection_ != nullptr);
     BOOST_ASSERT(scheduler_ != nullptr);
     ws_.binary(true);
+  }
+
+  WsConnection::~WsConnection() {
+    LOG_CONN_DTOR(ws);
   }
 
   void WsConnection::start() {
@@ -82,6 +88,7 @@ namespace libp2p::connection {
   }
 
   outcome::result<void> WsConnection::close() {
+    LOG_CONN_CLOSE(ws);
     return connection_->close();
   }
 
@@ -110,7 +117,8 @@ namespace libp2p::connection {
         cb(boost::system::errc::broken_pipe);
       }
     };
-    ws_.async_read_some(asioBuffer(out), std::move(on_read));
+    LOG_CONN_READ;
+    ws_.async_read_some(asioBuffer(out), op.asio(std::move(on_read)));
   }
 
   void WsConnection::writeSome(BytesIn in,    //
@@ -118,7 +126,9 @@ namespace libp2p::connection {
                                libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
     SL_TRACE(log_, "write some upto {} bytes", bytes);
-    ws_.async_write_some(true, asioBuffer(in), toAsioCbSize(std::move(cb)));
+    LOG_CONN_WRITE;
+    ws_.async_write_some(
+        true, asioBuffer(in), op.asio(toAsioCbSize(std::move(cb))));
   }
 
   void WsConnection::deferReadCallback(outcome::result<size_t> res,

@@ -11,6 +11,8 @@
 #include <libp2p/crypto/x25519_provider/x25519_provider_impl.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
 
+#include <log_conn.hpp>
+
 #ifndef UNIQUE_NAME
 #define UNIQUE_NAME(base) base##__LINE__
 #endif  // UNIQUE_NAME
@@ -54,11 +56,16 @@ namespace libp2p::connection {
     frame_buffer_->resize(0);
   }
 
+  NoiseConnection::~NoiseConnection() {
+    LOG_CONN_DTOR(noise);
+  }
+
   bool NoiseConnection::isClosed() const {
     return connection_->isClosed();
   }
 
   outcome::result<void> NoiseConnection::close() {
+    LOG_CONN_CLOSE(noise);
     return connection_->close();
   }
 
@@ -82,6 +89,8 @@ namespace libp2p::connection {
                                  size_t bytes,
                                  OperationContext ctx,
                                  ReadCallbackFunc cb) {
+    LOG_CONN_READ;
+    op.wrap(cb);
     if (not frame_buffer_->empty()) {
       auto n{std::min(bytes, frame_buffer_->size())};
       auto begin{frame_buffer_->begin()};
@@ -104,6 +113,8 @@ namespace libp2p::connection {
                               size_t bytes,
                               NoiseConnection::OperationContext ctx,
                               basic::Writer::WriteCallbackFunc cb) {
+    LOG_CONN_WRITE;
+    op.wrap(cb);
     auto *self{this};  // for OUTCOME_CB
     if (0 == bytes) {
       BOOST_ASSERT(ctx.bytes_served >= ctx.total_bytes);

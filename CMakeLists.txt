@@ -134,3 +134,8 @@ install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/libp2pConfig.cmake
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
         )
+
+libp2p_add_library(log_conn include/log_conn.cpp)
+target_link_libraries(log_conn Boost::boost)
+cmake_policy(SET CMP0079 NEW)
+target_link_libraries(p2p_tcp log_conn)

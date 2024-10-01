@@ -44,7 +44,7 @@ namespace libp2p::connection {
     WsConnection &operator=(const WsConnection &other) = delete;
     WsConnection(WsConnection &&other) = delete;
     WsConnection &operator=(WsConnection &&other) = delete;
-    ~WsConnection() override = default;
+    ~WsConnection() override;
 
     /**
      * Create a new WsConnection instance

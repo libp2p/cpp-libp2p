@@ -30,6 +30,8 @@ namespace libp2p::transport {
     }
     auto &[info, layers] = r.value();
     auto conn = std::make_shared<TcpConnection>(*context_, layers);
+    auto conn_id = log_conn::op::tcp_dial(address, remoteId);
+    conn->conn_id_ = conn_id;
     auto connect =
         [=,
          self{shared_from_this()},
@@ -59,7 +61,7 @@ namespace libp2p::transport {
               },
               timeout);
         };
-    resolve(resolver_, info, std::move(connect));
+    resolve(resolver_, info, std::move(connect), conn_id);
   }
 
   std::shared_ptr<TransportListener> TcpTransport::createListener(

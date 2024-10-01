@@ -9,6 +9,8 @@
 #include <libp2p/layer/websocket/ssl_connection.hpp>
 #include <libp2p/layer/websocket/ws_adaptor.hpp>
 
+#include <log_conn.hpp>
+
 namespace libp2p::layer {
   outcome::result<WssCertificate> WssCertificate::make(std::string_view pem) {
     auto context = std::make_shared<boost::asio::ssl::context>(
@@ -46,12 +48,16 @@ namespace libp2p::layer {
     if (not server_certificate_.context) {
       return cb(std::errc::address_family_not_supported);
     }
+    auto [conn_id, op] = log_conn::op::ssl(conn->conn_id_.value());
     auto ssl = std::make_shared<connection::SslConnection>(
         io_context_, std::move(conn), server_certificate_.context);
+    ssl->conn_id_ = conn_id;
     ssl->ssl_.async_handshake(
         boost::asio::ssl::stream_base::handshake_type::server,
         [=, ws{ws_adaptor_}, cb{std::move(cb)}](
             boost::system::error_code ec) mutable {
+          op(not ec);
+          log_conn::metrics::ssl.in(not ec);
           if (ec) {
             return cb(ec);
           }
@@ -63,12 +69,16 @@ namespace libp2p::layer {
       const multi::Multiaddress &address,
       std::shared_ptr<connection::LayerConnection> conn,
       LayerAdaptor::LayerConnCallbackFunc cb) const {
+    auto [conn_id, op] = log_conn::op::ssl(conn->conn_id_.value());
     auto ssl = std::make_shared<connection::SslConnection>(
         io_context_, std::move(conn), client_context_);
+    ssl->conn_id_ = conn_id;
     ssl->ssl_.async_handshake(
         boost::asio::ssl::stream_base::handshake_type::client,
         [=, ws{ws_adaptor_}, cb{std::move(cb)}](
             boost::system::error_code ec) mutable {
+          op(not ec);
+          log_conn::metrics::ssl.out(not ec);
           if (ec) {
             return cb(ec);
           }

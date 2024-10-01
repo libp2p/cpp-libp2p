@@ -11,6 +11,8 @@
 #include <libp2p/common/asio_buffer.hpp>
 #include <libp2p/common/asio_cb.hpp>
 
+#include <log_conn.hpp>
+
 namespace libp2p::connection {
   SslConnection::SslConnection(
       std::shared_ptr<boost::asio::io_context> io_context,
@@ -22,6 +24,10 @@ namespace libp2p::connection {
             AsAsioReadWrite{std::move(io_context), connection_},
             *ssl_context_,
         } {}
+
+  SslConnection::~SslConnection() {
+    LOG_CONN_DTOR(ssl);
+  }
 
   bool SslConnection::isInitiator() const {
     return connection_->isInitiator();
@@ -40,6 +46,7 @@ namespace libp2p::connection {
   }
 
   outcome::result<void> SslConnection::close() {
+    LOG_CONN_CLOSE(ssl);
     return connection_->close();
   }
 
@@ -54,14 +61,16 @@ namespace libp2p::connection {
                                size_t bytes,
                                libp2p::basic::Reader::ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
-    ssl_.async_read_some(asioBuffer(out), toAsioCbSize(std::move(cb)));
+    LOG_CONN_READ;
+    ssl_.async_read_some(asioBuffer(out), op.asio(toAsioCbSize(std::move(cb))));
   }
 
   void SslConnection::writeSome(BytesIn in,
                                 size_t bytes,
                                 libp2p::basic::Writer::WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
-    ssl_.async_write_some(asioBuffer(in), toAsioCbSize(std::move(cb)));
+    LOG_CONN_WRITE;
+    ssl_.async_write_some(asioBuffer(in), op.asio(toAsioCbSize(std::move(cb))));
   }
 
   void SslConnection::deferReadCallback(outcome::result<size_t> res,

@@ -41,6 +41,8 @@ namespace libp2p::connection {
      * @brief Get remote multiaddress for this connection.
      */
     virtual outcome::result<multi::Multiaddress> remoteMultiaddr() = 0;
+
+    std::optional<uint32_t> conn_id_;
   };
 
 }  // namespace libp2p::connection

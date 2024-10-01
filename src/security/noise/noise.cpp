@@ -8,7 +8,27 @@
 #include <libp2p/security/noise/handshake_message_marshaller_impl.hpp>
 #include <libp2p/security/noise/noise.hpp>
 
+#include <log_conn.hpp>
+
 namespace libp2p::security {
+  inline void wrap(bool out,
+                   const connection::LayerConnection &conn,
+                   SecurityAdaptor::SecConnCallbackFunc &cb) {
+    auto [conn_id, op] = log_conn::op::noise(conn.conn_id_.value());
+    cb = [=, cb{std::move(cb)}, op{std::move(op)}](
+             outcome::result<std::shared_ptr<connection::SecureConnection>> r) {
+      if (not r and r.error() == std::errc::bad_address) {
+        log_conn::op::noise_mismatch(conn_id);
+      }
+      op(r);
+      log_conn::metrics::noise[out]((bool)r);
+      if (r) {
+        r.value()->conn_id_ = conn_id;
+      }
+      cb(std::move(r));
+    };
+  }
+
   peer::ProtocolName Noise::getProtocolId() const {
     return kProtocolId;
   }
@@ -28,6 +48,7 @@ namespace libp2p::security {
     auto noise_marshaller =
         std::make_unique<noise::HandshakeMessageMarshallerImpl>(
             key_marshaller_);
+    wrap(false, *inbound, cb);
     auto handshake =
         std::make_shared<noise::Handshake>(crypto_provider_,
                                            std::move(noise_marshaller),
@@ -48,6 +69,7 @@ namespace libp2p::security {
     auto noise_marshaller =
         std::make_unique<noise::HandshakeMessageMarshallerImpl>(
             key_marshaller_);
+    wrap(true, *outbound, cb);
     auto handshake =
         std::make_shared<noise::Handshake>(crypto_provider_,
                                            std::move(noise_marshaller),

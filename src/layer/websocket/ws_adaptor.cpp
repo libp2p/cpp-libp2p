@@ -28,10 +28,14 @@ namespace libp2p::layer {
       std::shared_ptr<connection::LayerConnection> conn,
       LayerAdaptor::LayerConnCallbackFunc cb) const {
     log_->info("upgrade inbound connection to websocket");
+    auto [conn_id, op] = log_conn::op::ws(conn->conn_id_.value());
     auto ws = std::make_shared<connection::WsConnection>(
         config_, io_context_, std::move(conn), scheduler_);
+    ws->conn_id_ = conn_id;
     ws->ws_.async_accept(
         [=, cb{std::move(cb)}](boost::system::error_code ec) mutable {
+          op(not ec);
+          log_conn::metrics::ws.in(not ec);
           if (ec) {
             return cb(ec);
           }
@@ -45,12 +49,16 @@ namespace libp2p::layer {
       std::shared_ptr<connection::LayerConnection> conn,
       LayerAdaptor::LayerConnCallbackFunc cb) const {
     auto host = address.getProtocolsWithValues().begin()->second;
+    auto [conn_id, op] = log_conn::op::ws(conn->conn_id_.value());
     auto ws = std::make_shared<connection::WsConnection>(
         config_, io_context_, std::move(conn), scheduler_);
+    ws->conn_id_ = conn_id;
     ws->ws_.async_handshake(
         host,
         "/",
         [=, cb{std::move(cb)}](boost::system::error_code ec) mutable {
+          op(not ec);
+          log_conn::metrics::ws.out(not ec);
           if (ec) {
             return cb(ec);
           }

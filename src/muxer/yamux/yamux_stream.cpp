@@ -15,6 +15,8 @@
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
 
+#include <log_conn.hpp>
+
 namespace libp2p::connection {
 
   namespace {
@@ -44,12 +46,18 @@ namespace libp2p::connection {
     assert(write_queue_limit >= maximum_window_size_);
   }
 
+  YamuxStream::~YamuxStream() {
+    LOG_CONN_DTOR(stream);
+  }
+
   void YamuxStream::read(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
   void YamuxStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
+    LOG_CONN_READ;
+    op.wrap(cb);
     doRead(out, bytes, std::move(cb));
   }
 
@@ -68,6 +76,8 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
+    LOG_CONN_WRITE;
+    op.wrap(cb);
     doWrite(in, bytes, std::move(cb));
   }
 
@@ -90,6 +100,7 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::close(VoidResultHandlerFunc cb) {
+    LOG_CONN_CLOSE(stream);
     if (isClosed()) {
       if (cb) {
         feedback_.deferCall([wptr{weak_from_this()}, cb{std::move(cb)}] {
@@ -137,6 +148,7 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::reset() {
+    log_conn::op::stream_reset(conn_id_.value());
     no_more_callbacks_ = true;
     feedback_.resetStream(stream_id_);
     doClose(Error::STREAM_RESET_BY_HOST, true);
