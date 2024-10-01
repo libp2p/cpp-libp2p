@@ -5,6 +5,7 @@
 #include <libp2p/peer/peer_id.hpp>
 #include <log_conn.hpp>
 #include <scale2.hpp>
+#include <variant>
 
 #define DEFINE(x) decltype(x) x
 
