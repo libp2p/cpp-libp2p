@@ -24,15 +24,20 @@ namespace log_conn {
   using scale2::Compact64;
 
   struct Event {
+    SCALE2_TIE_3;
     struct CbLost {
+      SCALE2_TIE_1;
       Compact32 call_id;
     };
     struct CbMuch {
+      SCALE2_TIE_1;
       Compact32 call_id;
     };
     struct Conn {
+      SCALE2_TIE_2;
       struct Dns {
         struct Cb {
+          SCALE2_TIE_2;
           Compact32 call_id;
           bool ok;
         };
@@ -41,81 +46,99 @@ namespace log_conn {
         struct Dtor {};
         struct Close {};
         struct Dial {
+          SCALE2_TIE_1;
           std::string addr;
         };
         struct Connect {
           struct Cb {
+            SCALE2_TIE_2;
             Compact32 call_id;
             bool ok;
           };
           struct Timeout {};
         };
         struct Accept {
+          SCALE2_TIE_1;
           std::string addr;
         };
       };
       struct Ssl {
+        SCALE2_TIE_1;
         struct Dtor {};
         struct Close {};
         struct Cb {
+          SCALE2_TIE_2;
           Compact32 call_id;
           bool ok;
         };
         Compact32 parent_id;
       };
       struct Ws {
+        SCALE2_TIE_1;
         struct Dtor {};
         struct Close {};
         struct Cb {
+          SCALE2_TIE_2;
           Compact32 call_id;
           bool ok;
         };
         Compact32 parent_id;
       };
       struct Noise {
+        SCALE2_TIE_1;
         struct Dtor {};
         struct Close {};
         struct Mismatch {};
         struct Cb {
+          SCALE2_TIE_2;
           Compact32 call_id;
           std::optional<std::string> peer;
         };
         Compact32 parent_id;
       };
       struct Yamux {
+        SCALE2_TIE_1;
         struct Dtor {};
         struct Close {};
         Compact32 parent_id;
       };
       struct Stream {
+        SCALE2_TIE_2;
         struct Dtor {};
         struct Close {};
         struct Reset {};
         struct Protocol {
+          SCALE2_TIE_1;
           std::string proto;
         };
         Compact32 parent_id;
         bool out;
       };
       struct Read {
+        SCALE2_TIE_1;
         Compact32 n;
         struct Cb {
+          SCALE2_TIE_2;
           Compact32 call_id;
           std::optional<Bytes> buf;
         };
         struct CbSize {
+          SCALE2_TIE_2;
           Compact32 call_id;
           std::optional<Compact32> n;
         };
       };
       struct Write {
+        SCALE2_TIE_1;
         Bytes buf;
         struct Cb {
+          SCALE2_TIE_2;
           Compact32 call_id;
           std::optional<Compact32> n;
         };
       };
       struct WriteSize {
+        SCALE2_TIE_1;
         Compact32 n;
       };
       Compact32 conn_id;

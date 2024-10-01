@@ -3,14 +3,14 @@
 #include <qtils/append.hpp>
 #include <qtils/bytestr.hpp>
 
-#define _SCALE_ENCODE_TIE(...)                                          \
-  template <typename T>                                                 \
-  void encode(Out out, const T &v)                                      \
-    requires(requires { [](const T &v) { auto &[__VA_ARGS__] = v; }; }) \
-  {                                                                     \
-    auto &[__VA_ARGS__] = v;                                            \
-    encode(out, __VA_ARGS__);                                           \
+#define _SCALE2_TIE(...)          \
+  auto tie() const {              \
+    auto &[__VA_ARGS__] = *this;  \
+    return std::tie(__VA_ARGS__); \
   }
+#define SCALE2_TIE_1 _SCALE2_TIE(v0)
+#define SCALE2_TIE_2 _SCALE2_TIE(v0, v1)
+#define SCALE2_TIE_3 _SCALE2_TIE(v0, v1, v2)
 
 namespace scale2 {
   struct Out {
@@ -27,9 +27,11 @@ namespace scale2 {
   void encode(Out out, const T &)
     requires std::is_empty_v<T>
   {}
-  _SCALE_ENCODE_TIE(v0)
-  _SCALE_ENCODE_TIE(v0, v1)
-  _SCALE_ENCODE_TIE(v0, v1, v2)
+  void encode(Out out, const auto &v)
+    requires(requires { v.tie(); })
+  {
+    std::apply([&](const auto &...v) { encode(out, v...); }, v.tie());
+  }
   void _encode_int(Out out, const auto &v, size_t n) {
     qtils::append(out.v, qtils::BytesIn{(const uint8_t *)&v, n});
   }
