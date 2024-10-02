@@ -2,6 +2,7 @@
 
 #include <qtils/append.hpp>
 #include <qtils/bytestr.hpp>
+#include <variant>
 
 #define _SCALE2_TIE(...)          \
   auto tie() const {              \
