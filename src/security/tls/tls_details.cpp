@@ -6,7 +6,7 @@
 
 #include <openssl/asn1.h>
 #include <openssl/x509_vfy.h>
-#include <boost/asio/ssl.hpp>
+#include <boost/asio/ssl/verify_context.hpp>
 #include <boost/optional.hpp>
 
 #include <libp2p/crypto/ecdsa_provider/ecdsa_provider_impl.hpp>
@@ -46,6 +46,36 @@ namespace libp2p::security::tls_details {
 
   static const char *x509ErrorToStr(int error);
 
+  // libp2p-specific extension's OID
+  // https://github.com/libp2p/rust-libp2p/blob/8ceadaac5aec4b462463ef4082d6af577a3158b1/transports/tls/src/certificate.rs#L34
+  constexpr std::string_view extension_oid = "1.3.6.1.4.1.53594.1.1";
+  auto *extensionOid() {
+    static const ASN1_OBJECT *oid = OBJ_txt2obj(extension_oid.data(), 1);
+    return oid;
+  }
+
+  bool checkCriticalExtensions(X509 *cert) {
+    bool seen = false;
+    for (int i = 0; i < X509_get_ext_count(cert); i++) {
+      auto *ext = X509_get_ext(cert, i);
+      if (not X509_EXTENSION_get_critical(ext)) {
+        continue;
+      }
+      if (X509_supported_extension(ext)) {
+        continue;
+      }
+      if (seen) {
+        return false;
+      }
+      if (OBJ_cmp(X509_EXTENSION_get_object(ext), extensionOid()) == 0) {
+        seen = true;
+        continue;
+      }
+      return false;
+    }
+    return true;
+  }
+
   bool verifyCallback(bool status, boost::asio::ssl::verify_context &ctx) {
     X509_STORE_CTX *store_ctx = ctx.native_handle();
     assert(store_ctx);
@@ -53,15 +83,19 @@ namespace libp2p::security::tls_details {
     int error = X509_STORE_CTX_get_error(store_ctx);
     int32_t depth = X509_STORE_CTX_get_error_depth(store_ctx);
 
+    X509 *cert = X509_STORE_CTX_get_current_cert(store_ctx);
+    if (cert == nullptr) {
+      return false;
+    }
+
     if (error == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN
         || error == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT) {
       // we make and accept self-signed certs for libp2p
       status = true;
-    }
-
-    X509 *cert = X509_STORE_CTX_get_current_cert(store_ctx);
-    if (cert == nullptr) {
-      return false;
+    } else if (error == X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION) {
+      if (checkCriticalExtensions(cert)) {
+        status = true;
+      }
     }
 
     std::array<char, 256> subject_name{};
@@ -80,10 +114,6 @@ namespace libp2p::security::tls_details {
   }
 
   namespace {
-
-    // libp2p-specific extension's OID
-    constexpr std::string_view extension_oid = "1.3.6.1.4.1.53594.1.1";
-
     // prefix for extension's message signature
     constexpr std::string_view sign_prefix = "libp2p-tls-handshake:";
 
@@ -232,10 +262,8 @@ namespace libp2p::security::tls_details {
       // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
       ASN1_OCTET_STRING_set(os, ext_data.data(), ext_data.size());
 
-      ASN1_OBJECT *obj = OBJ_txt2obj(extension_oid.data(), 1);
-      CLEANUP_PTR(obj, ASN1_OBJECT_free);
-
-      X509_EXTENSION *ex = X509_EXTENSION_create_by_OBJ(nullptr, obj, 0, os);
+      X509_EXTENSION *ex =
+          X509_EXTENSION_create_by_OBJ(nullptr, extensionOid(), 0, os);
       if (ex == nullptr) {
         throw std::runtime_error("cannot create extension");
       }
@@ -332,11 +360,8 @@ namespace libp2p::security::tls_details {
 
     // extracts extension fields
     outcome::result<KeyAndSignature> extractExtensionFields(
-        X509 *peer_certificate) {
-      ASN1_OBJECT *obj = OBJ_txt2obj(extension_oid.data(), 1);
-      CLEANUP_PTR(obj, ASN1_OBJECT_free);
-
-      int index = X509_get_ext_by_OBJ(peer_certificate, obj, -1);
+        x509_st *peer_certificate) {
+      int index = X509_get_ext_by_OBJ(peer_certificate, extensionOid(), -1);
       if (index < 0) {
         log()->info("cannot find libp2p certificate extension");
         return TlsError::TLS_INCOMPATIBLE_CERTIFICATE_EXTENSION;

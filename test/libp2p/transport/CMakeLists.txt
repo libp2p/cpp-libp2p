@@ -6,6 +6,14 @@
 
 add_subdirectory(tcp)
 
+addtest(quic_test
+    quic_test.cpp
+    )
+target_link_libraries(quic_test
+    p2p_default_host
+    p2p_default_network
+    )
+
 addtest(libp2p_transport_parser_test
     multiaddress_parser_test.cpp
     )
