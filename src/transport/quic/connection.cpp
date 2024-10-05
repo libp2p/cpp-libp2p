@@ -16,6 +16,7 @@ namespace libp2p::transport {
       bool initiator,
       Multiaddress local,
       Multiaddress remote,
+      PeerId local_peer,
       PeerId peer,
       crypto::PublicKey key)
       : io_context_{std::move(io_context)},
@@ -23,6 +24,7 @@ namespace libp2p::transport {
         initiator_{initiator},
         local_{std::move(local)},
         remote_{std::move(remote)},
+        local_peer_{std::move(local_peer)},
         peer_{std::move(peer)},
         key_{std::move(key)} {}
 
@@ -80,7 +82,7 @@ namespace libp2p::transport {
   }
 
   outcome::result<PeerId> QuicConnection::localPeer() const {
-    throw std::logic_error{"QuicConnection::localPeer deprecated"};
+    return local_peer_;
   }
 
   outcome::result<PeerId> QuicConnection::remotePeer() const {

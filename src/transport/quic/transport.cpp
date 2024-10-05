@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <libp2p/peer/identity_manager.hpp>
 #include <libp2p/security/tls/ssl_context.hpp>
 #include <libp2p/transport/quic/connection.hpp>
 #include <libp2p/transport/quic/engine.hpp>
@@ -16,10 +17,12 @@ namespace libp2p::transport {
       std::shared_ptr<boost::asio::io_context> io_context,
       const security::SslContext &ssl_context,
       const muxer::MuxedConnectionConfig &mux_config,
+      const peer::IdentityManager &id_mgr,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_codec)
       : io_context_{std::move(io_context)},
         ssl_context_{ssl_context.quic},
         mux_config_{mux_config},
+        local_peer_{id_mgr.getId()},
         key_codec_{std::move(key_codec)},
         resolver_{*io_context_},
         client4_{makeClient(boost::asio::ip::udp::v4())},
@@ -64,8 +67,12 @@ namespace libp2p::transport {
 
   std::shared_ptr<TransportListener> QuicTransport::createListener(
       TransportListener::HandlerFunc handler) {
-    return std::make_shared<QuicListener>(
-        io_context_, ssl_context_, mux_config_, key_codec_, std::move(handler));
+    return std::make_shared<QuicListener>(io_context_,
+                                          ssl_context_,
+                                          mux_config_,
+                                          local_peer_,
+                                          key_codec_,
+                                          std::move(handler));
   }
 
   bool QuicTransport::canDial(const Multiaddress &ma) const {
@@ -81,6 +88,7 @@ namespace libp2p::transport {
     return std::make_shared<lsquic::Engine>(io_context_,
                                             ssl_context_,
                                             mux_config_,
+                                            local_peer_,
                                             key_codec_,
                                             boost::asio::ip::udp::socket{
                                                 *io_context_,

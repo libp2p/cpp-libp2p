@@ -22,11 +22,13 @@ namespace libp2p::transport::lsquic {
   Engine::Engine(std::shared_ptr<boost::asio::io_context> io_context,
                  std::shared_ptr<boost::asio::ssl::context> ssl_context,
                  const muxer::MuxedConnectionConfig &mux_config,
+                 PeerId local_peer,
                  std::shared_ptr<crypto::marshaller::KeyMarshaller> key_codec,
                  boost::asio::ip::udp::socket &&socket,
                  bool client)
       : io_context_{std::move(io_context)},
         ssl_context_{std::move(ssl_context)},
+        local_peer_{std::move(local_peer)},
         key_codec_{std::move(key_codec)},
         socket_{std::move(socket)},
         timer_{*io_context_},
@@ -102,6 +104,7 @@ namespace libp2p::transport::lsquic {
             op.has_value(),
             self->local_,
             detail::makeQuicAddr(op->remote).value(),
+            self->local_peer_,
             info.peer_id,
             info.public_key);
         conn_ctx->conn = conn;

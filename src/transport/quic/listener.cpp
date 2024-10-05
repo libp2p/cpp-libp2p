@@ -14,11 +14,13 @@ namespace libp2p::transport {
       std::shared_ptr<boost::asio::io_context> io_context,
       std::shared_ptr<boost::asio::ssl::context> ssl_context,
       const muxer::MuxedConnectionConfig &mux_config,
+      PeerId local_peer,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_codec,
       TransportListener::HandlerFunc handler)
       : io_context_{std::move(io_context)},
         ssl_context_{std::move(ssl_context)},
         mux_config_{mux_config},
+        local_peer_{std::move(local_peer)},
         key_codec_{std::move(key_codec)},
         handler_{std::move(handler)} {}
 
@@ -37,6 +39,7 @@ namespace libp2p::transport {
     server_ = std::make_shared<lsquic::Engine>(io_context_,
                                                ssl_context_,
                                                mux_config_,
+                                               local_peer_,
                                                key_codec_,
                                                std::move(socket),
                                                false);

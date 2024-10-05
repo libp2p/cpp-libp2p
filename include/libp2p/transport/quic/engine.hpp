@@ -94,6 +94,7 @@ namespace libp2p::transport::lsquic {
     Engine(std::shared_ptr<boost::asio::io_context> io_context,
            std::shared_ptr<boost::asio::ssl::context> ssl_context,
            const muxer::MuxedConnectionConfig &mux_config,
+           PeerId local_peer,
            std::shared_ptr<crypto::marshaller::KeyMarshaller> key_codec,
            boost::asio::ip::udp::socket &&socket,
            bool client);
@@ -123,6 +124,7 @@ namespace libp2p::transport::lsquic {
 
     std::shared_ptr<boost::asio::io_context> io_context_;
     std::shared_ptr<boost::asio::ssl::context> ssl_context_;
+    PeerId local_peer_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_codec_;
     boost::asio::ip::udp::socket socket_;
     boost::asio::steady_timer timer_;

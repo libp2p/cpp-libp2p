@@ -22,6 +22,10 @@ namespace libp2p::crypto::marshaller {
   class KeyMarshaller;
 }  // namespace libp2p::crypto::marshaller
 
+namespace libp2p::peer {
+  struct IdentityManager;
+}  // namespace libp2p::peer
+
 namespace libp2p::security {
   struct SslContext;
 }  // namespace libp2p::security
@@ -37,6 +41,7 @@ namespace libp2p::transport {
     QuicTransport(std::shared_ptr<boost::asio::io_context> io_context,
                   const security::SslContext &ssl_context,
                   const muxer::MuxedConnectionConfig &mux_config,
+                  const peer::IdentityManager &id_mgr,
                   std::shared_ptr<crypto::marshaller::KeyMarshaller> key_codec);
 
     // Adaptor
@@ -58,6 +63,7 @@ namespace libp2p::transport {
     std::shared_ptr<boost::asio::io_context> io_context_;
     std::shared_ptr<boost::asio::ssl::context> ssl_context_;
     muxer::MuxedConnectionConfig mux_config_;
+    PeerId local_peer_;
     std::shared_ptr<crypto::marshaller::KeyMarshaller> key_codec_;
     boost::asio::ip::udp::resolver resolver_;
     std::shared_ptr<lsquic::Engine> client4_, client6_;

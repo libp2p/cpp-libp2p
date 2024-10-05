@@ -27,6 +27,7 @@ namespace libp2p::transport {
                    bool initiator,
                    Multiaddress local,
                    Multiaddress remote,
+                   PeerId local_peer,
                    PeerId peer,
                    crypto::PublicKey key);
     ~QuicConnection() override;
@@ -79,7 +80,7 @@ namespace libp2p::transport {
     lsquic::ConnCtx *conn_ctx_;
     bool initiator_;
     Multiaddress local_, remote_;
-    PeerId peer_;
+    PeerId local_peer_, peer_;
     crypto::PublicKey key_;
     NewStreamHandlerFunc on_stream_;
 
