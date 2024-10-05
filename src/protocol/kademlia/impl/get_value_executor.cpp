@@ -167,11 +167,16 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    if (requests_in_progress_ == 0) {
+    if (requests_in_progress_ != 0) {
+      return;
+    }
+    if (received_records_->empty()) {
       done_ = true;
       log_.debug("done");
       handler_(Error::VALUE_NOT_FOUND);
+      return;
     }
+    finish();
   }
 
   void GetValueExecutor::onConnected(StreamAndProtocolOrError stream_res) {
@@ -310,41 +315,45 @@ namespace libp2p::protocol::kademlia {
       received_records_->insert({remote_peer_id, value});
 
       if (received_records_->size() >= config_.valueLookupsQuorum) {
-        std::vector<Value> values;
-        std::transform(received_records_->begin(),
-                       received_records_->end(),
-                       std::back_inserter(values),
-                       [](auto &record) { return record.value; });
-
-        auto index_res = validator_->select(key_, values);
-        if (not index_res.has_value()) {
-          log_.debug("Can't select best value of {} provided", values.size());
-          return;
-        }
-        auto &best = values[index_res.value()];
-
-        // Return result to upstear
-        done_ = true;
-        log_.debug("done");
-        handler_(best);
-
-        // Inform peer of new value
-        std::vector<PeerId> addressees;
-        auto &idx_by_value = received_records_->get<ByValue>();
-        for (auto &[peer, value] : idx_by_value) {
-          if (value != best) {
-            addressees.emplace_back(peer);
-          } else {
-            content_routing_table_->addProvider(key_, peer);
-          }
-        }
-
-        if (not addressees.empty()) {
-          auto put_value_executor = executor_factory_->createPutValueExecutor(
-              key_, std::move(value), std::move(addressees));
-          [[maybe_unused]] auto res = put_value_executor->start();
-        }
+        finish();
       }
+    }
+  }
+
+  void GetValueExecutor::finish() {
+    std::vector<Value> values;
+    std::transform(received_records_->begin(),
+                   received_records_->end(),
+                   std::back_inserter(values),
+                   [](auto &record) { return record.value; });
+
+    auto index_res = validator_->select(key_, values);
+    if (not index_res.has_value()) {
+      log_.debug("Can't select best value of {} provided", values.size());
+      return;
+    }
+    auto &best = values[index_res.value()];
+
+    // Return result to upstear
+    done_ = true;
+    log_.debug("done");
+    handler_(best);
+
+    // Inform peer of new value
+    std::vector<PeerId> addressees;
+    auto &idx_by_value = received_records_->get<ByValue>();
+    for (auto &[peer, value] : idx_by_value) {
+      if (value != best) {
+        addressees.emplace_back(peer);
+      } else {
+        content_routing_table_->addProvider(key_, peer);
+      }
+    }
+
+    if (not addressees.empty()) {
+      auto put_value_executor = executor_factory_->createPutValueExecutor(
+          key_, best, std::move(addressees));
+      [[maybe_unused]] auto res = put_value_executor->start();
     }
   }
 }  // namespace libp2p::protocol::kademlia
