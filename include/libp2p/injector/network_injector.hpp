@@ -42,6 +42,7 @@
 #include <libp2p/security/tls.hpp>
 #include <libp2p/security/tls/ssl_context.hpp>
 #include <libp2p/transport/impl/upgrader_impl.hpp>
+#include <libp2p/transport/quic/transport.hpp>
 #include <libp2p/transport/tcp.hpp>
 
 // clang-format off
@@ -344,7 +345,7 @@ namespace libp2p::injector {
         di::bind<layer::LayerAdaptor *[]>().to<layer::WsAdaptor, layer::WssAdaptor>(),  // NOLINT
         di::bind<security::SecurityAdaptor *[]>().to<security::Plaintext, security::Secio, security::Noise, security::TlsAdaptor>(),  // NOLINT
         di::bind<muxer::MuxerAdaptor *[]>().to<muxer::Yamux, muxer::Mplex>(),  // NOLINT
-        di::bind<transport::TransportAdaptor *[]>().to<transport::TcpTransport>(),  // NOLINT
+        di::bind<transport::TransportAdaptor *[]>().to<transport::TcpTransport, transport::QuicTransport>(),  // NOLINT
 
         // user-defined overrides...
         std::forward<decltype(args)>(args)...
