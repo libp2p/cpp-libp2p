@@ -67,6 +67,8 @@ namespace libp2p::protocol::kademlia {
     /// Handles result of connection
     void onConnected(StreamAndProtocolOrError stream_res);
 
+    void finish();
+
     static std::atomic_size_t instance_number;
 
     // Primary
