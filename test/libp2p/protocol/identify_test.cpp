@@ -80,7 +80,9 @@ class IdentifyTest : public testing::Test {
 
     id_msg_processor_ = std::make_shared<IdentifyMessageProcessor>(
         host_, conn_manager_, id_manager_, key_marshaller_);
-    identify_ = std::make_shared<Identify>(host_, id_msg_processor_, bus_);
+    IdentifyConfig config;
+    config.protocols = {kIdentifyProto};
+    identify_ = std::make_shared<Identify>(config, host_, id_msg_processor_, bus_);
   }
 
   HostMock host_;

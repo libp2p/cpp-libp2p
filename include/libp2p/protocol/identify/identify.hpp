@@ -11,6 +11,7 @@
 
 #include <libp2p/event/bus.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
+#include <libp2p/protocol/identify/config.hpp>
 #include <libp2p/protocol/identify/identify_msg_processor.hpp>
 
 namespace libp2p::multi {
@@ -32,7 +33,8 @@ namespace libp2p::protocol {
      * @param msg_processor to work with Identify messages
      * @param event_bus - bus, over which the events arrive
      */
-    Identify(Host &host,
+    Identify(const IdentifyConfig &config,
+             Host &host,
              std::shared_ptr<IdentifyMessageProcessor> msg_processor,
              event::Bus &event_bus);
 
@@ -81,7 +83,7 @@ namespace libp2p::protocol {
     std::shared_ptr<IdentifyMessageProcessor> msg_processor_;
     event::Bus &bus_;
     event::Handle sub_;  // will unsubscribe during destruction by itself
-
+    StreamProtocols protocols_;
     bool started_ = false;
   };
 }  // namespace libp2p::protocol
