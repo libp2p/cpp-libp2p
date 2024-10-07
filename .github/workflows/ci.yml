@@ -10,7 +10,7 @@ on:
 
 jobs:
   MacOS:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
     - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
     - name: venv
@@ -31,8 +31,7 @@ jobs:
         CTEST_OUTPUT_ON_FAILURE: 1
       run: cmake --build build --target test
   Linux-gcc:
-    runs-on: ubuntu-latest
-    container: qdrvm/kagome-dev@sha256:2d70246c32418a3dd45c246d3f5c2dd99bdafde145b903271849affe476c4cfc
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6
     - name: venv
