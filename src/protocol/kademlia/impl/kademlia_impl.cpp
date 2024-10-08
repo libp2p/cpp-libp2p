@@ -129,10 +129,25 @@ namespace libp2p::protocol::kademlia {
   outcome::result<void> KademliaImpl::putValue(Key key, Value value) {
     log_.debug("CALL: PutValue ({})", multi::detail::encodeBase58(key));
 
-    if (auto res = storage_->putValue(key, std::move(value));
-        not res.has_value()) {
-      return res.as_failure();
-    }
+    OUTCOME_TRY(storage_->putValue(key, value));
+
+    auto closer = std::make_shared<std::shared_ptr<FindPeerExecutor>>();
+    *closer = createFindPeerExecutor(
+        key,
+        [weak_self{weak_from_this()}, key, value, closer](
+            outcome::result<PeerInfo>) {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
+          }
+          if (not *closer) {
+            return;
+          }
+          std::ignore = self->createPutValueExecutor(
+                                key, value, (**closer).succeededPeers())
+                            ->start();
+        });
+    std::ignore = (**closer).start();
 
     return outcome::success();
   }
@@ -330,7 +345,7 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    auto res = putValue(key, value);
+    auto res = storage_->putValue(key, value);
     if (!res) {
       log_.warn("incoming PutValue failed: {}", res.error());
       return;
@@ -682,13 +697,13 @@ namespace libp2p::protocol::kademlia {
   }
 
   std::shared_ptr<FindPeerExecutor> KademliaImpl::createFindPeerExecutor(
-      PeerId peer_id, FoundPeerInfoHandler handler) {
+      HashedKey key, FoundPeerInfoHandler handler) {
     return std::make_shared<FindPeerExecutor>(config_,
                                               host_,
                                               scheduler_,
                                               shared_from_this(),
                                               peer_routing_table_,
-                                              std::move(peer_id),
+                                              std::move(key),
                                               std::move(handler));
   }
 

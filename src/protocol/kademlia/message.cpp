@@ -225,11 +225,11 @@ namespace libp2p::protocol::kademlia {
     return msg;
   }
 
-  Message createFindNodeRequest(const PeerId &node,
+  Message createFindNodeRequest(Key key,
                                 boost::optional<PeerInfo> self_announce) {
     Message msg;
     msg.type = Message::Type::kFindNode;
-    msg.key = node.toVector();
+    msg.key = std::move(key);
     if (self_announce) {
       msg.selfAnnounce(std::move(self_announce.value()));
     }
