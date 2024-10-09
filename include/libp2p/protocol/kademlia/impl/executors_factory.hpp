@@ -46,7 +46,7 @@ namespace libp2p::protocol::kademlia {
         ContentId sought_key, FoundProvidersHandler handler) = 0;
 
     virtual std::shared_ptr<FindPeerExecutor> createFindPeerExecutor(
-        PeerId peer_id, FoundPeerInfoHandler handler) = 0;
+        HashedKey key, FoundPeerInfoHandler handler) = 0;
   };
 
 }  // namespace libp2p::protocol::kademlia

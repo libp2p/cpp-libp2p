@@ -35,7 +35,7 @@ namespace libp2p::protocol::kademlia {
         std::shared_ptr<basic::Scheduler> scheduler,
         std::shared_ptr<SessionHost> session_host,
         const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
-        PeerId peer_id,
+        HashedKey target,
         FoundPeerInfoHandler handler);
 
     ~FindPeerExecutor() override;
@@ -70,9 +70,9 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<SessionHost> session_host_;
 
     // Secondary
-    const PeerId sought_peer_id_;
-    const NodeId target_;
+    HashedKey target_;
     std::unordered_set<PeerId> nearest_peer_ids_;
+    std::vector<PeerId> succeeded_peers_;
     FoundPeerInfoHandler handler_;
 
     // Auxiliary

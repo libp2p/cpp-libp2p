@@ -112,7 +112,7 @@ namespace libp2p::protocol::kademlia {
         ContentId content_id, FoundProvidersHandler handler) override;
 
     std::shared_ptr<FindPeerExecutor> createFindPeerExecutor(
-        PeerId peer_id, FoundPeerInfoHandler handler) override;
+        HashedKey key, FoundPeerInfoHandler handler) override;
 
     outcome::result<void> findRandomPeer() override;
     void randomWalk();

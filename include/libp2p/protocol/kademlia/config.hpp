@@ -148,6 +148,9 @@ namespace libp2p::protocol::kademlia {
 
     // https://github.com/libp2p/rust-libp2p/blob/c6cf7fec6913aa590622aeea16709fce6e9c99a5/protocols/kad/src/query/peers/closest.rs#L110-L120
     size_t query_initial_peers = K_VALUE;
+
+    // https://github.com/libp2p/rust-libp2p/blob/9a45db3f82b760c93099e66ec77a7a772d1f6cd3/protocols/kad/src/query/peers/closest.rs#L336-L346
+    size_t replication_factor = K_VALUE;
   };
 
 }  // namespace libp2p::protocol::kademlia

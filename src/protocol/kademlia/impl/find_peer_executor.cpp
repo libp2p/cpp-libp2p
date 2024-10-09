@@ -25,25 +25,24 @@ namespace libp2p::protocol::kademlia {
       std::shared_ptr<basic::Scheduler> scheduler,
       std::shared_ptr<SessionHost> session_host,
       const std::shared_ptr<PeerRoutingTable> &peer_routing_table,
-      PeerId sought_peer_id,
+      HashedKey target,
       FoundPeerInfoHandler handler)
       : config_(config),
         host_(std::move(host)),
         scheduler_(std::move(scheduler)),
         session_host_(std::move(session_host)),
-        sought_peer_id_(std::move(sought_peer_id)),
-        target_(sought_peer_id_),
+        target_{std::move(target)},
         handler_(std::move(handler)),
         log_("KademliaExecutor", "kademlia", "FindPeer", ++instance_number) {
     auto nearest_peer_ids = peer_routing_table->getNearestPeers(
-        target_, config_.query_initial_peers);
+        target_.hash, config_.query_initial_peers);
 
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));
 
-    std::for_each(nearest_peer_ids_.begin(),
-                  nearest_peer_ids_.end(),
-                  [this](auto &peer_id) { queue_.emplace(peer_id, target_); });
+    for (auto &peer_id : nearest_peer_ids_) {
+      queue_.emplace(peer_id, target_.hash);
+    }
 
     log_.debug("created");
   }
@@ -69,7 +68,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     Message request =
-        createFindNodeRequest(sought_peer_id_, std::move(self_announce));
+        createFindNodeRequest(target_.key, std::move(self_announce));
     if (!request.serialize(*serialized_request_)) {
       done_ = true;
       return Error::MESSAGE_SERIALIZE_ERROR;
@@ -100,7 +99,7 @@ namespace libp2p::protocol::kademlia {
     } else {
       log_.debug("done: {}", result.error());
     }
-    handler_(result);
+    handler_(result, std::move(succeeded_peers_));
   }
 
   void FindPeerExecutor::spawn() {
@@ -220,8 +219,6 @@ namespace libp2p::protocol::kademlia {
     return
         // Check if message type is appropriate
         msg.type == Message::Type::kFindNode;
-    // Check if response is accorded to request
-    // && msg.key == sought_peer_id_.toVector()
   }
 
   void FindPeerExecutor::onResult(const std::shared_ptr<Session> &session,
@@ -258,6 +255,8 @@ namespace libp2p::protocol::kademlia {
                requests_in_progress_,
                queue_.size());
 
+    succeeded_peers_.emplace_back(remote_peer_id);
+
     // Append gotten peer to queue
     if (msg.closer_peers) {
       for (auto &peer : msg.closer_peers.value()) {
@@ -283,7 +282,7 @@ namespace libp2p::protocol::kademlia {
         }
 
         // Found
-        if (peer.info.id == sought_peer_id_) {
+        if (peer.info.id == target_.peer) {
           done(peer.info);
         }
 
@@ -299,9 +298,14 @@ namespace libp2p::protocol::kademlia {
 
         // New peer add to queue
         if (auto [it, ok] = nearest_peer_ids_.emplace(peer.info.id); ok) {
-          queue_.emplace(*it, target_);
+          queue_.emplace(*it, target_.hash);
         }
       }
+    }
+
+    if (succeeded_peers_.size() >= config_.replication_factor) {
+      // https://github.com/libp2p/rust-libp2p/blob/9a45db3f82b760c93099e66ec77a7a772d1f6cd3/protocols/kad/src/query/peers/closest.rs#L336-L346
+      done(Error::VALUE_NOT_FOUND);
     }
   }
 

@@ -10,6 +10,7 @@
 #include <climits>
 #include <cstring>
 #include <memory>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -106,4 +107,17 @@ namespace libp2p::protocol::kademlia {
     Hash256 data_;
   };
 
+  struct HashedKey {
+    HashedKey(Key key, std::optional<PeerId> peer)
+        : key{std::move(key)},
+          hash{NodeId::hash(this->key)},
+          peer{std::move(peer)} {}
+    // NOLINTNEXTLINE(google-explicit-constructor)
+    HashedKey(Key key) : HashedKey{std::move(key), std::nullopt} {}
+    // NOLINTNEXTLINE(google-explicit-constructor)
+    HashedKey(const PeerId &peer) : HashedKey{peer.toVector(), peer} {}
+    Key key;
+    NodeId hash;
+    std::optional<PeerId> peer;
+  };
 }  // namespace libp2p::protocol::kademlia

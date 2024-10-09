@@ -59,9 +59,9 @@ namespace libp2p::protocol::kademlia {
     nearest_peer_ids_.insert(std::move_iterator(nearest_peer_ids.begin()),
                              std::move_iterator(nearest_peer_ids.end()));
 
-    std::for_each(nearest_peer_ids_.begin(),
-                  nearest_peer_ids_.end(),
-                  [this](auto &peer_id) { queue_.emplace(peer_id, target_); });
+    for (auto &peer_id : nearest_peer_ids_) {
+      queue_.emplace(peer_id, target_);
+    }
 
     received_records_ = std::make_unique<Table>();
     log_.debug("created");

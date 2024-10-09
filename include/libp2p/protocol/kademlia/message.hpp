@@ -77,7 +77,7 @@ namespace libp2p::protocol::kademlia {
   Message createGetProvidersRequest(const Key &key,
                                     boost::optional<PeerInfo> self_announce);
 
-  Message createFindNodeRequest(const PeerId &node,
+  Message createFindNodeRequest(Key key,
                                 boost::optional<PeerInfo> self_announce);
 
 }  // namespace libp2p::protocol::kademlia

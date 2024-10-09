@@ -129,12 +129,23 @@ namespace libp2p::protocol::kademlia {
   outcome::result<void> KademliaImpl::putValue(Key key, Value value) {
     log_.debug("CALL: PutValue ({})", multi::detail::encodeBase58(key));
 
-    if (auto res = storage_->putValue(key, std::move(value));
-        not res.has_value()) {
-      return res.as_failure();
-    }
+    OUTCOME_TRY(storage_->putValue(key, value));
 
-    return outcome::success();
+    // `FindPeerExecutor` holds itself using `shared_from_this`
+    return createFindPeerExecutor(
+               key,
+               [weak_self{weak_from_this()}, key, value](
+                   const outcome::result<PeerInfo> &,
+                   std::vector<PeerId> succeeded_peers) {
+                 auto self = weak_self.lock();
+                 if (not self) {
+                   return;
+                 }
+                 std::ignore = self->createPutValueExecutor(
+                                       key, value, std::move(succeeded_peers))
+                                   ->start();
+               })
+        ->start();
   }
 
   outcome::result<void> KademliaImpl::getValue(const Key &key,
@@ -274,7 +285,7 @@ namespace libp2p::protocol::kademlia {
     if (not peer_info.addresses.empty()) {
       scheduler_->schedule(
           [handler = std::move(handler), peer_info = std::move(peer_info)] {
-            handler(peer_info);
+            handler(peer_info, {});
           });
 
       log_.debug("{} found locally", peer_id.toBase58());
@@ -330,7 +341,7 @@ namespace libp2p::protocol::kademlia {
       return;
     }
 
-    auto res = putValue(key, value);
+    auto res = storage_->putValue(key, value);
     if (!res) {
       log_.warn("incoming PutValue failed: {}", res.error());
       return;
@@ -555,14 +566,15 @@ namespace libp2p::protocol::kademlia {
             multi::Multihash::create(multi::HashType::sha256, hash).value())
             .value();
 
-    FoundPeerInfoHandler handler =
-        [wp = weak_from_this()](outcome::result<PeerInfo> res) {
-          if (auto self = wp.lock()) {
-            if (res.has_value()) {
-              self->addPeer(res.value(), false);
-            }
-          }
-        };
+    FoundPeerInfoHandler handler = [wp = weak_from_this()](
+                                       outcome::result<PeerInfo> res,
+                                       const std::vector<PeerId> &) {
+      if (auto self = wp.lock()) {
+        if (res.has_value()) {
+          self->addPeer(res.value(), false);
+        }
+      }
+    };
 
     return findPeer(peer_id, handler);
   }
@@ -682,13 +694,13 @@ namespace libp2p::protocol::kademlia {
   }
 
   std::shared_ptr<FindPeerExecutor> KademliaImpl::createFindPeerExecutor(
-      PeerId peer_id, FoundPeerInfoHandler handler) {
+      HashedKey key, FoundPeerInfoHandler handler) {
     return std::make_shared<FindPeerExecutor>(config_,
                                               host_,
                                               scheduler_,
                                               shared_from_this(),
                                               peer_routing_table_,
-                                              std::move(peer_id),
+                                              std::move(key),
                                               std::move(handler));
   }
 
