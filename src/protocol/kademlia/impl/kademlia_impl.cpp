@@ -131,23 +131,23 @@ namespace libp2p::protocol::kademlia {
 
     OUTCOME_TRY(storage_->putValue(key, value));
 
-    auto closer = std::make_shared<std::shared_ptr<FindPeerExecutor>>();
-    *closer = createFindPeerExecutor(
+    auto nearest = std::make_shared<std::shared_ptr<FindPeerExecutor>>();
+    *nearest = createFindPeerExecutor(
         key,
-        [weak_self{weak_from_this()}, key, value, closer](
+        [weak_self{weak_from_this()}, key, value, nearest](
             const outcome::result<PeerInfo> &) {
           auto self = weak_self.lock();
           if (not self) {
             return;
           }
-          if (not *closer) {
+          if (not *nearest) {
             return;
           }
           std::ignore = self->createPutValueExecutor(
-                                key, value, (**closer).succeededPeers())
+                                key, value, (**nearest).succeededPeers())
                             ->start();
         });
-    std::ignore = (**closer).start();
+    std::ignore = (**nearest).start();
 
     return outcome::success();
   }
