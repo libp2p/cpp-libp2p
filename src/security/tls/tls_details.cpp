@@ -208,10 +208,10 @@ namespace libp2p::security::tls_details {
       }
 
       ASN1_INTEGER *rand_int = ASN1_INTEGER_new();
+      CLEANUP_PTR(rand_int, ASN1_INTEGER_free);
       BN_to_ASN1_INTEGER(bn, rand_int);
 
       if (X509_set_serialNumber(cert, rand_int) == 0) {
-        ASN1_INTEGER_free(rand_int);
         throw std::runtime_error("cannot add SN to certificate");
       }
     }
