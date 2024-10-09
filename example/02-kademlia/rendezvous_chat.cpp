@@ -337,7 +337,7 @@ int main(int argc, char *argv[]) {
       auto peer_id =
           libp2p::peer::PeerId::fromHash(cid.content_address).value();
 
-      [[maybe_unused]] auto res = kademlia->findPeer(peer_id, [&](auto) {
+      [[maybe_unused]] auto res = kademlia->findPeer(peer_id, [&](auto, auto) {
         // Say to world about his providing
         provide();
 

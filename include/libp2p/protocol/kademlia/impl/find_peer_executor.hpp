@@ -54,10 +54,6 @@ namespace libp2p::protocol::kademlia {
     void onResult(const std::shared_ptr<Session> &session,
                   outcome::result<Message> res) override;
 
-    auto &succeededPeers() const {
-      return succeeded_peers_;
-    }
-
    private:
     /// Spawns new request
     void spawn();

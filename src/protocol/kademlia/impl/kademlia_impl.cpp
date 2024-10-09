@@ -131,25 +131,21 @@ namespace libp2p::protocol::kademlia {
 
     OUTCOME_TRY(storage_->putValue(key, value));
 
-    auto nearest = std::make_shared<std::shared_ptr<FindPeerExecutor>>();
-    *nearest = createFindPeerExecutor(
-        key,
-        [weak_self{weak_from_this()}, key, value, nearest](
-            const outcome::result<PeerInfo> &) {
-          auto self = weak_self.lock();
-          if (not self) {
-            return;
-          }
-          if (not *nearest) {
-            return;
-          }
-          std::ignore = self->createPutValueExecutor(
-                                key, value, (**nearest).succeededPeers())
-                            ->start();
-        });
-    std::ignore = (**nearest).start();
-
-    return outcome::success();
+    // `FindPeerExecutor` holds itself using `shared_from_this`
+    return createFindPeerExecutor(
+               key,
+               [weak_self{weak_from_this()}, key, value](
+                   const outcome::result<PeerInfo> &,
+                   std::vector<PeerId> succeeded_peers) {
+                 auto self = weak_self.lock();
+                 if (not self) {
+                   return;
+                 }
+                 std::ignore = self->createPutValueExecutor(
+                                       key, value, std::move(succeeded_peers))
+                                   ->start();
+               })
+        ->start();
   }
 
   outcome::result<void> KademliaImpl::getValue(const Key &key,
@@ -289,7 +285,7 @@ namespace libp2p::protocol::kademlia {
     if (not peer_info.addresses.empty()) {
       scheduler_->schedule(
           [handler = std::move(handler), peer_info = std::move(peer_info)] {
-            handler(peer_info);
+            handler(peer_info, {});
           });
 
       log_.debug("{} found locally", peer_id.toBase58());
@@ -570,14 +566,15 @@ namespace libp2p::protocol::kademlia {
             multi::Multihash::create(multi::HashType::sha256, hash).value())
             .value();
 
-    FoundPeerInfoHandler handler =
-        [wp = weak_from_this()](outcome::result<PeerInfo> res) {
-          if (auto self = wp.lock()) {
-            if (res.has_value()) {
-              self->addPeer(res.value(), false);
-            }
-          }
-        };
+    FoundPeerInfoHandler handler = [wp = weak_from_this()](
+                                       outcome::result<PeerInfo> res,
+                                       const std::vector<PeerId> &) {
+      if (auto self = wp.lock()) {
+        if (res.has_value()) {
+          self->addPeer(res.value(), false);
+        }
+      }
+    };
 
     return findPeer(peer_id, handler);
   }

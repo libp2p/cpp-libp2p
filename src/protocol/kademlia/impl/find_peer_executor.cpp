@@ -100,7 +100,7 @@ namespace libp2p::protocol::kademlia {
     } else {
       log_.debug("done: {}", result.error());
     }
-    handler_(result);
+    handler_(result, std::move(succeeded_peers_));
   }
 
   void FindPeerExecutor::spawn() {
