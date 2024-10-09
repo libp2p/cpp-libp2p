@@ -193,8 +193,9 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
   });
 
   context->run_for(500ms);
-  std::for_each(
-      clients.begin(), clients.end(), [](std::thread &t) { t.join(); });
+  for (auto &t : clients) {
+    t.join();
+  }
 
   ASSERT_EQ(counter, kClients) << "not all clients' requests were handled";
 }

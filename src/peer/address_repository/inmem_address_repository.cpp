@@ -123,9 +123,9 @@ namespace libp2p::peer {
     auto &addresses = *peer_it->second;
 
     auto expires_at = Clock::now() + ttl;
-    std::for_each(addresses.begin(), addresses.end(), [expires_at](auto &item) {
+    for (auto &item : addresses) {
       item.second = expires_at;
-    });
+    }
 
     return outcome::success();
   }  // namespace libp2p::peer
