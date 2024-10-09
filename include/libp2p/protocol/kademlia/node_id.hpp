@@ -108,7 +108,10 @@ namespace libp2p::protocol::kademlia {
   };
 
   struct HashedKey {
-    HashedKey(Key key) : key{std::move(key)}, hash{NodeId::hash(this->key)} {}
+    // NOLINTNEXTLINE(google-explicit-constructor)
+    HashedKey(Key key)
+        : key{std::move(key)}, hash{NodeId::hash(this->key)}, peer{} {}
+    // NOLINTNEXTLINE(google-explicit-constructor)
     HashedKey(PeerId peer) : HashedKey{peer.toVector()} {
       this->peer = std::move(peer);
     }

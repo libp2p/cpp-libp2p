@@ -135,7 +135,7 @@ namespace libp2p::protocol::kademlia {
     *closer = createFindPeerExecutor(
         key,
         [weak_self{weak_from_this()}, key, value, closer](
-            outcome::result<PeerInfo>) {
+            const outcome::result<PeerInfo> &) {
           auto self = weak_self.lock();
           if (not self) {
             return;
