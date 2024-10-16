@@ -537,12 +537,6 @@ namespace libp2p::connection {
 
     SL_DEBUG(log(), "closing connection, reason: {}", notify_streams_code);
 
-    write_queue_.clear();
-
-    if (reply_to_peer_code.has_value() && !connection_->isClosed()) {
-      enqueue(goAwayMsg(reply_to_peer_code.value()));
-    }
-
     Streams streams;
     streams.swap(streams_);
 
@@ -559,6 +553,14 @@ namespace libp2p::connection {
 
     if (closed_callback_) {
       closed_callback_(remote_peer_, shared_from_this());
+    }
+
+    close_after_write_ = true;
+    if (reply_to_peer_code) {
+      enqueue(goAwayMsg(*reply_to_peer_code));
+    } else {
+      write_queue_.clear();
+      std::ignore = connection_->close();
     }
   }
 
@@ -634,6 +636,8 @@ namespace libp2p::connection {
   void YamuxedConnection::onDataWritten(outcome::result<size_t> res,
                                         StreamId stream_id) {
     if (!res) {
+      write_queue_.clear();
+      std::ignore = connection_->close();
       // write error
       close(res.error(), boost::none);
       return;
@@ -672,10 +676,12 @@ namespace libp2p::connection {
 
     is_writing_ = false;
 
-    if (started_ && !write_queue_.empty()) {
+    if (not write_queue_.empty()) {
       auto next_packet = std::move(write_queue_.front());
       write_queue_.pop_front();
       doWrite(std::move(next_packet));
+    } else if (close_after_write_) {
+      std::ignore = connection_->close();
     }
   }
 
