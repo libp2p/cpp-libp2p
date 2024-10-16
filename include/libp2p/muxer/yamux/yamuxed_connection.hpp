@@ -239,6 +239,8 @@ namespace libp2p::connection {
 
     uint32_t ping_counter_ = 0;
 
+    bool close_after_write_ = false;
+
    public:
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
         libp2p::connection::YamuxedConnection);
