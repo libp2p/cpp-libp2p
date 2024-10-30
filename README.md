@@ -25,7 +25,7 @@ Target C++ compilers are:
 
 To clone repository execute
 ```
-git clone https://github.com/libp2p/libp2p-cpp.git
+git clone https://github.com/libp2p/cpp-libp2p.git
 ```
 
 ### Build cpp-libp2p
