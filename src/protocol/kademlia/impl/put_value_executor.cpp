@@ -140,16 +140,7 @@ namespace libp2p::protocol::kademlia {
                stream->remotePeerId().value().toBase58());
 
     auto session = session_host_->openSession(stream);
-
-    if (!session->write(serialized_request_, shared_from_this())) {
-      --requests_in_progress_;
-      log_.debug("write to {} failed; done {}, active {}, in queue {}",
-                 addr,
-                 requests_succeed_,
-                 requests_in_progress_,
-                 addressees_.size() - addressees_idx_);
-      spawn();
-    }
+    session->write(*serialized_request_, shared_from_this());
   }
 
   Time PutValueExecutor::responseTimeout() const {

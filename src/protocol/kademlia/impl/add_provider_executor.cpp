@@ -188,24 +188,13 @@ namespace libp2p::protocol::kademlia {
                stream->remotePeerId().value().toBase58());
 
     auto session = session_host_->openSession(stream);
-
-    --requests_in_progress_;
-
-    if (session->write(serialized_request_, {})) {
-      ++requests_succeed_;
-      log_.debug("write to {} successfuly; done {}, active {}, in queue {}",
-                 addr,
-                 requests_succeed_,
-                 requests_in_progress_,
-                 queue_.size());
-    } else {
-      log_.debug("write to {} failed; done {}, active {}, in queue {}",
-                 addr,
-                 requests_succeed_,
-                 requests_in_progress_,
-                 queue_.size());
-    }
-
-    spawn();
+    session->write(*serialized_request_,
+                   [self{shared_from_this()}](outcome::result<void> r) {
+                     --self->requests_in_progress_;
+                     if (r) {
+                       ++self->requests_succeed_;
+                     }
+                     self->spawn();
+                   });
   }
 }  // namespace libp2p::protocol::kademlia

@@ -84,9 +84,6 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Session> openSession(
         std::shared_ptr<connection::Stream> stream) override;
 
-    /// @see SessionHost::closeSession
-    void closeSession(std::shared_ptr<connection::Stream> stream) override;
-
    private:
     void onPutValue(const std::shared_ptr<Session> &session, Message &&msg);
     void onGetValue(const std::shared_ptr<Session> &session, Message &&msg);
@@ -141,26 +138,6 @@ namespace libp2p::protocol::kademlia {
     // Subscribtion to new connections
     event::Handle new_connection_subscription_;
     event::Handle on_disconnected_;
-
-    struct StreamPtrComparator {
-      bool operator()(const std::shared_ptr<connection::Stream> &lhs,
-                      const std::shared_ptr<connection::Stream> &rhs) const {
-        return lhs.get() == rhs.get();
-      }
-    };
-
-    struct StreamPtrHaher {
-      size_t operator()(const std::shared_ptr<connection::Stream> &s) const {
-        auto r = std::hash<decltype(s.get())>()(s.get());
-        return r;
-      }
-    };
-
-    std::unordered_map<const std::shared_ptr<connection::Stream>,
-                       std::shared_ptr<Session>,
-                       StreamPtrHaher,
-                       StreamPtrComparator>
-        sessions_;
 
     // Random walk's auxiliary data
     struct {

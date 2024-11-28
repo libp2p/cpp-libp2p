@@ -51,7 +51,7 @@ namespace libp2p::protocol::kademlia {
     void clear();
 
     // tries to deserialize message from byte array
-    bool deserialize(const void *data, size_t sz);
+    bool deserialize(BytesIn pb);
 
     // serializes varint(message length) + message into buffer
     bool serialize(std::vector<uint8_t> &buffer) const;
