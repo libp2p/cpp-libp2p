@@ -320,8 +320,7 @@ namespace libp2p::protocol::kademlia {
         onPing(session, std::move(msg));
         break;
       default:
-        session->close(Error::UNEXPECTED_MESSAGE_TYPE);
-        return;
+        break;
     }
   }
 
@@ -348,13 +347,7 @@ namespace libp2p::protocol::kademlia {
     }
 
     // echo request
-    auto buffer = std::make_shared<std::vector<uint8_t>>();
-    if (not msg.serialize(*buffer)) {
-      session->close(Error::MESSAGE_SERIALIZE_ERROR);
-      BOOST_UNREACHABLE_RETURN();
-    }
-
-    session->write(buffer, {});
+    session->write(msg, weak_from_this());
   }
 
   void KademliaImpl::onGetValue(const std::shared_ptr<Session> &session,
@@ -393,13 +386,7 @@ namespace libp2p::protocol::kademlia {
           std::move(msg.key), std::move(value), std::to_string(expire.count())};
     }
 
-    auto buffer = std::make_shared<std::vector<uint8_t>>();
-    if (not msg.serialize(*buffer)) {
-      session->close(Error::MESSAGE_SERIALIZE_ERROR);
-      BOOST_UNREACHABLE_RETURN();
-    }
-
-    session->write(buffer, {});
+    session->write(msg, weak_from_this());
   }
 
   void KademliaImpl::onAddProvider(const std::shared_ptr<Session> &session,
@@ -480,13 +467,7 @@ namespace libp2p::protocol::kademlia {
       }
     }
 
-    auto buffer = std::make_shared<std::vector<uint8_t>>();
-    if (not msg.serialize(*buffer)) {
-      session->close(Error::MESSAGE_SERIALIZE_ERROR);
-      BOOST_UNREACHABLE_RETURN();
-    }
-
-    session->write(buffer, {});
+    session->write(msg, weak_from_this());
   }
 
   void KademliaImpl::onFindNode(const std::shared_ptr<Session> &session,
@@ -535,26 +516,14 @@ namespace libp2p::protocol::kademlia {
       msg.closer_peers = std::move(peers);
     }
 
-    auto buffer = std::make_shared<std::vector<uint8_t>>();
-    if (not msg.serialize(*buffer)) {
-      session->close(Error::MESSAGE_SERIALIZE_ERROR);
-      BOOST_UNREACHABLE_RETURN();
-    }
-
-    session->write(buffer, {});
+    session->write(msg, weak_from_this());
   }
 
   void KademliaImpl::onPing(const std::shared_ptr<Session> &session,
                             Message &&msg) {
     msg.clear();
 
-    auto buffer = std::make_shared<std::vector<uint8_t>>();
-    if (not msg.serialize(*buffer)) {
-      session->close(Error::MESSAGE_SERIALIZE_ERROR);
-      BOOST_UNREACHABLE_RETURN();
-    }
-
-    session->write(buffer, {});
+    session->write(msg, weak_from_this());
   }
 
   outcome::result<void> KademliaImpl::findRandomPeer() {
@@ -601,28 +570,8 @@ namespace libp2p::protocol::kademlia {
 
   std::shared_ptr<Session> KademliaImpl::openSession(
       std::shared_ptr<connection::Stream> stream) {
-    auto [it, is_new_session] = sessions_.emplace(
-        stream,
-        std::make_shared<Session>(weak_from_this(), scheduler_, stream));
-    assert(is_new_session);
-
-    log_.debug("session opened, total sessions: {}", sessions_.size());
-
-    return it->second;
-  }
-
-  void KademliaImpl::closeSession(std::shared_ptr<connection::Stream> stream) {
-    auto it = sessions_.find(stream);
-    if (it == sessions_.end()) {
-      return;
-    }
-
-    auto &session = it->second;
-
-    session->close();
-    sessions_.erase(it);
-
-    log_.debug("session completed, total sessions: {}", sessions_.size());
+    return std::make_shared<Session>(
+        scheduler_, stream, config_.responseTimeout);
   }
 
   void KademliaImpl::handleProtocol(StreamAndProtocol stream_and_protocol) {
@@ -638,12 +587,7 @@ namespace libp2p::protocol::kademlia {
                stream->remotePeerId().value().toBase58());
 
     auto session = openSession(stream);
-
-    if (!session->read()) {
-      sessions_.erase(stream);
-      stream->reset();
-      return;
-    }
+    session->read(weak_from_this());
   }
 
   std::shared_ptr<PutValueExecutor> KademliaImpl::createPutValueExecutor(

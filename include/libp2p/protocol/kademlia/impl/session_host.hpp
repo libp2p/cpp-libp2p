@@ -19,9 +19,6 @@ namespace libp2p::protocol::kademlia {
     /// Opens new session for stream
     virtual std::shared_ptr<Session> openSession(
         std::shared_ptr<connection::Stream> stream) = 0;
-
-    /// Closes session by stream
-    virtual void closeSession(std::shared_ptr<connection::Stream> stream) = 0;
   };
 
 }  // namespace libp2p::protocol::kademlia

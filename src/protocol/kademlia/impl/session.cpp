@@ -6,293 +6,137 @@
 
 #include <libp2p/protocol/kademlia/impl/session.hpp>
 
-#include <libp2p/basic/varint_reader.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <qtils/bytes.hpp>
+
+#include <libp2p/basic/message_read_writer_uvarint.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/protocol/kademlia/error.hpp>
-#include <libp2p/protocol/kademlia/impl/find_peer_executor.hpp>
-#include <libp2p/protocol/kademlia/message.hpp>
+#include <libp2p/protocol/kademlia/impl/response_handler.hpp>
+#include <libp2p/protocol/kademlia/impl/session_host.hpp>
 
 namespace libp2p::protocol::kademlia {
-
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-  std::atomic_size_t Session::instance_number = 0;
-
-  Session::Session(std::weak_ptr<SessionHost> session_host,
-                   std::weak_ptr<basic::Scheduler> scheduler,
+  Session::Session(std::weak_ptr<basic::Scheduler> scheduler,
                    std::shared_ptr<connection::Stream> stream,
                    Time operations_timeout)
-      : session_host_(std::move(session_host)),
-        scheduler_(std::move(scheduler)),
-        stream_(std::move(stream)),
-        operations_timeout_(operations_timeout),
-        log_("KademliaSession", "kademlia", "Session", ++instance_number) {
-    log_.debug("created");
-  }
+      : scheduler_{std::move(scheduler)},
+        stream_{std::move(stream)},
+        operations_timeout_{operations_timeout},
+        framing_{std::make_shared<basic::MessageReadWriterUvarint>(stream_)} {}
 
   Session::~Session() {
-    log_.debug("destroyed");
+    stream_->reset();
   }
 
-  bool Session::read() {
-    if (stream_->isClosedForRead()) {
-      close(Error::STREAM_RESET);
-      return false;
-    }
-
-    ++reading_;
-
-    libp2p::basic::VarintReader::readVarint(
-        stream_,
-        [wp = weak_from_this()](outcome::result<multi::UVarint> varint) {
-          if (auto self = wp.lock()) {
-            self->onLengthRead(std::move(varint));
-          }
-        });
-    setReadingTimeout();
-    return true;
+  void Session::read(OnRead on_read) {
+    setTimer();
+    framing_->read([self{shared_from_this()}, on_read{std::move(on_read)}](
+                       basic::MessageReadWriter::ReadCallback r) {
+      self->timer_.reset();
+      if (not r) {
+        on_read(r.error());
+        return;
+      }
+      Message msg;
+      if (not msg.deserialize(*r.value())) {
+        on_read(Error::MESSAGE_DESERIALIZE_ERROR);
+        return;
+      }
+      on_read(std::move(msg));
+    });
   }
 
-  bool Session::write(
-      const std::shared_ptr<std::vector<uint8_t>> &buffer,
-      const std::shared_ptr<ResponseHandler> &response_handler) {
-    if (stream_->isClosedForWrite()) {
-      close(Error::STREAM_RESET);
-      return false;
-    }
-
-    ++writing_;
-
-    writeReturnSize(stream_,
-                    *buffer,
-                    [wp = weak_from_this(), buffer, response_handler](
-                        outcome::result<size_t> result) {
-                      if (auto self = wp.lock()) {
-                        self->onMessageWritten(result, response_handler);
-                      }
-                    });
-
-    setResponseTimeout(response_handler);
-    return true;
-  }
-
-  void Session::close(outcome::result<void> reason) {
-    if (closed_) {
-      return;
-    }
-
-    closed_ = true;
-
-    if (reason.has_value()) {
-      reason = Error::SESSION_CLOSED;
-    }
-
-    for (auto &pair : response_handlers_) {
-      pair.second.reset();
-      pair.first->onResult(shared_from_this(), reason.as_failure());
-    }
-    response_handlers_.clear();
-
-    cancelReadingTimeout();
-
-    stream_->close([self{shared_from_this()}](outcome::result<void>) {});
-
-    if (auto session_host = session_host_.lock()) {
-      session_host->closeSession(stream_);
-    }
-  }
-
-  void Session::onLengthRead(outcome::result<multi::UVarint> varint) {
-    if (stream_->isClosedForRead()) {
-      close(Error::STREAM_RESET);
-      return;
-    }
-
-    if (closed_) {
-      return;
-    }
-
-    if (varint.has_error()) {
-      close(varint.error());
-      return;
-    }
-
-    auto msg_len = varint.value().toUInt64();
-    inner_buffer_.resize(msg_len);
-
-    // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-    stream_->read(std::span(inner_buffer_.data(), inner_buffer_.size()),
-                  msg_len,
-                  [wp = weak_from_this()](auto &&res) {
-                    if (auto self = wp.lock()) {
-                      self->onMessageRead(std::forward<decltype(res)>(res));
+  void Session::write(BytesIn frame, OnWrite on_write) {
+    setTimer();
+    auto buf = std::make_shared<Bytes>(qtils::asVec(frame));
+    libp2p::write(stream_,
+                  frame,
+                  [self{shared_from_this()},
+                   on_write{std::move(on_write)},
+                   buf](outcome::result<void> r) {
+                    self->timer_.reset();
+                    if (not r) {
+                      on_write(r.error());
+                      return;
                     }
+                    on_write(outcome::success());
                   });
   }
 
-  void Session::onMessageRead(outcome::result<size_t> res) {
-    cancelReadingTimeout();
-
-    if (closed_) {
-      return;
-    }
-
-    if (not res) {
-      close(res.as_failure());
-      return;
-    }
-
-    if (inner_buffer_.size() != res.value()) {
-      close(Error::MESSAGE_PARSE_ERROR);
-      return;
-    }
-
-    Message msg;
-    if (!msg.deserialize(inner_buffer_.data(), inner_buffer_.size())) {
-      close(Error::MESSAGE_DESERIALIZE_ERROR);
-      return;
-    }
-
-    switch (msg.type) {
-      case Message::Type::kPutValue:
-        log_.debug("Incoming PutValue message");
-        break;
-      case Message::Type::kGetValue:
-        log_.debug("Incoming GetValue message");
-        break;
-      case Message::Type::kAddProvider:
-        log_.debug("Incoming AddProvider message");
-        break;
-      case Message::Type::kGetProviders:
-        log_.debug("Incoming GetProviders message");
-        break;
-      case Message::Type::kFindNode:
-        log_.debug("Incoming FindNode message");
-        break;
-      case Message::Type::kPing:
-        log_.debug("Incoming Ping message");
-        break;
-      default:
-        close(Error::UNEXPECTED_MESSAGE_TYPE);
+  void Session::read(std::weak_ptr<SessionHost> weak_session_host) {
+    read([self{shared_from_this()},
+          weak_session_host{std::move(weak_session_host)}](
+             outcome::result<Message> r) {
+      auto session_host = weak_session_host.lock();
+      if (not session_host) {
         return;
-    }
-
-    --reading_;
-
-    bool pocessed = false;
-    for (auto it = response_handlers_.begin();
-         it != response_handlers_.end();) {
-      auto cit = it++;
-      auto &[response_handler, timeout_handle] = *cit;
-      if (response_handler->match(msg)) {
-        timeout_handle.reset();
-        response_handler->onResult(shared_from_this(), msg);
-        response_handlers_.erase(cit);
-        pocessed = true;
       }
-    }
-
-    // Propogate to session host
-    if (not pocessed) {
-      if (auto session_host = session_host_.lock()) {
-        session_host->onMessage(shared_from_this(), std::move(msg));
+      if (not r) {
+        return;
       }
-    }
-
-    // Continue to wait some response
-    if (not response_handlers_.empty()) {
-      read();
-    }
-
-    if (canBeClosed()) {
-      close();
-    }
+      session_host->onMessage(self, std::move(r.value()));
+    });
   }
 
-  void Session::onMessageWritten(
-      outcome::result<size_t> res,
-      const std::shared_ptr<ResponseHandler> &response_handler) {
-    if (not res) {
-      close(res.as_failure());
+  void Session::read(std::shared_ptr<ResponseHandler> response_handler) {
+    read([self{shared_from_this()},
+          response_handler](outcome::result<Message> r) {
+      if (r and not response_handler->match(r.value())) {
+        r = Error::UNEXPECTED_MESSAGE_TYPE;
+      }
+      response_handler->onResult(self, std::move(r));
+    });
+  }
+
+  void Session::write(const Message &msg,
+                      std::weak_ptr<SessionHost> weak_session_host) {
+    Bytes pb;
+    if (not msg.serialize(pb)) {
       return;
     }
-
-    --writing_;
-
-    if (not response_handlers_.empty()) {
-      read();
-    }
-
-    if (canBeClosed()) {
-      close();
-    }
+    write(pb,
+          [self{shared_from_this()},
+           weak_session_host{std::move(weak_session_host)}](
+              outcome::result<void> r) {
+            if (not r) {
+              return;
+            }
+            self->read(weak_session_host);
+          });
   }
 
-  void Session::setReadingTimeout() {
+  void Session::write(BytesIn frame,
+                      std::shared_ptr<ResponseHandler> response_handler) {
+    write(
+        frame,
+        [self{shared_from_this()}, response_handler](outcome::result<void> r) {
+          if (not r) {
+            response_handler->onResult(self, r.error());
+            return;
+          }
+          self->read(std::move(response_handler));
+        });
+  }
+
+  void Session::write(BytesIn frame) {
+    write(frame, [self{shared_from_this()}](outcome::result<void> r) {});
+  }
+
+  void Session::setTimer() {
     if (operations_timeout_ == Time::zero()) {
       return;
     }
-
     auto scheduler = scheduler_.lock();
     if (not scheduler) {
-      close(Error::INTERNAL_ERROR);
       return;
     }
-
-    reading_timeout_handle_ = scheduler->scheduleWithHandle(
-        [wp = weak_from_this()] {
-          if (auto self = wp.lock()) {
-            self->close(Error::TIMEOUT);
+    timer_ = scheduler->scheduleWithHandle(
+        [weak_self = weak_from_this()] {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
           }
+          self->stream_->reset();
         },
         operations_timeout_);
   }
-
-  void Session::cancelReadingTimeout() {
-    reading_timeout_handle_.reset();
-  }
-
-  void Session::setResponseTimeout(
-      const std::shared_ptr<ResponseHandler> &response_handler) {
-    if (not response_handler) {
-      return;
-    }
-
-    if (response_handler->responseTimeout() == Time::zero()) {
-      return;
-    }
-
-    auto scheduler = scheduler_.lock();
-    if (not scheduler) {
-      close(Error::INTERNAL_ERROR);
-      return;
-    }
-
-    response_handlers_.emplace(
-        response_handler,
-        scheduler->scheduleWithHandle(
-            [wp = weak_from_this(), response_handler] {
-              if (auto self = wp.lock()) {
-                if (response_handler) {
-                  self->cancelResponseTimeout(response_handler);
-                  response_handler->onResult(self, Error::TIMEOUT);
-                  self->close();
-                }
-              }
-            },
-            response_handler->responseTimeout()));
-  }
-
-  void Session::cancelResponseTimeout(
-      const std::shared_ptr<ResponseHandler> &response_handler) {
-    if (not response_handler) {
-      return;
-    }
-
-    if (auto it = response_handlers_.find(response_handler);
-        it != response_handlers_.end()) {
-      it->second.reset();
-      response_handlers_.erase(it);
-    }
-  }
-
 }  // namespace libp2p::protocol::kademlia

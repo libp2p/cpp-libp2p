@@ -105,10 +105,10 @@ namespace libp2p::protocol::kademlia {
     error_message_.clear();
   }
 
-  bool Message::deserialize(const void *data, size_t sz) {
+  bool Message::deserialize(BytesIn pb) {
     clear();
     pb::Message pb_msg;
-    if (!pb_msg.ParseFromArray(data, static_cast<int>(sz))) {
+    if (!pb_msg.ParseFromArray(pb.data(), static_cast<int>(pb.size()))) {
       error_message_ = "Invalid protobuf data";
       return false;
     }
