@@ -57,6 +57,8 @@ namespace libp2p::protocol::gossip {
     /// Periodic job needed to update meshes and shift "I have" caches
     void onHeartbeat();
 
+    std::vector<PeerId> subscribers(const TopicId &topic);
+
    private:
     /// Returns table item, creates a new one if needed
     boost::optional<TopicSubscriptions &> getItem(const TopicId &topic,

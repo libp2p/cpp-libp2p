@@ -1,0 +1,129 @@
+diff --git a/node_modules/@libp2p/interop/dist/src/connect/index.js b/node_modules/@libp2p/interop/dist/src/connect/index.js
+index c5d7843..10630f5 100644
+--- a/node_modules/@libp2p/interop/dist/src/connect/index.js
++++ b/node_modules/@libp2p/interop/dist/src/connect/index.js
+@@ -1,7 +1,7 @@
+ import { expect } from 'aegir/chai';
+ export function connectTests(factory) {
+-    const nodeTypes = ['js', 'go'];
+-    const transportTypes = ['tcp', 'webtransport', 'webrtc-direct'];
++    const nodeTypes = ['js', 'cpp'];
++    const transportTypes = ['tcp'];
+     for (const typeA of nodeTypes) {
+         for (const typeB of nodeTypes) {
+             transportTypes.forEach(transport => {
+diff --git a/node_modules/@libp2p/interop/dist/src/dht/content-fetching.js b/node_modules/@libp2p/interop/dist/src/dht/content-fetching.js
+index e81eb97..3ac9c0c 100644
+--- a/node_modules/@libp2p/interop/dist/src/dht/content-fetching.js
++++ b/node_modules/@libp2p/interop/dist/src/dht/content-fetching.js
+@@ -11,7 +11,7 @@ const record = {
+     value: uint8ArrayFromString('080012a60230820122300d06092a864886f70d01010105000382010f003082010a0282010100c2588f998971dac9e3eef76a311bf9159505aff69ea3b664c55a36aa28ee08de1127228a4d431bb9c0840240c75f6e98a0843a78d945491a3ea5e1f7cee2bc71383510db5290702383975b7bffae9fb40c84cc1220fb4a7db862fffb0de42f8fd8fb33a17deb20f30e2d0f194791fe69355a392f77df35f101e08a2fc95b2c018768938814fcb52482f899f5e90a1905e8abbcdbb1647ad80a5b0417e1ce8320d64197a6ba3848926375c63adebabdf6eb82109bcadfee13b62bf922bbb6f74c1a26c9bc6122d1436787e0e6de3c152b1959701092abef84599f73eaedb2fcef9f87293e1bbe8e0fef3f1a7fd2e8b94c7e633f88473644a63cb948e4d25c54490203010001', 'hex')
+ };
+ export function contentFetchingTests(factory) {
+-    const nodeTypes = ['js', 'go'];
++    const nodeTypes = ['js', 'cpp'];
+     for (const typeA of nodeTypes) {
+         for (const typeB of nodeTypes) {
+             runContentFetchingTests(factory, { type: typeA, dht: true }, { type: typeB, dht: true });
+diff --git a/node_modules/@libp2p/interop/dist/src/dht/content-routing.js b/node_modules/@libp2p/interop/dist/src/dht/content-routing.js
+index 9a81727..eaa799e 100644
+--- a/node_modules/@libp2p/interop/dist/src/dht/content-routing.js
++++ b/node_modules/@libp2p/interop/dist/src/dht/content-routing.js
+@@ -3,13 +3,9 @@ import { expect } from 'aegir/chai';
+ import all from 'it-all';
+ import { CID } from 'multiformats/cid';
+ export function contentRoutingTests(factory) {
+-    const nodeTypes = ['js', 'go'];
++    const nodeTypes = ['js', 'cpp'];
+     for (const typeA of nodeTypes) {
+         for (const typeB of nodeTypes) {
+-            if (typeA === 'go' && typeB === 'go') {
+-                // skip go<->go as it never seems to populate the routing tables
+-                continue;
+-            }
+             runContentRoutingTests(factory, { type: typeA, dht: true }, { type: typeB, dht: true });
+         }
+     }
+diff --git a/node_modules/@libp2p/interop/dist/src/dht/peer-routing.js b/node_modules/@libp2p/interop/dist/src/dht/peer-routing.js
+index 9006e88..da48e32 100644
+--- a/node_modules/@libp2p/interop/dist/src/dht/peer-routing.js
++++ b/node_modules/@libp2p/interop/dist/src/dht/peer-routing.js
+@@ -2,7 +2,7 @@
+ import { expect } from 'aegir/chai';
+ import pRetry from 'p-retry';
+ export function peerRoutingTests(factory) {
+-    const nodeTypes = ['js', 'go'];
++    const nodeTypes = ['js', 'cpp'];
+     for (const typeA of nodeTypes) {
+         for (const typeB of nodeTypes) {
+             runPeerRoutingTests(factory, { type: typeA, dht: true }, { type: typeB, dht: true });
+diff --git a/node_modules/@libp2p/interop/dist/src/index.d.ts b/node_modules/@libp2p/interop/dist/src/index.d.ts
+index 5e1cdbd..7e62434 100644
+--- a/node_modules/@libp2p/interop/dist/src/index.d.ts
++++ b/node_modules/@libp2p/interop/dist/src/index.d.ts
+@@ -51,7 +51,7 @@ export interface Daemon {
+     stop(): Promise<void>;
+     client: DaemonClient;
+ }
+-export type NodeType = 'js' | 'go';
++export type NodeType = 'js' | 'cpp';
+ export type PeerIdType = 'rsa' | 'ed25519' | 'secp256k1';
+ export type PubSubRouter = 'gossipsub' | 'floodsub';
+ export type Muxer = 'mplex' | 'yamux';
+diff --git a/node_modules/@libp2p/interop/dist/src/pubsub/floodsub.js b/node_modules/@libp2p/interop/dist/src/pubsub/floodsub.js
+index cc2299f..72e6704 100644
+--- a/node_modules/@libp2p/interop/dist/src/pubsub/floodsub.js
++++ b/node_modules/@libp2p/interop/dist/src/pubsub/floodsub.js
+@@ -4,7 +4,7 @@ import first from 'it-first';
+ import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string';
+ import { waitForSubscribed } from './utils.js';
+ export function floodsubTests(factory) {
+-    const nodeTypes = ['js', 'go'];
++    const nodeTypes = ['js', 'cpp'];
+     for (const typeA of nodeTypes) {
+         for (const typeB of nodeTypes) {
+             runFloodsubTests(factory, { type: typeA, pubsub: true, pubsubRouter: 'floodsub' }, { type: typeB, pubsub: true, pubsubRouter: 'floodsub' });
+diff --git a/node_modules/@libp2p/interop/dist/src/pubsub/index.js b/node_modules/@libp2p/interop/dist/src/pubsub/index.js
+index 3a1e7dd..29a3e86 100644
+--- a/node_modules/@libp2p/interop/dist/src/pubsub/index.js
++++ b/node_modules/@libp2p/interop/dist/src/pubsub/index.js
+@@ -3,7 +3,5 @@ import { gossipsubTests } from './gossipsub.js';
+ import { hybridTests } from './hybrid.js';
+ export async function pubsubTests(factory) {
+     floodsubTests(factory);
+-    gossipsubTests(factory);
+-    hybridTests(factory);
+ }
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/node_modules/@libp2p/interop/dist/src/utils/test-matrix.js b/node_modules/@libp2p/interop/dist/src/utils/test-matrix.js
+index 066320e..d323e95 100644
+--- a/node_modules/@libp2p/interop/dist/src/utils/test-matrix.js
++++ b/node_modules/@libp2p/interop/dist/src/utils/test-matrix.js
+@@ -1,9 +1,9 @@
+ import { keys } from '../resources/keys/index.js';
+ export function runTests(name, fn, factory) {
+-    const keyTypes = ['ed25519', 'rsa', 'secp256k1'];
+-    const impls = ['js', 'go'];
+-    const encrypters = ['noise', 'tls', 'plaintext'];
+-    const muxers = ['mplex', 'yamux'];
++    const keyTypes = ['ed25519'];
++    const impls = ['js', 'cpp'];
++    const encrypters = ['noise', 'plaintext'];
++    const muxers = ['yamux'];
+     for (const keyType of keyTypes) {
+         for (const implA of impls) {
+             for (const implB of impls) {
+diff --git a/node_modules/@libp2p/interop/src/index.ts b/node_modules/@libp2p/interop/src/index.ts
+index 3654258..9ae0fd5 100644
+--- a/node_modules/@libp2p/interop/src/index.ts
++++ b/node_modules/@libp2p/interop/src/index.ts
+@@ -54,7 +54,7 @@ export interface Daemon {
+   client: DaemonClient
+ }
+ 
+-export type NodeType = 'js' | 'go'
++export type NodeType = 'js' | 'cpp'
+ export type PeerIdType = 'rsa' | 'ed25519' | 'secp256k1'
+ export type PubSubRouter = 'gossipsub' | 'floodsub'
+ export type Muxer = 'mplex' | 'yamux'

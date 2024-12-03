@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "aegir build",
+    "test": "aegir test -t node -f dist/test/node.js"
+  },
+  "dependencies": {
+    "@libp2p/interop": "^13.0.0"
+  },
+  "devDependencies": {
+    "patch-package": "^8.0.0"
+  }
+}

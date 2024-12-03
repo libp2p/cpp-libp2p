@@ -7,12 +7,17 @@
 #include <gtest/gtest.h>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/peer/address_repository.hpp>
+#include <libp2p/peer/address_repository/host_addrs.hpp>
 #include <libp2p/peer/address_repository/inmem_address_repository.hpp>
 #include <libp2p/peer/errors.hpp>
 #include <qtils/test/outcome.hpp>
 #include <thread>
 #include "mock/libp2p/network/dnsaddr_resolver_mock.hpp"
+#include "mock/libp2p/peer/identity_manager_mock.hpp"
 
+using libp2p::HostAddrs;
+using libp2p::peer::IdentityManagerMock;
+using testing::ReturnRef;
 using namespace libp2p::peer;
 using namespace libp2p::multi;
 using namespace libp2p::common;
@@ -21,9 +26,12 @@ using std::literals::chrono_literals::operator""ms;
 
 struct InmemAddressRepository_Test : public ::testing::Test {
   void SetUp() override {
+    IdentityManagerMock id_mgr;
+    EXPECT_CALL(id_mgr, getId()).WillOnce(ReturnRef(p0));
     auto dnsaddr_resolver_mock =
         std::make_shared<libp2p::network::DnsaddrResolverMock>();
-    db = std::make_unique<InmemAddressRepository>(dnsaddr_resolver_mock);
+    db = std::make_unique<InmemAddressRepository>(
+        std::make_shared<HostAddrs>(id_mgr, nullptr), dnsaddr_resolver_mock);
     db->onAddressAdded([](const PeerId &p, const Multiaddress &ma) {
       std::cout << "added  : <" << p.toMultihash().toHex() << "> "
                 << ma.getStringAddress() << '\n';
@@ -43,6 +51,7 @@ struct InmemAddressRepository_Test : public ::testing::Test {
 
   std::unique_ptr<AddressRepository> db;
 
+  const PeerId p0 = PeerId::fromHash("12050000000000"_multihash).value();
   const PeerId p1 = PeerId::fromHash("12051203020304"_multihash).value();
   const PeerId p2 = PeerId::fromHash("12051203FFFFFF"_multihash).value();
 

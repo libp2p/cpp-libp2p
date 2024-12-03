@@ -15,6 +15,10 @@
 
 #include <libp2p/network/dnsaddr_resolver.hpp>
 
+namespace libp2p {
+  class HostAddrs;
+}  // namespace libp2p
+
 namespace libp2p::peer {
 
   /**
@@ -33,6 +37,7 @@ namespace libp2p::peer {
     static constexpr auto kDefaultTtl = std::chrono::milliseconds(1000);
 
     explicit InmemAddressRepository(
+        std::shared_ptr<HostAddrs> host_addrs,
         std::shared_ptr<network::DnsaddrResolver> dnsaddr_resolver);
 
     void bootstrap(const multi::Multiaddress &ma,
@@ -68,6 +73,7 @@ namespace libp2p::peer {
 
     peer_db::iterator findOrInsert(const PeerId &p);
 
+    std::shared_ptr<HostAddrs> host_addrs_;
     std::shared_ptr<network::DnsaddrResolver> dnsaddr_resolver_;
     peer_db db_;
     std::set<multi::Multiaddress> resolved_dns_addrs_;

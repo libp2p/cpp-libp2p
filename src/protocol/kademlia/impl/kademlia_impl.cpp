@@ -521,8 +521,6 @@ namespace libp2p::protocol::kademlia {
 
   void KademliaImpl::onPing(const std::shared_ptr<Session> &session,
                             Message &&msg) {
-    msg.clear();
-
     session->write(msg, weak_from_this());
   }
 

@@ -1,0 +1,18 @@
+diff --git a/node_modules/@libp2p/kad-dht/dist/src/rpc/index.js b/node_modules/@libp2p/kad-dht/dist/src/rpc/index.js
+index 2028185..6eb40f5 100644
+--- a/node_modules/@libp2p/kad-dht/dist/src/rpc/index.js
++++ b/node_modules/@libp2p/kad-dht/dist/src/rpc/index.js
+@@ -58,12 +58,7 @@ export class RPC {
+         Promise.resolve().then(async () => {
+             const { stream, connection } = data;
+             const peerId = connection.remotePeer;
+-            try {
+-                await this.routingTable.add(peerId);
+-            }
+-            catch (err) {
+-                this.log.error(err);
+-            }
++            this.routingTable.add(peerId).catch(err => this.log.error(err));
+             const self = this; // eslint-disable-line @typescript-eslint/no-this-alias
+             await pipe(stream, (source) => lp.decode(source), async function* (source) {
+                 for await (const msg of source) {

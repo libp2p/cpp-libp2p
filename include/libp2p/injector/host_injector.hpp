@@ -10,6 +10,7 @@
 
 // implementations
 #include <libp2p/host/basic_host.hpp>
+#include <libp2p/peer/address_repository/host_addrs.hpp>
 #include <libp2p/peer/address_repository/inmem_address_repository.hpp>
 #include <libp2p/peer/impl/peer_repository_impl.hpp>
 #include <libp2p/peer/key_repository/inmem_key_repository.hpp>

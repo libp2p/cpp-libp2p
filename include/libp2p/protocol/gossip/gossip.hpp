@@ -39,6 +39,8 @@ namespace libp2p::protocol::gossip {
 
   /// Gossip pub-sub protocol config
   struct Config {
+    Config() = default;
+
     /// Network density factors for gossip meshes
     size_t D_min = 5;
     size_t D_max = 10;
@@ -148,6 +150,8 @@ namespace libp2p::protocol::gossip {
 
     /// Publishes to topics. Returns false if validation fails or not started
     virtual bool publish(TopicId topic, Bytes data) = 0;
+
+    virtual std::vector<PeerId> subscribers(const TopicId &topic) = 0;
   };
 
   // Creates Gossip object

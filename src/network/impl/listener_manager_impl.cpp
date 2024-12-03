@@ -145,6 +145,10 @@ namespace libp2p::network {
     auto listener = tr->createListener(
         [this](auto &&r) { this->onConnection(std::forward<decltype(r)>(r)); });
 
+    if (started) {
+      OUTCOME_TRY(listener->listen(ma));
+    }
+
     listeners_.insert({ma, std::move(listener)});
 
     return outcome::success();

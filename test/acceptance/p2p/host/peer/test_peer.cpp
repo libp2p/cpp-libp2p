@@ -17,6 +17,7 @@
 #include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
 #include <libp2p/network/impl/dnsaddr_resolver_impl.hpp>
+#include <libp2p/peer/address_repository/host_addrs.hpp>
 #include <libp2p/security/plaintext/exchange_message_marshaller_impl.hpp>
 #include <libp2p/security/secio/exchange_message_marshaller_impl.hpp>
 #include <libp2p/security/secio/propose_message_marshaller_impl.hpp>
@@ -186,14 +187,14 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto dialer = std::make_unique<network::DialerImpl>(
       multiselect, tmgr, cmgr, listener, scheduler_);
 
-  auto network = std::make_unique<network::NetworkImpl>(
-      std::move(listener), std::move(dialer), cmgr);
+  auto network =
+      std::make_unique<network::NetworkImpl>(listener, std::move(dialer), cmgr);
 
   auto dnsaddr_resolver =
       std::make_shared<network::DnsaddrResolverImpl>(context_, cares_);
 
-  auto addr_repo =
-      std::make_shared<peer::InmemAddressRepository>(dnsaddr_resolver);
+  auto addr_repo = std::make_shared<peer::InmemAddressRepository>(
+      std::make_shared<HostAddrs>(*idmgr, listener), dnsaddr_resolver);
 
   auto key_repo = std::make_shared<peer::InmemKeyRepository>();
 

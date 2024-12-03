@@ -44,46 +44,11 @@ namespace libp2p::host {
   }
 
   peer::PeerInfo BasicHost::getPeerInfo() const {
-    auto addresses = getAddresses();
-    auto observed = getObservedAddresses();
-    auto interfaces = getAddressesInterfaces();
-
-    std::set<multi::Multiaddress> unique_addresses;
-    unique_addresses.insert(std::make_move_iterator(addresses.begin()),
-                            std::make_move_iterator(addresses.end()));
-    unique_addresses.insert(std::make_move_iterator(interfaces.begin()),
-                            std::make_move_iterator(interfaces.end()));
-    unique_addresses.insert(std::make_move_iterator(observed.begin()),
-                            std::make_move_iterator(observed.end()));
-
-    // TODO(xDimon): Needs to filter special interfaces (e.g. INADDR_ANY, etc.)
-    for (auto i = unique_addresses.begin(); i != unique_addresses.end();) {
-      bool is_good_addr = true;
-      for (auto &pv : i->getProtocolsWithValues()) {
-        if (pv.first.code == multi::Protocol::Code::IP4) {
-          if (pv.second == "0.0.0.0") {
-            is_good_addr = false;
-            break;
-          }
-        } else if (pv.first.code == multi::Protocol::Code::IP6) {
-          if (pv.second == "::") {
-            is_good_addr = false;
-            break;
-          }
-        }
-      }
-      if (not is_good_addr) {
-        i = unique_addresses.erase(i);
-      } else {
-        ++i;
-      }
-    }
-
-    std::vector<multi::Multiaddress> unique_addr_list(
-        std::make_move_iterator(unique_addresses.begin()),
-        std::make_move_iterator(unique_addresses.end()));
-
-    return {getId(), std::move(unique_addr_list)};
+    auto &peer_id = idmgr_->getId();
+    return {
+        peer_id,
+        repo_->getAddressRepository().getAddresses(peer_id).value(),
+    };
   }
 
   std::vector<multi::Multiaddress> BasicHost::getAddresses() const {

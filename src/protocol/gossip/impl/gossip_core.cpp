@@ -189,6 +189,10 @@ namespace libp2p::protocol::gossip {
     return true;
   }
 
+  std::vector<PeerId> GossipCore::subscribers(const TopicId &topic) {
+    return remote_subscriptions_->subscribers(topic);
+  }
+
   outcome::result<void> GossipCore::signMessage(TopicMessage &msg) const {
     const auto &keypair = idmgr_->getKeyPair();
     OUTCOME_TRY(signable, MessageBuilder::signableMessage(msg));

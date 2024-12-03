@@ -6,13 +6,16 @@
 
 #include <libp2p/peer/address_repository/inmem_address_repository.hpp>
 
+#include <libp2p/peer/address_repository/host_addrs.hpp>
 #include <libp2p/peer/errors.hpp>
 
 namespace libp2p::peer {
 
   InmemAddressRepository::InmemAddressRepository(
+      std::shared_ptr<HostAddrs> host_addrs,
       std::shared_ptr<network::DnsaddrResolver> dnsaddr_resolver)
-      : dnsaddr_resolver_{std::move(dnsaddr_resolver)} {
+      : host_addrs_{std::move(host_addrs)},
+        dnsaddr_resolver_{std::move(dnsaddr_resolver)} {
     BOOST_ASSERT(dnsaddr_resolver_);
   }
 
@@ -132,6 +135,15 @@ namespace libp2p::peer {
 
   outcome::result<std::vector<multi::Multiaddress>>
   InmemAddressRepository::getAddresses(const PeerId &p) const {
+    if (p == host_addrs_->peerId()) {
+      auto result = host_addrs_->get();
+      if (auto it = db_.find(p); it != db_.end()) {
+        for (auto &p : *it->second) {
+          result.add(p.first);
+        }
+      }
+      return std::move(result).asVec();
+    }
     auto peer_it = db_.find(p);
     if (peer_it == db_.end()) {
       return PeerError::NOT_FOUND;

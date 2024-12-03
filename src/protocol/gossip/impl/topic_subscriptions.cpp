@@ -224,6 +224,13 @@ namespace libp2p::protocol::gossip {
     }
   }
 
+  std::vector<PeerId> TopicSubscriptions::subscribers() {
+    std::vector<PeerId> peers;
+    subscribed_peers_.selectAll(
+        [&](const PeerContextPtr &p) { peers.emplace_back(p->peer_id); });
+    return peers;
+  }
+
   void TopicSubscriptions::addToMesh(const PeerContextPtr &p) {
     assert(p->message_builder);
 

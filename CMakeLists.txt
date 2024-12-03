@@ -110,6 +110,8 @@ include_directories(
 
 add_subdirectory(src)
 
+add_subdirectory(interop/cpp)
+
 if(EXAMPLES)
   add_subdirectory(example)
 endif()
