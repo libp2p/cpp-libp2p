@@ -35,7 +35,9 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, Multihash::Error, e) {
 namespace libp2p::multi {
 
   Multihash::Multihash(HashType type, BytesIn hash)
-      : data_(std::make_shared<const Data>(type, hash)) {}
+      : data_(std::make_shared<const Data>(type, hash)) {
+    BOOST_ASSERT(data_);
+  }
 
   namespace {
     template <typename Buffer>
@@ -81,6 +83,7 @@ namespace libp2p::multi {
     if (hash.size() > kMaxHashLength) {
       return Error::INPUT_TOO_LONG;
     }
+    BOOST_ASSERT(!hash.empty());
 
     return Multihash{type, hash};
   }
