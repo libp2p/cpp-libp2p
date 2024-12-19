@@ -31,8 +31,8 @@ namespace libp2p::network {
                p.id.toBase58().substr(46));
       // populate known addresses for in-progress dial if any new appear
       for (const auto &addr : p.addresses) {
-        if (0 == ctx->second.tried_addresses.count(addr)) {
-          ctx->second.addresses.insert(addr);
+        if (ctx->second.addr_seen.emplace(addr).second) {
+          ctx->second.addr_queue.emplace_back(addr);
         }
       }
       ctx->second.callbacks.emplace_back(std::move(cb));
@@ -48,7 +48,10 @@ namespace libp2p::network {
       return;
     }
 
-    DialCtx new_ctx{.addresses = {p.addresses.begin(), p.addresses.end()}};
+    DialCtx new_ctx{
+        .addr_queue = {p.addresses.begin(), p.addresses.end()},
+        .addr_seen = {p.addresses.begin(), p.addresses.end()},
+    };
     new_ctx.callbacks.emplace_back(std::move(cb));
     bool scheduled = dialing_peers_.emplace(p.id, std::move(new_ctx)).second;
     BOOST_ASSERT(scheduled);
@@ -64,22 +67,24 @@ namespace libp2p::network {
     }
     auto &&ctx = ctx_found->second;
 
-    if (ctx.addresses.empty() and not ctx.dialled) {
-      completeDial(peer_id, std::errc::address_family_not_supported);
-      return;
-    }
-    if (ctx.addresses.empty() and ctx.result.has_value()) {
-      completeDial(peer_id, ctx.result.value());
-      return;
-    }
-    if (ctx.addresses.empty()) {
+    if (ctx.addr_queue.empty()) {
+      if (not ctx.dialled) {
+        completeDial(peer_id, std::errc::address_family_not_supported);
+        return;
+      }
+      if (ctx.result.has_value()) {
+        completeDial(peer_id, ctx.result.value());
+        return;
+      }
       // this would never happen. Previous if-statement should work instead'
       completeDial(peer_id, std::errc::host_unreachable);
       return;
     }
 
+    auto addr = ctx.addr_queue.front();
+    ctx.addr_queue.pop_front();
     auto dial_handler =
-        [wp{weak_from_this()}, peer_id](
+        [wp{weak_from_this()}, peer_id, addr](
             outcome::result<std::shared_ptr<connection::CapableConnection>>
                 result) {
           if (auto self = wp.lock()) {
@@ -102,6 +107,7 @@ namespace libp2p::network {
               return;
             }
 
+            self->addr_repo_->dialFailed(peer_id, addr);
             // store an error otherwise and reschedule one more rotate
             ctx_found->second.result = std::move(result);
             self->scheduler_->schedule([wp, peer_id] {
@@ -118,11 +124,6 @@ namespace libp2p::network {
             BOOST_ASSERT(close_res);
           }
         };
-
-    auto first_addr = ctx.addresses.begin();
-    const auto addr = *first_addr;
-    ctx.tried_addresses.insert(addr);
-    ctx.addresses.erase(first_addr);
     if (auto tr = tmgr_->findBest(addr); nullptr != tr) {
       ctx.dialled = true;
       SL_TRACE(log_,
@@ -206,13 +207,15 @@ namespace libp2p::network {
       std::shared_ptr<TransportManager> tmgr,
       std::shared_ptr<ConnectionManager> cmgr,
       std::shared_ptr<ListenerManager> listener,
+      std::shared_ptr<peer::AddressRepository> addr_repo,
       std::shared_ptr<basic::Scheduler> scheduler)
       : multiselect_(std::move(multiselect)),
-        tmgr_(std::move(tmgr)),
-        cmgr_(std::move(cmgr)),
-        listener_(std::move(listener)),
-        scheduler_(std::move(scheduler)),
-        log_(log::createLogger("DialerImpl")) {
+        tmgr_{std::move(tmgr)},
+        cmgr_{std::move(cmgr)},
+        listener_{std::move(listener)},
+        addr_repo_{std::move(addr_repo)},
+        scheduler_{std::move(scheduler)},
+        log_{log::createLogger("DialerImpl")} {
     BOOST_ASSERT(multiselect_ != nullptr);
     BOOST_ASSERT(tmgr_ != nullptr);
     BOOST_ASSERT(cmgr_ != nullptr);

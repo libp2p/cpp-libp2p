@@ -34,6 +34,11 @@ namespace libp2p::peer {
     MOCK_METHOD2(updateAddresses,
                  outcome::result<void>(const PeerId &, Milliseconds));
 
+    MOCK_METHOD(void,
+                dialFailed,
+                (const PeerId &, const Multiaddress &),
+                (override));
+
     MOCK_CONST_METHOD1(
         getAddresses,
         outcome::result<std::vector<multi::Multiaddress>>(const PeerId &));
