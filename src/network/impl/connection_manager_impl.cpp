@@ -23,9 +23,14 @@ namespace libp2p::network {
     if (it == connections_.end()) {
       return {};
     }
-
-    return std::vector<ConnectionManager::ConnectionSPtr>(it->second.begin(),
-                                                          it->second.end());
+    std::vector<ConnectionSPtr> out;
+    out.reserve(it->second.size());
+    for (const auto &conn : it->second) {
+      if (not conn->isClosed()) {
+        out.emplace_back(conn);
+      }
+    }
+    return out;
   }
 
   ConnectionManager::ConnectionSPtr
@@ -66,7 +71,11 @@ namespace libp2p::network {
     out.reserve(connections_.size());
 
     for (auto &&entry : connections_) {
-      out.insert(out.end(), entry.second.begin(), entry.second.end());
+      for (const auto &conn : entry.second) {
+        if (not conn->isClosed()) {
+          out.emplace_back(conn);
+        }
+      }
     }
 
     return out;
