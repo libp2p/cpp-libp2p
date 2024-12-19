@@ -96,16 +96,12 @@ TEST_F(DialerTest, DialAllTheAddresses) {
   EXPECT_CALL(*tmgr, findBest(ma2)).WillOnce(Return(transport));
 
   // transport->dial returns an error for the first address
-  EXPECT_CALL(
-      *transport,
-      dial(pinfo_two_addrs.id, ma1, _, std::chrono::milliseconds::zero()))
+  EXPECT_CALL(*transport, dial(pinfo_two_addrs.id, ma1, _))
       .WillOnce(
           Arg2CallbackWithArg(make_error_code(std::errc::connection_refused)));
 
   // transport->dial returns valid connection for the second address
-  EXPECT_CALL(
-      *transport,
-      dial(pinfo_two_addrs.id, ma2, _, std::chrono::milliseconds::zero()))
+  EXPECT_CALL(*transport, dial(pinfo_two_addrs.id, ma2, _))
       .WillOnce(Arg2CallbackWithArg(outcome::success(connection)));
 
   bool executed = false;
@@ -137,8 +133,7 @@ TEST_F(DialerTest, DialNewConnection) {
   EXPECT_CALL(*tmgr, findBest(ma1)).WillOnce(Return(transport));
 
   // transport->dial returns valid connection
-  EXPECT_CALL(*transport,
-              dial(pinfo.id, ma1, _, std::chrono::milliseconds::zero()))
+  EXPECT_CALL(*transport, dial(pinfo.id, ma1, _))
       .WillOnce(Arg2CallbackWithArg(outcome::success(connection)));
 
   bool executed = false;

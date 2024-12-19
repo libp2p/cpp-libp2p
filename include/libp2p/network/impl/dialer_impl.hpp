@@ -30,18 +30,9 @@ namespace libp2p::network {
                std::shared_ptr<basic::Scheduler> scheduler);
 
     // Establishes a connection to a given peer
-    void dial(const peer::PeerInfo &p,
-              DialResultFunc cb,
-              std::chrono::milliseconds timeout) override;
+    void dial(const PeerInfo &p, DialResultFunc cb) override;
 
-    // NewStream returns a new stream to given peer p.
-    // If there is no connection to p, attempts to create one.
-    void newStream(const peer::PeerInfo &p,
-                   StreamProtocols protocols,
-                   StreamAndProtocolOrErrorCb cb,
-                   std::chrono::milliseconds timeout = {}) override;
-
-    void newStream(const peer::PeerId &peer_id,
+    void newStream(const PeerInfo &peer_id,
                    StreamProtocols protocols,
                    StreamAndProtocolOrErrorCb cb) override;
 
@@ -51,9 +42,6 @@ namespace libp2p::network {
     struct DialCtx {
       /// Known and scheduled addresses to try to dial via
       std::set<multi::Multiaddress> addresses;
-
-      /// Timeout for a single connection attempt
-      std::chrono::milliseconds timeout;
 
       /// Addresses we already tried, but no connection was established
       std::set<multi::Multiaddress> tried_addresses;

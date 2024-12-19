@@ -48,8 +48,7 @@ namespace libp2p::host {
     Connectedness connectedness(const peer::PeerInfo &p) const override;
 
     void connect(const peer::PeerInfo &peer_info,
-                 const ConnectionResultHandler &handler,
-                 std::chrono::milliseconds timeout) override;
+                 const ConnectionResultHandler &handler) override;
 
     void disconnect(const peer::PeerId &peer_id) override;
 
@@ -57,12 +56,7 @@ namespace libp2p::host {
                             StreamAndProtocolCb cb,
                             ProtocolPredicate predicate) override;
 
-    void newStream(const peer::PeerInfo &peer_info,
-                   StreamProtocols protocols,
-                   StreamAndProtocolOrErrorCb cb,
-                   std::chrono::milliseconds timeout = {}) override;
-
-    void newStream(const peer::PeerId &peer_id,
+    void newStream(const PeerInfo &peer_id,
                    StreamProtocols protocols,
                    StreamAndProtocolOrErrorCb cb) override;
 

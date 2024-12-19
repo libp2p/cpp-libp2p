@@ -141,17 +141,9 @@ namespace libp2p::host {
 
   void BasicHost::newStream(const peer::PeerInfo &peer_info,
                             StreamProtocols protocols,
-                            StreamAndProtocolOrErrorCb cb,
-                            std::chrono::milliseconds timeout) {
-    network_->getDialer().newStream(
-        peer_info, std::move(protocols), std::move(cb), timeout);
-  }
-
-  void BasicHost::newStream(const peer::PeerId &peer_id,
-                            StreamProtocols protocols,
                             StreamAndProtocolOrErrorCb cb) {
     network_->getDialer().newStream(
-        peer_id, std::move(protocols), std::move(cb));
+        peer_info, std::move(protocols), std::move(cb));
   }
 
   outcome::result<void> BasicHost::listen(const multi::Multiaddress &ma) {
@@ -217,9 +209,8 @@ namespace libp2p::host {
   }
 
   void BasicHost::connect(const peer::PeerInfo &peer_info,
-                          const ConnectionResultHandler &handler,
-                          std::chrono::milliseconds timeout) {
-    network_->getDialer().dial(peer_info, handler, timeout);
+                          const ConnectionResultHandler &handler) {
+    network_->getDialer().dial(peer_info, handler);
   }
 
   void BasicHost::disconnect(const peer::PeerId &peer_id) {

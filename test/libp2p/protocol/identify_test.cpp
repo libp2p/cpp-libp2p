@@ -82,7 +82,8 @@ class IdentifyTest : public testing::Test {
         host_, conn_manager_, id_manager_, key_marshaller_);
     IdentifyConfig config;
     config.protocols = {kIdentifyProto};
-    identify_ = std::make_shared<Identify>(config, host_, id_msg_processor_, bus_);
+    identify_ =
+        std::make_shared<Identify>(config, host_, id_msg_processor_, bus_);
   }
 
   HostMock host_;
@@ -211,7 +212,7 @@ TEST_F(IdentifyTest, Receive) {
       .WillOnce(Return(remote_multiaddr_));
 
   EXPECT_CALL(host_,
-              newStream(kRemotePeerInfo, StreamProtocols{kIdentifyProto}, _, _))
+              newStream(kRemotePeerInfo, StreamProtocols{kIdentifyProto}, _))
       .WillOnce(InvokeArgument<2>(StreamAndProtocol{stream_, kIdentifyProto}));
 
   EXPECT_CALL(*stream_, read(_, 1, _))

@@ -95,16 +95,13 @@ namespace libp2p::protocol::kademlia {
           config_.connectionTimeout);
 
       host_->newStream(
-          peer_info,
-          config_.protocols,
-          [holder](auto &&stream_res) {
+          peer_info, config_.protocols, [holder](auto &&stream_res) {
             if (holder->first) {
               holder->second.reset();
               holder->first->onConnected(stream_res);
               holder->first.reset();
             }
-          },
-          config_.connectionTimeout);
+          });
     }
 
     if (requests_in_progress_ == 0) {

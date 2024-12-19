@@ -13,9 +13,7 @@
 
 namespace libp2p::network {
 
-  void DialerImpl::dial(const peer::PeerInfo &p,
-                        DialResultFunc cb,
-                        std::chrono::milliseconds timeout) {
+  void DialerImpl::dial(const peer::PeerInfo &p, DialResultFunc cb) {
     SL_TRACE(log_, "Dialing to {}", p.id.toBase58().substr(46));
     if (auto c = cmgr_->getBestConnectionForPeer(p.id); c != nullptr) {
       // we have connection to this peer
@@ -50,8 +48,7 @@ namespace libp2p::network {
       return;
     }
 
-    DialCtx new_ctx{.addresses = {p.addresses.begin(), p.addresses.end()},
-                    .timeout = timeout};
+    DialCtx new_ctx{.addresses = {p.addresses.begin(), p.addresses.end()}};
     new_ctx.callbacks.emplace_back(std::move(cb));
     bool scheduled = dialing_peers_.emplace(p.id, std::move(new_ctx)).second;
     BOOST_ASSERT(scheduled);
@@ -132,7 +129,7 @@ namespace libp2p::network {
                "Dial to {} via {}",
                peer_id.toBase58().substr(46),
                addr.getStringAddress());
-      tr->dial(peer_id, addr, dial_handler, ctx.timeout);
+      tr->dial(peer_id, addr, dial_handler);
     } else {
       scheduler_->schedule([wp{weak_from_this()}, peer_id] {
         if (auto self = wp.lock()) {
@@ -157,42 +154,24 @@ namespace libp2p::network {
 
   void DialerImpl::newStream(const peer::PeerInfo &p,
                              StreamProtocols protocols,
-                             StreamAndProtocolOrErrorCb cb,
-                             std::chrono::milliseconds timeout) {
+                             StreamAndProtocolOrErrorCb cb) {
     SL_TRACE(log_,
              "New stream to {} for {} (peer info)",
              p.id.toBase58().substr(46),
              fmt::join(protocols, " "));
-    dial(
-        p,
-        [self{shared_from_this()},
-         protocols{std::move(protocols)},
-         cb{std::move(cb)}](
-            outcome::result<std::shared_ptr<connection::CapableConnection>>
-                rconn) mutable {
-          if (!rconn) {
-            return cb(rconn.error());
-          }
-          auto &&conn = rconn.value();
-          self->newStream(std::move(conn), std::move(protocols), std::move(cb));
-        },
-        timeout);
-  }
-
-  void DialerImpl::newStream(const peer::PeerId &peer_id,
-                             StreamProtocols protocols,
-                             StreamAndProtocolOrErrorCb cb) {
-    SL_TRACE(log_,
-             "New stream to {} for {} (peer id)",
-             peer_id.toBase58().substr(46),
-             fmt::join(protocols, " "));
-    auto conn = cmgr_->getBestConnectionForPeer(peer_id);
-    if (!conn) {
-      scheduler_->schedule(
-          [cb{std::move(cb)}] { cb(std::errc::not_connected); });
-      return;
-    }
-    newStream(std::move(conn), std::move(protocols), std::move(cb));
+    dial(p,
+         [self{shared_from_this()},
+          protocols{std::move(protocols)},
+          cb{std::move(cb)}](
+             outcome::result<std::shared_ptr<connection::CapableConnection>>
+                 rconn) mutable {
+           if (!rconn) {
+             return cb(rconn.error());
+           }
+           auto &&conn = rconn.value();
+           self->newStream(
+               std::move(conn), std::move(protocols), std::move(cb));
+         });
   }
 
   void DialerImpl::newStream(

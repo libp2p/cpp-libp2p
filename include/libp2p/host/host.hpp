@@ -125,21 +125,9 @@ namespace libp2p {
      * @brief Initiates connection to the peer {@param peer_info}.
      * @param peer_info peer to connect.
      * @param handler callback, will be executed on success or fail
-     * @param timeout in milliseconds
      */
     virtual void connect(const peer::PeerInfo &peer_info,
-                         const ConnectionResultHandler &handler,
-                         std::chrono::milliseconds timeout) = 0;
-
-    /**
-     * @brief Initiates connection to the peer {@param peer_info}.
-     * @param peer_info peer to connect.
-     * @param handler callback, will be executed on success or fail
-     */
-    inline void connect(const peer::PeerInfo &peer_info,
-                        const ConnectionResultHandler &handler) {
-      connect(peer_info, handler, std::chrono::milliseconds::zero());
-    };
+                         const ConnectionResultHandler &handler) = 0;
 
     /**
      * @brief Initiates connection to the peer {@param peer_info}. If connection
@@ -147,9 +135,8 @@ namespace libp2p {
      * @param peer_info peer to connect.
      */
     inline void connect(const peer::PeerInfo &peer_info) {
-      connect(
-          peer_info, [](auto &&) {}, std::chrono::milliseconds::zero());
-    };
+      connect(peer_info, [](ConnectionResult &&) {});
+    }
 
     /**
      * Closes all connections (outbound and inbound) to given {@param peer_id}
@@ -166,8 +153,7 @@ namespace libp2p {
      */
     virtual void newStream(const peer::PeerInfo &peer_info,
                            StreamProtocols protocols,
-                           StreamAndProtocolOrErrorCb cb,
-                           std::chrono::milliseconds timeout = {}) = 0;
+                           StreamAndProtocolOrErrorCb cb) = 0;
 
     /**
      * @brief Open new stream to the peer {@param peer} with protocol
@@ -176,9 +162,11 @@ namespace libp2p {
      * @param protocols "speak" using first supported protocol
      * @param cb callback, will be executed on success or fail
      */
-    virtual void newStream(const peer::PeerId &peer_id,
-                           StreamProtocols protocols,
-                           StreamAndProtocolOrErrorCb cb) = 0;
+    void newStream(const PeerId &peer_id,
+                   StreamProtocols protocols,
+                   StreamAndProtocolOrErrorCb cb) {
+      newStream(PeerInfo{.id = peer_id}, std::move(protocols), std::move(cb));
+    }
 
     /**
      * @brief Create listener on given multiaddress.

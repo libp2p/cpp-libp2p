@@ -14,16 +14,6 @@ namespace libp2p::transport {
   void TcpTransport::dial(const peer::PeerId &remoteId,
                           multi::Multiaddress address,
                           TransportAdaptor::HandlerFunc handler) {
-    dial(remoteId,
-         std::move(address),
-         std::move(handler),
-         std::chrono::milliseconds::zero());
-  }
-
-  void TcpTransport::dial(const peer::PeerId &remoteId,
-                          multi::Multiaddress address,
-                          TransportAdaptor::HandlerFunc handler,
-                          std::chrono::milliseconds timeout) {
     auto r = detail::asTcp(address);
     if (not r) {
       return handler(r.error());
@@ -57,7 +47,7 @@ namespace libp2p::transport {
 
                 session->upgradeOutbound(address, remoteId);
               },
-              timeout);
+              mux_config_.dial_timeout);
         };
     resolve(resolver_, info, std::move(connect));
   }
@@ -73,8 +63,10 @@ namespace libp2p::transport {
   }
 
   TcpTransport::TcpTransport(std::shared_ptr<boost::asio::io_context> context,
+                             const muxer::MuxedConnectionConfig &mux_config,
                              std::shared_ptr<Upgrader> upgrader)
       : context_{std::move(context)},
+        mux_config_{mux_config},
         upgrader_{std::move(upgrader)},
         resolver_{*context_} {}
 
