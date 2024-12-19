@@ -31,6 +31,7 @@
 #include <libp2p/network/impl/network_impl.hpp>
 #include <libp2p/network/impl/router_impl.hpp>
 #include <libp2p/network/impl/transport_manager_impl.hpp>
+#include <libp2p/peer/address_repository/inmem_address_repository.hpp>
 #include <libp2p/peer/impl/identity_manager_impl.hpp>
 #include <libp2p/protocol_muxer/multiselect.hpp>
 #include <libp2p/security/noise.hpp>
@@ -346,6 +347,8 @@ namespace libp2p::injector {
         di::bind<security::SecurityAdaptor *[]>().to<security::Plaintext, security::Secio, security::Noise, security::TlsAdaptor>(),  // NOLINT
         di::bind<muxer::MuxerAdaptor *[]>().to<muxer::Yamux, muxer::Mplex>(),  // NOLINT
         di::bind<transport::TransportAdaptor *[]>().to<transport::TcpTransport, transport::QuicTransport>(),  // NOLINT
+
+        di::bind<peer::AddressRepository>.to<peer::InmemAddressRepository>(),
 
         // user-defined overrides...
         std::forward<decltype(args)>(args)...

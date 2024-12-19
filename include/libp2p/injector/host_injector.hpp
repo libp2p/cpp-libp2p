@@ -10,7 +10,6 @@
 
 // implementations
 #include <libp2p/host/basic_host.hpp>
-#include <libp2p/peer/address_repository/inmem_address_repository.hpp>
 #include <libp2p/peer/impl/peer_repository_impl.hpp>
 #include <libp2p/peer/key_repository/inmem_key_repository.hpp>
 #include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
@@ -31,7 +30,6 @@ namespace libp2p::injector {
 
         // repositories
         di::bind<peer::PeerRepository>.to<peer::PeerRepositoryImpl>(),
-        di::bind<peer::AddressRepository>.to<peer::InmemAddressRepository>(),
         di::bind<peer::KeyRepository>.to<peer::InmemKeyRepository>(),
         di::bind<peer::ProtocolRepository>.to<peer::InmemProtocolRepository>(),
 

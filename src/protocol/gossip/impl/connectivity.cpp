@@ -238,8 +238,7 @@ namespace libp2p::protocol::gossip {
           if (self) {
             onNewStream(ctx, std::move(rstream));
           }
-        },
-        config_.rw_timeout_msec
+        }
     );
     // clang-format on
   }

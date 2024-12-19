@@ -122,9 +122,8 @@ TEST_F(IdentifyDeltaTest, Send) {
       .WillOnce(Return(kPeerInfo));
 
   // stream handling and message sending
-  EXPECT_CALL(
-      host_,
-      newStream(kPeerInfo, StreamProtocols{kIdentifyDeltaProtocol}, _, _))
+  EXPECT_CALL(host_,
+              newStream(kPeerInfo, StreamProtocols{kIdentifyDeltaProtocol}, _))
       .WillOnce(InvokeArgument<2>(
           StreamAndProtocol{stream_, kIdentifyDeltaProtocol}));
 

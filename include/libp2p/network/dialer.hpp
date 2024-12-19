@@ -32,33 +32,21 @@ namespace libp2p::network {
      * Establishes a connection or returns existing one to a given peer with a
      * specific timeout
      */
-    virtual void dial(const peer::PeerInfo &p,
-                      DialResultFunc cb,
-                      std::chrono::milliseconds timeout) = 0;
-
-    /**
-     * Establishes a connection or returns existing one to a given peer
-     */
-    inline void dial(const peer::PeerInfo &p, DialResultFunc cb) {
-      dial(p, std::move(cb), std::chrono::milliseconds::zero());
-    }
-
-    /**
-     * NewStream returns a new stream to given peer p with a specific timeout.
-     * If there is no connection to p, attempts to create one.
-     */
-    virtual void newStream(const peer::PeerInfo &peer_info,
-                           StreamProtocols protocols,
-                           StreamAndProtocolOrErrorCb cb,
-                           std::chrono::milliseconds timeout = {}) = 0;
+    virtual void dial(const PeerInfo &p, DialResultFunc cb) = 0;
 
     /**
      * NewStream returns a new stream to given peer p.
      * If there is no connection to p, returns error.
      */
-    virtual void newStream(const peer::PeerId &peer_id,
+    virtual void newStream(const PeerInfo &peer_id,
                            StreamProtocols protocols,
                            StreamAndProtocolOrErrorCb cb) = 0;
+
+    void newStream(const PeerId &peer_id,
+                   StreamProtocols protocols,
+                   StreamAndProtocolOrErrorCb cb) {
+      newStream(PeerInfo{.id = peer_id}, std::move(protocols), std::move(cb));
+    }
   };
 
 }  // namespace libp2p::network

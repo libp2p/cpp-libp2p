@@ -124,6 +124,13 @@ namespace libp2p::peer {
                                                   Milliseconds ttl) = 0;
 
     /**
+     * Move failed address to back.
+     * That way dialer will try other addresses first.
+     */
+    virtual void dialFailed(const PeerId &peer_id,
+                            const Multiaddress &addr) = 0;
+
+    /**
      * @brief Get all addresses associated with this Peer {@param p}. May
      * contain duplicates.
      * @param p peer

@@ -30,8 +30,7 @@ namespace libp2p::transport {
 
   void QuicTransport::dial(const PeerId &peer,
                            Multiaddress address,
-                           TransportAdaptor::HandlerFunc cb,
-                           std::chrono::milliseconds timeout) {
+                           TransportAdaptor::HandlerFunc cb) {
     auto r = detail::asQuic(address);
     if (not r) {
       return cb(r.error());

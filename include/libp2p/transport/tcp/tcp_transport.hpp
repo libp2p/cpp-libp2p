@@ -7,6 +7,7 @@
 #pragma once
 
 #include <boost/asio/ip/tcp.hpp>
+#include <libp2p/muxer/muxed_connection_config.hpp>
 #include <libp2p/transport/tcp/tcp_listener.hpp>
 #include <libp2p/transport/transport_adaptor.hpp>
 #include <libp2p/transport/upgrader.hpp>
@@ -22,16 +23,12 @@ namespace libp2p::transport {
     ~TcpTransport() override = default;
 
     TcpTransport(std::shared_ptr<boost::asio::io_context> context,
+                 const muxer::MuxedConnectionConfig &mux_config,
                  std::shared_ptr<Upgrader> upgrader);
 
     void dial(const peer::PeerId &remoteId,
               multi::Multiaddress address,
               TransportAdaptor::HandlerFunc handler) override;
-
-    void dial(const peer::PeerId &remoteId,
-              multi::Multiaddress address,
-              TransportAdaptor::HandlerFunc handler,
-              std::chrono::milliseconds timeout) override;
 
     std::shared_ptr<TransportListener> createListener(
         TransportListener::HandlerFunc handler) override;
@@ -42,6 +39,7 @@ namespace libp2p::transport {
 
    private:
     std::shared_ptr<boost::asio::io_context> context_;
+    muxer::MuxedConnectionConfig mux_config_;
     std::shared_ptr<Upgrader> upgrader_;
     boost::asio::ip::tcp::resolver resolver_;
   };
