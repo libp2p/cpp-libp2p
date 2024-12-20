@@ -145,11 +145,10 @@ namespace libp2p {
 
     /**
      * @brief Open new stream to the peer {@param peer_info} with protocol
-     * {@param protocol} with a specific timeout.
+     * {@param protocol}
      * @param peer_info stream will be opened to this peer
      * @param protocols "speak" using first supported protocol
      * @param cb callback, will be executed on success or fail
-     * @param timeout in milliseconds
      */
     virtual void newStream(const peer::PeerInfo &peer_info,
                            StreamProtocols protocols,

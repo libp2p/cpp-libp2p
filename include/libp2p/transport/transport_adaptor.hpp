@@ -32,7 +32,7 @@ namespace libp2p::transport {
     ~TransportAdaptor() override = default;
 
     /**
-     * Try to establish connection with a peer without timeout
+     * Try to establish connection with a peer
      * @param remoteId id of remote peer to dial
      * @param address of the peer
      * @param handler callback that will be executed on connection/error

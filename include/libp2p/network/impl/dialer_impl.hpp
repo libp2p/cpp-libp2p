@@ -43,7 +43,10 @@ namespace libp2p::network {
     // A context to handle an intermediary state of the peer we are dialing to
     // but the connection is not yet established
     struct DialCtx {
+      /// Queue of addresses to try connect to
       std::deque<Multiaddress> addr_queue;
+
+      /// Tracks addresses added to `addr_queue`
       std::unordered_set<Multiaddress> addr_seen;
 
       /// Callbacks for all who requested a connection to the peer
