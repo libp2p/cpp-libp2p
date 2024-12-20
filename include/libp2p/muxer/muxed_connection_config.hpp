@@ -32,5 +32,9 @@ namespace libp2p::muxer {
     static constexpr std::chrono::milliseconds kDefaultNoStreamsInterval =
         std::chrono::milliseconds(120000);
     std::chrono::milliseconds no_streams_interval = kDefaultNoStreamsInterval;
+
+    /// Dial timeout for outgoing connection
+    static constexpr std::chrono::seconds kDefaultDialTimeout{10};
+    std::chrono::milliseconds dial_timeout = kDefaultDialTimeout;
   };
 }  // namespace libp2p::muxer

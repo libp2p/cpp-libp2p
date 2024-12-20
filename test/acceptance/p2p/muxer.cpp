@@ -47,6 +47,8 @@ using ::testing::Mock;
 using ::testing::NiceMock;
 using std::chrono_literals::operator""ms;
 
+muxer::MuxedConnectionConfig mux_config;
+
 static const size_t kServerBufSize = 10000;  // 10 Kb
 
 // allows to print debug output to stdout, not wanted in CI output, but
@@ -395,7 +397,8 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   auto plaintext = std::make_shared<Plaintext>(
       msg_marshaller, idmgr, std::move(key_marshaller));
   auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
-  auto transport = std::make_shared<TcpTransport>(server_context, upgrader);
+  auto transport =
+      std::make_shared<TcpTransport>(server_context, mux_config, upgrader);
   auto server = std::make_shared<Server>(transport);
   server->listen(serverAddr);
 
@@ -429,7 +432,8 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
         auto plaintext =
             std::make_shared<Plaintext>(msg_marshaller, idmgr, key_marshaller);
         auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
-        auto transport = std::make_shared<TcpTransport>(context, upgrader);
+        auto transport =
+            std::make_shared<TcpTransport>(context, mux_config, upgrader);
         auto client = std::make_shared<Client>(
             transport, localSeed, context, streams, rounds);
 

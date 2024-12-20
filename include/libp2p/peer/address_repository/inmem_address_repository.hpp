@@ -50,6 +50,8 @@ namespace libp2p::peer {
     outcome::result<void> updateAddresses(const PeerId &p,
                                           Milliseconds ttl) override;
 
+    void dialFailed(const PeerId &peer_id, const Multiaddress &addr) override;
+
     outcome::result<std::vector<multi::Multiaddress>> getAddresses(
         const PeerId &p) const override;
 
@@ -60,13 +62,15 @@ namespace libp2p::peer {
     std::unordered_set<PeerId> getPeers() const override;
 
    private:
-    using ttlmap = std::unordered_map<multi::Multiaddress, Clock::time_point>;
-    using ttlmap_ptr = std::shared_ptr<ttlmap>;
-    using peer_db = std::unordered_map<PeerId, ttlmap_ptr>;
+    struct Peer {
+      std::unordered_map<Multiaddress, Clock::time_point> expires;
+      std::vector<Multiaddress> order;
+
+      bool eraseOrder(const Multiaddress &addr);
+    };
+    using peer_db = std::unordered_map<PeerId, Peer>;
 
     bool isNewDnsAddr(const multi::Multiaddress &ma);
-
-    peer_db::iterator findOrInsert(const PeerId &p);
 
     std::shared_ptr<network::DnsaddrResolver> dnsaddr_resolver_;
     peer_db db_;

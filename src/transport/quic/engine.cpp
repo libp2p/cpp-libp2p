@@ -53,6 +53,8 @@ namespace libp2p::transport::lsquic {
     settings.es_idle_timeout = std::chrono::duration_cast<std::chrono::seconds>(
                                    mux_config.no_streams_interval)
                                    .count();
+    settings.es_handshake_to =
+        std::chrono::microseconds{mux_config.dial_timeout}.count();
 
     static lsquic_stream_if stream_if{};
     stream_if.on_new_conn = +[](void *void_self, lsquic_conn_t *conn) {
