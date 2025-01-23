@@ -58,12 +58,11 @@ namespace libp2p::multi {
       X_PARITY_WS = 4770,
       X_PARITY_WSS = 4780,
     // Range for private use: 0x300000 – 0x3FFFFF
-#ifndef NDEBUG
+    // Debug section
       _DUMMY_PROTO_1 = 0x3DEAD1,
       _DUMMY_PROTO_2 = 0x3DEAD2,
       _DUMMY_PROTO_3 = 0x3DEAD3,
       _DUMMY_PROTO_4 = 0x3DEAD4,
-#endif
     };
 
     constexpr bool operator==(const Protocol &p) const {
@@ -82,12 +81,9 @@ namespace libp2p::multi {
    public:
     /**
      * The total number of known protocols
+     * (31 ordinal + 4 debug)
      */
-    static constexpr size_t kProtocolsNum = 31
-#ifndef NDEBUG
-                                          + 4
-#endif
-        ;
+    static constexpr size_t kProtocolsNum = 31 + 4;
 
     /**
      * Returns a protocol with the corresponding name if it exists, or nullptr
@@ -164,12 +160,12 @@ namespace libp2p::multi {
         {Protocol::Code::P2P_CIRCUIT, 0, "p2p-circuit"},
         {Protocol::Code::X_PARITY_WS, Protocol::kVarLen, "x-parity-ws"},
         {Protocol::Code::X_PARITY_WSS, Protocol::kVarLen, "x-parity-wss"},
-#ifndef NDEBUG
+// Debug section
         {Protocol::Code::_DUMMY_PROTO_1, 0, "_dummy_proto_1"},
         {Protocol::Code::_DUMMY_PROTO_2, 0, "_dummy_proto_2"},
         {Protocol::Code::_DUMMY_PROTO_3, Protocol::kVarLen, "_dummy_proto_3"},
         {Protocol::Code::_DUMMY_PROTO_4, Protocol::kVarLen, "_dummy_proto_4"},
-#endif
+
     };
   };
 
