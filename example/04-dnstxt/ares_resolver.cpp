@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
   // the guard to preserve context's running state when tasks queue is empty
   auto work_guard = boost::asio::make_work_guard(*context);
-  context->post([&] {
+  post(*context, [&] {
     ares.resolveTxt(
         "_dnsaddr.bootstrap.libp2p.io",
         context,

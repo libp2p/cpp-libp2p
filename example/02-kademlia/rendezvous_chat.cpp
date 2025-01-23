@@ -37,7 +37,7 @@ class Session : public std::enable_shared_from_this<Session> {
  public:
   explicit Session(std::shared_ptr<libp2p::connection::Stream> stream)
       : stream_(std::move(stream)),
-        incoming_(std::make_shared<std::vector<uint8_t>>(1 << 12)){};
+        incoming_(std::make_shared<std::vector<uint8_t>>(1 << 12)) {};
 
   bool read() {
     if (stream_->isClosedForRead()) {
@@ -316,7 +316,7 @@ int main(int argc, char *argv[]) {
                          kademlia_config.randomWalk.interval);
     };
 
-    io->post([&] {
+    post(*io, [&] {
       auto listen = host->listen(ma);
       if (not listen) {
         fmt::println(std::cerr,

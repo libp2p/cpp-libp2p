@@ -9,6 +9,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ip/udp.hpp>
 #include <charconv>
+#include <libp2p/boost/outcome.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <variant>
 
@@ -172,11 +173,7 @@ namespace libp2p::transport::detail {
     constexpr auto udp = std::is_same_v<T, boost::asio::ip::udp::endpoint>;
     static_assert(tcp or udp);
     auto ip = endpoint.address();
-    boost::system::error_code ec;
-    auto ip_str = ip.to_string(ec);
-    if (ec) {
-      return ec;
-    }
+    OUTCOME_TRY(ip_str, boost_outcome::to_string(ip));
     return fmt::format("/{}/{}/{}/{}",
                        ip.is_v4() ? "ip4" : "ip6",
                        ip_str,

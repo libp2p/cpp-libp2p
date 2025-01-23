@@ -63,7 +63,7 @@ Peer::Peer(Peer::Duration timeout, bool secure)
 
 void Peer::startServer(const multi::Multiaddress &address,
                        std::shared_ptr<std::promise<peer::PeerInfo>> promise) {
-  context_->post([this, address, p = std::move(promise)] {
+  post(*context_, [this, address, p = std::move(promise)] {
     EXPECT_OK(host_->listen(address));
     host_->start();
     p->set_value(host_->getPeerInfo());
@@ -75,38 +75,39 @@ void Peer::startServer(const multi::Multiaddress &address,
 void Peer::startClient(const peer::PeerInfo &pinfo,
                        size_t message_count,
                        Peer::sptr<TickCounter> counter) {
-  context_->post([this,
-                  server_id = pinfo.id.toBase58(),
-                  pinfo,
-                  message_count,
-                  counter = std::move(counter)]() mutable {
-    this->host_->newStream(
+  post(*context_,
+       [this,
+        server_id = pinfo.id.toBase58(),
         pinfo,
-        {echo_->getProtocolId()},
-        [server_id = std::move(server_id),
-         ping_times = message_count,
-         counter =
-             std::move(counter)](StreamAndProtocolOrError rstream) mutable {
-          // get stream
-          auto stream = EXPECT_OK(rstream);
-          // make client session
-          auto client = std::make_shared<protocol::ClientTestSession>(
-              stream.stream, ping_times);
-          // handle session
-          client->handle(
-              [server_id = std::move(server_id),
-               client,
-               counter = std::move(counter)](
-                  outcome::result<std::vector<uint8_t>> res) mutable {
-                // count message exchange
-                counter->tick();
-                // ensure message returned
-                auto vec = EXPECT_OK(res);
-                // ensure message is correct
-                ASSERT_EQ(vec.size(), client->bufferSize());  // NOLINT
-              });
-        });
-  });
+        message_count,
+        counter = std::move(counter)]() mutable {
+         this->host_->newStream(
+             pinfo,
+             {echo_->getProtocolId()},
+             [server_id = std::move(server_id),
+              ping_times = message_count,
+              counter = std::move(counter)](
+                 StreamAndProtocolOrError rstream) mutable {
+               // get stream
+               auto stream = EXPECT_OK(rstream);
+               // make client session
+               auto client = std::make_shared<protocol::ClientTestSession>(
+                   stream.stream, ping_times);
+               // handle session
+               client->handle(
+                   [server_id = std::move(server_id),
+                    client,
+                    counter = std::move(counter)](
+                       outcome::result<std::vector<uint8_t>> res) mutable {
+                     // count message exchange
+                     counter->tick();
+                     // ensure message returned
+                     auto vec = EXPECT_OK(res);
+                     // ensure message is correct
+                     ASSERT_EQ(vec.size(), client->bufferSize());  // NOLINT
+                   });
+             });
+       });
 }
 
 void Peer::wait() {

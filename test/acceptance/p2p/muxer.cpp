@@ -405,7 +405,7 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   std::vector<std::thread> clients;
   std::atomic<int> clients_running(totalClients);
 
-  server_context->post([&]() {
+  post(*server_context, [&]() {
     clients.reserve(totalClients);
     for (int i = 0; i < totalClients; i++) {
       auto localSeed = randomEngine();
