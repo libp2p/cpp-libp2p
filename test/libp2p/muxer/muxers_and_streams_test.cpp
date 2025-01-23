@@ -396,7 +396,7 @@ void testStreamsGetNotifiedAboutEOF(bool jumbo_msg, InjectorArgs &&...args) {
                                   io,
                                   std::forward<decltype(args)>(args)...);
 
-  io->post([&]() {
+  post(*io, [&]() {
     server->listen(listen_to);
     libp2p::peer::PeerInfo peer_info{server->getId(), {listen_to}};
     client->connect(peer_info);
@@ -499,7 +499,7 @@ void testOutboundConnectionAcceptsStreams(InjectorArgs &&...args) {
                                   io,
                                   std::forward<decltype(args)>(args)...);
 
-  io->post([&]() {
+  post(*io, [&]() {
     server->listen(listen_to);
     libp2p::peer::PeerInfo peer_info{server->getId(), {listen_to}};
     client->connect(peer_info);

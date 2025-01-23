@@ -8,7 +8,6 @@
 
 #include <libp2p/protocol/ping.hpp>
 
-#include <boost/asio/io_service.hpp>
 #include <boost/optional.hpp>
 
 #include <libp2p/common/literals.hpp>

@@ -167,8 +167,8 @@ namespace libp2p::transport::lsquic {
           if (n > 0) {
             r = n;
           }
-          stream_ctx->engine->io_context_->post(
-              [cb{std::move(op.cb)}, r] { cb(r); });
+          post(*stream_ctx->engine->io_context_,
+               [cb{std::move(op.cb)}, r] { cb(r); });
         };
 
     lsquic_engine_api api{};

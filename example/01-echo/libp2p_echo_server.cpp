@@ -173,7 +173,7 @@ dPtse4GVRA2swbXcZX5iFVi/V8poIpdVrgn5iMadkQnYf9APWJuGcebK
   auto ma = libp2p::multi::Multiaddress::create(_ma).value();
 
   // launch a Listener part of the Host
-  io_context->post([&] {
+  post(*io_context, [&] {
     auto listen_res = host->listen(ma);
     if (!listen_res) {
       log->error("host cannot listen the given multiaddress: {}",

@@ -51,21 +51,14 @@ namespace libp2p::protocol::example::utility {
 
   std::string getLocalIP(boost::asio::io_context &io) {
     boost::asio::ip::tcp::resolver resolver(io);
-    boost::asio::ip::tcp::resolver::query query(boost::asio::ip::host_name(),
-                                                "");
     boost::system::error_code ec;
-    boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query, ec);
-    boost::asio::ip::tcp::resolver::iterator end;
-    std::string addr("127.0.0.1");
-    while (it != end) {
-      auto ep = it->endpoint();
-      if (ep.address().is_v4()) {
-        addr = ep.address().to_string();
-        break;
+    for (auto &entry : resolver.resolve(boost::asio::ip::host_name(), "", ec)) {
+      auto address = entry.endpoint().address();
+      if (address.is_v4()) {
+        return address.to_string();
       }
-      ++it;
     }
-    return addr;
+    return "127.0.0.1";
   }
 
   boost::optional<libp2p::peer::PeerInfo> str2peerInfo(const std::string &str) {
