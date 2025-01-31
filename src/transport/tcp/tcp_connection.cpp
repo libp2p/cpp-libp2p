@@ -95,8 +95,9 @@ namespace libp2p::transport {
                                                               auto result) {
         if (auto self = wptr.lock()) {
           if (ec) {
+            cb(ec);
             self->close(ec);
-            return cb(ec);
+            return;
           }
           TRACE("{} {}", self->str(), result);
           cb(result);
