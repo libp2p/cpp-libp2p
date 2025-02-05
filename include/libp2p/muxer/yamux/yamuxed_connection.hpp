@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <atomic>
+#include <iostream>
 #include <unordered_map>
 
 #include <libp2p/basic/read_buffer.hpp>
@@ -35,7 +37,11 @@ namespace libp2p::connection {
     YamuxedConnection &operator=(const YamuxedConnection &other) = delete;
     YamuxedConnection(YamuxedConnection &&other) = delete;
     YamuxedConnection &operator=(YamuxedConnection &&other) = delete;
-    ~YamuxedConnection() override = default;
+    ~YamuxedConnection() override {
+      --yamuxed_conection_instance_count_;
+      std::cout << "YamuxedConnection is destroyed, total="
+                << yamuxed_conection_instance_count_ << std::endl;
+    }
 
     /**
      * Create a new YamuxedConnection instance
@@ -194,6 +200,8 @@ namespace libp2p::connection {
 
     /// TODO(artem): change read() interface to reduce copying
     std::shared_ptr<Buffer> raw_read_buffer_;
+
+    static std::atomic<int> yamuxed_conection_instance_count_;
 
     /// Buffering and segmenting
     YamuxReadingState reading_state_;

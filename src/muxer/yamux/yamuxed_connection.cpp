@@ -61,9 +61,15 @@ namespace libp2p::connection {
     assert(config_.maximum_streams > 0);
     assert(config_.maximum_window_size >= YamuxFrame::kInitialWindowSize);
 
+    ++yamuxed_conection_instance_count_;
+    std::cout << "YamuxedConnection is constructed, total="
+              << yamuxed_conection_instance_count_ << std::endl;
+
     raw_read_buffer_->resize(YamuxFrame::kInitialWindowSize + 4096);
     new_stream_id_ = (connection_->isInitiator() ? 1 : 2);
   }
+
+  std::atomic<int> YamuxedConnection::yamuxed_conection_instance_count_{0};
 
   void YamuxedConnection::start() {
     if (started_) {
