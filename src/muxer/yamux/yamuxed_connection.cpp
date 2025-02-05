@@ -37,7 +37,7 @@ namespace libp2p::connection {
       : config_(config),
         connection_(std::move(connection)),
         scheduler_(std::move(scheduler)),
-        raw_read_buffer_(std::make_shared<Buffer>()),
+        raw_read_buffer_(std::make_shared<CountableBuffer>()),
         reading_state_(
             [this](boost::optional<YamuxFrame> header) {
               return processHeader(std::move(header));

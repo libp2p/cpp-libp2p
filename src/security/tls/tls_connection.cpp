@@ -132,8 +132,9 @@ namespace libp2p::connection {
                                                               auto &&result) {
       if (ec) {
         SL_DEBUG(log(), "connection async op error {}", ec);
+        cb(ec);
         std::ignore = conn->close();
-        return cb(ec);
+        return;
       }
       cb(std::forward<decltype(result)>(result));
     };
