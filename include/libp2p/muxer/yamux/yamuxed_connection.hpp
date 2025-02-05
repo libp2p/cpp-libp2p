@@ -20,7 +20,7 @@ namespace libp2p::connection {
 
   class CountableBuffer : public std::vector<uint8_t> {
    public:
-    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
+    LIBP2P_METRICS_INSTANCE_COUNT(
         libp2p::connection::CountableBuffer);
   };
 
@@ -249,7 +249,7 @@ namespace libp2p::connection {
     bool close_after_write_ = false;
 
    public:
-    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
+    LIBP2P_METRICS_INSTANCE_COUNT(
         libp2p::connection::YamuxedConnection);
   };
 
