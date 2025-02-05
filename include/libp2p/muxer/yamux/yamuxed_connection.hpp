@@ -18,6 +18,13 @@
 
 namespace libp2p::connection {
 
+  class CountableBuffer : public std::vector<uint8_t> {
+   public:
+    LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
+        libp2p::connection::CountableBuffer);
+  };
+
+
   /**
    * Implementation of stream multiplexer - connection, which has only one
    * physical link to another peer, but many logical streams, for example, for
@@ -193,7 +200,7 @@ namespace libp2p::connection {
     bool started_ = false;
 
     /// TODO(artem): change read() interface to reduce copying
-    std::shared_ptr<Buffer> raw_read_buffer_;
+    std::shared_ptr<CountableBuffer> raw_read_buffer_;
 
     /// Buffering and segmenting
     YamuxReadingState reading_state_;
