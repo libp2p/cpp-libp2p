@@ -92,17 +92,14 @@ namespace libp2p::transport {
     template <typename Callback>
     auto closeOnError(TcpConnection &conn, Callback cb) {
       return [cb{std::move(cb)}, wptr{conn.weak_from_this()}](auto ec,
-                                                              auto result) {
-        if (auto self = wptr.lock()) {
-          if (ec) {
-            cb(ec);
+                                                              size_t result) {
+        if (ec) {
+          cb(ec);
+          if (auto self = wptr.lock()) {
             self->close(ec);
-            return;
           }
-          TRACE("{} {}", self->str(), result);
-          cb(result);
         } else {
-          log().debug("connection wptr expired");
+          cb(result);
         }
       };
     }
@@ -203,42 +200,14 @@ namespace libp2p::transport {
                              closeOnError(*this, std::move(cb)));
   }
 
-  namespace {
-    template <typename Callback, typename Arg>
-    void deferCallback(boost::asio::io_context &ctx,
-                       std::weak_ptr<TcpConnection> wptr,
-                       bool &closed_by_host,
-                       Callback cb,
-                       Arg arg) {
-      // defers callback to the next event loop cycle,
-      // cb will be called iff TcpConnection is still alive
-      // and was not closed by host's side
-      boost::asio::post(
-          ctx,
-          [wptr = std::move(wptr), cb = std::move(cb), arg, &closed_by_host]() {
-            if (!wptr.expired() && !closed_by_host) {
-              cb(arg);
-            }
-          });
-    }
-  }  // namespace
-
   void TcpConnection::deferReadCallback(outcome::result<size_t> res,
                                         ReadCallbackFunc cb) {
-    deferCallback(context_,
-                  weak_from_this(),
-                  std::ref(closed_by_host_),
-                  std::move(cb),
-                  res);
+    boost::asio::post(context_, [res, cb{std::move(cb)}] { cb(res); });
   }
 
   void TcpConnection::deferWriteCallback(std::error_code ec,
                                          WriteCallbackFunc cb) {
-    deferCallback(context_,
-                  weak_from_this(),
-                  std::ref(closed_by_host_),
-                  std::move(cb),
-                  ec);
+    boost::asio::post(context_, [ec, cb{std::move(cb)}] { cb(ec); });
   }
 
   outcome::result<void> TcpConnection::saveMultiaddresses() {

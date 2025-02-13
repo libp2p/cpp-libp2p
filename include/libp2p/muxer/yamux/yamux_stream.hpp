@@ -147,9 +147,6 @@ namespace libp2p::connection {
     /// True if the stream is writable, until FIN sent
     bool is_writable_ = true;
 
-    /// If set to true, then no more callbacks to client
-    bool no_more_callbacks_ = false;
-
     /// True after FIN sent
     bool fin_sent_ = false;
 

@@ -644,7 +644,7 @@ namespace libp2p::connection {
     }
 
     // this instance may be killed inside further callback
-    auto wptr = weak_from_this();
+    auto self = shared_from_this();
 
     if (stream_id != 0) {
       // pass write ack to stream about data size written except header size
@@ -667,11 +667,6 @@ namespace libp2p::connection {
           it->second->onDataWritten(sz);
         }
       }
-    }
-
-    if (wptr.expired()) {
-      // *this* no longer exists
-      return;
     }
 
     is_writing_ = false;
