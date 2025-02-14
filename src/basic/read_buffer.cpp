@@ -120,7 +120,7 @@ namespace libp2p::basic {
     total_size_ = 0;
     first_byte_offset_ = 0;
     capacity_remains_ = 0;
-    std::deque<Fragment>{}.swap(fragments_);
+    fragments_.clear();
   }
 
   size_t ReadBuffer::consumeAll(BytesOut out) {
