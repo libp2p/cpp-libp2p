@@ -184,58 +184,60 @@ namespace libp2p::connection {
     const muxer::MuxedConnectionConfig config_;
 
     /// Underlying connection
-    std::shared_ptr<SecureConnection> connection_;
+    NO_INLINE_DTOR(std::shared_ptr<SecureConnection>, connection_);
 
     /// Scheduler
-    std::shared_ptr<basic::Scheduler> scheduler_;
+    NO_INLINE_DTOR(std::shared_ptr<basic::Scheduler>, scheduler_);
 
     /// True if started
     bool started_ = false;
 
     /// TODO(artem): change read() interface to reduce copying
-    std::shared_ptr<Buffer> raw_read_buffer_;
+    NO_INLINE_DTOR(std::shared_ptr<Buffer>, raw_read_buffer_);
 
     /// Buffering and segmenting
-    YamuxReadingState reading_state_;
+    NO_INLINE_DTOR(YamuxReadingState, reading_state_);
 
     /// True if waiting for current write operation to complete
     bool is_writing_ = false;
 
-    std::shared_ptr<Bytes> writing_buf_ = std::make_shared<Bytes>();
+    NO_INLINE_DTOR(std::shared_ptr<Bytes>,
+                   writing_buf_) = std::make_shared<Bytes>();
 
     /// Write queue
-    std::deque<WriteQueueItem> write_queue_;
+    NO_INLINE_DTOR(std::deque<WriteQueueItem>, write_queue_);
 
     /// Active streams
-    Streams streams_;
+    NO_INLINE_DTOR(Streams, streams_);
 
     /// Streams just created. Need to call handlers after all
     /// data is processed. StreamHandlerFunc is null for inbound streams
-    std::vector<std::pair<StreamId, StreamHandlerFunc>> fresh_streams_;
+    using FreshStreams = std::vector<std::pair<StreamId, StreamHandlerFunc>>;
+    NO_INLINE_DTOR(FreshStreams, fresh_streams_);
 
     /// Handler for new inbound streams
-    NewStreamHandlerFunc new_stream_handler_;
+    NO_INLINE_DTOR(NewStreamHandlerFunc, new_stream_handler_);
 
     /// New stream id (odd if underlying connection is outbound)
     StreamId new_stream_id_ = 0;
 
     /// Pending outbound streams
-    PendingOutboundStreams pending_outbound_streams_;
+    NO_INLINE_DTOR(PendingOutboundStreams, pending_outbound_streams_);
 
     /// Timer handle for pings
-    basic::Scheduler::Handle ping_handle_;
+    NO_INLINE_DTOR(basic::Scheduler::Handle, ping_handle_);
 
     /// Cleanup for detached streams
-    basic::Scheduler::Handle cleanup_handle_;
+    NO_INLINE_DTOR(basic::Scheduler::Handle, cleanup_handle_);
 
     /// Timer handle for auto closing if inactive
-    basic::Scheduler::Handle inactivity_handle_;
+    NO_INLINE_DTOR(basic::Scheduler::Handle, inactivity_handle_);
 
     /// Called on connection close
-    ConnectionClosedCallback closed_callback_;
+    NO_INLINE_DTOR(ConnectionClosedCallback, closed_callback_);
 
     /// Remote peer saved here
-    peer::PeerId remote_peer_;
+    NO_INLINE_DTOR(peer::PeerId, remote_peer_);
 
     uint32_t ping_counter_ = 0;
 

@@ -38,7 +38,7 @@ namespace libp2p::connection {
         connection_(std::move(connection)),
         scheduler_(std::move(scheduler)),
         raw_read_buffer_(std::make_shared<Buffer>()),
-        reading_state_(
+        reading_state_(YamuxReadingState(
             [this](boost::optional<YamuxFrame> header) {
               return processHeader(std::move(header));
             },
@@ -52,7 +52,7 @@ namespace libp2p::connection {
               if (fin) {
                 processFin(stream_id);
               }
-            }),
+            })),
         closed_callback_(std::move(closed_callback)),
 
         // yes, sort of assert

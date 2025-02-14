@@ -11,6 +11,7 @@
 #include <libp2p/basic/read_buffer.hpp>
 #include <libp2p/basic/write_queue.hpp>
 #include <libp2p/common/metrics/instance_count.hpp>
+#include <libp2p/common/no_inline_dtor.hpp>
 #include <libp2p/connection/stream.hpp>
 
 namespace libp2p::connection {
@@ -133,7 +134,7 @@ namespace libp2p::connection {
     closeCompleted();
 
     /// Underlying connection (secured)
-    std::shared_ptr<connection::SecureConnection> connection_;
+    NO_INLINE_DTOR(std::shared_ptr<connection::SecureConnection>, connection_);
 
     /// Yamux-specific interface of connection
     YamuxStreamFeedback &feedback_;
@@ -163,16 +164,16 @@ namespace libp2p::connection {
     size_t maximum_window_size_;
 
     /// Write queue with callbacks
-    basic::WriteQueue write_queue_;
+    NO_INLINE_DTOR(basic::WriteQueue, write_queue_);
 
     /// Internal read buffer, stores bytes received between read()s
-    basic::ReadBuffer internal_read_buffer_;
+    NO_INLINE_DTOR(basic::ReadBuffer, internal_read_buffer_);
 
     /// True if read operation is active
     bool is_reading_ = false;
 
     /// Read callback, it is non-zero during async data receive
-    ReadCallbackFunc read_cb_;
+    NO_INLINE_DTOR(ReadCallbackFunc, read_cb_);
 
     /// TODO: get rid of this. client's read buffer
     BytesOut external_read_buffer_;
@@ -182,10 +183,10 @@ namespace libp2p::connection {
 
     /// adjustWindowSize() callback, triggers when receive window size
     /// becomes greater or equal then desired
-    VoidResultHandlerFunc window_size_cb_;
+    NO_INLINE_DTOR(VoidResultHandlerFunc, window_size_cb_);
 
     /// Close callback
-    VoidResultHandlerFunc close_cb_;
+    NO_INLINE_DTOR(VoidResultHandlerFunc, close_cb_);
 
    public:
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::connection::YamuxStream);

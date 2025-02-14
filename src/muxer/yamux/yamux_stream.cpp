@@ -36,7 +36,7 @@ namespace libp2p::connection {
         window_size_(YamuxFrame::kInitialWindowSize),
         peers_window_size_(YamuxFrame::kInitialWindowSize),
         maximum_window_size_(maximum_window_size),
-        write_queue_(write_queue_limit) {
+        write_queue_(basic::WriteQueue(write_queue_limit)) {
     assert(connection_);
     assert(stream_id_ > 0);
     assert(window_size_ <= maximum_window_size_);

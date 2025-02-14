@@ -8,6 +8,7 @@
 
 #include <libp2p/basic/message_read_writer.hpp>
 #include <libp2p/basic/readwriter.hpp>
+#include <libp2p/common/no_inline_dtor.hpp>
 
 namespace libp2p::basic {
   /**
@@ -38,6 +39,6 @@ namespace libp2p::basic {
     void write(BytesIn buffer, Writer::WriteCallbackFunc cb) override;
 
    private:
-    std::shared_ptr<ReadWriter> conn_;
+    NO_INLINE_DTOR(std::shared_ptr<ReadWriter>, conn_);
   };
 }  // namespace libp2p::basic
