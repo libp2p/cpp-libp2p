@@ -38,6 +38,17 @@ namespace libp2p::connection {
     virtual void streamClosed(uint32_t stream_id) = 0;
   };
 
+  struct Marker {
+    Marker(void *parent, const char *marker) : p(parent), s(marker) {
+      std::cout << "=+=+++++=+=>> " << (uintptr_t)p << " " << s << std::endl;
+    }
+    ~Marker() {
+      std::cout << "=-=-----=-=>> " << (uintptr_t)p << " " << s << std::endl;
+    }
+    void *p;
+    const char *s;
+  }
+
   /// Stream implementation, used by Yamux multiplexer
   class YamuxStream final : public Stream,
                             public std::enable_shared_from_this<YamuxStream> {
@@ -46,7 +57,9 @@ namespace libp2p::connection {
     YamuxStream &operator=(const YamuxStream &other) = delete;
     YamuxStream(YamuxStream &&other) = delete;
     YamuxStream &operator=(YamuxStream &&other) = delete;
-    ~YamuxStream() override = default;
+    ~YamuxStream() override {
+      Marker dm(this, "::~YamuxStream");
+    };
 
     YamuxStream(std::shared_ptr<connection::SecureConnection> connection,
                 YamuxStreamFeedback &feedback,
@@ -132,11 +145,17 @@ namespace libp2p::connection {
     [[nodiscard]] std::pair<VoidResultHandlerFunc, outcome::result<void>>
     closeCompleted();
 
+    Marker m1(this, "m1");
+
     /// Underlying connection (secured)
     std::shared_ptr<connection::SecureConnection> connection_;
 
+    Marker m2(this, "m2");
+
     /// Yamux-specific interface of connection
     YamuxStreamFeedback &feedback_;
+
+    Marker m3(this, "m3");
 
     /// Stream ID
     uint32_t stream_id_;
@@ -150,8 +169,12 @@ namespace libp2p::connection {
     /// True after FIN sent
     bool fin_sent_ = false;
 
+    Marker m4(this, "m4");
+
     /// Non zero reason means that stream is closed and the reason of it
     std::optional<std::error_code> close_reason_;
+
+    Marker m5(this, "m5");
 
     /// Max bytes allowed to send
     size_t window_size_;
@@ -162,30 +185,48 @@ namespace libp2p::connection {
     /// Maximum window size allowed for peer
     size_t maximum_window_size_;
 
+    Marker m6(this, "m6");
+
     /// Write queue with callbacks
     basic::WriteQueue write_queue_;
+
+    Marker m7(this, "m7");
 
     /// Internal read buffer, stores bytes received between read()s
     basic::ReadBuffer internal_read_buffer_;
 
+    Marker m8(this, "m8");
+
     /// True if read operation is active
     bool is_reading_ = false;
+
+    Marker m9(this, "m9");
 
     /// Read callback, it is non-zero during async data receive
     ReadCallbackFunc read_cb_;
 
+    Marker m10(this, "m10");
+
     /// TODO: get rid of this. client's read buffer
     BytesOut external_read_buffer_;
 
+    Marker m11(this, "m11");
+
     /// Size of message being read
     size_t read_message_size_ = 0;
+
+    Marker m12(this, "m12");
 
     /// adjustWindowSize() callback, triggers when receive window size
     /// becomes greater or equal then desired
     VoidResultHandlerFunc window_size_cb_;
 
+    Marker m13(this, "m13");
+
     /// Close callback
     VoidResultHandlerFunc close_cb_;
+
+    Marker m14(this, "m14");
 
    public:
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(libp2p::connection::YamuxStream);

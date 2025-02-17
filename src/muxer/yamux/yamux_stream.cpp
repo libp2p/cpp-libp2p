@@ -42,6 +42,7 @@ namespace libp2p::connection {
     assert(window_size_ <= maximum_window_size_);
     assert(peers_window_size_ <= maximum_window_size_);
     assert(write_queue_limit >= maximum_window_size_);
+    Marker cm(this, "::YamuxStream");
   }
 
   void YamuxStream::read(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
