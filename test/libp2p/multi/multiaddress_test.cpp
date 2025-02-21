@@ -37,7 +37,7 @@ class MultiaddressTest : public ::testing::Test {
  * @then creation succeeds
  */
 TEST_F(MultiaddressTest, CreateFromStringValid) {
-  auto address = EXPECT_OK(Multiaddress::create(valid_ip_udp));
+  ASSERT_OUTCOME_SUCCESS(address, Multiaddress::create(valid_ip_udp));
   ASSERT_EQ(address.getStringAddress(), valid_ip_udp);
   ASSERT_EQ(address.getBytesAddress(), valid_ip_udp_bytes);
 }
@@ -145,7 +145,7 @@ TEST_F(MultiaddressTest, GetString) {
  * @then result is equal to the expected one
  */
 TEST_F(MultiaddressTest, GetBytes) {
-  auto address = EXPECT_OK(Multiaddress::create(valid_ip_udp));
+  ASSERT_OUTCOME_SUCCESS(address, Multiaddress::create(valid_ip_udp));
   ASSERT_EQ(address.getBytesAddress(), valid_ip_udp_bytes);
 }
 
@@ -251,7 +251,7 @@ TEST_F(MultiaddressTest, GetProtocolsWithValues) {
 TEST_F(MultiaddressTest, DnsAndIpfs) {
   auto addr =
       "/dns4/p2p.cc3-0.kusama.network/tcp/30100/p2p/12D3KooWDgtynm4S9M3m6ZZhXYu2RrWKdvkCSScc25xKDVSg1Sjd"s;
-  auto address = EXPECT_OK(Multiaddress::create(addr));
+  ASSERT_OUTCOME_SUCCESS(address, Multiaddress::create(addr));
   ASSERT_EQ(address.getStringAddress(), addr);
   auto peer_id_opt = address.getPeerId();
   ASSERT_TRUE(peer_id_opt);
@@ -266,6 +266,6 @@ TEST_F(MultiaddressTest, DnsAndIpfs) {
  */
 TEST_F(MultiaddressTest, ParityWss) {
   auto addr = "/dns/telemetry.polkadot.io/tcp/443/x-parity-wss/%2Fsubmit%2F"s;
-  auto address = EXPECT_OK(Multiaddress::create(addr));
+  ASSERT_OUTCOME_SUCCESS(address, Multiaddress::create(addr));
   ASSERT_EQ(address.getStringAddress(), addr);
 }

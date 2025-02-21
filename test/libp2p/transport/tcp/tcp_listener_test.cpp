@@ -54,17 +54,21 @@ struct TcpListenerTest : public ::testing::Test {
  */
 TEST_F(TcpListenerTest, ListenCloseListen) {
   EXPECT_CALL(cb, Call(_)).WillRepeatedly(Invoke([](CapConnResult c) {
-    EXPECT_EC(c, boost::asio::error::operation_aborted);
+    if (!c) {
+      ASSERT_EQ(c.error().value(), (int)boost::asio::error::operation_aborted);
+    } else {
+      ADD_FAILURE();
+    }
   }));
 
-  EXPECT_OK(listener->listen(ma));
+  ASSERT_OUTCOME_SUCCESS(listener->listen(ma));
   ASSERT_FALSE(listener->isClosed());
-  EXPECT_OK(listener->close());
+  ASSERT_OUTCOME_SUCCESS(listener->close());
   ASSERT_TRUE(listener->isClosed());
 
-  EXPECT_OK(listener->listen(ma));
+  ASSERT_OUTCOME_SUCCESS(listener->listen(ma));
   ASSERT_FALSE(listener->isClosed());
-  EXPECT_OK(listener->close());
+  ASSERT_OUTCOME_SUCCESS(listener->close());
   ASSERT_TRUE(listener->isClosed());
 
   context->run_for(50ms);
@@ -78,14 +82,18 @@ TEST_F(TcpListenerTest, ListenCloseListen) {
 TEST_F(TcpListenerTest, DoubleClose) {
   EXPECT_CALL(cb, Call(_)).WillOnce(Invoke([](CapConnResult c) {
     if (!c) {
-      EXPECT_EC(c, boost::asio::error::operation_aborted);
+      if (!c) {
+        ASSERT_EQ(c.error().value(), (int)boost::asio::error::operation_aborted);
+      } else {
+        ADD_FAILURE();
+      }
     }
   }));
 
-  EXPECT_OK(listener->listen(ma));
+  ASSERT_OUTCOME_SUCCESS(listener->listen(ma));
   ASSERT_FALSE(listener->isClosed());
-  EXPECT_OK(listener->close());
-  EXPECT_OK(listener->close());
+  ASSERT_OUTCOME_SUCCESS(listener->close());
+  ASSERT_OUTCOME_SUCCESS(listener->close());
   ASSERT_TRUE(listener->isClosed());
   context->run_for(50ms);
 }

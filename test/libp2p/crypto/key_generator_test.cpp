@@ -76,7 +76,7 @@ class KeyGeneratorTest : public KeyGenTest,
  */
 TEST_P(KeyGeneratorTest, GenerateKeyPairSuccess) {
   auto key_type = GetParam();
-  auto val = EXPECT_OK(crypto_provider_->generateKeys(key_type));
+  ASSERT_OUTCOME_SUCCESS(val, crypto_provider_->generateKeys(key_type));
   ASSERT_EQ(val.privateKey.type, key_type);
   ASSERT_EQ(val.publicKey.type, key_type);
 }
@@ -88,8 +88,8 @@ TEST_P(KeyGeneratorTest, GenerateKeyPairSuccess) {
  */
 TEST_P(KeyGeneratorTest, TwoKeysAreDifferent) {
   auto key_type = GetParam();
-  auto val1 = EXPECT_OK(crypto_provider_->generateKeys(key_type));
-  auto val2 = EXPECT_OK(crypto_provider_->generateKeys(key_type));
+  ASSERT_OUTCOME_SUCCESS(val1, crypto_provider_->generateKeys(key_type));
+  ASSERT_OUTCOME_SUCCESS(val2, crypto_provider_->generateKeys(key_type));
   ASSERT_NE(val1.privateKey.data, val2.privateKey.data);
   ASSERT_NE(val1.publicKey.data, val2.privateKey.data);
 }
@@ -104,8 +104,9 @@ TEST_P(KeyGeneratorTest, TwoKeysAreDifferent) {
 TEST_P(KeyGeneratorTest, DerivePublicKeySuccess) {
   auto key_type = GetParam();
 
-  auto keys = EXPECT_OK(crypto_provider_->generateKeys(key_type));
-  auto derived = EXPECT_OK(crypto_provider_->derivePublicKey(keys.privateKey));
+  ASSERT_OUTCOME_SUCCESS(keys, crypto_provider_->generateKeys(key_type));
+  ASSERT_OUTCOME_SUCCESS(derived,
+                         crypto_provider_->derivePublicKey(keys.privateKey));
   ASSERT_EQ(derived.type, key_type);
   ASSERT_EQ(keys.publicKey.data, derived.data);
 }
@@ -138,7 +139,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(KeyLengthTest, KeyLengthCorrect) {
   auto [key_type, private_key_length, public_key_length] = GetParam();
 
-  auto val = EXPECT_OK(crypto_provider_->generateKeys(key_type));
+  ASSERT_OUTCOME_SUCCESS(val, crypto_provider_->generateKeys(key_type));
   ASSERT_EQ(val.privateKey.data.size(), private_key_length);
 }
 

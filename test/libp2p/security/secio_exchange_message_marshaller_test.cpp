@@ -23,8 +23,8 @@ class ExchangeMessageMarshallerTest : public ::testing::Test {
 TEST_F(ExchangeMessageMarshallerTest, BasicCase) {
   ExchangeMessage source{.epubkey = {1, 2, 3, 4, 5},
                          .signature = {6, 7, 8, 9, 10}};
-  auto bytes = EXPECT_OK(marshaller.marshal(source));
-  auto derived = EXPECT_OK(marshaller.unmarshal(bytes));
+  ASSERT_OUTCOME_SUCCESS(bytes, marshaller.marshal(source));
+  ASSERT_OUTCOME_SUCCESS(derived, marshaller.unmarshal(bytes));
   ASSERT_EQ(source.epubkey, derived.epubkey);
   ASSERT_EQ(source.signature, derived.signature);
 }

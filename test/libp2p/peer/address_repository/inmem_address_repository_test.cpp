@@ -59,14 +59,14 @@ struct InmemAddressRepository_Test : public ::testing::Test {
 
 TEST_F(InmemAddressRepository_Test, GarbageCollection) {
   // @given address repository that has 2 peers, and some addresses
-  EXPECT_OK(db->addAddresses(p1, std::vector<Multiaddress>{ma1, ma2}, 10ms));
-  EXPECT_OK(db->addAddresses(p1, std::vector<Multiaddress>{ma3, ma4}, 1000ms));
-  EXPECT_OK(db->upsertAddresses(p2, std::vector<Multiaddress>{ma4}, 10ms));
+  ASSERT_OUTCOME_SUCCESS(db->addAddresses(p1, std::vector<Multiaddress>{ma1, ma2}, 10ms));
+  ASSERT_OUTCOME_SUCCESS(db->addAddresses(p1, std::vector<Multiaddress>{ma3, ma4}, 1000ms));
+  ASSERT_OUTCOME_SUCCESS(db->upsertAddresses(p2, std::vector<Multiaddress>{ma4}, 10ms));
 
   // @when no collectGarbage is called
   {
-    auto v1 = EXPECT_OK(db->getAddresses(p1));
-    auto v2 = EXPECT_OK(db->getAddresses(p2));
+    ASSERT_OUTCOME_SUCCESS(v1, db->getAddresses(p1));
+    ASSERT_OUTCOME_SUCCESS(v2, db->getAddresses(p2));
 
     // @then initial state is initial
     EXPECT_EQ(v1.size(), 4);
@@ -77,8 +77,8 @@ TEST_F(InmemAddressRepository_Test, GarbageCollection) {
   collectGarbage();
 
   {
-    auto v1 = EXPECT_OK(db->getAddresses(p1));
-    auto v2 = EXPECT_OK(db->getAddresses(p2));
+    ASSERT_OUTCOME_SUCCESS(v1, db->getAddresses(p1));
+    ASSERT_OUTCOME_SUCCESS(v2, db->getAddresses(p2));
 
     // @then no addresses are evicted
     EXPECT_EQ(v1.size(), 4);
@@ -92,13 +92,13 @@ TEST_F(InmemAddressRepository_Test, GarbageCollection) {
 
   {
     // @then p1 has evicted 2 addresses
-    auto v1 = EXPECT_OK(db->getAddresses(p1));
+    ASSERT_OUTCOME_SUCCESS(v1, db->getAddresses(p1));
     EXPECT_EQ(v1.size(), 2);
 
     // @and p2 has been evicted completely
     auto v2 = db->getAddresses(p2);
     // peers without addresses are removed... so we can't find this peer
-    EXPECT_EC(v2, PeerError::NOT_FOUND);
+    ASSERT_OUTCOME_ERROR(v2, PeerError::NOT_FOUND);
   }
 
   // @when clear p1 addresses
@@ -108,12 +108,12 @@ TEST_F(InmemAddressRepository_Test, GarbageCollection) {
     // @then p1 is not evicted, but all its addresses are
     // since we intentionally cleared addresses of this peer, we do not evict
     // this peer from the list of known peers up to the next garbage collection
-    auto v1 = EXPECT_OK(db->getAddresses(p1));
+    ASSERT_OUTCOME_SUCCESS(v1, db->getAddresses(p1));
     EXPECT_EQ(v1.size(), 0);
 
     // @and p2 is still evicted
     auto v2 = db->getAddresses(p2);
-    EXPECT_EC(v2, PeerError::NOT_FOUND);
+    ASSERT_OUTCOME_ERROR(v2, PeerError::NOT_FOUND);
   }
 
   // @when third collect garbage is called
@@ -124,7 +124,7 @@ TEST_F(InmemAddressRepository_Test, GarbageCollection) {
     // last garbage collection removed all peers that do not have addresses
     for (const auto &it : {p1, p2}) {
       auto v = db->getAddresses(it);
-      EXPECT_EC(v, PeerError::NOT_FOUND);
+      ASSERT_OUTCOME_ERROR(v, PeerError::NOT_FOUND);
     }
   }
 }
@@ -135,11 +135,11 @@ TEST_F(InmemAddressRepository_Test, GarbageCollection) {
  * @then ttl is updated, ma1 is not evicted
  */
 TEST_F(InmemAddressRepository_Test, UpdateAddress) {
-  EXPECT_OK(db->addAddresses(p1, std::vector<Multiaddress>{ma1}, 10ms));
-  EXPECT_OK(db->upsertAddresses(p1, std::vector<Multiaddress>{ma1}, 1000ms));
+  ASSERT_OUTCOME_SUCCESS(db->addAddresses(p1, std::vector<Multiaddress>{ma1}, 10ms));
+  ASSERT_OUTCOME_SUCCESS(db->upsertAddresses(p1, std::vector<Multiaddress>{ma1}, 1000ms));
 
   {
-    auto v = EXPECT_OK(db->getAddresses(p1));
+    ASSERT_OUTCOME_SUCCESS(v, db->getAddresses(p1));
     EXPECT_EQ(v.size(), 1);
   }
 
@@ -147,7 +147,7 @@ TEST_F(InmemAddressRepository_Test, UpdateAddress) {
   collectGarbage();
 
   // ma1 is updated
-  auto v = EXPECT_OK(db->getAddresses(p1));
+  ASSERT_OUTCOME_SUCCESS(v, db->getAddresses(p1));
   EXPECT_EQ(v.size(), 1);
 }
 
@@ -157,11 +157,11 @@ TEST_F(InmemAddressRepository_Test, UpdateAddress) {
  * @then ttl of ma1 is not updated, ma1 is evicted. ma2 is inserted.
  */
 TEST_F(InmemAddressRepository_Test, InsertAddress) {
-  EXPECT_OK(db->addAddresses(p1, std::vector<Multiaddress>{ma1}, 10ms));
-  EXPECT_OK(db->upsertAddresses(p1, std::vector<Multiaddress>{ma2}, 1000ms));
+  ASSERT_OUTCOME_SUCCESS(db->addAddresses(p1, std::vector<Multiaddress>{ma1}, 10ms));
+  ASSERT_OUTCOME_SUCCESS(db->upsertAddresses(p1, std::vector<Multiaddress>{ma2}, 1000ms));
 
   {
-    auto v = EXPECT_OK(db->getAddresses(p1));
+    ASSERT_OUTCOME_SUCCESS(v, db->getAddresses(p1));
     EXPECT_EQ(v.size(), 2);
   }
 
@@ -169,7 +169,7 @@ TEST_F(InmemAddressRepository_Test, InsertAddress) {
   collectGarbage();
 
   // ma1 is evicted, ma2 is not
-  auto v = EXPECT_OK(db->getAddresses(p1));
+  ASSERT_OUTCOME_SUCCESS(v, db->getAddresses(p1));
   EXPECT_EQ(v.size(), 1);
   EXPECT_EQ(v.front(), ma2);
 }
@@ -180,8 +180,8 @@ TEST_F(InmemAddressRepository_Test, InsertAddress) {
  * @then 2 peers returned
  */
 TEST_F(InmemAddressRepository_Test, GetPeers) {
-  EXPECT_OK(db->upsertAddresses(p1, {}, 1000ms));
-  EXPECT_OK(db->upsertAddresses(p2, {}, 1000ms));
+  ASSERT_OUTCOME_SUCCESS(db->upsertAddresses(p1, {}, 1000ms));
+  ASSERT_OUTCOME_SUCCESS(db->upsertAddresses(p2, {}, 1000ms));
 
   auto s = db->getPeers();
   EXPECT_EQ(s.size(), 2);

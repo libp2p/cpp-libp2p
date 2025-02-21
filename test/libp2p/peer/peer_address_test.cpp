@@ -49,7 +49,7 @@ class PeerAddressTest : public ::testing::Test {
  * @then creation is successful
  */
 TEST_F(PeerAddressTest, FromStringSuccess) {
-  auto address = EXPECT_OK(PeerAddress::create(kAddressString));
+  ASSERT_OUTCOME_SUCCESS(address, PeerAddress::create(kAddressString));
   EXPECT_EQ(address.toString(), kAddressString);
   EXPECT_EQ(address.getId(), kDefaultPeerId);
   EXPECT_EQ(address.getAddress(), kDefaultAddress);
@@ -103,7 +103,8 @@ TEST_F(PeerAddressTest, FromStringIdNotSha256) {
  * @then creation is successful
  */
 TEST_F(PeerAddressTest, FromInfoSuccess) {
-  auto address = EXPECT_OK(
+  ASSERT_OUTCOME_SUCCESS(
+      address,
       PeerAddress::create(PeerInfo{kDefaultPeerId, {kDefaultAddress}}));
   EXPECT_EQ(address.toString(), kAddressString);
   EXPECT_EQ(address.getId(), kDefaultPeerId);
@@ -125,8 +126,8 @@ TEST_F(PeerAddressTest, FromInfoNoAddresses) {
  * @then creation is successful
  */
 TEST_F(PeerAddressTest, FromDistinctSuccess) {
-  auto address =
-      EXPECT_OK(PeerAddress::create(kDefaultPeerId, kDefaultAddress));
+  ASSERT_OUTCOME_SUCCESS(address,
+                         PeerAddress::create(kDefaultPeerId, kDefaultAddress));
   EXPECT_EQ(address.toString(), kAddressString);
   EXPECT_EQ(address.getId(), kDefaultPeerId);
   EXPECT_EQ(address.getAddress(), kDefaultAddress);

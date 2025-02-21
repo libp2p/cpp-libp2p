@@ -54,7 +54,7 @@ Peer::Peer(Peer::Duration timeout, bool secure)
           basic::Scheduler::Config{})},
       secure_{secure} {
   auto keys =
-      EXPECT_OK(crypto_provider_->generateKeys(crypto::Key::Type::Ed25519));
+      crypto_provider_->generateKeys(crypto::Key::Type::Ed25519).value();
   host_ = makeHost(keys);
 
   auto handler = [this](StreamAndProtocol stream) { echo_->handle(stream); };
@@ -64,7 +64,7 @@ Peer::Peer(Peer::Duration timeout, bool secure)
 void Peer::startServer(const multi::Multiaddress &address,
                        std::shared_ptr<std::promise<peer::PeerInfo>> promise) {
   post(*context_, [this, address, p = std::move(promise)] {
-    EXPECT_OK(host_->listen(address));
+    ASSERT_OUTCOME_SUCCESS(host_->listen(address));
     host_->start();
     p->set_value(host_->getPeerInfo());
   });
@@ -89,7 +89,7 @@ void Peer::startClient(const peer::PeerInfo &pinfo,
               counter = std::move(counter)](
                  StreamAndProtocolOrError rstream) mutable {
                // get stream
-               auto stream = EXPECT_OK(rstream);
+               ASSERT_OUTCOME_SUCCESS(stream, rstream);
                // make client session
                auto client = std::make_shared<protocol::ClientTestSession>(
                    stream.stream, ping_times);
@@ -102,7 +102,7 @@ void Peer::startClient(const peer::PeerInfo &pinfo,
                      // count message exchange
                      counter->tick();
                      // ensure message returned
-                     auto vec = EXPECT_OK(res);
+                     ASSERT_OUTCOME_SUCCESS(vec, res);
                      // ensure message is correct
                      ASSERT_EQ(vec.size(), client->bufferSize());  // NOLINT
                    });

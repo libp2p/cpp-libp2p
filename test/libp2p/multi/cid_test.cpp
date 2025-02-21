@@ -41,7 +41,7 @@ TEST(CidTest, MultibaseStringSuccess) {
   ContentIdentifier cid(ContentIdentifier::Version::V0,
                         MulticodecType::Code::DAG_PB,
                         reference_multihash);
-  auto cid_string = EXPECT_OK(ContentIdentifierCodec::toString(cid));
+  ASSERT_OUTCOME_SUCCESS(cid_string, ContentIdentifierCodec::toString(cid));
   ASSERT_EQ(cid_string, "QmYTYMTdkVyB8we45bdXfZuDu5vCjRVX8QNTFLhC7K8C7t");
 }
 
@@ -57,7 +57,7 @@ TEST(CidTest, MultibaseStringSuccessCIDV1) {
   ContentIdentifier cid(ContentIdentifier::Version::V1,
                         MulticodecType::Code::RAW,
                         reference_multihash);
-  auto cid_string = EXPECT_OK(ContentIdentifierCodec::toString(cid));
+  ASSERT_OUTCOME_SUCCESS(cid_string, ContentIdentifierCodec::toString(cid));
   ASSERT_EQ(cid_string,
             "bafkreibnlo34hl56ndafxtiqtweq3sriz2ybaw7vfhvbcepz56fujmqxxe");
 }
@@ -74,8 +74,9 @@ TEST(CidTest, MultibaseStringOfBaseSuccessCIDV1) {
   ContentIdentifier cid(ContentIdentifier::Version::V1,
                         MulticodecType::Code::RAW,
                         reference_multihash);
-  auto cid_string = EXPECT_OK(ContentIdentifierCodec::toStringOfBase(
-      cid, MultibaseCodec::Encoding::BASE58));
+  ASSERT_OUTCOME_SUCCESS(cid_string,
+                         ContentIdentifierCodec::toStringOfBase(
+                             cid, MultibaseCodec::Encoding::BASE58));
   ASSERT_EQ(cid_string, "zb2rhZhLextyrUiNJUcVUR143SaKDPvHxgpGyeB1N1nqdPzfi");
 }
 
@@ -91,8 +92,9 @@ TEST(CidTest, MultibaseStringOfBaseSuccessCIDV0) {
   ContentIdentifier cid(ContentIdentifier::Version::V0,
                         MulticodecType::Code::DAG_PB,
                         reference_multihash);
-  auto cid_string = EXPECT_OK(ContentIdentifierCodec::toStringOfBase(
-      cid, MultibaseCodec::Encoding::BASE58));
+  ASSERT_OUTCOME_SUCCESS(cid_string,
+                         ContentIdentifierCodec::toStringOfBase(
+                             cid, MultibaseCodec::Encoding::BASE58));
   ASSERT_EQ(cid_string, "QmYTYMTdkVyB8we45bdXfZuDu5vCjRVX8QNTFLhC7K8C7t");
 }
 
@@ -108,9 +110,10 @@ TEST(CidTest, MultibaseStringOfBaseCIDV0InvalidBase) {
   ContentIdentifier cid(ContentIdentifier::Version::V0,
                         MulticodecType::Code::DAG_PB,
                         reference_multihash);
-  EXPECT_EC(ContentIdentifierCodec::toStringOfBase(
-                cid, MultibaseCodec::Encoding::BASE32_LOWER),
-            ContentIdentifierCodec::EncodeError::INVALID_BASE_ENCODING);
+  ASSERT_OUTCOME_ERROR(
+      ContentIdentifierCodec::toStringOfBase(
+          cid, MultibaseCodec::Encoding::BASE32_LOWER),
+      ContentIdentifierCodec::EncodeError::INVALID_BASE_ENCODING);
 }
 
 /**
@@ -127,8 +130,8 @@ TEST(CidTest, MultibaseFromStringSuccessCIDV1) {
                                   reference_multihash);
   const std::string reference_string_cid =
       "bafkreibnlo34hl56ndafxtiqtweq3sriz2ybaw7vfhvbcepz56fujmqxxe";
-  auto cid =
-      EXPECT_OK(ContentIdentifierCodec::fromString(reference_string_cid));
+  ASSERT_OUTCOME_SUCCESS(
+      cid, ContentIdentifierCodec::fromString(reference_string_cid));
   ASSERT_EQ(cid, reference_cid);
 }
 
@@ -147,8 +150,8 @@ TEST(CidTest, MultibaseFromStringSuccessCIDV0) {
   const std::string reference_string_cid =
       "QmYTYMTdkVyB8we45bdXfZuDu5vCjRVX8QNTFLhC7K8C7t";
 
-  auto cid =
-      EXPECT_OK(ContentIdentifierCodec::fromString(reference_string_cid));
+  ASSERT_OUTCOME_SUCCESS(
+      cid, ContentIdentifierCodec::fromString(reference_string_cid));
   ASSERT_EQ(cid, reference_cid);
 }
 
@@ -160,8 +163,8 @@ TEST(CidTest, MultibaseFromStringSuccessCIDV0) {
 TEST(CidTest, MultibaseFromStringShortCid) {
   const std::string short_string = "*";
 
-  EXPECT_EC(ContentIdentifierCodec::fromString(short_string),
-            ContentIdentifierCodec::DecodeError::CID_TOO_SHORT);
+  ASSERT_OUTCOME_ERROR(ContentIdentifierCodec::fromString(short_string),
+                       ContentIdentifierCodec::DecodeError::CID_TOO_SHORT);
 }
 
 /**
@@ -236,11 +239,12 @@ TEST(CidTest, Create) {
 }
 
 TEST(CidEncodeTest, Encode) {
-  EXPECT_EC(ContentIdentifierCodec::encode(
-                ContentIdentifier(ContentIdentifier::Version::V0,
-                                  MulticodecType::Code::SHA1,
-                                  ZERO_MULTIHASH)),
-            ContentIdentifierCodec::EncodeError::INVALID_CONTENT_TYPE);
+  ASSERT_OUTCOME_ERROR(
+      ContentIdentifierCodec::encode(
+          ContentIdentifier(ContentIdentifier::Version::V0,
+                            MulticodecType::Code::SHA1,
+                            ZERO_MULTIHASH)),
+      ContentIdentifierCodec::EncodeError::INVALID_CONTENT_TYPE);
 
   EXPECT_EQ(ContentIdentifierCodec::encode(
                 ContentIdentifier(ContentIdentifier::Version::V0,
@@ -270,8 +274,8 @@ class CidEncodeDecodeTest : public testing::TestWithParam<ContentIdentifier> {};
 
 TEST_P(CidEncodeDecodeTest, DecodedMatchesOriginal) {
   auto cid = GetParam();
-  auto bytes = EXPECT_OK(ContentIdentifierCodec::encode(cid));
-  auto dec_cid = EXPECT_OK(ContentIdentifierCodec::decode(bytes));
+  ASSERT_OUTCOME_SUCCESS(bytes, ContentIdentifierCodec::encode(cid));
+  ASSERT_OUTCOME_SUCCESS(dec_cid, ContentIdentifierCodec::decode(bytes));
   ASSERT_EQ(cid, dec_cid);
 }
 
