@@ -78,6 +78,10 @@ if (METRICS_ENABLED)
   add_compile_definitions("LIBP2P_METRICS_ENABLED")
 endif ()
 
+if(SQLITE_ENABLED)
+  set(SQLITE_FIND_DEP "find_dependency(SQLiteModernCpp CONFIG REQUIRED)")
+endif()
+
 ## setup compilation flags
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang|Clang|GNU)$")
   # enable those flags

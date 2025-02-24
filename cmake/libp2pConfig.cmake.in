@@ -13,7 +13,7 @@ find_dependency(yaml-cpp CONFIG REQUIRED)
 find_dependency(soralog CONFIG REQUIRED)
 find_dependency(tsl_hat_trie CONFIG REQUIRED)
 find_dependency(Boost.DI CONFIG REQUIRED)
-find_dependency(SQLiteModernCpp CONFIG REQUIRED)
+@SQLITE_FIND_DEP@
 
 include("${CMAKE_CURRENT_LIST_DIR}/libp2pTargets.cmake")
 
