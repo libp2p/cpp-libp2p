@@ -4,15 +4,23 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+if (NOT PACKAGE_MANAGER STREQUAL "hunter")
+  function(hunter_add_package)
+  endfunction()
+endif ()
+
 if (TESTING)
   # https://docs.hunter.sh/en/latest/packages/pkg/GTest.html
   hunter_add_package(GTest)
   find_package(GTest CONFIG REQUIRED)
 endif()
 
-# https://docs.hunter.sh/en/latest/packages/pkg/Boost.html
-hunter_add_package(Boost COMPONENTS random filesystem program_options)
-find_package(Boost CONFIG REQUIRED random filesystem program_options)
+if (PACKAGE_MANAGER STREQUAL "hunter")
+  hunter_add_package(Boost COMPONENTS random filesystem program_options)
+  find_package(Boost CONFIG REQUIRED filesystem random program_options)
+else ()
+  find_package(Boost CONFIG REQUIRED filesystem random beast program_options)
+endif ()
 
 # https://www.openssl.org/
 hunter_add_package(BoringSSL)
@@ -53,6 +61,10 @@ find_package(tsl_hat_trie CONFIG REQUIRED)
 hunter_add_package(Boost.DI)
 find_package(Boost.DI CONFIG REQUIRED)
 
-# https://github.com/qdrvm/libp2p-sqlite-modern-cpp/tree/hunter
-hunter_add_package(SQLiteModernCpp)
-find_package(SQLiteModernCpp CONFIG REQUIRED)
+if (SQLITE_ENABLED)
+  # https://github.com/qdrvm/libp2p-sqlite-modern-cpp/tree/hunter
+  hunter_add_package(SQLiteModernCpp)
+  find_package(SQLiteModernCpp CONFIG REQUIRED)
+endif ()
+
+find_package(ZLIB REQUIRED)

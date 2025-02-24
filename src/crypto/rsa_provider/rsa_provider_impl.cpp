@@ -157,7 +157,7 @@ namespace libp2p::crypto::rsa {
       const Signature &signature,
       const PublicKey &public_key) const {
     OUTCOME_TRY(x509_key, RsaProviderImpl::getPublicKeyFromBytes(public_key));
-    EVP_PKEY *key = X509_PUBKEY_get0(x509_key.get());
+    EVP_PKEY *key = X509_PUBKEY_get(x509_key.get());
     std::unique_ptr<RSA, void (*)(RSA *)> rsa{EVP_PKEY_get1_RSA(key), RSA_free};
     OUTCOME_TRY(digest, sha256(message));
     int result = RSA_verify(NID_sha256,

@@ -1,5 +1,21 @@
 cmake_minimum_required(VERSION 3.12)
 
+if (PACKAGE_MANAGER)
+  if(PACKAGE_MANAGER NOT MATCHES "^(hunter|vcpkg)$")
+    message(FATAL_ERROR "PACKAGE_MANAGER must be set to 'hunter', 'vcpkg' or isn't set")
+  endif ()
+else ()
+  set(PACKAGE_MANAGER "hunter")
+  if (CMAKE_TOOLCHAIN_FILE)
+    get_filename_component(ACTUAL_NAME ${CMAKE_TOOLCHAIN_FILE} NAME)
+    if(ACTUAL_NAME STREQUAL "vcpkg.cmake")
+      message(STATUS "vcpkg will be used because vcpkg.cmake has found")
+      set(PACKAGE_MANAGER "vcpkg")
+    endif ()
+  endif ()
+endif ()
+message(STATUS "Selected package manager: ${PACKAGE_MANAGER}")
+
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.27")
   cmake_policy(SET CMP0144 NEW)
 endif()
@@ -20,7 +36,9 @@ set(CMAKE_TOOLCHAIN_FILE
 cmake_policy(SET CMP0048 NEW)
 cmake_policy(SET CMP0135 NEW)
 
-include("cmake/Hunter/init.cmake")
+if (PACKAGE_MANAGER STREQUAL "hunter")
+  include("cmake/Hunter/init.cmake")
+endif ()
 
 project(libp2p VERSION 0.1.17 LANGUAGES C CXX)
 
@@ -39,6 +57,7 @@ option(TSAN "Enable thread sanitizer" OFF)
 option(UBSAN "Enable UB sanitizer" OFF)
 option(EXPOSE_MOCKS "Make mocks header files visible for child projects" ON)
 option(METRICS_ENABLED "Enable libp2p metrics" OFF)
+option(SQLITE_ENABLED "Enable sqlite based libp2p storage" OFF)
 
 include(cmake/print.cmake)
 print("C flags: ${CMAKE_C_FLAGS}")
@@ -114,6 +133,9 @@ if(EXAMPLES)
   add_subdirectory(example)
 endif()
 if(TESTING OR COVERAGE)
+  if (PACKAGE_MANAGER STREQUAL "vcpkg")
+    list(APPEND VCPKG_MANIFEST_FEATURES libp2p-tests)
+  endif()
   enable_testing()
   add_subdirectory(test)
 endif()
@@ -126,11 +148,11 @@ include(CMakePackageConfigHelpers)
 
 set(CONFIG_INCLUDE_DIRS ${CMAKE_INSTALL_FULL_INCLUDEDIR}/libp2p)
 configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/libp2pConfig.cmake.in
-        ${CMAKE_CURRENT_BINARY_DIR}/libp2pConfig.cmake
-        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
-        )
+    ${CMAKE_CURRENT_BINARY_DIR}/libp2pConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
+)
 
 install(FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/libp2pConfig.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
-        )
+    ${CMAKE_CURRENT_BINARY_DIR}/libp2pConfig.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libp2p
+)

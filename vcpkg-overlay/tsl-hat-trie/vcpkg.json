@@ -1,0 +1,8 @@
+{
+  "name": "tsl-hat-trie",
+  "version": "1.0.0",
+  "dependencies": [
+    { "name": "vcpkg-cmake", "host": true },
+    { "name": "vcpkg-cmake-config", "host": true }
+  ]
+}

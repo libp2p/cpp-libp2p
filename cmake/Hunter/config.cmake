@@ -17,8 +17,8 @@
 
 hunter_config(
     soralog
-    URL  https://github.com/xDimon/soralog/archive/35634db3126d7dc1784c883713c8e31ebb07d051.tar.gz
-    SHA1 ee64d0982cffe0a3856c4e786161518e55a6ffd4
+    URL  https://github.com/xDimon/soralog/archive/4dfffd3d949b1c16a04db2e5756555a4031732f7.tar.gz
+    SHA1 60e3dcaab2d8e43f0ed4fd22087677663c618716
     #    VERSION 0.2.4
     KEEP_PACKAGE_SOURCES
 )
@@ -32,8 +32,8 @@ hunter_config(
 
 hunter_config(
     scale
-    URL  https://github.com/qdrvm/scale-codec-cpp/archive/24fbd767c8975647a733b45f9c3df92380110fb2.tar.gz
-    SHA1 c8570702805cdbacd31bd5caacead82c746ba901
+    URL  https://github.com/qdrvm/scale-codec-cpp/archive/156433264c90770c9eda2a2417852fd8e14a024e.tar.gz
+    SHA1 d2b9edf1d67f48c1916caeae119df3065ef14062
     KEEP_PACKAGE_SOURCES
 )
 
