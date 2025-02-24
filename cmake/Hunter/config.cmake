@@ -31,18 +31,10 @@ hunter_config(
 )
 
 hunter_config(
-    scale
-#    VERSION 2.0.0
-    URL  https://github.com/qdrvm/scale-codec-cpp/archive/refs/tags/v2.0.0.tar.gz
-    SHA1 a83f0a034693809b948451ff774aeb58462a0f96
-    KEEP_PACKAGE_SOURCES
-)
-
-hunter_config(
     qtils
-    URL  https://github.com/qdrvm/qtils/archive/9a64dfd6ed0226dec29805aa89d4c713a6f81d9f.tar.gz
-    SHA1 16c0269175018e88c33090f9fbdaa230c8fdb911
+    URL  https://github.com/qdrvm/qtils/archive/1e492cf09a3640570cae59a951502614320c0797.tar.gz
+    SHA1 033dd907e2566c95ce2ccf1fa6dd9766bc896894
     CMAKE_ARGS
-        FORMAT_ERROR_WITH_FULLTYPE=ON
+      FORMAT_ERROR_WITH_FULLTYPE=ON
     KEEP_PACKAGE_SOURCES
 )

@@ -31,7 +31,7 @@
   ],
   "features": {
     "libp2p-tests": {
-      "description": "Test of scale encoding/decoding",
+      "description": "Tests of libp2p",
       "dependencies": [
         "gtest"
       ]
