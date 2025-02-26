@@ -1,0 +1,7 @@
+{
+  "name": "libp2p-example",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "libp2p"
+  ]
+}

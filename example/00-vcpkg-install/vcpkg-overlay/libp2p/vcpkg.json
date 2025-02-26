@@ -1,0 +1,34 @@
+{
+  "name": "libp2p",
+  "version": "0.0.1",
+  "dependencies": [
+    { "name": "vcpkg-cmake", "host": true },
+    { "name": "vcpkg-cmake-config", "host": true },
+    "boost-filesystem",
+    "boost-random",
+    "boost-program-options",
+    "qtils",
+    "boringssl",
+    "boost-signals2",
+    "boost-asio",
+    "soralog",
+    "fmt",
+    "gtest",
+    "boost-beast",
+    "protobuf",
+    "liblsquic",
+    "zlib",
+    "boost-di",
+    "sqlite-modern-cpp",
+    "libsecp256k1",
+    "tsl-hat-trie",
+    "boost-multi-index",
+    "c-ares"
+  ],
+  "overrides": [
+    {
+      "name": "fmt",
+      "version": "10.1.1"
+    }
+  ]
+}

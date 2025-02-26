@@ -43,6 +43,8 @@ endif ()
 project(libp2p VERSION 0.1.17 LANGUAGES C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(TESTING "Build tests" ON)
 option(EXAMPLES "Build examples" ON)
