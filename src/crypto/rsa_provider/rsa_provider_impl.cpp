@@ -157,8 +157,19 @@ namespace libp2p::crypto::rsa {
       const Signature &signature,
       const PublicKey &public_key) const {
     OUTCOME_TRY(x509_key, RsaProviderImpl::getPublicKeyFromBytes(public_key));
+
     EVP_PKEY *key = X509_PUBKEY_get(x509_key.get());
-    std::unique_ptr<RSA, void (*)(RSA *)> rsa{EVP_PKEY_get1_RSA(key), RSA_free};
+    if (!key) {
+      return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+    }
+    std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> key_ptr{key,
+                                                                EVP_PKEY_free};
+    std::unique_ptr<RSA, decltype(&RSA_free)> rsa{
+        EVP_PKEY_get1_RSA(key_ptr.get()), RSA_free};
+    if (!rsa) {
+      return CryptoProviderError::SIGNATURE_VERIFICATION_FAILED;
+    }
+
     OUTCOME_TRY(digest, sha256(message));
     int result = RSA_verify(NID_sha256,
                             digest.data(),
