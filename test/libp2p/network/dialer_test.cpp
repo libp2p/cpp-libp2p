@@ -112,7 +112,7 @@ TEST_F(DialerTest, DialAllTheAddresses) {
 
   bool executed = false;
   dialer->dial(pinfo_two_addrs, [&](auto &&rconn) {
-    auto conn = EXPECT_OK(rconn);
+    ASSERT_OUTCOME_SUCCESS(conn, rconn);
     (void)conn;
     executed = true;
   });
@@ -144,7 +144,7 @@ TEST_F(DialerTest, DialNewConnection) {
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    auto conn = EXPECT_OK(rconn);
+    ASSERT_OUTCOME_SUCCESS(conn, rconn);
     (void)conn;
     executed = true;
   });
@@ -168,7 +168,7 @@ TEST_F(DialerTest, DialNoAddresses) {
   peer::PeerInfo pinfo = {pid, {}};
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    EXPECT_EC(rconn, std::errc::destination_address_required);
+    ASSERT_OUTCOME_ERROR(rconn, std::errc::destination_address_required);
     executed = true;
   });
 
@@ -193,7 +193,7 @@ TEST_F(DialerTest, DialNoTransports) {
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    EXPECT_EC(rconn, std::errc::address_family_not_supported);
+    ASSERT_OUTCOME_ERROR(rconn, std::errc::address_family_not_supported);
     executed = true;
   });
 
@@ -214,7 +214,7 @@ TEST_F(DialerTest, DialExistingConnection) {
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    auto conn = EXPECT_OK(rconn);
+    ASSERT_OUTCOME_SUCCESS(conn, rconn);
     (void)conn;
     executed = true;
   });
@@ -246,7 +246,7 @@ TEST_F(DialerTest, NewStreamFailed) {
 
   bool executed = false;
   dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
-    EXPECT_EC(rstream, std::errc::io_error);
+    ASSERT_OUTCOME_ERROR(rstream, std::errc::io_error);
     executed = true;
   });
 
@@ -281,7 +281,7 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
 
   bool executed = false;
   dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
-    EXPECT_EC(rstream, r);
+    ASSERT_OUTCOME_ERROR(rstream, r);
     executed = true;
   });
 
@@ -314,7 +314,7 @@ TEST_F(DialerTest, NewStreamSuccess) {
 
   bool executed = false;
   dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
-    auto s = EXPECT_OK(rstream);
+    ASSERT_OUTCOME_SUCCESS(s, rstream);
     (void)s;
     executed = true;
   });

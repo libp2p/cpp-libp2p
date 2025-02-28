@@ -130,8 +130,8 @@ class ChaChaPolyTest : public testing::Test {
 TEST_F(ChaChaPolyTest, Basic) {
   ChaCha20Poly1305Impl codec(key);
   Bytes data = "afafafdeadbeef"_unhex;
-  auto ciphertext = EXPECT_OK(codec.encrypt(nonce, data, aad));
-  auto plaintext = EXPECT_OK(codec.decrypt(nonce, ciphertext, aad));
+  ASSERT_OUTCOME_SUCCESS(ciphertext, codec.encrypt(nonce, data, aad));
+  ASSERT_OUTCOME_SUCCESS(plaintext, codec.decrypt(nonce, ciphertext, aad));
   ASSERT_EQ(data, plaintext);
 }
 
@@ -143,7 +143,7 @@ TEST_F(ChaChaPolyTest, Basic) {
 TEST_F(ChaChaPolyTest, Encrypt) {
   ChaCha20Poly1305Impl codec(key);
 
-  auto result = EXPECT_OK(codec.encrypt(nonce, plaintext, aad));
+  ASSERT_OUTCOME_SUCCESS(result, codec.encrypt(nonce, plaintext, aad));
   ASSERT_EQ(result, ciphertext);
 }
 
@@ -155,6 +155,6 @@ TEST_F(ChaChaPolyTest, Encrypt) {
 TEST_F(ChaChaPolyTest, Decrypt) {
   ChaCha20Poly1305Impl codec(key);
 
-  auto result = EXPECT_OK(codec.decrypt(nonce, ciphertext, aad));
+  ASSERT_OUTCOME_SUCCESS(result, codec.decrypt(nonce, ciphertext, aad));
   ASSERT_EQ(result, plaintext);
 }

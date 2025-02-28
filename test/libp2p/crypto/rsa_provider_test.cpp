@@ -213,7 +213,8 @@ class RsaProviderTest : public ::testing::Test {
  * @then Pre-generated signature must be valid
  */
 TEST_F(RsaProviderTest, SignatureVerificationSuccess) {
-  auto result = EXPECT_OK(provider_.verify(message_, signature_, public_key_));
+  ASSERT_OUTCOME_SUCCESS(result,
+                         provider_.verify(message_, signature_, public_key_));
   ASSERT_TRUE(result);
 }
 
@@ -225,8 +226,8 @@ TEST_F(RsaProviderTest, SignatureVerificationSuccess) {
  */
 TEST_F(RsaProviderTest, InvalidSignatureVerificationFailure) {
   Signature different_signature{SAMPLE_RSA_INVALID_SIGNATURE_BYTES};
-  auto result =
-      EXPECT_OK(provider_.verify(message_, different_signature, public_key_));
+  ASSERT_OUTCOME_SUCCESS(
+      result, provider_.verify(message_, different_signature, public_key_));
   ASSERT_FALSE(result);
 }
 
@@ -239,7 +240,8 @@ TEST_F(RsaProviderTest, InvalidSignatureVerificationFailure) {
 TEST_F(RsaProviderTest, InvalidPublicKeySignatureVerificationFailure) {
   PublicKey invalid_key = public_key_;
   invalid_key[32] ^= 8;
-  auto result = EXPECT_OK(provider_.verify(message_, signature_, invalid_key));
+  ASSERT_OUTCOME_SUCCESS(result,
+                         provider_.verify(message_, signature_, invalid_key));
   ASSERT_FALSE(result);
 }
 
@@ -249,6 +251,6 @@ TEST_F(RsaProviderTest, InvalidPublicKeySignatureVerificationFailure) {
  * @then Generated signature matches pre-generated
  */
 TEST_F(RsaProviderTest, SigningSample) {
-  auto signature = EXPECT_OK(provider_.sign(message_, private_key_));
+  ASSERT_OUTCOME_SUCCESS(signature, provider_.sign(message_, private_key_));
   EXPECT_EQ(signature, signature_);
 }

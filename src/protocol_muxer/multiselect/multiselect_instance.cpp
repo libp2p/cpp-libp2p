@@ -328,7 +328,7 @@ namespace libp2p::protocol_muxer::multiselect {
 
       SL_DEBUG(log(),
                "Failed to negotiate protocols: {}",
-               fmt::join(protocols_.begin(), protocols_.end(), ", "));
+               fmt::join(protocols_, ", "));
       return MaybeResult(ProtocolMuxer::Error::NEGOTIATION_FAILED);
     }
 

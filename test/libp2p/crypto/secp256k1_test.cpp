@@ -64,7 +64,8 @@ class Secp256k1ProviderTest : public ::testing::Test {
  * @then Derived public key must be the same as pre-generated
  */
 TEST_F(Secp256k1ProviderTest, PublicKeyDerivationSuccess) {
-  auto derivedPublicKey = EXPECT_OK(provider_.derive(sample_private_key_));
+  ASSERT_OUTCOME_SUCCESS(derivedPublicKey,
+                         provider_.derive(sample_private_key_));
   ASSERT_EQ(derivedPublicKey, sample_public_key_);
 };
 
@@ -74,7 +75,8 @@ TEST_F(Secp256k1ProviderTest, PublicKeyDerivationSuccess) {
  * @then Verification of the pre-generated signature must be successful
  */
 TEST_F(Secp256k1ProviderTest, PreGeneratedSignatureVerificationSuccess) {
-  auto verificationResult = EXPECT_OK(
+  ASSERT_OUTCOME_SUCCESS(
+      verificationResult,
       provider_.verify(message_, sample_signature_, sample_public_key_));
   ASSERT_TRUE(verificationResult);
 }
@@ -85,10 +87,12 @@ TEST_F(Secp256k1ProviderTest, PreGeneratedSignatureVerificationSuccess) {
  * @then Generating key pair, signature and it's verification must be successful
  */
 TEST_F(Secp256k1ProviderTest, GenerateSignatureSuccess) {
-  auto keyPair = EXPECT_OK(provider_.generate());
-  auto signature = EXPECT_OK(provider_.sign(message_, keyPair.private_key));
-  auto verificationResult =
-      EXPECT_OK(provider_.verify(message_, signature, keyPair.public_key));
+  ASSERT_OUTCOME_SUCCESS(keyPair, provider_.generate());
+  ASSERT_OUTCOME_SUCCESS(signature,
+                         provider_.sign(message_, keyPair.private_key));
+  ASSERT_OUTCOME_SUCCESS(
+      verificationResult,
+      provider_.verify(message_, signature, keyPair.public_key));
   ASSERT_TRUE(verificationResult);
 }
 
@@ -98,11 +102,12 @@ TEST_F(Secp256k1ProviderTest, GenerateSignatureSuccess) {
  * @then Signature for different public key must be invalid
  */
 TEST_F(Secp256k1ProviderTest, VerifySignatureInvalidKeyFailure) {
-  auto firstKeyPair = EXPECT_OK(provider_.generate());
-  auto secondKeyPair = EXPECT_OK(provider_.generate());
-  auto signature =
-      EXPECT_OK(provider_.sign(message_, firstKeyPair.private_key));
-  auto verificationResult = EXPECT_OK(
+  ASSERT_OUTCOME_SUCCESS(firstKeyPair, provider_.generate());
+  ASSERT_OUTCOME_SUCCESS(secondKeyPair, provider_.generate());
+  ASSERT_OUTCOME_SUCCESS(signature,
+                         provider_.sign(message_, firstKeyPair.private_key));
+  ASSERT_OUTCOME_SUCCESS(
+      verificationResult,
       provider_.verify(message_, signature, secondKeyPair.public_key));
   ASSERT_FALSE(verificationResult);
 }
@@ -113,9 +118,11 @@ TEST_F(Secp256k1ProviderTest, VerifySignatureInvalidKeyFailure) {
  * @then Invalid signature verification must be unsuccessful
  */
 TEST_F(Secp256k1ProviderTest, VerifyInvalidSignaturFailure) {
-  auto signature = EXPECT_OK(provider_.sign(message_, sample_private_key_));
+  ASSERT_OUTCOME_SUCCESS(signature,
+                         provider_.sign(message_, sample_private_key_));
   message_[0] = 0;  // Modify sample message
-  auto verificationResult =
-      EXPECT_OK(provider_.verify(message_, signature, sample_public_key_));
+  ASSERT_OUTCOME_SUCCESS(
+      verificationResult,
+      provider_.verify(message_, signature, sample_public_key_));
   ASSERT_FALSE(verificationResult);
 }

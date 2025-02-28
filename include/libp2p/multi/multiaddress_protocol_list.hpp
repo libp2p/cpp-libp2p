@@ -10,6 +10,7 @@
 #include <functional>
 #include <map>
 #include <string_view>
+#include <unistd.h>
 
 namespace libp2p::multi {
 

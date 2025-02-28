@@ -46,13 +46,12 @@ struct InmemProtocolRepository_Test : public ::testing::Test {
  * @then two protocols added
  */
 TEST_F(InmemProtocolRepository_Test, Add) {
-  EXPECT_OK(db->addProtocols(p1, vec(s1, s2)));
+  EXPECT_OUTCOME_SUCCESS(db->addProtocols(p1, vec(s1, s2)));
   {
-    auto v = EXPECT_OK(db->getProtocols(p1));
+    ASSERT_OUTCOME_SUCCESS(v, db->getProtocols(p1));
     EXPECT_EQ(v.size(), 2);
 
-    auto r = db->getProtocols(p2);
-    EXPECT_EC(r, PeerError::NOT_FOUND);
+    ASSERT_OUTCOME_ERROR(db->getProtocols(p2), PeerError::NOT_FOUND);
   }
 }
 
@@ -62,18 +61,17 @@ TEST_F(InmemProtocolRepository_Test, Add) {
  * @then they are evicted
  */
 TEST_F(InmemProtocolRepository_Test, CollectGarbage) {
-  EXPECT_OK(db->addProtocols(p1, vec(s1, s2)));
-  EXPECT_OK(db->addProtocols(p2, vec()));
+  ASSERT_OUTCOME_SUCCESS(db->addProtocols(p1, vec(s1, s2)));
+  ASSERT_OUTCOME_SUCCESS(db->addProtocols(p2, vec()));
 
   // no effect
   db->collectGarbage();
 
   {
-    auto v = EXPECT_OK(db->getProtocols(p1));
+    ASSERT_OUTCOME_SUCCESS(v, db->getProtocols(p1));
     EXPECT_EQ(v.size(), 2);
 
-    auto r = db->getProtocols(p2);
-    EXPECT_EC(r, PeerError::NOT_FOUND);
+    ASSERT_OUTCOME_ERROR(db->getProtocols(p2), PeerError::NOT_FOUND);
   }
 
   // clear p1. now p1 has 0 protocols
@@ -84,8 +82,7 @@ TEST_F(InmemProtocolRepository_Test, CollectGarbage) {
 
   {
     for (const auto &it : {p1, p2}) {
-      auto r = db->getProtocols(it);
-      EXPECT_EC(r, PeerError::NOT_FOUND);
+      ASSERT_OUTCOME_ERROR(db->getProtocols(it), PeerError::NOT_FOUND);
     }
   }
 }
@@ -96,30 +93,30 @@ TEST_F(InmemProtocolRepository_Test, CollectGarbage) {
  * @then expected protocols are returned
  */
 TEST_F(InmemProtocolRepository_Test, Supports) {
-  EXPECT_OK(db->addProtocols(p1, vec(s1, s2)));
+  ASSERT_OUTCOME_SUCCESS(db->addProtocols(p1, vec(s1, s2)));
 
   // one of
   {
-    auto v = EXPECT_OK(db->supportsProtocols(p1, set(s1)));
+    ASSERT_OUTCOME_SUCCESS(v, db->supportsProtocols(p1, set(s1)));
     EXPECT_EQ(v, vec(s1));
   }
 
   // forward order
   {
-    auto v = EXPECT_OK(db->supportsProtocols(p1, set(s1, s2)));
+    ASSERT_OUTCOME_SUCCESS(v, db->supportsProtocols(p1, set(s1, s2)));
     EXPECT_EQ(v, vec(s1, s2));
   }
 
   // reverse order
   {
-    auto v = EXPECT_OK(db->supportsProtocols(p1, set(s2, s1)));
+    ASSERT_OUTCOME_SUCCESS(v, db->supportsProtocols(p1, set(s2, s1)));
     EXPECT_EQ(v, vec(s1, s2));
   }
 
   // non existing
   {
-    EXPECT_OK(db->removeProtocols(p1, vec(s1)));
-    auto v = EXPECT_OK(db->supportsProtocols(p1, set(s1, s2)));
+    ASSERT_OUTCOME_SUCCESS(db->removeProtocols(p1, vec(s1)));
+    ASSERT_OUTCOME_SUCCESS(v, db->supportsProtocols(p1, set(s1, s2)));
     EXPECT_EQ(v, vec(s2));
   }
 }
@@ -130,9 +127,9 @@ TEST_F(InmemProtocolRepository_Test, Supports) {
  * @then protocol s1 is removed
  */
 TEST_F(InmemProtocolRepository_Test, Remove) {
-  EXPECT_OK(db->addProtocols(p1, vec(s1, s2)));
-  EXPECT_OK(db->removeProtocols(p1, vec(s1)));
-  auto v = EXPECT_OK(db->getProtocols(p1));
+  ASSERT_OUTCOME_SUCCESS(db->addProtocols(p1, vec(s1, s2)));
+  ASSERT_OUTCOME_SUCCESS(db->removeProtocols(p1, vec(s1)));
+  ASSERT_OUTCOME_SUCCESS(v, db->getProtocols(p1));
   EXPECT_EQ(v, vec(s2));
 }
 
@@ -142,9 +139,9 @@ TEST_F(InmemProtocolRepository_Test, Remove) {
  * @then get no error
  */
 TEST_F(InmemProtocolRepository_Test, RemoveNonExisting) {
-  EXPECT_OK(db->addProtocols(p1, vec(s2)));
-  EXPECT_OK(db->removeProtocols(p1, vec(s1)));
-  auto v = EXPECT_OK(db->getProtocols(p1));
+  ASSERT_OUTCOME_SUCCESS(db->addProtocols(p1, vec(s2)));
+  ASSERT_OUTCOME_SUCCESS(db->removeProtocols(p1, vec(s1)));
+  ASSERT_OUTCOME_SUCCESS(v, db->getProtocols(p1));
   EXPECT_EQ(v.size(), 1);
 }
 
@@ -154,11 +151,11 @@ TEST_F(InmemProtocolRepository_Test, RemoveNonExisting) {
  * @then 2 peers returned
  */
 TEST_F(InmemProtocolRepository_Test, GetPeers) {
-  EXPECT_OK(db->addProtocols(p1, {}));
+  ASSERT_OUTCOME_SUCCESS(db->addProtocols(p1, {}));
   auto s1 = db->getPeers();
   EXPECT_EQ(s1.size(), 1);
 
-  EXPECT_OK(db->addProtocols(p2, {}));
+  ASSERT_OUTCOME_SUCCESS(db->addProtocols(p2, {}));
   auto s = db->getPeers();
   EXPECT_EQ(s.size(), 2);
 }

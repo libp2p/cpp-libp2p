@@ -156,7 +156,7 @@ TEST_F(BasicHostTest, NewStream) {
 
   bool executed = false;
   host->newStream(pinfo, {protocol}, [&](auto &&result) {
-    auto stream = EXPECT_OK(result);
+    ASSERT_OUTCOME_SUCCESS(stream, result);
     (void)stream;
     executed = true;
   });
