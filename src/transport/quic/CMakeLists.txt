@@ -14,4 +14,5 @@ libp2p_add_library(p2p_quic
 target_link_libraries(p2p_quic
     lsquic::lsquic
     p2p_tls
+    ZLIB::ZLIB
     )

@@ -131,7 +131,7 @@ TEST_F(BasicHostTest, GetAddressesInterfaces) {
 TEST_F(BasicHostTest, Connect) {
   peer::PeerInfo pinfo{"2"_peerid, {ma1}};
   EXPECT_CALL(network, getDialer()).WillOnce(ReturnRef(*dialer));
-  EXPECT_CALL(*dialer, dial(pinfo, _, _)).Times(1);
+  EXPECT_CALL(*dialer, dial(pinfo, _)).Times(1);
 
   host->connect(pinfo);
 }
@@ -146,16 +146,12 @@ TEST_F(BasicHostTest, NewStream) {
   peer::ProtocolName protocol = "/proto/1.0.0";
 
   EXPECT_CALL(network, getDialer()).WillOnce(ReturnRef(*dialer));
-  EXPECT_CALL(*dialer,
-              newStream(pinfo,
-                        StreamProtocols{protocol},
-                        _,
-                        std::chrono::milliseconds::zero()))
+  EXPECT_CALL(*dialer, newStream(pinfo, StreamProtocols{protocol}, _))
       .WillOnce(Arg2CallbackWithArg(StreamAndProtocol{stream, protocol}));
 
   bool executed = false;
   host->newStream(pinfo, {protocol}, [&](auto &&result) {
-    auto stream = EXPECT_OK(result);
+    ASSERT_OUTCOME_SUCCESS(stream, result);
     (void)stream;
     executed = true;
   });

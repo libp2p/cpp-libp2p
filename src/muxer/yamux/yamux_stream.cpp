@@ -55,16 +55,7 @@ namespace libp2p::connection {
 
   void YamuxStream::deferReadCallback(outcome::result<size_t> res,
                                       ReadCallbackFunc cb) {
-    if (no_more_callbacks_) {
-      log()->debug("{} closed by client, ignoring callback", stream_id_);
-      return;
-    }
-    feedback_.deferCall([wptr = weak_from_this(), res, cb = std::move(cb)]() {
-      auto self = wptr.lock();
-      if (self && !self->no_more_callbacks_) {
-        cb(res);
-      }
-    });
+    feedback_.deferCall([res, cb{std::move(cb)}] { cb(res); });
   }
 
   void YamuxStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
@@ -73,16 +64,7 @@ namespace libp2p::connection {
 
   void YamuxStream::deferWriteCallback(std::error_code ec,
                                        WriteCallbackFunc cb) {
-    if (no_more_callbacks_) {
-      log()->debug("{} closed by client, ignoring callback", stream_id_);
-      return;
-    }
-    feedback_.deferCall([wptr = weak_from_this(), ec, cb = std::move(cb)]() {
-      auto self = wptr.lock();
-      if (self && !self->no_more_callbacks_) {
-        cb(ec);
-      }
-    });
+    feedback_.deferCall([ec, cb{std::move(cb)}] { cb(ec); });
   }
 
   bool YamuxStream::isClosed() const {
@@ -92,12 +74,8 @@ namespace libp2p::connection {
   void YamuxStream::close(VoidResultHandlerFunc cb) {
     if (isClosed()) {
       if (cb) {
-        feedback_.deferCall([wptr{weak_from_this()}, cb{std::move(cb)}] {
-          auto self = wptr.lock();
-          if (self) {
-            cb(*self->close_reason_);
-          }
-        });
+        feedback_.deferCall(
+            [cb{std::move(cb)}, ec{*close_reason_}] { cb(ec); });
       }
       return;
     }
@@ -137,7 +115,6 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::reset() {
-    no_more_callbacks_ = true;
     feedback_.resetStream(stream_id_);
     doClose(Error::STREAM_RESET_BY_HOST, true);
   }
@@ -163,14 +140,7 @@ namespace libp2p::connection {
     }
 
     if (cb) {
-      feedback_.deferCall([wptr = weak_from_this(), cb = std::move(cb), ec]() {
-        auto self = wptr.lock();
-        if (!self) {
-          return;
-        }
-        if (self->no_more_callbacks_) {
-          return;
-        }
+      feedback_.deferCall([cb{std::move(cb)}, ec] {
         if (!ec) {
           cb(outcome::success());
         } else {
@@ -336,7 +306,7 @@ namespace libp2p::connection {
       return;
     }
 
-    if (result.cb && !no_more_callbacks_) {
+    if (result.cb) {
       result.cb(result.size_to_ack);
     }
   }
@@ -373,35 +343,20 @@ namespace libp2p::connection {
     VoidResultHandlerFunc window_size_cb;
     window_size_cb.swap(window_size_cb_);
 
-    if (no_more_callbacks_) {
-      return;
-    }
-
     // now we are detached from *this* and may be killed from inside callbacks
     // we will call
-    auto wptr = weak_from_this();
+    auto self = shared_from_this();
 
     if (read_cb_and_res.first) {
       read_cb_and_res.first(read_cb_and_res.second);
     }
 
-    if (wptr.expired() || no_more_callbacks_) {
-      return;
-    }
-
     for (const auto &cb : write_callbacks) {
       cb(ec);
-      if (wptr.expired() || no_more_callbacks_) {
-        return;
-      }
     }
 
     if (window_size_cb) {
       window_size_cb(ec);
-    }
-
-    if (wptr.expired() || no_more_callbacks_) {
-      return;
     }
 
     if (close_cb_and_res.first) {

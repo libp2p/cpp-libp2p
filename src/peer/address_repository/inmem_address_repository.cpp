@@ -67,26 +67,17 @@ namespace libp2p::peer {
     return false;
   }
 
-  InmemAddressRepository::peer_db::iterator
-  InmemAddressRepository::findOrInsert(const PeerId &p) {
-    auto it = db_.find(p);
-    if (it == db_.end()) {
-      it = db_.emplace(p, std::make_shared<ttlmap>()).first;
-    }
-    return it;
-  }
-
   outcome::result<bool> InmemAddressRepository::addAddresses(
       const PeerId &p,
       std::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
     bool added = false;
-    auto peer_it = findOrInsert(p);
-    auto &addresses = *peer_it->second;
+    auto &addresses = db_[p];
 
     auto expires_at = Clock::now() + ttl;
     for (const auto &m : ma) {
-      if (addresses.emplace(m, expires_at).second) {
+      if (addresses.expires.emplace(m, expires_at).second) {
+        addresses.order.emplace_back(m);
         signal_added_(p, m);
         added = true;
       }
@@ -100,13 +91,13 @@ namespace libp2p::peer {
       std::span<const multi::Multiaddress> ma,
       AddressRepository::Milliseconds ttl) {
     bool added = false;
-    auto peer_it = findOrInsert(p);
-    auto &addresses = *peer_it->second;
+    auto &addresses = db_[p];
 
     auto expires_at = Clock::now() + ttl;
     for (const auto &m : ma) {
-      auto [addr_it, emplaced] = addresses.emplace(m, expires_at);
+      auto [addr_it, emplaced] = addresses.expires.emplace(m, expires_at);
       if (emplaced) {
+        addresses.order.emplace_back(m);
         signal_added_(p, m);
         added = true;
       } else {
@@ -123,23 +114,39 @@ namespace libp2p::peer {
     if (peer_it == db_.end()) {
       return PeerError::NOT_FOUND;
     }
-    auto &addresses = *peer_it->second;
+    auto &addresses = peer_it->second;
 
     auto expires_at = Clock::now() + ttl;
-    for (auto &item : addresses) {
+    for (auto &item : addresses.expires) {
       item.second = expires_at;
     }
 
     return outcome::success();
-  }  // namespace libp2p::peer
+  }
+
+  void InmemAddressRepository::dialFailed(const PeerId &peer_id,
+                                          const Multiaddress &addr) {
+    auto peer_it = db_.find(peer_id);
+    if (peer_it == db_.end()) {
+      return;
+    }
+    auto &peer = peer_it->second;
+    if (not peer.expires.contains(addr)) {
+      return;
+    }
+    if (not peer.eraseOrder(addr)) {
+      return;
+    }
+    peer.order.emplace_back(addr);
+  }
 
   outcome::result<std::vector<multi::Multiaddress>>
   InmemAddressRepository::getAddresses(const PeerId &p) const {
     if (p == host_addrs_->peerId()) {
       auto result = host_addrs_->get();
       if (auto it = db_.find(p); it != db_.end()) {
-        for (auto &p : *it->second) {
-          result.add(p.first);
+        for (auto &address : it->second.order) {
+          result.add(address);
         }
       }
       return std::move(result).asVec();
@@ -148,24 +155,16 @@ namespace libp2p::peer {
     if (peer_it == db_.end()) {
       return PeerError::NOT_FOUND;
     }
-    auto &addresses = *peer_it->second;
-
-    std::vector<multi::Multiaddress> ma;
-    ma.reserve(addresses.size());
-    std::transform(addresses.begin(),
-                   addresses.end(),
-                   std::back_inserter(ma),
-                   [](auto &item) { return item.first; });
-    return ma;
+    return peer_it->second.order;
   }
 
   void InmemAddressRepository::clear(const PeerId &p) {
     auto it = db_.find(p);
     if (it != db_.end()) {
-      for (const auto &item : *it->second) {
+      for (const auto &item : it->second.expires) {
         signal_removed_(p, item.first);
       }
-      it->second->clear();
+      it->second = {};
     }
   }
 
@@ -176,23 +175,24 @@ namespace libp2p::peer {
 
     // for each peer
     while (peer != peer_end) {
-      auto &&maptr = peer->second;
+      auto &maptr = peer->second;
 
       // remove all expired addresses
-      auto ma = maptr->begin();
-      auto ma_end = maptr->end();
+      auto ma = maptr.expires.begin();
+      auto ma_end = maptr.expires.end();
       while (ma != ma_end) {
         if (now >= ma->second) {
           signal_removed_(peer->first, ma->first);
+          maptr.eraseOrder(ma->first);
           // erase returns element next to deleted
-          ma = maptr->erase(ma);
+          ma = maptr.expires.erase(ma);
         } else {
           ++ma;
         }
       }
 
       // peer has no more addresses
-      if (peer->second->empty()) {
+      if (peer->second.expires.empty()) {
         // erase returns element next to deleted
         peer = db_.erase(peer);
       } else {
@@ -210,4 +210,12 @@ namespace libp2p::peer {
     return peers;
   }
 
+  bool InmemAddressRepository::Peer::eraseOrder(const Multiaddress &addr) {
+    auto it = std::ranges::find(order, addr);
+    if (it == order.end()) {
+      return false;
+    }
+    order.erase(it);
+    return true;
+  }
 }  // namespace libp2p::peer

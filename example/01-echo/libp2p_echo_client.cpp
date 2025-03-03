@@ -104,7 +104,8 @@ int main(int argc, char *argv[]) {
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
   auto sch = injector.create<std::shared_ptr<libp2p::basic::Scheduler>>();
 
-  context->post(
+  post(
+      *context,
       [log,
        host{std::move(host)},
        &echo,

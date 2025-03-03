@@ -6,14 +6,16 @@
 
 #pragma once
 
-#include <set>
+#include <deque>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <libp2p/basic/scheduler.hpp>
 #include <libp2p/network/connection_manager.hpp>
 #include <libp2p/network/dialer.hpp>
 #include <libp2p/network/listener_manager.hpp>
 #include <libp2p/network/transport_manager.hpp>
+#include <libp2p/peer/address_repository.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
 
 namespace libp2p::network {
@@ -27,21 +29,13 @@ namespace libp2p::network {
                std::shared_ptr<TransportManager> tmgr,
                std::shared_ptr<ConnectionManager> cmgr,
                std::shared_ptr<ListenerManager> listener,
+               std::shared_ptr<peer::AddressRepository> addr_repo,
                std::shared_ptr<basic::Scheduler> scheduler);
 
     // Establishes a connection to a given peer
-    void dial(const peer::PeerInfo &p,
-              DialResultFunc cb,
-              std::chrono::milliseconds timeout) override;
+    void dial(const PeerInfo &p, DialResultFunc cb) override;
 
-    // NewStream returns a new stream to given peer p.
-    // If there is no connection to p, attempts to create one.
-    void newStream(const peer::PeerInfo &p,
-                   StreamProtocols protocols,
-                   StreamAndProtocolOrErrorCb cb,
-                   std::chrono::milliseconds timeout = {}) override;
-
-    void newStream(const peer::PeerId &peer_id,
+    void newStream(const PeerInfo &peer_id,
                    StreamProtocols protocols,
                    StreamAndProtocolOrErrorCb cb) override;
 
@@ -49,14 +43,11 @@ namespace libp2p::network {
     // A context to handle an intermediary state of the peer we are dialing to
     // but the connection is not yet established
     struct DialCtx {
-      /// Known and scheduled addresses to try to dial via
-      std::set<multi::Multiaddress> addresses;
+      /// Queue of addresses to try connect to
+      std::deque<Multiaddress> addr_queue;
 
-      /// Timeout for a single connection attempt
-      std::chrono::milliseconds timeout;
-
-      /// Addresses we already tried, but no connection was established
-      std::set<multi::Multiaddress> tried_addresses;
+      /// Tracks addresses added to `addr_queue`
+      std::unordered_set<Multiaddress> addr_seen;
 
       /// Callbacks for all who requested a connection to the peer
       std::vector<Dialer::DialResultFunc> callbacks;
@@ -86,6 +77,7 @@ namespace libp2p::network {
     std::shared_ptr<TransportManager> tmgr_;
     std::shared_ptr<ConnectionManager> cmgr_;
     std::shared_ptr<ListenerManager> listener_;
+    std::shared_ptr<peer::AddressRepository> addr_repo_;
     std::shared_ptr<basic::Scheduler> scheduler_;
     log::Logger log_;
 

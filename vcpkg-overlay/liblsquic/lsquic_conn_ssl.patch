@@ -1,0 +1,80 @@
+diff --git a/include/lsquic.h b/include/lsquic.h
+index 389fbcc..c38d027 100644
+--- a/include/lsquic.h
++++ b/include/lsquic.h
+@@ -1671,6 +1671,10 @@ int lsquic_stream_close(lsquic_stream_t *s);
+ int
+ lsquic_stream_has_unacked_data (lsquic_stream_t *s);
+ 
++/* Return SSL object associated with this connection */
++struct ssl_st *
++lsquic_conn_ssl(struct lsquic_conn *conn);
++
+ /**
+  * Get certificate chain returned by the server.  This can be used for
+  * server certificate verification.
+diff --git a/src/liblsquic/lsquic_conn.c b/src/liblsquic/lsquic_conn.c
+index f76550d..31e5285 100644
+--- a/src/liblsquic/lsquic_conn.c
++++ b/src/liblsquic/lsquic_conn.c
+@@ -128,6 +128,12 @@ lsquic_conn_crypto_alg_keysize (const lsquic_conn_t *lconn)
+ }
+ 
+ 
++struct ssl_st *
++lsquic_conn_ssl(struct lsquic_conn *lconn) {
++    return lconn->cn_esf_c->esf_get_ssl(lconn->cn_enc_session);
++}
++
++
+ struct stack_st_X509 *
+ lsquic_conn_get_server_cert_chain (struct lsquic_conn *lconn)
+ {
+diff --git a/src/liblsquic/lsquic_enc_sess.h b/src/liblsquic/lsquic_enc_sess.h
+index f45c15f..3505fbd 100644
+--- a/src/liblsquic/lsquic_enc_sess.h
++++ b/src/liblsquic/lsquic_enc_sess.h
+@@ -115,6 +115,9 @@ struct enc_session_funcs_common
+     (*esf_decrypt_packet)(enc_session_t *, struct lsquic_engine_public *,
+         const struct lsquic_conn *, struct lsquic_packet_in *);
+ 
++    struct ssl_st *
++    (*esf_get_ssl)(enc_session_t *);
++
+     struct stack_st_X509 *
+     (*esf_get_server_cert_chain) (enc_session_t *);
+ 
+diff --git a/src/liblsquic/lsquic_enc_sess_ietf.c b/src/liblsquic/lsquic_enc_sess_ietf.c
+index 66329c1..076c4c5 100644
+--- a/src/liblsquic/lsquic_enc_sess_ietf.c
++++ b/src/liblsquic/lsquic_enc_sess_ietf.c
+@@ -2519,6 +2519,13 @@ iquic_esf_global_cleanup (void)
+ }
+ 
+ 
++static struct ssl_st *
++iquic_esf_get_ssl(enc_session_t *enc_session_p) {
++    struct enc_sess_iquic *const enc_sess = enc_session_p;
++    return enc_sess->esi_ssl;
++}
++
++
+ static struct stack_st_X509 *
+ iquic_esf_get_server_cert_chain (enc_session_t *enc_session_p)
+ {
+@@ -2744,6 +2751,7 @@ const struct enc_session_funcs_common lsquic_enc_session_common_ietf_v1 =
+     .esf_global_cleanup  = iquic_esf_global_cleanup,
+     .esf_global_init     = iquic_esf_global_init,
+     .esf_tag_len         = IQUIC_TAG_LEN,
++    .esf_get_ssl         = iquic_esf_get_ssl,
+     .esf_get_server_cert_chain
+                          = iquic_esf_get_server_cert_chain,
+     .esf_get_sni         = iquic_esf_get_sni,
+@@ -2763,6 +2771,7 @@ const struct enc_session_funcs_common lsquic_enc_session_common_ietf_v1_no_flush
+     .esf_global_cleanup  = iquic_esf_global_cleanup,
+     .esf_global_init     = iquic_esf_global_init,
+     .esf_tag_len         = IQUIC_TAG_LEN,
++    .esf_get_ssl         = iquic_esf_get_ssl,
+     .esf_get_server_cert_chain
+                          = iquic_esf_get_server_cert_chain,
+     .esf_get_sni         = iquic_esf_get_sni,

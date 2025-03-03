@@ -15,10 +15,13 @@
 #include "mock/libp2p/network/connection_manager_mock.hpp"
 #include "mock/libp2p/network/listener_mock.hpp"
 #include "mock/libp2p/network/transport_manager_mock.hpp"
+#include "mock/libp2p/peer/address_repository_mock.hpp"
 #include "mock/libp2p/protocol_muxer/protocol_muxer_mock.hpp"
 #include "mock/libp2p/transport/transport_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/prepare_loggers.hpp"
+
+using libp2p::peer::AddressRepositoryMock;
 
 using namespace libp2p;
 using namespace network;
@@ -40,7 +43,7 @@ struct DialerTest : public ::testing::Test {
   void SetUp() override {
     testutil::prepareLoggers();
     dialer = std::make_shared<DialerImpl>(
-        proto_muxer, tmgr, cmgr, listener, scheduler);
+        proto_muxer, tmgr, cmgr, listener, addr_repo, scheduler);
   }
 
   std::shared_ptr<StreamMock> stream = std::make_shared<StreamMock>();
@@ -60,6 +63,9 @@ struct DialerTest : public ::testing::Test {
       std::make_shared<ConnectionManagerMock>();
 
   std::shared_ptr<ListenerMock> listener = std::make_shared<ListenerMock>();
+
+  std::shared_ptr<AddressRepositoryMock> addr_repo =
+      std::make_shared<AddressRepositoryMock>();
 
   std::shared_ptr<ManualSchedulerBackend> scheduler_backend =
       std::make_shared<ManualSchedulerBackend>();
@@ -96,21 +102,17 @@ TEST_F(DialerTest, DialAllTheAddresses) {
   EXPECT_CALL(*tmgr, findBest(ma2)).WillOnce(Return(transport));
 
   // transport->dial returns an error for the first address
-  EXPECT_CALL(
-      *transport,
-      dial(pinfo_two_addrs.id, ma1, _, std::chrono::milliseconds::zero()))
+  EXPECT_CALL(*transport, dial(pinfo_two_addrs.id, ma1, _))
       .WillOnce(
           Arg2CallbackWithArg(make_error_code(std::errc::connection_refused)));
 
   // transport->dial returns valid connection for the second address
-  EXPECT_CALL(
-      *transport,
-      dial(pinfo_two_addrs.id, ma2, _, std::chrono::milliseconds::zero()))
+  EXPECT_CALL(*transport, dial(pinfo_two_addrs.id, ma2, _))
       .WillOnce(Arg2CallbackWithArg(outcome::success(connection)));
 
   bool executed = false;
   dialer->dial(pinfo_two_addrs, [&](auto &&rconn) {
-    auto conn = EXPECT_OK(rconn);
+    ASSERT_OUTCOME_SUCCESS(conn, rconn);
     (void)conn;
     executed = true;
   });
@@ -137,13 +139,12 @@ TEST_F(DialerTest, DialNewConnection) {
   EXPECT_CALL(*tmgr, findBest(ma1)).WillOnce(Return(transport));
 
   // transport->dial returns valid connection
-  EXPECT_CALL(*transport,
-              dial(pinfo.id, ma1, _, std::chrono::milliseconds::zero()))
+  EXPECT_CALL(*transport, dial(pinfo.id, ma1, _))
       .WillOnce(Arg2CallbackWithArg(outcome::success(connection)));
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    auto conn = EXPECT_OK(rconn);
+    ASSERT_OUTCOME_SUCCESS(conn, rconn);
     (void)conn;
     executed = true;
   });
@@ -167,7 +168,7 @@ TEST_F(DialerTest, DialNoAddresses) {
   peer::PeerInfo pinfo = {pid, {}};
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    EXPECT_EC(rconn, std::errc::destination_address_required);
+    ASSERT_OUTCOME_ERROR(rconn, std::errc::destination_address_required);
     executed = true;
   });
 
@@ -192,7 +193,7 @@ TEST_F(DialerTest, DialNoTransports) {
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    EXPECT_EC(rconn, std::errc::address_family_not_supported);
+    ASSERT_OUTCOME_ERROR(rconn, std::errc::address_family_not_supported);
     executed = true;
   });
 
@@ -213,7 +214,7 @@ TEST_F(DialerTest, DialExistingConnection) {
 
   bool executed = false;
   dialer->dial(pinfo, [&](auto &&rconn) {
-    auto conn = EXPECT_OK(rconn);
+    ASSERT_OUTCOME_SUCCESS(conn, rconn);
     (void)conn;
     executed = true;
   });
@@ -245,7 +246,7 @@ TEST_F(DialerTest, NewStreamFailed) {
 
   bool executed = false;
   dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
-    EXPECT_EC(rstream, std::errc::io_error);
+    ASSERT_OUTCOME_ERROR(rstream, std::errc::io_error);
     executed = true;
   });
 
@@ -280,7 +281,7 @@ TEST_F(DialerTest, NewStreamNegotiationFailed) {
 
   bool executed = false;
   dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
-    EXPECT_EC(rstream, r);
+    ASSERT_OUTCOME_ERROR(rstream, r);
     executed = true;
   });
 
@@ -313,7 +314,7 @@ TEST_F(DialerTest, NewStreamSuccess) {
 
   bool executed = false;
   dialer->newStream(pinfo, protocols, [&](auto &&rstream) {
-    auto s = EXPECT_OK(rstream);
+    ASSERT_OUTCOME_SUCCESS(s, rstream);
     (void)s;
     executed = true;
   });

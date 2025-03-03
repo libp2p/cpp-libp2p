@@ -33,16 +33,18 @@ using ::testing::Invoke;
 using ::testing::NiceMock;
 using ::testing::Return;
 
+libp2p::muxer::MuxedConnectionConfig mux_config;
+
 namespace {
   std::shared_ptr<CapableConnection> expectConnectionValid(
       outcome::result<std::shared_ptr<CapableConnection>> rconn) {
-    EXPECT_OK(rconn);
+    EXPECT_OUTCOME_SUCCESS(rconn);
     auto conn = rconn.value();
 
-    auto mar = EXPECT_OK(conn->remoteMultiaddr());
-    auto mal = EXPECT_OK(conn->localMultiaddr());
+    EXPECT_OUTCOME_SUCCESS(mar, conn->remoteMultiaddr());
+    EXPECT_OUTCOME_SUCCESS(mal, conn->localMultiaddr());
     std::ostringstream s;
-    s << mar.getStringAddress() << " -> " << mal.getStringAddress();
+    s << mar.value().getStringAddress() << " -> " << mal.value().getStringAddress();
     std::cout << s.str() << '\n';
 
     return conn;
@@ -95,7 +97,8 @@ namespace {
 TEST(TCP, TwoListenersCantBindOnSamePort) {
   auto context = std::make_shared<boost::asio::io_context>(1);
   auto upgrader = makeUpgrader();
-  auto transport = std::make_shared<TcpTransport>(context, std::move(upgrader));
+  auto transport =
+      std::make_shared<TcpTransport>(context, mux_config, std::move(upgrader));
   auto listener1 = transport->createListener([](auto &&c) { EXPECT_TRUE(c); });
 
   ASSERT_TRUE(listener1);
@@ -110,7 +113,11 @@ TEST(TCP, TwoListenersCantBindOnSamePort) {
 
   std::cout << "listener 2 starting...\n";
   auto r = listener2->listen(ma);
-  EXPECT_EC(r, boost::asio::error::address_in_use);
+  if (!r) {
+    ASSERT_EQ(r.error().value(), (int)boost::asio::error::address_in_use);
+  } else {
+    ADD_FAILURE();
+  }
 
   using std::chrono_literals::operator""ms;
   context->run_for(50ms);
@@ -129,7 +136,8 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
 
   auto context = std::make_shared<boost::asio::io_context>();
   auto upgrader = makeUpgrader();
-  auto transport = std::make_shared<TcpTransport>(context, std::move(upgrader));
+  auto transport =
+      std::make_shared<TcpTransport>(context, mux_config, std::move(upgrader));
   using libp2p::connection::RawConnection;
   auto listener = transport->createListener([&](auto &&rconn) {
     auto conn = expectConnectionValid(rconn);
@@ -138,11 +146,11 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
     auto buf = std::make_shared<std::vector<uint8_t>>(kSize, 0);
     conn->readSome(
         *buf, buf->size(), [&counter, conn, buf, context](auto &&res) {
-          EXPECT_OK(res);
+          ASSERT_OUTCOME_SUCCESS(res);
 
           libp2p::writeReturnSize(
               conn, *buf, [&counter, conn, buf, context](auto &&res) {
-                EXPECT_OK(res);
+                ASSERT_OUTCOME_SUCCESS(res);
                 EXPECT_EQ(res.value(), buf->size());
                 counter++;
                 if (counter >= kClients) {
@@ -160,8 +168,8 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
     return std::thread([&]() {
       auto context = std::make_shared<boost::asio::io_context>();
       auto upgrader = makeUpgrader();
-      auto transport =
-          std::make_shared<TcpTransport>(context, std::move(upgrader));
+      auto transport = std::make_shared<TcpTransport>(
+          context, mux_config, std::move(upgrader));
       transport->dial(testutil::randomPeerId(), ma, [context](auto &&rconn) {
         auto conn = expectConnectionValid(rconn);
 
@@ -175,13 +183,13 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
 
         libp2p::writeReturnSize(
             conn, *buf, [conn, readback, buf, context](auto &&res) {
-              EXPECT_OK(res);
+              ASSERT_OUTCOME_SUCCESS(res);
               ASSERT_EQ(res.value(), buf->size());
               conn->read(*readback,
                          readback->size(),
                          [conn, readback, buf, context](auto &&res) {
                            context->stop();
-                           EXPECT_OK(res);
+                           ASSERT_OUTCOME_SUCCESS(res);
                            ASSERT_EQ(res.value(), readback->size());
                            ASSERT_EQ(*buf, *readback);
                          });
@@ -208,11 +216,12 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
 TEST(TCP, DialToNoServer) {
   auto context = std::make_shared<boost::asio::io_context>();
   auto upgrader = makeUpgrader();
-  auto transport = std::make_shared<TcpTransport>(context, std::move(upgrader));
+  auto transport =
+      std::make_shared<TcpTransport>(context, mux_config, std::move(upgrader));
   auto ma = "/ip4/127.0.0.1/tcp/40003"_multiaddr;
 
   transport->dial(testutil::randomPeerId(), ma, [](auto &&rc) {
-    EXPECT_EC(rc, boost::asio::error::connection_refused);
+    ASSERT_OUTCOME_ERROR(rc, boost::asio::error::connection_refused);
   });
 
   using std::chrono_literals::operator""ms;
@@ -227,14 +236,15 @@ TEST(TCP, DialToNoServer) {
 TEST(TCP, ClientClosesConnection) {
   auto context = std::make_shared<boost::asio::io_context>(1);
   auto upgrader = makeUpgrader();
-  auto transport = std::make_shared<TcpTransport>(context, std::move(upgrader));
+  auto transport =
+      std::make_shared<TcpTransport>(context, mux_config, std::move(upgrader));
   auto listener = transport->createListener([&](auto &&rconn) {
     auto conn = expectConnectionValid(rconn);
     EXPECT_FALSE(conn->isInitiator());
 
     auto buf = std::make_shared<std::vector<uint8_t>>(100, 0);
     conn->readSome(*buf, buf->size(), [conn, buf](auto &&res) {
-      EXPECT_EC(res, boost::asio::error::eof);
+      ASSERT_OUTCOME_ERROR(res, boost::asio::error::eof);
     });
   });
 
@@ -259,11 +269,12 @@ TEST(TCP, ClientClosesConnection) {
 TEST(TCP, ServerClosesConnection) {
   auto context = std::make_shared<boost::asio::io_context>(1);
   auto upgrader = makeUpgrader();
-  auto transport = std::make_shared<TcpTransport>(context, std::move(upgrader));
+  auto transport =
+      std::make_shared<TcpTransport>(context, mux_config, std::move(upgrader));
   auto listener = transport->createListener([&](auto &&rconn) {
     auto conn = expectConnectionValid(rconn);
     EXPECT_FALSE(conn->isInitiator());
-    EXPECT_OK(conn->close());
+    ASSERT_OUTCOME_SUCCESS(conn->close());
   });
 
   ASSERT_TRUE(listener);
@@ -275,7 +286,7 @@ TEST(TCP, ServerClosesConnection) {
     EXPECT_TRUE(conn->isInitiator());
     auto buf = std::make_shared<std::vector<uint8_t>>(100, 0);
     conn->readSome(*buf, buf->size(), [conn, buf](auto &&res) {
-      EXPECT_EC(res, boost::asio::error::eof);
+      ASSERT_OUTCOME_ERROR(res, boost::asio::error::eof);
     });
   });
 
@@ -293,17 +304,18 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
 
   auto context = std::make_shared<boost::asio::io_context>(1);
   auto upgrader = makeUpgrader();
-  auto transport = std::make_shared<TcpTransport>(context, std::move(upgrader));
+  auto transport =
+      std::make_shared<TcpTransport>(context, mux_config, std::move(upgrader));
   auto listener = transport->createListener([&](auto &&rconn) {
     auto conn = expectConnectionValid(rconn);
     EXPECT_FALSE(conn->isInitiator());
 
     auto buf = std::make_shared<std::vector<uint8_t>>(kSize, 0);
     conn->readSome(*buf, kSize, [&counter, conn, buf](auto &&res) {
-      EXPECT_OK(res);
+      ASSERT_OUTCOME_SUCCESS(res);
 
       libp2p::writeReturnSize(conn, *buf, [&counter, buf, conn](auto &&res) {
-        EXPECT_OK(res);
+        ASSERT_OUTCOME_SUCCESS(res);
         EXPECT_EQ(res.value(), buf->size());
         counter++;
       });
@@ -330,10 +342,10 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
 
         libp2p::writeReturnSize(
             conn, *buf, [conn, kSize, readback, buf](auto &&res) {
-              EXPECT_OK(res);
+              ASSERT_OUTCOME_SUCCESS(res);
               ASSERT_EQ(res.value(), buf->size());
               conn->read(*readback, kSize, [conn, readback, buf](auto &&res) {
-                EXPECT_OK(res);
+                ASSERT_OUTCOME_SUCCESS(res);
                 ASSERT_EQ(res.value(), readback->size());
                 ASSERT_EQ(*buf, *readback);
               });

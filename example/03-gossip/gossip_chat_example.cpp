@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
   }
 
   // start the node as soon as async engine starts
-  io->post([&] {
+  post(*io, [&] {
     auto listen_res = host->listen(peer_info->addresses[0]);
     if (!listen_res) {
       fmt::println(std::cerr,

@@ -6,6 +6,8 @@
 
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
 
+#include <boost/asio/post.hpp>
+
 #include <libp2p/log/logger.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -15,7 +17,7 @@ namespace libp2p::basic {
       : io_context_(std::move(io_context)), timer_(*io_context_) {}
 
   void AsioSchedulerBackend::post(std::function<void()> &&cb) {
-    io_context_->post(std::move(cb));
+    boost::asio::post(*io_context_, std::move(cb));
   }
 
   std::chrono::milliseconds AsioSchedulerBackend::now() const {
@@ -25,16 +27,7 @@ namespace libp2p::basic {
   void AsioSchedulerBackend::setTimer(
       std::chrono::milliseconds abs_time,
       std::weak_ptr<SchedulerBackendFeedback> scheduler) {
-    boost::system::error_code ec;
-    timer_.expires_at(decltype(timer_)::clock_type::time_point(abs_time), ec);
-
-    if (ec) {
-      // this should never happen
-      auto log = log::createLogger("Scheduler", "scheduler");
-      log->critical("cannot set timer: {}", ec);
-      boost::asio::detail::throw_error(ec, "setTimer");
-    }
-
+    timer_.expires_at(decltype(timer_)::clock_type::time_point(abs_time));
     timer_.async_wait([scheduler = std::move(scheduler)](
                           const boost::system::error_code &error) {
       if (!error) {

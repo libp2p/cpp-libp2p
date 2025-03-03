@@ -88,7 +88,7 @@ TEST(EchoTest, DISABLED_Client) {
 
   auto client = echo.createClient(stream);
   client->sendAnd(msg, [&](outcome::result<std::string> rm) {
-    auto m = EXPECT_OK(rm);
+    ASSERT_OUTCOME_SUCCESS(m, rm);
     ASSERT_EQ(m, msg);
     executed = true;
   });

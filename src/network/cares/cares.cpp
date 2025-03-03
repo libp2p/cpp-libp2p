@@ -148,7 +148,7 @@ namespace libp2p::network::c_ares {
       Ares::TxtCallback callback,
       Ares::Error error) {
     if (auto ctx = io_context.lock()) {
-      ctx->post([callback{std::move(callback)}, error] { callback(error); });
+      post(*ctx, [callback{std::move(callback)}, error] { callback(error); });
       return;
     }
     SL_DEBUG(log(), "IO context has expired");
@@ -186,8 +186,9 @@ namespace libp2p::network::c_ares {
     }
     ::ares_free_data(reply);
     if (auto ctx = request_ptr->io_context.lock()) {
-      ctx->post([callback{std::move(request_ptr->callback)},
-                 reply{std::move(result)}] { callback(reply); });
+      post(*ctx,
+           [callback{std::move(request_ptr->callback)},
+            reply{std::move(result)}] { callback(reply); });
     } else {
       SL_DEBUG(log(), "IO context has expired");
     }

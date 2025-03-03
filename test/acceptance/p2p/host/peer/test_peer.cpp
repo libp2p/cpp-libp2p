@@ -55,7 +55,7 @@ Peer::Peer(Peer::Duration timeout, bool secure)
           basic::Scheduler::Config{})},
       secure_{secure} {
   auto keys =
-      EXPECT_OK(crypto_provider_->generateKeys(crypto::Key::Type::Ed25519));
+      crypto_provider_->generateKeys(crypto::Key::Type::Ed25519).value();
   host_ = makeHost(keys);
 
   auto handler = [this](StreamAndProtocol stream) { echo_->handle(stream); };
@@ -64,8 +64,8 @@ Peer::Peer(Peer::Duration timeout, bool secure)
 
 void Peer::startServer(const multi::Multiaddress &address,
                        std::shared_ptr<std::promise<peer::PeerInfo>> promise) {
-  context_->post([this, address, p = std::move(promise)] {
-    EXPECT_OK(host_->listen(address));
+  post(*context_, [this, address, p = std::move(promise)] {
+    ASSERT_OUTCOME_SUCCESS(host_->listen(address));
     host_->start();
     p->set_value(host_->getPeerInfo());
   });
@@ -76,38 +76,39 @@ void Peer::startServer(const multi::Multiaddress &address,
 void Peer::startClient(const peer::PeerInfo &pinfo,
                        size_t message_count,
                        Peer::sptr<TickCounter> counter) {
-  context_->post([this,
-                  server_id = pinfo.id.toBase58(),
-                  pinfo,
-                  message_count,
-                  counter = std::move(counter)]() mutable {
-    this->host_->newStream(
+  post(*context_,
+       [this,
+        server_id = pinfo.id.toBase58(),
         pinfo,
-        {echo_->getProtocolId()},
-        [server_id = std::move(server_id),
-         ping_times = message_count,
-         counter =
-             std::move(counter)](StreamAndProtocolOrError rstream) mutable {
-          // get stream
-          auto stream = EXPECT_OK(rstream);
-          // make client session
-          auto client = std::make_shared<protocol::ClientTestSession>(
-              stream.stream, ping_times);
-          // handle session
-          client->handle(
-              [server_id = std::move(server_id),
-               client,
-               counter = std::move(counter)](
-                  outcome::result<std::vector<uint8_t>> res) mutable {
-                // count message exchange
-                counter->tick();
-                // ensure message returned
-                auto vec = EXPECT_OK(res);
-                // ensure message is correct
-                ASSERT_EQ(vec.size(), client->bufferSize());  // NOLINT
-              });
-        });
-  });
+        message_count,
+        counter = std::move(counter)]() mutable {
+         this->host_->newStream(
+             pinfo,
+             {echo_->getProtocolId()},
+             [server_id = std::move(server_id),
+              ping_times = message_count,
+              counter = std::move(counter)](
+                 StreamAndProtocolOrError rstream) mutable {
+               // get stream
+               ASSERT_OUTCOME_SUCCESS(stream, rstream);
+               // make client session
+               auto client = std::make_shared<protocol::ClientTestSession>(
+                   stream.stream, ping_times);
+               // handle session
+               client->handle(
+                   [server_id = std::move(server_id),
+                    client,
+                    counter = std::move(counter)](
+                       outcome::result<std::vector<uint8_t>> res) mutable {
+                     // count message exchange
+                     counter->tick();
+                     // ensure message returned
+                     ASSERT_OUTCOME_SUCCESS(vec, res);
+                     // ensure message is correct
+                     ASSERT_EQ(vec.size(), client->bufferSize());  // NOLINT
+                   });
+             });
+       });
 }
 
 void Peer::wait() {
@@ -172,7 +173,8 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
                                                 std::move(muxer_adaptors));
 
   std::vector<std::shared_ptr<transport::TransportAdaptor>> transports = {
-      std::make_shared<transport::TcpTransport>(context_, std::move(upgrader))};
+      std::make_shared<transport::TcpTransport>(
+          context_, muxed_config_, std::move(upgrader))};
 
   auto tmgr =
       std::make_shared<network::TransportManagerImpl>(std::move(transports));
@@ -184,17 +186,17 @@ Peer::sptr<host::BasicHost> Peer::makeHost(const crypto::KeyPair &keyPair) {
   auto listener = std::make_shared<network::ListenerManagerImpl>(
       multiselect, std::move(router), tmgr, cmgr);
 
-  auto dialer = std::make_unique<network::DialerImpl>(
-      multiselect, tmgr, cmgr, listener, scheduler_);
-
-  auto network =
-      std::make_unique<network::NetworkImpl>(listener, std::move(dialer), cmgr);
-
   auto dnsaddr_resolver =
       std::make_shared<network::DnsaddrResolverImpl>(context_, cares_);
 
   auto addr_repo = std::make_shared<peer::InmemAddressRepository>(
       std::make_shared<HostAddrs>(*idmgr, listener), dnsaddr_resolver);
+
+  auto dialer = std::make_unique<network::DialerImpl>(
+      multiselect, tmgr, cmgr, listener, addr_repo, scheduler_);
+
+  auto network =
+      std::make_unique<network::NetworkImpl>(listener, std::move(dialer), cmgr);
 
   auto key_repo = std::make_shared<peer::InmemKeyRepository>();
 

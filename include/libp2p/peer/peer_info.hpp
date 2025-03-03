@@ -40,6 +40,10 @@ namespace libp2p::peer {
 
 }  // namespace libp2p::peer
 
+namespace libp2p {
+  using peer::PeerInfo;
+}  // namespace libp2p
+
 namespace std {
   template <>
   struct hash<libp2p::peer::PeerInfo> {

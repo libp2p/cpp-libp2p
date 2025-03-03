@@ -53,10 +53,10 @@ TEST_F(ExchangeMessageMarshallerTest, ToProtobufAndBack) {
   EXPECT_CALL(*key_marshaller, marshal(pk))
       .WillOnce(Return(ProtobufKey{pubkey_bytes}));
   EXPECT_CALL(*key_marshaller, unmarshalPublicKey(_)).WillOnce(Return(pk));
-  auto pid = EXPECT_OK(PeerId::fromPublicKey(ProtobufKey{pk.data}));
+  ASSERT_OUTCOME_SUCCESS(pid, PeerId::fromPublicKey(ProtobufKey{pk.data}));
   ExchangeMessage msg{.pubkey = pk, .peer_id = pid};
-  auto bytes = EXPECT_OK(marshaller->marshal(msg));
-  auto dec_msg = EXPECT_OK(marshaller->unmarshal(bytes));
+  ASSERT_OUTCOME_SUCCESS(bytes, marshaller->marshal(msg));
+  ASSERT_OUTCOME_SUCCESS(dec_msg, marshaller->unmarshal(bytes));
   ASSERT_EQ(msg.peer_id, dec_msg.first.peer_id);
   ASSERT_EQ(msg.pubkey, dec_msg.first.pubkey);
 }
@@ -70,9 +70,9 @@ TEST_F(ExchangeMessageMarshallerTest, ToProtobufAndBack) {
 TEST_F(ExchangeMessageMarshallerTest, MarshalError) {
   EXPECT_CALL(*key_marshaller, marshal(pk))
       .WillOnce(Return(ProtobufKey{std::vector<uint8_t>(32, 1)}));
-  auto pid = EXPECT_OK(PeerId::fromPublicKey(ProtobufKey{pk.data}));
+  ASSERT_OUTCOME_SUCCESS(pid, PeerId::fromPublicKey(ProtobufKey{pk.data}));
   ExchangeMessage msg{.pubkey = pk, .peer_id = pid};
-  EXPECT_HAS_ERROR(marshaller->marshal(msg));
+  EXPECT_OUTCOME_ERROR(marshaller->marshal(msg));
 }
 
 /**
@@ -87,8 +87,8 @@ TEST_F(ExchangeMessageMarshallerTest, UnmarshalError) {
   EXPECT_CALL(*key_marshaller, unmarshalPublicKey(_))
       .WillOnce(
           Return(libp2p::crypto::CryptoProviderError::FAILED_UNMARSHAL_DATA));
-  auto pid = EXPECT_OK(PeerId::fromPublicKey(ProtobufKey{pk.data}));
+  ASSERT_OUTCOME_SUCCESS(pid, PeerId::fromPublicKey(ProtobufKey{pk.data}));
   ExchangeMessage msg{.pubkey = pk, .peer_id = pid};
-  auto bytes = EXPECT_OK(marshaller->marshal(msg));
-  EXPECT_HAS_ERROR(marshaller->unmarshal(bytes));
+  ASSERT_OUTCOME_SUCCESS(bytes, marshaller->marshal(msg));
+  EXPECT_OUTCOME_ERROR(marshaller->unmarshal(bytes));
 }

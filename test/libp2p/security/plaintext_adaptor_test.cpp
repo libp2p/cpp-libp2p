@@ -104,16 +104,16 @@ TEST_F(PlaintextAdaptorTest, DISABLED_SecureInbound) {
 
   adaptor->secureInbound(
       conn, [this](outcome::result<std::shared_ptr<SecureConnection>> rc) {
-        auto sec = EXPECT_OK(rc);
+        ASSERT_OUTCOME_SUCCESS(sec, rc);
 
-        auto sec_remote_pubkey = EXPECT_OK(sec->remotePublicKey());
+        ASSERT_OUTCOME_SUCCESS(sec_remote_pubkey, sec->remotePublicKey());
         EXPECT_EQ(sec_remote_pubkey, remote_pubkey);
 
         EXPECT_CALL(*key_marshaller, marshal(sec_remote_pubkey))
             .WillOnce(Return(ProtobufKey{remote_pubkey.data}));
-        auto remote_id = EXPECT_OK(sec->remotePeer());
-        auto calculated =
-            EXPECT_OK(PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}));
+        ASSERT_OUTCOME_SUCCESS(remote_id, sec->remotePeer());
+        ASSERT_OUTCOME_SUCCESS(
+            calculated, PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}));
         EXPECT_EQ(remote_id, calculated);
       });
 }
@@ -149,16 +149,16 @@ TEST_F(PlaintextAdaptorTest, DISABLED_SecureOutbound) {
       conn,
       pid,
       [pid, this](outcome::result<std::shared_ptr<SecureConnection>> rc) {
-        auto sec = EXPECT_OK(rc);
+        ASSERT_OUTCOME_SUCCESS(sec, rc);
 
-        auto sec_remote_pubkey = EXPECT_OK(sec->remotePublicKey());
+        ASSERT_OUTCOME_SUCCESS(sec_remote_pubkey, sec->remotePublicKey());
         EXPECT_EQ(sec_remote_pubkey, remote_pubkey);
 
         EXPECT_CALL(*key_marshaller, marshal(sec_remote_pubkey))
             .WillOnce(Return(ProtobufKey{remote_pubkey.data}));
-        auto remote_id = EXPECT_OK(sec->remotePeer());
-        auto calculated =
-            EXPECT_OK(PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}));
+        ASSERT_OUTCOME_SUCCESS(remote_id, sec->remotePeer());
+        ASSERT_OUTCOME_SUCCESS(
+            calculated, PeerId::fromPublicKey(ProtobufKey{remote_pubkey.data}));
         EXPECT_EQ(remote_id, calculated);
         EXPECT_EQ(remote_id, pid);
       });

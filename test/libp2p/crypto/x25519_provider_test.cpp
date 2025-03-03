@@ -39,7 +39,7 @@ class X25519Fixture : public ::testing::Test {
  * @then the public key bytes are equal to expected
  */
 TEST_F(X25519Fixture, GoKeyCompatibility) {
-  auto public_key = EXPECT_OK(provider.derive(privkey));
+  ASSERT_OUTCOME_SUCCESS(public_key, provider.derive(privkey));
   ASSERT_EQ(public_key, pubkey);
 }
 
@@ -49,7 +49,7 @@ TEST_F(X25519Fixture, GoKeyCompatibility) {
  * @then the result equals to the expected
  */
 TEST_F(X25519Fixture, GoDiffieHellmanCompatibility) {
-  auto shared_secret = EXPECT_OK(provider.dh(privkey, pubkey));
+  ASSERT_OUTCOME_SUCCESS(shared_secret, provider.dh(privkey, pubkey));
   ASSERT_EQ(shared_secret, secret);
 }
 
@@ -59,8 +59,8 @@ TEST_F(X25519Fixture, GoDiffieHellmanCompatibility) {
  * @then the shared secrets are the same
  */
 TEST_F(X25519Fixture, SharedSecret) {
-  auto peer = EXPECT_OK(provider.generate());
-  auto secret1 = EXPECT_OK(provider.dh(privkey, peer.public_key));
-  auto secret2 = EXPECT_OK(provider.dh(peer.private_key, pubkey));
+  ASSERT_OUTCOME_SUCCESS(peer, provider.generate());
+  ASSERT_OUTCOME_SUCCESS(secret1, provider.dh(privkey, peer.public_key));
+  ASSERT_OUTCOME_SUCCESS(secret2, provider.dh(peer.private_key, pubkey));
   ASSERT_EQ(secret1, secret2);
 }

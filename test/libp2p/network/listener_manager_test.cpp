@@ -70,7 +70,7 @@ TEST_F(ListenerManagerTest, ListenValidAddr) {
       .WillOnce(Return(transport_listener));
 
   auto supported = "/ip4/127.0.0.1/tcp/0"_multiaddr;
-  EXPECT_OK(listener->listen(supported));
+  ASSERT_OUTCOME_SUCCESS(listener->listen(supported));
 
   EXPECT_EQ(listener->getListenAddresses(),
             std::vector<multi::Multiaddress>{supported});
@@ -84,7 +84,7 @@ TEST_F(ListenerManagerTest, ListenValidAddr) {
             std::vector<multi::Multiaddress>{random_port_resolved});
 
   // do listen on the same addr
-  EXPECT_HAS_ERROR(listener->listen(supported));
+  ASSERT_OUTCOME_ERROR(listener->listen(supported));
 }
 
 /**
@@ -96,7 +96,7 @@ TEST_F(ListenerManagerTest, ListenInvalidAddr) {
   EXPECT_CALL(*tmgr, findBest(_)).WillOnce(Return(nullptr));
 
   auto unsupported = "/ip4/127.0.0.1/udp/0"_multiaddr;
-  EXPECT_HAS_ERROR(listener->listen(unsupported));
+  ASSERT_OUTCOME_ERROR(listener->listen(unsupported));
 
   EXPECT_TRUE(listener->getListenAddresses().empty());
 
@@ -120,7 +120,7 @@ TEST_F(ListenerManagerTest, StartStop) {
 
   // given 1 listener
   auto supported = "/ip4/127.0.0.1/tcp/0"_multiaddr;
-  EXPECT_OK(listener->listen(supported));
+  ASSERT_OUTCOME_SUCCESS(listener->listen(supported));
 
   // when start
   ASSERT_NO_FATAL_FAILURE(listener->start());

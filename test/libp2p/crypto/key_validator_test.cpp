@@ -75,10 +75,10 @@ class GeneratedKeysTest : public BaseKeyTest,
  */
 TEST_P(GeneratedKeysTest, GeneratedKeysAreValid) {
   Key::Type key_type = GetParam();
-  auto key_pair = EXPECT_OK(crypto_provider->generateKeys(key_type));
-  EXPECT_OK(validator->validate(key_pair.publicKey));
-  EXPECT_OK(validator->validate(key_pair.privateKey));
-  EXPECT_OK(validator->validate(key_pair));
+  ASSERT_OUTCOME_SUCCESS(key_pair, crypto_provider->generateKeys(key_type));
+  EXPECT_OUTCOME_SUCCESS(validator->validate(key_pair.publicKey));
+  EXPECT_OUTCOME_SUCCESS(validator->validate(key_pair.privateKey));
+  EXPECT_OUTCOME_SUCCESS(validator->validate(key_pair));
 }
 
 /**
@@ -95,10 +95,10 @@ TEST_P(GeneratedKeysTest, GeneratedKeysAreValid) {
 TEST_P(GeneratedKeysTest, ArbitraryKeyInvalid) {
   Key::Type key_type = GetParam();
   auto public_key = PublicKey{{key_type, random->randomBytes(64)}};
-  EXPECT_HAS_ERROR(validator->validate(public_key));
+  ASSERT_OUTCOME_ERROR(validator->validate(public_key));
 
   auto private_key = PrivateKey{{key_type, random->randomBytes(64)}};
-  EXPECT_HAS_ERROR(validator->validate(private_key));
+  ASSERT_OUTCOME_ERROR(validator->validate(private_key));
 }
 
 /**
@@ -115,11 +115,11 @@ TEST_P(GeneratedKeysTest, ArbitraryKeyInvalid) {
 TEST_P(GeneratedKeysTest, InvalidPublicKeyInvalidatesPair) {
   Key::Type key_type = GetParam();
 
-  auto key_pair = EXPECT_OK(crypto_provider->generateKeys(key_type));
+  ASSERT_OUTCOME_SUCCESS(key_pair, crypto_provider->generateKeys(key_type));
   auto public_key = PublicKey{{key_type, random->randomBytes(64)}};
-  EXPECT_HAS_ERROR(validator->validate(public_key));
+  ASSERT_OUTCOME_ERROR(validator->validate(public_key));
   auto invalid_pair = KeyPair{public_key, key_pair.privateKey};
-  EXPECT_HAS_ERROR(validator->validate(invalid_pair));
+  ASSERT_OUTCOME_ERROR(validator->validate(invalid_pair));
 }
 
 INSTANTIATE_TEST_SUITE_P(GeneratedValidKeysCases,
@@ -145,8 +145,8 @@ TEST_P(RandomKeyTest, Every32byteIsValidPrivateKey) {
   auto key_type = GetParam();
   auto sequence = random->randomBytes(32);
   auto private_key = PrivateKey{{key_type, sequence}};
-  EXPECT_OK(validator->validate(private_key));
-  EXPECT_OK(crypto_provider->derivePublicKey(private_key));
+  EXPECT_OUTCOME_SUCCESS(validator->validate(private_key));
+  EXPECT_OUTCOME_SUCCESS(crypto_provider->derivePublicKey(private_key));
 }
 
 INSTANTIATE_TEST_SUITE_P(RandomSequencesCases,
@@ -165,9 +165,9 @@ class UnspecifiedKeyTest : public BaseKeyTest, public ::testing::Test {};
 TEST_F(UnspecifiedKeyTest, UnspecifiedAlwaysValid) {
   auto private_key =
       PrivateKey{{Key::Type::UNSPECIFIED, random->randomBytes(64)}};
-  EXPECT_OK(validator->validate(private_key));
+  EXPECT_OUTCOME_SUCCESS(validator->validate(private_key));
   auto public_key =
       PublicKey{{Key::Type::UNSPECIFIED, random->randomBytes(64)}};
-  EXPECT_OK(validator->validate(public_key));
-  EXPECT_OK(validator->validate(KeyPair{public_key, private_key}));
+  EXPECT_OUTCOME_SUCCESS(validator->validate(public_key));
+  EXPECT_OUTCOME_SUCCESS(validator->validate(KeyPair{public_key, private_key}));
 }

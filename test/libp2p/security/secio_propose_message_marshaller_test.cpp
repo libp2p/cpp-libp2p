@@ -26,8 +26,8 @@ TEST_F(ProposeMessageMarshallerTest, BasicCase) {
                         .exchanges = "think",
                         .ciphers = "of the",
                         .hashes = "rapture"};
-  auto bytes = EXPECT_OK(marshaller.marshal(source));
-  auto derived = EXPECT_OK(marshaller.unmarshal(bytes));
+  ASSERT_OUTCOME_SUCCESS(bytes, marshaller.marshal(source));
+  ASSERT_OUTCOME_SUCCESS(derived, marshaller.unmarshal(bytes));
   ASSERT_EQ(source.rand, derived.rand);
   ASSERT_EQ(source.pubkey, derived.pubkey);
   ASSERT_EQ(source.exchanges, derived.exchanges);

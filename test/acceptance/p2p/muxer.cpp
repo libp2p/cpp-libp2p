@@ -47,6 +47,8 @@ using ::testing::Mock;
 using ::testing::NiceMock;
 using std::chrono_literals::operator""ms;
 
+muxer::MuxedConnectionConfig mux_config;
+
 static const size_t kServerBufSize = 10000;  // 10 Kb
 
 // allows to print debug output to stdout, not wanted in CI output, but
@@ -89,7 +91,7 @@ struct UpgraderSemiMock : public Upgrader {
 
   void upgradeToMuxed(SecSPtr conn, OnMuxedCallbackFunc cb) override {
     mux->muxConnection(std::move(conn), [cb = std::move(cb)](auto &&conn_res) {
-      auto conn = EXPECT_OK(conn_res);
+      ASSERT_OUTCOME_SUCCESS(conn, conn_res);
       cb(std::move(conn));
     });
   }
@@ -109,7 +111,7 @@ struct Server : public std::enable_shared_from_this<Server> {
 
     conn->onStream(
         [this, conn](outcome::result<std::shared_ptr<Stream>> rstream) {
-          auto stream = EXPECT_OK(rstream);
+          ASSERT_OUTCOME_SUCCESS(stream, rstream);
           this->println("new stream created");
           this->streamsCreated++;
           auto buf = std::make_shared<std::vector<uint8_t>>();
@@ -134,7 +136,7 @@ struct Server : public std::enable_shared_from_this<Server> {
             this->println(fmt::format("readSome error: {}", rread.error()));
           }
 
-          auto read = EXPECT_OK(rread);
+          ASSERT_OUTCOME_SUCCESS(read, rread);
 
           this->println("readSome ", read, " bytes");
           if (read == 0) {
@@ -148,7 +150,7 @@ struct Server : public std::enable_shared_from_this<Server> {
               stream,
               *buf,
               [buf, read, stream, this](outcome::result<size_t> rwrite) {
-                auto write = EXPECT_OK(rwrite);
+                ASSERT_OUTCOME_SUCCESS(write, rwrite);
                 this->println("write ", write, " bytes");
                 this->streamWrites++;
                 ASSERT_EQ(write, read);
@@ -161,12 +163,12 @@ struct Server : public std::enable_shared_from_this<Server> {
   void listen(const Multiaddress &ma) {
     listener_ = transport_->createListener(
         [this](outcome::result<std::shared_ptr<CapableConnection>> rconn) {
-          auto conn = EXPECT_OK(rconn);
+          ASSERT_OUTCOME_SUCCESS(conn, rconn);
           this->println("new connection received");
           this->onConnection(conn);
         });
 
-    EXPECT_OK(this->listener_->listen(ma));
+    ASSERT_OUTCOME_SUCCESS(this->listener_->listen(ma));
   }
 
   size_t clientsConnected = 0;
@@ -208,7 +210,7 @@ struct Client : public std::enable_shared_from_this<Client> {
         p,
         server,
         [this](outcome::result<std::shared_ptr<CapableConnection>> rconn) {
-          auto conn = EXPECT_OK(rconn);
+          ASSERT_OUTCOME_SUCCESS(conn, rconn);
           conn->start();
           this->println("connected");
           this->onConnection(conn);
@@ -220,7 +222,7 @@ struct Client : public std::enable_shared_from_this<Client> {
       boost::asio::post(*context_, [i, conn, this]() {
         conn->newStream(
             [i, conn, this](outcome::result<std::shared_ptr<Stream>> rstream) {
-              auto stream = EXPECT_OK(rstream);
+              ASSERT_OUTCOME_SUCCESS(stream, rstream);
               this->println("new stream number ", i, " created");
               this->onStream(i, this->rounds_, stream);
             });
@@ -246,7 +248,7 @@ struct Client : public std::enable_shared_from_this<Client> {
         stream,
         *buf,
         [round, streamId, buf, stream, this](outcome::result<size_t> rwrite) {
-          auto write = EXPECT_OK(rwrite);
+          ASSERT_OUTCOME_SUCCESS(write, rwrite);
           this->println(streamId, " write ", write, " bytes");
           this->streamWrites++;
 
@@ -257,7 +259,7 @@ struct Client : public std::enable_shared_from_this<Client> {
                        readbuf->size(),
                        [round, streamId, write, buf, readbuf, stream, this](
                            outcome::result<size_t> rread) {
-                         auto read = EXPECT_OK(rread);
+                         ASSERT_OUTCOME_SUCCESS(read, rread);
                          this->println(streamId, " readSome ", read, " bytes");
                          this->streamReads++;
 
@@ -395,14 +397,15 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
   auto plaintext = std::make_shared<Plaintext>(
       msg_marshaller, idmgr, std::move(key_marshaller));
   auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
-  auto transport = std::make_shared<TcpTransport>(server_context, upgrader);
+  auto transport =
+      std::make_shared<TcpTransport>(server_context, mux_config, upgrader);
   auto server = std::make_shared<Server>(transport);
   server->listen(serverAddr);
 
   std::vector<std::thread> clients;
   std::atomic<int> clients_running(totalClients);
 
-  server_context->post([&]() {
+  post(*server_context, [&]() {
     clients.reserve(totalClients);
     for (int i = 0; i < totalClients; i++) {
       auto localSeed = randomEngine();
@@ -429,13 +432,14 @@ TEST_P(MuxerAcceptanceTest, ParallelEcho) {
         auto plaintext =
             std::make_shared<Plaintext>(msg_marshaller, idmgr, key_marshaller);
         auto upgrader = std::make_shared<UpgraderSemiMock>(plaintext, muxer);
-        auto transport = std::make_shared<TcpTransport>(context, upgrader);
+        auto transport =
+            std::make_shared<TcpTransport>(context, mux_config, upgrader);
         auto client = std::make_shared<Client>(
             transport, localSeed, context, streams, rounds);
 
-        auto marshalled_key =
-            EXPECT_OK(key_marshaller->marshal(serverKeyPair.publicKey));
-        auto p = EXPECT_OK(PeerId::fromPublicKey(marshalled_key));
+        ASSERT_OUTCOME_SUCCESS(
+            marshalled_key, key_marshaller->marshal(serverKeyPair.publicKey));
+        ASSERT_OUTCOME_SUCCESS(p, PeerId::fromPublicKey(marshalled_key));
         client->connect(p, serverAddr);
 
         context->run_for(10000ms);
