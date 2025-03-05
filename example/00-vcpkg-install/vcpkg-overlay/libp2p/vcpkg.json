@@ -1,7 +1,9 @@
 {
   "name": "libp2p",
-  "version": "0.1.32",
+  "version": "0.0.1",
   "dependencies": [
+    { "name": "vcpkg-cmake", "host": true },
+    { "name": "vcpkg-cmake-config", "host": true },
     "boost-filesystem",
     "boost-random",
     "boost-program-options",
@@ -28,13 +30,5 @@
       "name": "fmt",
       "version": "10.1.1"
     }
-  ],
-  "features": {
-    "libp2p-tests": {
-      "description": "Tests of libp2p",
-      "dependencies": [
-        "gtest"
-      ]
-    }
-  }
+  ]
 }

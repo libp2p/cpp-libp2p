@@ -1,0 +1,8 @@
+{
+  "name": "fmt",
+  "version": "10.1.1",
+  "dependencies": [
+    { "name": "vcpkg-cmake", "host": true },
+    { "name": "vcpkg-cmake-config", "host": true }
+  ]
+}

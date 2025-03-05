@@ -1,6 +1,6 @@
 # CPP-Libp2p  
 
-> Fully compatible C++17 implementation of libp2p library
+> Fully compatible C++20 implementation of libp2p library
 
 Libp2p is a modular networking stack described in [spec](https://github.com/libp2p/specs)
 
