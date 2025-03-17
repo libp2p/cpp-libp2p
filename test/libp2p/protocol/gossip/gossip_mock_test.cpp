@@ -59,21 +59,21 @@ inline uint8_t decodeMessageId(std::string_view data) {
   return data.at(0);
 }
 
+struct Received {
+  std::vector<bool> subscriptions{};
+  MessageIds messages{};
+  std::vector<bool> graft{};
+  MessageIds ihave{};
+  MessageIds iwant{};
+  MessageIds idontwant{};
+};
+
 struct MockPeer {
   MockPeer(PeerId peer_id, ProtocolName version, std::shared_ptr<Stream> writer)
       : peer_id_{std::move(peer_id)},
         version_{std::move(version)},
         writer_{std::move(writer)},
         framing_{std::make_shared<MessageReadWriterUvarint>(writer_)} {}
-
-  struct Received {
-    std::vector<bool> subscriptions;
-    MessageIds messages;
-    std::vector<bool> graft;
-    MessageIds ihave;
-    MessageIds iwant;
-    MessageIds idontwant;
-  };
 
   void expect(Received expected) {
     EXPECT_EQ(received_.subscriptions, expected.subscriptions);
