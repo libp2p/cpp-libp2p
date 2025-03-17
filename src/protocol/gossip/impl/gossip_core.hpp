@@ -13,6 +13,7 @@
 #include <libp2p/basic/scheduler.hpp>
 #include <libp2p/host/host.hpp>
 #include <libp2p/log/sublogger.hpp>
+#include <libp2p/protocol/gossip/time_cache.hpp>
 
 #include "message_cache.hpp"
 #include "message_receiver.hpp"
@@ -23,6 +24,7 @@ namespace libp2p::protocol::gossip {
   class LocalSubscriptions;
   class RemoteSubscriptions;
   class Connectivity;
+  class Score;
 
   /// Central component in gossip protocol impl, manages pub-sub logic itself
   class GossipCore : public Gossip,
@@ -71,7 +73,7 @@ namespace libp2p::protocol::gossip {
     void onGraft(const PeerContextPtr &from, const TopicId &topic) override;
     void onPrune(const PeerContextPtr &from,
                  const TopicId &topic,
-                 uint64_t backoff_time) override;
+                 std::optional<std::chrono::seconds> backoff_time) override;
     void onTopicMessage(const PeerContextPtr &from,
                         TopicMessage::Ptr msg) override;
     void onMessageEnd(const PeerContextPtr &from) override;
@@ -115,6 +117,10 @@ namespace libp2p::protocol::gossip {
     /// Message cache w/expiration
     MessageCache msg_cache_;
 
+    std::shared_ptr<Score> score_;
+
+    DuplicateCache<MessageId> duplicate_cache_;
+
     /// Local subscriptions manager (this host subscribed to topics)
     std::shared_ptr<LocalSubscriptions> local_subscriptions_;
 
@@ -131,9 +137,6 @@ namespace libp2p::protocol::gossip {
 
     /// Network part of gossip component
     std::shared_ptr<Connectivity> connectivity_;
-
-    /// Local {un}subscribe changes to be broadcasted to peers
-    std::map<TopicId, bool> broadcast_on_heartbeat_;
 
     /// Incremented msg sequence number
     uint64_t msg_seq_;

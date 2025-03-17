@@ -21,6 +21,7 @@ namespace libp2p::protocol::gossip {
 
     /// Returns if the set contains such a peer
     bool contains(const peer::PeerId &id) const;
+    bool contains(const PeerContextPtr &ctx) const;
 
     /// Inserts peer context into set, returns false if already inserted
     bool insert(PeerContextPtr ctx);
@@ -55,6 +56,18 @@ namespace libp2p::protocol::gossip {
 
     /// Conditionally erases peers from the set
     void eraseIf(const FilterCallback &filter);
+
+    auto begin() const {
+      return peers_.begin();
+    }
+    auto end() const {
+      return peers_.end();
+    }
+    void extend(auto &&peers) {
+      for (auto &ctx : peers) {
+        insert(ctx);
+      }
+    }
 
    private:
     std::set<PeerContextPtr, std::less<>> peers_;

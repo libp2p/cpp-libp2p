@@ -7,6 +7,7 @@
 #pragma once
 
 #include <libp2p/common/metrics/instance_count.hpp>
+#include <optional>
 
 #include "common.hpp"
 
@@ -42,6 +43,8 @@ namespace libp2p::protocol::gossip {
     /// If true, then outbound connection is in progress
     bool is_connecting = false;
 
+    std::optional<PeerKind> peer_kind;
+
     ~PeerContext() = default;
     PeerContext(PeerContext &&) = delete;
     PeerContext(const PeerContext &) = delete;
@@ -49,6 +52,11 @@ namespace libp2p::protocol::gossip {
     PeerContext &operator=(PeerContext &&) = delete;
 
     explicit PeerContext(peer::PeerId id);
+
+    bool isFloodsub() const;
+    bool isGossipsub() const;
+    bool isGossipsubv1_1() const;
+    bool isGossipsubv1_2() const;
 
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
         libp2p::protocol::gossip::PeerContext);

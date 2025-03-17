@@ -11,6 +11,7 @@
 #include <libp2p/crypto/crypto_provider.hpp>
 #include <libp2p/crypto/key_marshaller.hpp>
 #include <libp2p/peer/identity_manager.hpp>
+#include <libp2p/protocol/gossip/score.hpp>
 #include <qtils/hex.hpp>
 
 #include "connectivity.hpp"
@@ -54,9 +55,11 @@ namespace libp2p::protocol::gossip {
         key_marshaller_(std::move(key_marshaller)),
         local_peer_id_(host_->getPeerInfo().id),
         msg_cache_(
-            config_.message_cache_lifetime_msec,
+            config_.history_length * config_.heartbeat_interval_msec,
             [sch = scheduler_] { return sch->now(); }
         ),
+        score_{std::make_shared<Score>()},
+        duplicate_cache_{config.duplicate_cache_time},
         local_subscriptions_(std::make_shared<LocalSubscriptions>(
             [this](bool subscribe, const TopicId &topic) {
               onLocalSubscriptionChanged(subscribe, topic);
@@ -109,7 +112,7 @@ namespace libp2p::protocol::gossip {
     }
 
     remote_subscriptions_ = std::make_shared<RemoteSubscriptions>(
-        config_, *connectivity_, *scheduler_, log_);
+        config_, *connectivity_, score_, scheduler_, log_);
 
     started_ = true;
 
@@ -177,6 +180,10 @@ namespace libp2p::protocol::gossip {
 
     MessageId msg_id = create_message_id_(msg->from, msg->seq_no, msg->data);
 
+    if (not duplicate_cache_.insert(msg_id)) {
+      return false;
+    }
+
     [[maybe_unused]] bool inserted = msg_cache_.insert(msg, msg_id);
     assert(inserted);
 
@@ -223,25 +230,39 @@ namespace libp2p::protocol::gossip {
                            const MessageId &msg_id) {
     assert(started_);
 
+    if (not from->isGossipsub()) {
+      return;
+    }
+    if (score_->below(from->peer_id, config_.score.gossip_threshold)) {
+      return;
+    }
+
     log_.debug("peer {} has msg for topic {}", from->str, topic);
 
-    if (remote_subscriptions_->hasTopic(topic)
-        && !msg_cache_.contains(msg_id)) {
+    if (remote_subscriptions_->isSubscribed(topic)
+        and not duplicate_cache_.contains(msg_id)) {
       log_.debug("requesting msg id {:x}", msg_id);
 
       from->message_builder->addIWant(msg_id);
-      connectivity_->peerIsWritable(from, false);
+      connectivity_->peerIsWritable(from);
     }
   }
 
   void GossipCore::onIWant(const PeerContextPtr &from,
                            const MessageId &msg_id) {
+    if (not from->isGossipsub()) {
+      return;
+    }
+    if (score_->below(from->peer_id, config_.score.gossip_threshold)) {
+      return;
+    }
+
     log_.debug("peer {} wants message {:x}", from->str, msg_id);
 
     auto msg_found = msg_cache_.getMessage(msg_id);
     if (msg_found) {
       from->message_builder->addMessage(*msg_found.value(), msg_id);
-      connectivity_->peerIsWritable(from, true);
+      connectivity_->peerIsWritable(from);
     } else {
       log_.debug("wanted message not in cache");
     }
@@ -250,6 +271,10 @@ namespace libp2p::protocol::gossip {
   void GossipCore::onGraft(const PeerContextPtr &from, const TopicId &topic) {
     assert(started_);
 
+    if (not from->isGossipsub()) {
+      return;
+    }
+
     log_.debug("graft from peer {} for topic {}", from->str, topic);
 
     remote_subscriptions_->onGraft(from, topic);
@@ -257,8 +282,12 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::onPrune(const PeerContextPtr &from,
                            const TopicId &topic,
-                           uint64_t backoff_time) {
+                           std::optional<std::chrono::seconds> backoff_time) {
     assert(started_);
+
+    if (not from->isGossipsub()) {
+      return;
+    }
 
     log_.debug("prune from peer {} for topic {}", from->str, topic);
 
@@ -270,20 +299,18 @@ namespace libp2p::protocol::gossip {
     assert(started_);
 
     // do we need this message?
-    auto subscribed = remote_subscriptions_->hasTopic(msg->topic);
+    auto subscribed = remote_subscriptions_->isSubscribed(msg->topic);
     if (!subscribed) {
       // ignore this message
       return;
     }
 
     MessageId msg_id = create_message_id_(msg->from, msg->seq_no, msg->data);
-    log_.debug("message arrived, msg id={:x}", msg_id);
-
-    if (msg_cache_.contains(msg_id)) {
-      // already there, ignore
-      log_.debug("ignoring message, already in cache");
+    if (not duplicate_cache_.insert(msg_id)) {
       return;
     }
+
+    log_.debug("message arrived, msg id={:x}", msg_id);
 
     // validate message. If no validator is set then we
     // suppose that the message is valid (we might not know topic details)
@@ -316,9 +343,6 @@ namespace libp2p::protocol::gossip {
     assert(started_);
 
     log_.debug("finished dispatching message from peer {}", from->str);
-
-    // Apply immediate send operation to affected peers
-    connectivity_->flush();
   }
 
   void GossipCore::onHeartbeat() {
@@ -331,8 +355,7 @@ namespace libp2p::protocol::gossip {
     remote_subscriptions_->onHeartbeat();
 
     // send changes to peers
-    connectivity_->onHeartbeat(broadcast_on_heartbeat_);
-    broadcast_on_heartbeat_.clear();
+    connectivity_->onHeartbeat();
 
     setTimerHeartbeat();
   }
@@ -347,8 +370,7 @@ namespace libp2p::protocol::gossip {
         for (const auto &local_sub : local_subscriptions_->subscribedTo()) {
           ctx->message_builder->addSubscription(true, local_sub.first);
         }
-        connectivity_->peerIsWritable(ctx, true);
-        connectivity_->flush();
+        connectivity_->peerIsWritable(ctx);
       }
     } else {
       log_.debug("peer {} disconnected", ctx->str);
@@ -362,14 +384,7 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    // send this notification on next heartbeat to all connected peers
-    auto it = broadcast_on_heartbeat_.find(topic);
-    if (it == broadcast_on_heartbeat_.end()) {
-      broadcast_on_heartbeat_.emplace(topic, subscribe);
-    } else if (it->second != subscribe) {
-      // save traffic
-      broadcast_on_heartbeat_.erase(it);
-    }
+    connectivity_->subscribe(topic, subscribe);
 
     // update meshes per topic
     remote_subscriptions_->onSelfSubscribed(subscribe, topic);

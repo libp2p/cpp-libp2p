@@ -58,6 +58,13 @@ namespace libp2p::protocol::gossip {
   outcome::result<SharedBuffer> MessageBuilder::serialize() {
     create_protobuf_structures();
 
+    for (auto &[topic, subscribe] : subscriptions_) {
+      auto *subscription = pb_msg_->add_subscriptions();
+      subscription->set_subscribe(subscribe);
+      subscription->set_topicid(topic);
+    }
+    subscriptions_.clear();
+
     for (auto &[topic, message_ids] : ihaves_) {
       auto *ih = control_pb_msg_->add_ihave();
       ih->set_topicid(topic);
@@ -109,11 +116,10 @@ namespace libp2p::protocol::gossip {
   }
 
   void MessageBuilder::addSubscription(bool subscribe, const TopicId &topic) {
-    create_protobuf_structures();
-
-    auto *dst = pb_msg_->add_subscriptions();
-    dst->set_subscribe(subscribe);
-    dst->set_topicid(topic);
+    auto it = subscriptions_.emplace(topic, subscribe).first;
+    if (it->second != subscribe) {
+      subscriptions_.erase(it);
+    }
     empty_ = false;
   }
 
@@ -137,10 +143,15 @@ namespace libp2p::protocol::gossip {
     empty_ = false;
   }
 
-  void MessageBuilder::addPrune(const TopicId &topic) {
+  void MessageBuilder::addPrune(const TopicId &topic,
+                                std::optional<std::chrono::seconds> backoff) {
     create_protobuf_structures();
 
-    control_pb_msg_->add_prune()->set_topicid(topic);
+    auto *prune = control_pb_msg_->add_prune();
+    prune->set_topicid(topic);
+    if (backoff.has_value()) {
+      prune->set_backoff(backoff->count());
+    }
     control_not_empty_ = true;
     empty_ = false;
   }

@@ -29,7 +29,7 @@ namespace libp2p::protocol::gossip {
   Connectivity::Connectivity(Config config,
                              std::shared_ptr<basic::Scheduler> scheduler,
                              std::shared_ptr<Host> host,
-                             std::shared_ptr<MessageReceiver> msg_receiver,
+                             std::weak_ptr<MessageReceiver> msg_receiver,
                              ConnectionStatusFeedback on_connected)
       : config_(std::move(config)),
         scheduler_(std::move(scheduler)),
@@ -38,7 +38,16 @@ namespace libp2p::protocol::gossip {
         connected_cb_(std::move(on_connected)),
         log_("gossip",
              "Connectivity",
-             host_->getPeerInfo().id.toBase58().substr(46)) {}
+             host_->getPeerInfo().id.toBase58().substr(46)) {
+    for (auto &p : config_.protocol_versions) {
+      protocols_.emplace_back(p.first);
+    }
+    std::ranges::sort(protocols_,
+                      [&](const ProtocolName &l, const ProtocolName &r) {
+                        return config_.protocol_versions.at(l)
+                             > config_.protocol_versions.at(r);
+                      });
+  }
 
   Connectivity::~Connectivity() {
     stop();
@@ -58,7 +67,7 @@ namespace libp2p::protocol::gossip {
         };
 
     host_->setProtocolHandler(
-        {config_.protocol_version},
+        protocols_,
         [self_wptr=weak_from_this()]
             (StreamAndProtocol stream) {
           auto h = self_wptr.lock();
@@ -134,10 +143,6 @@ namespace libp2p::protocol::gossip {
     ctx->outbound_stream->write(std::move(serialized));
   }
 
-  peer::ProtocolName Connectivity::getProtocolId() const {
-    return config_.protocol_version;
-  }
-
   void Connectivity::handle(StreamAndProtocol stream_and_protocol) {
     auto &stream = stream_and_protocol.stream;
 
@@ -178,6 +183,7 @@ namespace libp2p::protocol::gossip {
         unban(ctx);
       }
     }
+    updatePeerKind(*ctx, stream_and_protocol);
 
     size_t stream_id = 0;
     bool is_new_connection = false;
@@ -189,7 +195,7 @@ namespace libp2p::protocol::gossip {
                                                   config_,
                                                   *scheduler_,
                                                   on_stream_event_,
-                                                  *msg_receiver_,
+                                                  msg_receiver_,
                                                   std::move(stream),
                                                   ctx);
 
@@ -232,7 +238,7 @@ namespace libp2p::protocol::gossip {
     // clang-format off
     host_->newStream(
         pi,
-        {config_.protocol_version},
+        protocols_,
         [wptr = weak_from_this(), this, ctx=ctx] (auto &&rstream) mutable {
             auto self = wptr.lock();
           if (self) {
@@ -253,7 +259,7 @@ namespace libp2p::protocol::gossip {
     // clang-format off
     host_->newStream(
         ctx->peer_id,
-        {config_.protocol_version},
+        protocols_,
         [wptr = weak_from_this(), this, ctx=ctx] (auto &&rstream) mutable {
           auto self = wptr.lock();
           if (self) {
@@ -279,6 +285,7 @@ namespace libp2p::protocol::gossip {
     }
 
     auto &stream = rstream.value().stream;
+    updatePeerKind(*ctx, rstream.value());
 
     if (!started_) {
       stream->reset();
@@ -306,7 +313,7 @@ namespace libp2p::protocol::gossip {
                                                   config_,
                                                   *scheduler_,
                                                   on_stream_event_,
-                                                  *msg_receiver_,
+                                                  msg_receiver_,
                                                   std::move(stream),
                                                   ctx);
 
@@ -395,26 +402,31 @@ namespace libp2p::protocol::gossip {
     banOrForget(from);
   }
 
-  void Connectivity::peerIsWritable(const PeerContextPtr &ctx,
-                                    bool low_latency) {
+  void Connectivity::peerIsWritable(const PeerContextPtr &ctx) {
     if (ctx->message_builder->empty()) {
       return;
     }
 
-    if (low_latency) {
-      writable_peers_low_latency_.insert(ctx);
-    } else {
-      writable_peers_on_heartbeat_.insert(ctx);
+    const auto was_empty = writable_peers_.empty();
+    writable_peers_.insert(ctx);
+    if (was_empty) {
+      scheduler_->schedule([weak_self{weak_from_this()}] {
+        auto self = weak_self.lock();
+        if (not self) {
+          return;
+        }
+        self->flush();
+      });
     }
   }
 
   void Connectivity::flush() {
-    writable_peers_low_latency_.selectAll(
+    writable_peers_.selectAll(
         [this](const PeerContextPtr &ctx) { flush(ctx); });
-    writable_peers_low_latency_.clear();
+    writable_peers_.clear();
   }
 
-  void Connectivity::onHeartbeat(const std::map<TopicId, bool> &local_changes) {
+  void Connectivity::onHeartbeat() {
     if (!started_) {
       return;
     }
@@ -448,32 +460,6 @@ namespace libp2p::protocol::gossip {
       }
     }
 
-    if (!local_changes.empty()) {
-      // we have something to say to all connected peers
-
-      std::vector<std::pair<bool, TopicId>> flat_changes;
-      flat_changes.reserve(local_changes.size());
-      boost::for_each(local_changes, [&flat_changes](auto &&p) {
-        flat_changes.emplace_back(p.second, std::move(p.first));
-      });
-
-      connected_peers_.selectAll(
-          [&flat_changes, this](const PeerContextPtr &ctx) {
-            boost::for_each(flat_changes, [&ctx](auto &&p) {
-              ctx->message_builder->addSubscription(p.first, p.second);
-            });
-            flush(ctx);
-          });
-
-    } else {
-      flush();
-      writable_peers_on_heartbeat_.selectAll(
-          [this](const PeerContextPtr &ctx) { flush(ctx); });
-    }
-
-    writable_peers_low_latency_.clear();
-    writable_peers_on_heartbeat_.clear();
-
     if (ts >= addresses_renewal_time_) {
       addresses_renewal_time_ =
           scheduler_->now() + config_.address_expiration_msec * 9 / 10;
@@ -489,4 +475,17 @@ namespace libp2p::protocol::gossip {
     return connected_peers_;
   }
 
+  void Connectivity::subscribe(const TopicId &topic, bool subscribe) {
+    for (auto &ctx : connected_peers_) {
+      ctx->message_builder->addSubscription(subscribe, topic);
+      peerIsWritable(ctx);
+    }
+  }
+
+  void Connectivity::updatePeerKind(PeerContext &ctx,
+                                    const StreamAndProtocol &stream) const {
+    if (not ctx.peer_kind) {
+      ctx.peer_kind = config_.protocol_versions.at(stream.protocol);
+    }
+  }
 }  // namespace libp2p::protocol::gossip

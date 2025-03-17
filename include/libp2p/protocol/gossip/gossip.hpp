@@ -10,6 +10,7 @@
 #include <functional>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/optional.hpp>
@@ -17,7 +18,10 @@
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_id.hpp>
+#include <libp2p/peer/protocol.hpp>
 #include <libp2p/protocol/common/subscription.hpp>
+#include <libp2p/protocol/gossip/peer_kind.hpp>
+#include <libp2p/protocol/gossip/score_config.hpp>
 
 namespace libp2p {
   struct Host;
@@ -41,6 +45,7 @@ namespace libp2p::protocol::gossip {
   struct Config {
     /// Network density factors for gossip meshes
     size_t D_min = 5;
+    size_t D = 6;
     size_t D_max = 10;
 
     /// Ideal number of connected peers to support the network
@@ -50,26 +55,11 @@ namespace libp2p::protocol::gossip {
     /// incoming peers will be rejected
     size_t max_connections_num = 1000;
 
-    /// Forward messages to all subscribers not in mesh
-    /// (floodsub mode compatibility)
-    bool floodsub_forward_mode = false;
-
     /// Forward local message to local subscribers
     bool echo_forward_mode = false;
 
     /// Read or write timeout per whole network operation
     std::chrono::milliseconds rw_timeout_msec{std::chrono::seconds(10)};
-
-    /// Lifetime of a message in message cache
-    std::chrono::milliseconds message_cache_lifetime_msec{
-        std::chrono::minutes(2)};
-
-    /// Topic's message seen cache lifetime
-    std::chrono::milliseconds seen_cache_lifetime_msec{
-        message_cache_lifetime_msec * 3 / 4};
-
-    /// Topic's seen cache limit
-    unsigned seen_cache_limit = 100;
 
     /// Heartbeat interval
     std::chrono::milliseconds heartbeat_interval_msec{1000};
@@ -86,11 +76,36 @@ namespace libp2p::protocol::gossip {
     /// Max RPC message size
     size_t max_message_size = 1 << 24;
 
-    /// Protocol version
-    std::string protocol_version = "/meshsub/1.0.0";
+    /// Protocol versions
+    std::unordered_map<ProtocolName, PeerKind> protocol_versions{
+        {"/floodsub/1.0.0", PeerKind::Floodsub},
+        {"/meshsub/1.0.0", PeerKind::Gossipsub},
+        {"/meshsub/1.1.0", PeerKind::Gossipsubv1_1},
+        {"/meshsub/1.2.0", PeerKind::Gossipsubv1_2},
+    };
 
     /// Sign published messages
     bool sign_messages = false;
+
+    size_t history_length{5};
+
+    size_t history_gossip{3};
+
+    std::chrono::seconds fanout_ttl{60};
+
+    std::chrono::seconds duplicate_cache_time{60};
+
+    std::chrono::seconds prune_backoff{60};
+
+    std::chrono::seconds unsubscribe_backoff{10};
+
+    size_t backoff_slack = 1;
+
+    bool flood_publish = true;
+
+    size_t max_ihave_length = 5000;
+
+    ScoreConfig score;
   };
 
   using TopicId = std::string;

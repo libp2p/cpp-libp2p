@@ -88,12 +88,10 @@ namespace libp2p::protocol::gossip {
         if (!pr.has_topicid()) {
           continue;
         }
-        uint64_t backoff_time = 60;
+        std::optional<std::chrono::seconds> backoff_time;
         if (pr.has_backoff()) {
-          backoff_time = pr.backoff();
+          backoff_time = std::chrono::seconds{pr.backoff()};
         }
-        log()->debug(
-            "prune backoff={}, {} peers", backoff_time, pr.peers_size());
         for (const auto &peer : pr.peers()) {
           // TODO(artem): meshsub 1.1.0 + signed peer records NYI
 

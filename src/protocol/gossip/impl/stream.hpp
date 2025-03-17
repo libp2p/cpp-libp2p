@@ -34,7 +34,7 @@ namespace libp2p::protocol::gossip {
            const Config &config,
            basic::Scheduler &scheduler,
            const Feedback &feedback,
-           MessageReceiver &msg_receiver,
+           std::weak_ptr<MessageReceiver> msg_receiver,
            std::shared_ptr<connection::Stream> stream,
            PeerContextPtr peer);
 
@@ -61,7 +61,7 @@ namespace libp2p::protocol::gossip {
     basic::Scheduler &scheduler_;
     const size_t max_message_size_;
     const Feedback &feedback_;
-    MessageReceiver &msg_receiver_;
+    std::weak_ptr<MessageReceiver> msg_receiver_;
     std::shared_ptr<connection::Stream> stream_;
     PeerContextPtr peer_;
 

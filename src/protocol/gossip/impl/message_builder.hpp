@@ -7,6 +7,7 @@
 #pragma once
 
 #include <map>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "common.hpp"
@@ -54,7 +55,8 @@ namespace libp2p::protocol::gossip {
     void addGraft(const TopicId &topic);
 
     /// Adds prune request
-    void addPrune(const TopicId &topic);
+    void addPrune(const TopicId &topic,
+                  std::optional<std::chrono::seconds> backoff);
 
     /// Adds message to be forwarded
     void addMessage(const TopicMessage &msg, const MessageId &msg_id);
@@ -73,6 +75,7 @@ namespace libp2p::protocol::gossip {
     std::unique_ptr<pubsub::pb::ControlMessage> control_pb_msg_;
     bool empty_;
     bool control_not_empty_;
+    std::unordered_map<TopicId, bool> subscriptions_;
 
     /// Intermediate struct for building IHave messages
     std::map<TopicId, std::vector<MessageId>> ihaves_;
