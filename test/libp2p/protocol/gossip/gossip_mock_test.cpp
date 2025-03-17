@@ -410,7 +410,7 @@ TEST_F(GossipMockTest, FloodPublish) {
   subscribe(*peer2, true);
   publish(1);
   publish(*peer2, 2, randomPeerId());
-  peer1->expect({.graft = {true}, .messages = {1, 2}});
+  peer1->expect({.messages = {1, 2}, .graft = {true}});
   peer2->expect({.messages = {1}});
 }
 
@@ -429,7 +429,7 @@ TEST_F(GossipMockTest, Gossip) {
   subscribe(*peer2, true);
   subscribe(*peer3, true);
   publish(1);
-  peer1->expect({.graft = {true}, .messages = {1}});
+  peer1->expect({.messages = {1}, .graft = {true}});
 
   heartbeat();
   if (peer2->received_.ihave.empty()) {
