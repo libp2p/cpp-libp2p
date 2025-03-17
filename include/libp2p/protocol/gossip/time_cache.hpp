@@ -17,6 +17,8 @@ namespace libp2p::protocol::gossip::time_cache {
   using Clock = std::chrono::steady_clock;
   using Time = Clock::time_point;
 
+  /// This implements a time-based LRU cache for checking gossipsub message
+  /// duplicates.
   template <typename K, typename V>
   class TimeCache {
    public:

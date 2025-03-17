@@ -87,22 +87,60 @@ namespace libp2p::protocol::gossip {
     /// Sign published messages
     bool sign_messages = false;
 
+    /// Number of heartbeats to keep in the `memcache`
     size_t history_length{5};
 
+    /// Number of past heartbeats to gossip about (default is 3).
     size_t history_gossip{3};
 
+    /// Time to live for fanout peers (default is 60 seconds).
     std::chrono::seconds fanout_ttl{60};
 
+    /// Duplicates are prevented by storing message id's of known messages in an
+    /// LRU time cache. This settings sets the time period that messages are
+    /// stored in the cache. Duplicates can be received if duplicate messages
+    /// are sent at a time greater than this setting apart. The default is 1
+    /// minute.
     std::chrono::seconds duplicate_cache_time{60};
 
+    /// Controls the backoff time for pruned peers. This is how long
+    /// a peer must wait before attempting to graft into our mesh again after
+    /// being pruned. When pruning a peer, we send them our value of
+    /// `prune_backoff` so they know the minimum time to wait. Peers running
+    /// older versions may not send a backoff time, so if we receive a prune
+    /// message without one, we will wait at least `prune_backoff` before
+    /// attempting to re-graft. The default is one minute.
     std::chrono::seconds prune_backoff{60};
 
+    /// Controls the backoff time when unsubscribing from a topic.
+    ///
+    /// This is how long to wait before resubscribing to the topic. A short
+    /// backoff period in case of an unsubscribe event allows reaching a healthy
+    /// mesh in a more timely manner. The default is 10 seconds.
     std::chrono::seconds unsubscribe_backoff{10};
 
+    /// Number of heartbeat slots considered as slack for backoffs. This
+    /// guarantees that we wait at least backoff_slack heartbeats after a
+    /// backoff is over before we try to graft. This solves problems occurring
+    /// through high latencies. In particular if `backoff_slack *
+    /// heartbeat_interval` is longer than any latencies between processing
+    /// prunes on our side and processing prunes on the receiving side this
+    /// guarantees that we get not punished for too early grafting. The default
+    /// is 1.
     size_t backoff_slack = 1;
 
+    /// Whether to do flood publishing or not. If enabled newly created messages
+    /// will always be
+    /// sent to all peers that are subscribed to the topic and have a good
+    /// enough score. The default is true.
     bool flood_publish = true;
 
+    /// The maximum number of messages to include in an IHAVE message.
+    /// Also controls the maximum number of IHAVE ids we will accept and request
+    /// with IWANT from a peer within a heartbeat, to protect from IHAVE floods.
+    /// You should adjust this value from the default if your system is pushing
+    /// more than 5000 messages in GossipSubHistoryGossip heartbeats; with the
+    /// defaults this is 1666 messages/s. The default is 5000.
     size_t max_ihave_length = 5000;
 
     ScoreConfig score;

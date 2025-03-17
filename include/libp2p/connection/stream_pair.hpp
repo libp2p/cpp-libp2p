@@ -15,6 +15,10 @@ namespace libp2p::basic {
 namespace libp2p::connection {
   struct Stream;
 
+  /**
+   * Create pair of connected bidirectional read-writers
+   * implementing `Stream` interface.
+   */
   std::pair<std::shared_ptr<Stream>, std::shared_ptr<Stream>> streamPair(
       std::shared_ptr<basic::Scheduler> post, PeerId peer1, PeerId peer2);
 }  // namespace libp2p::connection
