@@ -533,6 +533,8 @@ namespace libp2p::connection {
       return;
     }
 
+    // Keep alive until method completion
+    auto self = shared_from_this();
     started_ = false;
 
     SL_DEBUG(log(), "closing connection, reason: {}", notify_streams_code);
