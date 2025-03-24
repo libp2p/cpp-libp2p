@@ -714,7 +714,11 @@ namespace libp2p::connection {
                "scheduling expire timer to {} msec",
                config_.no_streams_interval.count());
       inactivity_handle_ = scheduler_->scheduleWithHandle(
-          [this] { onExpireTimer(); },
+          [weak_ptr(weak_from_this())] {
+            if (auto self = weak_ptr.lock()) {
+              self->onExpireTimer();
+            }
+          },
           scheduler_->now() + config_.no_streams_interval);
     }
   }
