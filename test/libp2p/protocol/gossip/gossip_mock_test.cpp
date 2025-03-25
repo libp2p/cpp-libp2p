@@ -81,6 +81,7 @@ struct MockPeer {
     EXPECT_EQ(received_.graft, expected.graft);
     EXPECT_EQ(received_.ihave, expected.ihave);
     EXPECT_EQ(received_.iwant, expected.iwant);
+    EXPECT_EQ(received_.idontwant, expected.idontwant);
     received_ = {};
   }
 
@@ -281,6 +282,22 @@ struct GossipMockTest : testing::Test {
     scheduler_backend_->callDeferred();
   }
 
+  void iwant(MockPeer &peer, uint8_t i) {
+    peer.write([&](pubsub::pb::RPC &rpc) {
+      auto *iwant = rpc.mutable_control()->add_iwant();
+      *iwant->add_messageids() = qtils::byte2str(encodeMessageId(i));
+    });
+    scheduler_backend_->callDeferred();
+  }
+
+  void idontwant(MockPeer &peer, uint8_t i) {
+    peer.write([&](pubsub::pb::RPC &rpc) {
+      auto *idontwant = rpc.mutable_control()->add_idontwant();
+      *idontwant->add_message_ids() = qtils::byte2str(encodeMessageId(i));
+    });
+    scheduler_backend_->callDeferred();
+  }
+
   void heartbeat() {
     scheduler_backend_->shift(config_.heartbeat_interval_msec);
   }
@@ -456,4 +473,42 @@ TEST_F(GossipMockTest, IhaveIwant) {
 
   publish(*peer1, 1);
   ihave(*peer1, 1);
+
+  iwant(*peer1, 1);
+  peer1->expect({.messages = {1}});
+}
+
+/**
+ * send idontwant after receiving message.
+ * send idontwant to mesh peers.
+ * send idontwant to cancel pending iwant requests.
+ * don't reply to iwant from peer after receiving idontwant.
+ * don't forward message to peer after receiving idontwant.
+ */
+TEST_F(GossipMockTest, Idontwant) {
+  config_.idontwant_message_size_threshold = 1;
+  setup();
+  auto peer1 = connect(PeerKind::Gossipsubv1_2);
+  auto peer2 = connect(PeerKind::Gossipsubv1_2);
+
+  auto sub = subscribe();
+  subscribe(*peer1, true);
+  subscribe(*peer2, true);
+  publish(*peer2, 1);
+  peer1->expect({.messages = {1}, .graft = {1}, .idontwant = {1}});
+
+  ihave(*peer2, 2);
+  peer2->expect({.iwant = {2}});
+  publish(*peer1, 2);
+  peer1->expect({.idontwant = {2}});
+  peer2->expect({.idontwant = {2}});
+
+  idontwant(*peer2, 2);
+  iwant(*peer2, 2);
+  peer2->expect({});
+
+  idontwant(*peer2, 3);
+  publish(*peer1, 3);
+  peer1->expect({.idontwant = {3}});
+  peer2->expect({});
 }

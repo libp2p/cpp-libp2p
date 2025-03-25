@@ -143,6 +143,26 @@ namespace libp2p::protocol::gossip {
     /// defaults this is 1666 messages/s. The default is 5000.
     size_t max_ihave_length = 5000;
 
+    /// Time to wait for a message requested through IWANT following an IHAVE
+    /// advertisement. If the message is not received within this window, a
+    /// broken promise is declared and the router may apply behavioural
+    /// penalties. The default is 3 seconds.
+    std::chrono::milliseconds iwant_followup_time = std::chrono::seconds{3};
+
+    /// The message size threshold for which IDONTWANT messages are sent.
+    /// Sending IDONTWANT messages for small messages can have a negative effect
+    /// to the overall traffic and CPU load. This acts as a lower bound cutoff
+    /// for the message size to which IDONTWANT won't be sent to peers. Only
+    /// works if the peers support Gossipsub1.2 (see
+    /// <https://github.com/libp2p/specs/blob/master/pubsub/gossipsub/gossipsub-v1.2.md#idontwant-message>)
+    /// default is 1kB
+    size_t idontwant_message_size_threshold = 1000;
+
+    /// Send IDONTWANT messages after publishing message on gossip. This is an
+    /// optimisation to avoid bandwidth consumption by downloading the published
+    /// message over gossip. By default it is false.
+    bool idontwant_on_publish = false;
+
     ScoreConfig score;
   };
 

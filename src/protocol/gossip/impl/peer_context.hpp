@@ -7,6 +7,7 @@
 #pragma once
 
 #include <libp2p/common/metrics/instance_count.hpp>
+#include <libp2p/protocol/gossip/time_cache.hpp>
 #include <optional>
 
 #include "common.hpp"
@@ -44,6 +45,8 @@ namespace libp2p::protocol::gossip {
     bool is_connecting = false;
 
     std::optional<PeerKind> peer_kind;
+
+    IDontWantCache<MessageId> idontwant;
 
     ~PeerContext() = default;
     PeerContext(PeerContext &&) = delete;

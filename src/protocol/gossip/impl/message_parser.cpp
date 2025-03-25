@@ -7,6 +7,7 @@
 #include "message_parser.hpp"
 
 #include <libp2p/log/logger.hpp>
+#include <qtils/bytestr.hpp>
 
 #include "message_receiver.hpp"
 
@@ -51,6 +52,15 @@ namespace libp2p::protocol::gossip {
 
     if (pb_msg_->has_control()) {
       const auto &c = pb_msg_->control();
+
+      std::vector<MessageId> idontwant_message_ids;
+      for (const auto &idontwant : c.idontwant()) {
+        for (auto &msg_id : idontwant.message_ids()) {
+          idontwant_message_ids.emplace_back(
+              qtils::asVec(qtils::str2byte(msg_id)));
+        }
+      }
+      receiver.onIDontWant(from, idontwant_message_ids);
 
       for (const auto &h : c.ihave()) {
         if (!h.has_topicid() || h.messageids_size() == 0) {

@@ -40,6 +40,7 @@ namespace libp2p::protocol::gossip {
       std::shared_ptr<ChoosePeers> choose_peers,
       std::shared_ptr<ExplicitPeers> explicit_peers,
       std::shared_ptr<Score> score,
+      std::shared_ptr<GossipPromises> gossip_promises,
       log::SubLogger &log)
       : topic_(std::move(topic)),
         config_(config),
@@ -48,6 +49,7 @@ namespace libp2p::protocol::gossip {
         choose_peers_{std::move(choose_peers)},
         explicit_peers_{std::move(explicit_peers)},
         score_{std::move(score)},
+        gossip_promises_{std::move(gossip_promises)},
         self_subscribed_(false),
         log_(log) {
     connectivity_.getConnectedPeers().selectIf(
@@ -83,7 +85,8 @@ namespace libp2p::protocol::gossip {
     auto origin = peerFrom(*msg);
 
     auto add_peer = [&](const PeerContextPtr &ctx) {
-      if (needToForward(ctx, from, origin)) {
+      if (needToForward(ctx, from, origin)
+          and not ctx->idontwant.contains(msg_id)) {
         ctx->message_builder->addMessage(*msg, msg_id);
         connectivity_.peerIsWritable(ctx);
       }
@@ -130,6 +133,25 @@ namespace libp2p::protocol::gossip {
     }
 
     history_gossip_.back().emplace_back(msg_id);
+
+    if ((not is_published_locally or config_.idontwant_on_publish)
+        and MessageBuilder::pbSize(*msg)
+                > config_.idontwant_message_size_threshold) {
+      auto add_idontwant_peer = [&](const PeerContextPtr &ctx) {
+        if (ctx->isGossipsubv1_2()) {
+          ctx->message_builder->addIDontWant(msg_id);
+          connectivity_.peerIsWritable(ctx);
+        }
+      };
+      for (auto &ctx : mesh_peers_) {
+        add_idontwant_peer(ctx);
+      }
+      gossip_promises_->peers(msg_id, [&](const PeerId &peer_id) {
+        if (auto ctx = subscribed_peers_.find(peer_id)) {
+          add_idontwant_peer(*ctx);
+        }
+      });
+    }
   }
 
   void TopicSubscriptions::onHeartbeat(Time now) {

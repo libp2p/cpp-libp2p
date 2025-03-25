@@ -76,6 +76,8 @@ namespace libp2p::protocol::gossip {
                  std::optional<std::chrono::seconds> backoff_time) override;
     void onTopicMessage(const PeerContextPtr &from,
                         TopicMessage::Ptr msg) override;
+    void onIDontWant(const PeerContextPtr &from,
+                     const std::vector<MessageId> &message_ids) override;
     void onMessageEnd(const PeerContextPtr &from) override;
 
     /// Periodic heartbeat timer fn
@@ -120,6 +122,8 @@ namespace libp2p::protocol::gossip {
     std::shared_ptr<Score> score_;
 
     DuplicateCache<MessageId> duplicate_cache_;
+
+    std::shared_ptr<GossipPromises> gossip_promises_;
 
     /// Local subscriptions manager (this host subscribed to topics)
     std::shared_ptr<LocalSubscriptions> local_subscriptions_;

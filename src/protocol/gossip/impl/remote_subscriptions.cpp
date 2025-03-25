@@ -19,6 +19,7 @@ namespace libp2p::protocol::gossip {
       const Config &config,
       Connectivity &connectivity,
       std::shared_ptr<Score> score,
+      std::shared_ptr<GossipPromises> gossip_promises,
       std::shared_ptr<basic::Scheduler> scheduler,
       log::SubLogger &log)
       : config_(config),
@@ -26,6 +27,7 @@ namespace libp2p::protocol::gossip {
         choose_peers_{std::make_shared<ChoosePeers>()},
         explicit_peers_{std::make_shared<ExplicitPeers>()},
         score_{std::move(score)},
+        gossip_promises_{std::move(gossip_promises)},
         scheduler_{std::move(scheduler)},
         log_(log) {}
 
@@ -182,6 +184,7 @@ namespace libp2p::protocol::gossip {
                                                        choose_peers_,
                                                        explicit_peers_,
                                                        score_,
+                                                       gossip_promises_,
                                                        log_));
       TopicSubscriptions &item = it->second;
       log_.debug("created entry for topic {}", topic);

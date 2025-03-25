@@ -14,5 +14,6 @@ namespace libp2p::protocol::gossip {
     bool below(const PeerId &peer_id, double threshold) {
       return false;
     }
+    void addPenalty(const PeerId &peer_id, size_t count) {}
   };
 }  // namespace libp2p::protocol::gossip

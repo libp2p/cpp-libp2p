@@ -14,6 +14,7 @@
 
 namespace pubsub::pb {
   // protobuf entities forward declaration
+  class Message;
   class RPC;
   class ControlMessage;
 }  // namespace pubsub::pb
@@ -45,6 +46,8 @@ namespace libp2p::protocol::gossip {
     /// Adds subscription notification
     void addSubscription(bool subscribe, const TopicId &topic);
 
+    void addIDontWant(const MessageId &msg_id);
+
     /// Adds "I have" notification
     void addIHave(const TopicId &topic, const MessageId &msg_id);
 
@@ -63,6 +66,10 @@ namespace libp2p::protocol::gossip {
 
     static outcome::result<Bytes> signableMessage(const TopicMessage &msg);
 
+    static void toPb(pubsub::pb::Message &pb_message,
+                     const TopicMessage &message);
+    static size_t pbSize(const TopicMessage &message);
+
    private:
     /// Creates protobuf structures if needed
     void create_protobuf_structures();
@@ -76,6 +83,7 @@ namespace libp2p::protocol::gossip {
     bool empty_;
     bool control_not_empty_;
     std::unordered_map<TopicId, bool> subscriptions_;
+    std::unordered_set<MessageId> idontwant_;
 
     /// Intermediate struct for building IHave messages
     std::map<TopicId, std::vector<MessageId>> ihaves_;

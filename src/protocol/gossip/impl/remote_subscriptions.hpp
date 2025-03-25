@@ -21,6 +21,7 @@ namespace libp2p::protocol::gossip {
     RemoteSubscriptions(const Config &config,
                         Connectivity &connectivity,
                         std::shared_ptr<Score> score,
+                        std::shared_ptr<GossipPromises> gossip_promises,
                         std::shared_ptr<basic::Scheduler> scheduler,
                         log::SubLogger &log);
 
@@ -68,6 +69,7 @@ namespace libp2p::protocol::gossip {
     std::shared_ptr<ChoosePeers> choose_peers_;
     std::shared_ptr<ExplicitPeers> explicit_peers_;
     std::shared_ptr<Score> score_;
+    std::shared_ptr<GossipPromises> gossip_promises_;
     std::shared_ptr<basic::Scheduler> scheduler_;
 
     std::unordered_map<TopicId, TopicSubscriptions> table_;

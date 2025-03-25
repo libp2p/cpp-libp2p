@@ -60,6 +60,7 @@ namespace libp2p::protocol::gossip {
         ),
         score_{std::make_shared<Score>()},
         duplicate_cache_{config.duplicate_cache_time},
+        gossip_promises_{std::make_shared<GossipPromises>(config.iwant_followup_time)},
         local_subscriptions_(std::make_shared<LocalSubscriptions>(
             [this](bool subscribe, const TopicId &topic) {
               onLocalSubscriptionChanged(subscribe, topic);
@@ -112,7 +113,7 @@ namespace libp2p::protocol::gossip {
     }
 
     remote_subscriptions_ = std::make_shared<RemoteSubscriptions>(
-        config_, *connectivity_, score_, scheduler_, log_);
+        config_, *connectivity_, score_, gossip_promises_, scheduler_, log_);
 
     started_ = true;
 
@@ -240,9 +241,11 @@ namespace libp2p::protocol::gossip {
     log_.debug("peer {} has msg for topic {}", from->str, topic);
 
     if (remote_subscriptions_->isSubscribed(topic)
-        and not duplicate_cache_.contains(msg_id)) {
+        and not duplicate_cache_.contains(msg_id)
+        and not gossip_promises_->contains(msg_id)) {
       log_.debug("requesting msg id {:x}", msg_id);
 
+      gossip_promises_->add(msg_id, from->peer_id);
       from->message_builder->addIWant(msg_id);
       connectivity_->peerIsWritable(from);
     }
@@ -254,6 +257,9 @@ namespace libp2p::protocol::gossip {
       return;
     }
     if (score_->below(from->peer_id, config_.score.gossip_threshold)) {
+      return;
+    }
+    if (from->idontwant.contains(msg_id)) {
       return;
     }
 
@@ -337,6 +343,18 @@ namespace libp2p::protocol::gossip {
 
     local_subscriptions_->forwardMessage(msg);
     remote_subscriptions_->onNewMessage(from, msg, msg_id);
+
+    gossip_promises_->remove(msg_id);
+  }
+
+  void GossipCore::onIDontWant(const PeerContextPtr &from,
+                               const std::vector<MessageId> &message_ids) {
+    if (not from->isGossipsubv1_2()) {
+      return;
+    }
+    for (auto &message_id : message_ids) {
+      from->idontwant.insert(message_id);
+    }
   }
 
   void GossipCore::onMessageEnd(const PeerContextPtr &from) {
@@ -347,6 +365,10 @@ namespace libp2p::protocol::gossip {
 
   void GossipCore::onHeartbeat() {
     assert(started_);
+
+    for (auto &[peer_id, count] : gossip_promises_->clearExpired()) {
+      score_->addPenalty(peer_id, count);
+    }
 
     // shift cache
     msg_cache_.shift();
