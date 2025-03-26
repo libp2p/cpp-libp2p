@@ -45,8 +45,15 @@ namespace libp2p::protocol::gossip {
   struct Config {
     /// Network density factors for gossip meshes
     size_t D_min = 5;
+    size_t D_lazy = 6;
     size_t D = 6;
     size_t D_max = 10;
+
+    /// Affects how many peers we will emit gossip to at each heartbeat.
+    ///
+    /// We will send gossip to `gossip_factor * (total number of non-mesh
+    /// peers)`, or `gossip_lazy`, whichever is greater. The default is 0.25.
+    double gossip_factor = 0.25;
 
     /// Ideal number of connected peers to support the network
     size_t ideal_connections_num = 100;

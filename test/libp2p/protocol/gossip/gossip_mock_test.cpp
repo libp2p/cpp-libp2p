@@ -132,6 +132,7 @@ struct GossipMockTest : testing::Test {
   void SetUp() override {
     config_.D_min = 1;
     config_.D = 1;
+    config_.D_lazy = 1;
     config_.flood_publish = false;
   }
 

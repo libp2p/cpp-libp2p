@@ -387,7 +387,9 @@ namespace libp2p::protocol::gossip {
              and not score_->below(ctx->peer_id,
                                    config_.score.gossip_threshold);
         },
-        config_.D);
+        [&](size_t n) {
+          return std::max<size_t>(config_.D_lazy, n * config_.gossip_factor);
+        });
     size_t message_count = 0;
     for (auto &x : history_gossip_) {
       message_count += x.size();
