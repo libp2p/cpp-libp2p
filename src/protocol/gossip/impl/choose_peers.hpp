@@ -40,6 +40,10 @@ namespace libp2p::protocol::gossip {
       });
     }
 
+    void shuffle(auto &&r) {
+      std::ranges::shuffle(std::forward<decltype(r)>(r), random_);
+    }
+
    private:
     std::default_random_engine random_;
   };

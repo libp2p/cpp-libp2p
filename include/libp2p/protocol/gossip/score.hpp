@@ -17,6 +17,9 @@ namespace libp2p::protocol::gossip {
     bool below(const PeerId &peer_id, double threshold) {
       return false;
     }
+    double get(const PeerId &peer_id) {
+      return 0;
+    }
     void addPenalty(const PeerId &peer_id, size_t count) {}
     void graft(const PeerId &peer_id, const TopicId &topic) {}
     void prune(const PeerId &peer_id, const TopicId &topic) {}

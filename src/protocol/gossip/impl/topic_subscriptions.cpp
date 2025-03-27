@@ -40,6 +40,7 @@ namespace libp2p::protocol::gossip {
       std::shared_ptr<ChoosePeers> choose_peers,
       std::shared_ptr<ExplicitPeers> explicit_peers,
       std::shared_ptr<Score> score,
+      std::shared_ptr<OutboundPeers> outbound_peers,
       log::SubLogger &log)
       : topic_(std::move(topic)),
         config_(config),
@@ -48,6 +49,7 @@ namespace libp2p::protocol::gossip {
         choose_peers_{std::move(choose_peers)},
         explicit_peers_{std::move(explicit_peers)},
         score_{std::move(score)},
+        outbound_peers_{std::move(outbound_peers)},
         self_subscribed_(false),
         log_(log) {
     connectivity_.getConnectedPeers().selectIf(
@@ -166,6 +168,10 @@ namespace libp2p::protocol::gossip {
         }
         return false;
       });
+      auto outbound = static_cast<size_t>(
+          std::ranges::count_if(mesh_peers_, [&](const PeerContextPtr &ctx) {
+            return outbound_peers_->contains(ctx->peer_id);
+          }));
       if (mesh_peers_.size() < config_.D_min) {
         for (auto &ctx : choose_peers_->choose(
                  subscribed_peers_,
@@ -176,14 +182,53 @@ namespace libp2p::protocol::gossip {
                       and not score_->below(ctx->peer_id, config_.score.zero);
                  },
                  config_.D - mesh_peers_.size())) {
+          if (outbound_peers_->contains(ctx->peer_id)) {
+            ++outbound;
+          }
           addToMesh(ctx);
         }
       } else if (mesh_peers_.size() > config_.D_max) {
-        auto peers =
-            mesh_peers_.selectRandomPeers(mesh_peers_.size() - config_.D_max);
-        for (auto &p : peers) {
-          sendPrune(p, false);
-          mesh_peers_.erase(p->peer_id);
+        std::vector<PeerId> shuffled;
+        for (auto &ctx : mesh_peers_) {
+          shuffled.emplace_back(ctx->peer_id);
+        }
+        choose_peers_->shuffle(shuffled);
+        std::ranges::sort(shuffled, [&](const PeerId &l, const PeerId &r) {
+          return score_->get(r) < score_->get(l);
+        });
+        if (shuffled.size() > config_.retain_scores) {
+          choose_peers_->shuffle(
+              std::span{shuffled}.subspan(config_.retain_scores));
+        }
+        for (auto &peer_id : shuffled) {
+          if (mesh_peers_.size() <= config_.D_max) {
+            break;
+          }
+          if (outbound_peers_->contains(peer_id)) {
+            if (outbound <= config_.mesh_outbound_min) {
+              continue;
+            }
+            --outbound;
+          }
+          auto ctx = mesh_peers_.find(peer_id).value();
+          sendPrune(ctx, false);
+          mesh_peers_.erase(ctx->peer_id);
+        }
+      }
+      if (mesh_peers_.size() >= config_.D_min) {
+        if (outbound < config_.mesh_outbound_min) {
+          for (auto &ctx : choose_peers_->choose(
+                   subscribed_peers_,
+                   [&](const PeerContextPtr &ctx) {
+                     return not mesh_peers_.contains(ctx)
+                        and not explicit_peers_->contains(ctx->peer_id)
+                        and not isBackoffWithSlack(ctx->peer_id)
+                        and not score_->below(ctx->peer_id, config_.score.zero)
+                        and outbound_peers_->contains(ctx->peer_id);
+                   },
+                   config_.mesh_outbound_min - outbound)) {
+            addToMesh(ctx);
+          }
         }
       }
     }
@@ -305,8 +350,6 @@ namespace libp2p::protocol::gossip {
     // implicit subscribe on graft
     subscribed_peers_.insert(ctx);
 
-    bool mesh_is_full = (mesh_peers_.size() >= config_.D_max);
-
     bool prune = [&] {
       if (self_subscribed_) {
         return true;
@@ -324,7 +367,8 @@ namespace libp2p::protocol::gossip {
       if (score_->below(ctx->peer_id, config_.score.zero)) {
         return true;
       }
-      if (mesh_is_full) {
+      if (mesh_peers_.size() >= config_.D_max
+          and not outbound_peers_->contains(ctx->peer_id)) {
         return true;
       }
       score_->graft(ctx->peer_id, topic_);

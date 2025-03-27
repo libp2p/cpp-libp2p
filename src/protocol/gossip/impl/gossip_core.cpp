@@ -59,6 +59,7 @@ namespace libp2p::protocol::gossip {
             [sch = scheduler_] { return sch->now(); }
         ),
         score_{std::make_shared<Score>()},
+        outbound_peers_{std::make_shared<OutboundPeers>()},
         duplicate_cache_{config.duplicate_cache_time},
         gossip_promises_{config.iwant_followup_time},
         local_subscriptions_(std::make_shared<LocalSubscriptions>(
@@ -113,7 +114,7 @@ namespace libp2p::protocol::gossip {
     }
 
     remote_subscriptions_ = std::make_shared<RemoteSubscriptions>(
-        config_, *connectivity_, score_, scheduler_, log_);
+        config_, *connectivity_, score_, outbound_peers_, scheduler_, log_);
 
     started_ = true;
 
@@ -140,6 +141,9 @@ namespace libp2p::protocol::gossip {
                               .size()
                           == 1) {
                         self->score_->connect(peer_id);
+                        if (conn->isInitiator()) {
+                          self->outbound_peers_->insert(peer_id);
+                        }
                       }
                     }
                   }
@@ -150,6 +154,7 @@ namespace libp2p::protocol::gossip {
             .subscribe([weak_self{weak_from_this()}](const PeerId &peer_id) {
               if (auto self = weak_self.lock()) {
                 self->score_->disconnect(peer_id);
+                self->outbound_peers_->erase(peer_id);
               }
             });
   }

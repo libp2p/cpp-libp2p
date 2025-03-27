@@ -49,6 +49,14 @@ namespace libp2p::protocol::gossip {
     size_t D = 6;
     size_t D_max = 10;
 
+    /// Affects how peers are selected when pruning a mesh due to over
+    /// subscription.
+    ///
+    ///  At least `retain_scores` of the retained peers will be high-scoring,
+    ///  while the remainder
+    /// are  chosen randomly (D_score in the spec, default is 4).
+    size_t retain_scores = 4;
+
     /// Affects how many peers we will emit gossip to at each heartbeat.
     ///
     /// We will send gossip to `gossip_factor * (total number of non-mesh
@@ -146,6 +154,11 @@ namespace libp2p::protocol::gossip {
     /// last PRUNE, then there is an extra score penalty applied to the peer
     /// through P7.
     std::chrono::milliseconds graft_flood_threshold = std::chrono::seconds{10};
+
+    /// Minimum number of outbound peers in the mesh network before adding more
+    /// (D_out in the spec). This value must be smaller or equal than `mesh_n /
+    /// 2` and smaller than `mesh_n_low`. The default is 2.
+    size_t mesh_outbound_min = 2;
 
     /// The maximum number of messages to include in an IHAVE message.
     /// Also controls the maximum number of IHAVE ids we will accept and request

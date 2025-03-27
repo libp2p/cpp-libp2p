@@ -31,6 +31,7 @@ namespace libp2p::protocol::gossip {
                        std::shared_ptr<ChoosePeers> choose_peers,
                        std::shared_ptr<ExplicitPeers> explicit_peers,
                        std::shared_ptr<Score> score,
+                       std::shared_ptr<OutboundPeers> outbound_peers,
                        log::SubLogger &log);
 
     /// Returns true if not self-subscribed and
@@ -90,6 +91,7 @@ namespace libp2p::protocol::gossip {
     std::shared_ptr<ChoosePeers> choose_peers_;
     std::shared_ptr<ExplicitPeers> explicit_peers_;
     std::shared_ptr<Score> score_;
+    std::shared_ptr<OutboundPeers> outbound_peers_;
 
     /// This host subscribed to this topic or not, this affects mesh behavior
     bool self_subscribed_;

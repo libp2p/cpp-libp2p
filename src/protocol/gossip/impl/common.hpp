@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <unordered_set>
 
 #include <libp2p/protocol/gossip/gossip.hpp>
 
@@ -46,6 +47,8 @@ namespace libp2p::protocol::gossip {
 
   /// Remote peer and its context
   using PeerContextPtr = std::shared_ptr<struct PeerContext>;
+
+  using OutboundPeers = std::unordered_set<PeerId>;
 
   /// Message being published
   struct TopicMessage {
