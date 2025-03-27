@@ -90,6 +90,7 @@ namespace libp2p::protocol::gossip {
     void onPeerConnection(bool connected, const PeerContextPtr &ctx);
 
     void setTimerHeartbeat();
+    void setTimerScore();
 
     /// Configuration parameters
     const Config config_;
@@ -123,7 +124,7 @@ namespace libp2p::protocol::gossip {
 
     DuplicateCache<MessageId> duplicate_cache_;
 
-    std::shared_ptr<GossipPromises> gossip_promises_;
+    GossipPromises gossip_promises_;
 
     /// Local subscriptions manager (this host subscribed to topics)
     std::shared_ptr<LocalSubscriptions> local_subscriptions_;
@@ -153,6 +154,9 @@ namespace libp2p::protocol::gossip {
 
     /// Logger
     log::SubLogger log_;
+
+    event::Handle new_connection_sub_;
+    event::Handle peer_disconnected_sub_;
   };
 
 }  // namespace libp2p::protocol::gossip

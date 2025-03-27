@@ -112,6 +112,7 @@ struct GossipMockTest : testing::Test {
       std::make_shared<ManualSchedulerBackend>();
   std::shared_ptr<SchedulerImpl> scheduler_ = std::make_shared<SchedulerImpl>(
       scheduler_backend_, SchedulerImpl::Config{});
+  libp2p::event::Bus bus_;
   std::shared_ptr<PeerRepositoryMock> peer_repo_ =
       std::make_shared<PeerRepositoryMock>();
   std::shared_ptr<AddressRepositoryMock> address_repo_ =
@@ -137,6 +138,7 @@ struct GossipMockTest : testing::Test {
   }
 
   void setup() {
+    EXPECT_CALL(*host_, getBus()).WillRepeatedly(ReturnRef(bus_));
     EXPECT_CALL(*host_, getPeerRepository())
         .WillRepeatedly(ReturnRef(*peer_repo_));
     EXPECT_CALL(*peer_repo_, getAddressRepository())

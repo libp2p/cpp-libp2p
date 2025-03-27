@@ -60,7 +60,7 @@ namespace libp2p::protocol::gossip {
         ),
         score_{std::make_shared<Score>()},
         duplicate_cache_{config.duplicate_cache_time},
-        gossip_promises_{std::make_shared<GossipPromises>(config.iwant_followup_time)},
+        gossip_promises_{config.iwant_followup_time},
         local_subscriptions_(std::make_shared<LocalSubscriptions>(
             [this](bool subscribe, const TopicId &topic) {
               onLocalSubscriptionChanged(subscribe, topic);
@@ -113,7 +113,7 @@ namespace libp2p::protocol::gossip {
     }
 
     remote_subscriptions_ = std::make_shared<RemoteSubscriptions>(
-        config_, *connectivity_, score_, gossip_promises_, scheduler_, log_);
+        config_, *connectivity_, score_, scheduler_, log_);
 
     started_ = true;
 
@@ -122,8 +122,36 @@ namespace libp2p::protocol::gossip {
     }
 
     setTimerHeartbeat();
+    setTimerScore();
 
     connectivity_->start();
+    new_connection_sub_ =
+        host_->getBus()
+            .getChannel<event::network::OnNewConnectionChannel>()
+            .subscribe(
+                [weak_self{weak_from_this()}](
+                    std::weak_ptr<connection::CapableConnection> weak_conn) {
+                  if (auto self = weak_self.lock()) {
+                    if (auto conn = weak_conn.lock()) {
+                      auto peer_id = conn->remotePeer().value();
+                      if (self->host_->getNetwork()
+                              .getConnectionManager()
+                              .getConnectionsToPeer(peer_id)
+                              .size()
+                          == 1) {
+                        self->score_->connect(peer_id);
+                      }
+                    }
+                  }
+                });
+    peer_disconnected_sub_ =
+        host_->getBus()
+            .getChannel<event::network::OnPeerDisconnectedChannel>()
+            .subscribe([weak_self{weak_from_this()}](const PeerId &peer_id) {
+              if (auto self = weak_self.lock()) {
+                self->score_->disconnect(peer_id);
+              }
+            });
   }
 
   void GossipCore::stop() {
@@ -242,10 +270,10 @@ namespace libp2p::protocol::gossip {
 
     if (remote_subscriptions_->isSubscribed(topic)
         and not duplicate_cache_.contains(msg_id)
-        and not gossip_promises_->contains(msg_id)) {
+        and not gossip_promises_.contains(msg_id)) {
       log_.debug("requesting msg id {:x}", msg_id);
 
-      gossip_promises_->add(msg_id, from->peer_id);
+      gossip_promises_.add(msg_id, from->peer_id);
       from->message_builder->addIWant(msg_id);
       connectivity_->peerIsWritable(from);
     }
@@ -280,6 +308,9 @@ namespace libp2p::protocol::gossip {
     if (not from->isGossipsub()) {
       return;
     }
+    if (score_->below(from->peer_id, config_.score.graylist_threshold)) {
+      return;
+    }
 
     log_.debug("graft from peer {} for topic {}", from->str, topic);
 
@@ -294,6 +325,9 @@ namespace libp2p::protocol::gossip {
     if (not from->isGossipsub()) {
       return;
     }
+    if (score_->below(from->peer_id, config_.score.graylist_threshold)) {
+      return;
+    }
 
     log_.debug("prune from peer {} for topic {}", from->str, topic);
 
@@ -304,6 +338,10 @@ namespace libp2p::protocol::gossip {
                                   TopicMessage::Ptr msg) {
     assert(started_);
 
+    if (score_->below(from->peer_id, config_.score.graylist_threshold)) {
+      return;
+    }
+
     // do we need this message?
     auto subscribed = remote_subscriptions_->isSubscribed(msg->topic);
     if (!subscribed) {
@@ -312,7 +350,22 @@ namespace libp2p::protocol::gossip {
     }
 
     MessageId msg_id = create_message_id_(msg->from, msg->seq_no, msg->data);
+
+    if (MessageBuilder::pbSize(*msg)
+        > config_.idontwant_message_size_threshold) {
+      gossip_promises_.peers(msg_id, [&](const PeerId &peer_id) {
+        if (auto ctx_opt = connectivity_->getConnectedPeers().find(peer_id)) {
+          auto &ctx = *ctx_opt;
+          if (ctx->isGossipsubv1_2()) {
+            ctx->message_builder->addIDontWant(msg_id);
+            connectivity_->peerIsWritable(ctx);
+          }
+        }
+      });
+    }
+
     if (not duplicate_cache_.insert(msg_id)) {
+      score_->duplicateMessage(from->peer_id, msg_id, msg->topic);
       return;
     }
 
@@ -334,6 +387,10 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
+    score_->validateMessage(from->peer_id, msg_id, msg->topic);
+
+    gossip_promises_.remove(msg_id);
+
     if (!msg_cache_.insert(msg, msg_id)) {
       log_.error("message cache error");
       return;
@@ -343,13 +400,14 @@ namespace libp2p::protocol::gossip {
 
     local_subscriptions_->forwardMessage(msg);
     remote_subscriptions_->onNewMessage(from, msg, msg_id);
-
-    gossip_promises_->remove(msg_id);
   }
 
   void GossipCore::onIDontWant(const PeerContextPtr &from,
                                const std::vector<MessageId> &message_ids) {
     if (not from->isGossipsubv1_2()) {
+      return;
+    }
+    if (score_->below(from->peer_id, config_.score.graylist_threshold)) {
       return;
     }
     for (auto &message_id : message_ids) {
@@ -366,7 +424,7 @@ namespace libp2p::protocol::gossip {
   void GossipCore::onHeartbeat() {
     assert(started_);
 
-    for (auto &[peer_id, count] : gossip_promises_->clearExpired()) {
+    for (auto &[peer_id, count] : gossip_promises_.clearExpired()) {
       score_->addPenalty(peer_id, count);
     }
 
@@ -422,5 +480,18 @@ namespace libp2p::protocol::gossip {
           self->onHeartbeat();
         },
         config_.heartbeat_interval_msec);
+  }
+
+  void GossipCore::setTimerScore() {
+    scheduler_->schedule(
+        [weak_self{weak_from_this()}] {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
+          }
+          self->score_->onDecay();
+          self->setTimerScore();
+        },
+        config_.score.decay_interval);
   }
 }  // namespace libp2p::protocol::gossip

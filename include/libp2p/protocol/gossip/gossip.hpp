@@ -142,6 +142,11 @@ namespace libp2p::protocol::gossip {
     /// enough score. The default is true.
     bool flood_publish = true;
 
+    /// If a GRAFT comes before `graft_flood_threshold` has elapsed since the
+    /// last PRUNE, then there is an extra score penalty applied to the peer
+    /// through P7.
+    std::chrono::milliseconds graft_flood_threshold = std::chrono::seconds{10};
+
     /// The maximum number of messages to include in an IHAVE message.
     /// Also controls the maximum number of IHAVE ids we will accept and request
     /// with IWANT from a peer within a heartbeat, to protect from IHAVE floods.

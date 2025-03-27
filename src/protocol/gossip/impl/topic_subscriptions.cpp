@@ -40,7 +40,6 @@ namespace libp2p::protocol::gossip {
       std::shared_ptr<ChoosePeers> choose_peers,
       std::shared_ptr<ExplicitPeers> explicit_peers,
       std::shared_ptr<Score> score,
-      std::shared_ptr<GossipPromises> gossip_promises,
       log::SubLogger &log)
       : topic_(std::move(topic)),
         config_(config),
@@ -49,7 +48,6 @@ namespace libp2p::protocol::gossip {
         choose_peers_{std::move(choose_peers)},
         explicit_peers_{std::move(explicit_peers)},
         score_{std::move(score)},
-        gossip_promises_{std::move(gossip_promises)},
         self_subscribed_(false),
         log_(log) {
     connectivity_.getConnectedPeers().selectIf(
@@ -102,7 +100,9 @@ namespace libp2p::protocol::gossip {
       }
     } else {
       for (auto &ctx : subscribed_peers_) {
-        if (ctx->isFloodsub()) {
+        if (ctx->isFloodsub()
+            and not score_->below(ctx->peer_id,
+                                  config_.score.publish_threshold)) {
           add_peer(ctx);
         }
       }
@@ -137,20 +137,12 @@ namespace libp2p::protocol::gossip {
     if ((not is_published_locally or config_.idontwant_on_publish)
         and MessageBuilder::pbSize(*msg)
                 > config_.idontwant_message_size_threshold) {
-      auto add_idontwant_peer = [&](const PeerContextPtr &ctx) {
+      for (auto &ctx : mesh_peers_) {
         if (ctx->isGossipsubv1_2()) {
           ctx->message_builder->addIDontWant(msg_id);
           connectivity_.peerIsWritable(ctx);
         }
-      };
-      for (auto &ctx : mesh_peers_) {
-        add_idontwant_peer(ctx);
       }
-      gossip_promises_->peers(msg_id, [&](const PeerId &peer_id) {
-        if (auto ctx = subscribed_peers_.find(peer_id)) {
-          add_idontwant_peer(*ctx);
-        }
-      });
     }
   }
 
@@ -236,6 +228,9 @@ namespace libp2p::protocol::gossip {
         if (explicit_peers_->contains(ctx->peer_id)) {
           continue;
         }
+        if (score_->below(ctx->peer_id, config_.score.publish_threshold)) {
+          continue;
+        }
         if (isBackoffWithSlack(ctx->peer_id)) {
           continue;
         }
@@ -278,6 +273,7 @@ namespace libp2p::protocol::gossip {
     subscribed_peers_.insert(ctx);
 
     if (ctx->isGossipsub() and mesh_peers_.size() < config_.D_min
+        and not mesh_peers_.contains(ctx)
         and not explicit_peers_->contains(ctx->peer_id)
         and not isBackoffWithSlack(ctx->peer_id)
         and not score_->below(ctx->peer_id, config_.score.zero)) {
@@ -285,16 +281,17 @@ namespace libp2p::protocol::gossip {
     }
   }
 
-  void TopicSubscriptions::onPeerUnsubscribed(const PeerContextPtr &p) {
-    subscribed_peers_.erase(p->peer_id);
+  void TopicSubscriptions::onPeerUnsubscribed(const PeerContextPtr &ctx) {
+    subscribed_peers_.erase(ctx->peer_id);
     if (fanout_) {
-      fanout_->peers.erase(p->peer_id);
+      fanout_->peers.erase(ctx->peer_id);
       if (fanout_->peers.empty()) {
         fanout_.reset();
       }
     }
-    if (mesh_peers_.erase(p->peer_id)) {
-      updateBackoff(p->peer_id, config_.prune_backoff);
+    if (mesh_peers_.erase(ctx->peer_id)) {
+      score_->prune(ctx->peer_id, topic_);
+      updateBackoff(ctx->peer_id, config_.prune_backoff);
     }
   }
 
@@ -310,30 +307,52 @@ namespace libp2p::protocol::gossip {
 
     bool mesh_is_full = (mesh_peers_.size() >= config_.D_max);
 
-    if (self_subscribed_ and not mesh_is_full
-        and not explicit_peers_->contains(ctx->peer_id)
-        and not isBackoff(ctx->peer_id, std::chrono::milliseconds{0})) {
+    bool prune = [&] {
+      if (self_subscribed_) {
+        return true;
+      }
+      if (explicit_peers_->contains(ctx->peer_id)) {
+        return true;
+      }
+      if (isBackoff(ctx->peer_id, std::chrono::milliseconds{0})) {
+        score_->addPenalty(ctx->peer_id, 1);
+        if (isBackoff(ctx->peer_id,
+                      config_.graft_flood_threshold - config_.prune_backoff)) {
+          score_->addPenalty(ctx->peer_id, 1);
+        }
+      }
+      if (score_->below(ctx->peer_id, config_.score.zero)) {
+        return true;
+      }
+      if (mesh_is_full) {
+        return true;
+      }
+      score_->graft(ctx->peer_id, topic_);
       mesh_peers_.insert(ctx);
-    } else {
-      // we don't have mesh for the topic
+      return false;
+    }();
+    if (prune) {
       sendPrune(ctx, false);
     }
   }
 
   void TopicSubscriptions::onPrune(
-      const PeerContextPtr &p, std::optional<std::chrono::seconds> backoff) {
-    mesh_peers_.erase(p->peer_id);
-    updateBackoff(p->peer_id, backoff.value_or(config_.prune_backoff));
+      const PeerContextPtr &ctx, std::optional<std::chrono::seconds> backoff) {
+    if (mesh_peers_.erase(ctx->peer_id)) {
+      score_->prune(ctx->peer_id, topic_);
+    }
+    updateBackoff(ctx->peer_id, backoff.value_or(config_.prune_backoff));
   }
 
-  void TopicSubscriptions::addToMesh(const PeerContextPtr &p) {
-    assert(p->message_builder);
+  void TopicSubscriptions::addToMesh(const PeerContextPtr &ctx) {
+    assert(ctx->message_builder);
 
-    p->message_builder->addGraft(topic_);
-    connectivity_.peerIsWritable(p);
-    mesh_peers_.insert(p);
+    ctx->message_builder->addGraft(topic_);
+    connectivity_.peerIsWritable(ctx);
+    score_->graft(ctx->peer_id, topic_);
+    mesh_peers_.insert(ctx);
     log_.debug("peer {} added to mesh (size={}) for topic {}",
-               p->str,
+               ctx->str,
                mesh_peers_.size(),
                topic_);
   }
@@ -347,6 +366,7 @@ namespace libp2p::protocol::gossip {
     ctx->message_builder->addPrune(
         topic_,
         ctx->isGossipsubv1_1() ? std::make_optional(backoff) : std::nullopt);
+    score_->prune(ctx->peer_id, topic_);
     connectivity_.peerIsWritable(ctx);
     log_.debug("peer {} removed from mesh (size={}) for topic {}",
                ctx->str,
