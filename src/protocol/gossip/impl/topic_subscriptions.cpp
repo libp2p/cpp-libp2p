@@ -149,6 +149,7 @@ namespace libp2p::protocol::gossip {
   }
 
   void TopicSubscriptions::onHeartbeat(Time now) {
+    ++heartbeat_ticks_;
     auto slack = config_.backoff_slack * config_.heartbeat_interval_msec;
     for (auto it = dont_bother_until_.begin();
          it != dont_bother_until_.end();) {
@@ -227,6 +228,32 @@ namespace libp2p::protocol::gossip {
                         and outbound_peers_->contains(ctx->peer_id);
                    },
                    config_.mesh_outbound_min - outbound)) {
+            addToMesh(ctx);
+          }
+        }
+      }
+      if (heartbeat_ticks_ % config_.opportunistic_graft_ticks == 0
+          and mesh_peers_.size() > 1) {
+        std::vector<double> scores;
+        scores.reserve(mesh_peers_.size());
+        for (auto &ctx : mesh_peers_) {
+          scores.emplace_back(score_->score(ctx->peer_id));
+        }
+        std::ranges::sort(scores);
+        auto middle = scores.size() / 2;
+        auto median = scores.size() % 2 == 0
+                        ? (scores[middle - 1] + scores[middle + 1]) / 2
+                        : scores[middle];
+        if (median < config_.score.opportunistic_graft_threshold) {
+          for (auto &ctx : choose_peers_->choose(
+                   subscribed_peers_,
+                   [&](const PeerContextPtr &ctx) {
+                     return not mesh_peers_.contains(ctx)
+                        and not explicit_peers_->contains(ctx->peer_id)
+                        and not isBackoffWithSlack(ctx->peer_id)
+                        and score_->score(ctx->peer_id) > median;
+                   },
+                   config_.opportunistic_graft_peers)) {
             addToMesh(ctx);
           }
         }

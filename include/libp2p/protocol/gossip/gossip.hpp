@@ -160,6 +160,19 @@ namespace libp2p::protocol::gossip {
     /// 2` and smaller than `mesh_n_low`. The default is 2.
     size_t mesh_outbound_min = 2;
 
+    /// Number of heartbeat ticks that specify the interval in which
+    /// opportunistic grafting is applied. Every `opportunistic_graft_ticks` we
+    /// will attempt to select some high-scoring mesh peers to replace
+    /// lower-scoring ones, if the median score of our mesh peers falls below a
+    /// threshold (see
+    /// <https://godoc.org/github.com/libp2p/go-libp2p-pubsub#PeerScoreThresholds>).
+    /// The default is 60.
+    size_t opportunistic_graft_ticks = 60;
+
+    /// The maximum number of new peers to graft to during opportunistic
+    /// grafting. The default is 2.
+    size_t opportunistic_graft_peers = 2;
+
     /// The maximum number of messages to include in an IHAVE message.
     /// Also controls the maximum number of IHAVE ids we will accept and request
     /// with IWANT from a peer within a heartbeat, to protect from IHAVE floods.

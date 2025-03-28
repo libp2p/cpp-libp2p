@@ -118,6 +118,8 @@ namespace libp2p::protocol::gossip {
     log::SubLogger &log_;
 
     std::default_random_engine gossip_random_;
+
+    size_t heartbeat_ticks_ = 0;
   };
 
 }  // namespace libp2p::protocol::gossip
