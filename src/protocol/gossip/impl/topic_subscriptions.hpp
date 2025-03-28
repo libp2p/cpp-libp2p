@@ -13,11 +13,15 @@
 
 #include "peer_set.hpp"
 
+namespace libp2p::protocol::gossip::score {
+  class Score;
+}  // namespace libp2p::protocol::gossip::score
+
 namespace libp2p::protocol::gossip {
   class ChoosePeers;
   class Connectivity;
   class ExplicitPeers;
-  class Score;
+  using score::Score;
 
   /// Per-topic subscriptions
   class TopicSubscriptions {

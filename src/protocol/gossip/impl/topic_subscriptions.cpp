@@ -194,7 +194,7 @@ namespace libp2p::protocol::gossip {
         }
         choose_peers_->shuffle(shuffled);
         std::ranges::sort(shuffled, [&](const PeerId &l, const PeerId &r) {
-          return score_->get(r) < score_->get(l);
+          return score_->score(r) < score_->score(l);
         });
         if (shuffled.size() > config_.retain_scores) {
           choose_peers_->shuffle(

@@ -58,7 +58,7 @@ namespace libp2p::protocol::gossip {
             config_.history_length * config_.heartbeat_interval_msec,
             [sch = scheduler_] { return sch->now(); }
         ),
-        score_{std::make_shared<Score>()},
+        score_{std::make_shared<Score>(config_.score)},
         outbound_peers_{std::make_shared<OutboundPeers>()},
         duplicate_cache_{config.duplicate_cache_time},
         gossip_promises_{config.iwant_followup_time},

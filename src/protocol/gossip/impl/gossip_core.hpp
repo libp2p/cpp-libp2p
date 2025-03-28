@@ -19,12 +19,16 @@
 #include "message_receiver.hpp"
 #include "peer_set.hpp"
 
+namespace libp2p::protocol::gossip::score {
+  class Score;
+}  // namespace libp2p::protocol::gossip::score
+
 namespace libp2p::protocol::gossip {
 
   class LocalSubscriptions;
   class RemoteSubscriptions;
   class Connectivity;
-  class Score;
+  using score::Score;
 
   /// Central component in gossip protocol impl, manages pub-sub logic itself
   class GossipCore : public Gossip,
