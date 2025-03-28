@@ -29,7 +29,13 @@ namespace libp2p::connection {
           is_initiator_{is_initiator},
           peer_id_{std::move(peer_id)} {}
 
-    ~StreamPair() {
+    // clang-tidy cppcoreguidelines-special-member-functions
+    StreamPair(const StreamPair &) = delete;
+    void operator=(const StreamPair &) = delete;
+    StreamPair(StreamPair &&) = delete;
+    void operator=(StreamPair &&) = delete;
+
+    ~StreamPair() override {
       reset();
     }
 

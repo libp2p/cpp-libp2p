@@ -67,8 +67,8 @@ namespace libp2p::protocol::gossip::score {
 
   class Score {
    public:
-    Score(const ScoreConfig &params)
-        : params_{params}, deliveries_{kTimeCacheDuration} {}
+    Score(ScoreConfig params)
+        : params_{std::move(params)}, deliveries_{kTimeCacheDuration} {}
 
     bool below(const PeerId &peer_id, double threshold) {
       return score(peer_id) < threshold;
@@ -139,7 +139,7 @@ namespace libp2p::protocol::gossip::score {
       if (it == peer_stats_.end()) {
         return;
       }
-      it->second.behaviour_penalty += count;
+      it->second.behaviour_penalty += static_cast<double>(count);
     }
     void graft(const PeerId &peer_id, const TopicId &topic) {
       auto it = peer_stats_.find(peer_id);
@@ -331,7 +331,7 @@ namespace libp2p::protocol::gossip::score {
 
     ScoreConfig params_;
     std::unordered_map<PeerId, PeerStats> peer_stats_;
-    TimeCache<MessageId, DeliveryRecord> deliveries_;
+    TimeCache<MessageId, DeliveryRecord, qtils::BytesStdHash> deliveries_;
   };
 }  // namespace libp2p::protocol::gossip::score
 

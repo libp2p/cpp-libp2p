@@ -25,7 +25,7 @@ namespace libp2p::protocol::gossip::time_cache {
 
   /// This implements a time-based LRU cache for checking gossipsub message
   /// duplicates.
-  template <typename K, typename V>
+  template <typename K, typename V, typename H = std::hash<K>>
   class TimeCache {
    public:
     TimeCache(Ttl ttl) : ttl_{ttl} {}
@@ -72,7 +72,7 @@ namespace libp2p::protocol::gossip::time_cache {
         expirations_;
   };
 
-  template <typename K>
+  template <typename K, typename H = std::hash<K>>
   class DuplicateCache {
    public:
     DuplicateCache(Ttl ttl) : cache_{ttl} {}
@@ -91,10 +91,10 @@ namespace libp2p::protocol::gossip::time_cache {
     }
 
    private:
-    TimeCache<K, qtils::Empty> cache_;
+    TimeCache<K, qtils::Empty, H> cache_;
   };
 
-  template <typename K>
+  template <typename K, typename H = std::hash<K>>
   class IDontWantCache {
     static constexpr size_t kCapacity = 10000;
     static constexpr Ttl kTtl = std::chrono::seconds{3};
@@ -119,7 +119,7 @@ namespace libp2p::protocol::gossip::time_cache {
     }
 
    private:
-    TimeCache<K, qtils::Empty> cache_{kTtl};
+    TimeCache<K, qtils::Empty, H> cache_{kTtl};
   };
 
   class GossipPromises {

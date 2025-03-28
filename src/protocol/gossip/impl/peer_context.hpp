@@ -46,7 +46,7 @@ namespace libp2p::protocol::gossip {
 
     std::optional<PeerKind> peer_kind;
 
-    IDontWantCache<MessageId> idontwant;
+    IDontWantCache<MessageId, qtils::BytesStdHash> idontwant;
 
     ~PeerContext() = default;
     PeerContext(PeerContext &&) = delete;

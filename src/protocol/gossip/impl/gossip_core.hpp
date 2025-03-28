@@ -128,7 +128,7 @@ namespace libp2p::protocol::gossip {
 
     std::shared_ptr<OutboundPeers> outbound_peers_;
 
-    DuplicateCache<MessageId> duplicate_cache_;
+    DuplicateCache<MessageId, qtils::BytesStdHash> duplicate_cache_;
 
     GossipPromises gossip_promises_;
 
