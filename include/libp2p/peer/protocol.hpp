@@ -17,3 +17,7 @@ namespace libp2p::peer {
       std::string;
 
 }  // namespace libp2p::peer
+
+namespace libp2p {
+  using peer::ProtocolName;
+}  // namespace libp2p

@@ -21,8 +21,7 @@ namespace libp2p::protocol::gossip {
   class MessageReceiver;
 
   /// Part of GossipCore: Protocol server and network connections manager
-  class Connectivity : public protocol::BaseProtocol,
-                       public std::enable_shared_from_this<Connectivity> {
+  class Connectivity : public std::enable_shared_from_this<Connectivity> {
    public:
     Connectivity(const Connectivity &) = delete;
     Connectivity &operator=(const Connectivity &) = delete;
@@ -35,10 +34,10 @@ namespace libp2p::protocol::gossip {
     Connectivity(Config config,
                  std::shared_ptr<basic::Scheduler> scheduler,
                  std::shared_ptr<Host> host,
-                 std::shared_ptr<MessageReceiver> msg_receiver,
+                 std::weak_ptr<MessageReceiver> msg_receiver,
                  ConnectionStatusFeedback on_connected);
 
-    ~Connectivity() override;
+    ~Connectivity();
 
     void start();
 
@@ -52,26 +51,25 @@ namespace libp2p::protocol::gossip {
     /// Add peer to writable set, actual writes occur on flush() (piggybacking)
     /// The idea behind writable set and flush() is a compromise between
     /// latency and message rate
-    void peerIsWritable(const PeerContextPtr &ctx, bool low_latency);
+    void peerIsWritable(const PeerContextPtr &ctx);
 
     /// Flushes all pending writes for peers in writable set
     void flush();
 
     /// Performs periodic tasks and broadcasts heartbeat message to
     /// all connected peers. The changes are subscribe/unsubscribe events
-    void onHeartbeat(const std::map<TopicId, bool> &local_changes);
+    void onHeartbeat();
 
     /// Returns connected peers
     const PeerSet &getConnectedPeers() const;
 
+    void subscribe(const TopicId &topic, bool subscribe);
+
    private:
     using BannedPeers = std::set<std::pair<Time, PeerContextPtr>>;
 
-    /// BaseProtocol override
-    peer::ProtocolName getProtocolId() const override;
-
-    /// BaseProtocol override, on new inbound stream
-    void handle(StreamAndProtocol stream) override;
+    /// On new inbound stream
+    void handle(StreamAndProtocol stream);
 
     /// Tries to connect to peer
     void dial(const PeerContextPtr &peer);
@@ -99,10 +97,14 @@ namespace libp2p::protocol::gossip {
     /// Flushes outgoing messages into wire for a given peer, if connected
     void flush(const PeerContextPtr &ctx) const;
 
+    void updatePeerKind(PeerContext &ctx,
+                        const StreamAndProtocol &stream) const;
+
     const Config config_;
+    StreamProtocols protocols_;
     std::shared_ptr<basic::Scheduler> scheduler_;
     std::shared_ptr<Host> host_;
-    std::shared_ptr<MessageReceiver> msg_receiver_;
+    std::weak_ptr<MessageReceiver> msg_receiver_;
     ConnectionStatusFeedback connected_cb_;
     Stream::Feedback on_stream_event_;
     bool started_ = false;
@@ -120,11 +122,8 @@ namespace libp2p::protocol::gossip {
     /// Writable peers
     PeerSet connected_peers_;
 
-    /// Peers with pending write operation before the next heartbeat
-    PeerSet writable_peers_low_latency_;
-
-    /// Peers to be flushed on next heartbeat
-    PeerSet writable_peers_on_heartbeat_;
+    /// Peers with pending write operation
+    PeerSet writable_peers_;
 
     /// Renew addresses in address repo periodically within heartbeat timer
     std::chrono::milliseconds addresses_renewal_time_{0};
