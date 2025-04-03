@@ -316,6 +316,8 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::doClose(std::error_code ec, bool notify_read_side) {
+    // ensure lifetime of this object during doClose
+    auto self = shared_from_this();
     if (close_reason_) {
       // already closed
       return;
@@ -342,10 +344,6 @@ namespace libp2p::connection {
 
     VoidResultHandlerFunc window_size_cb;
     window_size_cb.swap(window_size_cb_);
-
-    // now we are detached from *this* and may be killed from inside callbacks
-    // we will call
-    auto self = shared_from_this();
 
     if (read_cb_and_res.first) {
       read_cb_and_res.first(read_cb_and_res.second);
