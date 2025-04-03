@@ -19,7 +19,7 @@ namespace libp2p::transport {
       const muxer::MuxedConnectionConfig &mux_config,
       const peer::IdentityManager &id_mgr,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_codec)
-      : io_context_{std::move(io_context)},
+      : io_context_{io_context},
         ssl_context_{ssl_context.quic},
         mux_config_{mux_config},
         local_peer_{id_mgr.getId()},
