@@ -8,7 +8,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <libp2p/protocol/gossip/explicit_peers.hpp>
+#include <libp2p/protocol/gossip/score.hpp>
 
+#include "choose_peers.hpp"
 #include "connectivity.hpp"
 #include "message_builder.hpp"
 
@@ -29,21 +32,43 @@ namespace libp2p::protocol::gossip {
 
   }  // namespace
 
-  TopicSubscriptions::TopicSubscriptions(TopicId topic,
-                                         const Config &config,
-                                         Connectivity &connectivity,
-                                         log::SubLogger &log)
+  TopicSubscriptions::TopicSubscriptions(
+      TopicId topic,
+      const Config &config,
+      Connectivity &connectivity,
+      std::shared_ptr<basic::Scheduler> scheduler,
+      std::shared_ptr<ChoosePeers> choose_peers,
+      std::shared_ptr<ExplicitPeers> explicit_peers,
+      std::shared_ptr<Score> score,
+      std::shared_ptr<OutboundPeers> outbound_peers,
+      log::SubLogger &log)
       : topic_(std::move(topic)),
         config_(config),
         connectivity_(connectivity),
+        scheduler_{std::move(scheduler)},
+        choose_peers_{std::move(choose_peers)},
+        explicit_peers_{std::move(explicit_peers)},
+        score_{std::move(score)},
+        outbound_peers_{std::move(outbound_peers)},
         self_subscribed_(false),
-        fanout_period_ends_(0),
-        log_(log) {}
+        log_(log) {
+    connectivity_.getConnectedPeers().selectIf(
+        [&](const PeerContextPtr &ctx) { subscribed_peers_.insert(ctx); },
+        [&](const PeerContextPtr &ctx) {
+          return ctx->subscribed_to.count(topic_) != 0;
+        });
+    if (config_.history_gossip == 0) {
+      throw std::logic_error{"gossip config.history_gossip must not be zero"};
+    }
+    history_gossip_.resize(config_.history_gossip);
+  }
 
-  bool TopicSubscriptions::empty() const {
-    return (not self_subscribed_)
-        && (fanout_period_ends_ == std::chrono::milliseconds::zero())
-        && subscribed_peers_.empty() && mesh_peers_.empty();
+  bool TopicSubscriptions::isUsed() const {
+    return self_subscribed_ or fanout_.has_value();
+  }
+
+  bool TopicSubscriptions::isSubscribed() const {
+    return self_subscribed_;
   }
 
   void TopicSubscriptions::onNewMessage(
@@ -53,199 +78,434 @@ namespace libp2p::protocol::gossip {
       Time now) {
     bool is_published_locally = !from.has_value();
 
-    if (is_published_locally) {
-      fanout_period_ends_ = now + config_.seen_cache_lifetime_msec;
-      log_.debug("setting fanout period for {}, {}->{}",
-                 topic_,
-                 now.count(),
-                 fanout_period_ends_.count());
+    if (not self_subscribed_ and not is_published_locally) {
+      return;
     }
 
     auto origin = peerFrom(*msg);
 
-    mesh_peers_.selectAll(
-        [this, &msg, &msg_id, &from, &origin](const PeerContextPtr &ctx) {
-          assert(ctx->message_builder);
+    auto add_peer = [&](const PeerContextPtr &ctx) {
+      if (needToForward(ctx, from, origin)
+          and not ctx->idontwant.contains(msg_id)) {
+        ctx->message_builder->addMessage(*msg, msg_id);
+        connectivity_.peerIsWritable(ctx);
+      }
+    };
 
-          if (needToForward(ctx, from, origin)) {
-            ctx->message_builder->addMessage(*msg, msg_id);
+    if (config_.flood_publish and is_published_locally) {
+      for (auto &ctx : subscribed_peers_) {
+        if (explicit_peers_->contains(ctx->peer_id)
+            or not score_->below(ctx->peer_id,
+                                 config_.score.publish_threshold)) {
+          add_peer(ctx);
+        }
+      }
+    } else {
+      for (auto &ctx : subscribed_peers_) {
+        if (ctx->isFloodsub()
+            and not score_->below(ctx->peer_id,
+                                  config_.score.publish_threshold)) {
+          add_peer(ctx);
+        }
+      }
 
-            // forward immediately to those in mesh
-            connectivity_.peerIsWritable(ctx, true);
-          }
-        });
-
-    auto peers = subscribed_peers_.selectRandomPeers(config_.D_max * 2);
-    for (const auto &ctx : peers) {
-      assert(ctx->message_builder);
-
-      if (needToForward(ctx, from, origin)) {
-        ctx->message_builder->addIHave(topic_, msg_id);
-
-        // local messages announce themselves immediately
-        connectivity_.peerIsWritable(ctx, is_published_locally);
+      if (self_subscribed_) {
+        for (auto &ctx : mesh_peers_) {
+          add_peer(ctx);
+        }
+      } else {
+        if (not fanout_.has_value()) {
+          fanout_.emplace();
+        }
+        if (fanout_->peers.empty()) {
+          fanout_->peers.extend(choose_peers_->choose(
+              subscribed_peers_,
+              [&](const PeerContextPtr &ctx) {
+                return not explicit_peers_->contains(ctx->peer_id)
+                   and not score_->below(ctx->peer_id,
+                                         config_.score.publish_threshold);
+              },
+              config_.D));
+        }
+        fanout_->until = now + config_.fanout_ttl;
+        for (auto &ctx : fanout_->peers) {
+          add_peer(ctx);
+        }
       }
     }
 
-    seen_cache_.emplace_back(now + config_.seen_cache_lifetime_msec, msg_id);
+    history_gossip_.back().emplace_back(msg_id);
 
-    log_.debug("message forwarded, topic={}, m={}, s={}",
-               topic_,
-               mesh_peers_.size(),
-               subscribed_peers_.size());
+    if ((not is_published_locally or config_.idontwant_on_publish)
+        and MessageBuilder::pbSize(*msg)
+                > config_.idontwant_message_size_threshold) {
+      for (auto &ctx : mesh_peers_) {
+        if (ctx->isGossipsubv1_2()) {
+          ctx->message_builder->addIDontWant(msg_id);
+          connectivity_.peerIsWritable(ctx);
+        }
+      }
+    }
   }
 
   void TopicSubscriptions::onHeartbeat(Time now) {
-    if (self_subscribed_ && !subscribed_peers_.empty()) {
-      // add/remove mesh members according to desired network density D
-      size_t sz = mesh_peers_.size();
+    ++heartbeat_ticks_;
+    auto slack = config_.backoff_slack * config_.heartbeat_interval_msec;
+    for (auto it = dont_bother_until_.begin();
+         it != dont_bother_until_.end();) {
+      if (it->second + slack > now) {
+        ++it;
+      } else {
+        it = dont_bother_until_.erase(it);
+      }
+    }
 
-      if (sz < config_.D_min) {
-        auto peers = subscribed_peers_.selectRandomPeers(config_.D_min - sz);
-        for (auto &p : peers) {
-          auto it = dont_bother_until_.find(p);
-          if (it != dont_bother_until_.end()) {
-            if (it->second < now) {
-              dont_bother_until_.erase(it);
-            } else {
+    if (self_subscribed_) {
+      // add/remove mesh members according to desired network density D
+      mesh_peers_.eraseIf([&](const PeerContextPtr &ctx) {
+        if (score_->below(ctx->peer_id, config_.score.zero)) {
+          sendPrune(ctx, false);
+          return true;
+        }
+        return false;
+      });
+      auto outbound = static_cast<size_t>(
+          std::ranges::count_if(mesh_peers_, [&](const PeerContextPtr &ctx) {
+            return outbound_peers_->contains(ctx->peer_id);
+          }));
+      if (mesh_peers_.size() < config_.D_min) {
+        for (auto &ctx : choose_peers_->choose(
+                 subscribed_peers_,
+                 [&](const PeerContextPtr &ctx) {
+                   return not mesh_peers_.contains(ctx)
+                      and not explicit_peers_->contains(ctx->peer_id)
+                      and not isBackoffWithSlack(ctx->peer_id)
+                      and not score_->below(ctx->peer_id, config_.score.zero);
+                 },
+                 config_.D - mesh_peers_.size())) {
+          if (outbound_peers_->contains(ctx->peer_id)) {
+            ++outbound;
+          }
+          addToMesh(ctx);
+        }
+      } else if (mesh_peers_.size() > config_.D_max) {
+        std::vector<PeerId> shuffled;
+        for (auto &ctx : mesh_peers_) {
+          shuffled.emplace_back(ctx->peer_id);
+        }
+        choose_peers_->shuffle(shuffled);
+        std::ranges::sort(shuffled, [&](const PeerId &l, const PeerId &r) {
+          return score_->score(r) < score_->score(l);
+        });
+        if (shuffled.size() > config_.retain_scores) {
+          choose_peers_->shuffle(
+              std::span{shuffled}.subspan(config_.retain_scores));
+        }
+        for (auto &peer_id : shuffled) {
+          if (mesh_peers_.size() <= config_.D_max) {
+            break;
+          }
+          if (outbound_peers_->contains(peer_id)) {
+            if (outbound <= config_.mesh_outbound_min) {
               continue;
             }
+            --outbound;
           }
-
-          addToMesh(p);
-          subscribed_peers_.erase(p->peer_id);
+          auto ctx = mesh_peers_.find(peer_id).value();
+          sendPrune(ctx, false);
+          mesh_peers_.erase(ctx->peer_id);
         }
-      } else if (sz > config_.D_max) {
-        auto peers = mesh_peers_.selectRandomPeers(sz - config_.D_max);
-        for (auto &p : peers) {
-          removeFromMesh(p);
-          mesh_peers_.erase(p->peer_id);
+      }
+      if (mesh_peers_.size() >= config_.D_min) {
+        if (outbound < config_.mesh_outbound_min) {
+          for (auto &ctx : choose_peers_->choose(
+                   subscribed_peers_,
+                   [&](const PeerContextPtr &ctx) {
+                     return not mesh_peers_.contains(ctx)
+                        and not explicit_peers_->contains(ctx->peer_id)
+                        and not isBackoffWithSlack(ctx->peer_id)
+                        and not score_->below(ctx->peer_id, config_.score.zero)
+                        and outbound_peers_->contains(ctx->peer_id);
+                   },
+                   config_.mesh_outbound_min - outbound)) {
+            addToMesh(ctx);
+          }
+        }
+      }
+      if (heartbeat_ticks_ % config_.opportunistic_graft_ticks == 0
+          and mesh_peers_.size() > 1) {
+        std::vector<double> scores;
+        scores.reserve(mesh_peers_.size());
+        for (auto &ctx : mesh_peers_) {
+          scores.emplace_back(score_->score(ctx->peer_id));
+        }
+        std::ranges::sort(scores);
+        auto middle = scores.size() / 2;
+        auto median = scores.size() % 2 == 0
+                        ? (scores[middle - 1] + scores[middle + 1]) / 2
+                        : scores[middle];
+        if (median < config_.score.opportunistic_graft_threshold) {
+          for (auto &ctx : choose_peers_->choose(
+                   subscribed_peers_,
+                   [&](const PeerContextPtr &ctx) {
+                     return not mesh_peers_.contains(ctx)
+                        and not explicit_peers_->contains(ctx->peer_id)
+                        and not isBackoffWithSlack(ctx->peer_id)
+                        and score_->score(ctx->peer_id) > median;
+                   },
+                   config_.opportunistic_graft_peers)) {
+            addToMesh(ctx);
+          }
         }
       }
     }
 
     // fanout ends some time after this host ends publishing to the topic,
     // to save space and traffic
-    if (fanout_period_ends_ != Time::zero() && fanout_period_ends_ < now) {
-      fanout_period_ends_ = Time::zero();
+    if (fanout_.has_value() and fanout_->until < now) {
+      fanout_.reset();
       log_.debug("fanout period reset for {}", topic_);
     }
-
-    // shift msg ids cache
-    auto seen_cache_size = seen_cache_.size();
-    bool changed = false;
-
-    if (seen_cache_size > config_.seen_cache_limit) {
-      auto b = seen_cache_.begin();
-      auto e = b + ssize_t(seen_cache_size - config_.seen_cache_limit);
-      seen_cache_.erase(b, e);
-      changed = true;
-    } else if (seen_cache_size != 0) {
-      auto it = std::find_if(seen_cache_.begin(),
-                             seen_cache_.end(),
-                             [now](const auto &p) { return p.first >= now; });
-      if (it != seen_cache_.begin()) {
-        seen_cache_.erase(seen_cache_.begin(), it);
-        changed = true;
+    if (fanout_.has_value()) {
+      fanout_->peers.eraseIf([&](const PeerContextPtr &ctx) {
+        return score_->below(ctx->peer_id, config_.score.publish_threshold);
+      });
+      if (fanout_->peers.size() < config_.D) {
+        fanout_->peers.extend(choose_peers_->choose(
+            subscribed_peers_,
+            [&](const PeerContextPtr &ctx) {
+              return not fanout_->peers.contains(ctx)
+                 and not explicit_peers_->contains(ctx->peer_id)
+                 and not score_->below(ctx->peer_id,
+                                       config_.score.publish_threshold);
+            },
+            config_.D - fanout_->peers.size()));
       }
     }
 
-    if (changed) {
-      log_.debug("seen cache size changed {}->{} for {}",
-                 seen_cache_size,
-                 seen_cache_.size(),
-                 topic_);
+    emitGossip();
+
+    // shift msg ids cache
+    history_gossip_.pop_front();
+    history_gossip_.emplace_back();
+  }
+
+  void TopicSubscriptions::subscribe() {
+    if (self_subscribed_) {
+      return;
+    }
+    self_subscribed_ = true;
+    if (fanout_.has_value()) {
+      for (auto &ctx : fanout_->peers) {
+        if (explicit_peers_->contains(ctx->peer_id)) {
+          continue;
+        }
+        if (score_->below(ctx->peer_id, config_.score.publish_threshold)) {
+          continue;
+        }
+        if (isBackoffWithSlack(ctx->peer_id)) {
+          continue;
+        }
+        if (mesh_peers_.size() >= config_.D) {
+          break;
+        }
+        addToMesh(ctx);
+      }
+      fanout_.reset();
+    }
+    if (mesh_peers_.size() < config_.D) {
+      for (auto &ctx : choose_peers_->choose(
+               subscribed_peers_,
+               [&](const PeerContextPtr &ctx) {
+                 return not mesh_peers_.contains(ctx)
+                    and not explicit_peers_->contains(ctx->peer_id)
+                    and not isBackoffWithSlack(ctx->peer_id)
+                    and not score_->below(ctx->peer_id, config_.score.zero);
+               },
+               config_.D - mesh_peers_.size())) {
+        addToMesh(ctx);
+      }
     }
   }
 
-  void TopicSubscriptions::onSelfSubscribed(bool self_subscribed) {
-    self_subscribed_ = self_subscribed;
-    if (!self_subscribed_) {
-      // remove the mesh
-      log_.debug("removing mesh for {}", topic_);
-      mesh_peers_.selectAll(
-          [this](const PeerContextPtr &p) { removeFromMesh(p); });
-      mesh_peers_.clear();
+  void TopicSubscriptions::unsubscribe() {
+    if (not self_subscribed_) {
+      return;
+    }
+    self_subscribed_ = false;
+    for (auto &ctx : mesh_peers_) {
+      sendPrune(ctx, true);
+    }
+    mesh_peers_.clear();
+  }
+
+  void TopicSubscriptions::onPeerSubscribed(const PeerContextPtr &ctx) {
+    assert(ctx->subscribed_to.count(topic_) != 0);
+
+    subscribed_peers_.insert(ctx);
+
+    if (ctx->isGossipsub() and mesh_peers_.size() < config_.D_min
+        and not mesh_peers_.contains(ctx)
+        and not explicit_peers_->contains(ctx->peer_id)
+        and not isBackoffWithSlack(ctx->peer_id)
+        and not score_->below(ctx->peer_id, config_.score.zero)) {
+      addToMesh(ctx);
     }
   }
 
-  void TopicSubscriptions::onPeerSubscribed(const PeerContextPtr &p) {
-    assert(p->subscribed_to.count(topic_) != 0);
-
-    subscribed_peers_.insert(p);
-
-    // announce the peer about messages available for the topic
-    for (const auto &[_, msg_id] : seen_cache_) {
-      p->message_builder->addIHave(topic_, msg_id);
+  void TopicSubscriptions::onPeerUnsubscribed(const PeerContextPtr &ctx) {
+    subscribed_peers_.erase(ctx->peer_id);
+    if (fanout_) {
+      fanout_->peers.erase(ctx->peer_id);
+      if (fanout_->peers.empty()) {
+        fanout_.reset();
+      }
     }
-    // will be sent on next heartbeat
-    connectivity_.peerIsWritable(p, false);
+    if (mesh_peers_.erase(ctx->peer_id)) {
+      score_->prune(ctx->peer_id, topic_);
+      updateBackoff(ctx->peer_id, config_.prune_backoff);
+    }
   }
 
-  void TopicSubscriptions::onPeerUnsubscribed(const PeerContextPtr &p) {
-    auto res = subscribed_peers_.erase(p->peer_id);
-    if (!res) {
-      res = mesh_peers_.erase(p->peer_id);
-    }
-    dont_bother_until_.erase(p);
-  }
-
-  void TopicSubscriptions::onGraft(const PeerContextPtr &p) {
-    auto res = mesh_peers_.find(p->peer_id);
+  void TopicSubscriptions::onGraft(const PeerContextPtr &ctx) {
+    auto res = mesh_peers_.find(ctx->peer_id);
     if (res) {
       // already there
       return;
     }
 
-    if (!subscribed_peers_.contains(p->peer_id)) {
-      // subscribe first
-      p->subscribed_to.insert(topic_);
-      onPeerSubscribed(p);
-    }
+    // implicit subscribe on graft
+    subscribed_peers_.insert(ctx);
 
-    bool mesh_is_full = (mesh_peers_.size() >= config_.D_max);
-
-    if (self_subscribed_ && !mesh_is_full) {
-      mesh_peers_.insert(p);
-      subscribed_peers_.erase(p->peer_id);
-    } else {
-      // we don't have mesh for the topic
-      p->message_builder->addPrune(topic_);
-      connectivity_.peerIsWritable(p, true);
+    bool prune = [&] {
+      if (self_subscribed_) {
+        return true;
+      }
+      if (explicit_peers_->contains(ctx->peer_id)) {
+        return true;
+      }
+      if (isBackoff(ctx->peer_id, std::chrono::milliseconds{0})) {
+        score_->addPenalty(ctx->peer_id, 1);
+        if (isBackoff(ctx->peer_id,
+                      config_.graft_flood_threshold - config_.prune_backoff)) {
+          score_->addPenalty(ctx->peer_id, 1);
+        }
+      }
+      if (score_->below(ctx->peer_id, config_.score.zero)) {
+        return true;
+      }
+      if (mesh_peers_.size() >= config_.D_max
+          and not outbound_peers_->contains(ctx->peer_id)) {
+        return true;
+      }
+      score_->graft(ctx->peer_id, topic_);
+      mesh_peers_.insert(ctx);
+      return false;
+    }();
+    if (prune) {
+      sendPrune(ctx, false);
     }
   }
 
-  void TopicSubscriptions::onPrune(const PeerContextPtr &p,
-                                   Time dont_bother_until) {
-    mesh_peers_.erase(p->peer_id);
-    if (p->subscribed_to.count(topic_) != 0) {
-      subscribed_peers_.insert(p);
-      dont_bother_until_.insert({p, dont_bother_until});
+  void TopicSubscriptions::onPrune(
+      const PeerContextPtr &ctx, std::optional<std::chrono::seconds> backoff) {
+    if (mesh_peers_.erase(ctx->peer_id)) {
+      score_->prune(ctx->peer_id, topic_);
     }
+    updateBackoff(ctx->peer_id, backoff.value_or(config_.prune_backoff));
   }
 
-  void TopicSubscriptions::addToMesh(const PeerContextPtr &p) {
-    assert(p->message_builder);
+  void TopicSubscriptions::addToMesh(const PeerContextPtr &ctx) {
+    assert(ctx->message_builder);
 
-    p->message_builder->addGraft(topic_);
-    connectivity_.peerIsWritable(p, false);
-    mesh_peers_.insert(p);
+    ctx->message_builder->addGraft(topic_);
+    connectivity_.peerIsWritable(ctx);
+    score_->graft(ctx->peer_id, topic_);
+    mesh_peers_.insert(ctx);
     log_.debug("peer {} added to mesh (size={}) for topic {}",
-               p->str,
+               ctx->str,
                mesh_peers_.size(),
                topic_);
   }
 
-  void TopicSubscriptions::removeFromMesh(const PeerContextPtr &p) {
-    assert(p->message_builder);
+  void TopicSubscriptions::sendPrune(const PeerContextPtr &ctx,
+                                     bool unsubscribe) {
+    assert(ctx->message_builder);
 
-    p->message_builder->addPrune(topic_);
-    connectivity_.peerIsWritable(p, false);
-    subscribed_peers_.insert(p);
+    auto backoff = unsubscribe ? config_.prune_backoff : config_.prune_backoff;
+    updateBackoff(ctx->peer_id, backoff);
+    ctx->message_builder->addPrune(
+        topic_,
+        ctx->isGossipsubv1_1() ? std::make_optional(backoff) : std::nullopt);
+    score_->prune(ctx->peer_id, topic_);
+    connectivity_.peerIsWritable(ctx);
     log_.debug("peer {} removed from mesh (size={}) for topic {}",
-               p->str,
+               ctx->str,
                mesh_peers_.size(),
                topic_);
   }
 
+  bool TopicSubscriptions::isBackoff(const PeerId &peer_id,
+                                     std::chrono::milliseconds slack) const {
+    auto it = dont_bother_until_.find(peer_id);
+    if (it == dont_bother_until_.end()) {
+      return false;
+    }
+    return it->second + slack > scheduler_->now();
+  }
+
+  bool TopicSubscriptions::isBackoffWithSlack(const PeerId &peer_id) const {
+    return isBackoff(peer_id,
+                     config_.backoff_slack * config_.heartbeat_interval_msec);
+  }
+
+  void TopicSubscriptions::updateBackoff(const PeerId &peer_id,
+                                         std::chrono::milliseconds duration) {
+    auto until = scheduler_->now() + duration;
+    auto [it, inserted] = dont_bother_until_.emplace(peer_id, until);
+    if (not inserted and it->second < until) {
+      it->second = until;
+    }
+  }
+
+  void TopicSubscriptions::emitGossip() {
+    auto &mesh = fanout_.has_value() ? fanout_->peers : mesh_peers_;
+    auto peers = choose_peers_->choose(
+        subscribed_peers_,
+        [&](const PeerContextPtr &ctx) {
+          return not mesh.contains(ctx)
+             and not explicit_peers_->contains(ctx->peer_id)
+             and not score_->below(ctx->peer_id,
+                                   config_.score.gossip_threshold);
+        },
+        [&](size_t n) {
+          return std::max(config_.D_lazy,
+                          static_cast<size_t>(static_cast<double>(n)
+                                              * config_.gossip_factor));
+        });
+    size_t message_count = 0;
+    for (auto &x : history_gossip_) {
+      message_count += x.size();
+    }
+    if (message_count == 0) {
+      return;
+    }
+    std::vector<MessageId> messages;
+    messages.reserve(message_count);
+    for (auto &x : history_gossip_) {
+      messages.insert(messages.end(), x.begin(), x.end());
+    }
+    std::ranges::shuffle(messages, gossip_random_);
+    for (auto &ctx : peers) {
+      std::span messages_span{messages};
+      if (messages.size() > config_.max_ihave_length) {
+        std::ranges::shuffle(messages, gossip_random_);
+        messages_span = messages_span.first(config_.max_ihave_length);
+      }
+      for (auto &message_id : messages_span) {
+        ctx->message_builder->addIHave(topic_, message_id);
+      }
+      connectivity_.peerIsWritable(ctx);
+    }
+  }
 }  // namespace libp2p::protocol::gossip

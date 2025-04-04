@@ -24,7 +24,11 @@ namespace libp2p::protocol::gossip {
   }
 
   bool PeerSet::contains(const peer::PeerId &id) const {
-    return peers_.count(id) != 0;
+    return peers_.contains(id);
+  }
+
+  bool PeerSet::contains(const PeerContextPtr &ctx) const {
+    return peers_.contains(ctx);
   }
 
   bool PeerSet::insert(PeerContextPtr ctx) {

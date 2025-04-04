@@ -22,6 +22,22 @@ namespace libp2p::protocol::gossip {
         str(makeStringRepr(peer_id)),
         message_builder(std::make_shared<MessageBuilder>()) {}
 
+  bool PeerContext::isFloodsub() const {
+    return not peer_kind or peer_kind.value() == PeerKind::Floodsub;
+  }
+
+  bool PeerContext::isGossipsub() const {
+    return peer_kind and peer_kind.value() >= PeerKind::Gossipsub;
+  }
+
+  bool PeerContext::isGossipsubv1_1() const {
+    return peer_kind and peer_kind.value() >= PeerKind::Gossipsubv1_1;
+  }
+
+  bool PeerContext::isGossipsubv1_2() const {
+    return peer_kind and peer_kind.value() >= PeerKind::Gossipsubv1_2;
+  }
+
   bool operator<(const PeerContextPtr &ctx, const peer::PeerId &peer) {
     if (!ctx) {
       return false;

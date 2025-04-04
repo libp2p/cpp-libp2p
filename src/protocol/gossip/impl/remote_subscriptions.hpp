@@ -20,7 +20,9 @@ namespace libp2p::protocol::gossip {
     /// GossipCore and lives only within its scope
     RemoteSubscriptions(const Config &config,
                         Connectivity &connectivity,
-                        basic::Scheduler &scheduler,
+                        std::shared_ptr<Score> score,
+                        std::shared_ptr<OutboundPeers> outbound_peers,
+                        std::shared_ptr<basic::Scheduler> scheduler,
                         log::SubLogger &log);
 
     /// This host subscribes or unsubscribes
@@ -38,7 +40,7 @@ namespace libp2p::protocol::gossip {
     void onPeerDisconnected(const PeerContextPtr &peer);
 
     /// Returns if topic exists in the table
-    bool hasTopic(const TopicId &topic) const;
+    bool isSubscribed(const TopicId &topic) const;
 
     /// Remote peer adds topic into its mesh
     void onGraft(const PeerContextPtr &peer, const TopicId &topic);
@@ -46,7 +48,7 @@ namespace libp2p::protocol::gossip {
     /// Remote peer removes topic from its mesh
     void onPrune(const PeerContextPtr &peer,
                  const TopicId &topic,
-                 uint64_t backoff_time);
+                 std::optional<std::chrono::seconds> backoff_time);
 
     /// Forwards message to its topics. If 'from' is not set then the message is
     /// published locally
@@ -64,10 +66,12 @@ namespace libp2p::protocol::gossip {
 
     const Config &config_;
     Connectivity &connectivity_;
-    basic::Scheduler &scheduler_;
+    std::shared_ptr<ChoosePeers> choose_peers_;
+    std::shared_ptr<ExplicitPeers> explicit_peers_;
+    std::shared_ptr<Score> score_;
+    std::shared_ptr<OutboundPeers> outbound_peers_;
+    std::shared_ptr<basic::Scheduler> scheduler_;
 
-    // TODO(artem): bound table size (which may grow!)
-    // by removing items not subscribed to locally. LRU(???)
     std::unordered_map<TopicId, TopicSubscriptions> table_;
 
     log::SubLogger &log_;

@@ -20,3 +20,15 @@ target_link_libraries(gossip_local_subs_test
     p2p_gossip
     p2p_testutil_peer
     )
+
+addtest(gossip_mock_test
+    gossip_mock_test.cpp
+    )
+target_link_libraries(gossip_mock_test
+    p2p_basic_scheduler
+    p2p_gossip
+    p2p_manual_scheduler_backend
+    p2p_message_read_writer
+    p2p_stream_pair
+    p2p_testutil_peer
+    )

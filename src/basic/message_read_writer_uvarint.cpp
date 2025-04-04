@@ -32,8 +32,8 @@ namespace libp2p::basic {
           }
 
           auto msg_len = varint_res.value().toUInt64();
+          auto buffer = std::make_shared<std::vector<uint8_t>>(msg_len, 0);
           if (0 != msg_len) {
-            auto buffer = std::make_shared<std::vector<uint8_t>>(msg_len, 0);
             self->conn_->read(
                 *buffer,
                 msg_len,
@@ -44,7 +44,7 @@ namespace libp2p::basic {
                   cb(std::move(buffer));
                 });
           } else {
-            cb(ResultType{});
+            cb(buffer);
           }
         });
   }

@@ -7,6 +7,7 @@
 #include "message_parser.hpp"
 
 #include <libp2p/log/logger.hpp>
+#include <qtils/bytestr.hpp>
 
 #include "message_receiver.hpp"
 
@@ -52,6 +53,15 @@ namespace libp2p::protocol::gossip {
     if (pb_msg_->has_control()) {
       const auto &c = pb_msg_->control();
 
+      std::vector<MessageId> idontwant_message_ids;
+      for (const auto &idontwant : c.idontwant()) {
+        for (auto &msg_id : idontwant.message_ids()) {
+          idontwant_message_ids.emplace_back(
+              qtils::asVec(qtils::str2byte(msg_id)));
+        }
+      }
+      receiver.onIDontWant(from, idontwant_message_ids);
+
       for (const auto &h : c.ihave()) {
         if (!h.has_topicid() || h.messageids_size() == 0) {
           continue;
@@ -88,12 +98,10 @@ namespace libp2p::protocol::gossip {
         if (!pr.has_topicid()) {
           continue;
         }
-        uint64_t backoff_time = 60;
+        std::optional<std::chrono::seconds> backoff_time;
         if (pr.has_backoff()) {
-          backoff_time = pr.backoff();
+          backoff_time = std::chrono::seconds{pr.backoff()};
         }
-        log()->debug(
-            "prune backoff={}, {} peers", backoff_time, pr.peers_size());
         for (const auto &peer : pr.peers()) {
           // TODO(artem): meshsub 1.1.0 + signed peer records NYI
 
