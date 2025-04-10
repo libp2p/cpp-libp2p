@@ -66,11 +66,12 @@ namespace libp2p::peer {
 
   Clock::time_point InmemAddressRepository::calculateExpirationTime(
       const Milliseconds &ttl) const {
-    if (ttl >= std::chrono::milliseconds::max() / 2) {
-      // Handle "permanent" or extremely long TTL values safely
-      return Clock::time_point::max();
+    static const auto max_time = Clock::time_point::max();
+    const auto now = Clock::now();
+    if (now >= max_time - ttl) {
+      return max_time;
     }
-    return Clock::now() + ttl;
+    return now + ttl;
   }
 
   outcome::result<bool> InmemAddressRepository::addAddresses(
