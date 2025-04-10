@@ -72,6 +72,8 @@ namespace libp2p::peer {
 
     bool isNewDnsAddr(const multi::Multiaddress &ma);
 
+    Clock::time_point calculateExpirationTime(const Milliseconds &ttl) const;
+
     std::shared_ptr<network::DnsaddrResolver> dnsaddr_resolver_;
     peer_db db_;
     std::set<multi::Multiaddress> resolved_dns_addrs_;

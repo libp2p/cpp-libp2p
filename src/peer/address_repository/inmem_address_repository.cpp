@@ -64,6 +64,16 @@ namespace libp2p::peer {
     return false;
   }
 
+  Clock::time_point InmemAddressRepository::calculateExpirationTime(
+      const Milliseconds &ttl) const {
+    static const auto max_time = Clock::time_point::max();
+    const auto now = Clock::now();
+    if (now >= max_time - ttl) {
+      return max_time;
+    }
+    return now + ttl;
+  }
+
   outcome::result<bool> InmemAddressRepository::addAddresses(
       const PeerId &p,
       std::span<const multi::Multiaddress> ma,
@@ -71,7 +81,8 @@ namespace libp2p::peer {
     bool added = false;
     auto &addresses = db_[p];
 
-    auto expires_at = Clock::now() + ttl;
+    auto expires_at = calculateExpirationTime(ttl);
+
     for (const auto &m : ma) {
       if (addresses.expires.emplace(m, expires_at).second) {
         addresses.order.emplace_back(m);
@@ -90,7 +101,8 @@ namespace libp2p::peer {
     bool added = false;
     auto &addresses = db_[p];
 
-    auto expires_at = Clock::now() + ttl;
+    auto expires_at = calculateExpirationTime(ttl);
+
     for (const auto &m : ma) {
       auto [addr_it, emplaced] = addresses.expires.emplace(m, expires_at);
       if (emplaced) {
@@ -113,7 +125,8 @@ namespace libp2p::peer {
     }
     auto &addresses = peer_it->second;
 
-    auto expires_at = Clock::now() + ttl;
+    auto expires_at = calculateExpirationTime(ttl);
+
     for (auto &item : addresses.expires) {
       item.second = expires_at;
     }
