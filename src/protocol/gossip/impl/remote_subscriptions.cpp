@@ -7,31 +7,47 @@
 #include "remote_subscriptions.hpp"
 
 #include <algorithm>
+#include <libp2p/protocol/gossip/explicit_peers.hpp>
 
+#include "choose_peers.hpp"
 #include "connectivity.hpp"
 #include "message_builder.hpp"
 
 namespace libp2p::protocol::gossip {
 
-  RemoteSubscriptions::RemoteSubscriptions(const Config &config,
-                                           Connectivity &connectivity,
-                                           basic::Scheduler &scheduler,
-                                           log::SubLogger &log)
+  RemoteSubscriptions::RemoteSubscriptions(
+      const Config &config,
+      Connectivity &connectivity,
+      std::shared_ptr<Score> score,
+      std::shared_ptr<OutboundPeers> outbound_peers,
+      std::shared_ptr<basic::Scheduler> scheduler,
+      log::SubLogger &log)
       : config_(config),
         connectivity_(connectivity),
-        scheduler_(scheduler),
+        choose_peers_{std::make_shared<ChoosePeers>()},
+        explicit_peers_{std::make_shared<ExplicitPeers>()},
+        score_{std::move(score)},
+        outbound_peers_{std::move(outbound_peers)},
+        scheduler_{std::move(scheduler)},
         log_(log) {}
 
   void RemoteSubscriptions::onSelfSubscribed(bool subscribed,
                                              const TopicId &topic) {
+    if (subscribed == isSubscribed(topic)) {
+      return;
+    }
     auto res = getItem(topic, subscribed);
     if (!res) {
       log_.error("error in self subscribe to {}", topic);
       return;
     }
     TopicSubscriptions &subs = res.value();
-    subs.onSelfSubscribed(subscribed);
-    if (subs.empty()) {
+    if (subscribed) {
+      subs.subscribe();
+    } else {
+      subs.unsubscribe();
+    }
+    if (not subs.isUsed()) {
       table_.erase(topic);
     }
     log_.debug("self {} {}",
@@ -48,7 +64,7 @@ namespace libp2p::protocol::gossip {
     }
     log_.debug("peer {} subscribing to {}", peer->str, topic);
 
-    auto res = getItem(topic, true);
+    auto res = getItem(topic, false);
     if (!res) {
       // not error in this case, this is request from wire...
       log_.debug("entry doesnt exist for {}", topic);
@@ -78,7 +94,7 @@ namespace libp2p::protocol::gossip {
     TopicSubscriptions &subs = res.value();
 
     subs.onPeerUnsubscribed(peer);
-    if (subs.empty()) {
+    if (not subs.isUsed()) {
       table_.erase(topic);
     }
   }
@@ -92,38 +108,44 @@ namespace libp2p::protocol::gossip {
     }
   }
 
-  bool RemoteSubscriptions::hasTopic(const TopicId &topic) const {
-    return table_.count(topic) != 0;
+  bool RemoteSubscriptions::isSubscribed(const TopicId &topic) const {
+    auto it = table_.find(topic);
+    return it != table_.end() and it->second.isSubscribed();
   }
 
   void RemoteSubscriptions::onGraft(const PeerContextPtr &peer,
                                     const TopicId &topic) {
+    // implicit subscribe on graft
+    peer->subscribed_to.insert(topic);
     auto res = getItem(topic, false);
     if (!res) {
       // we don't have this topic anymore
-      peer->message_builder->addPrune(topic);
-      connectivity_.peerIsWritable(peer, true);
+      peer->message_builder->addPrune(
+          topic,
+          peer->isGossipsubv1_1() ? std::make_optional(config_.prune_backoff)
+                                  : std::nullopt);
+      connectivity_.peerIsWritable(peer);
       return;
     }
     res.value().onGraft(peer);
   }
 
-  void RemoteSubscriptions::onPrune(const PeerContextPtr &peer,
-                                    const TopicId &topic,
-                                    uint64_t backoff_time) {
+  void RemoteSubscriptions::onPrune(
+      const PeerContextPtr &peer,
+      const TopicId &topic,
+      std::optional<std::chrono::seconds> backoff_time) {
     auto res = getItem(topic, false);
     if (!res) {
       return;
     }
-    res.value().onPrune(peer,
-                        scheduler_.now() + std::chrono::seconds(backoff_time));
+    res.value().onPrune(peer, backoff_time);
   }
 
   void RemoteSubscriptions::onNewMessage(
       const boost::optional<PeerContextPtr> &from,
       const TopicMessage::Ptr &msg,
       const MessageId &msg_id) {
-    auto now = scheduler_.now();
+    auto now = scheduler_->now();
     bool is_published_locally = !from.has_value();
     auto res = getItem(msg->topic, is_published_locally);
     if (!res) {
@@ -134,10 +156,10 @@ namespace libp2p::protocol::gossip {
   }
 
   void RemoteSubscriptions::onHeartbeat() {
-    auto now = scheduler_.now();
+    auto now = scheduler_->now();
     for (auto it = table_.begin(); it != table_.end();) {
       it->second.onHeartbeat(now);
-      if (it->second.empty()) {
+      if (not it->second.isUsed()) {
         // fanout interval expired - clean up
         log_.debug("deleted entry for topic {}", it->first);
         it = table_.erase(it);
@@ -154,14 +176,17 @@ namespace libp2p::protocol::gossip {
       return it->second;
     }
     if (create_if_not_exist) {
-      auto [it, _] = table_.emplace(
-          topic, TopicSubscriptions(topic, config_, connectivity_, log_));
+      auto [it, _] = table_.emplace(topic,
+                                    TopicSubscriptions(topic,
+                                                       config_,
+                                                       connectivity_,
+                                                       scheduler_,
+                                                       choose_peers_,
+                                                       explicit_peers_,
+                                                       score_,
+                                                       outbound_peers_,
+                                                       log_));
       TopicSubscriptions &item = it->second;
-      connectivity_.getConnectedPeers().selectIf(
-          [&item](const PeerContextPtr &ctx) { item.onPeerSubscribed(ctx); },
-          [&topic](const PeerContextPtr &ctx) {
-            return ctx->subscribed_to.count(topic) != 0;
-          });
       log_.debug("created entry for topic {}", topic);
       return item;
     }

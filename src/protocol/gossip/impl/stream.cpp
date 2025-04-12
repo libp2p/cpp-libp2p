@@ -23,7 +23,7 @@ namespace libp2p::protocol::gossip {
                  const Config &config,
                  basic::Scheduler &scheduler,
                  const Feedback &feedback,
-                 MessageReceiver &msg_receiver,
+                 std::weak_ptr<MessageReceiver> msg_receiver,
                  std::shared_ptr<connection::Stream> stream,
                  PeerContextPtr peer)
       : stream_id_(stream_id),
@@ -31,7 +31,7 @@ namespace libp2p::protocol::gossip {
         scheduler_(scheduler),
         max_message_size_(config.max_message_size),
         feedback_(feedback),
-        msg_receiver_(msg_receiver),
+        msg_receiver_{std::move(msg_receiver)},
         stream_(std::move(stream)),
         peer_(std::move(peer)),
         read_buffer_(std::make_shared<std::vector<uint8_t>>()) {
@@ -119,7 +119,12 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    parser.dispatch(peer_, msg_receiver_);
+    if (auto msg_receiver = msg_receiver_.lock()) {
+      parser.dispatch(peer_, *msg_receiver);
+    } else {
+      close();
+      return;
+    }
 
     // reads again
     read();

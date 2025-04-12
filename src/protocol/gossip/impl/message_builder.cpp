@@ -7,6 +7,7 @@
 #include "message_builder.hpp"
 
 #include <libp2p/multi/uvarint.hpp>
+#include <qtils/bytestr.hpp>
 
 #include <generated/protocol/gossip/protobuf/rpc.pb.h>
 
@@ -29,6 +30,8 @@ namespace libp2p::protocol::gossip {
     control_pb_msg_->Clear();
     empty_ = true;
     control_not_empty_ = false;
+    subscriptions_.clear();
+    idontwant_.clear();
     ihaves_.clear();
     iwant_.clear();
     messages_added_.clear();
@@ -39,6 +42,8 @@ namespace libp2p::protocol::gossip {
     control_pb_msg_.reset();
     empty_ = true;
     control_not_empty_ = false;
+    std::exchange(subscriptions_, {});
+    std::exchange(idontwant_, {});
     decltype(ihaves_){}.swap(ihaves_);
     decltype(iwant_){}.swap(iwant_);
     decltype(messages_added_){}.swap(messages_added_);
@@ -57,6 +62,19 @@ namespace libp2p::protocol::gossip {
 
   outcome::result<SharedBuffer> MessageBuilder::serialize() {
     create_protobuf_structures();
+
+    for (auto &[topic, subscribe] : subscriptions_) {
+      auto *subscription = pb_msg_->add_subscriptions();
+      subscription->set_subscribe(subscribe);
+      subscription->set_topicid(topic);
+    }
+
+    if (not idontwant_.empty()) {
+      auto *idontwant = control_pb_msg_->add_idontwant();
+      for (auto &msg_id : idontwant_) {
+        *idontwant->add_message_ids() = qtils::byte2str(msg_id);
+      }
+    }
 
     for (auto &[topic, message_ids] : ihaves_) {
       auto *ih = control_pb_msg_->add_ihave();
@@ -109,11 +127,16 @@ namespace libp2p::protocol::gossip {
   }
 
   void MessageBuilder::addSubscription(bool subscribe, const TopicId &topic) {
-    create_protobuf_structures();
+    auto it = subscriptions_.emplace(topic, subscribe).first;
+    if (it->second != subscribe) {
+      subscriptions_.erase(it);
+    }
+    empty_ = false;
+  }
 
-    auto *dst = pb_msg_->add_subscriptions();
-    dst->set_subscribe(subscribe);
-    dst->set_topicid(topic);
+  void MessageBuilder::addIDontWant(const MessageId &msg_id) {
+    idontwant_.emplace(msg_id);
+    control_not_empty_ = true;
     empty_ = false;
   }
 
@@ -137,10 +160,15 @@ namespace libp2p::protocol::gossip {
     empty_ = false;
   }
 
-  void MessageBuilder::addPrune(const TopicId &topic) {
+  void MessageBuilder::addPrune(const TopicId &topic,
+                                std::optional<std::chrono::seconds> backoff) {
     create_protobuf_structures();
 
-    control_pb_msg_->add_prune()->set_topicid(topic);
+    auto *prune = control_pb_msg_->add_prune();
+    prune->set_topicid(topic);
+    if (backoff.has_value()) {
+      prune->set_backoff(backoff->count());
+    }
     control_not_empty_ = true;
     empty_ = false;
   }
@@ -155,18 +183,7 @@ namespace libp2p::protocol::gossip {
     }
     messages_added_.insert(msg_id);
 
-    auto *dst = pb_msg_->add_publish();
-    dst->set_from(msg.from.data(), msg.from.size());
-    dst->set_data(msg.data.data(), msg.data.size());
-    dst->set_seqno(msg.seq_no.data(), msg.seq_no.size());
-    dst->set_topic(msg.topic);
-    if (msg.signature) {
-      dst->set_signature(msg.signature.value().data(),
-                         msg.signature.value().size());
-    }
-    if (msg.key) {
-      dst->set_key(msg.key.value().data(), msg.key.value().size());
-    }
+    toPb(*pb_msg_->add_publish(), msg);
     empty_ = false;
   }
 
@@ -187,5 +204,27 @@ namespace libp2p::protocol::gossip {
       return Error::MESSAGE_SERIALIZE_ERROR;
     }
     return signable;
+  }
+
+  void MessageBuilder::toPb(pubsub::pb::Message &pb_message,
+                            const TopicMessage &message) {
+    pb_message.set_from(message.from.data(), message.from.size());
+    pb_message.set_data(message.data.data(), message.data.size());
+    pb_message.set_seqno(message.seq_no.data(), message.seq_no.size());
+    pb_message.set_topic(message.topic);
+    if (message.signature) {
+      pb_message.set_signature(message.signature.value().data(),
+                               message.signature.value().size());
+    }
+    if (message.key) {
+      pb_message.set_key(message.key.value().data(),
+                         message.key.value().size());
+    }
+  }
+
+  size_t MessageBuilder::pbSize(const TopicMessage &message) {
+    static thread_local pubsub::pb::Message pb_message;
+    toPb(pb_message, message);
+    return pb_message.ByteSizeLong();
   }
 }  // namespace libp2p::protocol::gossip

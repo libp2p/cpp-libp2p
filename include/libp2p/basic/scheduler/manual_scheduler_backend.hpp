@@ -66,9 +66,9 @@ namespace libp2p::basic {
       }
     }
 
-   private:
     void callDeferred();
 
+   private:
     /// Current time, set manually
     std::chrono::milliseconds current_clock_;
 

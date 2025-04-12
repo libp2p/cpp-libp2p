@@ -19,5 +19,12 @@ target_link_libraries(p2p_loopback_stream
     p2p_peer_id
     )
 
+libp2p_add_library(p2p_stream_pair
+    stream_pair.cpp
+    )
+target_link_libraries(p2p_stream_pair
+    p2p_peer_id
+    )
+
 libp2p_install(p2p_loopback_stream)
 

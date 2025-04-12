@@ -37,11 +37,14 @@ namespace libp2p::protocol::gossip {
     /// backoff_time seconds
     virtual void onPrune(const PeerContextPtr &from,
                          const TopicId &topic,
-                         uint64_t backoff_time) = 0;
+                         std::optional<std::chrono::seconds> backoff_time) = 0;
 
     /// Message received
     virtual void onTopicMessage(const PeerContextPtr &from,
                                 TopicMessage::Ptr msg) = 0;
+
+    virtual void onIDontWant(const PeerContextPtr &from,
+                             const std::vector<MessageId> &message_ids) = 0;
 
     /// Current wire protocol message dispatch ended
     virtual void onMessageEnd(const PeerContextPtr &from) = 0;
