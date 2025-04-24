@@ -6,7 +6,7 @@
 
 #include "src/protocol/gossip/impl/local_subscriptions.hpp"
 
-#include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <gtest/gtest.h>
 
 #include "testutil/libp2p/peer.hpp"

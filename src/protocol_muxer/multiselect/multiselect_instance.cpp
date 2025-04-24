@@ -7,6 +7,7 @@
 #include <libp2p/protocol_muxer/multiselect/multiselect_instance.hpp>
 
 #include <cctype>
+#include <fmt/ranges.h>
 
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/trace.hpp>

@@ -17,14 +17,23 @@
 
 hunter_config(
     soralog
-    VERSION 0.2.5
-    KEEP_PACKAGE_SOURCES
+    URL https://github.com/qdrvm/soralog/archive/cf70b08f8ef86696861272bc7195242b718d23cd.tar.gz
+    SHA1 358acbcdd9696c4b91141ee77606e097ddaa1b9e
 )
 
 hunter_config(
     qtils
-    VERSION 0.1.1
+    URL https://github.com/qdrvm/qtils/archive/77479adc6fa4eeceb81dbf78ecab7766fdb7c898.tar.gz
+    SHA1 016750cce6821904ff7d8e026828fca5a83ea46a
     CMAKE_ARGS
       FORMAT_ERROR_WITH_FULLTYPE=ON
     KEEP_PACKAGE_SOURCES
+)
+
+hunter_config(
+    fmt
+    URL  https://github.com/fmtlib/fmt/archive/refs/tags/11.1.4.tar.gz
+    SHA1 045b14fcdc6356eeb2d83feeb1c79e58215517f8
+    CMAKE_ARGS
+    CMAKE_POSITION_INDEPENDENT_CODE=TRUE
 )
