@@ -23,12 +23,22 @@ hunter_config(
     KEEP_PACKAGE_SOURCES
 )
 
-hunter_config(
-    ZLIB
-    VERSION 1.3.0-p0
-    URL  https://github.com/cpp-pm/zlib/archive/refs/tags/v1.3.0-p0.tar.gz
-    SHA1 311ca59e20cbbfe9d9e05196c12c6ae109093987
-)
+if(APPLE)
+    hunter_config(
+        ZLIB
+        URL  https://github.com/kamilsa/zlib/archive/b5aad46d87ecb8380189631eef7e1414fbede17f.tar.gz
+        SHA1 9d6a562f80477bc3198cf18109ec90af022f2ef4
+    )
+else()
+    hunter_config(
+        ZLIB
+        VERSION 1.3.0-p0
+        URL  https://github.com/cpp-pm/zlib/archive/refs/tags/v1.3.0-p0.tar.gz
+        SHA1 311ca59e20cbbfe9d9e05196c12c6ae109093987
+        CMAKE_ARGS
+        CMAKE_C_FLAGS=-DZ_SOLO=ON
+    )
+endif()
 
 hunter_config(
     qtils
