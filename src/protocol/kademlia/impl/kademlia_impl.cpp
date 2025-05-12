@@ -58,7 +58,6 @@ namespace libp2p::protocol::kademlia {
   }
 
   void KademliaImpl::start() {
-    BOOST_ASSERT(not started_);
     if (started_) {
       return;
     }
