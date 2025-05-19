@@ -170,6 +170,7 @@ namespace libp2p::protocol_muxer::multiselect {
     write_queue_.clear();
     Multiselect::ProtocolHandlerFunc callback;
     callback.swap(callback_);
+    connection_.reset();
 
     owner_.instanceClosed(shared_from_this(), callback, std::move(result));
   }

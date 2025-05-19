@@ -250,10 +250,14 @@ namespace libp2p::transport {
         conn,
         conn->isInitiator(),
         true,
-        [self{shared_from_this()}, cb = std::move(cb), conn](
+        [weak_self{weak_from_this()}, cb = std::move(cb), conn](
             outcome::result<peer::ProtocolName> proto_res) mutable {
           if (!proto_res) {
             return cb(proto_res.error());
+          }
+          auto self = weak_self.lock();
+          if (!self) {
+            return cb(Error::NO_ADAPTOR_FOUND);
           }
 
           auto adaptor = findAdaptor(self->muxer_adaptors_, proto_res.value());
