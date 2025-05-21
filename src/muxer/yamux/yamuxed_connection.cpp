@@ -732,7 +732,7 @@ namespace libp2p::connection {
 
   // TODO(turuslan): #240, yamux stream destructor
   void YamuxedConnection::setTimerCleanup() {
-    static constexpr auto kCleanupInterval = std::chrono::seconds(150);
+    static constexpr auto kCleanupInterval = std::chrono::seconds(5);
     cleanup_handle_ = scheduler_->scheduleWithHandle(
         [weak_self{weak_from_this()}] {
           auto self = weak_self.lock();
