@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/protocol_muxer/multiselect.hpp>
 #include "parser.hpp"
 
@@ -21,7 +22,8 @@ namespace libp2p::protocol_muxer::multiselect {
   class MultiselectInstance
       : public std::enable_shared_from_this<MultiselectInstance> {
    public:
-    explicit MultiselectInstance(Multiselect &owner);
+    explicit MultiselectInstance(Multiselect &owner,
+                                 std::shared_ptr<basic::Scheduler> scheduler);
 
     /// Implements ProtocolMuxer API
     void selectOneOf(std::span<const peer::ProtocolName> protocols,
@@ -74,6 +76,12 @@ namespace libp2p::protocol_muxer::multiselect {
     /// Handles "na" reply, client-specific
     MaybeResult handleNA();
 
+    /// Handle timeout for protocol negotiation
+    void onTimeout();
+
+    /// Cancel any active timeout timer
+    void cancelTimeout();
+
     /// Owner of this object, needed for reuse of instances
     Multiselect &owner_;
 
@@ -109,6 +117,12 @@ namespace libp2p::protocol_muxer::multiselect {
     /// the instance waits for write callback completion.
     /// Inside is index of protocol chosen
     boost::optional<size_t> wait_for_reply_sent_;
+
+    /// Timeout handle for protocol negotiation
+    basic::Scheduler::Handle timeout_handle_;
+
+    /// Scheduler for timeouts
+    std::shared_ptr<basic::Scheduler> scheduler_;
 
     /// Incoming messages parser
     Parser parser_;

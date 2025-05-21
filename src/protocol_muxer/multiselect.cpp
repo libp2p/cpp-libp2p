@@ -21,6 +21,11 @@ namespace libp2p::protocol_muxer::multiselect {
     constexpr size_t kMaxCacheSize = 8;
   }  // namespace
 
+  Multiselect::Multiselect(std::shared_ptr<basic::Scheduler> scheduler)
+      : scheduler_(std::move(scheduler)) {
+    BOOST_ASSERT(scheduler_ != nullptr);
+  }
+
   void Multiselect::selectOneOf(std::span<const peer::ProtocolName> protocols,
                                 std::shared_ptr<basic::ReadWriter> connection,
                                 bool is_initiator,
@@ -62,7 +67,7 @@ namespace libp2p::protocol_muxer::multiselect {
   Multiselect::Instance Multiselect::getInstance() {
     Instance instance;
     if (cache_.empty()) {
-      instance = std::make_shared<MultiselectInstance>(*this);
+      instance = std::make_shared<MultiselectInstance>(*this, scheduler_);
     } else {
       SL_TRACE(log(),
                "cache: {}->{}, active {}->{}",

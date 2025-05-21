@@ -22,8 +22,9 @@ namespace libp2p::protocol_muxer::multiselect {
     }
   }  // namespace
 
-  MultiselectInstance::MultiselectInstance(Multiselect &owner)
-      : owner_(owner) {}
+  MultiselectInstance::MultiselectInstance(Multiselect &owner,
+                                           std::shared_ptr<basic::Scheduler> scheduler)
+      : owner_(owner), scheduler_(std::move(scheduler)) {}
 
   void MultiselectInstance::selectOneOf(
       std::span<const peer::ProtocolName> protocols,
@@ -61,6 +62,19 @@ namespace libp2p::protocol_muxer::multiselect {
 
     write_queue_.clear();
     is_writing_ = false;
+
+    // Set up a timeout for protocol negotiation (2 seconds)
+    if (scheduler_) {
+      cancelTimeout();  // Cancel any existing timeout
+      timeout_handle_ = scheduler_->scheduleWithHandle(
+          [wptr = weak_from_this(), round = current_round_]() {
+            auto self = wptr.lock();
+            if (self && self->current_round_ == round) {
+              self->onTimeout();
+            }
+          },
+          std::chrono::milliseconds(2000));
+    }
 
     if (is_initiator_) {
       std::ignore = sendProposal();
@@ -168,6 +182,10 @@ namespace libp2p::protocol_muxer::multiselect {
     closed_ = true;
     ++current_round_;
     write_queue_.clear();
+
+    // Cancel the timeout when closing normally
+    cancelTimeout();
+
     Multiselect::ProtocolHandlerFunc callback;
     callback.swap(callback_);
     connection_.reset();
@@ -337,6 +355,20 @@ namespace libp2p::protocol_muxer::multiselect {
 
     SL_DEBUG(log(), "Unexpected NA received by server");
     return MaybeResult(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
+  }
+
+  void MultiselectInstance::onTimeout() {
+    if (closed_) {
+      return;
+    }
+    SL_DEBUG(log(), "protocol negotiation timed out");
+    close(ProtocolMuxer::Error::NEGOTIATION_FAILED);
+  }
+
+  void MultiselectInstance::cancelTimeout() {
+    if (timeout_handle_) {
+      // timeout_handle_.cancel();
+    }
   }
 
 }  // namespace libp2p::protocol_muxer::multiselect

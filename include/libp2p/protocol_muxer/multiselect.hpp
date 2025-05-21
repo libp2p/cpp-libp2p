@@ -9,6 +9,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <libp2p/basic/scheduler.hpp>
 #include "protocol_muxer.hpp"
 
 namespace libp2p::protocol_muxer::multiselect {
@@ -19,6 +20,12 @@ namespace libp2p::protocol_muxer::multiselect {
   class Multiselect : public protocol_muxer::ProtocolMuxer {
    public:
     using Instance = std::shared_ptr<MultiselectInstance>;
+
+    /**
+     * Constructor for Multiselect protocol muxer
+     * @param scheduler - scheduler used for timeouts in protocol negotiation
+     */
+    explicit Multiselect(std::shared_ptr<basic::Scheduler> scheduler);
 
     ~Multiselect() override = default;
 
@@ -50,6 +57,9 @@ namespace libp2p::protocol_muxer::multiselect {
 
     /// Idle instances which can be reused
     std::vector<Instance> cache_;
+
+    /// Scheduler for protocol negotiation timeouts
+    std::shared_ptr<basic::Scheduler> scheduler_;
   };
 
 }  // namespace libp2p::protocol_muxer::multiselect
