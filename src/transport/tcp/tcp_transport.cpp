@@ -21,19 +21,34 @@ namespace libp2p::transport {
     auto &[info, layers] = r.value();
     auto conn = std::make_shared<TcpConnection>(*context_, layers);
     auto connect =
-        [=,
-         self{shared_from_this()},
+        [weak{weak_from_this()},
          handler{std::move(handler)},
-         layers = std::move(layers)](
-            outcome::result<boost::asio::ip::tcp::resolver::results_type>
-                r) mutable {
+         layers = std::move(layers),
+         conn = std::move(conn),
+         address,
+         remoteId](outcome::result<boost::asio::ip::tcp::resolver::results_type>
+                       r) mutable {
           if (not r) {
             return handler(r.error());
           }
+
+          auto self = weak.lock();
+          if (not self) {
+            return;
+          }
+
           conn->connect(
               r.value(),
-              [=, handler{std::move(handler)}, layers = std::move(layers)](
-                  auto ec, auto &e) mutable {
+              [weak{self->weak_from_this()},
+               handler{std::move(handler)},
+               layers = std::move(layers),
+               conn = std::move(conn),
+               address,
+               remoteId](auto ec, auto &e) mutable {
+                auto self = weak.lock();
+                if (not self) {
+                  return;
+                }
                 if (ec) {
                   std::ignore = conn->close();
                   return handler(ec);
@@ -47,7 +62,7 @@ namespace libp2p::transport {
 
                 session->upgradeOutbound(address, remoteId);
               },
-              mux_config_.dial_timeout);
+              self->mux_config_.dial_timeout);
         };
     resolve(resolver_, info, std::move(connect));
   }
