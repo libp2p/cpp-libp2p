@@ -19,10 +19,11 @@ namespace libp2p::muxer {
       std::weak_ptr<network::ConnectionManager> w(cmgr);
       close_cb_ = [wptr{std::move(w)}](
                       const peer::PeerId &p,
-                      const std::shared_ptr<connection::CapableConnection> &c) {
+                      const std::weak_ptr<connection::CapableConnection> &c) {
         auto mgr = wptr.lock();
-        if (mgr) {
-          mgr->onConnectionClosed(p, c);
+        auto conn = c.lock();
+        if (mgr && conn) {
+          mgr->onConnectionClosed(p, conn);
         }
       };
     }

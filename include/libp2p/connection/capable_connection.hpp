@@ -25,7 +25,7 @@ namespace libp2p::connection {
 
     using ConnectionClosedCallback = std::function<void(
         const peer::PeerId &,
-        const std::shared_ptr<connection::CapableConnection> &)>;
+        const std::weak_ptr<connection::CapableConnection> &)>;
 
     ~CapableConnection() override = default;
 

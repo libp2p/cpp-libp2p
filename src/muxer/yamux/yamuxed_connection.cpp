@@ -554,7 +554,7 @@ namespace libp2p::connection {
     }
 
     if (closed_callback_) {
-      closed_callback_(remote_peer_, shared_from_this());
+      closed_callback_(remote_peer_, weak_from_this());
     }
 
     close_after_write_ = true;
