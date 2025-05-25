@@ -64,7 +64,7 @@ namespace libp2p::transport {
               },
               self->mux_config_.dial_timeout);
         };
-    resolve(resolver_, info, std::move(connect));
+    resolve(resolver_, info, std::move(connect), mux_config_.dial_timeout);
   }
 
   std::shared_ptr<TransportListener> TcpTransport::createListener(

@@ -8,6 +8,7 @@
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ip/udp.hpp>
+#include <boost/asio/deadline_timer.hpp>
 #include <charconv>
 #include <libp2p/boost/outcome.hpp>
 #include <libp2p/multi/multiaddress.hpp>
@@ -141,20 +142,46 @@ namespace libp2p::transport::detail {
   }
 
   template <typename T>
-  void resolve(T &resolver, const TcpOrUdp &addr, auto &&cb) {
+  void resolve(T &resolver, const TcpOrUdp &addr, auto &&cb, std::chrono::milliseconds timeout = std::chrono::milliseconds::zero()) {
     if (auto ip = std::get_if<boost::asio::ip::address>(&addr.ip)) {
       return cb(T::results_type::create(
           typename T::endpoint_type{*ip, addr.port}, "", ""));
     }
+
     auto &dns = std::get<Dns>(addr.ip);
-    auto cb2 = [cb{std::forward<decltype(cb)>(cb)}](
+
+    // Create a timer for timeout if specified
+    std::shared_ptr<boost::asio::deadline_timer> timer;
+    if (timeout > std::chrono::milliseconds::zero()) {
+      timer = std::make_shared<boost::asio::deadline_timer>(resolver.get_executor());
+      timer->expires_from_now(boost::posix_time::milliseconds(timeout.count()));
+
+      // Start the timeout timer
+      timer->async_wait([&resolver, cb=cb](const boost::system::error_code &error) mutable {
+        if (not error) {
+          // Cancel the ongoing resolution operation
+          resolver.cancel();
+          // Timeout error
+          cb(boost::system::error_code{boost::system::errc::timed_out,
+                                      boost::system::generic_category()});
+        }
+      });
+    }
+
+    auto cb2 = [cb{std::forward<decltype(cb)>(cb)}, timer](
                    boost::system::error_code ec,
                    typename T::results_type r) mutable {
+      // Cancel the timer if it exists
+      if (timer) {
+        timer->cancel();
+      }
+
       if (ec) {
         return cb(ec);
       }
       cb(std::move(r));
     };
+
     if (dns.v4) {
       resolver.async_resolve(
           *dns.v4 ? T::protocol_type::v4() : T::protocol_type::v6(),
