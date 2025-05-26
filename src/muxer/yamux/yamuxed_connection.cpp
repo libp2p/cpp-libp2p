@@ -737,7 +737,7 @@ namespace libp2p::connection {
         [weak_self{weak_from_this()}] {
           if (weak_self.lock()) {
             log()->info("YamuxedConnection with pointer {} to peer id {} has {} reference count",
-                        weak_self.lock().get(),
+                        fmt::ptr(weak_self.lock().get()),
                         weak_self.lock()->remote_peer_.toBase58(),
                         weak_self.use_count());
           }
