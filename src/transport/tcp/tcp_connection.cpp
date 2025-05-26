@@ -186,8 +186,60 @@ namespace libp2p::transport {
     ByteCounter::getInstance().incrementBytesRead(bytes);
     ambigousSize(out, bytes);
     TRACE("{} read some up to {}", debug_str_, bytes);
-    socket_.async_read_some(asioBuffer(out),
-                            closeOnError(*this, std::move(cb)));
+
+    // Create shared state for timeout tracking
+    auto timer = std::make_shared<boost::asio::deadline_timer>(context_);
+    auto operation_completed = std::make_shared<std::atomic<bool>>(false);
+
+    // Set timer for 2 seconds
+    timer->expires_from_now(boost::posix_time::seconds(2));
+
+    // Start timeout timer
+    timer->async_wait([wptr = weak_from_this(), cb, operation_completed](
+                          const boost::system::error_code &error) {
+      if (error) {
+        return;  // Timer was cancelled
+      }
+
+      auto self = wptr.lock();
+      if (!self) {
+        return;
+      }
+
+      bool expected = false;
+      if (operation_completed->compare_exchange_strong(expected, true)) {
+        // Timeout occurred - call callback with timeout error
+        auto timeout_ec = boost::system::error_code{
+            boost::system::errc::timed_out, boost::system::generic_category()};
+        cb(timeout_ec);
+        self->close(timeout_ec);
+      }
+    });
+
+    // Start the read operation with modified callback that cancels timer
+    socket_.async_read_some(
+        asioBuffer(out),
+        [wptr = weak_from_this(), cb, timer, operation_completed](
+            const boost::system::error_code &ec,
+            std::size_t bytes_transferred) {
+          // Cancel the timer immediately
+          timer->cancel();
+
+          auto self = wptr.lock();
+          if (!self) {
+            return;
+          }
+
+          bool expected = false;
+          if (operation_completed->compare_exchange_strong(expected, true)) {
+            if (ec) {
+              cb(ec);
+              self->close(ec);
+            } else {
+              cb(bytes_transferred);
+            }
+          }
+        });
   }
 
   void TcpConnection::writeSome(BytesIn in,
@@ -196,8 +248,60 @@ namespace libp2p::transport {
     ByteCounter::getInstance().incrementBytesWritten(bytes);
     ambigousSize(in, bytes);
     TRACE("{} write some up to {}", debug_str_, bytes);
-    socket_.async_write_some(asioBuffer(in),
-                             closeOnError(*this, std::move(cb)));
+
+    // Create shared state for timeout tracking
+    auto timer = std::make_shared<boost::asio::deadline_timer>(context_);
+    auto operation_completed = std::make_shared<std::atomic<bool>>(false);
+
+    // Set timer for 2 seconds
+    timer->expires_from_now(boost::posix_time::seconds(2));
+
+    // Start timeout timer
+    timer->async_wait([wptr = weak_from_this(), cb, operation_completed](
+                          const boost::system::error_code &error) {
+      if (error) {
+        return;  // Timer was cancelled
+      }
+
+      auto self = wptr.lock();
+      if (!self) {
+        return;
+      }
+
+      bool expected = false;
+      if (operation_completed->compare_exchange_strong(expected, true)) {
+        // Timeout occurred - call callback with timeout error
+        auto timeout_ec = boost::system::error_code{
+            boost::system::errc::timed_out, boost::system::generic_category()};
+        cb(timeout_ec);
+        self->close(timeout_ec);
+      }
+    });
+
+    // Start the write operation with modified callback that cancels timer
+    socket_.async_write_some(
+        asioBuffer(in),
+        [wptr = weak_from_this(), cb, timer, operation_completed](
+            const boost::system::error_code &ec,
+            std::size_t bytes_transferred) {
+          // Cancel the timer immediately
+          timer->cancel();
+
+          auto self = wptr.lock();
+          if (!self) {
+            return;
+          }
+
+          bool expected = false;
+          if (operation_completed->compare_exchange_strong(expected, true)) {
+            if (ec) {
+              cb(ec);
+              self->close(ec);
+            } else {
+              cb(bytes_transferred);
+            }
+          }
+        });
   }
 
   void TcpConnection::deferReadCallback(outcome::result<size_t> res,
