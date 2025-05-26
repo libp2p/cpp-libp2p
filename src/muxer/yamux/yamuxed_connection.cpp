@@ -537,7 +537,11 @@ namespace libp2p::connection {
     auto self = shared_from_this();
     started_ = false;
 
-    SL_DEBUG(log(), "closing connection, reason: {}", notify_streams_code);
+    SL_DEBUG(log(),
+             "closing connection with peer {}, pointer {}, reason: {}",
+             remote_peer_.toBase58(),
+             fmt::ptr(self.get()),
+             notify_streams_code);
 
     Streams streams;
     streams.swap(streams_);
@@ -736,10 +740,12 @@ namespace libp2p::connection {
     cleanup_handle_ = scheduler_->scheduleWithHandle(
         [weak_self{weak_from_this()}] {
           if (weak_self.lock()) {
-            log()->info("YamuxedConnection with pointer {} to peer id {} has {} reference count",
-                        fmt::ptr(weak_self.lock().get()),
-                        weak_self.lock()->remote_peer_.toBase58(),
-                        weak_self.use_count());
+            log()->info(
+                "YamuxedConnection with pointer {} to peer id {} has {} "
+                "reference count",
+                fmt::ptr(weak_self.lock().get()),
+                weak_self.lock()->remote_peer_.toBase58(),
+                weak_self.use_count());
           }
           auto self = weak_self.lock();
           if (not self) {
