@@ -573,12 +573,8 @@ namespace libp2p::connection {
     }
 
     close_after_write_ = true;
-    if (reply_to_peer_code) {
-      enqueue(goAwayMsg(*reply_to_peer_code));
-    } else {
-      write_queue_.clear();
-      std::ignore = connection_->close();
-    }
+    write_queue_.clear();
+    std::ignore = connection_->close();
   }
 
   void YamuxedConnection::writeStreamData(uint32_t stream_id, BytesIn data) {
