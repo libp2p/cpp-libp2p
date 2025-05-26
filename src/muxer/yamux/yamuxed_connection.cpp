@@ -735,6 +735,12 @@ namespace libp2p::connection {
     static constexpr auto kCleanupInterval = std::chrono::seconds(5);
     cleanup_handle_ = scheduler_->scheduleWithHandle(
         [weak_self{weak_from_this()}] {
+          if (weak_self.lock()) {
+            log()->info("YamuxedConnection with pointer {} to peer id {} has {} reference count",
+                        weak_self.lock().get(),
+                        weak_self.lock()->remote_peer_.toBase58(),
+                        weak_self.use_count());
+          }
           auto self = weak_self.lock();
           if (not self) {
             return;
