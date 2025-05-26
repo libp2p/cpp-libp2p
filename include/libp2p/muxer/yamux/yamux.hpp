@@ -35,6 +35,7 @@ namespace libp2p::muxer {
    private:
     MuxedConnectionConfig config_;
     std::shared_ptr<basic::Scheduler> scheduler_;
+    std::shared_ptr<network::ConnectionManager> cmgr_;
     connection::CapableConnection::ConnectionClosedCallback close_cb_;
   };
 }  // namespace libp2p::muxer
