@@ -29,6 +29,13 @@ namespace libp2p::connection {
 
   }  // namespace
 
+  static size_t counter = 0;
+
+  YamuxedConnection::~YamuxedConnection() {
+    counter--;
+    log()->info("YamuxedConnection destroyed, counter={}", counter);
+  }
+
   YamuxedConnection::YamuxedConnection(
       std::shared_ptr<SecureConnection> connection,
       std::shared_ptr<basic::Scheduler> scheduler,
@@ -60,6 +67,10 @@ namespace libp2p::connection {
     assert(scheduler_);
     assert(config_.maximum_streams > 0);
     assert(config_.maximum_window_size >= YamuxFrame::kInitialWindowSize);
+
+    counter++;
+    log()->info(
+        "YamuxedConnection with {} created, counter={}", remote_peer_, counter);
 
     raw_read_buffer_->resize(YamuxFrame::kInitialWindowSize + 4096);
     new_stream_id_ = (connection_->isInitiator() ? 1 : 2);
