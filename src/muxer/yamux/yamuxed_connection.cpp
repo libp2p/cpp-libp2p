@@ -573,7 +573,6 @@ namespace libp2p::connection {
     }
 
     close_after_write_ = true;
-    writing_buf_.reset();
     write_queue_.clear();
     std::ignore = connection_->close();
   }
