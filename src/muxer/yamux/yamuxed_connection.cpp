@@ -734,6 +734,10 @@ namespace libp2p::connection {
   }
 
   void YamuxedConnection::adjustExpireTimer() {
+    // First check if the connection is still active and scheduler is valid
+    if (!started_ || isClosed() || !scheduler_) {
+      return;
+    }
     if (config_.no_streams_interval.count() > 0 && streams_.empty()
         && pending_outbound_streams_.empty()) {
       SL_DEBUG(log(),
