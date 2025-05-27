@@ -7,6 +7,7 @@
 #include <libp2p/muxer/yamux/yamux_stream.hpp>
 
 #include <cassert>
+#include <atomic>
 
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
@@ -27,11 +28,13 @@ namespace libp2p::connection {
   YamuxStream::YamuxStream(
       std::shared_ptr<connection::SecureConnection> connection,
       YamuxStreamFeedback &feedback,
+      std::shared_ptr<basic::Scheduler> scheduler,
       uint32_t stream_id,
       size_t maximum_window_size,
       size_t write_queue_limit)
       : connection_(std::move(connection)),
         feedback_(feedback),
+        scheduler_(std::move(scheduler)),
         stream_id_(stream_id),
         window_size_(YamuxFrame::kInitialWindowSize),
         peers_window_size_(YamuxFrame::kInitialWindowSize),
@@ -50,7 +53,34 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
-    doRead(out, bytes, std::move(cb));
+    // Timeout support: schedule a 2-second timer
+    if (!scheduler_) {
+      // fallback: no scheduler, just do normal read
+      doRead(out, bytes, std::move(cb));
+      return;
+    }
+    auto self = shared_from_this();
+    auto timed_out = std::make_shared<std::atomic_bool>(false);
+    // Save original callback
+    auto user_cb = std::make_shared<ReadCallbackFunc>(std::move(cb));
+    // Schedule timeout
+    auto timeout_handle = std::make_shared<basic::Scheduler::Handle>(
+        scheduler_->scheduleWithHandle([self, timed_out, user_cb] {
+          if (timed_out->exchange(true) == false) {
+            // Timeout occurred first
+            (*user_cb)(Error::STREAM_TIMEOUT);
+          }
+        }, std::chrono::milliseconds(2000)));
+    // Wrap the callback to cancel the timer if read completes first
+    auto wrapped_cb = [timed_out, timeout_handle, user_cb](outcome::result<size_t> res) mutable {
+      if (timed_out->exchange(true) == false) {
+        if (timeout_handle && *timeout_handle) {
+          timeout_handle->reset();
+        }
+        (*user_cb)(std::move(res));
+      }
+    };
+    doRead(out, bytes, std::move(wrapped_cb));
   }
 
   void YamuxStream::deferReadCallback(outcome::result<size_t> res,

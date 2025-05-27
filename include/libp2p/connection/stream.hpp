@@ -44,6 +44,7 @@ namespace libp2p::connection {
       STREAM_INVALID_WINDOW_SIZE,
       STREAM_WRITE_OVERFLOW,
       STREAM_RECEIVE_OVERFLOW,
+      STREAM_TIMEOUT
     };
 
     using VoidResultHandlerFunc = std::function<void(outcome::result<void>)>;

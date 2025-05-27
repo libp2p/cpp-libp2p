@@ -701,6 +701,7 @@ namespace libp2p::connection {
     auto stream =
         std::make_shared<YamuxStream>(shared_from_this(),
                                       *this,
+                                      scheduler_,
                                       stream_id,
                                       config_.maximum_window_size,
                                       basic::WriteQueue::kDefaultSizeLimit);

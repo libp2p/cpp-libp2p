@@ -12,6 +12,7 @@
 #include <libp2p/basic/write_queue.hpp>
 #include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/stream.hpp>
+#include <libp2p/basic/scheduler.hpp>
 
 namespace libp2p::connection {
 
@@ -50,6 +51,7 @@ namespace libp2p::connection {
 
     YamuxStream(std::shared_ptr<connection::SecureConnection> connection,
                 YamuxStreamFeedback &feedback,
+                std::shared_ptr<basic::Scheduler> scheduler,
                 uint32_t stream_id,
                 size_t maximum_window_size,
                 size_t write_queue_limit);
@@ -138,6 +140,9 @@ namespace libp2p::connection {
     /// Yamux-specific interface of connection
     YamuxStreamFeedback &feedback_;
 
+    /// Scheduler for timeouts
+    std::shared_ptr<basic::Scheduler> scheduler_;
+
     /// Stream ID
     uint32_t stream_id_;
 
@@ -192,3 +197,4 @@ namespace libp2p::connection {
   };
 
 }  // namespace libp2p::connection
+
