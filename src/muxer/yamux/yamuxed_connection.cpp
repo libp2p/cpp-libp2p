@@ -624,11 +624,6 @@ namespace libp2p::connection {
   }
 
   void YamuxedConnection::enqueue(Buffer packet, StreamId stream_id) {
-    // Check if connection is already closed or invalid
-    if (isClosed() || !writing_buf_) {
-      return;
-    }
-
     if (is_writing_) {
       write_queue_.push_back(WriteQueueItem{std::move(packet), stream_id});
     } else {
@@ -639,11 +634,6 @@ namespace libp2p::connection {
   void YamuxedConnection::doWrite(WriteQueueItem packet) {
     assert(!is_writing_);
 
-    // Add null check before dereferencing
-    if (!writing_buf_) {
-      log()->error("writing_buf_ is null in doWrite");
-      return;
-    }
     writing_buf_->assign(packet.packet.begin(), packet.packet.end());
     auto cb = [wptr{weak_from_this()},
                buf{writing_buf_},
