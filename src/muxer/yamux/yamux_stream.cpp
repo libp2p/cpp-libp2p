@@ -89,7 +89,34 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
-    doWrite(in, bytes, std::move(cb));
+    // Timeout support: schedule a 2-second timer
+    if (!scheduler_) {
+      // fallback: no scheduler, just do normal write
+      doWrite(in, bytes, std::move(cb));
+      return;
+    }
+    auto self = shared_from_this();
+    auto timed_out = std::make_shared<std::atomic_bool>(false);
+    // Save original callback
+    auto user_cb = std::make_shared<WriteCallbackFunc>(std::move(cb));
+    // Schedule timeout
+    auto timeout_handle = std::make_shared<basic::Scheduler::Handle>(
+        scheduler_->scheduleWithHandle([self, timed_out, user_cb] {
+          if (timed_out->exchange(true) == false) {
+            // Timeout occurred first
+            (*user_cb)(Error::STREAM_TIMEOUT);
+          }
+        }, std::chrono::milliseconds(2000)));
+    // Wrap the callback to cancel the timer if write completes first
+    auto wrapped_cb = [timed_out, timeout_handle, user_cb](outcome::result<size_t> res) mutable {
+      if (timed_out->exchange(true) == false) {
+        if (timeout_handle && *timeout_handle) {
+          timeout_handle->reset();
+        }
+        (*user_cb)(std::move(res));
+      }
+    };
+    doWrite(in, bytes, std::move(wrapped_cb));
   }
 
   void YamuxStream::deferWriteCallback(std::error_code ec,
