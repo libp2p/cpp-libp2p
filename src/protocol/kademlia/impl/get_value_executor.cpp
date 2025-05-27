@@ -190,6 +190,16 @@ namespace libp2p::protocol::kademlia {
     }
 
     auto &stream = stream_res.value().stream;
+
+    if (stream->isClosed()) {
+      --requests_in_progress_;
+      log_.debug("stream is closed; active {}, in queue {}",
+                 requests_in_progress_,
+                 queue_.size());
+      spawn();
+      return;
+    }
+
     assert(stream->remoteMultiaddr().has_value());
 
     std::string addr(stream->remoteMultiaddr().value().getStringAddress());
