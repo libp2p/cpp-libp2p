@@ -6,8 +6,8 @@
 
 #include <libp2p/muxer/yamux/yamux_stream.hpp>
 
-#include <cassert>
 #include <atomic>
+#include <cassert>
 
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
@@ -32,7 +32,7 @@ namespace libp2p::connection {
       uint32_t stream_id,
       size_t maximum_window_size,
       size_t write_queue_limit)
-      : connection_(std::move(connection)),
+      : connection_(connection),
         feedback_(feedback),
         scheduler_(std::move(scheduler)),
         stream_id_(stream_id),
@@ -40,7 +40,7 @@ namespace libp2p::connection {
         peers_window_size_(YamuxFrame::kInitialWindowSize),
         maximum_window_size_(maximum_window_size),
         write_queue_(write_queue_limit) {
-    assert(connection_);
+    assert(!connection_.expired());
     assert(stream_id_ > 0);
     assert(window_size_ <= maximum_window_size_);
     assert(peers_window_size_ <= maximum_window_size_);
@@ -65,14 +65,17 @@ namespace libp2p::connection {
     auto user_cb = std::make_shared<ReadCallbackFunc>(std::move(cb));
     // Schedule timeout
     auto timeout_handle = std::make_shared<basic::Scheduler::Handle>(
-        scheduler_->scheduleWithHandle([self, timed_out, user_cb] {
-          if (timed_out->exchange(true) == false) {
-            // Timeout occurred first
-            (*user_cb)(Error::STREAM_TIMEOUT);
-          }
-        }, std::chrono::milliseconds(2000)));
+        scheduler_->scheduleWithHandle(
+            [self, timed_out, user_cb] {
+              if (timed_out->exchange(true) == false) {
+                // Timeout occurred first
+                (*user_cb)(Error::STREAM_TIMEOUT);
+              }
+            },
+            std::chrono::milliseconds(2000)));
     // Wrap the callback to cancel the timer if read completes first
-    auto wrapped_cb = [timed_out, timeout_handle, user_cb](outcome::result<size_t> res) mutable {
+    auto wrapped_cb = [timed_out, timeout_handle, user_cb](
+                          outcome::result<size_t> res) mutable {
       if (timed_out->exchange(true) == false) {
         if (timeout_handle && *timeout_handle) {
           timeout_handle->reset();
@@ -101,14 +104,17 @@ namespace libp2p::connection {
     auto user_cb = std::make_shared<WriteCallbackFunc>(std::move(cb));
     // Schedule timeout
     auto timeout_handle = std::make_shared<basic::Scheduler::Handle>(
-        scheduler_->scheduleWithHandle([self, timed_out, user_cb] {
-          if (timed_out->exchange(true) == false) {
-            // Timeout occurred first
-            (*user_cb)(Error::STREAM_TIMEOUT);
-          }
-        }, std::chrono::milliseconds(2000)));
+        scheduler_->scheduleWithHandle(
+            [self, timed_out, user_cb] {
+              if (timed_out->exchange(true) == false) {
+                // Timeout occurred first
+                (*user_cb)(Error::STREAM_TIMEOUT);
+              }
+            },
+            std::chrono::milliseconds(2000)));
     // Wrap the callback to cancel the timer if write completes first
-    auto wrapped_cb = [timed_out, timeout_handle, user_cb](outcome::result<size_t> res) mutable {
+    auto wrapped_cb = [timed_out, timeout_handle, user_cb](
+                          outcome::result<size_t> res) mutable {
       if (timed_out->exchange(true) == false) {
         if (timeout_handle && *timeout_handle) {
           timeout_handle->reset();
@@ -208,19 +214,35 @@ namespace libp2p::connection {
   }
 
   outcome::result<peer::PeerId> YamuxStream::remotePeerId() const {
-    return connection_->remotePeer();
+    auto shared_connection = connection_.lock();
+    if (shared_connection) {
+      return shared_connection->remotePeer();
+    }
+    return Error::STREAM_RESET_BY_HOST;
   }
 
   outcome::result<bool> YamuxStream::isInitiator() const {
-    return connection_->isInitiator();
+    auto shared_connection = connection_.lock();
+    if (shared_connection) {
+      return shared_connection->isInitiator();
+    }
+    return Error::STREAM_RESET_BY_HOST;
   }
 
   outcome::result<multi::Multiaddress> YamuxStream::localMultiaddr() const {
-    return connection_->localMultiaddr();
+    auto shared_connection = connection_.lock();
+    if (shared_connection) {
+      return shared_connection->localMultiaddr();
+    }
+    return Error::STREAM_RESET_BY_HOST;
   }
 
   outcome::result<multi::Multiaddress> YamuxStream::remoteMultiaddr() const {
-    return connection_->remoteMultiaddr();
+    auto shared_connection = connection_.lock();
+    if (shared_connection) {
+      return shared_connection->remoteMultiaddr();
+    }
+    return Error::STREAM_RESET_BY_HOST;
   }
 
   void YamuxStream::increaseSendWindow(size_t delta) {

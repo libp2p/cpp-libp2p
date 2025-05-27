@@ -135,7 +135,7 @@ namespace libp2p::connection {
     closeCompleted();
 
     /// Underlying connection (secured)
-    std::shared_ptr<connection::SecureConnection> connection_;
+    std::weak_ptr<connection::SecureConnection> connection_;
 
     /// Yamux-specific interface of connection
     YamuxStreamFeedback &feedback_;
