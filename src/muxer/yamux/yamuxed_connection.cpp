@@ -743,9 +743,11 @@ namespace libp2p::connection {
       SL_DEBUG(log(),
                "scheduling expire timer to {} msec",
                config_.no_streams_interval.count());
+
+      auto weak_self = weak_from_this();
       inactivity_handle_ = scheduler_->scheduleWithHandle(
-          [weak_ptr(weak_from_this())] {
-            if (auto self = weak_ptr.lock()) {
+          [weak_self] {
+            if (auto self = weak_self.lock()) {
               self->onExpireTimer();
             }
           },
