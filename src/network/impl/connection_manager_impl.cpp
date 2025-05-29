@@ -148,13 +148,14 @@ namespace libp2p::network {
     }
     auto it = connections_.find(peer_id);
     if (it == connections_.end()) {
-      log()->error("inconsistency in onConnectionClosed, peer not found");
+      log()->warn("onConnectionClosed called for peer {} that was not in connection manager (connection may have been closed before being added)", peer_id.toBase58());
       return;
     }
 
     [[maybe_unused]] auto erased = it->second.erase(conn);
     if (erased == 0) {
-      log()->error("inconsistency in onConnectionClosed, connection not found");
+      log()->warn("onConnectionClosed called for connection to peer {} that was not in connection manager (connection may have been closed before being added)", peer_id.toBase58());
+      return;
     }
 
     if (it->second.empty()) {

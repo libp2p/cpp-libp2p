@@ -78,6 +78,8 @@ namespace libp2p::connection {
                            ReadCallbackFunc cb) override;
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
+    void markAsRegistered();
+
    private:
     using Streams = std::unordered_map<StreamId, std::shared_ptr<YamuxStream>>;
 
@@ -240,6 +242,8 @@ namespace libp2p::connection {
     uint32_t ping_counter_ = 0;
 
     bool close_after_write_ = false;
+
+    bool registered_in_manager_ = false;
 
    public:
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(

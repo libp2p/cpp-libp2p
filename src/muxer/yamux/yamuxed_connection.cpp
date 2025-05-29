@@ -553,7 +553,7 @@ namespace libp2p::connection {
       cb(notify_streams_code);
     }
 
-    if (closed_callback_) {
+    if (closed_callback_ && registered_in_manager_) {
       closed_callback_(remote_peer_, shared_from_this());
     }
 
@@ -744,7 +744,8 @@ namespace libp2p::connection {
           }
           std::vector<StreamId> abandoned;
           for (auto &[id, stream] : self->streams_) {
-            if (stream.use_count() == 1) {
+            auto stream_holder = stream;
+            if (stream_holder.use_count() == 2) {  // 2 = our + в streams_
               abandoned.push_back(id);
               self->enqueue(resetStreamMsg(id));
             }
@@ -778,5 +779,9 @@ namespace libp2p::connection {
           self->setTimerPing();
         },
         config_.ping_interval);
+  }
+
+  void YamuxedConnection::markAsRegistered() {
+    registered_in_manager_ = true;
   }
 }  // namespace libp2p::connection
