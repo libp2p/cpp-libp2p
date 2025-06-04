@@ -13,6 +13,7 @@
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 
 #define TRACE_ENABLED 0
+#include <boost/asio/use_awaitable.hpp>
 #include <libp2p/common/trace.hpp>
 
 namespace libp2p::connection {
@@ -164,6 +165,142 @@ namespace libp2p::connection {
 
   outcome::result<multi::Multiaddress> YamuxStream::remoteMultiaddr() const {
     return connection_->remoteMultiaddr();
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> YamuxStream::read(
+      BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+
+    if (out.data() == nullptr || out.size() == 0 || bytes == 0) {
+      co_return Error::STREAM_INVALID_ARGUMENT;
+    }
+
+    // If the stream is closed, return the error
+    if (close_reason_) {
+      co_return *close_reason_;
+    }
+
+    // If the stream is not readable, return an error
+    if (!is_readable_) {
+      co_return Error::STREAM_NOT_READABLE;
+    }
+
+    // Read the exact number of bytes requested
+    size_t total_bytes_read = 0;
+    while (total_bytes_read < bytes) {
+      auto remaining = bytes - total_bytes_read;
+      auto result = co_await readSome(out.subspan(total_bytes_read), remaining);
+
+      if (!result) {
+        co_return result.error();
+      }
+
+      size_t bytes_read = result.value();
+      if (bytes_read == 0) {
+        // End of stream reached
+        break;
+      }
+
+      total_bytes_read += bytes_read;
+    }
+
+    co_return total_bytes_read;
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> YamuxStream::readSome(
+      BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+
+    if (out.data() == nullptr || out.size() == 0 || bytes == 0) {
+      co_return Error::STREAM_INVALID_ARGUMENT;
+    }
+
+    // If the stream is closed, return the error
+    if (close_reason_) {
+      co_return *close_reason_;
+    }
+
+    // If the stream is not readable, return an error
+    if (!is_readable_) {
+      co_return Error::STREAM_NOT_READABLE;
+    }
+
+    // If something is still in read buffer, the client can consume these bytes
+    auto bytes_available_now = internal_read_buffer_.size();
+    if (bytes_available_now > 0) {
+      out = out.first(static_cast<ptrdiff_t>(std::min(bytes, bytes_available_now)));
+      size_t consumed = internal_read_buffer_.consume(out);
+
+      if (is_readable_) {
+        feedback_.ackReceivedBytes(stream_id_, consumed);
+      }
+
+      co_return consumed;
+    }
+
+    // No data available, need to set up an async read
+    struct ReadContext {
+      std::optional<outcome::result<size_t>> result;
+      bool done = false;
+    };
+
+    auto ctx = std::make_shared<ReadContext>();
+
+    doRead(out, bytes, [ctx](auto result) {
+      ctx->result = result;
+      ctx->done = true;
+    });
+
+    // Wait for the read operation to complete
+    while (!ctx->done) {
+      co_await boost::asio::post(boost::asio::use_awaitable);
+    }
+
+    co_return *ctx->result;
+  }
+
+  boost::asio::awaitable<std::error_code> YamuxStream::writeSome(
+      BytesIn in, size_t bytes) {
+    ambigousSize(in, bytes);
+
+    if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
+      co_return Error::STREAM_INVALID_ARGUMENT;
+    }
+
+    if (!is_writable_) {
+      co_return Error::STREAM_NOT_WRITABLE;
+    }
+
+    if (close_reason_) {
+      co_return *close_reason_;
+    }
+
+    if (!write_queue_.canEnqueue(bytes)) {
+      co_return Error::STREAM_WRITE_OVERFLOW;
+    }
+
+    struct WriteContext {
+      std::optional<std::error_code> result;
+      bool done = false;
+    };
+
+    auto ctx = std::make_shared<WriteContext>();
+
+    doWrite(in.first(bytes), bytes, [ctx](auto result) {
+      if (result) {
+        ctx->result = std::error_code{};
+      } else {
+        ctx->result = result.error();
+      }
+      ctx->done = true;
+    });
+
+    // Wait for the write operation to complete
+    while (!ctx->done) {
+      co_await boost::asio::post(boost::asio::use_awaitable);
+    }
+
+    co_return *ctx->result;
   }
 
   void YamuxStream::increaseSendWindow(size_t delta) {

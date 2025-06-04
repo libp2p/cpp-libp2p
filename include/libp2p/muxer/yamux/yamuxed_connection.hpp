@@ -78,6 +78,14 @@ namespace libp2p::connection {
                            ReadCallbackFunc cb) override;
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
+    // Coroutine-based methods
+    boost::asio::awaitable<outcome::result<size_t>> read(BytesOut out,
+                                                         size_t bytes) override;
+    boost::asio::awaitable<outcome::result<size_t>> readSome(
+        BytesOut out, size_t bytes) override;
+    boost::asio::awaitable<std::error_code> writeSome(BytesIn in,
+                                                      size_t bytes) override;
+
    private:
     using Streams = std::unordered_map<StreamId, std::shared_ptr<YamuxStream>>;
 

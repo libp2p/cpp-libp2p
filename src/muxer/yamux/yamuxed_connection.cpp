@@ -196,6 +196,24 @@ namespace libp2p::connection {
     connection_->deferWriteCallback(ec, std::move(cb));
   }
 
+  boost::asio::awaitable<outcome::result<size_t>> YamuxedConnection::read(
+      BytesOut out, size_t bytes) {
+    log()->error("YamuxedConnection::read : invalid direct call");
+    co_return Error::CONNECTION_DIRECT_IO_FORBIDDEN;
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> YamuxedConnection::readSome(
+      BytesOut out, size_t bytes) {
+    log()->error("YamuxedConnection::readSome : invalid direct call");
+    co_return Error::CONNECTION_DIRECT_IO_FORBIDDEN;
+  }
+
+  boost::asio::awaitable<std::error_code> YamuxedConnection::writeSome(
+      BytesIn in, size_t bytes) {
+    log()->error("YamuxedConnection::writeSome : invalid direct call");
+    co_return Error::CONNECTION_DIRECT_IO_FORBIDDEN;
+  }
+
   void YamuxedConnection::continueReading() {
     SL_TRACE(log(), "YamuxedConnection::continueReading");
     connection_->readSome(*raw_read_buffer_,
