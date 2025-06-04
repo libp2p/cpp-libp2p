@@ -183,4 +183,60 @@ namespace libp2p::connection {
   outcome::result<void> TlsConnection::close() {
     return original_connection_->close();
   }
+
+  boost::asio::awaitable<outcome::result<size_t>> TlsConnection::read(
+      BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    SL_TRACE(log(), "co_read {} bytes", bytes);
+    if (isClosed()) {
+      co_return make_error_code(std::errc::connection_aborted);
+    }
+    boost::system::error_code ec;
+    size_t bytes_transferred = co_await boost::asio::async_read(
+        socket_,
+        asioBuffer(out),
+        boost::asio::redirect_error(boost::asio::use_awaitable, ec));
+    if (ec) {
+      std::ignore = close();
+      co_return ec;
+    }
+    co_return bytes_transferred;
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> TlsConnection::readSome(
+      BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    SL_TRACE(log(), "co_readSome up to {} bytes", bytes);
+    if (isClosed()) {
+      co_return make_error_code(std::errc::connection_aborted);
+    }
+    boost::system::error_code ec;
+    size_t bytes_transferred = co_await socket_.async_read_some(
+        asioBuffer(out),
+        boost::asio::redirect_error(boost::asio::use_awaitable, ec));
+    if (ec) {
+      std::ignore = close();
+      co_return ec;
+    }
+    co_return bytes_transferred;
+  }
+
+  boost::asio::awaitable<std::error_code> TlsConnection::writeSome(
+      BytesIn in, size_t bytes) {
+    ambigousSize(in, bytes);
+    SL_TRACE(log(), "co_writeSome up to {} bytes", bytes);
+    if (isClosed()) {
+      co_return make_error_code(std::errc::connection_aborted);
+    }
+    boost::system::error_code ec;
+    size_t bytes_transferred = co_await socket_.async_write_some(
+        asioBuffer(in),
+        boost::asio::redirect_error(boost::asio::use_awaitable, ec));
+    if (ec) {
+      std::ignore = close();
+      co_return ec;
+    }
+    co_return ec;
+  }
+
 }  // namespace libp2p::connection

@@ -48,6 +48,14 @@ namespace libp2p::transport {
     void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
+    // Coroutine-based methods
+    boost::asio::awaitable<outcome::result<size_t>> read(BytesOut out,
+                                                         size_t bytes) override;
+    boost::asio::awaitable<outcome::result<size_t>> readSome(
+        BytesOut out, size_t bytes) override;
+    boost::asio::awaitable<std::error_code> writeSome(BytesIn in,
+                                                      size_t bytes) override;
+
     // Closeable
     bool isClosed() const override;
     outcome::result<void> close() override;

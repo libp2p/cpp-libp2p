@@ -98,6 +98,14 @@ namespace libp2p::connection {
     /// Closes the socket
     outcome::result<void> close() override;
 
+    // Coroutine-based methods
+    boost::asio::awaitable<outcome::result<size_t>> read(BytesOut out,
+                                                         size_t bytes) override;
+    boost::asio::awaitable<outcome::result<size_t>> readSome(
+        BytesOut out, size_t bytes) override;
+    boost::asio::awaitable<std::error_code> writeSome(BytesIn in,
+                                                      size_t bytes) override;
+
    private:
     /// Async handshake callback. Performs libp2p-specific verification and
     /// extraction of remote peer's identity fields
