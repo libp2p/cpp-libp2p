@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <boost/asio/use_awaitable.hpp>
 #include <libp2p/security/noise/noise_connection.hpp>
 
 #include <libp2p/basic/read_return_size.hpp>
@@ -188,4 +189,106 @@ namespace libp2p::connection {
     write_buffers_.erase(iterator);
     iterator = write_buffers_.end();
   }
+
+  boost::asio::awaitable<outcome::result<size_t>> NoiseConnection::read(BytesOut out,
+                                                                        size_t bytes) {
+    ambigousSize(out, bytes);
+
+    size_t total_bytes_read = 0;
+    while (total_bytes_read < bytes) {
+      auto remaining = bytes - total_bytes_read;
+      auto result = co_await readSome(out.subspan(total_bytes_read), remaining);
+
+      if (!result) {
+        co_return result.error();
+      }
+
+      size_t bytes_read = result.value();
+      if (bytes_read == 0) {
+        break;  // Connection closed by peer
+      }
+
+      total_bytes_read += bytes_read;
+    }
+
+    co_return total_bytes_read;
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> NoiseConnection::readSome(
+      BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+
+    // If there's data in the frame buffer, use it directly
+    if (!frame_buffer_->empty()) {
+      auto n = std::min(bytes, frame_buffer_->size());
+      auto begin = frame_buffer_->begin();
+      auto end = begin + static_cast<int64_t>(n);
+      std::copy(begin, end, out.begin());
+      frame_buffer_->erase(begin, end);
+      co_return n;
+    }
+
+    // No data in buffer, need to read a new frame using coroutine method
+    auto frame_result = co_await framer_->read();
+    if (!frame_result) {
+      co_return frame_result.error();
+    }
+
+    // Decrypt the received data
+    auto decrypt_result = decoder_cs_->decrypt({}, *frame_result.value(), {});
+    if (!decrypt_result) {
+      co_return decrypt_result.error();
+    }
+
+    // Store decrypted data in frame buffer
+    frame_buffer_->assign(decrypt_result.value().begin(), decrypt_result.value().end());
+
+    // Now read from the frame buffer
+    auto n = std::min(bytes, frame_buffer_->size());
+    auto begin = frame_buffer_->begin();
+    auto end = begin + static_cast<int64_t>(n);
+    std::copy(begin, end, out.begin());
+    frame_buffer_->erase(begin, end);
+
+    co_return n;
+  }
+
+  boost::asio::awaitable<std::error_code> NoiseConnection::writeSome(
+      BytesIn in, size_t bytes) {
+    ambigousSize(in, bytes);
+
+    if (0 == bytes) {
+      co_return std::error_code{};
+    }
+
+    // Process only up to kMaxPlainText bytes at a time
+    auto n = std::min(bytes, security::noise::kMaxPlainText);
+
+    // Encrypt the data
+    auto encrypt_result = encoder_cs_->encrypt({}, in.subspan(0, n), {});
+    if (!encrypt_result) {
+      co_return encrypt_result.error();
+    }
+
+    // Store the encrypted data in a buffer
+    Bytes encrypted = std::move(encrypt_result.value());
+
+    // Write the encrypted data using coroutine method
+    auto write_result = co_await framer_->write(encrypted);
+    if (!write_result) {
+      co_return write_result.error();
+    }
+
+    // If there's more data to write, recursively call writeSome
+    if (n < bytes) {
+      auto remaining_result = co_await writeSome(in.subspan(n), bytes - n);
+      if (remaining_result) {
+        co_return std::error_code{};
+      }
+      co_return remaining_result;
+    }
+
+    co_return std::error_code{};
+  }
+
 }  // namespace libp2p::connection

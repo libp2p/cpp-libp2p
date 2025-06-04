@@ -5,6 +5,8 @@
  */
 
 #include <arpa/inet.h>
+#include <boost/asio/post.hpp>
+#include <boost/asio/use_awaitable.hpp>
 
 #include <libp2p/security/noise/insecure_rw.hpp>
 
@@ -75,5 +77,79 @@ namespace libp2p::security::noise {
       cb(written_bytes - kLengthPrefixSize);
     };
     writeReturnSize(connection_, outbuf_, std::move(write_cb));
+  }
+
+  boost::asio::awaitable<basic::MessageReadWriter::ReadCallback>
+  InsecureReadWriter::read() {
+    buffer_->resize(kMaxMsgLen);  // ensure buffer capacity
+
+    // Read the length prefix
+    auto read_length_result = co_await connection_->read(*buffer_, kLengthPrefixSize);
+    if (!read_length_result) {
+      co_return read_length_result.error();
+    }
+
+    if (kLengthPrefixSize != read_length_result.value()) {
+      co_return std::errc::broken_pipe;
+    }
+
+    // Extract the frame length from the prefix
+    uint16_t frame_len = ntohs(common::convert<uint16_t>(buffer_->data()));  // NOLINT
+
+    // Read the actual data
+    auto read_data_result = co_await connection_->read(*buffer_, frame_len);
+    if (!read_data_result) {
+      co_return read_data_result.error();
+    }
+
+    if (frame_len != read_data_result.value()) {
+      co_return std::errc::broken_pipe;
+    }
+
+    // Resize buffer to actual data size and return it
+    buffer_->resize(read_data_result.value());
+    co_return buffer_;
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>>
+  InsecureReadWriter::write(BytesIn buffer) {
+    if (buffer.size() > static_cast<int64_t>(kMaxMsgLen)) {
+      co_return std::errc::message_size;
+    }
+
+    // Prepare the output buffer with length prefix
+    outbuf_.clear();
+    outbuf_.reserve(kLengthPrefixSize + buffer.size());
+    common::putUint16BE(outbuf_, buffer.size());
+    outbuf_.insert(outbuf_.end(), buffer.begin(), buffer.end());
+
+    // Use a promise to handle the completion
+    struct ContextState {
+      std::optional<outcome::result<size_t>> result;
+      bool done = false;
+    };
+
+    auto state = std::make_shared<ContextState>();
+
+    writeReturnSize(connection_, outbuf_, [state](auto result) {
+      state->result = result;
+      state->done = true;
+    });
+
+    // Wait until write operation completes
+    while (!state->done) {
+      co_await boost::asio::post(boost::asio::use_awaitable);
+    }
+
+    if (!state->result->has_value()) {
+      co_return state->result->error();
+    }
+
+    if (outbuf_.size() != state->result->value()) {
+      co_return std::errc::broken_pipe;
+    }
+
+    // Return number of actual payload bytes written (excluding length prefix)
+    co_return state->result->value() - kLengthPrefixSize;
   }
 }  // namespace libp2p::security::noise
