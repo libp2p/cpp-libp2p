@@ -68,6 +68,10 @@ namespace libp2p::connection {
     void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
     void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
+    boost::asio::awaitable<outcome::result<size_t>> read(BytesOut out, size_t bytes) override;
+    boost::asio::awaitable<outcome::result<size_t>> readSome(BytesOut out, size_t bytes) override;
+    boost::asio::awaitable<std::error_code> writeSome(BytesIn in, size_t bytes) override;
+
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;

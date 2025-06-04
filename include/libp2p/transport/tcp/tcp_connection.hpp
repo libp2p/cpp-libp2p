@@ -11,6 +11,7 @@
 #include <optional>
 
 #include <boost/asio.hpp>
+#include <boost/asio/experimental/awaitable_operators.hpp>
 #include <boost/noncopyable.hpp>
 #include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/raw_connection.hpp>
@@ -71,6 +72,15 @@ namespace libp2p::transport {
     void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
+
+    // Coroutine-based methods
+    boost::asio::awaitable<outcome::result<size_t>> read(BytesOut out,
+                                                         size_t bytes);
+
+    boost::asio::awaitable<outcome::result<size_t>> readSome(BytesOut out,
+                                                             size_t bytes);
+
+    boost::asio::awaitable<std::error_code> writeSome(BytesIn in, size_t bytes);
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 

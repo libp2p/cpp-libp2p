@@ -10,6 +10,7 @@
 #include <mutex>
 
 #include <boost/asio/streambuf.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <boost/noncopyable.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/log/logger.hpp>
@@ -60,6 +61,10 @@ namespace libp2p::connection {
     void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
+
+    boost::asio::awaitable<outcome::result<size_t>> read(BytesOut out, size_t bytes) override;
+    boost::asio::awaitable<outcome::result<size_t>> readSome(BytesOut out, size_t bytes) override;
+    boost::asio::awaitable<std::error_code> writeSome(BytesIn in, size_t bytes) override;
 
     bool isClosed() const override;
 

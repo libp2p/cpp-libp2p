@@ -7,6 +7,7 @@
 #include <libp2p/muxer/mplex/mplex_stream.hpp>
 
 #include <algorithm>
+#include <boost/asio/use_awaitable.hpp>
 
 #include <boost/container_hash/hash.hpp>
 #include <libp2p/basic/read_return_size.hpp>
@@ -37,6 +38,32 @@ namespace libp2p::connection {
   void MplexStream::read(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     readReturnSize(shared_from_this(), out, std::move(cb));
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> MplexStream::read(BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    if (is_reset_) {
+      co_return Error::STREAM_RESET_BY_PEER;
+    }
+    if (!is_readable_) {
+      co_return Error::STREAM_NOT_READABLE;
+    }
+    if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
+      co_return Error::STREAM_INVALID_ARGUMENT;
+    }
+    while (read_buffer_.size() < bytes) {
+      co_await boost::asio::post(boost::asio::use_awaitable);
+      if (is_reset_ || !is_readable_) {
+        co_return Error::STREAM_RESET_BY_PEER;
+      }
+    }
+    auto size = std::min(read_buffer_.size(), bytes);
+    if (boost::asio::buffer_copy(boost::asio::buffer(out.data(), size), read_buffer_.data(), size) != size) {
+      co_return Error::STREAM_INTERNAL_ERROR;
+    }
+    read_buffer_.consume(size);
+    receive_window_size_ += size;
+    co_return size;
   }
 
   void MplexStream::readDone(outcome::result<size_t> res) {
@@ -88,6 +115,32 @@ namespace libp2p::connection {
     }
   }
 
+  boost::asio::awaitable<outcome::result<size_t>> MplexStream::readSome(BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    if (is_reset_) {
+      co_return Error::STREAM_RESET_BY_PEER;
+    }
+    if (!is_readable_) {
+      co_return Error::STREAM_NOT_READABLE;
+    }
+    if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
+      co_return Error::STREAM_INVALID_ARGUMENT;
+    }
+    while (read_buffer_.size() == 0) {
+      co_await boost::asio::post(boost::asio::use_awaitable);
+      if (is_reset_ || !is_readable_) {
+        co_return Error::STREAM_RESET_BY_PEER;
+      }
+    }
+    auto size = std::min(read_buffer_.size(), bytes);
+    if (boost::asio::buffer_copy(boost::asio::buffer(out.data(), size), read_buffer_.data(), size) != size) {
+      co_return Error::STREAM_INTERNAL_ERROR;
+    }
+    read_buffer_.consume(size);
+    receive_window_size_ += size;
+    co_return size;
+  }
+
   void MplexStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
     ambigousSize(in, bytes);
     // TODO(107): Reentrancy
@@ -134,6 +187,51 @@ namespace libp2p::connection {
             writeReturnSize(self, in, cb);
           }
         });
+  }
+
+  boost::asio::awaitable<std::error_code> MplexStream::writeSome(BytesIn in, size_t bytes) {
+    ambigousSize(in, bytes);
+    if (is_reset_) {
+      co_return Error::STREAM_RESET_BY_PEER;
+    }
+    if (!is_writable_) {
+      co_return Error::STREAM_NOT_WRITABLE;
+    }
+    if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
+      co_return Error::STREAM_INVALID_ARGUMENT;
+    }
+    if (is_writing_) {
+      // Wait until not writing
+      while (is_writing_) {
+        co_await boost::asio::post(boost::asio::use_awaitable);
+      }
+    }
+    if (connection_.expired()) {
+      co_return Error::STREAM_RESET_BY_HOST;
+    }
+    is_writing_ = true;
+    std::error_code result;
+    bool done = false;
+    connection_.lock()->streamWrite(
+        stream_id_,
+        in,
+        bytes,
+        [self = shared_from_this(), &result, &done](auto &&write_res) mutable {
+          if (!write_res) {
+            self->log_->error("write for stream {} failed: {}",
+                              self->stream_id_.toString(),
+                              write_res.error());
+            result = write_res.error();
+          } else {
+            result = std::error_code{};
+          }
+          self->is_writing_ = false;
+          done = true;
+        });
+    while (!done) {
+      co_await boost::asio::post(boost::asio::use_awaitable);
+    }
+    co_return result;
   }
 
   void MplexStream::deferReadCallback(outcome::result<size_t> res,

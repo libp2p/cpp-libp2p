@@ -210,6 +210,78 @@ namespace libp2p::transport {
     boost::asio::post(context_, [ec, cb{std::move(cb)}] { cb(ec); });
   }
 
+  boost::asio::awaitable<outcome::result<size_t>> TcpConnection::read(
+      BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    TRACE("{} co_read {}", debug_str_, bytes);
+
+    if (isClosed()) {
+      co_return close_reason_.value_or(
+          make_error_code(boost::system::errc::operation_canceled));
+    }
+
+    boost::system::error_code ec;
+    size_t bytes_transferred = co_await boost::asio::async_read(
+        socket_,
+        asioBuffer(out),
+        boost::asio::redirect_error(boost::asio::use_awaitable, ec));
+
+    if (ec) {
+      close(ec);
+      co_return ec;
+    }
+    ByteCounter::getInstance().incrementBytesRead(
+        bytes_transferred);  // It's important to count actual bytes
+                             // transferred.
+    co_return bytes_transferred;
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> TcpConnection::readSome(
+      BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    TRACE("{} co_readSome up to {}", debug_str_, bytes);
+
+    if (isClosed()) {
+      co_return close_reason_.value_or(
+          make_error_code(boost::system::errc::operation_canceled));
+    }
+
+    boost::system::error_code ec;
+    size_t bytes_transferred = co_await socket_.async_read_some(
+        asioBuffer(out),
+        boost::asio::redirect_error(boost::asio::use_awaitable, ec));
+
+    if (ec) {
+      close(ec);
+      co_return ec;
+    }
+    ByteCounter::getInstance().incrementBytesRead(bytes_transferred);
+    co_return bytes_transferred;
+  }
+
+  boost::asio::awaitable<std::error_code> TcpConnection::writeSome(
+      BytesIn in, size_t bytes) {
+    ambigousSize(in, bytes);
+    TRACE("{} co_writeSome up to {}", debug_str_, bytes);
+
+    if (isClosed()) {
+      co_return close_reason_.value_or(
+          make_error_code(boost::system::errc::operation_canceled));
+    }
+
+    boost::system::error_code ec;
+    size_t bytes_transferred = co_await socket_.async_write_some(
+        asioBuffer(in),
+        boost::asio::redirect_error(boost::asio::use_awaitable, ec));
+
+    if (ec) {
+      close(ec);
+      co_return ec;
+    }
+    ByteCounter::getInstance().incrementBytesWritten(bytes_transferred);
+    co_return ec;
+  }
+
   outcome::result<void> TcpConnection::saveMultiaddresses() {
     boost::system::error_code ec;
     if (socket_.is_open()) {
@@ -240,14 +312,6 @@ namespace libp2p::transport {
                              remote_multiaddress_->getStringAddress());
 #endif
     return outcome::success();
-  }
-
-  uint64_t TcpConnection::getBytesRead() {
-    return ByteCounter::getInstance().getBytesRead();
-  }
-
-  uint64_t TcpConnection::getBytesWritten() {
-    return ByteCounter::getInstance().getBytesWritten();
   }
 
 }  // namespace libp2p::transport

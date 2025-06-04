@@ -39,6 +39,11 @@ namespace libp2p::connection {
     outcome::result<libp2p::multi::Multiaddress> remoteMultiaddr()
         const override;
 
+    // Coroutine-based methods
+    boost::asio::awaitable<outcome::result<size_t>> read(BytesOut out, size_t bytes) override;
+    boost::asio::awaitable<outcome::result<size_t>> readSome(BytesOut out, size_t bytes) override;
+    boost::asio::awaitable<std::error_code> writeSome(BytesIn in, size_t bytes) override;
+
    protected:
     void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
