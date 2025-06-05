@@ -34,6 +34,25 @@ namespace libp2p::transport {
     void upgradeOutbound(const multi::Multiaddress &address,
                          const peer::PeerId &remoteId);
 
+    /**
+     * Coroutine version of upgradeInbound
+     * @return awaitable with capable connection or error
+     */
+    boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::CapableConnection>>>
+    upgradeInboundCoro();
+
+    /**
+     * Coroutine version of upgradeOutbound
+     * @param address - multiaddress to connect to
+     * @param remoteId - remote peer ID
+     * @return awaitable with capable connection or error
+     */
+    boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::CapableConnection>>>
+    upgradeOutboundCoro(const multi::Multiaddress &address,
+                       const peer::PeerId &remoteId);
+
    private:
     std::shared_ptr<transport::Upgrader> upgrader_;
     ProtoAddrVec layers_;
@@ -67,6 +86,15 @@ namespace libp2p::transport {
 
     void onSecured(
         outcome::result<std::shared_ptr<connection::SecureConnection>> res);
+
+    /**
+     * Coroutine version of onSecured
+     * @param secure_conn - secure connection to be muxed
+     * @return awaitable with capable connection or error
+     */
+    boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::CapableConnection>>>
+    onSecuredCoro(std::shared_ptr<connection::SecureConnection> secure_conn);
 
    public:
     LIBP2P_METRICS_INSTANCE_COUNT_IF_ENABLED(
