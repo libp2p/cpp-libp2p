@@ -172,6 +172,54 @@ namespace libp2p::transport {
         });
   }
 
+  boost::asio::awaitable<TcpConnection::ErrorCode> TcpConnection::connect(
+      const ResolverResultsType &iterator) {
+    boost::system::error_code ec;
+    co_await boost::asio::async_connect(
+        socket_,
+        iterator,
+        boost::asio::redirect_error(boost::asio::use_awaitable, ec));
+
+    if (ec) {
+      co_return ec;
+    }
+
+    initiator_ = true;
+    std::ignore = saveMultiaddresses();
+    co_return ec;
+  }
+
+  boost::asio::awaitable<TcpConnection::ErrorCode> TcpConnection::connect(
+      const ResolverResultsType &iterator, std::chrono::milliseconds timeout) {
+    if (timeout == std::chrono::milliseconds::zero()) {
+      co_return co_await connect(iterator);
+    }
+
+    boost::system::error_code ec;
+    using namespace boost::asio::experimental::awaitable_operators;
+    auto result = co_await (
+        boost::asio::async_connect(
+            socket_,
+            iterator,
+            boost::asio::redirect_error(boost::asio::use_awaitable, ec))
+        || deadline_timer_.async_wait(boost::asio::use_awaitable));
+
+    if (ec) {
+      co_return ec;
+    }
+
+    // if result is 0, it means connect finished first
+    // if result is 1, it means timer finished first
+    if (result.index() == 1) {
+      socket_.close();  // close the socket if timeout occurred
+      co_return make_error_code(boost::system::errc::timed_out);
+    }
+
+    initiator_ = true;
+    std::ignore = saveMultiaddresses();
+    co_return ec;
+  }
+
   void TcpConnection::read(BytesOut out,
                            size_t bytes,
                            TcpConnection::ReadCallbackFunc cb) {
