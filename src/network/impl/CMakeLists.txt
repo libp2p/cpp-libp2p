@@ -22,6 +22,7 @@ target_link_libraries(p2p_listener_manager
     p2p_multiaddress
     p2p_peer_id
     p2p_logger
+    p2p_yamuxed_connection
     )
 
 
