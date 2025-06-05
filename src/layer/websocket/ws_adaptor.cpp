@@ -8,6 +8,7 @@
 
 #include <libp2p/log/logger.hpp>
 #include <libp2p/transport/tcp/tcp_util.hpp>
+#include <boost/asio/use_awaitable.hpp>
 
 namespace libp2p::layer {
 
@@ -40,6 +41,23 @@ namespace libp2p::layer {
         });
   }
 
+  boost::asio::awaitable<outcome::result<std::shared_ptr<connection::LayerConnection>>>
+  WsAdaptor::upgradeInbound(std::shared_ptr<connection::LayerConnection> conn) const {
+    log_->info("upgrade inbound connection to websocket (coroutine)");
+    auto ws = std::make_shared<connection::WsConnection>(
+        config_, io_context_, std::move(conn), scheduler_);
+
+    try {
+      co_await ws->ws_.async_accept(boost::asio::use_awaitable);
+      ws->start();
+      co_return outcome::success(std::move(ws));
+    } catch (const boost::system::system_error &error) {
+      co_return outcome::failure(error.code());
+    } catch (const std::exception &) {
+      co_return outcome::failure(std::errc::io_error);
+    }
+  }
+
   void WsAdaptor::upgradeOutbound(
       const multi::Multiaddress &address,
       std::shared_ptr<connection::LayerConnection> conn,
@@ -57,6 +75,28 @@ namespace libp2p::layer {
           ws->start();
           cb(std::move(ws));
         });
+  }
+
+  boost::asio::awaitable<outcome::result<std::shared_ptr<connection::LayerConnection>>>
+  WsAdaptor::upgradeOutbound(
+      const multi::Multiaddress &address,
+      std::shared_ptr<connection::LayerConnection> conn) const {
+    auto host = address.getProtocolsWithValues().begin()->second;
+    auto ws = std::make_shared<connection::WsConnection>(
+        config_, io_context_, std::move(conn), scheduler_);
+
+    try {
+      co_await ws->ws_.async_handshake(
+          host,
+          "/",
+          boost::asio::use_awaitable);
+      ws->start();
+      co_return outcome::success(std::move(ws));
+    } catch (const boost::system::system_error &error) {
+      co_return outcome::failure(error.code());
+    } catch (const std::exception &) {
+      co_return outcome::failure(std::errc::io_error);
+    }
   }
 
 }  // namespace libp2p::layer

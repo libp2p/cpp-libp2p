@@ -6,6 +6,7 @@
 
 #include <libp2p/layer/websocket/wss_adaptor.hpp>
 
+#include <boost/asio/use_awaitable.hpp>
 #include <libp2p/layer/websocket/ssl_connection.hpp>
 #include <libp2p/layer/websocket/ws_adaptor.hpp>
 
@@ -59,6 +60,29 @@ namespace libp2p::layer {
         });
   }
 
+  boost::asio::awaitable<outcome::result<std::shared_ptr<connection::LayerConnection>>>
+  WssAdaptor::upgradeInbound(std::shared_ptr<connection::LayerConnection> conn) const {
+    if (not server_certificate_.context) {
+      co_return outcome::failure(std::errc::address_family_not_supported);
+    }
+
+    auto ssl = std::make_shared<connection::SslConnection>(
+        io_context_, std::move(conn), server_certificate_.context);
+
+    try {
+      co_await ssl->ssl_.async_handshake(
+          boost::asio::ssl::stream_base::handshake_type::server,
+          boost::asio::use_awaitable);
+
+      auto result = co_await ws_adaptor_->upgradeInbound(std::move(ssl));
+      co_return result;
+    } catch (const boost::system::system_error &error) {
+      co_return outcome::failure(error.code());
+    } catch (const std::exception &) {
+      co_return outcome::failure(std::errc::io_error);
+    }
+  }
+
   void WssAdaptor::upgradeOutbound(
       const multi::Multiaddress &address,
       std::shared_ptr<connection::LayerConnection> conn,
@@ -74,5 +98,26 @@ namespace libp2p::layer {
           }
           ws->upgradeOutbound(address, std::move(ssl), std::move(cb));
         });
+  }
+
+  boost::asio::awaitable<outcome::result<std::shared_ptr<connection::LayerConnection>>>
+  WssAdaptor::upgradeOutbound(
+      const multi::Multiaddress &address,
+      std::shared_ptr<connection::LayerConnection> conn) const {
+    auto ssl = std::make_shared<connection::SslConnection>(
+        io_context_, std::move(conn), client_context_);
+
+    try {
+      co_await ssl->ssl_.async_handshake(
+          boost::asio::ssl::stream_base::handshake_type::client,
+          boost::asio::use_awaitable);
+
+      auto result = co_await ws_adaptor_->upgradeOutbound(address, std::move(ssl));
+      co_return result;
+    } catch (const boost::system::system_error &error) {
+      co_return outcome::failure(error.code());
+    } catch (const std::exception &) {
+      co_return outcome::failure(std::errc::io_error);
+    }
   }
 }  // namespace libp2p::layer

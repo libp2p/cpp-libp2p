@@ -6,6 +6,7 @@
 
 #include <libp2p/layer/websocket/ws_connection.hpp>
 
+#include <boost/asio/use_awaitable.hpp>
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/asio_buffer.hpp>
@@ -129,6 +130,89 @@ namespace libp2p::connection {
   void WsConnection::deferWriteCallback(std::error_code ec,
                                         WriteCallbackFunc cb) {
     connection_->deferWriteCallback(ec, std::move(cb));
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> WsConnection::read(
+      BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    SL_TRACE(log_, "read {} bytes (coroutine)", bytes);
+
+    if (bytes == 0 || out.empty()) {
+      co_return outcome::success(0);
+    }
+
+    size_t total_bytes_read = 0;
+
+    while (total_bytes_read < bytes) {
+      auto result = co_await readSome(BytesOut{out.data() + total_bytes_read,
+                                               out.size() - total_bytes_read},
+                                      bytes - total_bytes_read);
+
+      if (!result) {
+        co_return result.error();
+      }
+
+      size_t bytes_read = result.value();
+      if (bytes_read == 0) {
+        break;  // EOF reached
+      }
+
+      total_bytes_read += bytes_read;
+    }
+
+    co_return outcome::success(total_bytes_read);
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> WsConnection::readSome(
+      BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    SL_TRACE(log_, "read some upto {} bytes (coroutine)", bytes);
+
+    if (bytes == 0 || out.empty()) {
+      co_return outcome::success(0);
+    }
+
+    try {
+      size_t n = co_await ws_.async_read_some(
+          asioBuffer(out), boost::asio::use_awaitable);
+
+      if (n != 0) {
+        co_return outcome::success(n);
+      }
+
+      // If we got zero bytes and we're still connected, try again
+      if (!isClosed()) {
+        auto result = co_await readSome(out, out.size());
+        co_return result;
+      }
+
+      co_return outcome::failure(boost::system::errc::broken_pipe);
+    } catch (const boost::system::system_error &error) {
+      co_return outcome::failure(error.code());
+    } catch (const std::exception &) {
+      co_return outcome::failure(boost::system::errc::io_error);
+    }
+  }
+
+  boost::asio::awaitable<std::error_code> WsConnection::writeSome(
+      BytesIn in, size_t bytes) {
+    ambigousSize(in, bytes);
+    SL_TRACE(log_, "write some upto {} bytes (coroutine)", bytes);
+
+    if (bytes == 0 || in.empty()) {
+      co_return std::error_code{};
+    }
+
+    try {
+      co_await ws_.async_write_some(
+          true, asioBuffer(in), boost::asio::use_awaitable);
+      co_return std::error_code{};
+    } catch (const boost::system::system_error &error) {
+      co_return error.code();
+    } catch (const std::exception &) {
+      co_return boost::system::errc::make_error_code(
+          boost::system::errc::io_error);
+    }
   }
 
   void WsConnection::setTimerPing() {

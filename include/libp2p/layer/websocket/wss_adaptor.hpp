@@ -7,6 +7,7 @@
 #pragma once
 
 #include <libp2p/layer/layer_adaptor.hpp>
+#include <boost/asio/awaitable.hpp>
 
 namespace boost::asio {
   class io_context;
@@ -36,9 +37,16 @@ namespace libp2p::layer {
     void upgradeInbound(std::shared_ptr<connection::LayerConnection> conn,
                         LayerConnCallbackFunc cb) const override;
 
+    boost::asio::awaitable<outcome::result<std::shared_ptr<connection::LayerConnection>>>
+    upgradeInbound(std::shared_ptr<connection::LayerConnection> conn) const override;
+
     void upgradeOutbound(const multi::Multiaddress &address,
                          std::shared_ptr<connection::LayerConnection> conn,
                          LayerConnCallbackFunc cb) const override;
+
+    boost::asio::awaitable<outcome::result<std::shared_ptr<connection::LayerConnection>>>
+    upgradeOutbound(const multi::Multiaddress &address,
+                    std::shared_ptr<connection::LayerConnection> conn) const override;
 
    private:
     std::shared_ptr<boost::asio::io_context> io_context_;
