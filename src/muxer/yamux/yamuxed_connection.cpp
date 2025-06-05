@@ -839,9 +839,9 @@ namespace libp2p::connection {
     log()->info("Write queue size: {}", write_queue_.size());
     
     log()->info("Timer handles active:");
-    log()->info("  ping_handle_ active: {}", ping_handle_.has_value());
-    log()->info("  cleanup_handle_ active: {}", cleanup_handle_.has_value());
-    log()->info("  inactivity_handle_ active: {}", inactivity_handle_.has_value());
+    log()->info("  ping_handle_ active: {}", static_cast<bool>(ping_handle_));
+    log()->info("  cleanup_handle_ active: {}", static_cast<bool>(cleanup_handle_));
+    log()->info("  inactivity_handle_ active: {}", static_cast<bool>(inactivity_handle_));
     
     log()->info("Connection state:");
     log()->info("  connection_.use_count(): {}", connection_.use_count());
