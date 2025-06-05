@@ -8,6 +8,7 @@
 
 #include <memory>
 
+#include <boost/asio/awaitable.hpp>
 #include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/transport/upgrader.hpp>
@@ -43,6 +44,26 @@ namespace libp2p::transport {
                         const peer::PeerId &remoteId);
 
     void secureInbound(std::shared_ptr<connection::LayerConnection> conn);
+
+    /**
+     * Coroutine version of secureInbound
+     * @param conn - connection to be upgraded
+     * @return awaitable with secured connection or error
+     */
+    boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::SecureConnection>>>
+    secureInboundCoro(std::shared_ptr<connection::LayerConnection> conn);
+
+    /**
+     * Coroutine version of secureOutbound
+     * @param conn - connection to be upgraded
+     * @param remoteId - remote peer ID
+     * @return awaitable with secured connection or error
+     */
+    boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::SecureConnection>>>
+    secureOutboundCoro(std::shared_ptr<connection::LayerConnection> conn,
+                      const peer::PeerId &remoteId);
 
     void onSecured(
         outcome::result<std::shared_ptr<connection::SecureConnection>> res);

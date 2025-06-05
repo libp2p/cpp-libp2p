@@ -5,6 +5,9 @@
  */
 
 #include <libp2p/transport/impl/upgrader_session.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/detached.hpp>
+#include <boost/asio/use_awaitable.hpp>
 
 namespace libp2p::transport {
 
@@ -80,6 +83,21 @@ namespace libp2p::transport {
 
     upgrader_->upgradeToSecureOutbound(
         std::move(conn), remoteId, std::move(on_sec_upgraded));
+  }
+
+  boost::asio::awaitable<outcome::result<std::shared_ptr<connection::SecureConnection>>>
+  UpgraderSession::secureInboundCoro(
+      std::shared_ptr<connection::LayerConnection> conn) {
+    auto secure_conn_res = co_await upgrader_->upgradeToSecureInboundCoro(std::move(conn));
+    co_return secure_conn_res;
+  }
+
+  boost::asio::awaitable<outcome::result<std::shared_ptr<connection::SecureConnection>>>
+  UpgraderSession::secureOutboundCoro(
+      std::shared_ptr<connection::LayerConnection> conn,
+      const peer::PeerId &remoteId) {
+    auto secure_conn_res = co_await upgrader_->upgradeToSecureOutboundCoro(std::move(conn), remoteId);
+    co_return secure_conn_res;
   }
 
   void UpgraderSession::onSecured(
