@@ -73,6 +73,9 @@ namespace libp2p::network {
      */
     virtual outcome::result<void> listen(const multi::Multiaddress &ma) = 0;
 
+    virtual boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::CapableConnection>>>
+    listenCoroutine() = 0;
     /**
      * @brief Returns an unmodified list of addresses, added by user.
      */

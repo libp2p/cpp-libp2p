@@ -247,4 +247,22 @@ namespace libp2p::network {
     return *router_;
   }
 
+  boost::asio::awaitable<
+      outcome::result<std::shared_ptr<connection::CapableConnection>>>
+  ListenerManagerImpl::listenCoroutine() {
+    while (true) {
+      try {
+        for (auto &[ma, listener] : listeners_) {
+          auto connection = co_await listener->asyncAccept();
+          if (!connection) {
+            co_return connection.error();
+          }
+          co_return connection.value();
+        }
+      } catch (const std::exception &e) {
+        co_return std::errc::io_error;
+      }
+    }
+  }
+
 }  // namespace libp2p::network

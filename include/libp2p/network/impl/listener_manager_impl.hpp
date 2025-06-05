@@ -38,6 +38,10 @@ namespace libp2p::network {
 
     outcome::result<void> listen(const multi::Multiaddress &ma) override;
 
+    boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::CapableConnection>>>
+    listenCoroutine();
+
     std::vector<multi::Multiaddress> getListenAddresses() const override;
 
     std::vector<multi::Multiaddress> getListenAddressesInterfaces()

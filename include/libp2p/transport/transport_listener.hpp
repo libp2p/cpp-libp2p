@@ -52,5 +52,13 @@ namespace libp2p::transport {
      * @return collection of those addresses
      */
     virtual outcome::result<multi::Multiaddress> getListenMultiaddr() const = 0;
+
+    /**
+     * Asynchronously accept a new connection
+     * @return Awaitable result of a new CapableConnection or error
+     */
+    virtual boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::CapableConnection>>>
+    asyncAccept() = 0;
   };
 }  // namespace libp2p::transport

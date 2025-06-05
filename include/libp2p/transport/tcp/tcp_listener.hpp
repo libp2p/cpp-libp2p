@@ -35,6 +35,12 @@ namespace libp2p::transport {
 
     outcome::result<void> close() override;
 
+    /**
+     * Asynchronously accept a new connection
+     * @return Awaitable result of a new CapableConnection or error
+     */
+    boost::asio::awaitable<outcome::result<std::shared_ptr<connection::CapableConnection>>> asyncAccept() override;
+
    private:
     boost::asio::io_context &context_;
     std::shared_ptr<Upgrader> upgrader_;
