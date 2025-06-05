@@ -797,4 +797,24 @@ namespace libp2p::connection {
         },
         config_.ping_interval);
   }
+
+  boost::asio::awaitable<outcome::result<std::shared_ptr<Stream>>> YamuxedConnection::newStreamCoroutine() {
+    if (!started_) {
+      co_return Error::CONNECTION_NOT_ACTIVE;
+    }
+
+    if (streams_.size() >= config_.maximum_streams) {
+      co_return Error::CONNECTION_TOO_MANY_STREAMS;
+    }
+
+    auto stream_id = new_stream_id_;
+    new_stream_id_ += 2;
+    enqueue(newStreamMsg(stream_id));
+
+    // Wait for the stream to be acknowledged
+    co_await boost::asio::this_coro::executor;
+
+    auto stream = createStream(stream_id);
+    co_return stream;
+  }
 }  // namespace libp2p::connection

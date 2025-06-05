@@ -56,6 +56,9 @@ namespace libp2p::connection {
 
     void newStream(StreamHandlerFunc cb) override;
 
+    boost::asio::awaitable<outcome::result<std::shared_ptr<Stream>>>
+    newStreamCoroutine();
+
     void onStream(NewStreamHandlerFunc cb) override;
 
     outcome::result<peer::PeerId> localPeer() const override;

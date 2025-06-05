@@ -66,6 +66,12 @@ namespace libp2p::connection {
      * reset
      */
     virtual void onStream(NewStreamHandlerFunc cb) = 0;
+
+    /**
+     * @brief Opens new stream in a coroutine manner
+     * @return Awaitable result of a new Stream or error
+     */
+    virtual boost::asio::awaitable<outcome::result<std::shared_ptr<Stream>>> newStreamCoroutine() = 0;
   };
 
 }  // namespace libp2p::connection
