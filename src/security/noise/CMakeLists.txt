@@ -10,6 +10,7 @@ libp2p_add_library(p2p_noise
     noise.cpp
     noise_connection.cpp
     handshake.cpp
+    handshake_coro.cpp
     crypto/state.cpp
     crypto/hkdf.cpp
     crypto/noise_dh.cpp
