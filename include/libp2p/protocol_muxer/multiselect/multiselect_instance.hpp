@@ -7,6 +7,9 @@
 #pragma once
 
 #include <libp2p/protocol_muxer/multiselect.hpp>
+#include <libp2p/basic/readwriter.hpp>
+#include <boost/asio/awaitable.hpp>
+
 #include "parser.hpp"
 
 namespace soralog {
@@ -29,6 +32,13 @@ namespace libp2p::protocol_muxer::multiselect {
                      bool is_initiator,
                      bool negotiate_multiselect,
                      Multiselect::ProtocolHandlerFunc cb);
+
+    /// Coroutine version of ProtocolMuxer API
+    boost::asio::awaitable<outcome::result<peer::ProtocolName>> selectOneOf(
+        std::span<const peer::ProtocolName> protocols,
+        std::shared_ptr<basic::ReadWriter> connection,
+        bool is_initiator,
+        bool negotiate_multiselect);
 
    private:
     using Protocols = boost::container::small_vector<std::string, 4>;
@@ -73,6 +83,28 @@ namespace libp2p::protocol_muxer::multiselect {
 
     /// Handles "na" reply, client-specific
     MaybeResult handleNA();
+
+    /// Coroutine versions of send and receive operations
+    boost::asio::awaitable<outcome::result<size_t>> sendCoro(Packet packet);
+    boost::asio::awaitable<outcome::result<size_t>> receiveCoro(size_t bytes_needed);
+    boost::asio::awaitable<MaybeResult> processMessagesCoro();
+
+    /// Coroutine helper methods for protocol negotiation
+    boost::asio::awaitable<outcome::result<void>> sendProtocolProposalCoro(
+        std::shared_ptr<basic::ReadWriter> connection,
+        bool multistream_negotiated,
+        const std::string &protocol);
+
+    boost::asio::awaitable<outcome::result<peer::ProtocolName>> processProtocolMessageCoro(
+        std::shared_ptr<basic::ReadWriter> connection,
+        bool is_initiator,
+        bool multistream_negotiated,
+        bool wait_for_protocol_reply,
+        size_t current_protocol,
+        boost::optional<size_t> &wait_for_reply_sent,
+        const boost::container::small_vector<std::string, 4> &local_protocols,
+        const Message &msg,
+        boost::optional<std::shared_ptr<MsgBuf>> &na_response);
 
     /// Owner of this object, needed for reuse of instances
     Multiselect &owner_;
