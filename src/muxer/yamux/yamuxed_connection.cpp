@@ -87,6 +87,11 @@ namespace libp2p::connection {
       return;
     }
     started_ = false;
+    
+    ping_handle_.reset();
+    cleanup_handle_.reset();
+    inactivity_handle_.reset();
+    SL_INFO(log(), "=== ALL TIMERS CANCELLED IN stop() ===");
   }
 
   outcome::result<std::shared_ptr<Stream>> YamuxedConnection::newStream() {
@@ -537,6 +542,11 @@ namespace libp2p::connection {
     auto self = shared_from_this();
     started_ = false;
 
+    ping_handle_.reset();
+    cleanup_handle_.reset();
+    inactivity_handle_.reset();
+    SL_INFO(log(), "=== ALL TIMERS CANCELLED IN close() ===");
+
     SL_DEBUG(log(), "closing connection, reason: {}", notify_streams_code);
 
     Streams streams;
@@ -554,7 +564,17 @@ namespace libp2p::connection {
     }
 
     if (closed_callback_ && registered_in_manager_) {
-      closed_callback_(remote_peer_, shared_from_this());
+      auto self_ptr = shared_from_this();
+      SL_INFO(log(), "=== CALLING closed_callback_ ===");
+      SL_INFO(log(), "YamuxedConnection address: {}", (void*)this);
+      SL_INFO(log(), "shared_ptr address: {}", (void*)self_ptr.get());
+      SL_INFO(log(), "shared_ptr use_count: {}", self_ptr.use_count());
+      SL_INFO(log(), "remote_peer_: {}", remote_peer_.toBase58());
+      
+      closed_callback_(remote_peer_, self_ptr);
+      
+      SL_INFO(log(), "=== closed_callback_ FINISHED ===");
+      SL_INFO(log(), "shared_ptr use_count after callback: {}", self_ptr.use_count());
     }
 
     close_after_write_ = true;
@@ -783,5 +803,62 @@ namespace libp2p::connection {
 
   void YamuxedConnection::markAsRegistered() {
     registered_in_manager_ = true;
+  }
+
+  void YamuxedConnection::debugPrintActiveStreams() const {
+    log()->info("=== DEBUG: YamuxedConnection {} active streams analysis ===", 
+                (void*)this);
+    log()->info("YamuxedConnection shared_ptr use_count: {}", 
+                shared_from_this().use_count());
+    log()->info("Total streams: {}, pending: {}", 
+                streams_.size(), pending_outbound_streams_.size());
+    
+    for (const auto& [id, stream] : streams_) {
+      log()->info("Stream {}: use_count={}, readable={}, writable={}", 
+                  id, stream.use_count(), 
+                  !stream->isClosedForRead(), !stream->isClosedForWrite());
+    }
+    
+    for (const auto& [id, cb] : pending_outbound_streams_) {
+      log()->info("Pending stream {}: callback set", id);
+    }
+    log()->info("=== END DEBUG ===");
+  }
+
+  void YamuxedConnection::debugPrintMemoryLeakSources() const {
+    log()->info("=== MEMORY LEAK DIAGNOSTIC for YamuxedConnection {} ===", (void*)this);
+    log()->info("shared_ptr use_count: {}", shared_from_this().use_count());
+    log()->info("started_: {}", started_);
+    log()->info("registered_in_manager_: {}", registered_in_manager_);
+    log()->info("is_writing_: {}", is_writing_);
+    log()->info("close_after_write_: {}", close_after_write_);
+    
+    log()->info("Active streams: {}", streams_.size());
+    log()->info("Pending outbound streams: {}", pending_outbound_streams_.size());
+    log()->info("Fresh streams (awaiting handlers): {}", fresh_streams_.size());
+    log()->info("Write queue size: {}", write_queue_.size());
+    
+    log()->info("Timer handles active:");
+    log()->info("  ping_handle_ active: {}", ping_handle_.has_value());
+    log()->info("  cleanup_handle_ active: {}", cleanup_handle_.has_value());
+    log()->info("  inactivity_handle_ active: {}", inactivity_handle_.has_value());
+    
+    log()->info("Connection state:");
+    log()->info("  connection_.use_count(): {}", connection_.use_count());
+    log()->info("  connection_->isClosed(): {}", connection_->isClosed());
+    
+    log()->info("Callbacks registered:");
+    log()->info("  closed_callback_ set: {}", static_cast<bool>(closed_callback_));
+    log()->info("  new_stream_handler_ set: {}", static_cast<bool>(new_stream_handler_));
+    
+    for (const auto& [id, stream] : streams_) {
+      log()->info("Stream {} detailed info:", id);
+      log()->info("  use_count: {}", stream.use_count());
+      log()->info("  is closed: {}", stream->isClosed());
+      log()->info("  closed for read: {}", stream->isClosedForRead());  
+      log()->info("  closed for write: {}", stream->isClosedForWrite());
+    }
+    
+    log()->info("=== END MEMORY LEAK DIAGNOSTIC ===");
   }
 }  // namespace libp2p::connection

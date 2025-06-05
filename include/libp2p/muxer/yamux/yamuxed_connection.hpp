@@ -80,6 +80,14 @@ namespace libp2p::connection {
 
     void markAsRegistered();
 
+    size_t getStreamsCount() const { return streams_.size(); }
+    size_t getPendingStreamsCount() const { return pending_outbound_streams_.size(); }
+    long getSharedPtrUseCount() const { return shared_from_this().use_count(); }
+    
+    void debugPrintActiveStreams() const;
+    
+    void debugPrintMemoryLeakSources() const;
+
    private:
     using Streams = std::unordered_map<StreamId, std::shared_ptr<YamuxStream>>;
 
