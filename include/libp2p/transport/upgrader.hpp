@@ -48,6 +48,18 @@ namespace libp2p::transport {
                                        OnLayerCallbackFunc cb) = 0;
 
     /**
+     * Coroutine version of upgradeLayersOutbound
+     * @param address multiaddress to connect to
+     * @param conn to be upgraded
+     * @param layers - vector of layer protocols for upgrade
+     * @return awaitable with layered connection or error
+     */
+    virtual boost::asio::awaitable<outcome::result<LayerSPtr>>
+    upgradeLayersOutboundCoro(const multi::Multiaddress &address,
+                             RawSPtr conn,
+                             ProtoAddrVec layers) = 0;
+
+    /**
      * Upgrade inbound connection to each required layers
      * @param conn to be upgraded
      * @param layers - vector of layer protocols for each of which you need to
@@ -58,6 +70,15 @@ namespace libp2p::transport {
     virtual void upgradeLayersInbound(RawSPtr conn,
                                       ProtoAddrVec layers,
                                       OnLayerCallbackFunc cb) = 0;
+
+    /**
+     * Coroutine version of upgradeLayersInbound
+     * @param conn to be upgraded
+     * @param layers - vector of layer protocols for upgrade
+     * @return awaitable with layered connection or error
+     */
+    virtual boost::asio::awaitable<outcome::result<LayerSPtr>>
+    upgradeLayersInboundCoro(RawSPtr conn, ProtoAddrVec layers) = 0;
 
     /**
      * Upgrade outbound raw connection to the secure one
@@ -104,6 +125,14 @@ namespace libp2p::transport {
      * error happens
      */
     virtual void upgradeToMuxed(SecSPtr conn, OnMuxedCallbackFunc cb) = 0;
+
+    /**
+     * Coroutine version of upgradeToMuxed
+     * @param conn to be upgraded
+     * @return awaitable with capable connection or error
+     */
+    virtual boost::asio::awaitable<outcome::result<CapSPtr>>
+    upgradeToMuxedCoro(SecSPtr conn) = 0;
   };
 
 }  // namespace libp2p::transport

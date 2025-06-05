@@ -49,6 +49,14 @@ namespace libp2p::transport {
                                ProtoAddrVec layers,
                                OnLayerCallbackFunc cb) override;
 
+    boost::asio::awaitable<outcome::result<LayerSPtr>> upgradeLayersInboundCoro(
+        RawSPtr conn, ProtoAddrVec layers) override;
+
+    boost::asio::awaitable<outcome::result<LayerSPtr>> upgradeLayersOutboundCoro(
+        const multi::Multiaddress &address,
+        RawSPtr conn,
+        ProtoAddrVec layers) override;
+
     void upgradeToSecureInbound(LayerSPtr conn,
                                 OnSecuredCallbackFunc cb) override;
     void upgradeToSecureOutbound(LayerSPtr conn,
@@ -61,6 +69,9 @@ namespace libp2p::transport {
         LayerSPtr conn, const peer::PeerId &remoteId) override;
 
     void upgradeToMuxed(SecSPtr conn, OnMuxedCallbackFunc cb) override;
+
+    boost::asio::awaitable<outcome::result<CapSPtr>> upgradeToMuxedCoro(
+        SecSPtr conn) override;
 
     enum class Error { SUCCESS = 0, NO_ADAPTOR_FOUND = 1 };
 
@@ -91,6 +102,23 @@ namespace libp2p::transport {
                                    ProtoAddrVec layers,
                                    size_t layer_index,
                                    OnLayerCallbackFunc cb);
+
+    /**
+     * Coroutine version to upgrade to next layer outbound
+     */
+    boost::asio::awaitable<outcome::result<LayerSPtr>> upgradeToNextLayerOutboundCoro(
+        const multi::Multiaddress &address,
+        LayerSPtr conn,
+        ProtoAddrVec layers,
+        size_t layer_index);
+
+    /**
+     * Coroutine version to upgrade to next layer inbound
+     */
+    boost::asio::awaitable<outcome::result<LayerSPtr>> upgradeToNextLayerInboundCoro(
+        LayerSPtr conn,
+        ProtoAddrVec layers,
+        size_t layer_index);
 
     std::shared_ptr<protocol_muxer::ProtocolMuxer> protocol_muxer_;
 
