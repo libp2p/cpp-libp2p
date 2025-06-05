@@ -31,5 +31,15 @@ namespace libp2p::muxer {
     virtual void muxConnection(
         std::shared_ptr<connection::SecureConnection> conn,
         CapConnCallbackFunc cb) const = 0;
+
+    /**
+     * Make a muxed connection from the secure one, using this adaptor
+     * (coroutine version)
+     * @param conn - connection to be upgraded
+     * @return awaitable with result containing upgraded connection or error
+     */
+    virtual boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::CapableConnection>>>
+    muxConnection(std::shared_ptr<connection::SecureConnection> conn) const = 0;
   };
 }  // namespace libp2p::muxer

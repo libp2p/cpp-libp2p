@@ -46,4 +46,28 @@ namespace libp2p::muxer {
     cb(std::make_shared<connection::YamuxedConnection>(
         std::move(conn), scheduler_, close_cb_, config_));
   }
+
+  boost::asio::awaitable<
+      outcome::result<std::shared_ptr<connection::CapableConnection>>>
+  Yamux::muxConnection(
+      std::shared_ptr<connection::SecureConnection> conn) const {
+    if (conn == nullptr || conn->isClosed()) {
+      log::createLogger("Yamux")->error("dead connection passed to muxer");
+      co_return std::errc::not_connected;
+    }
+
+    if (auto res = conn->remotePeer(); res.has_error()) {
+      log::createLogger("Yamux")->error(
+          "inactive connection passed to muxer: {}", res.error());
+      co_return res.error();
+    }
+
+    auto yamuxed_conn = std::make_shared<connection::YamuxedConnection>(
+        std::move(conn), scheduler_, close_cb_, config_);
+
+    // Start the yamuxed connection?
+    // yamuxed_conn->start();
+
+    co_return yamuxed_conn;
+  }
 }  // namespace libp2p::muxer
