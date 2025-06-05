@@ -29,6 +29,13 @@ namespace libp2p::protocol_muxer::multiselect {
                      bool negotiate_multiselect,
                      ProtocolHandlerFunc cb) override;
 
+    /// Implements coroutine version of ProtocolMuxer API
+    boost::asio::awaitable<outcome::result<peer::ProtocolName>> selectOneOf(
+        std::span<const peer::ProtocolName> protocols,
+        std::shared_ptr<basic::ReadWriter> connection,
+        bool is_initiator,
+        bool negotiate_multistream) override;
+
     /// Simple single stream negotiate procedure
     void simpleStreamNegotiate(
         const std::shared_ptr<connection::Stream> &stream,

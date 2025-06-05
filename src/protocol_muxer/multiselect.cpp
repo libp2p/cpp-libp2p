@@ -33,6 +33,28 @@ namespace libp2p::protocol_muxer::multiselect {
                                std::move(cb));
   }
 
+  boost::asio::awaitable<outcome::result<peer::ProtocolName>>
+  Multiselect::selectOneOf(std::span<const peer::ProtocolName> protocols,
+                           std::shared_ptr<basic::ReadWriter> connection,
+                           bool is_initiator,
+                           bool negotiate_multistream) {
+    // Create instance and delegate to its coroutine implementation
+    auto instance = getInstance();
+
+    // Get the result from the coroutine implementation
+    auto result = co_await instance->selectOneOf(
+        protocols, std::move(connection), is_initiator, negotiate_multistream);
+
+    // Return the instance to the cache regardless of result
+    active_instances_.erase(instance);
+    if (cache_.size() < kMaxCacheSize) {
+      cache_.emplace_back(std::move(instance));
+    }
+
+    // Return the result
+    co_return result;
+  }
+
   void Multiselect::simpleStreamNegotiate(
       const std::shared_ptr<connection::Stream> &stream,
       const peer::ProtocolName &protocol_id,

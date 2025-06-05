@@ -50,6 +50,23 @@ namespace libp2p::protocol_muxer {
                              ProtocolHandlerFunc cb) = 0;
 
     /**
+     * Coroutine version of selectOneOf
+     * @param protocols - set of protocols, one of which should be chosen during
+     * the negotiation
+     * @param connection - connection for which the protocol is being chosen
+     * @param is_initiator - true, if we initiated the connection and thus
+     * taking lead in the Multiselect protocol; false otherwise
+     * @param negotiate_multistream - true, if we need to negotiate multistream
+     * itself, this happens with fresh raw connections
+     * @return awaitable with chosen protocol or error
+     */
+    virtual boost::asio::awaitable<outcome::result<peer::ProtocolName>> selectOneOf(
+        std::span<const peer::ProtocolName> protocols,
+        std::shared_ptr<basic::ReadWriter> connection,
+        bool is_initiator,
+        bool negotiate_multistream) = 0;
+
+    /**
      * Simple (Yes/No) negotiation of a single protocol on a fresh outbound
      * stream
      * @param stream Stream, just connected
