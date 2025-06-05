@@ -7,6 +7,12 @@
 #include <libp2p/network/impl/connection_manager_impl.hpp>
 
 #include <algorithm>
+#include <vector>
+#include <memory>
+#include <mutex>
+#include <unordered_map>
+#include <unordered_set>
+#include <boost/optional.hpp>
 
 namespace libp2p::network {
 
@@ -156,7 +162,7 @@ namespace libp2p::network {
   }
 
   void ConnectionManagerImpl::onConnectionClosed(const peer::PeerId &peer,
-                                                 CapableConnectionSPtr connection) {
+                                                 const std::shared_ptr<connection::CapableConnection> &connection) {
     SL_INFO(log(), "=== onConnectionClosed CALLED ===");
     SL_INFO(log(), "peer: {}", peer.toBase58());
     SL_INFO(log(), "connection address: {}", (void*)connection.get());
