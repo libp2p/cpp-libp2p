@@ -41,8 +41,10 @@ namespace libp2p::security {
      * @param inbound - connection to be secured
      * @return awaitable with secured connection or error
      */
-    boost::asio::awaitable<outcome::result<std::shared_ptr<connection::SecureConnection>>>
-    secureInboundCoro(std::shared_ptr<connection::LayerConnection> inbound) override;
+    boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::SecureConnection>>>
+    secureInboundCoro(
+        std::shared_ptr<connection::LayerConnection> inbound) override;
 
     /**
      * Coroutine version of secureOutbound

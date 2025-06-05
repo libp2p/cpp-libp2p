@@ -61,38 +61,42 @@ namespace libp2p::security {
     handshake->connect();
   }
 
-  boost::asio::awaitable<outcome::result<std::shared_ptr<connection::SecureConnection>>>
-  Noise::secureInboundCoro(std::shared_ptr<connection::LayerConnection> inbound) {
+  boost::asio::awaitable<
+      outcome::result<std::shared_ptr<connection::SecureConnection>>>
+  Noise::secureInboundCoro(
+      std::shared_ptr<connection::LayerConnection> inbound) {
     log_->info("securing inbound connection (coroutine)");
     auto noise_marshaller =
         std::make_unique<noise::HandshakeMessageMarshallerImpl>(
             key_marshaller_);
     auto handshake =
         std::make_shared<noise::HandshakeCoro>(crypto_provider_,
-                                            std::move(noise_marshaller),
-                                            local_key_,
-                                            inbound,
-                                            false,
-                                            boost::none,
-                                            key_marshaller_);
+                                               std::move(noise_marshaller),
+                                               local_key_,
+                                               inbound,
+                                               false,
+                                               boost::none,
+                                               key_marshaller_);
     co_return co_await handshake->connect();
   }
 
-  boost::asio::awaitable<outcome::result<std::shared_ptr<connection::SecureConnection>>>
-  Noise::secureOutboundCoro(std::shared_ptr<connection::LayerConnection> outbound,
-                          const peer::PeerId &p) {
+  boost::asio::awaitable<
+      outcome::result<std::shared_ptr<connection::SecureConnection>>>
+  Noise::secureOutboundCoro(
+      std::shared_ptr<connection::LayerConnection> outbound,
+      const peer::PeerId &p) {
     log_->info("securing outbound connection (coroutine)");
     auto noise_marshaller =
         std::make_unique<noise::HandshakeMessageMarshallerImpl>(
             key_marshaller_);
     auto handshake =
         std::make_shared<noise::HandshakeCoro>(crypto_provider_,
-                                            std::move(noise_marshaller),
-                                            local_key_,
-                                            outbound,
-                                            true,
-                                            p,
-                                            key_marshaller_);
+                                               std::move(noise_marshaller),
+                                               local_key_,
+                                               outbound,
+                                               true,
+                                               p,
+                                               key_marshaller_);
     co_return co_await handshake->connect();
   }
 }  // namespace libp2p::security
