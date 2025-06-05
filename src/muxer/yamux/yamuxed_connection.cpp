@@ -571,7 +571,7 @@ namespace libp2p::connection {
       SL_INFO(log(), "shared_ptr use_count: {}", self_ptr.use_count());
       SL_INFO(log(), "remote_peer_: {}", remote_peer_.toBase58());
       
-      closed_callback_(remote_peer_, self_ptr);
+      closed_callback_(remote_peer_, std::static_pointer_cast<connection::CapableConnection>(self_ptr));
       
       SL_INFO(log(), "=== closed_callback_ FINISHED ===");
       SL_INFO(log(), "shared_ptr use_count after callback: {}", self_ptr.use_count());
