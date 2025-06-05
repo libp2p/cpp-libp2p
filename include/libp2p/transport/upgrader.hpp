@@ -12,6 +12,7 @@
 #include <libp2p/connection/layer_connection.hpp>
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/connection/secure_connection.hpp>
+#include <boost/asio/awaitable.hpp>
 
 namespace libp2p::transport {
 
@@ -70,6 +71,16 @@ namespace libp2p::transport {
                                          OnSecuredCallbackFunc cb) = 0;
 
     /**
+     * Coroutine version of upgradeToSecureOutbound
+     * @param conn to be upgraded
+     * @param remoteId peer id of remote peer
+     * @return awaitable with secured connection or error
+     */
+    virtual boost::asio::awaitable<outcome::result<SecSPtr>>
+    upgradeToSecureOutboundCoro(LayerSPtr conn,
+                               const peer::PeerId &remoteId) = 0;
+
+    /**
      * Upgrade inbound raw connection to the secure one
      * @param conn to be upgraded
      * @param cb - callback, which is called, when a connection is upgraded or
@@ -77,6 +88,14 @@ namespace libp2p::transport {
      */
     virtual void upgradeToSecureInbound(LayerSPtr conn,
                                         OnSecuredCallbackFunc cb) = 0;
+
+    /**
+     * Coroutine version of upgradeToSecureInbound
+     * @param conn to be upgraded
+     * @return awaitable with secured connection or error
+     */
+    virtual boost::asio::awaitable<outcome::result<SecSPtr>>
+    upgradeToSecureInboundCoro(LayerSPtr conn) = 0;
 
     /**
      * Upgrade a secure connection to the muxed (capable) one

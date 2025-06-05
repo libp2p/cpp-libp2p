@@ -55,6 +55,11 @@ namespace libp2p::transport {
                                  const peer::PeerId &remoteId,
                                  OnSecuredCallbackFunc cb) override;
 
+    boost::asio::awaitable<outcome::result<SecSPtr>> upgradeToSecureInboundCoro(
+        LayerSPtr conn) override;
+    boost::asio::awaitable<outcome::result<SecSPtr>> upgradeToSecureOutboundCoro(
+        LayerSPtr conn, const peer::PeerId &remoteId) override;
+
     void upgradeToMuxed(SecSPtr conn, OnMuxedCallbackFunc cb) override;
 
     enum class Error { SUCCESS = 0, NO_ADAPTOR_FOUND = 1 };

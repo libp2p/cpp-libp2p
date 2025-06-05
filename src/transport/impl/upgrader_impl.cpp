@@ -9,6 +9,9 @@
 #include <fmt/format.h>
 #include <libp2p/multi/converters/conversion_error.hpp>
 #include <numeric>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/detached.hpp>
+#include <boost/asio/use_awaitable.hpp>
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::transport, UpgraderImpl::Error, e) {
   using E = libp2p::transport::UpgraderImpl::Error;
@@ -242,6 +245,51 @@ namespace libp2p::transport {
           return adaptor->secureOutbound(
               std::move(conn), remoteId, std::move(cb));
         });
+  }
+
+  boost::asio::awaitable<outcome::result<UpgraderImpl::SecSPtr>>
+  UpgraderImpl::upgradeToSecureInboundCoro(LayerSPtr conn) {
+    BOOST_ASSERT_MSG(!conn->isInitiator(),
+                     "connection is initiator, and upgrade for inbound is "
+                     "called (should be upgrade for outbound)");
+
+    auto proto_res = co_await protocol_muxer_->selectOneOf(
+        security_protocols_, conn, conn->isInitiator(), true);
+
+    if (!proto_res) {
+      co_return proto_res.error();
+    }
+
+    auto adaptor = findAdaptor(security_adaptors_, proto_res.value());
+    if (adaptor == nullptr) {
+      co_return Error::NO_ADAPTOR_FOUND;
+    }
+
+    auto secure_conn_res = co_await adaptor->secureInboundCoro(std::move(conn));
+    co_return secure_conn_res;
+  }
+
+  boost::asio::awaitable<outcome::result<UpgraderImpl::SecSPtr>>
+  UpgraderImpl::upgradeToSecureOutboundCoro(LayerSPtr conn,
+                                          const peer::PeerId &remoteId) {
+    BOOST_ASSERT_MSG(conn->isInitiator(),
+                     "connection is NOT initiator, and upgrade for outbound is "
+                     "called (should be upgrade for inbound)");
+
+    auto proto_res = co_await protocol_muxer_->selectOneOf(
+        security_protocols_, conn, conn->isInitiator(), true);
+
+    if (!proto_res) {
+      co_return proto_res.error();
+    }
+
+    auto adaptor = findAdaptor(security_adaptors_, proto_res.value());
+    if (adaptor == nullptr) {
+      co_return Error::NO_ADAPTOR_FOUND;
+    }
+
+    auto secure_conn_res = co_await adaptor->secureOutboundCoro(std::move(conn), remoteId);
+    co_return secure_conn_res;
   }
 
   void UpgraderImpl::upgradeToMuxed(SecSPtr conn, OnMuxedCallbackFunc cb) {
