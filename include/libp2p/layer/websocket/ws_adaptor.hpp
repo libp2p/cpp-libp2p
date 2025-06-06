@@ -11,6 +11,7 @@
 #include <libp2p/layer/websocket/ws_connection.hpp>
 #include <libp2p/layer/websocket/ws_connection_config.hpp>
 #include <libp2p/network/connection_manager.hpp>
+#include <boost/asio/awaitable.hpp>
 
 namespace libp2p::layer {
 
@@ -25,9 +26,16 @@ namespace libp2p::layer {
     void upgradeInbound(std::shared_ptr<connection::LayerConnection> conn,
                         LayerConnCallbackFunc cb) const override;
 
+    boost::asio::awaitable<outcome::result<std::shared_ptr<connection::LayerConnection>>>
+    upgradeInbound(std::shared_ptr<connection::LayerConnection> conn) const override;
+
     void upgradeOutbound(const multi::Multiaddress &address,
                          std::shared_ptr<connection::LayerConnection> conn,
                          LayerConnCallbackFunc cb) const override;
+
+    boost::asio::awaitable<outcome::result<std::shared_ptr<connection::LayerConnection>>>
+    upgradeOutbound(const multi::Multiaddress &address,
+                    std::shared_ptr<connection::LayerConnection> conn) const override;
 
    private:
     std::shared_ptr<basic::Scheduler> scheduler_;

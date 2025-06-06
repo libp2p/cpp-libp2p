@@ -9,6 +9,7 @@
 #include <functional>
 #include <vector>
 
+#include <boost/asio/awaitable.hpp>
 #include <libp2p/common/types.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
@@ -54,6 +55,13 @@ namespace libp2p::basic {
      * @param res read result
      * @param cb callback
      */
+
+    virtual boost::asio::awaitable<outcome::result<size_t>> read(
+        BytesOut out, size_t bytes) = 0;
+
+    virtual boost::asio::awaitable<outcome::result<size_t>> readSome(
+        BytesOut out, size_t bytes) = 0;
+
     virtual void deferReadCallback(outcome::result<size_t> res,
                                    ReadCallbackFunc cb) = 0;
   };

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <boost/beast/websocket.hpp>
+#include <boost/asio/awaitable.hpp>
 
 #include <libp2p/basic/scheduler.hpp>
 #include <libp2p/common/metrics/instance_count.hpp>
@@ -78,6 +79,13 @@ namespace libp2p::connection {
     void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
+
+    boost::asio::awaitable<outcome::result<size_t>> read(BytesOut out,
+                                                         size_t bytes) override;
+    boost::asio::awaitable<outcome::result<size_t>> readSome(
+        BytesOut out, size_t bytes) override;
+    boost::asio::awaitable<std::error_code> writeSome(BytesIn in,
+                                                      size_t bytes) override;
 
    private:
     void setTimerPing();

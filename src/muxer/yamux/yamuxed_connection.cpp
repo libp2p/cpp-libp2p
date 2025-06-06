@@ -196,6 +196,24 @@ namespace libp2p::connection {
     connection_->deferWriteCallback(ec, std::move(cb));
   }
 
+  boost::asio::awaitable<outcome::result<size_t>> YamuxedConnection::read(
+      BytesOut out, size_t bytes) {
+    log()->error("YamuxedConnection::read : invalid direct call");
+    co_return Error::CONNECTION_DIRECT_IO_FORBIDDEN;
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> YamuxedConnection::readSome(
+      BytesOut out, size_t bytes) {
+    log()->error("YamuxedConnection::readSome : invalid direct call");
+    co_return Error::CONNECTION_DIRECT_IO_FORBIDDEN;
+  }
+
+  boost::asio::awaitable<std::error_code> YamuxedConnection::writeSome(
+      BytesIn in, size_t bytes) {
+    log()->error("YamuxedConnection::writeSome : invalid direct call");
+    co_return Error::CONNECTION_DIRECT_IO_FORBIDDEN;
+  }
+
   void YamuxedConnection::continueReading() {
     SL_TRACE(log(), "YamuxedConnection::continueReading");
     connection_->readSome(*raw_read_buffer_,
@@ -778,5 +796,25 @@ namespace libp2p::connection {
           self->setTimerPing();
         },
         config_.ping_interval);
+  }
+
+  boost::asio::awaitable<outcome::result<std::shared_ptr<Stream>>> YamuxedConnection::newStreamCoroutine() {
+    if (!started_) {
+      co_return Error::CONNECTION_NOT_ACTIVE;
+    }
+
+    if (streams_.size() >= config_.maximum_streams) {
+      co_return Error::CONNECTION_TOO_MANY_STREAMS;
+    }
+
+    auto stream_id = new_stream_id_;
+    new_stream_id_ += 2;
+    enqueue(newStreamMsg(stream_id));
+
+    // Wait for the stream to be acknowledged
+    co_await boost::asio::this_coro::executor;
+
+    auto stream = createStream(stream_id);
+    co_return stream;
   }
 }  // namespace libp2p::connection

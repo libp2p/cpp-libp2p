@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <boost/asio/awaitable.hpp>
 #include <functional>
 
 #include <libp2p/common/types.hpp>
@@ -33,6 +34,9 @@ namespace libp2p::basic {
      * enable_shared_from_this()
      */
     virtual void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) = 0;
+
+    virtual boost::asio::awaitable<std::error_code> writeSome(BytesIn in,
+                                                              size_t bytes) = 0;
 
     /**
      * @brief Defers reporting error state to callback to avoid reentrancy

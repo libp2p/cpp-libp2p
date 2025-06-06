@@ -36,10 +36,18 @@ namespace libp2p::transport {
     throw std::logic_error{"QuicConnection::read must not be called"};
   }
 
+  boost::asio::awaitable<outcome::result<size_t>> QuicConnection::read(BytesOut, size_t) {
+    throw std::logic_error{"QuicConnection::read (coroutine) must not be called"};
+  }
+
   void QuicConnection::readSome(BytesOut out,
                                 size_t bytes,
                                 ReadCallbackFunc cb) {
     throw std::logic_error{"QuicConnection::readSome must not be called"};
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> QuicConnection::readSome(BytesOut, size_t) {
+    throw std::logic_error{"QuicConnection::readSome (coroutine) must not be called"};
   }
 
   void QuicConnection::deferReadCallback(outcome::result<size_t> res,
@@ -51,6 +59,10 @@ namespace libp2p::transport {
                                  size_t bytes,
                                  WriteCallbackFunc cb) {
     throw std::logic_error{"QuicConnection::writeSome must not be called"};
+  }
+
+  boost::asio::awaitable<std::error_code> QuicConnection::writeSome(BytesIn, size_t) {
+    throw std::logic_error{"QuicConnection::writeSome (coroutine) must not be called"};
   }
 
   void QuicConnection::deferWriteCallback(std::error_code ec,

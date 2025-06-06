@@ -36,6 +36,15 @@ namespace libp2p::security {
         SecConnCallbackFunc cb) = 0;
 
     /**
+     * Coroutine version of secureInbound
+     * @param inbound - connection to be secured
+     * @return awaitable with secured connection or error
+     */
+    virtual boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::SecureConnection>>>
+    secureInboundCoro(std::shared_ptr<connection::LayerConnection> inbound) = 0;
+
+    /**
      * @brief Secure the connection, either locally or by communicating with
      * opposing node via outbound connection (we are initiator).
      * @param outbound connection
@@ -46,5 +55,10 @@ namespace libp2p::security {
         std::shared_ptr<connection::LayerConnection> outbound,
         const peer::PeerId &p,
         SecConnCallbackFunc cb) = 0;
+
+    virtual boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::SecureConnection>>>
+    secureOutboundCoro(std::shared_ptr<connection::LayerConnection> outbound,
+                       const peer::PeerId &p) = 0;
   };
 }  // namespace libp2p::security

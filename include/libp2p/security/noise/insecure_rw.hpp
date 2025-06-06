@@ -40,6 +40,12 @@ namespace libp2p::security::noise {
     /// write the given bytes to the network
     void write(BytesIn buffer, basic::Writer::WriteCallbackFunc cb) override;
 
+    /// read next message from the network (coroutine version)
+    boost::asio::awaitable<ReadCallback> read() override;
+
+    /// write the given bytes to the network (coroutine version)
+    boost::asio::awaitable<outcome::result<size_t>> write(BytesIn buffer) override;
+
    private:
     std::shared_ptr<connection::LayerConnection> connection_;
     std::shared_ptr<Bytes> buffer_;

@@ -32,6 +32,17 @@ namespace libp2p::muxer {
     void muxConnection(std::shared_ptr<connection::SecureConnection> conn,
                        CapConnCallbackFunc cb) const override;
 
+    /**
+     * Make a muxed connection from the secure one, using this adaptor
+     * (coroutine version)
+     * @param conn - connection to be upgraded
+     * @return awaitable with result containing upgraded connection or error
+     */
+    boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::CapableConnection>>>
+    muxConnection(
+        std::shared_ptr<connection::SecureConnection> conn) const override;
+
    private:
     MuxedConnectionConfig config_;
     std::shared_ptr<basic::Scheduler> scheduler_;

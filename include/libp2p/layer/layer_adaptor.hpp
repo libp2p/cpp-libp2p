@@ -33,6 +33,14 @@ namespace libp2p::layer {
         LayerConnCallbackFunc cb) const = 0;
 
     /**
+     * Coroutine version of upgradeInbound
+     * @param conn - connection to be upgraded
+     * @return result with upgraded connection or error
+     */
+    virtual boost::asio::awaitable<outcome::result<std::shared_ptr<connection::LayerConnection>>> upgradeInbound(
+        std::shared_ptr<connection::LayerConnection> conn) const = 0;
+
+    /**
      * Make a next-layer connection from the current-layer one, using this
      * adaptor
      * @param conn - connection to be upgraded
@@ -42,5 +50,15 @@ namespace libp2p::layer {
         const multi::Multiaddress &address,
         std::shared_ptr<connection::LayerConnection> conn,
         LayerConnCallbackFunc cb) const = 0;
+
+    /**
+     * Coroutine version of upgradeOutbound
+     * @param address - multiaddress of the remote peer
+     * @param conn - connection to be upgraded
+     * @return result with upgraded connection or error
+     */
+    virtual boost::asio::awaitable<outcome::result<std::shared_ptr<connection::LayerConnection>>> upgradeOutbound(
+        const multi::Multiaddress &address,
+        std::shared_ptr<connection::LayerConnection> conn) const = 0;
   };
 }  // namespace libp2p::layer

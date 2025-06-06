@@ -142,6 +142,18 @@ namespace libp2p::connection {
     connection_->writeSome(in, bytes, std::move(cb));
   }
 
+  boost::asio::awaitable<outcome::result<size_t>> MplexedConnection::read(BytesOut out, size_t bytes) {
+    co_return co_await connection_->read(out, bytes);
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> MplexedConnection::readSome(BytesOut out, size_t bytes) {
+    co_return co_await connection_->readSome(out, bytes);
+  }
+
+  boost::asio::awaitable<std::error_code> MplexedConnection::writeSome(BytesIn in, size_t bytes) {
+    co_return co_await connection_->writeSome(in, bytes);
+  }
+
   void MplexedConnection::deferReadCallback(outcome::result<size_t> res,
                                             ReadCallbackFunc cb) {
     connection_->deferReadCallback(res, std::move(cb));

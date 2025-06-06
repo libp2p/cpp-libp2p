@@ -12,6 +12,8 @@
 #include <libp2p/log/logger.hpp>
 #include <libp2p/security/security_adaptor.hpp>
 
+#include <boost/asio/awaitable.hpp>
+
 namespace libp2p::security {
 
   class Noise : public SecurityAdaptor,
@@ -33,6 +35,27 @@ namespace libp2p::security {
     void secureOutbound(std::shared_ptr<connection::LayerConnection> outbound,
                         const peer::PeerId &p,
                         SecConnCallbackFunc cb) override;
+
+    /**
+     * Coroutine version of secureInbound
+     * @param inbound - connection to be secured
+     * @return awaitable with secured connection or error
+     */
+    boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::SecureConnection>>>
+    secureInboundCoro(
+        std::shared_ptr<connection::LayerConnection> inbound) override;
+
+    /**
+     * Coroutine version of secureOutbound
+     * @param outbound - connection to be secured
+     * @param p - remote peer id
+     * @return awaitable with secured connection or error
+     */
+    boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::SecureConnection>>>
+    secureOutboundCoro(std::shared_ptr<connection::LayerConnection> outbound,
+                       const peer::PeerId &p) override;
 
    private:
     log::Logger log_ = log::createLogger("Noise");

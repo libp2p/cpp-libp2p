@@ -84,6 +84,29 @@ namespace libp2p::connection {
     readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
+  boost::asio::awaitable<outcome::result<size_t>> LoopbackStream::read(BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    if (is_reset_) {
+      co_return Error::STREAM_RESET_BY_HOST;
+    }
+    if (!is_readable_) {
+      co_return Error::STREAM_NOT_READABLE;
+    }
+    if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
+      co_return Error::STREAM_INVALID_ARGUMENT;
+    }
+    // Wait until enough data is available
+    while (buffer_.size() < bytes) {
+      co_await boost::asio::post(*io_context_, boost::asio::use_awaitable);
+    }
+    auto to_read = std::min(buffer_.size(), bytes);
+    if (boost::asio::buffer_copy(boost::asio::buffer(out.data(), to_read), buffer_.data(), to_read) != to_read) {
+      co_return Error::STREAM_INTERNAL_ERROR;
+    }
+    buffer_.consume(to_read);
+    co_return to_read;
+  }
+
   void LoopbackStream::writeSome(BytesIn in,
                                  size_t bytes,
                                  libp2p::basic::Writer::WriteCallbackFunc cb) {
@@ -114,6 +137,23 @@ namespace libp2p::connection {
     if (auto data_notifyee = std::move(data_notifyee_)) {
       data_notifyee(buffer_.size());
     }
+  }
+
+  boost::asio::awaitable<std::error_code> LoopbackStream::writeSome(BytesIn in, size_t bytes) {
+    if (is_reset_) {
+      co_return Error::STREAM_RESET_BY_HOST;
+    }
+    if (!is_writable_) {
+      co_return Error::STREAM_NOT_WRITABLE;
+    }
+    if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
+      co_return Error::STREAM_INVALID_ARGUMENT;
+    }
+    if (boost::asio::buffer_copy(buffer_.prepare(bytes), boost::asio::const_buffer(in.data(), bytes)) != bytes) {
+      co_return Error::STREAM_INTERNAL_ERROR;
+    }
+    buffer_.commit(bytes);
+    co_return std::error_code{};
   }
 
   void LoopbackStream::readSome(BytesOut out,
@@ -170,6 +210,29 @@ namespace libp2p::connection {
     if (not data_notifyee_) {
       data_notifyee_ = std::move(read_lambda);
     }
+  }
+
+  boost::asio::awaitable<outcome::result<size_t>> LoopbackStream::readSome(BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    if (is_reset_) {
+      co_return Error::STREAM_RESET_BY_HOST;
+    }
+    if (!is_readable_) {
+      co_return Error::STREAM_NOT_READABLE;
+    }
+    if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
+      co_return Error::STREAM_INVALID_ARGUMENT;
+    }
+    // Wait until any data is available
+    while (buffer_.size() == 0) {
+      co_await boost::asio::post(*io_context_, boost::asio::use_awaitable);
+    }
+    auto to_read = std::min(buffer_.size(), bytes);
+    if (boost::asio::buffer_copy(boost::asio::buffer(out.data(), to_read), buffer_.data(), to_read) != to_read) {
+      co_return Error::STREAM_INTERNAL_ERROR;
+    }
+    buffer_.consume(to_read);
+    co_return to_read;
   }
 
   void LoopbackStream::deferReadCallback(outcome::result<size_t> res,

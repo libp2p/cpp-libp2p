@@ -73,6 +73,8 @@ namespace libp2p::network {
      */
     virtual outcome::result<void> listen(const multi::Multiaddress &ma) = 0;
 
+    virtual boost::asio::awaitable<outcome::result<void>> listenCoroutine(
+        const multi::Multiaddress &ma) = 0;
     /**
      * @brief Returns an unmodified list of addresses, added by user.
      */
@@ -96,6 +98,10 @@ namespace libp2p::network {
      * @brief Allows new connections for accepting incoming streams
      */
     virtual void onConnection(
+        outcome::result<std::shared_ptr<connection::CapableConnection>>
+            rconn) = 0;
+
+    virtual void onConnectionCoro(
         outcome::result<std::shared_ptr<connection::CapableConnection>>
             rconn) = 0;
   };

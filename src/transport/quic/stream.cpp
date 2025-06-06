@@ -5,6 +5,9 @@
  */
 
 #include <lsquic.h>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/transport/quic/connection.hpp>
@@ -33,6 +36,35 @@ namespace libp2p::connection {
     readReturnSize(shared_from_this(), out, std::move(cb));
   }
 
+  boost::asio::awaitable<outcome::result<size_t>> QuicStream::read(BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    if (not stream_ctx_) {
+      co_return QuicError::STREAM_CLOSED;
+    }
+    if (stream_ctx_->reading) {
+      co_return QuicError::STREAM_READ_IN_PROGRESS;
+    }
+    auto n = lsquic_stream_read(stream_ctx_->ls_stream, out.data(), out.size());
+    if (n == -1 && errno == EWOULDBLOCK) {
+      bool done = false;
+      outcome::result<size_t> r = QuicError::STREAM_CLOSED;
+      stream_ctx_->reading.emplace(transport::lsquic::StreamCtx::Reading{
+          out, [&](auto res) {
+            r = res;
+            done = true;
+          }});
+      lsquic_stream_wantread(stream_ctx_->ls_stream, 1);
+      while (!done) {
+        co_await boost::asio::post(boost::asio::use_awaitable);
+      }
+      co_return r;
+    }
+    if (n > 0) {
+      co_return n;
+    }
+    co_return QuicError::STREAM_CLOSED;
+  }
+
   void QuicStream::readSome(BytesOut out,
                             size_t bytes,
                             basic::Reader::ReadCallbackFunc cb) {
@@ -56,6 +88,35 @@ namespace libp2p::connection {
     deferReadCallback(r, std::move(cb));
   }
 
+  boost::asio::awaitable<outcome::result<size_t>> QuicStream::readSome(BytesOut out, size_t bytes) {
+    ambigousSize(out, bytes);
+    if (not stream_ctx_) {
+      co_return QuicError::STREAM_CLOSED;
+    }
+    if (stream_ctx_->reading) {
+      co_return QuicError::STREAM_READ_IN_PROGRESS;
+    }
+    auto n = lsquic_stream_read(stream_ctx_->ls_stream, out.data(), out.size());
+    if (n == -1 && errno == EWOULDBLOCK) {
+      bool done = false;
+      outcome::result<size_t> r = QuicError::STREAM_CLOSED;
+      stream_ctx_->reading.emplace(transport::lsquic::StreamCtx::Reading{
+          out, [&](auto res) {
+            r = res;
+            done = true;
+          }});
+      lsquic_stream_wantread(stream_ctx_->ls_stream, 1);
+      while (!done) {
+        co_await boost::asio::post(boost::asio::use_awaitable);
+      }
+      co_return r;
+    }
+    if (n > 0) {
+      co_return n;
+    }
+    co_return QuicError::STREAM_CLOSED;
+  }
+
   void QuicStream::deferReadCallback(outcome::result<size_t> res,
                                      basic::Reader::ReadCallbackFunc cb) {
     conn_->deferReadCallback(res, std::move(cb));
@@ -77,58 +138,18 @@ namespace libp2p::connection {
     deferReadCallback(r, std::move(cb));
   }
 
-  void QuicStream::deferWriteCallback(std::error_code ec,
-                                      WriteCallbackFunc cb) {
-    conn_->deferWriteCallback(ec, std::move(cb));
-  }
-
-  bool QuicStream::isClosedForRead() const {
-    return false;  // deprecated
-  }
-
-  bool QuicStream::isClosedForWrite() const {
-    return false;  // deprecated
-  }
-
-  bool QuicStream::isClosed() const {
-    return false;  // deprecated
-  }
-
-  void QuicStream::close(Stream::VoidResultHandlerFunc cb) {
+  boost::asio::awaitable<std::error_code> QuicStream::writeSome(BytesIn in, size_t bytes) {
+    ambigousSize(in, bytes);
     if (not stream_ctx_) {
-      return cb(outcome::success());
+      co_return QuicError::STREAM_CLOSED;
     }
-    lsquic_stream_shutdown(stream_ctx_->ls_stream, 1);
-    cb(outcome::success());
-  }
-
-  void QuicStream::reset() {
-    if (not stream_ctx_) {
-      return;
+    auto n = lsquic_stream_write(stream_ctx_->ls_stream, in.data(), in.size());
+    if (n > 0 && lsquic_stream_flush(stream_ctx_->ls_stream) == 0) {
+      stream_ctx_->engine->process();
+      co_return std::error_code{};
     }
-    lsquic_stream_close(stream_ctx_->ls_stream);
+    stream_ctx_->engine->process();
+    co_return QuicError::STREAM_CLOSED;
   }
+}
 
-  void QuicStream::adjustWindowSize(uint32_t new_size,
-                                    Stream::VoidResultHandlerFunc cb) {}
-
-  outcome::result<bool> QuicStream::isInitiator() const {
-    return initiator_;
-  }
-
-  outcome::result<PeerId> QuicStream::remotePeerId() const {
-    return conn_->remotePeer();
-  }
-
-  outcome::result<Multiaddress> QuicStream::localMultiaddr() const {
-    return conn_->localMultiaddr();
-  }
-
-  outcome::result<Multiaddress> QuicStream::remoteMultiaddr() const {
-    return conn_->remoteMultiaddr();
-  }
-
-  void QuicStream::onClose() {
-    stream_ctx_ = nullptr;
-  }
-}  // namespace libp2p::connection

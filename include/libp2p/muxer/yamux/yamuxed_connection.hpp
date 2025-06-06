@@ -56,6 +56,9 @@ namespace libp2p::connection {
 
     void newStream(StreamHandlerFunc cb) override;
 
+    boost::asio::awaitable<outcome::result<std::shared_ptr<Stream>>>
+    newStreamCoroutine();
+
     void onStream(NewStreamHandlerFunc cb) override;
 
     outcome::result<peer::PeerId> localPeer() const override;
@@ -77,6 +80,14 @@ namespace libp2p::connection {
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
+
+    // Coroutine-based methods
+    boost::asio::awaitable<outcome::result<size_t>> read(BytesOut out,
+                                                         size_t bytes) override;
+    boost::asio::awaitable<outcome::result<size_t>> readSome(
+        BytesOut out, size_t bytes) override;
+    boost::asio::awaitable<std::error_code> writeSome(BytesIn in,
+                                                      size_t bytes) override;
 
    private:
     using Streams = std::unordered_map<StreamId, std::shared_ptr<YamuxStream>>;

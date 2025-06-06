@@ -63,6 +63,10 @@ namespace libp2p::transport {
     return detail::makeAddress(endpoint, layers_);
   }
 
+  boost::asio::io_context &TcpListener::getContext() const {
+    return context_;
+  }
+
   bool TcpListener::isClosed() const {
     return !acceptor_.is_open();
   }
@@ -102,5 +106,33 @@ namespace libp2p::transport {
           self->doAccept();
         });
   };
+
+  boost::asio::awaitable<
+      outcome::result<std::shared_ptr<connection::CapableConnection>>>
+  TcpListener::asyncAccept() {
+    try {
+      boost::asio::ip::tcp::socket socket(context_);
+      co_await acceptor_.async_accept(socket, boost::asio::use_awaitable);
+
+      auto connection =
+          std::make_shared<TcpConnection>(context_, layers_, std::move(socket));
+      auto secure_connection =
+          co_await upgrader_->upgradeToSecureInboundCoro(connection);
+
+      if (!secure_connection) {
+        co_return secure_connection.error();
+      }
+
+      auto capable_connection = co_await upgrader_->upgradeToMuxedCoro(
+          std::move(secure_connection.value()));
+
+      if (!capable_connection) {
+        co_return capable_connection.error();
+      }
+      co_return capable_connection.value();
+    } catch (const std::exception &e) {
+      co_return std::errc::io_error;
+    }
+  }
 
 }  // namespace libp2p::transport

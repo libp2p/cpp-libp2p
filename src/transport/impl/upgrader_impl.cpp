@@ -7,6 +7,9 @@
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 
 #include <fmt/format.h>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/detached.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <libp2p/multi/converters/conversion_error.hpp>
 #include <numeric>
 
@@ -93,6 +96,103 @@ namespace libp2p::transport {
                                            OnLayerCallbackFunc cb) {
     upgradeToNextLayerOutbound(
         address, std::move(conn), std::move(layers), 0, std::move(cb));
+  }
+
+  boost::asio::awaitable<outcome::result<UpgraderImpl::LayerSPtr>>
+  UpgraderImpl::upgradeLayersInboundCoro(RawSPtr conn, ProtoAddrVec layers) {
+    auto result = co_await upgradeToNextLayerInboundCoro(
+        std::move(conn), std::move(layers), 0);
+    co_return result;
+  }
+
+  boost::asio::awaitable<outcome::result<UpgraderImpl::LayerSPtr>>
+  UpgraderImpl::upgradeLayersOutboundCoro(const multi::Multiaddress &address,
+                                          RawSPtr conn,
+                                          ProtoAddrVec layers) {
+    auto result = co_await upgradeToNextLayerOutboundCoro(
+        address, std::move(conn), std::move(layers), 0);
+    co_return result;
+  }
+
+  boost::asio::awaitable<outcome::result<UpgraderImpl::LayerSPtr>>
+  UpgraderImpl::upgradeToNextLayerInboundCoro(LayerSPtr conn,
+                                              ProtoAddrVec layers,
+                                              size_t layer_index) {
+    BOOST_ASSERT_MSG(!conn->isInitiator(),
+                     "connection is initiator, and upgrade for inbound is "
+                     "called (should be upgrade for outbound)");
+
+    if (layer_index >= layers.size()) {
+      co_return conn;
+    }
+    const auto &protocol = layers[layer_index];
+
+    auto adaptor_it =
+        std::find_if(layer_adaptors_.begin(),
+                     layer_adaptors_.end(),
+                     [&](const auto &adaptor) {
+                       return adaptor->getProtocol() == protocol.first.code;
+                     });
+
+    if (adaptor_it == layer_adaptors_.end()) {
+      co_return outcome::failure(
+          multi::converters::ConversionError::NOT_IMPLEMENTED);
+    }
+
+    const auto &adaptor = *adaptor_it;
+
+    auto next_layer_conn_res = co_await adaptor->upgradeInbound(conn);
+    if (!next_layer_conn_res) {
+      co_return next_layer_conn_res.error();
+    }
+
+    auto next_layer_conn = std::move(next_layer_conn_res.value());
+    auto result = co_await upgradeToNextLayerInboundCoro(
+        std::move(next_layer_conn), std::move(layers), layer_index + 1);
+    co_return result;
+  }
+
+  boost::asio::awaitable<outcome::result<UpgraderImpl::LayerSPtr>>
+  UpgraderImpl::upgradeToNextLayerOutboundCoro(
+      const multi::Multiaddress &address,
+      LayerSPtr conn,
+      ProtoAddrVec layers,
+      size_t layer_index) {
+    BOOST_ASSERT_MSG(conn->isInitiator(),
+                     "connection is NOT initiator, and upgrade of outbound is "
+                     "called (should be upgrade of inbound)");
+
+    if (layer_index >= layers.size()) {
+      co_return conn;
+    }
+    const auto &protocol = layers[layer_index];
+
+    auto adaptor_it =
+        std::find_if(layer_adaptors_.begin(),
+                     layer_adaptors_.end(),
+                     [&](const auto &adaptor) {
+                       return adaptor->getProtocol() == protocol.first.code;
+                     });
+
+    if (adaptor_it == layer_adaptors_.end()) {
+      co_return outcome::failure(
+          multi::converters::ConversionError::NOT_IMPLEMENTED);
+    }
+
+    const auto &adaptor = *adaptor_it;
+
+    auto next_layer_conn_res = co_await adaptor->upgradeOutbound(address, conn);
+    if (!next_layer_conn_res) {
+      co_return next_layer_conn_res.error();
+    }
+
+    auto &next_layer_conn = next_layer_conn_res.value();
+    auto result =
+        co_await upgradeToNextLayerOutboundCoro(address,
+                                                std::move(next_layer_conn),
+                                                std::move(layers),
+                                                layer_index + 1);
+    co_return result;
   }
 
   void UpgraderImpl::upgradeToNextLayerInbound(LayerSPtr conn,
@@ -244,6 +344,52 @@ namespace libp2p::transport {
         });
   }
 
+  boost::asio::awaitable<outcome::result<UpgraderImpl::SecSPtr>>
+  UpgraderImpl::upgradeToSecureInboundCoro(LayerSPtr conn) {
+    BOOST_ASSERT_MSG(!conn->isInitiator(),
+                     "connection is initiator, and upgrade for inbound is "
+                     "called (should be upgrade for outbound)");
+
+    auto proto_res = co_await protocol_muxer_->selectOneOf(
+        security_protocols_, conn, conn->isInitiator(), true);
+
+    if (!proto_res) {
+      co_return proto_res.error();
+    }
+
+    auto adaptor = findAdaptor(security_adaptors_, proto_res.value());
+    if (adaptor == nullptr) {
+      co_return Error::NO_ADAPTOR_FOUND;
+    }
+
+    auto secure_conn_res = co_await adaptor->secureInboundCoro(std::move(conn));
+    co_return secure_conn_res;
+  }
+
+  boost::asio::awaitable<outcome::result<UpgraderImpl::SecSPtr>>
+  UpgraderImpl::upgradeToSecureOutboundCoro(LayerSPtr conn,
+                                            const peer::PeerId &remoteId) {
+    BOOST_ASSERT_MSG(conn->isInitiator(),
+                     "connection is NOT initiator, and upgrade for outbound is "
+                     "called (should be upgrade for inbound)");
+
+    auto proto_res = co_await protocol_muxer_->selectOneOf(
+        security_protocols_, conn, conn->isInitiator(), true);
+
+    if (!proto_res) {
+      co_return proto_res.error();
+    }
+
+    auto adaptor = findAdaptor(security_adaptors_, proto_res.value());
+    if (adaptor == nullptr) {
+      co_return Error::NO_ADAPTOR_FOUND;
+    }
+
+    auto secure_conn_res =
+        co_await adaptor->secureOutboundCoro(std::move(conn), remoteId);
+    co_return secure_conn_res;
+  }
+
   void UpgraderImpl::upgradeToMuxed(SecSPtr conn, OnMuxedCallbackFunc cb) {
     return protocol_muxer_->selectOneOf(
         muxer_protocols_,
@@ -273,5 +419,29 @@ namespace libp2p::transport {
                 return cb(std::move(conn));
               });
         });
+  }
+
+  boost::asio::awaitable<outcome::result<UpgraderImpl::CapSPtr>>
+  UpgraderImpl::upgradeToMuxedCoro(SecSPtr conn) {
+    auto proto_res = co_await protocol_muxer_->selectOneOf(
+        muxer_protocols_, conn, conn->isInitiator(), true);
+
+    if (!proto_res) {
+      co_return proto_res.error();
+    }
+
+    auto adaptor = findAdaptor(muxer_adaptors_, proto_res.value());
+    if (!adaptor) {
+      co_return Error::NO_ADAPTOR_FOUND;
+    }
+
+    auto conn_res = co_await adaptor->muxConnection(std::move(conn));
+    if (!conn_res) {
+      co_return conn_res.error();
+    }
+
+    auto &&muxed_conn = conn_res.value();
+    muxed_conn->start();
+    co_return muxed_conn;
   }
 }  // namespace libp2p::transport
