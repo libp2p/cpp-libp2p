@@ -63,6 +63,10 @@ namespace libp2p::transport {
     return detail::makeAddress(endpoint, layers_);
   }
 
+  boost::asio::io_context &TcpListener::getContext() const {
+    return context_;
+  }
+
   bool TcpListener::isClosed() const {
     return !acceptor_.is_open();
   }

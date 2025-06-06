@@ -31,6 +31,8 @@ namespace libp2p::transport {
 
     outcome::result<multi::Multiaddress> getListenMultiaddr() const override;
 
+    boost::asio::io_context &getContext() const override;
+
     bool isClosed() const override;
 
     outcome::result<void> close() override;
@@ -39,7 +41,9 @@ namespace libp2p::transport {
      * Asynchronously accept a new connection
      * @return Awaitable result of a new CapableConnection or error
      */
-    boost::asio::awaitable<outcome::result<std::shared_ptr<connection::CapableConnection>>> asyncAccept() override;
+    boost::asio::awaitable<
+        outcome::result<std::shared_ptr<connection::CapableConnection>>>
+    asyncAccept() override;
 
    private:
     boost::asio::io_context &context_;

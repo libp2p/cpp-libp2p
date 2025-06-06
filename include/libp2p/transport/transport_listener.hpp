@@ -54,6 +54,12 @@ namespace libp2p::transport {
     virtual outcome::result<multi::Multiaddress> getListenMultiaddr() const = 0;
 
     /**
+     * Get the io_context of this listener
+     * @return reference to the io_context
+     */
+    virtual boost::asio::io_context &getContext() const = 0;
+
+    /**
      * Asynchronously accept a new connection
      * @return Awaitable result of a new CapableConnection or error
      */

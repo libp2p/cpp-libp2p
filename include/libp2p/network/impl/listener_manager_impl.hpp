@@ -38,9 +38,8 @@ namespace libp2p::network {
 
     outcome::result<void> listen(const multi::Multiaddress &ma) override;
 
-    boost::asio::awaitable<
-        outcome::result<std::shared_ptr<connection::CapableConnection>>>
-    listenCoroutine();
+    boost::asio::awaitable<outcome::result<void>> listenCoroutine(
+        const multi::Multiaddress &ma) override;
 
     std::vector<multi::Multiaddress> getListenAddresses() const override;
 
@@ -50,6 +49,10 @@ namespace libp2p::network {
     Router &getRouter() override;
 
     void onConnection(
+        outcome::result<std::shared_ptr<connection::CapableConnection>> rconn)
+        override;
+
+    void onConnectionCoro(
         outcome::result<std::shared_ptr<connection::CapableConnection>> rconn)
         override;
 

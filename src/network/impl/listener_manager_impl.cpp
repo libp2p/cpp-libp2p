@@ -243,26 +243,59 @@ namespace libp2p::network {
     this->cmgr_->addConnectionToPeer(id, conn);
   }
 
+  void ListenerManagerImpl::onConnectionCoro(
+      outcome::result<std::shared_ptr<connection::CapableConnection>> rconn) {
+    if (!rconn) {
+      log()->warn("can not accept valid connection, {}", rconn.error());
+      return;  // ignore
+    }
+    auto &&conn = rconn.value();
+
+    auto rid = conn->remotePeer();
+    if (!rid) {
+      log()->warn("can not get remote peer id, {}", rid.error());
+      return;  // ignore
+    }
+    auto &&id = rid.value();
+
+    // IMPLEMENT
+  }
+
   Router &ListenerManagerImpl::getRouter() {
     return *router_;
   }
 
-  boost::asio::awaitable<
-      outcome::result<std::shared_ptr<connection::CapableConnection>>>
-  ListenerManagerImpl::listenCoroutine() {
-    while (true) {
-      try {
-        for (auto &[ma, listener] : listeners_) {
-          auto connection = co_await listener->asyncAccept();
-          if (!connection) {
-            co_return connection.error();
-          }
-          co_return connection.value();
-        }
-      } catch (const std::exception &e) {
-        co_return std::errc::io_error;
-      }
+  boost::asio::awaitable<outcome::result<void>>
+  ListenerManagerImpl::listenCoroutine(const multi::Multiaddress &ma) {
+    auto tr = this->tmgr_->findBest(ma);
+    if (tr == nullptr) {
+      // can not listen on this address
+      co_return std::errc::address_family_not_supported;
     }
+
+    auto it = listeners_.find(ma);
+    if (it != listeners_.end()) {
+      // this address is already used
+      co_return std::errc::address_in_use;
+    }
+
+    auto listener = tr->createListener(
+        [](auto &&) { throw std::logic_error("can not listen, placeholder"); });
+
+    listeners_.insert({ma, std::move(listener)});
+
+    // process connection in onConnectionCoro in detached coroutine
+    boost::asio::co_spawn(
+        listener->getContext(),
+        [this, listener]() -> boost::asio::awaitable<void> {
+          while (listener && !listener->isClosed()) {
+            auto connection = co_await listener->asyncAccept();
+            this->onConnectionCoro(std::move(connection));
+          }
+        },
+        boost::asio::detached);
+
+    co_return outcome::success();
   }
 
 }  // namespace libp2p::network

@@ -59,6 +59,13 @@ namespace libp2p::connection {
     virtual void newStream(StreamHandlerFunc cb) = 0;
 
     /**
+     * @brief Opens new stream in a coroutine manner
+     * @return Awaitable result of a new Stream or error
+     */
+    virtual boost::asio::awaitable<outcome::result<std::shared_ptr<Stream>>>
+    newStreamCoroutine() = 0;
+
+    /**
      * @brief Set a handler, which is called, when a new stream arrives from the
      * other side
      * @param cb, to which a received stream is passed
@@ -66,12 +73,6 @@ namespace libp2p::connection {
      * reset
      */
     virtual void onStream(NewStreamHandlerFunc cb) = 0;
-
-    /**
-     * @brief Opens new stream in a coroutine manner
-     * @return Awaitable result of a new Stream or error
-     */
-    virtual boost::asio::awaitable<outcome::result<std::shared_ptr<Stream>>> newStreamCoroutine() = 0;
   };
 
 }  // namespace libp2p::connection
