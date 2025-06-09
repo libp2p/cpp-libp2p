@@ -9,6 +9,10 @@
 #include <libp2p/log/logger.hpp>
 #include <libp2p/muxer/yamux/yamuxed_connection.hpp>
 
+#ifdef YAMUX_HARDWARE_TRACKING
+#include <libp2p/muxer/yamux/hardware_tracker.hpp>
+#endif
+
 namespace libp2p::muxer {
   Yamux::Yamux(MuxedConnectionConfig config,
                std::shared_ptr<basic::Scheduler> scheduler,
@@ -43,7 +47,14 @@ namespace libp2p::muxer {
           "inactive connection passed to muxer: {}", res.error());
       return cb(res.error());
     }
-    cb(std::make_shared<connection::YamuxedConnection>(
-        std::move(conn), scheduler_, close_cb_, config_));
+    
+    auto yamux_connection = std::make_shared<connection::YamuxedConnection>(
+        std::move(conn), scheduler_, close_cb_, config_);
+    
+#ifdef YAMUX_HARDWARE_TRACKING
+    connection::trackNextYamuxedConnection(yamux_connection);
+#endif
+    
+    cb(yamux_connection);
   }
 }  // namespace libp2p::muxer
