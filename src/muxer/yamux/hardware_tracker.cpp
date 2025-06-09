@@ -141,7 +141,10 @@ void HardwareSharedPtrTracker::startTracking(std::shared_ptr<YamuxedConnection> 
     }
     
     if (is_tracking_) {
-        stopTracking();
+        std::cout << "Already tracking another YamuxedConnection (address: " 
+                  << (current_tracked_ptr_.expired() ? "expired" : "active") 
+                  << "), ignoring new request\n";
+        return;
     }
     
     std::cout << "\n=== HARDWARE TRACKING STARTED ===\n";
