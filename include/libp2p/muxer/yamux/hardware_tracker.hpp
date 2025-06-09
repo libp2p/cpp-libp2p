@@ -60,8 +60,10 @@ private:
 private:
     std::atomic<bool> enabled_{false};
     std::atomic<bool> is_tracking_{false};
+    std::atomic<bool> should_stop_{false};  // Flag for signal handler
     
     void* watched_address_{nullptr};
+    int watchpoint_fd_{-1};  // Store perf_event fd
     std::weak_ptr<YamuxedConnection> current_tracked_ptr_;
     
     // For debug registers

@@ -74,6 +74,8 @@ bool HardwareSharedPtrTracker::setHardwareWatchpoint(void* address) {
         return false;
     }
     
+    watchpoint_fd_ = fd;
+    
     std::cout << "Hardware watchpoint set on address " << address 
               << " (fd=" << fd << ")\n";
     
@@ -81,8 +83,13 @@ bool HardwareSharedPtrTracker::setHardwareWatchpoint(void* address) {
 }
 
 bool HardwareSharedPtrTracker::removeHardwareWatchpoint() {
-    std::cout << "Hardware watchpoint removed\n";
-    return true;
+    if (watchpoint_fd_ != -1) {
+        close(watchpoint_fd_);
+        watchpoint_fd_ = -1;
+        std::cout << "Hardware watchpoint removed\n";
+        return true;
+    }
+    return false;
 }
 
 void HardwareSharedPtrTracker::signalHandler(int sig, siginfo_t* info, void* context) {
@@ -90,14 +97,7 @@ void HardwareSharedPtrTracker::signalHandler(int sig, siginfo_t* info, void* con
         return;
     }
     
-    std::cout << "\n=== HARDWARE BREAKPOINT TRIGGERED ===\n";
-    std::cout << "Signal: " << sig << "\n";
-    std::cout << "Address: " << info->si_addr << "\n";
-    
-    instance_->printStackTrace();
-    instance_->checkAndSwitchIfNeeded();
-    
-    std::cout << "====================================\n\n";
+    instance_->should_stop_ = true;
 }
 
 void HardwareSharedPtrTracker::printStackTrace() {
@@ -119,19 +119,26 @@ void HardwareSharedPtrTracker::printStackTrace() {
 }
 
 void HardwareSharedPtrTracker::checkAndSwitchIfNeeded() {
-    if (auto ptr = current_tracked_ptr_.lock()) {
-        long count = ptr.use_count();
-        std::cout << "Current use_count: " << count << "\n";
+    if (should_stop_.exchange(false)) {
+        std::cout << "\n=== HARDWARE BREAKPOINT TRIGGERED ===\n";
+        printStackTrace();
         
-        if (count <= 1) {
-            std::cout << "Object will be deleted soon (use_count=" << count << ")\n";
-            std::cout << "Waiting for next YamuxedConnection to track...\n";
+        if (auto ptr = current_tracked_ptr_.lock()) {
+            long count = ptr.use_count();
+            std::cout << "Current use_count: " << count << "\n";
+            
+            if (count <= 1) {
+                std::cout << "Object will be deleted soon (use_count=" << count << ")\n";
+                std::cout << "Stopping hardware tracking\n";
+                stopTracking();
+            }
+        } else {
+            std::cout << "Tracked object already deleted\n";
+            std::cout << "Stopping hardware tracking\n";
             stopTracking();
         }
-    } else {
-        std::cout << "Tracked object already deleted\n";
-        std::cout << "Waiting for next YamuxedConnection to track...\n";
-        stopTracking();
+        
+        std::cout << "====================================\n\n";
     }
 }
 
@@ -165,6 +172,7 @@ void HardwareSharedPtrTracker::startTracking(std::shared_ptr<YamuxedConnection> 
     watched_address_ = ref_count_addr;
     current_tracked_ptr_ = ptr;
     is_tracking_ = true;
+    should_stop_ = false;
     
     std::cout << "Hardware tracking activated\n";
     std::cout << "=================================\n\n";
@@ -182,6 +190,7 @@ void HardwareSharedPtrTracker::stopTracking() {
     watched_address_ = nullptr;
     current_tracked_ptr_.reset();
     is_tracking_ = false;
+    should_stop_ = false;
     
     std::cout << "Hardware tracking stopped\n";
     std::cout << "=================================\n\n";
@@ -189,6 +198,8 @@ void HardwareSharedPtrTracker::stopTracking() {
 
 void trackNextYamuxedConnection(std::shared_ptr<YamuxedConnection> ptr) {
     auto& tracker = HardwareSharedPtrTracker::getInstance();
+    
+    tracker.checkAndSwitchIfNeeded();
     
     if (!tracker.isTracking()) {
         tracker.startTracking(std::move(ptr));
