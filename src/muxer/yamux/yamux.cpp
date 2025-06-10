@@ -15,6 +15,7 @@ namespace libp2p::muxer {
                std::shared_ptr<basic::Scheduler> scheduler,
                std::shared_ptr<network::ConnectionManager> cmgr)
       : config_{config}, scheduler_{std::move(scheduler)} {
+    connection::HardwareSharedPtrTracker::getInstance().enable();
     assert(scheduler_);
     if (cmgr) {
       std::weak_ptr<network::ConnectionManager> w(cmgr);
