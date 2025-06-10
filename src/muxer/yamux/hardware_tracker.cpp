@@ -6,6 +6,7 @@
 #include <linux/perf_event.h>
 #include <asm/unistd.h>
 #include <cstdio>
+#include <fcntl.h>
 
 namespace libp2p::connection {
 
@@ -45,11 +46,12 @@ void* HardwareSharedPtrTracker::getRefCountAddress(const std::shared_ptr<Yamuxed
         return nullptr;
     }
     
-    void* ref_count_addr = control_block;
+    uint32_t* ref_count_addr = (uint32_t*)((uint8_t*)control_block + sizeof(void*));
     
     std::cout << "Control block address: " << control_block << "\n";
     std::cout << "Reference count address: " << ref_count_addr << "\n";
     std::cout << "Current use_count: " << ptr.use_count() << "\n";
+    assert(*ref_count_addr == ptr.use_count());
     
     return ref_count_addr;
 }
@@ -61,22 +63,50 @@ bool HardwareSharedPtrTracker::setHardwareWatchpoint(void* address) {
     pe.type = PERF_TYPE_BREAKPOINT;
     pe.size = sizeof(pe);
     pe.config = 0;
-    pe.bp_type = HW_BREAKPOINT_W | HW_BREAKPOINT_R;
+    pe.bp_type = HW_BREAKPOINT_W;  // Только запись, чтение может генерировать много событий
     pe.bp_addr = reinterpret_cast<uint64_t>(address);
-    pe.bp_len = sizeof(long);
-    pe.disabled = 0;
+    pe.bp_len = HW_BREAKPOINT_LEN_4;  // 4 байта для int
+    pe.disabled = 0;  // Включен сразу
     pe.exclude_kernel = 1;
     pe.exclude_hv = 1;
+    pe.exclude_user = 0;  // Отслеживаем user space
+    pe.sample_period = 1;  // Генерировать событие на каждое изменение
+    pe.wakeup_events = 1;  // Пробуждать на каждое событие
+    
+    std::cout << "🔧 Настройка hardware watchpoint:\n";
+    std::cout << "   Адрес: " << address << "\n";
+    std::cout << "   bp_addr: 0x" << std::hex << pe.bp_addr << std::dec << "\n";
+    std::cout << "   bp_len: " << pe.bp_len << "\n";
+    std::cout << "   bp_type: " << pe.bp_type << " (только запись)\n";
     
     int fd = syscall(__NR_perf_event_open, &pe, 0, -1, -1, 0);
     if (fd == -1) {
-        perror("perf_event_open for hardware watchpoint failed");
+        perror("❌ perf_event_open неудачен");
+        std::cout << "   Ошибка: " << strerror(errno) << "\n";
+        std::cout << "   Код ошибки: " << errno << "\n";
         return false;
+    }
+    
+    // Настраиваем доставку сигнала
+    struct f_owner_ex owner;
+    owner.type = F_OWNER_TID;
+    owner.pid = syscall(SYS_gettid);
+    
+    if (fcntl(fd, F_SETOWN_EX, &owner) == -1) {
+        perror("⚠️ fcntl F_SETOWN_EX failed");
+    }
+    
+    if (fcntl(fd, F_SETFL, O_ASYNC) == -1) {
+        perror("⚠️ fcntl F_SETFL failed");
+    }
+    
+    if (fcntl(fd, F_SETSIG, SIGTRAP) == -1) {
+        perror("⚠️ fcntl F_SETSIG failed");
     }
     
     watchpoint_fd_ = fd;
     
-    std::cout << "Hardware watchpoint set on address " << address 
+    std::cout << "✅ Hardware watchpoint установлен на адрес " << address 
               << " (fd=" << fd << ")\n";
     
     return true;
@@ -96,33 +126,43 @@ void HardwareSharedPtrTracker::signalHandler(int sig, siginfo_t* info, void* con
     if (!instance_ || sig != SIGTRAP) {
         return;
     }
-
-    // printStackTrace();
     
     static int call_number = 0;
     call_number++;
     
-    const char msg[] = "\n=== HARDWARE BREAKPOINT: REFERENCE COUNT CHANGED ===\n";
+    const char msg[] = "\n🚨 === HARDWARE BREAKPOINT: REFERENCE COUNT CHANGED === 🚨\n";
     write(STDOUT_FILENO, msg, sizeof(msg) - 1);
     
-    char call_msg[100];
-    int len = snprintf(call_msg, sizeof(call_msg), "Call #%d - Address: %p\n", call_number, info->si_addr);
+    char call_msg[200];
+    int len = snprintf(call_msg, sizeof(call_msg), "📍 Изменение #%d - Адрес: %p\n", call_number, info->si_addr);
     write(STDOUT_FILENO, call_msg, len);
     
-    const int max_frames = 15;
-    void* buffer[max_frames];
-    
-    const char stack_msg[] = "Stack trace (exact location of reference count change):\n";
+    const char stack_msg[] = "📚 Стек трассировки (точное место изменения счетчика ссылок):\n";
     write(STDOUT_FILENO, stack_msg, sizeof(stack_msg) - 1);
     
+    // Получаем стек трассировки
+    const int max_frames = 7;
+    void* buffer[max_frames];
     int nframes = backtrace(buffer, max_frames);
     
-    backtrace_symbols_fd(buffer, nframes, STDOUT_FILENO);
+    // Используем backtrace_symbols для получения символов
+    char** symbols = backtrace_symbols(buffer, nframes);
     
-    const char end_msg[] = "================================================\n\n";
+    if (symbols) {
+        for (int i = 0; i < nframes; ++i) {
+            char frame_msg[500];
+            int frame_len = snprintf(frame_msg, sizeof(frame_msg), 
+                                   "   [%2d] %s\n", i, symbols[i]);
+            write(STDOUT_FILENO, frame_msg, frame_len);
+        }
+        free(symbols);
+    } else {
+        // Fallback - используем backtrace_symbols_fd если symbols == NULL
+        backtrace_symbols_fd(buffer, nframes, STDOUT_FILENO);
+    }
+    
+    const char end_msg[] = "🔚 ============================================== 🔚\n\n";
     write(STDOUT_FILENO, end_msg, sizeof(end_msg) - 1);
-    
-    //instance_->signal_count_.fetch_add(1, std::memory_order_relaxed);
 }
 
 void HardwareSharedPtrTracker::printStackTrace() {
@@ -167,7 +207,7 @@ void HardwareSharedPtrTracker::checkAndSwitchIfNeeded() {
     }
 }
 
-void HardwareSharedPtrTracker::startTracking(std::shared_ptr<YamuxedConnection> ptr) {
+void HardwareSharedPtrTracker::startTracking(const std::shared_ptr<YamuxedConnection>& ptr) {
     if (!enabled_) {
         return;
     }
@@ -221,9 +261,9 @@ void HardwareSharedPtrTracker::stopTracking() {
     std::cout << "=================================\n\n";
 }
 
-void trackNextYamuxedConnection(std::shared_ptr<YamuxedConnection> ptr) {
+void trackNextYamuxedConnection(const std::shared_ptr<YamuxedConnection>& ptr) {
     auto& tracker = HardwareSharedPtrTracker::getInstance();
-    tracker.startTracking(std::move(ptr));
-}
+    tracker.startTracking(ptr);
+}    
 
 } // namespace libp2p::connection 

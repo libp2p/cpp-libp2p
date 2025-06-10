@@ -23,7 +23,7 @@ public:
     }
 
     // Start tracking the reference count of a shared_ptr
-    void startTracking(std::shared_ptr<YamuxedConnection> ptr);
+    void startTracking(const std::shared_ptr<YamuxedConnection>& ptr);
     
     // Stop current tracking
     void stopTracking();
@@ -76,7 +76,7 @@ private:
 };
 
 // Global function for setting in yamux.cpp
-void trackNextYamuxedConnection(std::shared_ptr<YamuxedConnection> ptr);
+void trackNextYamuxedConnection(const std::shared_ptr<YamuxedConnection>& ptr);
 
 // Macros for convenience
 #define YAMUX_HARDWARE_TRACK_ENABLE() \

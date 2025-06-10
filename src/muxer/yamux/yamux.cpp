@@ -8,10 +8,7 @@
 
 #include <libp2p/log/logger.hpp>
 #include <libp2p/muxer/yamux/yamuxed_connection.hpp>
-
-#ifdef YAMUX_HARDWARE_TRACKING
 #include <libp2p/muxer/yamux/hardware_tracker.hpp>
-#endif
 
 namespace libp2p::muxer {
   Yamux::Yamux(MuxedConnectionConfig config,
@@ -50,10 +47,7 @@ namespace libp2p::muxer {
     
     auto yamux_connection = std::make_shared<connection::YamuxedConnection>(
         std::move(conn), scheduler_, close_cb_, config_);
-    
-#ifdef YAMUX_HARDWARE_TRACKING
     connection::trackNextYamuxedConnection(yamux_connection);
-#endif
     
     cb(yamux_connection);
   }
