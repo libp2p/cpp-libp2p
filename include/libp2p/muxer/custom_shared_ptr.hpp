@@ -99,6 +99,21 @@ namespace libp2p::connection {
   //==============================================================================
   template <typename T>
   class shared_ptr {
+   private:
+    // Helper for enable_shared_from_this
+    template <typename U>
+    void enable_weak_this(const U *ptr) {
+      if (ptr != nullptr && sp_) {
+        if (auto esft =
+                dynamic_cast<const std::enable_shared_from_this<U> *>(ptr)) {
+          // Get a shared_ptr of the correct type before converting to weak_ptr
+          auto shared_ptr_u = std::static_pointer_cast<U>(sp_);
+          const_cast<std::enable_shared_from_this<U> *>(esft)
+              ->weak_from_this() = shared_ptr_u;
+        }
+      }
+    }
+
    public:
     // Default constructor: creates an empty shared_ptr.
     shared_ptr() noexcept : sp_(), memory_block_(nullptr) {}
@@ -116,6 +131,7 @@ namespace libp2p::connection {
               typename = std::enable_if_t<std::is_convertible_v<U *, T *>>>
     explicit shared_ptr(U *p) : sp_(p), memory_block_(nullptr) {
       allocate_special_buffer();
+      enable_weak_this<U>(p);
     }
 
     // Copy constructor
@@ -266,6 +282,7 @@ namespace libp2p::connection {
     shared_ptr<T> result;
     result.sp_ = std::make_shared<T>(std::forward<Args>(args)...);
     result.allocate_special_buffer();
+    result.enable_weak_this(result.get());
     return result;
   }
 
