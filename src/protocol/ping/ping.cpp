@@ -33,7 +33,7 @@ namespace libp2p::protocol {
   }
 
   void Ping::startPinging(
-      const std::shared_ptr<connection::CapableConnection> &conn,
+      const connection::shared_ptr<connection::CapableConnection> &conn,
       std::function<void(outcome::result<std::shared_ptr<PingClientSession>>)>
           cb) {
     auto remote_peer = conn->remotePeer();

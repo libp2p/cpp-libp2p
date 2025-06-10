@@ -53,7 +53,7 @@ namespace libp2p::protocol {
      * @param cb to be called, when a ping session is started, or error happens
      */
     void startPinging(
-        const std::shared_ptr<connection::CapableConnection> &conn,
+        const connection::shared_ptr<connection::CapableConnection> &conn,
         std::function<void(outcome::result<std::shared_ptr<PingClientSession>>)>
             cb);
 
