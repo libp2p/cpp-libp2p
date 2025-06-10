@@ -96,12 +96,37 @@ void HardwareSharedPtrTracker::signalHandler(int sig, siginfo_t* info, void* con
     if (!instance_ || sig != SIGTRAP) {
         return;
     }
+
+    // printStackTrace();
     
-    instance_->should_stop_ = true;
+    static int call_number = 0;
+    call_number++;
+    
+    const char msg[] = "\n=== HARDWARE BREAKPOINT: REFERENCE COUNT CHANGED ===\n";
+    write(STDOUT_FILENO, msg, sizeof(msg) - 1);
+    
+    char call_msg[100];
+    int len = snprintf(call_msg, sizeof(call_msg), "Call #%d - Address: %p\n", call_number, info->si_addr);
+    write(STDOUT_FILENO, call_msg, len);
+    
+    const int max_frames = 15;
+    void* buffer[max_frames];
+    
+    const char stack_msg[] = "Stack trace (exact location of reference count change):\n";
+    write(STDOUT_FILENO, stack_msg, sizeof(stack_msg) - 1);
+    
+    int nframes = backtrace(buffer, max_frames);
+    
+    backtrace_symbols_fd(buffer, nframes, STDOUT_FILENO);
+    
+    const char end_msg[] = "================================================\n\n";
+    write(STDOUT_FILENO, end_msg, sizeof(end_msg) - 1);
+    
+    //instance_->signal_count_.fetch_add(1, std::memory_order_relaxed);
 }
 
 void HardwareSharedPtrTracker::printStackTrace() {
-    const int max_frames = 20;
+    const int max_frames = 7;
     void* buffer[max_frames];
     
     int nframes = backtrace(buffer, max_frames);
@@ -147,13 +172,13 @@ void HardwareSharedPtrTracker::startTracking(std::shared_ptr<YamuxedConnection> 
         return;
     }
     
-    if (is_tracking_) {
-        std::cout << "Already tracking another YamuxedConnection (address: " 
-                  << (current_tracked_ptr_.expired() ? "expired" : "active") 
+    if (!current_tracked_ptr_.expired()) {
+        std::cout << "Already tracking another YamuxedConnection (address: active" 
                   << "), ignoring new request\n";
         return;
     }
     
+    stopTracking();
     std::cout << "\n=== HARDWARE TRACKING STARTED ===\n";
     std::cout << "YamuxedConnection address: " << ptr.get() << "\n";
     std::cout << "shared_ptr use_count: " << ptr.use_count() << "\n";
@@ -198,14 +223,7 @@ void HardwareSharedPtrTracker::stopTracking() {
 
 void trackNextYamuxedConnection(std::shared_ptr<YamuxedConnection> ptr) {
     auto& tracker = HardwareSharedPtrTracker::getInstance();
-    
-    tracker.checkAndSwitchIfNeeded();
-    
-    if (!tracker.isTracking()) {
-        tracker.startTracking(std::move(ptr));
-    } else {
-        std::cout << "Already tracking another YamuxedConnection, waiting for completion...\n";
-    }
+    tracker.startTracking(std::move(ptr));
 }
 
 } // namespace libp2p::connection 
