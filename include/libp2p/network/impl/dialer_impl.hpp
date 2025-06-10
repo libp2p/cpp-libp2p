@@ -69,7 +69,7 @@ namespace libp2p::network {
     // connection requesters
     void completeDial(const peer::PeerId &peer_id, const DialResult &result);
 
-    void newStream(std::shared_ptr<connection::CapableConnection> conn,
+    void newStream(connection::shared_ptr<connection::CapableConnection> conn,
                    StreamProtocols protocols,
                    StreamAndProtocolOrErrorCb cb);
 

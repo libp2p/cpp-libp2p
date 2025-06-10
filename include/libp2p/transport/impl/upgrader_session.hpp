@@ -20,7 +20,7 @@ namespace libp2p::transport {
   struct UpgraderSession
       : public std::enable_shared_from_this<UpgraderSession> {
     using ConnectionCallback =
-        void(outcome::result<std::shared_ptr<connection::CapableConnection>>);
+        void(outcome::result<connection::shared_ptr<connection::CapableConnection>>);
     using HandlerFunc = std::function<ConnectionCallback>;
 
     UpgraderSession(std::shared_ptr<transport::Upgrader> upgrader,

@@ -43,7 +43,12 @@ namespace libp2p::transport {
                                                key_codec_,
                                                std::move(socket),
                                                false);
-    server_->onAccept(handler_);
+    lsquic::OnAccept n_handler =
+        [this](connection::shared_ptr<QuicConnection> res) {
+          this->handler_(
+              connection::shared_ptr<connection::CapableConnection>(res.get()));
+        };
+    server_->onAccept(n_handler);
     server_->start();
     return outcome::success();
   }

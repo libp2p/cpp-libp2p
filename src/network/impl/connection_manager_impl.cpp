@@ -6,6 +6,8 @@
 
 #include <libp2p/network/impl/connection_manager_impl.hpp>
 
+#include <libp2p/muxer/custom_shared_ptr.hpp>
+
 #include <algorithm>
 
 namespace libp2p::network {
@@ -51,7 +53,7 @@ namespace libp2p::network {
 
   void ConnectionManagerImpl::addConnectionToPeer(
       const peer::PeerId &p, ConnectionManager::ConnectionSPtr c) {
-    if (c == nullptr) {
+    if (not c) {
       log()->error("inconsistency: not adding nullptr to active connections");
       return;
     }
@@ -140,8 +142,8 @@ namespace libp2p::network {
   }
 
   void ConnectionManagerImpl::onConnectionClosed(
-      const peer::PeerId &peer_id,
-      const std::shared_ptr<connection::CapableConnection> &conn) {
+      peer::PeerId peer_id,
+      const connection::shared_ptr<connection::CapableConnection> &conn) {
     if (closing_connections_to_peer_.has_value()
         && closing_connections_to_peer_.value() == peer_id) {
       return;

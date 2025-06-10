@@ -46,8 +46,8 @@ namespace libp2p::network {
     Router &getRouter() override;
 
     void onConnection(
-        outcome::result<std::shared_ptr<connection::CapableConnection>> rconn)
-        override;
+        outcome::result<connection::shared_ptr<connection::CapableConnection>>
+            rconn) override;
 
    private:
     bool started = false;

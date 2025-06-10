@@ -10,6 +10,8 @@
 
 #include <libp2p/connection/secure_connection.hpp>
 
+#include "libp2p/muxer/custom_shared_ptr.hpp"
+
 namespace libp2p::connection {
   struct Stream;
 
@@ -25,7 +27,7 @@ namespace libp2p::connection {
 
     using ConnectionClosedCallback = std::function<void(
         const peer::PeerId &,
-        const std::weak_ptr<connection::CapableConnection> &)>;
+        const weak_ptr<connection::CapableConnection> &)>;
 
     ~CapableConnection() override = default;
 

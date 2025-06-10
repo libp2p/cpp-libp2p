@@ -9,10 +9,11 @@
 #include <optional>
 
 #include <libp2p/basic/read_buffer.hpp>
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/basic/write_queue.hpp>
 #include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/stream.hpp>
-#include <libp2p/basic/scheduler.hpp>
+#include <libp2p/muxer/custom_shared_ptr.hpp>
 
 namespace libp2p::connection {
 
@@ -49,7 +50,7 @@ namespace libp2p::connection {
     YamuxStream &operator=(YamuxStream &&other) = delete;
     ~YamuxStream() override = default;
 
-    YamuxStream(std::shared_ptr<connection::SecureConnection> connection,
+    YamuxStream(shared_ptr<connection::YamuxedConnection> connection,
                 YamuxStreamFeedback &feedback,
                 std::shared_ptr<basic::Scheduler> scheduler,
                 uint32_t stream_id,
@@ -135,7 +136,7 @@ namespace libp2p::connection {
     closeCompleted();
 
     /// Underlying connection (secured)
-    std::weak_ptr<connection::SecureConnection> connection_;
+    weak_ptr<YamuxedConnection> connection_;
 
     /// Yamux-specific interface of connection
     YamuxStreamFeedback &feedback_;
@@ -197,4 +198,3 @@ namespace libp2p::connection {
   };
 
 }  // namespace libp2p::connection
-

@@ -58,7 +58,8 @@ namespace libp2p::transport {
                 if (not r) {
                   return cb(r.error());
                 }
-                cb(r.value());
+                cb(connection::shared_ptr<connection::CapableConnection>(
+                    r.value().get()));
               });
         };
     detail::resolve(resolver_, info, std::move(connect));

@@ -17,15 +17,16 @@ namespace libp2p::muxer {
     assert(scheduler_);
     if (cmgr_) {
       std::weak_ptr<network::ConnectionManager> w(cmgr_);
-      close_cb_ = [wptr{std::move(w)}](
-                      const peer::PeerId &p,
-                      const std::weak_ptr<connection::CapableConnection> &c) {
-        auto mgr = wptr.lock();
-        auto conn = c.lock();
-        if (mgr && conn) {
-          mgr->onConnectionClosed(p, conn);
-        }
-      };
+      close_cb_ =
+          [wptr{std::move(w)}](
+              const peer::PeerId &p,
+              const connection::weak_ptr<connection::CapableConnection> &c) {
+            auto mgr = wptr.lock();
+            auto conn = c.lock();
+            if (mgr && conn) {
+              mgr->onConnectionClosed(p, conn);
+            }
+          };
     }
   }
 
@@ -53,17 +54,20 @@ namespace libp2p::muxer {
     // Check if a connection to this peer already exists
     if (cmgr_) {
       auto existing_conn = cmgr_->getBestConnectionForPeer(peer_id);
+      auto custom_existing_conn = connection::shared_ptr(existing_conn.get());
       if (existing_conn && !existing_conn->isClosed()) {
         log::createLogger("Yamux")->debug(
             "connection to peer {} already exists, reusing",
             peer_id.toBase58());
-        return cb(existing_conn);
+        return cb(custom_existing_conn);
       }
     }
 
     log::createLogger("Yamux")->debug("muxing new connection to peer {}",
                                       peer_id.toBase58());
-    cb(std::make_shared<connection::YamuxedConnection>(
-        std::move(conn), scheduler_, close_cb_, config_));
+    connection::shared_ptr<connection::CapableConnection> sptr(
+        new connection::YamuxedConnection(
+            std::move(conn), scheduler_, close_cb_, config_));
+    cb(sptr);
   }
 }  // namespace libp2p::muxer

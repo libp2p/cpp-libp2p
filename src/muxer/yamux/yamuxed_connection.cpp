@@ -548,7 +548,7 @@ namespace libp2p::connection {
     auto self = shared_from_this();
     started_ = false;
 
-    SL_DEBUG(log(),
+    SL_INFO(log(),
              "closing connection with peer {}, pointer {}, reason: {}",
              remote_peer_.toBase58(),
              fmt::ptr(self.get()),
@@ -577,7 +577,9 @@ namespace libp2p::connection {
       enqueue(goAwayMsg(*reply_to_peer_code));
     } else {
       write_queue_.clear();
-      std::ignore = connection_->close();
+      if (connection_) {
+        std::ignore = connection_->close();
+      }
     }
   }
 

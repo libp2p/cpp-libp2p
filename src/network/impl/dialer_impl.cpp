@@ -85,8 +85,8 @@ namespace libp2p::network {
     ctx.addr_queue.pop_front();
     auto dial_handler =
         [wp{weak_from_this()}, peer_id, addr](
-            outcome::result<std::shared_ptr<connection::CapableConnection>>
-                result) {
+            outcome::result<
+                connection::shared_ptr<connection::CapableConnection>> result) {
           if (auto self = wp.lock()) {
             auto ctx_found = self->dialing_peers_.find(peer_id);
             if (self->dialing_peers_.end() == ctx_found) {
@@ -160,23 +160,22 @@ namespace libp2p::network {
              "New stream to {} for {} (peer info)",
              p.id.toBase58().substr(46),
              fmt::join(protocols, " "));
-    dial(p,
-         [self{shared_from_this()},
-          protocols{std::move(protocols)},
-          cb{std::move(cb)}](
-             outcome::result<std::shared_ptr<connection::CapableConnection>>
-                 rconn) mutable {
-           if (!rconn) {
-             return cb(rconn.error());
-           }
-           auto &&conn = rconn.value();
-           self->newStream(
-               std::move(conn), std::move(protocols), std::move(cb));
-         });
+    dial(
+        p,
+        [self{shared_from_this()},
+         protocols{std::move(protocols)},
+         cb{std::move(cb)}](outcome::result<connection::shared_ptr<
+                                connection::CapableConnection>> rconn) mutable {
+          if (!rconn) {
+            return cb(rconn.error());
+          }
+          auto &&conn = rconn.value();
+          self->newStream(std::move(conn), std::move(protocols), std::move(cb));
+        });
   }
 
   void DialerImpl::newStream(
-      std::shared_ptr<connection::CapableConnection> conn,
+      connection::shared_ptr<connection::CapableConnection> conn,
       StreamProtocols protocols,
       StreamAndProtocolOrErrorCb cb) {
     auto stream_res = conn->newStream();

@@ -12,6 +12,7 @@
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
+#include <libp2p/muxer/yamux/yamuxed_connection.hpp>
 
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
@@ -25,13 +26,12 @@ namespace libp2p::connection {
     }
   }  // namespace
 
-  YamuxStream::YamuxStream(
-      std::shared_ptr<connection::SecureConnection> connection,
-      YamuxStreamFeedback &feedback,
-      std::shared_ptr<basic::Scheduler> scheduler,
-      uint32_t stream_id,
-      size_t maximum_window_size,
-      size_t write_queue_limit)
+  YamuxStream::YamuxStream(shared_ptr<connection::YamuxedConnection> connection,
+                           YamuxStreamFeedback &feedback,
+                           std::shared_ptr<basic::Scheduler> scheduler,
+                           uint32_t stream_id,
+                           size_t maximum_window_size,
+                           size_t write_queue_limit)
       : connection_(connection),
         feedback_(feedback),
         scheduler_(std::move(scheduler)),
@@ -215,7 +215,7 @@ namespace libp2p::connection {
 
   outcome::result<peer::PeerId> YamuxStream::remotePeerId() const {
     auto shared_connection = connection_.lock();
-    if (shared_connection) {
+    if (shared_connection.use_count() > 0) {
       return shared_connection->remotePeer();
     }
     return Error::STREAM_RESET_BY_HOST;
@@ -223,7 +223,7 @@ namespace libp2p::connection {
 
   outcome::result<bool> YamuxStream::isInitiator() const {
     auto shared_connection = connection_.lock();
-    if (shared_connection) {
+    if (shared_connection.use_count() > 0) {
       return shared_connection->isInitiator();
     }
     return Error::STREAM_RESET_BY_HOST;
@@ -231,7 +231,7 @@ namespace libp2p::connection {
 
   outcome::result<multi::Multiaddress> YamuxStream::localMultiaddr() const {
     auto shared_connection = connection_.lock();
-    if (shared_connection) {
+    if (shared_connection.use_count() > 0) {
       return shared_connection->localMultiaddr();
     }
     return Error::STREAM_RESET_BY_HOST;
@@ -239,7 +239,7 @@ namespace libp2p::connection {
 
   outcome::result<multi::Multiaddress> YamuxStream::remoteMultiaddr() const {
     auto shared_connection = connection_.lock();
-    if (shared_connection) {
+    if (shared_connection.use_count() > 0) {
       return shared_connection->remoteMultiaddr();
     }
     return Error::STREAM_RESET_BY_HOST;

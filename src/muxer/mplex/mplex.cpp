@@ -8,6 +8,7 @@
 
 #include <memory>
 
+#include <libp2p/muxer/custom_shared_ptr.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 namespace libp2p::muxer {
@@ -19,7 +20,8 @@ namespace libp2p::muxer {
 
   void Mplex::muxConnection(std::shared_ptr<connection::SecureConnection> conn,
                             CapConnCallbackFunc cb) const {
-    cb(std::make_shared<connection::MplexedConnection>(std::move(conn),
-                                                       config_));
+    connection::shared_ptr<connection::CapableConnection> sptr(
+        new connection::MplexedConnection(std::move(conn), config_));
+    cb(sptr);
   }
 }  // namespace libp2p::muxer

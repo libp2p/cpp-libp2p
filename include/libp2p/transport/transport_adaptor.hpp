@@ -14,6 +14,7 @@
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/event/emitter.hpp>
 #include <libp2p/multi/multiaddress.hpp>
+#include <libp2p/muxer/custom_shared_ptr.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/transport/transport_listener.hpp>
 
@@ -25,8 +26,8 @@ namespace libp2p::transport {
    */
   class TransportAdaptor : public basic::Adaptor {
    public:
-    using ConnectionCallback =
-        void(outcome::result<std::shared_ptr<connection::CapableConnection>>);
+    using ConnectionCallback = void(
+        outcome::result<connection::shared_ptr<connection::CapableConnection>>);
     using HandlerFunc = std::function<ConnectionCallback>;
 
     ~TransportAdaptor() override = default;

@@ -12,6 +12,7 @@
 #include <libp2p/connection/layer_connection.hpp>
 #include <libp2p/connection/raw_connection.hpp>
 #include <libp2p/connection/secure_connection.hpp>
+#include <libp2p/muxer/custom_shared_ptr.hpp>
 
 namespace libp2p::transport {
 
@@ -25,7 +26,7 @@ namespace libp2p::transport {
     using RawSPtr = std::shared_ptr<connection::RawConnection>;
     using LayerSPtr = std::shared_ptr<connection::LayerConnection>;
     using SecSPtr = std::shared_ptr<connection::SecureConnection>;
-    using CapSPtr = std::shared_ptr<connection::CapableConnection>;
+    using CapSPtr = connection::shared_ptr<connection::CapableConnection>;
 
     using OnLayerCallbackFunc = std::function<void(outcome::result<LayerSPtr>)>;
     using OnSecuredCallbackFunc = std::function<void(outcome::result<SecSPtr>)>;

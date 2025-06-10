@@ -118,7 +118,8 @@ namespace libp2p::transport::lsquic {
       if (op) {
         op->cb(res);
       } else if (res) {
-        self->on_accept_(res.value());
+        connection::shared_ptr<QuicConnection> custom_sptr{res.value().get()};
+        self->on_accept_(custom_sptr);
       }
     };
     stream_if.on_new_stream = +[](void *void_self, lsquic_stream_t *stream) {

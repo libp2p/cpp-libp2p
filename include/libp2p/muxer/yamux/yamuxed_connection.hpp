@@ -12,6 +12,7 @@
 #include <libp2p/basic/scheduler.hpp>
 #include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/capable_connection.hpp>
+#include <libp2p/muxer/custom_shared_ptr.hpp>
 #include <libp2p/muxer/muxed_connection_config.hpp>
 #include <libp2p/muxer/yamux/yamux_reading_state.hpp>
 #include <libp2p/muxer/yamux/yamux_stream.hpp>
@@ -27,7 +28,7 @@ namespace libp2p::connection {
   class YamuxedConnection final
       : public CapableConnection,
         public YamuxStreamFeedback,
-        public std::enable_shared_from_this<YamuxedConnection> {
+        public enable_shared_from_this<YamuxedConnection> {
    public:
     using StreamId = uint32_t;
 

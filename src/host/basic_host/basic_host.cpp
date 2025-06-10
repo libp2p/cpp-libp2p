@@ -106,7 +106,7 @@ namespace libp2p::host {
 
   Host::Connectedness BasicHost::connectedness(const peer::PeerInfo &p) const {
     auto conn = network_->getConnectionManager().getBestConnectionForPeer(p.id);
-    if (conn != nullptr) {
+    if (conn) {
       return Connectedness::CONNECTED;
     }
 

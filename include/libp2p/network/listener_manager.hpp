@@ -11,6 +11,8 @@
 #include <libp2p/network/router.hpp>
 #include <libp2p/protocol/base_protocol.hpp>
 
+#include "libp2p/muxer/custom_shared_ptr.hpp"
+
 namespace libp2p::event::network {
 
   using ListenAddressAddedChannel =
@@ -96,7 +98,7 @@ namespace libp2p::network {
      * @brief Allows new connections for accepting incoming streams
      */
     virtual void onConnection(
-        outcome::result<std::shared_ptr<connection::CapableConnection>>
+        outcome::result<connection::shared_ptr<connection::CapableConnection>>
             rconn) = 0;
   };
 

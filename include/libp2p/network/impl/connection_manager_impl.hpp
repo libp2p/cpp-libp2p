@@ -34,8 +34,9 @@ namespace libp2p::network {
     void closeConnectionsToPeer(const peer::PeerId &p) override;
 
     void onConnectionClosed(
-        const peer::PeerId &peer_id,
-        const std::shared_ptr<connection::CapableConnection> &conn) override;
+        peer::PeerId peer_id,
+        const connection::shared_ptr<connection::CapableConnection> &conn)
+        override;
 
    private:
     std::unordered_map<peer::PeerId, std::unordered_set<ConnectionSPtr>>

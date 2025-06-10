@@ -179,7 +179,8 @@ namespace libp2p::network {
   }
 
   void ListenerManagerImpl::onConnection(
-      outcome::result<std::shared_ptr<connection::CapableConnection>> rconn) {
+      outcome::result<connection::shared_ptr<connection::CapableConnection>>
+          rconn) {
     if (!rconn) {
       log()->warn("can not accept valid connection, {}", rconn.error());
       return;  // ignore

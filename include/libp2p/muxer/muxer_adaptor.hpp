@@ -13,13 +13,16 @@
 #include <libp2p/connection/secure_connection.hpp>
 #include <libp2p/outcome/outcome.hpp>
 
+#include "custom_shared_ptr.hpp"
+
 namespace libp2p::muxer {
   /**
    * Strategy to upgrade connections to muxed
    */
   struct MuxerAdaptor : public basic::Adaptor {
     using CapConnCallbackFunc = std::function<void(
-        outcome::result<std::shared_ptr<connection::CapableConnection>>)>;
+        outcome::result<connection::shared_ptr<
+                               connection::CapableConnection>>)>;
 
     ~MuxerAdaptor() override = default;
 

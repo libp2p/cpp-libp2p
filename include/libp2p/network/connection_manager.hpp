@@ -13,12 +13,14 @@
 #include <libp2p/event/bus.hpp>
 #include <libp2p/peer/peer_info.hpp>
 
+#include "libp2p/muxer/custom_shared_ptr.hpp"
+
 namespace libp2p::event::network {
 
   /// fired when any new connection, in or outbound, is created
   using OnNewConnectionChannel =
       channel_decl<struct OnNewConnection,
-                   std::weak_ptr<connection::CapableConnection>>;
+                   connection::weak_ptr<connection::CapableConnection>>;
 
   /// fired when all connections to peer closed
   using OnPeerDisconnectedChannel =
@@ -34,7 +36,7 @@ namespace libp2p::network {
    */
   struct ConnectionManager : public basic::GarbageCollectable {
     using Connection = connection::CapableConnection;
-    using ConnectionSPtr = std::shared_ptr<Connection>;
+    using ConnectionSPtr = connection::shared_ptr<Connection>;
 
     ~ConnectionManager() override = default;
 
@@ -59,8 +61,8 @@ namespace libp2p::network {
     // called from connections when they are closed
     // TODO(artem) connection IDs instead of indexing by sptr
     virtual void onConnectionClosed(
-        const peer::PeerId &peer_id,
-        const std::shared_ptr<connection::CapableConnection> &conn) = 0;
+        peer::PeerId peer_id,
+        const connection::shared_ptr<connection::CapableConnection> &conn) = 0;
   };
 
 }  // namespace libp2p::network

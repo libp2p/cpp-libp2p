@@ -10,6 +10,7 @@
 #include <boost/asio/ip/udp.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <libp2p/multi/multiaddress.hpp>
+#include <libp2p/muxer/custom_shared_ptr.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <memory>
 #include <optional>
@@ -85,7 +86,7 @@ namespace libp2p::transport::lsquic {
     std::optional<Reading> reading{};
   };
 
-  using OnAccept = std::function<void(std::shared_ptr<QuicConnection>)>;
+  using OnAccept = std::function<void(connection::shared_ptr<QuicConnection>)>;
 
   /**
    * libp2p wrapper and adapter for lsquic server/client socket.

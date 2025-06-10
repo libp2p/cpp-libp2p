@@ -25,7 +25,7 @@ namespace libp2p::network {
     virtual ~Dialer() = default;
 
     using DialResult =
-        outcome::result<std::shared_ptr<connection::CapableConnection>>;
+        outcome::result<connection::shared_ptr<connection::CapableConnection>>;
     using DialResultFunc = std::function<void(DialResult)>;
 
     /**

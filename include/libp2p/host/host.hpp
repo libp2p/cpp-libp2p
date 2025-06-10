@@ -44,7 +44,7 @@ namespace libp2p {
     virtual ~Host() = default;
 
     using ConnectionResult =
-        outcome::result<std::shared_ptr<connection::CapableConnection>>;
+        outcome::result<connection::shared_ptr<connection::CapableConnection>>;
     using ConnectionResultHandler = std::function<void(ConnectionResult)>;
 
     using NewConnectionHandler = std::function<void(peer::PeerInfo &&)>;

@@ -14,6 +14,7 @@
 #include <libp2p/basic/closeable.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/multi/multiaddress.hpp>
+#include <libp2p/muxer/custom_shared_ptr.hpp>
 
 namespace libp2p::transport {
 
@@ -26,8 +27,8 @@ namespace libp2p::transport {
     using NoArgsCallback = void();
     using ErrorCallback = void(const std::error_code &);
     using MultiaddrCallback = void(const multi::Multiaddress &);
-    using ConnectionCallback =
-        void(outcome::result<std::shared_ptr<connection::CapableConnection>>);
+    using ConnectionCallback = void(
+        outcome::result<connection::shared_ptr<connection::CapableConnection>>);
     using HandlerFunc = std::function<ConnectionCallback>;
 
     ~TransportListener() override = default;
