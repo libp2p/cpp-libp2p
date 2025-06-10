@@ -261,7 +261,8 @@ namespace libp2p::connection {
 
     // Returns the number of shared_ptrs that own the object.
     long use_count() const noexcept {
-      return cb_ ? cb_->shared_count.load() : 0;
+      std::shared_ptr<detail::ControlBlock> temp{cb_};
+      return temp ? temp->shared_count.load() : 0;
     }
 
     // Checks if the managed object has been deleted.
