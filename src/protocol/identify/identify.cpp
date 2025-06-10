@@ -65,7 +65,7 @@ namespace libp2p::protocol {
   }
 
   void Identify::onNewConnection(
-      const std::weak_ptr<connection::CapableConnection> &conn) {
+      const connection::weak_ptr<connection::CapableConnection> &conn) {
     if (conn.expired()) {
       return;
     }

@@ -81,29 +81,31 @@ namespace libp2p::protocol::kademlia {
     new_connection_subscription_ =
         host_->getBus()
             .getChannel<event::network::OnNewConnectionChannel>()
-            .subscribe([this](
-                           // NOLINTNEXTLINE
-                           std::weak_ptr<connection::CapableConnection> conn) {
-              if (auto connection = conn.lock()) {
-                // adding outbound connections only
-                if (connection->isInitiator()) {
-                  log_.debug("new outbound connection");
-                  auto remote_peer_res = connection->remotePeer();
-                  if (!remote_peer_res) {
-                    return;
+            .subscribe(
+                [this](
+                    // NOLINTNEXTLINE
+                    connection::weak_ptr<connection::CapableConnection> conn) {
+                  if (auto connection = conn.lock()) {
+                    // adding outbound connections only
+                    if (connection->isInitiator()) {
+                      log_.debug("new outbound connection");
+                      auto remote_peer_res = connection->remotePeer();
+                      if (!remote_peer_res) {
+                        return;
+                      }
+                      auto remote_peer_addr_res = connection->remoteMultiaddr();
+                      if (!remote_peer_addr_res) {
+                        return;
+                      }
+                      addPeer(
+                          peer::PeerInfo{
+                              std::move(remote_peer_res.value()),
+                              {std::move(remote_peer_addr_res.value())}},
+                          false,
+                          true);
+                    }
                   }
-                  auto remote_peer_addr_res = connection->remoteMultiaddr();
-                  if (!remote_peer_addr_res) {
-                    return;
-                  }
-                  addPeer(
-                      peer::PeerInfo{std::move(remote_peer_res.value()),
-                                     {std::move(remote_peer_addr_res.value())}},
-                      false,
-                      true);
-                }
-              }
-            });
+                });
     on_disconnected_ =
         host_->getBus()
             .getChannel<event::network::OnPeerDisconnectedChannel>()

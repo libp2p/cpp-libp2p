@@ -77,7 +77,7 @@ namespace libp2p::protocol {
      * @param conn - new connection
      */
     void onNewConnection(
-        const std::weak_ptr<connection::CapableConnection> &conn);
+        const connection::weak_ptr<connection::CapableConnection> &conn);
 
     Host &host_;
     std::shared_ptr<IdentifyMessageProcessor> msg_processor_;
