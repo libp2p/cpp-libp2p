@@ -7,6 +7,14 @@
 #include <asm/unistd.h>
 #include <cstdio>
 #include <fcntl.h>
+#include <linux/perf_event.h>
+#include <linux/hw_breakpoint.h>
+#include <execinfo.h>
+#include <atomic>
+#include <cstring>
+#include <signal.h>
+#include <unistd.h>
+#include <sys/syscall.h>
 
 namespace libp2p::connection {
 
