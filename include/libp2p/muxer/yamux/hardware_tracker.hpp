@@ -76,10 +76,7 @@ private:
 };
 
 // Global function for setting in yamux.cpp
-inline void trackNextYamuxedConnection(const std::shared_ptr<YamuxedConnection>& ptr) {
-    auto& tracker = HardwareSharedPtrTracker::getInstance();
-    tracker.startTracking(ptr);
-}
+void trackNextYamuxedConnection(const std::shared_ptr<YamuxedConnection>& ptr);
 
 // Macros for convenience
 #define YAMUX_HARDWARE_TRACK_ENABLE() \

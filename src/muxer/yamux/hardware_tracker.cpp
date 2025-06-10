@@ -261,4 +261,9 @@ void HardwareSharedPtrTracker::stopTracking() {
     std::cout << "=================================\n\n";
 }
 
+void trackNextYamuxedConnection(const std::shared_ptr<YamuxedConnection>& ptr) {
+    auto& tracker = HardwareSharedPtrTracker::getInstance();
+    tracker.startTracking(ptr);
+}    
+
 } // namespace libp2p::connection 
