@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/protocol_muxer/multiselect/multiselect_instance.hpp>
 #include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
@@ -20,6 +21,9 @@ namespace libp2p::protocol_muxer::multiselect {
 
     constexpr size_t kMaxCacheSize = 8;
   }  // namespace
+
+  Multiselect::Multiselect(std::shared_ptr<basic::Scheduler> scheduler)
+      : scheduler_(std::move(scheduler)) {}
 
   void Multiselect::selectOneOf(std::span<const peer::ProtocolName> protocols,
                                 std::shared_ptr<basic::ReadWriter> connection,
@@ -62,7 +66,7 @@ namespace libp2p::protocol_muxer::multiselect {
   Multiselect::Instance Multiselect::getInstance() {
     Instance instance;
     if (cache_.empty()) {
-      instance = std::make_shared<MultiselectInstance>(*this);
+      instance = std::make_shared<MultiselectInstance>(*this, scheduler_);
     } else {
       SL_TRACE(log(),
                "cache: {}->{}, active {}->{}",

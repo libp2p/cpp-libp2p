@@ -7,7 +7,9 @@
 #include <libp2p/protocol_muxer/multiselect/multiselect_instance.hpp>
 
 #include <cctype>
+#include <span>
 
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/trace.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
@@ -20,10 +22,14 @@ namespace libp2p::protocol_muxer::multiselect {
       static log::Logger logger = log::createLogger("Multiselect");
       return logger;
     }
+
+    /// Timeout for protocol negotiation (5 seconds)
+    constexpr std::chrono::milliseconds kNegotiationTimeout{5000};
   }  // namespace
 
-  MultiselectInstance::MultiselectInstance(Multiselect &owner)
-      : owner_(owner) {}
+  MultiselectInstance::MultiselectInstance(
+      Multiselect &owner, std::shared_ptr<basic::Scheduler> scheduler)
+      : owner_(owner), scheduler_(std::move(scheduler)) {}
 
   void MultiselectInstance::selectOneOf(
       std::span<const peer::ProtocolName> protocols,
@@ -61,6 +67,15 @@ namespace libp2p::protocol_muxer::multiselect {
 
     write_queue_.clear();
     is_writing_ = false;
+
+    // Schedule timeout for negotiation
+    timeout_handle_ = scheduler_->scheduleWithHandle(
+        [wptr = std::weak_ptr<MultiselectInstance>(shared_from_this())]() {
+          if (auto self = wptr.lock()) {
+            self->onTimeout();
+          }
+        },
+        kNegotiationTimeout);
 
     if (is_initiator_) {
       std::ignore = sendProposal();
@@ -166,6 +181,10 @@ namespace libp2p::protocol_muxer::multiselect {
 
   void MultiselectInstance::close(outcome::result<std::string> result) {
     closed_ = true;
+
+    // Cancel timeout if it's still active
+    timeout_handle_.reset();
+
     ++current_round_;
     write_queue_.clear();
     Multiselect::ProtocolHandlerFunc callback;
@@ -336,6 +355,13 @@ namespace libp2p::protocol_muxer::multiselect {
 
     SL_DEBUG(log(), "Unexpected NA received by server");
     return MaybeResult(ProtocolMuxer::Error::PROTOCOL_VIOLATION);
+  }
+
+  void MultiselectInstance::onTimeout() {
+    SL_DEBUG(log(),
+             "Protocol negotiation timeout after {}ms",
+             kNegotiationTimeout.count());
+    close(ProtocolMuxer::Error::NEGOTIATION_FAILED);
   }
 
 }  // namespace libp2p::protocol_muxer::multiselect
