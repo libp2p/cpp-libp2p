@@ -11,6 +11,10 @@
 
 #include "protocol_muxer.hpp"
 
+namespace libp2p::basic {
+  class Scheduler;
+}
+
 namespace libp2p::protocol_muxer::multiselect {
 
   class MultiselectInstance;
@@ -19,6 +23,8 @@ namespace libp2p::protocol_muxer::multiselect {
   class Multiselect : public protocol_muxer::ProtocolMuxer {
    public:
     using Instance = std::shared_ptr<MultiselectInstance>;
+
+    explicit Multiselect(std::shared_ptr<basic::Scheduler> scheduler);
 
     ~Multiselect() override = default;
 
@@ -44,6 +50,9 @@ namespace libp2p::protocol_muxer::multiselect {
    private:
     /// Returns instance either from cache or creates a new one
     Instance getInstance();
+
+    /// Scheduler for timeout management
+    std::shared_ptr<basic::Scheduler> scheduler_;
 
     /// Active instances, keep them here to hold shared ptrs alive
     std::unordered_set<Instance> active_instances_;

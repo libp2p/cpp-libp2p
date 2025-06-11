@@ -6,11 +6,16 @@
 
 #pragma once
 
+#include <libp2p/basic/scheduler.hpp>
 #include <libp2p/protocol_muxer/multiselect.hpp>
 #include "parser.hpp"
 
 namespace soralog {
   class Logger;
+}
+
+namespace libp2p::basic {
+  class Scheduler;
 }
 
 namespace libp2p::protocol_muxer::multiselect {
@@ -21,7 +26,8 @@ namespace libp2p::protocol_muxer::multiselect {
   class MultiselectInstance
       : public std::enable_shared_from_this<MultiselectInstance> {
    public:
-    explicit MultiselectInstance(Multiselect &owner);
+    explicit MultiselectInstance(Multiselect &owner,
+                                 std::shared_ptr<basic::Scheduler> scheduler);
 
     /// Implements ProtocolMuxer API
     void selectOneOf(std::span<const peer::ProtocolName> protocols,
@@ -74,6 +80,9 @@ namespace libp2p::protocol_muxer::multiselect {
     /// Handles "na" reply, client-specific
     MaybeResult handleNA();
 
+    /// Handles timeout when negotiation takes too long
+    void onTimeout();
+
     /// Owner of this object, needed for reuse of instances
     Multiselect &owner_;
 
@@ -125,6 +134,12 @@ namespace libp2p::protocol_muxer::multiselect {
 
     /// Cache: serialized NA response
     boost::optional<Packet> na_response_;
+
+    /// Scheduler for timeout handling
+    std::shared_ptr<basic::Scheduler> scheduler_;
+
+    /// Timeout handle for negotiation timeout
+    basic::Scheduler::Handle timeout_handle_;
   };
 
 }  // namespace libp2p::protocol_muxer::multiselect
