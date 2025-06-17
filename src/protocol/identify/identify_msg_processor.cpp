@@ -329,9 +329,24 @@ namespace libp2p::protocol {
     // }
 
     if (!hasConsistentTransport(observed_address, host_.getAddresses())) {
+      std::string listen_addresses_str;
+      for (const auto &addr : host_.getAddresses()) {
+        listen_addresses_str += std::string(addr.getStringAddress()) + " ";
+      }
+        log_->error(
+            "observed address {} from peer {} does not have the same transport "
+            "as our listen addresses: {}",
+            observed_address.getStringAddress(),
+            peer_id.toBase58(),
+            listen_addresses_str);
       return;
     }
 
+    log_->info(
+        "received an observed address {} from peer {}, {}",
+        observed_address.getStringAddress(),
+        peer_id.toBase58(),
+        stream->remotePeerId().value().toBase58());
     observed_addresses_.add(std::move(observed_address),
                             std::move(local_addr_res.value()),
                             remote_addr_res.value(),
