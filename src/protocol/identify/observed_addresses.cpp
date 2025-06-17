@@ -111,8 +111,7 @@ namespace libp2p::protocol {
 
   bool ObservedAddresses::addressIsActivated(const ObservedAddress &address,
                                              Clock::time_point now) const {
-    return now - address.last_seen <= address.ttl
-        && address.seen_by.size() >= kActivationThresh;
+    return true;
   }
 
   multi::Multiaddress ObservedAddresses::observerGroup(
