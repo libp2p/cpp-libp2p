@@ -311,22 +311,22 @@ namespace libp2p::protocol {
 
     // if our local address is not one of our "official" listen addresses, we
     // are not going to save its mapping to the observed one
-    auto &listener = host_.getNetwork().getListener();
-    auto i_listen_addresses = listener.getListenAddressesInterfaces();
-
-    auto listen_addresses = listener.getListenAddresses();
-
-    auto addr_in_addresses = std::find(i_listen_addresses.begin(),
-                                       i_listen_addresses.end(),
-                                       local_addr_res.value())
-                              != i_listen_addresses.end()
-                          || std::find(listen_addresses.begin(),
-                                       listen_addresses.end(),
-                                       local_addr_res.value())
-                                 != listen_addresses.end();
-    if (!addr_in_addresses) {
-      return;
-    }
+    // auto &listener = host_.getNetwork().getListener();
+    // auto i_listen_addresses = listener.getListenAddressesInterfaces();
+    //
+    // auto listen_addresses = listener.getListenAddresses();
+    //
+    // auto addr_in_addresses = std::find(i_listen_addresses.begin(),
+    //                                    i_listen_addresses.end(),
+    //                                    local_addr_res.value())
+    //                           != i_listen_addresses.end()
+    //                       || std::find(listen_addresses.begin(),
+    //                                    listen_addresses.end(),
+    //                                    local_addr_res.value())
+    //                              != listen_addresses.end();
+    // if (!addr_in_addresses) {
+    //   return;
+    // }
 
     if (!hasConsistentTransport(observed_address, host_.getAddresses())) {
       return;
