@@ -30,14 +30,14 @@ namespace libp2p::connection {
       uint32_t stream_id,
       size_t maximum_window_size,
       size_t write_queue_limit)
-      : connection_(std::move(connection)),
+      : connection_(connection),
         feedback_(feedback),
         stream_id_(stream_id),
         window_size_(YamuxFrame::kInitialWindowSize),
         peers_window_size_(YamuxFrame::kInitialWindowSize),
         maximum_window_size_(maximum_window_size),
         write_queue_(write_queue_limit) {
-    assert(connection_);
+    assert(connection);
     assert(stream_id_ > 0);
     assert(window_size_ <= maximum_window_size_);
     assert(peers_window_size_ <= maximum_window_size_);
@@ -151,19 +151,31 @@ namespace libp2p::connection {
   }
 
   outcome::result<peer::PeerId> YamuxStream::remotePeerId() const {
-    return connection_->remotePeer();
+    if (auto conn = connection_.lock()) {
+      return conn->remotePeer();
+    }
+    return Error::STREAM_RESET_BY_HOST;
   }
 
   outcome::result<bool> YamuxStream::isInitiator() const {
-    return connection_->isInitiator();
+    if (auto conn = connection_.lock()) {
+      return conn->isInitiator();
+    }
+    return Error::STREAM_RESET_BY_HOST;
   }
 
   outcome::result<multi::Multiaddress> YamuxStream::localMultiaddr() const {
-    return connection_->localMultiaddr();
+    if (auto conn = connection_.lock()) {
+      return conn->localMultiaddr();
+    }
+    return Error::STREAM_RESET_BY_HOST;
   }
 
   outcome::result<multi::Multiaddress> YamuxStream::remoteMultiaddr() const {
-    return connection_->remoteMultiaddr();
+    if (auto conn = connection_.lock()) {
+      return conn->remoteMultiaddr();
+    }
+    return Error::STREAM_RESET_BY_HOST;
   }
 
   void YamuxStream::increaseSendWindow(size_t delta) {

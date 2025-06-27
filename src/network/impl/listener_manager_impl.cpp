@@ -7,6 +7,7 @@
 #include <libp2p/network/impl/listener_manager_impl.hpp>
 
 #include <libp2p/log/logger.hpp>
+#include <libp2p/muxer/yamux/yamuxed_connection.hpp>
 
 namespace libp2p::network {
 
@@ -240,6 +241,9 @@ namespace libp2p::network {
         });
 
     // store connection
+    if (auto yamux_conn = std::dynamic_pointer_cast<connection::YamuxedConnection>(conn)) {
+      yamux_conn->markAsRegistered();
+    }
     this->cmgr_->addConnectionToPeer(id, conn);
   }
 
