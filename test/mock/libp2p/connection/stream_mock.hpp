@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/connection/stream.hpp>
 
 #include <gmock/gmock.h>
 
 namespace libp2p::connection {
-  class StreamMock : public Stream {
+  class StreamMock : public std::enable_shared_from_this<StreamMock>,
+                     public Stream {
    public:
     ~StreamMock() override = default;
 
@@ -25,7 +27,12 @@ namespace libp2p::connection {
 
     MOCK_METHOD1(close, void(VoidResultHandlerFunc));
 
-    MOCK_METHOD3(read, void(BytesOut, size_t, Reader::ReadCallbackFunc));
+    void read(BytesOut out,
+              size_t ambigous_size,
+              Reader::ReadCallbackFunc cb) override {
+      ASSERT_EQ(out.size(), ambigous_size);
+      readReturnSize(shared_from_this(), out, cb);
+    }
     MOCK_METHOD3(readSome, void(BytesOut, size_t, Reader::ReadCallbackFunc));
     MOCK_METHOD3(writeSome, void(BytesIn, size_t, Writer::WriteCallbackFunc));
 
