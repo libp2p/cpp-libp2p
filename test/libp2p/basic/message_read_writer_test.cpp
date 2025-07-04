@@ -9,6 +9,8 @@
 #include <gtest/gtest.h>
 #include <libp2p/multi/uvarint.hpp>
 #include "mock/libp2p/connection/layer_connection_mock.hpp"
+#include "testutil/expect_read.hpp"
+#include "testutil/expect_write.hpp"
 #include "testutil/gmock_actions.hpp"
 
 using namespace libp2p;
@@ -41,17 +43,10 @@ class MessageReadWriterTest : public testing::Test {
   bool operation_completed_ = false;
 };
 
-ACTION_P(ReadPut, buf) {
-  ASSERT_GE(arg0.size(), buf.size());
-  std::copy(buf.begin(), buf.end(), arg0.begin());
-  arg2(buf.size());
-}
-
 TEST_F(MessageReadWriterTest, Read) {
-  EXPECT_CALL(*conn_mock_, read(_, 1, _))
-      .WillOnce(ReadPut(len_varint_.toBytes()));
-  EXPECT_CALL(*conn_mock_, read(_, kMsgLength, _))
-      .WillOnce(ReadPut(msg_bytes_));
+  EXPECT_CALL_READ(*conn_mock_)
+      .WILL_READ(len_varint_.toBytes())
+      .WILL_READ(msg_bytes_);
 
   msg_rw_->read([this](auto &&res) {
     ASSERT_TRUE(res);
@@ -62,18 +57,8 @@ TEST_F(MessageReadWriterTest, Read) {
   ASSERT_TRUE(operation_completed_);
 }
 
-ACTION_P2(CheckWrite, buf, varint) {
-  ASSERT_EQ(arg0.size(), buf.size());
-
-  for (auto i = 0u; i < varint.size(); ++i) {
-    ASSERT_EQ(arg0[i], varint.toBytes()[i]);
-  }
-  arg2(buf.size());
-}
-
 TEST_F(MessageReadWriterTest, Write) {
-  EXPECT_CALL(*conn_mock_, writeSome(_, kMsgLength + 1, _))
-      .WillOnce(CheckWrite(msg_with_varint_bytes_, len_varint_));
+  EXPECT_CALL_WRITE(*conn_mock_).WILL_WRITE(msg_with_varint_bytes_);
 
   msg_rw_->write(msg_bytes_, [this](auto &&res) {
     ASSERT_TRUE(res);

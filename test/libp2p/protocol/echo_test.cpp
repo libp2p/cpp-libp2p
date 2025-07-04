@@ -6,8 +6,11 @@
 
 #include <gtest/gtest.h>
 #include <libp2p/protocol/echo.hpp>
+#include <qtils/bytestr.hpp>
 #include <qtils/test/outcome.hpp>
 #include "mock/libp2p/connection/stream_mock.hpp"
+#include "testutil/expect_read.hpp"
+#include "testutil/expect_write.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/prepare_loggers.hpp"
 
@@ -17,30 +20,8 @@ using ::testing::_;
 using ::testing::Return;
 using std::string_literals::operator""s;
 
-// set what we read
-ACTION_P(SetReadMsg, msg) {
-  std::copy(msg.begin(), msg.end(), arg0.begin());
-  arg2(msg.size());
-}
-
-// assert that we write the same as we read
-ACTION_P(WriteMsgAssertEqual, msg) {
-  std::string sub;
-
-  if (*arg0.begin() == 0) {
-    // EOF
-    return;
-  }
-
-  auto begin = arg0.begin();
-  auto end = arg0.begin();
-
-  std::advance(end, msg.size());
-  std::copy(begin, end, std::back_inserter(sub));
-  EXPECT_EQ(sub, msg);
-
-  arg2(msg.size());
-}
+const auto msg = "hello"s;
+const auto msg_bytes = qtils::str2byte(msg);
 
 /**
  * @given Stream
@@ -52,7 +33,6 @@ TEST(EchoTest, Server) {
 
   Echo echo;
   auto stream = std::make_shared<connection::StreamMock>();
-  auto msg = "hello"s;
 
   EXPECT_CALL(*stream, isClosedForRead())
       .WillOnce(Return(false))
@@ -63,8 +43,8 @@ TEST(EchoTest, Server) {
   EXPECT_CALL(*stream, close(_))
       .WillOnce(Arg0CallbackWithArg(outcome::success()));
 
-  EXPECT_CALL(*stream, readSome(_, _, _)).WillOnce(SetReadMsg(msg));
-  EXPECT_CALL(*stream, writeSome(_, _, _)).WillOnce(WriteMsgAssertEqual(msg));
+  EXPECT_CALL_READ(*stream).WILL_READ(msg_bytes);
+  EXPECT_CALL_WRITE(*stream).WILL_WRITE(msg_bytes);
 
   echo.handle(StreamAndProtocol{stream, {}});
 }
@@ -74,15 +54,14 @@ TEST(EchoTest, Server) {
  * @when client writes string "hello" to the Stream
  * @then client reads back the same string
  */
-TEST(EchoTest, DISABLED_Client) {
+TEST(EchoTest, Client) {
   Echo echo;
   auto stream = std::make_shared<connection::StreamMock>();
-  auto msg = "hello"s;
 
   EXPECT_CALL(*stream, isClosedForWrite()).WillOnce(Return(false));
 
-  EXPECT_CALL(*stream, writeSome(_, _, _)).WillOnce(WriteMsgAssertEqual(msg));
-  EXPECT_CALL(*stream, readSome(_, _, _)).WillOnce(WriteMsgAssertEqual(msg));
+  EXPECT_CALL_READ(*stream).WILL_READ(msg_bytes).WILL_READ_ERROR();
+  EXPECT_CALL_WRITE(*stream).WILL_WRITE(msg_bytes);
 
   bool executed = false;
 
