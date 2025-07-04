@@ -22,6 +22,8 @@
 #include "mock/libp2p/crypto/random_generator_mock.hpp"
 #include "mock/libp2p/host/host_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
+#include "testutil/expect_read.hpp"
+#include "testutil/expect_write.hpp"
 
 using libp2p::basic::Scheduler;
 using libp2p::basic::SchedulerMock;
@@ -97,18 +99,9 @@ ACTION_P(ReadPut, buf) {
  * writes it back
  */
 TEST_F(PingTest, PingServer) {
-  EXPECT_CALL(*stream_, read(_, kPingMsgSize, _))
-      .WillOnce(ReadPut(buffer_))
-      .WillOnce(  // no second read
-          InvokeArgument<2>(std::error_code{}));
+  EXPECT_CALL_READ(*stream_).WILL_READ(buffer_).WILL_READ_ERROR();
 
-  auto if_eq_buf = [&](BytesIn actual) {
-    auto expected = BytesIn(buffer_);
-    return std::equal(
-        actual.begin(), actual.end(), expected.begin(), expected.end());
-  };
-  EXPECT_CALL(*stream_, writeSome(Truly(if_eq_buf), kPingMsgSize, _))
-      .WillOnce(InvokeArgument<2>(buffer_.size()));
+  EXPECT_CALL_WRITE(*stream_).WILL_WRITE(buffer_);
 
   EXPECT_CALL(*stream_, isClosedForWrite()).WillOnce(Return(false));
   EXPECT_CALL(*stream_, isClosedForRead())
@@ -135,17 +128,9 @@ TEST_F(PingTest, PingClient) {
   EXPECT_CALL(*rand_gen_, randomBytes(kPingMsgSize))
       .Times(2)
       .WillRepeatedly(Return(buffer_));
-  auto if_eq_buf = [&](BytesIn actual) {
-    auto expected = BytesIn(buffer_);
-    return std::equal(
-        actual.begin(), actual.end(), expected.begin(), expected.end());
-  };
-  EXPECT_CALL(*stream_, writeSome(Truly(if_eq_buf), kPingMsgSize, _))
-      .WillOnce(InvokeArgument<2>(buffer_.size()))
-      .WillOnce(  // no second write
-          InvokeArgument<2>(
-              make_error_code(boost::asio::error::invalid_argument)));
-  EXPECT_CALL(*stream_, read(_, kPingMsgSize, _)).WillOnce(ReadPut(buffer_));
+
+  EXPECT_CALL_WRITE(*stream_).WILL_WRITE(buffer_).WILL_WRITE_ERROR();
+  EXPECT_CALL_READ(*stream_).WILL_READ(buffer_);
 
   EXPECT_CALL(*stream_, isClosedForWrite())
       .Times(2)
@@ -175,12 +160,7 @@ TEST_F(PingTest, PingClientTimeoutExpired) {
       .WillOnce(InvokeArgument<2>(StreamAndProtocol{stream_, kPingProto}));
 
   EXPECT_CALL(*rand_gen_, randomBytes(kPingMsgSize)).WillOnce(Return(buffer_));
-  auto if_eq_buf = [&](BytesIn actual) {
-    auto expected = BytesIn(buffer_);
-    return std::equal(
-        actual.begin(), actual.end(), expected.begin(), expected.end());
-  };
-  EXPECT_CALL(*stream_, writeSome(Truly(if_eq_buf), kPingMsgSize, _));
+  EXPECT_CALL_WRITE(*stream_).WILL_WRITE(buffer_);
 
   EXPECT_CALL(*stream_, isClosedForWrite()).WillOnce(Return(false));
 

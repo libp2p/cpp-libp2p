@@ -44,9 +44,6 @@ class PlaintextAdaptorTest : public testing::Test {
     key_marshaller = std::make_shared<KeyMarshallerMock>();
     adaptor = std::make_shared<Plaintext>(marshaller, idmgr, key_marshaller);
 
-    ON_CALL(*conn, read(_, _, _)).WillByDefault(Arg2CallbackWithArg(5));
-    ON_CALL(*conn, writeSome(_, _, _)).WillByDefault(Arg2CallbackWithArg(5));
-
     ON_CALL(*idmgr, getKeyPair()).WillByDefault(ReturnRef(local_keypair));
     ON_CALL(*idmgr, getId()).WillByDefault(ReturnRef(local_pid));
     ON_CALL(*marshaller, marshal(_))

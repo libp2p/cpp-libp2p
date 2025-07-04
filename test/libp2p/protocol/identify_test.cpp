@@ -24,6 +24,8 @@
 #include "mock/libp2p/peer/key_repository_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
+#include "testutil/expect_read.hpp"
+#include "testutil/expect_write.hpp"
 #include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
@@ -184,10 +186,7 @@ TEST_F(IdentifyTest, Send) {
   EXPECT_CALL(host_, getLibp2pClientVersion()).WillOnce(Return(kClientVersion));
 
   // handle Identify request and check it
-  EXPECT_CALL(*stream_, writeSome(_, _, _))
-      .WillOnce(Success(
-          BytesIn(identify_pb_msg_bytes_.data(), identify_pb_msg_bytes_.size()),
-          outcome::success(identify_pb_msg_bytes_.size())));
+  EXPECT_CALL_WRITE(*stream_).WILL_WRITE(identify_pb_msg_bytes_);
 
   identify_->handle(StreamAndProtocol{stream_, {}});
 }
@@ -215,12 +214,9 @@ TEST_F(IdentifyTest, Receive) {
               newStream(kRemotePeerInfo, StreamProtocols{kIdentifyProto}, _))
       .WillOnce(InvokeArgument<2>(StreamAndProtocol{stream_, kIdentifyProto}));
 
-  EXPECT_CALL(*stream_, read(_, 1, _))
-      .WillOnce(ReadPut(std::span(identify_pb_msg_bytes_.data(), 1)));
-  EXPECT_CALL(*stream_, read(_, pb_msg_len_varint_->toUInt64(), _))
-      .WillOnce(ReadPut(std::span(
-          identify_pb_msg_bytes_.data() + pb_msg_len_varint_->size(),
-          identify_pb_msg_bytes_.size() - pb_msg_len_varint_->size())));
+  EXPECT_CALL_READ(*stream_)
+      .WILL_READ(BytesOut(identify_pb_msg_bytes_).first(1))
+      .WILL_READ(BytesOut(identify_pb_msg_bytes_).subspan(1));
 
   EXPECT_CALL(*stream_, remotePeerId())
       .Times(2)

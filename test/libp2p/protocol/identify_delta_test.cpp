@@ -19,6 +19,7 @@
 #include "mock/libp2p/network/connection_manager_mock.hpp"
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
+#include "testutil/expect_read.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/prepare_loggers.hpp"
 
@@ -154,12 +155,9 @@ ACTION_P(ReadPut, buf) {
  */
 TEST_F(IdentifyDeltaTest, Receive) {
   // handle
-  EXPECT_CALL(*stream_, read(_, 1, _))
-      .WillOnce(ReadPut(std::span(msg_added_rm_protos_bytes_.data(), 1)));
-  EXPECT_CALL(*stream_, read(_, added_rm_proto_len_.toUInt64(), _))
-      .WillOnce(ReadPut(std::span(
-          msg_added_rm_protos_bytes_.data() + added_proto_len_.size(),
-          msg_added_rm_protos_bytes_.size() - added_proto_len_.size())));
+  EXPECT_CALL_READ(*stream_)
+      .WILL_READ(BytesOut(msg_added_rm_protos_bytes_).first(1))
+      .WILL_READ(BytesOut(msg_added_rm_protos_bytes_).subspan(1));
 
   // deltaReceived
   EXPECT_CALL(*stream_, remotePeerId())

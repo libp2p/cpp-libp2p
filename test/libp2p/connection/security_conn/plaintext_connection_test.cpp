@@ -11,6 +11,8 @@
 #include <qtils/test/outcome.hpp>
 #include "mock/libp2p/connection/layer_connection_mock.hpp"
 #include "mock/libp2p/crypto/key_marshaller_mock.hpp"
+#include "testutil/expect_read.hpp"
+#include "testutil/expect_write.hpp"
 #include "testutil/gmock_actions.hpp"
 
 using namespace libp2p::connection;
@@ -120,28 +122,11 @@ TEST_F(PlaintextConnectionTest, RemoteMultiaddr) {
  */
 TEST_F(PlaintextConnectionTest, Read) {
   const int size = 100;
-  EXPECT_CALL(*connection_, read(_, _, _)).WillOnce(AsioSuccess(size));
+  EXPECT_CALL_READ(*connection_).WILL_READ_SIZE(size);
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
   secure_connection_->read(*buf, size, [size, buf](auto &&res) {
     ASSERT_OUTCOME_SUCCESS(res);
     ASSERT_EQ(res.value(), size);
-  });
-}
-
-/**
- * @given plaintext secure connection
- * @when invoking readSome method of the connection
- * @then method behaves as expected
- */
-TEST_F(PlaintextConnectionTest, ReadSome) {
-  const int size = 100;
-  const int smaller = 50;
-  EXPECT_CALL(*connection_, readSome(_, _, _))
-      .WillOnce(AsioSuccess(smaller /* less than 100 */));
-  auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
-  secure_connection_->readSome(*buf, smaller, [smaller, buf](auto &&res) {
-    ASSERT_OUTCOME_SUCCESS(res);
-    ASSERT_EQ(res.value(), smaller);
   });
 }
 
@@ -152,28 +137,11 @@ TEST_F(PlaintextConnectionTest, ReadSome) {
  */
 TEST_F(PlaintextConnectionTest, Write) {
   const int size = 100;
-  EXPECT_CALL(*connection_, writeSome(_, _, _)).WillOnce(AsioSuccess(size));
+  EXPECT_CALL_WRITE(*connection_).WILL_WRITE_SIZE(size);
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
   libp2p::writeReturnSize(secure_connection_, *buf, [size, buf](auto &&res) {
     ASSERT_OUTCOME_SUCCESS(res);
     ASSERT_EQ(res.value(), size);
-  });
-}
-
-/**
- * @given plaintext secure connection
- * @when invoking writeSome method of the connection
- * @then method behaves as expected
- */
-TEST_F(PlaintextConnectionTest, WriteSome) {
-  const int size = 100;
-  const int smaller = 50;
-  EXPECT_CALL(*connection_, writeSome(_, _, _))
-      .WillOnce(AsioSuccess(smaller /* less than 100 */));
-  auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
-  secure_connection_->writeSome(*buf, smaller, [smaller, buf](auto &&res) {
-    ASSERT_OUTCOME_SUCCESS(res);
-    ASSERT_EQ(res.value(), smaller);
   });
 }
 
