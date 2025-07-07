@@ -8,25 +8,9 @@
 
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
+#include <libp2p/common/outcome_macro.hpp>
 #include <libp2p/crypto/x25519_provider/x25519_provider_impl.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
-
-#ifndef UNIQUE_NAME
-#define UNIQUE_NAME(base) base##__LINE__
-#endif  // UNIQUE_NAME
-
-#define OUTCOME_CB_I(var, res)                \
-  auto && (var) = (res);                      \
-  if ((var).has_error()) {                    \
-    self->eraseWriteBuffer(ctx.write_buffer); \
-    return cb((var).error());                 \
-  }
-
-#define OUTCOME_CB_NAME_I(var, val, res) \
-  OUTCOME_CB_I(var, res)                 \
-  auto && (val) = (var).value();
-
-#define OUTCOME_CB(name, res) OUTCOME_CB_NAME_I(UNIQUE_NAME(name), name, res)
 
 namespace libp2p::connection {
   NoiseConnection::NoiseConnection(
@@ -72,18 +56,9 @@ namespace libp2p::connection {
   void NoiseConnection::readSome(BytesOut out,
                                  size_t bytes,
                                  libp2p::basic::Reader::ReadCallbackFunc cb) {
-    OperationContext context{.bytes_served = 0,
-                             .total_bytes = bytes,
-                             .write_buffer = write_buffers_.end()};
-    readSome(out, bytes, context, std::move(cb));
-  }
-
-  void NoiseConnection::readSome(BytesOut out,
-                                 size_t bytes,
-                                 OperationContext ctx,
-                                 ReadCallbackFunc cb) {
+    ambigousSize(out, bytes);
     if (not frame_buffer_->empty()) {
-      auto n{std::min(bytes, frame_buffer_->size())};
+      auto n{std::min(out.size(), frame_buffer_->size())};
       auto begin{frame_buffer_->begin()};
       auto end{begin + static_cast<int64_t>(n)};
       std::copy(begin, end, out.begin());
@@ -91,55 +66,35 @@ namespace libp2p::connection {
       return cb(n);
     }
     framer_->read(
-        [self{shared_from_this()}, out, bytes, cb{std::move(cb)}, ctx](
-            auto _data) mutable {
-          OUTCOME_CB(data, _data);
-          OUTCOME_CB(decrypted, self->decoder_cs_->decrypt({}, *data, {}));
+        [self{shared_from_this()}, out, cb{std::move(cb)}](
+            outcome::result<std::shared_ptr<Bytes>> data_result) mutable {
+          auto data = IF_ERROR_CB_RETURN(data_result);
+          auto decrypted =
+              IF_ERROR_CB_RETURN(self->decoder_cs_->decrypt({}, *data, {}));
           self->frame_buffer_->assign(decrypted.begin(), decrypted.end());
-          self->readSome(out, bytes, ctx, std::move(cb));
+          self->readSome(out, out.size(), std::move(cb));
         });
-  }
-
-  void NoiseConnection::write(BytesIn in,
-                              size_t bytes,
-                              NoiseConnection::OperationContext ctx,
-                              basic::Writer::WriteCallbackFunc cb) {
-    auto *self{this};  // for OUTCOME_CB
-    if (0 == bytes) {
-      BOOST_ASSERT(ctx.bytes_served >= ctx.total_bytes);
-      eraseWriteBuffer(ctx.write_buffer);
-      return cb(ctx.total_bytes);
-    }
-    auto n{std::min(bytes, security::noise::kMaxPlainText)};
-    OUTCOME_CB(encrypted, encoder_cs_->encrypt({}, in.subspan(0, n), {}));
-    if (write_buffers_.end() == ctx.write_buffer) {
-      constexpr auto dummy_size = 1;
-      constexpr auto dummy_value = 0x0;
-      ctx.write_buffer =
-          write_buffers_.emplace(write_buffers_.end(), dummy_size, dummy_value);
-    }
-    ctx.write_buffer->swap(encrypted);
-    framer_->write(*ctx.write_buffer,
-                   [self{shared_from_this()},
-                    in{in.subspan(static_cast<int64_t>(n))},
-                    bytes{bytes - n},
-                    cb{std::move(cb)},
-                    ctx](auto _n) mutable {
-                     OUTCOME_CB(n, _n);
-                     ctx.bytes_served += n;
-                     self->write(in, bytes, ctx, std::move(cb));
-                   });
   }
 
   void NoiseConnection::writeSome(BytesIn in,
                                   size_t bytes,
-                                  libp2p::basic::Writer::WriteCallbackFunc cb) {
-    OperationContext context{
-        .bytes_served = 0,
-        .total_bytes = bytes,
-        .write_buffer = write_buffers_.end(),
-    };
-    write(in, bytes, context, std::move(cb));
+                                  basic::Writer::WriteCallbackFunc cb) {
+    ambigousSize(in, bytes);
+    if (in.empty()) {
+      cb(in.size());
+      return;
+    }
+    if (in.size() > security::noise::kMaxPlainText) {
+      in = in.first(security::noise::kMaxPlainText);
+    }
+    auto encrypted = IF_ERROR_CB_RETURN(encoder_cs_->encrypt({}, in, {}));
+    // `InsecureReadWriter::write` doesn't leak `BytesIn` reference
+    framer_->write(
+        encrypted,
+        [in, cb{std::move(cb)}](outcome::result<size_t> result) mutable {
+          IF_ERROR_CB_RETURN(result);
+          cb(in.size());
+        });
   }
 
   void NoiseConnection::deferReadCallback(outcome::result<size_t> res,
@@ -179,13 +134,5 @@ namespace libp2p::connection {
   outcome::result<libp2p::crypto::PublicKey> NoiseConnection::remotePublicKey()
       const {
     return remote_;
-  }
-
-  void NoiseConnection::eraseWriteBuffer(BufferList::iterator &iterator) {
-    if (write_buffers_.end() == iterator) {
-      return;
-    }
-    write_buffers_.erase(iterator);
-    iterator = write_buffers_.end();
   }
 }  // namespace libp2p::connection

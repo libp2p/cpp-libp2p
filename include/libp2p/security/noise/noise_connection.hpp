@@ -24,14 +24,6 @@ namespace libp2p::connection {
   class NoiseConnection : public SecureConnection,
                           public std::enable_shared_from_this<NoiseConnection> {
    public:
-    using BufferList = std::list<Bytes>;
-
-    struct OperationContext {
-      size_t bytes_served;                /// written or read bytes count
-      const size_t total_bytes;           /// total size to process
-      BufferList::iterator write_buffer;  /// temporary data storage
-    };
-
     ~NoiseConnection() override = default;
 
     NoiseConnection(
@@ -70,18 +62,6 @@ namespace libp2p::connection {
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
    private:
-    void readSome(BytesOut out,
-                  size_t bytes,
-                  OperationContext ctx,
-                  ReadCallbackFunc cb);
-
-    void write(BytesIn in,
-               size_t bytes,
-               OperationContext ctx,
-               WriteCallbackFunc cb);
-
-    void eraseWriteBuffer(BufferList::iterator &iterator);
-
     std::shared_ptr<LayerConnection> connection_;
     crypto::PublicKey local_;
     crypto::PublicKey remote_;
@@ -90,7 +70,6 @@ namespace libp2p::connection {
     std::shared_ptr<security::noise::CipherState> decoder_cs_;
     std::shared_ptr<Bytes> frame_buffer_;
     std::shared_ptr<security::noise::InsecureReadWriter> framer_;
-    BufferList write_buffers_;
     log::Logger log_ = log::createLogger("NoiseConnection");
 
    public:
