@@ -13,6 +13,7 @@
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/byteutil.hpp>
+#include <libp2p/common/outcome_macro.hpp>
 #include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
 #include <libp2p/crypto/error.hpp>
 #include <libp2p/crypto/hmac_provider.hpp>
@@ -44,21 +45,6 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::connection, SecioConnection::Error, e) {
       return "Unknown error";
   }
 }
-
-#ifndef UNIQUE_NAME
-#define UNIQUE_NAME(base) base##__LINE__
-#endif  // UNIQUE_NAME
-
-#define IO_OUTCOME_TRY_NAME(var, val, res, cb) \
-  auto && (var) = (res);                       \
-  if ((var).has_error()) {                     \
-    cb((var).error());                         \
-    return;                                    \
-  }                                            \
-  auto && (val) = (var).value();
-
-#define IO_OUTCOME_TRY(name, res, cb) \
-  IO_OUTCOME_TRY_NAME(UNIQUE_NAME(name), name, res, cb)
 
 namespace {
   template <typename AesSecretType>
@@ -99,7 +85,8 @@ namespace libp2p::connection {
         local_stretched_key_{std::move(local_stretched_key)},
         remote_stretched_key_{std::move(remote_stretched_key)},
         aes128_secrets_{boost::none},
-        aes256_secrets_{boost::none} {
+        aes256_secrets_{boost::none},
+        write_buffer_{std::make_shared<Bytes>()} {
     BOOST_ASSERT(original_connection_);
     BOOST_ASSERT(hmac_provider_);
     BOOST_ASSERT(key_marshaller_);
@@ -206,6 +193,7 @@ namespace libp2p::connection {
   void SecioConnection::readSome(BytesOut out,
                                  size_t bytes,
                                  basic::Reader::ReadCallbackFunc cb) {
+    ambigousSize(out, bytes);
     // TODO(107): Reentrancy
 
     if (!isInitialized()) {
@@ -213,48 +201,29 @@ namespace libp2p::connection {
       return;
     }
 
-    // define bytes quantity to read of user-level data
-    size_t out_size{out.empty() ? 0 : static_cast<size_t>(out.size())};
-    size_t read_limit{out_size < bytes ? out_size : bytes};
-
     if (not user_data_buffer_.empty()) {
-      auto bytes_available{user_data_buffer_.size()};
-      size_t to_read{bytes_available < read_limit ? bytes_available
-                                                  : read_limit};
+      size_t to_read{std::min(user_data_buffer_.size(), out.size())};
       popUserData(out, to_read);
       SL_TRACE(log_, "Successfully read {} bytes", to_read);
       cb(to_read);
       return;
     }
 
-    ReadCallbackFunc cb_wrapper =
-        [self{shared_from_this()}, user_cb{cb}, out, bytes](
-            outcome::result<size_t> size_read_res) -> void {
-      if (not size_read_res) {
-        user_cb(size_read_res);
-        return;
-      }
-      self->readSome(out, bytes, user_cb);
-    };
-
-    readNextMessage(cb_wrapper);
+    readNextMessage([self{shared_from_this()}, out, cb{std::move(cb)}](
+                        outcome::result<void> result) {
+      IF_ERROR_CB_RETURN(result);
+      self->readSome(out, out.size(), std::move(cb));
+    });
   }
 
-  void SecioConnection::readNextMessage(ReadCallbackFunc cb) {
-    original_connection_->read(
+  void SecioConnection::readNextMessage(CbOutcomeVoid cb) {
+    read_buffer_->resize(kLenMarkerSize);
+    libp2p::read(
+        original_connection_,
         *read_buffer_,
-        kLenMarkerSize,
         [self{shared_from_this()}, buffer = read_buffer_, cb{std::move(cb)}](
-            outcome::result<size_t> read_bytes_res) mutable {
-          IO_OUTCOME_TRY(len_marker_size, read_bytes_res, cb);
-          if (len_marker_size != kLenMarkerSize) {
-            self->log_->error(
-                "Cannot read frame header. Read {} bytes when {} expected",
-                len_marker_size,
-                kLenMarkerSize);
-            cb(Error::STREAM_IS_BROKEN);
-            return;
-          }
+            outcome::result<void> result) mutable {
+          IF_ERROR_CB_RETURN(result);
           uint32_t frame_len{
               ntohl(common::convert<uint32_t>(buffer->data()))};  // NOLINT
           if (frame_len > kMaxFrameSize) {
@@ -265,37 +234,28 @@ namespace libp2p::connection {
             return;
           }
           SL_TRACE(self->log_, "Expecting frame of size {}.", frame_len);
-          self->original_connection_->read(
+          buffer->resize(frame_len);
+          libp2p::read(
+              self->original_connection_,
               *buffer,
-              frame_len,
-              [self, buffer, frame_len, cb{cb}](
-                  outcome::result<size_t> read_bytes) mutable {
-                IO_OUTCOME_TRY(read_frame_bytes, read_bytes, cb);
-                if (frame_len != read_frame_bytes) {
-                  self->log_->error(
-                      "Unable to read expected amount of bytes. Read {} when "
-                      "{} expected",
-                      read_frame_bytes,
-                      frame_len);
-                  cb(Error::STREAM_IS_BROKEN);
-                  return;
-                }
-                SL_TRACE(
-                    self->log_, "Received frame with len {}", read_frame_bytes);
-                IO_OUTCOME_TRY(mac_size, self->macSize(), cb);
+              [self, buffer, frame_len, cb{std::move(cb)}](
+                  outcome::result<void> result) mutable {
+                IF_ERROR_CB_RETURN(result);
+                SL_TRACE(self->log_, "Received frame with len {}", frame_len);
+                auto mac_size = IF_ERROR_CB_RETURN(self->macSize());
                 const auto data_size{frame_len - mac_size};
                 auto data_span{std::span(buffer->data(), data_size)};
                 auto mac_span{std::span(*buffer).subspan(data_size, mac_size)};
-                IO_OUTCOME_TRY(remote_mac, self->macRemote(data_span), cb);
+                auto remote_mac =
+                    IF_ERROR_CB_RETURN(self->macRemote(data_span));
                 if (BytesIn(remote_mac) != BytesIn(mac_span)) {
                   self->log_->error(
                       "Signature does not validate for the received frame");
                   cb(Error::INVALID_MAC);
                   return;
                 }
-                IO_OUTCOME_TRY(decrypted_bytes,
-                               (*self->remote_decryptor_)->crypt(data_span),
-                               cb);
+                auto decrypted_bytes = IF_ERROR_CB_RETURN(
+                    (*self->remote_decryptor_)->crypt(data_span));
                 size_t decrypted_bytes_len{decrypted_bytes.size()};
                 for (auto &&e : decrypted_bytes) {
                   self->user_data_buffer_.emplace(std::forward<decltype(e)>(e));
@@ -304,7 +264,7 @@ namespace libp2p::connection {
                          "Frame decrypted successfully {} -> {}",
                          frame_len,
                          decrypted_bytes_len);
-                cb(decrypted_bytes_len);
+                cb(outcome::success());
               });
         });
   }
@@ -312,38 +272,35 @@ namespace libp2p::connection {
   void SecioConnection::writeSome(BytesIn in,
                                   size_t bytes,
                                   basic::Writer::WriteCallbackFunc cb) {
+    ambigousSize(in, bytes);
     // TODO(107): Reentrancy
 
     if (!isInitialized()) {
       cb(Error::CONN_NOT_INITIALIZED);
     }
-    IO_OUTCOME_TRY(mac_size, macSize(), cb);
-    size_t frame_len{bytes + mac_size};
-    Bytes frame_buffer;
+    auto mac_size = IF_ERROR_CB_RETURN(macSize());
+    size_t frame_len{in.size() + mac_size};
+    write_buffer_->resize(0);
+    auto &frame_buffer = *write_buffer_;
     constexpr size_t len_field_size{kLenMarkerSize};
     frame_buffer.reserve(len_field_size + frame_len);
 
     common::putUint32BE(frame_buffer, frame_len);
-    IO_OUTCOME_TRY(encrypted_data, (*local_encryptor_)->crypt(in), cb);
-    IO_OUTCOME_TRY(mac_data, macLocal(encrypted_data), cb);
+    auto encrypted_data = IF_ERROR_CB_RETURN((*local_encryptor_)->crypt(in));
+    auto mac_data = IF_ERROR_CB_RETURN(macLocal(encrypted_data));
     frame_buffer.insert(frame_buffer.end(),
                         std::make_move_iterator(encrypted_data.begin()),
                         std::make_move_iterator(encrypted_data.end()));
     frame_buffer.insert(frame_buffer.end(),
                         std::make_move_iterator(mac_data.begin()),
                         std::make_move_iterator(mac_data.end()));
-    basic::Writer::WriteCallbackFunc cb_wrapper =
-        [user_cb{std::move(cb)}, bytes, raw_bytes{frame_buffer.size()}](
-            auto &&res) {
-          if (not res) {
-            return user_cb(res);  // pulling out the error occurred
-          }
-          if (res.value() != raw_bytes) {
-            return user_cb(Error::STREAM_IS_BROKEN);
-          }
-          user_cb(bytes);
-        };
-    writeReturnSize(original_connection_, frame_buffer, cb_wrapper);
+    write(original_connection_,
+          frame_buffer,
+          [buffer{write_buffer_}, in, cb{std::move(cb)}](
+              outcome::result<void> result) {
+            IF_ERROR_CB_RETURN(result);
+            cb(in.size());
+          });
   }
 
   bool SecioConnection::isClosed() const {
