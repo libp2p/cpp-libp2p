@@ -46,7 +46,7 @@ namespace libp2p::connection {
   }
 
   bool MplexStream::readTry() {
-    auto size{std::min(read_buffer_.size(), reading_->bytes)};
+    auto size{std::min(read_buffer_.size(), reading_->out.size())};
     if (size == 0) {
       return false;
     }
@@ -65,20 +65,21 @@ namespace libp2p::connection {
   }
 
   void MplexStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
+    ambigousSize(out, bytes);
     if (is_reset_) {
       return cb(Error::STREAM_RESET_BY_PEER);
     }
     if (!is_readable_) {
       return cb(Error::STREAM_NOT_READABLE);
     }
-    if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
+    if (out.empty()) {
       return cb(Error::STREAM_INVALID_ARGUMENT);
     }
     if (reading_.has_value()) {
       return cb(Error::STREAM_IS_READING);
     }
 
-    reading_.emplace(Reading{out, bytes, std::move(cb)});
+    reading_.emplace(Reading{out, std::move(cb)});
     if (readTry()) {
       return;
     }
@@ -98,13 +99,13 @@ namespace libp2p::connection {
     if (!is_writable_) {
       return cb(Error::STREAM_NOT_WRITABLE);
     }
-    if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
+    if (in.empty()) {
       return cb(Error::STREAM_INVALID_ARGUMENT);
     }
     if (is_writing_) {
       std::vector<uint8_t> in_vector(in.begin(), in.end());
       std::lock_guard<std::mutex> lock(write_queue_mutex_);
-      write_queue_.emplace_back(in_vector, bytes, cb);
+      write_queue_.emplace_back(in_vector, cb);
       return;
     }
     if (connection_.expired()) {
@@ -129,7 +130,7 @@ namespace libp2p::connection {
           // check if new write messages were received while stream was writing
           // and propagate these messages
           if (not self->write_queue_.empty()) {
-            auto [in, bytes, cb] = self->write_queue_.front();
+            auto [in, cb] = self->write_queue_.front();
             self->write_queue_.pop_front();
             writeReturnSize(self, in, cb);
           }

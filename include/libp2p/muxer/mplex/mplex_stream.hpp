@@ -84,7 +84,6 @@ namespace libp2p::connection {
    private:
     struct Reading {
       BytesOut out;
-      size_t bytes;
       ReadCallbackFunc cb;
     };
 
@@ -101,8 +100,7 @@ namespace libp2p::connection {
     boost::optional<Reading> reading_;
 
     /// Queue of write requests that were received when stream was writing
-    std::deque<std::tuple<std::vector<uint8_t>, size_t, WriteCallbackFunc>>
-        write_queue_{};
+    std::deque<std::tuple<Bytes, WriteCallbackFunc>> write_queue_{};
 
     mutable std::mutex write_queue_mutex_;
 

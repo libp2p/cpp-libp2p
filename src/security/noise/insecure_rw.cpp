@@ -8,24 +8,11 @@
 
 #include <libp2p/security/noise/insecure_rw.hpp>
 
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/read.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/common/byteutil.hpp>
+#include <libp2p/common/outcome_macro.hpp>
 #include <libp2p/security/noise/crypto/state.hpp>
-
-#ifndef UNIQUE_NAME
-#define UNIQUE_NAME(base) base##__LINE__
-#endif  // UNIQUE_NAME
-
-#define IO_OUTCOME_TRY_NAME(var, val, res, cb) \
-  auto && (var) = (res);                       \
-  if ((var).has_error()) {                     \
-    cb((var).error());                         \
-    return;                                    \
-  }                                            \
-  auto && (val) = (var).value();
-
-#define IO_OUTCOME_TRY(name, res, cb) \
-  IO_OUTCOME_TRY_NAME(UNIQUE_NAME(name), name, res, cb)
 
 namespace libp2p::security::noise {
   InsecureReadWriter::InsecureReadWriter(
@@ -34,27 +21,21 @@ namespace libp2p::security::noise {
       : connection_{std::move(connection)}, buffer_{std::move(buffer)} {}
 
   void InsecureReadWriter::read(basic::MessageReadWriter::ReadCallbackFunc cb) {
-    buffer_->resize(kMaxMsgLen);  // ensure buffer capacity
+    buffer_->reserve(kMaxMsgLen);  // ensure buffer capacity
     auto read_cb = [cb{std::move(cb)}, self{shared_from_this()}](
-                       outcome::result<size_t> result) mutable {
-      IO_OUTCOME_TRY(read_bytes, result, cb);
-      if (kLengthPrefixSize != read_bytes) {
-        return cb(std::errc::broken_pipe);
-      }
+                       outcome::result<void> result) mutable {
+      IF_ERROR_CB_RETURN(result);
       uint16_t frame_len{
           ntohs(common::convert<uint16_t>(self->buffer_->data()))};  // NOLINT
-      auto read_cb = [cb = std::move(cb), self, frame_len](
-                         outcome::result<size_t> result) {
-        IO_OUTCOME_TRY(read_bytes, result, cb);
-        if (frame_len != read_bytes) {
-          return cb(std::errc::broken_pipe);
-        }
-        self->buffer_->resize(read_bytes);
+      auto read_cb = [cb = std::move(cb), self](outcome::result<void> result) {
+        IF_ERROR_CB_RETURN(result);
         cb(self->buffer_);
       };
-      self->connection_->read(*self->buffer_, frame_len, std::move(read_cb));
+      self->buffer_->resize(frame_len);
+      libp2p::read(self->connection_, *self->buffer_, std::move(read_cb));
     };
-    connection_->read(*buffer_, kLengthPrefixSize, std::move(read_cb));
+    buffer_->resize(kLengthPrefixSize);
+    libp2p::read(connection_, *buffer_, std::move(read_cb));
   }
 
   void InsecureReadWriter::write(BytesIn buffer,
@@ -66,14 +47,11 @@ namespace libp2p::security::noise {
     outbuf_.reserve(kLengthPrefixSize + buffer.size());
     common::putUint16BE(outbuf_, buffer.size());
     outbuf_.insert(outbuf_.end(), buffer.begin(), buffer.end());
-    auto write_cb = [self{shared_from_this()},
-                     cb{std::move(cb)}](outcome::result<size_t> result) {
-      IO_OUTCOME_TRY(written_bytes, result, cb);
-      if (self->outbuf_.size() != written_bytes) {
-        return cb(std::errc::broken_pipe);
-      }
-      cb(written_bytes - kLengthPrefixSize);
+    auto write_cb = [self{shared_from_this()}, buffer, cb{std::move(cb)}](
+                        outcome::result<void> result) {
+      IF_ERROR_CB_RETURN(result);
+      cb(buffer.size());
     };
-    writeReturnSize(connection_, outbuf_, std::move(write_cb));
+    libp2p::write(connection_, outbuf_, std::move(write_cb));
   }
 }  // namespace libp2p::security::noise

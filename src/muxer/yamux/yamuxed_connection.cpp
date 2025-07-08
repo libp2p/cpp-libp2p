@@ -8,9 +8,7 @@
 
 #include <boost/asio/error.hpp>
 
-#include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
-#include <libp2p/common/ambigous_size.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/log/logger.hpp>
 
 namespace libp2p::connection {
@@ -625,18 +623,18 @@ namespace libp2p::connection {
     writing_buf_->assign(packet.packet.begin(), packet.packet.end());
     auto cb = [wptr{weak_from_this()},
                buf{writing_buf_},
-               packet = std::move(packet)](outcome::result<size_t> res) {
+               packet = std::move(packet)](outcome::result<void> res) mutable {
       if (auto self = wptr.lock()) {
-        self->onDataWritten(res, packet.stream_id);
+        self->onDataWritten(res, std::move(packet));
       }
     };
 
     is_writing_ = true;
-    writeReturnSize(connection_, *writing_buf_, cb);
+    write(connection_, *writing_buf_, cb);
   }
 
-  void YamuxedConnection::onDataWritten(outcome::result<size_t> res,
-                                        StreamId stream_id) {
+  void YamuxedConnection::onDataWritten(outcome::result<void> res,
+                                        WriteQueueItem &&packet) {
     if (!res) {
       write_queue_.clear();
       std::ignore = connection_->close();
@@ -648,10 +646,10 @@ namespace libp2p::connection {
     // this instance may be killed inside further callback
     auto self = shared_from_this();
 
-    if (stream_id != 0) {
+    if (packet.stream_id != 0) {
       // pass write ack to stream about data size written except header size
 
-      auto sz = res.value();
+      auto sz = packet.packet.size();
       if (sz < YamuxFrame::kHeaderLength) {
         log()->error("onDataWritten : too small size arrived: {}", sz);
         sz = 0;
@@ -660,10 +658,11 @@ namespace libp2p::connection {
       }
 
       if (sz > 0) {
-        auto it = streams_.find(stream_id);
+        auto it = streams_.find(packet.stream_id);
         if (it == streams_.end()) {
-          SL_DEBUG(
-              log(), "onDataWritten : stream {} no longer exists", stream_id);
+          SL_DEBUG(log(),
+                   "onDataWritten : stream {} no longer exists",
+                   packet.stream_id);
         } else {
           // stream can now call write callbacks
           it->second->onDataWritten(sz);

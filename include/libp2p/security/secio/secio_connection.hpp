@@ -11,6 +11,7 @@
 #include <mutex>
 #include <queue>
 
+#include <libp2p/basic/cb.hpp>
 #include <libp2p/common/metrics/instance_count.hpp>
 #include <libp2p/connection/secure_connection.hpp>
 #include <libp2p/crypto/common.hpp>
@@ -115,7 +116,7 @@ namespace libp2p::connection {
     /**
      * Retrieves the next available SECIO message from the network.
      */
-    void readNextMessage(ReadCallbackFunc cb);
+    void readNextMessage(CbOutcomeVoid cb);
 
     /**
      * Moves decrypted bytes from internal buffer to the output buffer.
@@ -163,6 +164,7 @@ namespace libp2p::connection {
     std::queue<uint8_t> user_data_buffer_;
 
     std::shared_ptr<Bytes> read_buffer_;
+    std::shared_ptr<Bytes> write_buffer_;
 
     log::Logger log_ = log::createLogger("SecIoConnection");
 

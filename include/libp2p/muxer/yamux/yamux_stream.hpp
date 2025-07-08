@@ -112,21 +112,22 @@ namespace libp2p::connection {
     void closedByConnection(std::error_code ec);
 
    private:
+    struct Reading {
+      BytesOut out;
+      ReadCallbackFunc cb;
+    };
+
     /// Performs close-related cleanup and notifications
-    void doClose(std::error_code ec, bool notify_read_side);
+    void doClose(std::error_code ec);
 
     /// Called by read*() functions
-    void doRead(BytesOut out, size_t bytes, ReadCallbackFunc cb);
-
-    /// Completes the read operation if any, clears read state
-    [[nodiscard]] std::pair<ReadCallbackFunc, outcome::result<size_t>>
-    readCompleted();
+    void doRead(BytesOut out, ReadCallbackFunc cb);
 
     /// Dequeues data from write queue and sends to the wire in async manner
     void doWrite();
 
     /// Called by write*() functions
-    void doWrite(BytesIn in, size_t bytes, WriteCallbackFunc cb);
+    void doWrite(BytesIn in, WriteCallbackFunc cb);
 
     /// Clears close callback state
     [[nodiscard]] std::pair<VoidResultHandlerFunc, outcome::result<void>>
@@ -169,16 +170,7 @@ namespace libp2p::connection {
     basic::ReadBuffer internal_read_buffer_;
 
     /// True if read operation is active
-    bool is_reading_ = false;
-
-    /// Read callback, it is non-zero during async data receive
-    ReadCallbackFunc read_cb_;
-
-    /// TODO: get rid of this. client's read buffer
-    BytesOut external_read_buffer_;
-
-    /// Size of message being read
-    size_t read_message_size_ = 0;
+    std::optional<Reading> reading_;
 
     /// adjustWindowSize() callback, triggers when receive window size
     /// becomes greater or equal then desired
