@@ -41,9 +41,9 @@ namespace libp2p::protocol {
 
     void onRead(outcome::result<size_t> rread);
 
-    void doWrite(size_t size);
+    void doWrite();
 
-    void onWrite(outcome::result<size_t> rwrite);
+    void onWrite(outcome::result<void> rwrite);
   };
 
 }  // namespace libp2p::protocol

@@ -7,8 +7,9 @@
 #include <libp2p/protocol/echo/server_echo_session.hpp>
 
 #include <boost/assert.hpp>
+#include <qtils/bytestr.hpp>
 
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/write.hpp>
 
 namespace libp2p::protocol {
 
@@ -70,40 +71,31 @@ namespace libp2p::protocol {
     } else {
       log_->debug("read {} bytes", rread.value());
     }
-    doWrite(rread.value());
+    buf_.resize(rread.value());
+    doWrite();
   }
 
-  void ServerEchoSession::doWrite(size_t size) {
-    if (stream_->isClosedForWrite() || size == 0) {
+  void ServerEchoSession::doWrite() {
+    if (stream_->isClosedForWrite() or buf_.empty()) {
       return stop();
     }
-
-    auto write_buf = std::vector<uint8_t>(
-        buf_.begin(),
-        // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-        buf_.begin() + size);
-    BytesIn span = write_buf;
-    writeReturnSize(
-        stream_,
-        span,
-        [self{shared_from_this()}, write_buf{std::move(write_buf)}](
-            outcome::result<size_t> rwrite) { self->onWrite(rwrite); });
+    write(stream_,
+          buf_,
+          [self{shared_from_this()}](outcome::result<void> rwrite) {
+            self->onWrite(rwrite);
+          });
   }
 
-  void ServerEchoSession::onWrite(outcome::result<size_t> rwrite) {
+  void ServerEchoSession::onWrite(outcome::result<void> rwrite) {
     if (!rwrite) {
       log_->error("error happened during write: {}", rwrite.error());
       return stop();
     }
 
-    if (rwrite.value() < 120) {
-      log_->info(
-          "written message: {}",
-          std::string{buf_.begin(),
-                      // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-                      buf_.begin() + rwrite.value()});
+    if (buf_.size() < 120) {
+      log_->info("written message: {}", qtils::byte2str(buf_));
     } else {
-      log_->info("written {} bytes", rwrite.value());
+      log_->info("written {} bytes", buf_.size());
     }
 
     if (!repeat_infinitely_) {
