@@ -26,9 +26,18 @@ namespace libp2p::connection {
   }  // namespace
 
   struct FinallyReading {
+    FinallyReading(YamuxStream::ReadCallbackFunc cb, outcome::result<size_t> r)
+        : cb{std::move(cb)}, r{r} {}
     ~FinallyReading() {
       cb(r);
     }
+
+    // clang-tidy cppcoreguidelines-special-member-functions
+    FinallyReading(const FinallyReading &) = delete;
+    void operator=(const FinallyReading &) = delete;
+    FinallyReading(FinallyReading &&) = delete;
+    void operator=(FinallyReading &&) = delete;
+
     YamuxStream::ReadCallbackFunc cb;
     outcome::result<size_t> r;
   };
