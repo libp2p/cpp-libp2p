@@ -159,7 +159,7 @@ namespace libp2p::connection {
     void doWrite(WriteQueueItem packet);
 
     /// Write callback
-    void onDataWritten(outcome::result<size_t> res, StreamId stream_id);
+    void onDataWritten(outcome::result<void> res, WriteQueueItem &&packet);
 
     /// Creates new yamux stream
     std::shared_ptr<Stream> createStream(StreamId stream_id);
