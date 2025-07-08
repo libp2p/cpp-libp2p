@@ -384,7 +384,7 @@ namespace libp2p::connection {
       return deferReadCallback(Error::STREAM_NOT_READABLE, std::move(cb));
     }
 
-    reading_.emplace(out, std::move(cb));
+    reading_.emplace(Reading{out, std::move(cb)});
   }
 
   void YamuxStream::doWrite() {
