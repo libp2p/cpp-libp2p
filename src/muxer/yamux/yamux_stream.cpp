@@ -25,6 +25,11 @@ namespace libp2p::connection {
     }
   }  // namespace
 
+  /**
+   * Calls read callback on return.
+   *
+   * try { ... } finally { cb(); }
+   */
   struct FinallyReading {
     FinallyReading(YamuxStream::ReadCallbackFunc cb, outcome::result<size_t> r)
         : cb{std::move(cb)}, r{r} {}
