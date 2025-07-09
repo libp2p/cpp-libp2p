@@ -16,6 +16,7 @@ libp2p_add_library(p2p_yamuxed_connection
     yamux_frame.cpp
     yamux_stream.cpp
     yamux_reading_state.cpp
+    hardware_tracker.cpp
     )
 target_link_libraries(p2p_yamuxed_connection
     Boost::boost

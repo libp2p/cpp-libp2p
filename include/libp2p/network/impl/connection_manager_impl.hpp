@@ -7,6 +7,7 @@
 #pragma once
 
 #include <unordered_set>
+#include <mutex>
 
 #include <libp2p/event/bus.hpp>
 #include <libp2p/network/connection_manager.hpp>
@@ -46,6 +47,12 @@ namespace libp2p::network {
     /// Reentrancy resolver between closeConnectionsToPeer and
     /// onConnectionClosed
     boost::optional<peer::PeerId> closing_connections_to_peer_;
+    
+    /// Mutex to protect connection_is_closing_ set
+    std::mutex connection_mutex_;
+    
+    /// Set of connections currently being closed to prevent double closing
+    std::unordered_set<ConnectionSPtr> connection_is_closing_;
   };
 
 }  // namespace libp2p::network
