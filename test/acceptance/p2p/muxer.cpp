@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 #include <cstdlib>
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
 #include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/basic/write_return_size.hpp>
@@ -255,19 +256,20 @@ struct Client : public std::enable_shared_from_this<Client> {
           auto readbuf = std::make_shared<std::vector<uint8_t>>();
           readbuf->resize(write);
 
-          stream->read(*readbuf,
-                       readbuf->size(),
-                       [round, streamId, write, buf, readbuf, stream, this](
-                           outcome::result<size_t> rread) {
-                         ASSERT_OUTCOME_SUCCESS(read, rread);
-                         this->println(streamId, " readSome ", read, " bytes");
-                         this->streamReads++;
+          readReturnSize(stream,
+                         *readbuf,
+                         [round, streamId, write, buf, readbuf, stream, this](
+                             outcome::result<size_t> rread) {
+                           ASSERT_OUTCOME_SUCCESS(read, rread);
+                           this->println(
+                               streamId, " readSome ", read, " bytes");
+                           this->streamReads++;
 
-                         ASSERT_EQ(write, read);
-                         ASSERT_EQ(*buf, *readbuf);
+                           ASSERT_EQ(write, read);
+                           ASSERT_EQ(*buf, *readbuf);
 
-                         this->onStream(streamId, round - 1, stream);
-                       });
+                           this->onStream(streamId, round - 1, stream);
+                         });
         });
   }
 

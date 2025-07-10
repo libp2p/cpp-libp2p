@@ -8,6 +8,7 @@
 
 #include <gmock/gmock.h>
 
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 
 namespace libp2p::connection {
@@ -82,7 +83,7 @@ namespace libp2p::connection {
     };
 
     void read(BytesOut in, size_t bytes, Reader::ReadCallbackFunc f) override {
-      return real_->read(in, bytes, f);
+      return readReturnSize(real_, in, f);
     };
 
     void readSome(BytesOut in,

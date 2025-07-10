@@ -11,6 +11,7 @@
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
 #include <libp2p/basic/message_read_writer_error.hpp>
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/varint_reader.hpp>
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/multi/uvarint.hpp>
@@ -34,9 +35,9 @@ namespace libp2p::basic {
           auto msg_len = varint_res.value().toUInt64();
           if (0 != msg_len) {
             auto buffer = std::make_shared<std::vector<uint8_t>>(msg_len, 0);
-            self->conn_->read(
+            readReturnSize(
+                self->conn_,
                 *buffer,
-                msg_len,
                 [self, buffer, cb = std::move(cb)](auto &&res) mutable {
                   if (!res) {
                     return cb(res.error());

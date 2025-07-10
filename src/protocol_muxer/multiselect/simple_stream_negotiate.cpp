@@ -6,6 +6,7 @@
 
 #include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
 
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
@@ -76,9 +77,9 @@ namespace libp2p::protocol_muxer::multiselect {
       // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
       span = span.subspan(kMaxVarintSize, remaining_bytes);
 
-      stream->read(
+      readReturnSize(
+          stream,
           span,
-          span.size(),
           [stream = stream, cb = std::move(cb), buffers = std::move(buffers)](
               outcome::result<size_t> res) mutable {
             onLastBytesRead(std::move(stream), cb, *buffers, res);
@@ -100,9 +101,9 @@ namespace libp2p::protocol_muxer::multiselect {
       BytesOut span(buffers->read);
       span = span.first(kMaxVarintSize);
 
-      stream->read(
+      readReturnSize(
+          stream,
           span,
-          span.size(),
           [stream = stream, cb = std::move(cb), buffers = std::move(buffers)](
               outcome::result<size_t> res) mutable {
             onFirstBytesRead(stream, std::move(cb), std::move(buffers), res);

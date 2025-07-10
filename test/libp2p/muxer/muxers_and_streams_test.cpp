@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include <boost/di/extension/scopes/shared.hpp>
 
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/injector/host_injector.hpp>
 
@@ -173,8 +174,9 @@ namespace libp2p::regression {
         return behavior_(*this);
       }
       // clang-format off
-      stream->read(
-          *read_buf_, read_buf_->size(),
+      readReturnSize(
+          stream,
+          *read_buf_,
           [wptr = weak_from_this(), buf = read_buf_] (auto res) {
             auto self = wptr.lock();
             if (self) {  self->onRead(res); }
