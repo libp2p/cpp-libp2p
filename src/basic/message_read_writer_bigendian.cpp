@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <boost/assert.hpp>
 #include <libp2p/basic/message_read_writer_error.hpp>
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/byteutil.hpp>
 
@@ -24,9 +25,9 @@ namespace libp2p::basic {
   void MessageReadWriterBigEndian::read(ReadCallbackFunc cb) {
     auto buffer = std::make_shared<std::vector<uint8_t>>();
     buffer->resize(kLenMarkerSize);
-    conn_->read(
+    readReturnSize(
+        conn_,
         *buffer,
-        kLenMarkerSize,
         [self{shared_from_this()}, buffer, cb{std::move(cb)}](auto &&result) {
           if (not result) {
             return cb(result.error());
@@ -35,8 +36,8 @@ namespace libp2p::basic {
               common::convert<uint32_t>(buffer->data()));
           buffer->resize(msg_len);
           std::fill(buffer->begin(), buffer->end(), 0u);
-          self->conn_->read(
-              *buffer, msg_len, [self, buffer, cb](auto &&result) {
+          readReturnSize(
+              self->conn_, *buffer, [self, buffer, cb](auto &&result) {
                 if (not result) {
                   return cb(result.error());
                 }

@@ -9,6 +9,7 @@
 #include <cctype>
 #include <span>
 
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/scheduler.hpp>
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/trace.hpp>
@@ -213,16 +214,16 @@ namespace libp2p::protocol_muxer::multiselect {
     BytesOut span(*read_buffer_);
     span = span.first(static_cast<Parser::IndexType>(bytes_needed));
 
-    connection_->read(span,
-                      bytes_needed,
-                      [wptr = weak_from_this(),
-                       round = current_round_,
-                       packet = read_buffer_](outcome::result<size_t> res) {
-                        auto self = wptr.lock();
-                        if (self && self->current_round_ == round) {
-                          self->onDataRead(res);
-                        }
-                      });
+    readReturnSize(connection_,
+                   span,
+                   [wptr = weak_from_this(),
+                    round = current_round_,
+                    packet = read_buffer_](outcome::result<size_t> res) {
+                     auto self = wptr.lock();
+                     if (self && self->current_round_ == round) {
+                       self->onDataRead(res);
+                     }
+                   });
   }
 
   void MultiselectInstance::onDataRead(outcome::result<size_t> res) {

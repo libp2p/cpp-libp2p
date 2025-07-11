@@ -54,8 +54,6 @@ namespace libp2p::connection {
                 size_t maximum_window_size,
                 size_t write_queue_limit);
 
-    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
-
     void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,

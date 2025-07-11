@@ -76,9 +76,6 @@ namespace libp2p::connection {
     /// Returns remote network address
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 
-    /// Async reads exactly the # of bytes given
-    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
-
     /// Async reads up to the # of bytes given
     void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 

@@ -27,12 +27,6 @@ namespace libp2p::connection {
 
     MOCK_METHOD1(close, void(VoidResultHandlerFunc));
 
-    void read(BytesOut out,
-              size_t ambigous_size,
-              Reader::ReadCallbackFunc cb) override {
-      ASSERT_EQ(out.size(), ambigous_size);
-      readReturnSize(shared_from_this(), out, cb);
-    }
     MOCK_METHOD3(readSome, void(BytesOut, size_t, Reader::ReadCallbackFunc));
     MOCK_METHOD3(writeSome, void(BytesIn, size_t, Writer::WriteCallbackFunc));
 

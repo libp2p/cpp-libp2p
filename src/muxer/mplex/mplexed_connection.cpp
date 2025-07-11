@@ -7,6 +7,7 @@
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 #include <boost/assert.hpp>
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/muxer/mplex/mplex_frame.hpp>
 
@@ -122,12 +123,6 @@ namespace libp2p::connection {
 
   bool MplexedConnection::isClosed() const {
     return !is_active_ || connection_->isClosed();
-  }
-
-  void MplexedConnection::read(BytesOut out,
-                               size_t bytes,
-                               ReadCallbackFunc cb) {
-    connection_->read(out, bytes, std::move(cb));
   }
 
   void MplexedConnection::readSome(BytesOut out,

@@ -111,7 +111,6 @@ namespace libp2p::connection {
 
     /// usage of these four methods is highly not recommended or even forbidden:
     /// use stream over this connection instead
-    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
     void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
     void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
 

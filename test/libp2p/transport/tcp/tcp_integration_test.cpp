@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 #include <chrono>
 #include <iostream>
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/transport/tcp.hpp>
@@ -44,7 +45,8 @@ namespace {
     EXPECT_OUTCOME_SUCCESS(mar, conn->remoteMultiaddr());
     EXPECT_OUTCOME_SUCCESS(mal, conn->localMultiaddr());
     std::ostringstream s;
-    s << mar.value().getStringAddress() << " -> " << mal.value().getStringAddress();
+    s << mar.value().getStringAddress() << " -> "
+      << mal.value().getStringAddress();
     std::cout << s.str() << '\n';
 
     return conn;
@@ -185,14 +187,13 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
             conn, *buf, [conn, readback, buf, context](auto &&res) {
               ASSERT_OUTCOME_SUCCESS(res);
               ASSERT_EQ(res.value(), buf->size());
-              conn->read(*readback,
-                         readback->size(),
-                         [conn, readback, buf, context](auto &&res) {
-                           context->stop();
-                           ASSERT_OUTCOME_SUCCESS(res);
-                           ASSERT_EQ(res.value(), readback->size());
-                           ASSERT_EQ(*buf, *readback);
-                         });
+              libp2p::readReturnSize(
+                  conn, *readback, [conn, readback, buf, context](auto &&res) {
+                    context->stop();
+                    ASSERT_OUTCOME_SUCCESS(res);
+                    ASSERT_EQ(res.value(), readback->size());
+                    ASSERT_EQ(*buf, *readback);
+                  });
             });
       });
 
@@ -344,11 +345,12 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
             conn, *buf, [conn, kSize, readback, buf](auto &&res) {
               ASSERT_OUTCOME_SUCCESS(res);
               ASSERT_EQ(res.value(), buf->size());
-              conn->read(*readback, kSize, [conn, readback, buf](auto &&res) {
-                ASSERT_OUTCOME_SUCCESS(res);
-                ASSERT_EQ(res.value(), readback->size());
-                ASSERT_EQ(*buf, *readback);
-              });
+              libp2p::readReturnSize(
+                  conn, *readback, [conn, readback, buf](auto &&res) {
+                    ASSERT_OUTCOME_SUCCESS(res);
+                    ASSERT_EQ(res.value(), readback->size());
+                    ASSERT_EQ(*buf, *readback);
+                  });
             });
       });
 

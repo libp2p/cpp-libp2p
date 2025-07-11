@@ -8,6 +8,7 @@
 
 #include <gmock/gmock.h>
 
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 
 namespace libp2p::connection {
@@ -31,7 +32,6 @@ namespace libp2p::connection {
 
     MOCK_CONST_METHOD0(isClosed, bool(void));
     MOCK_METHOD0(close, outcome::result<void>());
-    MOCK_METHOD3(read, void(BytesOut, size_t, Reader::ReadCallbackFunc));
     MOCK_METHOD3(readSome, void(BytesOut, size_t, Reader::ReadCallbackFunc));
     MOCK_METHOD3(writeSome, void(BytesIn, size_t, Writer::WriteCallbackFunc));
     MOCK_METHOD2(deferReadCallback,
@@ -79,10 +79,6 @@ namespace libp2p::connection {
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override {
       return real_->remoteMultiaddr();
-    };
-
-    void read(BytesOut in, size_t bytes, Reader::ReadCallbackFunc f) override {
-      return real_->read(in, bytes, f);
     };
 
     void readSome(BytesOut in,

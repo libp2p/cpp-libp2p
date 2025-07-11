@@ -8,6 +8,7 @@
 
 #include <generated/security/secio/protobuf/secio.pb.h>
 #include <libp2p/basic/protobuf_message_read_writer.hpp>
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write_return_size.hpp>
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/security/error.hpp>
@@ -265,9 +266,9 @@ namespace libp2p::security {
                 }
                 const auto kToRead{self->propose_message_.rand.size()};
                 auto buffer = std::make_shared<Bytes>(kToRead);
-                secio_conn->read(
+                readReturnSize(
+                    secio_conn,
                     *buffer,
-                    kToRead,
                     [self, cb, conn, secio_conn, buffer](auto &&read_res) {
                       SECIO_OUTCOME_TRY(read_bytes, read_res, conn, cb)
                       if (read_bytes != buffer->size()

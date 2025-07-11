@@ -8,6 +8,7 @@
 
 #include <cassert>
 
+#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/varint_reader.hpp>
 #include <libp2p/basic/write_return_size.hpp>
 
@@ -83,15 +84,15 @@ namespace libp2p::protocol::gossip {
 
     read_buffer_->resize(msg_len);
 
-    stream_->read(std::span(read_buffer_->data(), msg_len),
-                  msg_len,
-                  [self_wptr = weak_from_this(), this, buffer = read_buffer_](
-                      auto &&res) {
-                    if (self_wptr.expired()) {
-                      return;
-                    }
-                    onMessageRead(std::forward<decltype(res)>(res));
-                  });
+    readReturnSize(stream_,
+                   std::span(read_buffer_->data(), msg_len),
+                   [self_wptr = weak_from_this(), this, buffer = read_buffer_](
+                       auto &&res) {
+                     if (self_wptr.expired()) {
+                       return;
+                     }
+                     onMessageRead(std::forward<decltype(res)>(res));
+                   });
   }
 
   void Stream::onMessageRead(outcome::result<size_t> res) {

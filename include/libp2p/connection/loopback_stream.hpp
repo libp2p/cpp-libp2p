@@ -40,8 +40,6 @@ namespace libp2p::connection {
         const override;
 
    protected:
-    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
-
     void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
     void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;

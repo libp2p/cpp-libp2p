@@ -163,13 +163,6 @@ namespace libp2p::connection {
     return !started_ || connection_->isClosed();
   }
 
-  void YamuxedConnection::read(BytesOut out,
-                               size_t bytes,
-                               ReadCallbackFunc cb) {
-    log()->error("YamuxedConnection::read : invalid direct call");
-    deferReadCallback(Error::CONNECTION_DIRECT_IO_FORBIDDEN, std::move(cb));
-  }
-
   void YamuxedConnection::readSome(BytesOut out,
                                    size_t bytes,
                                    ReadCallbackFunc cb) {

@@ -5,6 +5,7 @@
  */
 
 #include <libp2p/basic/varint_reader.hpp>
+#include <libp2p/basic/read_return_size.hpp>
 
 #include <vector>
 
@@ -44,10 +45,10 @@ namespace libp2p::basic {
     }
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    conn->read(
+    readReturnSize(
+        conn,
         std::span(varint_buf->data() + current_length, 1),
-        1,
-        [c = std::move(conn), cb = std::move(cb), current_length, varint_buf](
+        [c = conn, cb = std::move(cb), current_length, varint_buf](
             auto &&res) mutable {
           if (not res.has_value()) {
             return cb(res.error());
