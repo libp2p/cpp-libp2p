@@ -50,8 +50,6 @@ namespace libp2p::connection {
 
     ~MplexStream() override = default;
 
-    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
-
     void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
 
     void deferReadCallback(outcome::result<size_t> res,

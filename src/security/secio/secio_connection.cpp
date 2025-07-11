@@ -183,13 +183,6 @@ namespace libp2p::connection {
     }
   }
 
-  void SecioConnection::read(BytesOut out,
-                             size_t bytes,
-                             basic::Reader::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
-    libp2p::readReturnSize(shared_from_this(), out, std::move(cb));
-  }
-
   void SecioConnection::readSome(BytesOut out,
                                  size_t bytes,
                                  basic::Reader::ReadCallbackFunc cb) {

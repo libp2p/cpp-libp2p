@@ -140,14 +140,6 @@ namespace libp2p::connection {
     };
   }
 
-  void TlsConnection::read(BytesOut out,
-                           size_t bytes,
-                           Reader::ReadCallbackFunc f) {
-    ambigousSize(out, bytes);
-    SL_TRACE(log(), "reading {} bytes", bytes);
-    readReturnSize(shared_from_this(), out, std::move(f));
-  }
-
   void TlsConnection::readSome(BytesOut out,
                                size_t bytes,
                                Reader::ReadCallbackFunc cb) {

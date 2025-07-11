@@ -58,12 +58,6 @@ namespace libp2p::connection {
     return original_connection_->remoteMultiaddr();
   }
 
-  void PlaintextConnection::read(BytesOut in,
-                                 size_t bytes,
-                                 Reader::ReadCallbackFunc f) {
-    return readReturnSize(original_connection_, in, std::move(f));
-  };
-
   void PlaintextConnection::readSome(BytesOut in,
                                      size_t bytes,
                                      Reader::ReadCallbackFunc f) {

@@ -77,13 +77,6 @@ namespace libp2p::connection {
     return outcome::success(own_peer_info_.addresses.front());
   }
 
-  void LoopbackStream::read(BytesOut out,
-                            size_t bytes,
-                            libp2p::basic::Reader::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
-    readReturnSize(shared_from_this(), out, std::move(cb));
-  }
-
   void LoopbackStream::writeSome(BytesIn in,
                                  size_t bytes,
                                  libp2p::basic::Writer::WriteCallbackFunc cb) {

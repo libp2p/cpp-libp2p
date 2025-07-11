@@ -82,10 +82,6 @@ namespace libp2p::connection {
       return real_->remoteMultiaddr();
     };
 
-    void read(BytesOut in, size_t bytes, Reader::ReadCallbackFunc f) override {
-      return readReturnSize(real_, in, f);
-    };
-
     void readSome(BytesOut in,
                   size_t bytes,
                   Reader::ReadCallbackFunc f) override {

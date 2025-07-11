@@ -34,11 +34,6 @@ namespace libp2p::connection {
                            StreamId stream_id)
       : connection_{std::move(connection)}, stream_id_{stream_id} {}
 
-  void MplexStream::read(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
-    readReturnSize(shared_from_this(), out, std::move(cb));
-  }
-
   void MplexStream::readDone(outcome::result<size_t> res) {
     auto cb{std::move(reading_->cb)};
     reading_.reset();

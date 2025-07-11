@@ -85,14 +85,6 @@ namespace libp2p::connection {
     return connection_->close();
   }
 
-  void WsConnection::read(BytesOut out,
-                          size_t bytes,
-                          libp2p::basic::Reader::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
-    SL_TRACE(log_, "read {} bytes", bytes);
-    readReturnSize(shared_from_this(), out, std::move(cb));
-  }
-
   void WsConnection::readSome(BytesOut out,
                               size_t bytes,
                               libp2p::basic::Reader::ReadCallbackFunc cb) {

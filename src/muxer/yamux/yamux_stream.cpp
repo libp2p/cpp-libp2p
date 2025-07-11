@@ -67,11 +67,6 @@ namespace libp2p::connection {
     assert(write_queue_limit >= maximum_window_size_);
   }
 
-  void YamuxStream::read(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
-    readReturnSize(shared_from_this(), out, std::move(cb));
-  }
-
   void YamuxStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
     ambigousSize(out, bytes);
     doRead(out, std::move(cb));

@@ -39,7 +39,6 @@ namespace libp2p::transport {
     void operator=(QuicConnection &&) = delete;
 
     // Reader
-    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
     void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;

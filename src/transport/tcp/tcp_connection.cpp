@@ -172,14 +172,6 @@ namespace libp2p::transport {
         });
   }
 
-  void TcpConnection::read(BytesOut out,
-                           size_t bytes,
-                           TcpConnection::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
-    TRACE("{} read {}", debug_str_, bytes);
-    readReturnSize(shared_from_this(), out, std::move(cb));
-  }
-
   void TcpConnection::readSome(BytesOut out,
                                size_t bytes,
                                TcpConnection::ReadCallbackFunc cb) {
