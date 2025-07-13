@@ -183,11 +183,9 @@ namespace libp2p::transport {
   }
 
   void TcpConnection::writeSome(BytesIn in,
-                                size_t bytes,
                                 TcpConnection::WriteCallbackFunc cb) {
-    ByteCounter::getInstance().incrementBytesWritten(bytes);
-    ambigousSize(in, bytes);
-    TRACE("{} write some up to {}", debug_str_, bytes);
+    ByteCounter::getInstance().incrementBytesWritten(in.size());
+    TRACE("{} write some up to {}", debug_str_, in.size());
     socket_.async_write_some(asioBuffer(in),
                              closeOnError(*this, std::move(cb)));
   }

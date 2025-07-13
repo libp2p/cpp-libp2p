@@ -84,7 +84,7 @@ namespace libp2p::connection {
                            ReadCallbackFunc cb) override;
 
     /// Async writes up to the # of bytes given
-    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
+    void writeSome(BytesIn in, WriteCallbackFunc cb) override;
 
     /// Defers error callback to avoid reentrancy in async calls
     void deferWriteCallback(std::error_code ec, ReadCallbackFunc cb) override;

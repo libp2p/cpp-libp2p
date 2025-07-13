@@ -20,6 +20,7 @@
 #include "mock/libp2p/peer/peer_repository_mock.hpp"
 #include "mock/libp2p/peer/protocol_repository_mock.hpp"
 #include "testutil/expect_read.hpp"
+#include "testutil/expect_write.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/prepare_loggers.hpp"
 
@@ -134,9 +135,7 @@ TEST_F(IdentifyDeltaTest, Send) {
         actual.begin(), actual.end(), expected.begin(), expected.end());
   };
 
-  EXPECT_CALL(*stream_,
-              writeSome(Truly(if_added), msg_added_protos_bytes_.size(), _))
-      .WillOnce(InvokeArgument<2>(outcome::success()));
+  EXPECT_CALL_WRITE(*stream_).WILL_WRITE(msg_added_protos_bytes_);
 
   id_delta_->start();
   bus_.getChannel<event::network::ProtocolsAddedChannel>().publish(

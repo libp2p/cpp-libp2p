@@ -37,7 +37,7 @@ namespace libp2p::connection {
                            ReadCallbackFunc cb) override;
 
     // Writer
-    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
+    void writeSome(BytesIn in, WriteCallbackFunc cb) override;
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
     // Stream

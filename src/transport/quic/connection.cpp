@@ -44,7 +44,6 @@ namespace libp2p::transport {
   }
 
   void QuicConnection::writeSome(BytesIn in,
-                                 size_t bytes,
                                  WriteCallbackFunc cb) {
     throw std::logic_error{"QuicConnection::writeSome must not be called"};
   }

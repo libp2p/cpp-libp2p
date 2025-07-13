@@ -65,9 +65,8 @@ namespace libp2p::connection {
   };
 
   void PlaintextConnection::writeSome(BytesIn in,
-                                      size_t bytes,
                                       Writer::WriteCallbackFunc f) {
-    return original_connection_->writeSome(in, bytes, std::move(f));
+    return original_connection_->writeSome(in, std::move(f));
   }
 
   void PlaintextConnection::deferReadCallback(outcome::result<size_t> res,

@@ -84,8 +84,7 @@ namespace libp2p::connection {
     }
   }
 
-  void MplexStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
+  void MplexStream::writeSome(BytesIn in, WriteCallbackFunc cb) {
     // TODO(107): Reentrancy
 
     if (is_reset_) {
@@ -111,7 +110,7 @@ namespace libp2p::connection {
     connection_.lock()->streamWrite(
         stream_id_,
         in,
-        bytes,
+        in.size(),
         [self{shared_from_this()}, cb{std::move(cb)}](auto &&write_res) {
           self->is_writing_ = false;
           if (!write_res) {

@@ -51,9 +51,7 @@ namespace libp2p::connection {
   }
 
   void SslConnection::writeSome(BytesIn in,
-                                size_t bytes,
                                 libp2p::basic::Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
     ssl_.async_write_some(asioBuffer(in), toAsioCbSize(std::move(cb)));
   }
 
