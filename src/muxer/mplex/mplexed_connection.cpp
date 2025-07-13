@@ -132,9 +132,8 @@ namespace libp2p::connection {
   }
 
   void MplexedConnection::writeSome(BytesIn in,
-                                    size_t bytes,
                                     WriteCallbackFunc cb) {
-    connection_->writeSome(in, bytes, std::move(cb));
+    connection_->writeSome(in, std::move(cb));
   }
 
   void MplexedConnection::deferReadCallback(outcome::result<size_t> res,

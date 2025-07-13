@@ -135,8 +135,8 @@ TEST_F(IdentifyDeltaTest, Send) {
   };
 
   EXPECT_CALL(*stream_,
-              writeSome(Truly(if_added), msg_added_protos_bytes_.size(), _))
-      .WillOnce(InvokeArgument<2>(outcome::success()));
+              writeSome(Truly(if_added), _))
+      .WillOnce(InvokeArgument<1>(outcome::success()));
 
   id_delta_->start();
   bus_.getChannel<event::network::ProtocolsAddedChannel>().publish(

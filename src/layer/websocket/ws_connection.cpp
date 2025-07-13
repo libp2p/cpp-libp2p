@@ -106,10 +106,8 @@ namespace libp2p::connection {
   }
 
   void WsConnection::writeSome(BytesIn in,    //
-                               size_t bytes,  //
                                libp2p::basic::Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
-    SL_TRACE(log_, "write some upto {} bytes", bytes);
+    SL_TRACE(log_, "write some upto {} bytes", in.size());
     ws_.async_write_some(true, asioBuffer(in), toAsioCbSize(std::move(cb)));
   }
 

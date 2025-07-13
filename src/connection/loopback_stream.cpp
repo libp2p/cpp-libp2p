@@ -78,7 +78,6 @@ namespace libp2p::connection {
   }
 
   void LoopbackStream::writeSome(BytesIn in,
-                                 size_t bytes,
                                  libp2p::basic::Writer::WriteCallbackFunc cb) {
     if (is_reset_) {
       return deferWriteCallback(Error::STREAM_RESET_BY_HOST, std::move(cb));
@@ -86,20 +85,20 @@ namespace libp2p::connection {
     if (!is_writable_) {
       return deferWriteCallback(Error::STREAM_NOT_WRITABLE, std::move(cb));
     }
-    if (bytes == 0 || in.empty() || static_cast<size_t>(in.size()) < bytes) {
+    if (in.empty()) {
       return deferWriteCallback(Error::STREAM_INVALID_ARGUMENT, std::move(cb));
     }
 
-    if (boost::asio::buffer_copy(buffer_.prepare(bytes),
-                                 boost::asio::const_buffer(in.data(), bytes))
-        != bytes) {
+    if (boost::asio::buffer_copy(buffer_.prepare(in.size()),
+                                 boost::asio::const_buffer(in.data(), in.size()))
+        != in.size()) {
       return deferWriteCallback(Error::STREAM_INTERNAL_ERROR, std::move(cb));
     }
 
-    buffer_.commit(bytes);
+    buffer_.commit(in.size());
 
     // intentionally used deferReadCallback, since it acquires bytes written
-    deferReadCallback(bytes, std::move(cb));
+    deferReadCallback(in.size(), std::move(cb));
     /* The whole approach with such methods (deferReadCallback and
      * deferWriteCallback) is going to be avoided in the near future, thus we do
      * not remove  from the source code the counting of bytes written */

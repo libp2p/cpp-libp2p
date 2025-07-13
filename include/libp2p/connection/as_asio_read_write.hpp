@@ -78,7 +78,7 @@ namespace libp2p {
               boost::asio::const_buffer,
               ConstBufferSequence>::first(buffers)};
       impl->writeSome(
-          asioBuffer(buffer), buffer.size(), wrapCb(std::forward<Cb>(cb)));
+          asioBuffer(buffer), wrapCb(std::forward<Cb>(cb)));
     }
 
     std::shared_ptr<boost::asio::io_context> io;

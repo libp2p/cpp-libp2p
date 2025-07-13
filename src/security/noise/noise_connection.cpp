@@ -70,9 +70,7 @@ namespace libp2p::connection {
   }
 
   void NoiseConnection::writeSome(BytesIn in,
-                                  size_t bytes,
                                   basic::Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
     if (in.empty()) {
       cb(in.size());
       return;

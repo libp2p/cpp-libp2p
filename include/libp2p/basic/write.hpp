@@ -18,7 +18,6 @@ namespace libp2p {
     // write some bytes
     writer->writeSome(
         in,
-        in.size(),
         [weak{std::weak_ptr{writer}}, in, cb{std::move(cb)}](
             outcome::result<size_t> n_res) mutable {
           if (n_res.has_error()) {

@@ -263,9 +263,7 @@ namespace libp2p::connection {
   }
 
   void SecioConnection::writeSome(BytesIn in,
-                                  size_t bytes,
                                   basic::Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
     // TODO(107): Reentrancy
 
     if (!isInitialized()) {

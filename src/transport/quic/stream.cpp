@@ -55,9 +55,7 @@ namespace libp2p::connection {
   }
 
   void QuicStream::writeSome(BytesIn in,
-                             size_t bytes,
                              basic::Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
     outcome::result<size_t> r = QuicError::STREAM_CLOSED;
     if (not stream_ctx_) {
       return cb(r);

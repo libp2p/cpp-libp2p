@@ -155,10 +155,8 @@ namespace libp2p::connection {
   }
 
   void TlsConnection::writeSome(BytesIn in,
-                                size_t bytes,
                                 Writer::WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
-    SL_TRACE(log(), "writing some up to {} bytes", bytes);
+    SL_TRACE(log(), "writing some up to {} bytes", in.size());
     socket_.async_write_some(asioBuffer(in),
                              closeOnError(*this, std::move(cb)));
   }

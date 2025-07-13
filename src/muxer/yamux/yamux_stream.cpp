@@ -77,8 +77,7 @@ namespace libp2p::connection {
     feedback_.deferCall([res, cb{std::move(cb)}] { cb(res); });
   }
 
-  void YamuxStream::writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) {
-    ambigousSize(in, bytes);
+  void YamuxStream::writeSome(BytesIn in, WriteCallbackFunc cb) {
     doWrite(in, std::move(cb));
   }
 

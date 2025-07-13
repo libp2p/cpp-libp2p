@@ -171,7 +171,6 @@ namespace libp2p::connection {
   }
 
   void YamuxedConnection::writeSome(BytesIn in,
-                                    size_t bytes,
                                     WriteCallbackFunc cb) {
     log()->error("YamuxedConnection::writeSome : invalid direct call");
     deferWriteCallback(Error::CONNECTION_DIRECT_IO_FORBIDDEN, std::move(cb));
