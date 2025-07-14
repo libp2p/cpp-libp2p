@@ -68,7 +68,7 @@ namespace libp2p {
               boost::asio::mutable_buffer,
               MutableBufferSequence>::first(buffers)};
       impl->readSome(
-          asioBuffer(buffer), buffer.size(), wrapCb(std::forward<Cb>(cb)));
+          asioBuffer(buffer), wrapCb(std::forward<Cb>(cb)));
     }
 
     template <typename ConstBufferSequence, typename Cb>

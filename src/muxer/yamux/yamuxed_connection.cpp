@@ -164,7 +164,6 @@ namespace libp2p::connection {
   }
 
   void YamuxedConnection::readSome(BytesOut out,
-                                   size_t bytes,
                                    ReadCallbackFunc cb) {
     log()->error("YamuxedConnection::readSome : invalid direct call");
     deferReadCallback(Error::CONNECTION_DIRECT_IO_FORBIDDEN, std::move(cb));
@@ -189,7 +188,6 @@ namespace libp2p::connection {
   void YamuxedConnection::continueReading() {
     SL_TRACE(log(), "YamuxedConnection::continueReading");
     connection_->readSome(*raw_read_buffer_,
-                          raw_read_buffer_->size(),
                           [wptr = weak_from_this(), buffer = raw_read_buffer_](
                               outcome::result<size_t> res) {
                             auto self = wptr.lock();

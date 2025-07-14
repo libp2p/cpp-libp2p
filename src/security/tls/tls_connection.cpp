@@ -7,7 +7,6 @@
 #include "tls_connection.hpp"
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/asio_buffer.hpp>
 #include <libp2p/security/tls/tls_details.hpp>
 
@@ -141,10 +140,8 @@ namespace libp2p::connection {
   }
 
   void TlsConnection::readSome(BytesOut out,
-                               size_t bytes,
                                Reader::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
-    SL_TRACE(log(), "reading some up to {} bytes", bytes);
+    SL_TRACE(log(), "reading some up to {} bytes", out.size());
     socket_.async_read_some(asioBuffer(out),
                             closeOnError(*this, std::move(cb)));
   }

@@ -7,7 +7,6 @@
 #include <libp2p/transport/tcp/tcp_connection.hpp>
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/asio_buffer.hpp>
 #include <libp2p/transport/tcp/bytes_counter.hpp>
 #include <libp2p/transport/tcp/tcp_util.hpp>
@@ -173,11 +172,9 @@ namespace libp2p::transport {
   }
 
   void TcpConnection::readSome(BytesOut out,
-                               size_t bytes,
                                TcpConnection::ReadCallbackFunc cb) {
-    ByteCounter::getInstance().incrementBytesRead(bytes);
-    ambigousSize(out, bytes);
-    TRACE("{} read some up to {}", debug_str_, bytes);
+    ByteCounter::getInstance().incrementBytesRead(out.size());
+    TRACE("{} read some up to {}", debug_str_, out.size());
     socket_.async_read_some(asioBuffer(out),
                             closeOnError(*this, std::move(cb)));
   }

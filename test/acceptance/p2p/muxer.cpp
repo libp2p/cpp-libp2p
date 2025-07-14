@@ -128,7 +128,7 @@ struct Server : public std::enable_shared_from_this<Server> {
     println("onStream executed");
 
     stream->readSome(
-        *buf, buf->size(), [buf, stream, this](outcome::result<size_t> rread) {
+        *buf, [buf, stream, this](outcome::result<size_t> rread) {
           if (!rread) {
             if (rread.error() == RawConnection::Error::CONNECTION_CLOSED_BY_PEER
                 || rread.error() == Stream::Error::STREAM_RESET_BY_HOST) {

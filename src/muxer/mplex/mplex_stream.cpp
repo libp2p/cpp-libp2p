@@ -11,7 +11,6 @@
 #include <boost/container_hash/hash.hpp>
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write_return_size.hpp>
-#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 #define TRY_GET_CONNECTION(tmp)         \
@@ -59,8 +58,7 @@ namespace libp2p::connection {
     return true;
   }
 
-  void MplexStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
+  void MplexStream::readSome(BytesOut out, ReadCallbackFunc cb) {
     if (is_reset_) {
       return cb(Error::STREAM_RESET_BY_PEER);
     }

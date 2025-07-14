@@ -9,7 +9,6 @@
 #include <cassert>
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 #include <qtils/option_take.hpp>
 
@@ -67,8 +66,7 @@ namespace libp2p::connection {
     assert(write_queue_limit >= maximum_window_size_);
   }
 
-  void YamuxStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
+  void YamuxStream::readSome(BytesOut out, ReadCallbackFunc cb) {
     doRead(out, std::move(cb));
   }
 

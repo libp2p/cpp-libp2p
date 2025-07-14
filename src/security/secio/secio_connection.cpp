@@ -11,7 +11,6 @@
 #include <arpa/inet.h>
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write_return_size.hpp>
-#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/common/outcome_macro.hpp>
 #include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
@@ -184,9 +183,7 @@ namespace libp2p::connection {
   }
 
   void SecioConnection::readSome(BytesOut out,
-                                 size_t bytes,
                                  basic::Reader::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
     // TODO(107): Reentrancy
 
     if (!isInitialized()) {
@@ -205,7 +202,7 @@ namespace libp2p::connection {
     readNextMessage([self{shared_from_this()}, out, cb{std::move(cb)}](
                         outcome::result<void> result) {
       IF_ERROR_CB_RETURN(result);
-      self->readSome(out, out.size(), std::move(cb));
+      self->readSome(out, std::move(cb));
     });
   }
 

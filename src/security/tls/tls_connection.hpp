@@ -77,7 +77,7 @@ namespace libp2p::connection {
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 
     /// Async reads up to the # of bytes given
-    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, ReadCallbackFunc cb) override;
 
     /// Defers read callback to avoid reentrancy in async calls
     void deferReadCallback(outcome::result<size_t> res,

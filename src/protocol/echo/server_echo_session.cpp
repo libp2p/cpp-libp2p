@@ -48,7 +48,6 @@ namespace libp2p::protocol {
 
     stream_->readSome(
         buf_,
-        buf_.size(),
         [self{shared_from_this()}](outcome::result<size_t> rread) {
           self->onRead(rread);
         });

@@ -7,7 +7,6 @@
 #include <libp2p/layer/websocket/ws_connection.hpp>
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/asio_buffer.hpp>
 #include <libp2p/common/asio_cb.hpp>
 #include <libp2p/common/bytestr.hpp>
@@ -86,10 +85,8 @@ namespace libp2p::connection {
   }
 
   void WsConnection::readSome(BytesOut out,
-                              size_t bytes,
                               libp2p::basic::Reader::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
-    SL_TRACE(log_, "read some upto {} bytes", bytes);
+    SL_TRACE(log_, "read some upto {} bytes", out.size());
     auto on_read = [weak{weak_from_this()}, out, cb{std::move(cb)}](
                        boost::system::error_code ec, size_t n) mutable {
       if (ec) {
@@ -97,7 +94,7 @@ namespace libp2p::connection {
       } else if (n != 0) {
         cb(n);
       } else if (auto self = weak.lock()) {
-        self->readSome(out, out.size(), std::move(cb));
+        self->readSome(out, std::move(cb));
       } else {
         cb(boost::system::errc::broken_pipe);
       }
