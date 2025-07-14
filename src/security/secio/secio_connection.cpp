@@ -11,7 +11,6 @@
 #include <arpa/inet.h>
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write_return_size.hpp>
-#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/byteutil.hpp>
 #include <libp2p/common/outcome_macro.hpp>
 #include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>

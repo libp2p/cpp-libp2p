@@ -11,7 +11,6 @@
 #include <boost/container_hash/hash.hpp>
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write_return_size.hpp>
-#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 #define TRY_GET_CONNECTION(tmp)         \

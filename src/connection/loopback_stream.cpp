@@ -7,7 +7,6 @@
 #include <libp2p/connection/loopback_stream.hpp>
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/common/ambigous_size.hpp>
 
 namespace libp2p::connection {
 
