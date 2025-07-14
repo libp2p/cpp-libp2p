@@ -44,9 +44,7 @@ namespace libp2p::connection {
   }
 
   void SslConnection::readSome(BytesOut out,
-                               size_t bytes,
                                libp2p::basic::Reader::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
     ssl_.async_read_some(asioBuffer(out), toAsioCbSize(std::move(cb)));
   }
 

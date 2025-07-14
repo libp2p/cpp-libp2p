@@ -32,7 +32,7 @@ namespace libp2p::basic {
      * pointer, or having buffer as part of some class/struct, and using
      * enable_shared_from_this()
      */
-    virtual void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) = 0;
+    virtual void readSome(BytesOut out, ReadCallbackFunc cb) = 0;
 
     /**
      * @brief Defers reporting result or error to callback to avoid reentrancy

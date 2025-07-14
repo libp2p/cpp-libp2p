@@ -109,7 +109,6 @@ namespace libp2p::connection {
   }
 
   void LoopbackStream::readSome(BytesOut out,
-                                size_t bytes,
                                 libp2p::basic::Reader::ReadCallbackFunc cb) {
     if (is_reset_) {
       return deferReadCallback(Error::STREAM_RESET_BY_HOST, std::move(cb));
@@ -117,7 +116,7 @@ namespace libp2p::connection {
     if (!is_readable_) {
       return deferReadCallback(Error::STREAM_NOT_READABLE, std::move(cb));
     }
-    if (bytes == 0 || out.empty() || static_cast<size_t>(out.size()) < bytes) {
+    if (out.empty()) {
       return cb(Error::STREAM_INVALID_ARGUMENT);
     }
 
@@ -125,8 +124,7 @@ namespace libp2p::connection {
     // it to the caller, if so
     auto read_lambda = [self{shared_from_this()},
                         cb{std::move(cb)},
-                        out,
-                        bytes](outcome::result<size_t> res) mutable {
+                        out](outcome::result<size_t> res) mutable {
       if (!res) {
         self->data_notified_ = true;
         self->deferReadCallback(res.as_failure(), std::move(cb));
@@ -134,7 +132,7 @@ namespace libp2p::connection {
       }
 
       if (self->buffer_.size() > 0) {
-        auto to_read = std::min(self->buffer_.size(), bytes);
+        auto to_read = std::min(self->buffer_.size(), out.size());
 
         if (boost::asio::buffer_copy(boost::asio::buffer(out.data(), to_read),
                                      self->buffer_.data(),

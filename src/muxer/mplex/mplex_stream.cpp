@@ -59,8 +59,7 @@ namespace libp2p::connection {
     return true;
   }
 
-  void MplexStream::readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
+  void MplexStream::readSome(BytesOut out, ReadCallbackFunc cb) {
     if (is_reset_) {
       return cb(Error::STREAM_RESET_BY_PEER);
     }

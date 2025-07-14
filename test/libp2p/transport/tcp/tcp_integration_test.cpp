@@ -147,7 +147,7 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
 
     auto buf = std::make_shared<std::vector<uint8_t>>(kSize, 0);
     conn->readSome(
-        *buf, buf->size(), [&counter, conn, buf, context](auto &&res) {
+        *buf, [&counter, conn, buf, context](auto &&res) {
           ASSERT_OUTCOME_SUCCESS(res);
 
           libp2p::writeReturnSize(
@@ -244,7 +244,7 @@ TEST(TCP, ClientClosesConnection) {
     EXPECT_FALSE(conn->isInitiator());
 
     auto buf = std::make_shared<std::vector<uint8_t>>(100, 0);
-    conn->readSome(*buf, buf->size(), [conn, buf](auto &&res) {
+    conn->readSome(*buf, [conn, buf](auto &&res) {
       ASSERT_OUTCOME_ERROR(res, boost::asio::error::eof);
     });
   });
@@ -286,7 +286,7 @@ TEST(TCP, ServerClosesConnection) {
     auto conn = expectConnectionValid(rconn);
     EXPECT_TRUE(conn->isInitiator());
     auto buf = std::make_shared<std::vector<uint8_t>>(100, 0);
-    conn->readSome(*buf, buf->size(), [conn, buf](auto &&res) {
+    conn->readSome(*buf, [conn, buf](auto &&res) {
       ASSERT_OUTCOME_ERROR(res, boost::asio::error::eof);
     });
   });
@@ -312,7 +312,7 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
     EXPECT_FALSE(conn->isInitiator());
 
     auto buf = std::make_shared<std::vector<uint8_t>>(kSize, 0);
-    conn->readSome(*buf, kSize, [&counter, conn, buf](auto &&res) {
+    conn->readSome(*buf, [&counter, conn, buf](auto &&res) {
       ASSERT_OUTCOME_SUCCESS(res);
 
       libp2p::writeReturnSize(conn, *buf, [&counter, buf, conn](auto &&res) {

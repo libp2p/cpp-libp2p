@@ -18,7 +18,6 @@ namespace libp2p {
     // read some bytes
     reader->readSome(
         out,
-        out.size(),
         [weak{std::weak_ptr{reader}}, out, cb{std::move(cb)}](
             outcome::result<size_t> n_res) mutable {
           if (n_res.has_error()) {

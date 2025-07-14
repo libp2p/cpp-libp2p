@@ -33,7 +33,6 @@ namespace libp2p::transport {
   }
 
   void QuicConnection::readSome(BytesOut out,
-                                size_t bytes,
                                 ReadCallbackFunc cb) {
     throw std::logic_error{"QuicConnection::readSome must not be called"};
   }

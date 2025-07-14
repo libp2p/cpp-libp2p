@@ -184,9 +184,7 @@ namespace libp2p::connection {
   }
 
   void SecioConnection::readSome(BytesOut out,
-                                 size_t bytes,
                                  basic::Reader::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
     // TODO(107): Reentrancy
 
     if (!isInitialized()) {
@@ -205,7 +203,7 @@ namespace libp2p::connection {
     readNextMessage([self{shared_from_this()}, out, cb{std::move(cb)}](
                         outcome::result<void> result) {
       IF_ERROR_CB_RETURN(result);
-      self->readSome(out, out.size(), std::move(cb));
+      self->readSome(out, std::move(cb));
     });
   }
 

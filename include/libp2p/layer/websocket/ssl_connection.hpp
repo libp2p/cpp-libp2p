@@ -32,7 +32,7 @@ namespace libp2p::connection {
     outcome::result<void> close() override;
     bool isClosed() const override;
 
-    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, ReadCallbackFunc cb) override;
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 

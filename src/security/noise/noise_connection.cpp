@@ -47,9 +47,7 @@ namespace libp2p::connection {
   }
 
   void NoiseConnection::readSome(BytesOut out,
-                                 size_t bytes,
                                  libp2p::basic::Reader::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
     if (not frame_buffer_->empty()) {
       auto n{std::min(out.size(), frame_buffer_->size())};
       auto begin{frame_buffer_->begin()};
@@ -65,7 +63,7 @@ namespace libp2p::connection {
           auto decrypted =
               IF_ERROR_CB_RETURN(self->decoder_cs_->decrypt({}, *data, {}));
           self->frame_buffer_->assign(decrypted.begin(), decrypted.end());
-          self->readSome(out, out.size(), std::move(cb));
+          self->readSome(out, std::move(cb));
         });
   }
 

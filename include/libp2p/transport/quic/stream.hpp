@@ -32,7 +32,7 @@ namespace libp2p::connection {
     void operator=(QuicStream &&) = delete;
 
     // Reader
-    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
+    void readSome(BytesOut out, ReadCallbackFunc cb) override;
     void deferReadCallback(outcome::result<size_t> res,
                            ReadCallbackFunc cb) override;
 

@@ -55,7 +55,7 @@ namespace libp2p::protocol {
       completed();
     }
 
-    stream_->readSome(span, span.size(), [self](outcome::result<size_t> rr) {
+    stream_->readSome(span, [self](outcome::result<size_t> rr) {
       if (!rr && !self->ec_) {
         self->ec_ = rr.error();
         return self->completed();

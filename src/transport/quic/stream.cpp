@@ -27,9 +27,7 @@ namespace libp2p::connection {
   }
 
   void QuicStream::readSome(BytesOut out,
-                            size_t bytes,
                             basic::Reader::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
     outcome::result<size_t> r = QuicError::STREAM_CLOSED;
     if (not stream_ctx_) {
       return cb(r);

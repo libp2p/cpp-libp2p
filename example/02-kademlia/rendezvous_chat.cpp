@@ -47,7 +47,6 @@ class Session : public std::enable_shared_from_this<Session> {
 
     stream_->readSome(
         *incoming_,
-        incoming_->size(),
         [self = shared_from_this()](outcome::result<size_t> result) {
           if (not result) {
             self->close();

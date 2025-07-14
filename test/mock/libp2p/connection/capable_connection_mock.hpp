@@ -32,7 +32,7 @@ namespace libp2p::connection {
 
     MOCK_CONST_METHOD0(isClosed, bool(void));
     MOCK_METHOD0(close, outcome::result<void>());
-    MOCK_METHOD3(readSome, void(BytesOut, size_t, Reader::ReadCallbackFunc));
+    MOCK_METHOD2(readSome, void(BytesOut, Reader::ReadCallbackFunc));
     MOCK_METHOD2(writeSome, void(BytesIn, Writer::WriteCallbackFunc));
     MOCK_METHOD2(deferReadCallback,
                  void(outcome::result<size_t>, Reader::ReadCallbackFunc));
@@ -82,9 +82,8 @@ namespace libp2p::connection {
     };
 
     void readSome(BytesOut in,
-                  size_t bytes,
                   Reader::ReadCallbackFunc f) override {
-      return real_->readSome(in, bytes, f);
+      return real_->readSome(in, f);
     };
 
     void writeSome(BytesIn in,
