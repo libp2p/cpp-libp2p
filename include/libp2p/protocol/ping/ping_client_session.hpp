@@ -46,11 +46,11 @@ namespace libp2p::protocol {
    private:
     void write();
 
-    void writeCompleted(outcome::result<size_t> r);
+    void writeCompleted(outcome::result<void> r);
 
     void read();
 
-    void readCompleted(outcome::result<size_t> r);
+    void readCompleted(outcome::result<void> r);
 
     void close();
 

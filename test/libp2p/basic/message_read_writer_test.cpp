@@ -60,9 +60,8 @@ TEST_F(MessageReadWriterTest, Read) {
 TEST_F(MessageReadWriterTest, Write) {
   EXPECT_CALL_WRITE(*conn_mock_).WILL_WRITE(msg_with_varint_bytes_);
 
-  msg_rw_->write(msg_bytes_, [this](auto &&res) {
+  msg_rw_->write(msg_bytes_, [this](outcome::result<void> res) {
     ASSERT_TRUE(res);
-    ASSERT_EQ(res.value(), msg_bytes_.size());
     operation_completed_ = true;
   });
 

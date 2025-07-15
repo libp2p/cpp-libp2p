@@ -35,7 +35,7 @@ namespace libp2p::basic {
      * @param buffer - the message to be written
      * @param cb, which is called, when the message is read or error happens
      */
-    void write(BytesIn buffer, Writer::WriteCallbackFunc cb) override;
+    void write(BytesIn buffer, CbOutcomeVoid cb) override;
 
    private:
     std::shared_ptr<ReadWriter> conn_;

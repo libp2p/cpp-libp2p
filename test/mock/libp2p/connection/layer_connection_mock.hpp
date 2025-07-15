@@ -7,13 +7,14 @@
 #pragma once
 
 #include <libp2p/connection/layer_connection.hpp>
-#include <libp2p/basic/read_return_size.hpp>
 
 #include <gmock/gmock.h>
 
 namespace libp2p::connection {
 
-  class LayerConnectionMock : public std::enable_shared_from_this<LayerConnectionMock>, public virtual LayerConnection {
+  class LayerConnectionMock
+      : public std::enable_shared_from_this<LayerConnectionMock>,
+        public virtual LayerConnection {
    public:
     ~LayerConnectionMock() override = default;
 

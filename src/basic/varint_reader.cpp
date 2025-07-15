@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <libp2p/basic/read.hpp>
 #include <libp2p/basic/varint_reader.hpp>
-#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/common/outcome_macro.hpp>
 
 #include <vector>
 
@@ -44,26 +45,22 @@ namespace libp2p::basic {
       return cb(Error::NO_VARINT);
     }
 
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    readReturnSize(
-        conn,
-        std::span(varint_buf->data() + current_length, 1),
-        [c = conn, cb = std::move(cb), current_length, varint_buf](
-            auto &&res) mutable {
-          if (not res.has_value()) {
-            return cb(res.error());
-          }
+    read(conn,
+         BytesOut{*varint_buf}.subspan(current_length, 1),
+         [c = conn, cb = std::move(cb), current_length, varint_buf](
+             outcome::result<void> result) mutable {
+           IF_ERROR_CB_RETURN(result);
 
-          auto varint_opt = multi::UVarint::create(
-              std::span(varint_buf->data(), current_length + 1));
-          if (varint_opt) {
-            return cb(*varint_opt);
-          }
+           auto varint_opt = multi::UVarint::create(
+               BytesIn{*varint_buf}.first(current_length + 1));
+           if (varint_opt) {
+             return cb(*varint_opt);
+           }
 
-          readVarint(std::move(c),
-                     std::move(cb),
-                     ++current_length,
-                     std::move(varint_buf));
-        });
+           readVarint(std::move(c),
+                      std::move(cb),
+                      current_length + 1,
+                      std::move(varint_buf));
+         });
   }
 }  // namespace libp2p::basic

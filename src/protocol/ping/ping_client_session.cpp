@@ -7,8 +7,8 @@
 #include <libp2p/protocol/ping/ping_client_session.hpp>
 
 #include <boost/assert.hpp>
-#include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/read.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/protocol/ping/common.hpp>
 
 namespace libp2p::protocol {
@@ -55,14 +55,14 @@ namespace libp2p::protocol {
         config_.timeout);
 
     write_buffer_ = rand_gen_->randomBytes(config_.message_size);
-    writeReturnSize(stream_,
-                    write_buffer_,
-                    [self{shared_from_this()}](outcome::result<size_t> r) {
-                      self->writeCompleted(r);
-                    });
+    libp2p::write(stream_,
+                  write_buffer_,
+                  [self{shared_from_this()}](outcome::result<void> r) {
+                    self->writeCompleted(r);
+                  });
   }
 
-  void PingClientSession::writeCompleted(outcome::result<size_t> r) {
+  void PingClientSession::writeCompleted(outcome::result<void> r) {
     timer_.reset();
     if (r.has_error()) {
       // timeout passed or error happened; in any case, we cannot ping it
@@ -85,14 +85,14 @@ namespace libp2p::protocol {
         },
         config_.timeout);
 
-    readReturnSize(stream_,
-                   read_buffer_,
-                   [self{shared_from_this()}](outcome::result<size_t> r) {
-                     self->readCompleted(r);
-                   });
+    libp2p::read(stream_,
+                 read_buffer_,
+                 [self{shared_from_this()}](outcome::result<void> r) {
+                   self->readCompleted(r);
+                 });
   }
 
-  void PingClientSession::readCompleted(outcome::result<size_t> r) {
+  void PingClientSession::readCompleted(outcome::result<void> r) {
     timer_.reset();
     if (r.has_error() || write_buffer_ != read_buffer_) {
       // again, in case of any error we cannot continue to ping the peer and

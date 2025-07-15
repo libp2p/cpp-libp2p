@@ -8,8 +8,8 @@
 #include <gtest/gtest.h>
 #include <chrono>
 #include <iostream>
-#include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/read.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/transport/tcp.hpp>
 #include <memory>
@@ -146,20 +146,19 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
     EXPECT_FALSE(conn->isInitiator());
 
     auto buf = std::make_shared<std::vector<uint8_t>>(kSize, 0);
-    conn->readSome(
-        *buf, [&counter, conn, buf, context](auto &&res) {
-          ASSERT_OUTCOME_SUCCESS(res);
+    conn->readSome(*buf, [&counter, conn, buf, context](auto &&res) {
+      ASSERT_OUTCOME_SUCCESS(res);
 
-          libp2p::writeReturnSize(
-              conn, *buf, [&counter, conn, buf, context](auto &&res) {
-                ASSERT_OUTCOME_SUCCESS(res);
-                EXPECT_EQ(res.value(), buf->size());
-                counter++;
-                if (counter >= kClients) {
-                  context->stop();
-                }
-              });
-        });
+      libp2p::write(conn,
+                    *buf,
+                    [&counter, conn, buf, context](outcome::result<void> res) {
+                      ASSERT_OUTCOME_SUCCESS(res);
+                      counter++;
+                      if (counter >= kClients) {
+                        context->stop();
+                      }
+                    });
+    });
   });
 
   ASSERT_TRUE(listener);
@@ -183,15 +182,17 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
 
         EXPECT_TRUE(conn->isInitiator());
 
-        libp2p::writeReturnSize(
-            conn, *buf, [conn, readback, buf, context](auto &&res) {
+        libp2p::write(
+            conn,
+            *buf,
+            [conn, readback, buf, context](outcome::result<void> res) {
               ASSERT_OUTCOME_SUCCESS(res);
-              ASSERT_EQ(res.value(), buf->size());
-              libp2p::readReturnSize(
-                  conn, *readback, [conn, readback, buf, context](auto &&res) {
+              libp2p::read(
+                  conn,
+                  *readback,
+                  [conn, readback, buf, context](outcome::result<void> res) {
                     context->stop();
                     ASSERT_OUTCOME_SUCCESS(res);
-                    ASSERT_EQ(res.value(), readback->size());
                     ASSERT_EQ(*buf, *readback);
                   });
             });
@@ -315,11 +316,11 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
     conn->readSome(*buf, [&counter, conn, buf](auto &&res) {
       ASSERT_OUTCOME_SUCCESS(res);
 
-      libp2p::writeReturnSize(conn, *buf, [&counter, buf, conn](auto &&res) {
-        ASSERT_OUTCOME_SUCCESS(res);
-        EXPECT_EQ(res.value(), buf->size());
-        counter++;
-      });
+      libp2p::write(
+          conn, *buf, [&counter, buf, conn](outcome::result<void> res) {
+            ASSERT_OUTCOME_SUCCESS(res);
+            counter++;
+          });
     });
   });
 
@@ -341,16 +342,15 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
 
         EXPECT_TRUE(conn->isInitiator());
 
-        libp2p::writeReturnSize(
-            conn, *buf, [conn, kSize, readback, buf](auto &&res) {
+        libp2p::write(
+            conn, *buf, [conn, readback, buf](outcome::result<void> res) {
               ASSERT_OUTCOME_SUCCESS(res);
-              ASSERT_EQ(res.value(), buf->size());
-              libp2p::readReturnSize(
-                  conn, *readback, [conn, readback, buf](auto &&res) {
-                    ASSERT_OUTCOME_SUCCESS(res);
-                    ASSERT_EQ(res.value(), readback->size());
-                    ASSERT_EQ(*buf, *readback);
-                  });
+              libp2p::read(conn,
+                           *readback,
+                           [conn, readback, buf](outcome::result<void> res) {
+                             ASSERT_OUTCOME_SUCCESS(res);
+                             ASSERT_EQ(*buf, *readback);
+                           });
             });
       });
 

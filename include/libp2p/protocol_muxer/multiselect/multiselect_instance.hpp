@@ -60,7 +60,7 @@ namespace libp2p::protocol_muxer::multiselect {
     void send(Packet packet);
 
     /// Called when write operation completes
-    void onDataWritten(outcome::result<size_t> res);
+    void onDataWritten(outcome::result<void> res);
 
     /// Closes the negotiation session with result, returns instance to owner
     void close(outcome::result<std::string> result);
@@ -69,7 +69,7 @@ namespace libp2p::protocol_muxer::multiselect {
     void receive();
 
     /// Called on read operations completion
-    void onDataRead(outcome::result<size_t> res);
+    void onDataRead(outcome::result<void> res);
 
     /// Processes parsed messages, called from onDataRead
     MaybeResult processMessages();

@@ -38,7 +38,7 @@ namespace libp2p::security::noise {
     void read(ReadCallbackFunc cb) override;
 
     /// write the given bytes to the network
-    void write(BytesIn buffer, basic::Writer::WriteCallbackFunc cb) override;
+    void write(BytesIn buffer, CbOutcomeVoid cb) override;
 
    private:
     std::shared_ptr<connection::LayerConnection> connection_;
