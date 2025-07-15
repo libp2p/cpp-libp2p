@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/connection/layer_connection.hpp>
 
 #include <gmock/gmock.h>

@@ -69,7 +69,7 @@ namespace libp2p::protocol_muxer::multiselect {
     void receive();
 
     /// Called on read operations completion
-    void onDataRead(outcome::result<size_t> res);
+    void onDataRead(outcome::result<void> res);
 
     /// Processes parsed messages, called from onDataRead
     MaybeResult processMessages();

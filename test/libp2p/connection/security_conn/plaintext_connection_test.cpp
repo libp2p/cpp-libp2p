@@ -5,7 +5,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/read.hpp>
 #include <libp2p/basic/write.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/security/plaintext/plaintext_connection.hpp>
@@ -125,9 +125,8 @@ TEST_F(PlaintextConnectionTest, Read) {
   const int size = 100;
   EXPECT_CALL_READ(*connection_).WILL_READ_SIZE(size);
   auto buf = std::make_shared<std::vector<uint8_t>>(size, 0);
-  libp2p::readReturnSize(secure_connection_, *buf, [size, buf](auto &&res) {
+  libp2p::read(secure_connection_, *buf, [buf](outcome::result<void> res) {
     ASSERT_OUTCOME_SUCCESS(res);
-    ASSERT_EQ(res.value(), size);
   });
 }
 

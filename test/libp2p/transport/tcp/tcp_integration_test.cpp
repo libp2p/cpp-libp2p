@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include <chrono>
 #include <iostream>
-#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/read.hpp>
 #include <libp2p/basic/write.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/transport/tcp.hpp>
@@ -187,11 +187,12 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
             *buf,
             [conn, readback, buf, context](outcome::result<void> res) {
               ASSERT_OUTCOME_SUCCESS(res);
-              libp2p::readReturnSize(
-                  conn, *readback, [conn, readback, buf, context](auto &&res) {
+              libp2p::read(
+                  conn,
+                  *readback,
+                  [conn, readback, buf, context](outcome::result<void> res) {
                     context->stop();
                     ASSERT_OUTCOME_SUCCESS(res);
-                    ASSERT_EQ(res.value(), readback->size());
                     ASSERT_EQ(*buf, *readback);
                   });
             });
@@ -344,12 +345,12 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
         libp2p::write(
             conn, *buf, [conn, readback, buf](outcome::result<void> res) {
               ASSERT_OUTCOME_SUCCESS(res);
-              libp2p::readReturnSize(
-                  conn, *readback, [conn, readback, buf](auto &&res) {
-                    ASSERT_OUTCOME_SUCCESS(res);
-                    ASSERT_EQ(res.value(), readback->size());
-                    ASSERT_EQ(*buf, *readback);
-                  });
+              libp2p::read(conn,
+                           *readback,
+                           [conn, readback, buf](outcome::result<void> res) {
+                             ASSERT_OUTCOME_SUCCESS(res);
+                             ASSERT_EQ(*buf, *readback);
+                           });
             });
       });
 

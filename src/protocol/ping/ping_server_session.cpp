@@ -7,7 +7,7 @@
 #include <libp2p/protocol/ping/ping_server_session.hpp>
 
 #include <boost/assert.hpp>
-#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/read.hpp>
 #include <libp2p/basic/write.hpp>
 #include <libp2p/protocol/ping/common.hpp>
 
@@ -32,13 +32,14 @@ namespace libp2p::protocol {
       return;
     }
 
-    readReturnSize(
-        stream_, buffer_, [self{shared_from_this()}](auto &&read_res) {
-          if (!read_res) {
-            return;
-          }
-          self->readCompleted();
-        });
+    libp2p::read(stream_,
+                 buffer_,
+                 [self{shared_from_this()}](outcome::result<void> read_res) {
+                   if (!read_res) {
+                     return;
+                   }
+                   self->readCompleted();
+                 });
   }
 
   void PingServerSession::readCompleted() {

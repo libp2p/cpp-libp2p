@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <boost/assert.hpp>
-#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/read.hpp>
 #include <libp2p/basic/write.hpp>
 #include <libp2p/common/outcome_macro.hpp>
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
@@ -52,16 +52,16 @@ namespace libp2p::protocol {
 
     read_buf_ = std::vector<uint8_t>(buffer_size_);
 
-    readReturnSize(stream_,
-                   read_buf_,
-                   [self = shared_from_this(),
-                    cb{std::move(cb)}](outcome::result<size_t> rr) mutable {
-                     if (!rr) {
-                       return cb(rr.error());
-                     }
-                     cb(std::move(self->read_buf_));
-                     return self->write(std::move(cb));
-                   });
+    libp2p::read(stream_,
+                 read_buf_,
+                 [self = shared_from_this(),
+                  cb{std::move(cb)}](outcome::result<void> rr) mutable {
+                   if (!rr) {
+                     return cb(rr.error());
+                   }
+                   cb(std::move(self->read_buf_));
+                   return self->write(std::move(cb));
+                 });
   }
 
 }  // namespace libp2p::protocol

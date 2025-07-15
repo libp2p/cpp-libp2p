@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include <boost/container_hash/hash.hpp>
-#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 

@@ -6,7 +6,6 @@
 
 #include <libp2p/layer/websocket/ws_connection.hpp>
 
-#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/asio_buffer.hpp>
 #include <libp2p/common/asio_cb.hpp>
 #include <libp2p/common/bytestr.hpp>

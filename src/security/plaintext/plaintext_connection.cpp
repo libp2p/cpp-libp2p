@@ -7,7 +7,6 @@
 #include <libp2p/security/plaintext/plaintext_connection.hpp>
 
 #include <boost/assert.hpp>
-#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 
 namespace libp2p::connection {

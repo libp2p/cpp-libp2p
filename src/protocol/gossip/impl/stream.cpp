@@ -8,7 +8,7 @@
 
 #include <cassert>
 
-#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/read.hpp>
 #include <libp2p/basic/varint_reader.hpp>
 #include <libp2p/basic/write.hpp>
 
@@ -81,18 +81,18 @@ namespace libp2p::protocol::gossip {
 
     read_buffer_->resize(msg_len);
 
-    readReturnSize(stream_,
-                   std::span(read_buffer_->data(), msg_len),
-                   [self_wptr = weak_from_this(), this, buffer = read_buffer_](
-                       auto &&res) {
-                     if (self_wptr.expired()) {
-                       return;
-                     }
-                     onMessageRead(std::forward<decltype(res)>(res));
-                   });
+    libp2p::read(stream_,
+                 std::span(read_buffer_->data(), msg_len),
+                 [self_wptr = weak_from_this(), this, buffer = read_buffer_](
+                     outcome::result<void> res) {
+                   if (self_wptr.expired()) {
+                     return;
+                   }
+                   onMessageRead(std::forward<decltype(res)>(res));
+                 });
   }
 
-  void Stream::onMessageRead(outcome::result<size_t> res) {
+  void Stream::onMessageRead(outcome::result<void> res) {
     if (!reading_) {
       return;
     }
@@ -104,12 +104,10 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    TRACE("read {} bytes from {}:{}", res.value(), peer_->str, stream_id_);
-
-    if (read_buffer_->size() != res.value()) {
-      feedback_(peer_, Error::MESSAGE_PARSE_ERROR);
-      return;
-    }
+    TRACE("read {} bytes from {}:{}",
+          read_buffer_->size(),
+          peer_->str,
+          stream_id_);
 
     MessageParser parser;
     if (!parser.parse(*read_buffer_)) {

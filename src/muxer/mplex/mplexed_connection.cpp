@@ -7,7 +7,6 @@
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 #include <boost/assert.hpp>
-#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/write.hpp>
 #include <libp2p/muxer/mplex/mplex_frame.hpp>
 

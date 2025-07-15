@@ -8,7 +8,7 @@
 
 #include <generated/security/secio/protobuf/secio.pb.h>
 #include <libp2p/basic/protobuf_message_read_writer.hpp>
-#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/read.hpp>
 #include <libp2p/basic/write.hpp>
 #include <libp2p/crypto/sha/sha256.hpp>
 #include <libp2p/security/error.hpp>
@@ -262,18 +262,17 @@ namespace libp2p::security {
                   SECIO_OUTCOME_VOID_TRY(write_res, conn, cb);
                   const auto kToRead{self->propose_message_.rand.size()};
                   auto buffer = std::make_shared<Bytes>(kToRead);
-                  readReturnSize(
-                      secio_conn,
-                      *buffer,
-                      [self, cb, conn, secio_conn, buffer](auto &&read_res) {
-                        SECIO_OUTCOME_TRY(read_bytes, read_res, conn, cb)
-                        if (read_bytes != buffer->size()
-                            or *buffer != self->propose_message_.rand) {
-                          return cb(Error::INITIAL_PACKET_VERIFICATION_FAILED);
-                        }
-                        SL_TRACE(self->log_, "connection initialized");
-                        cb(secio_conn);
-                      });
+                  read(secio_conn,
+                       *buffer,
+                       [self, cb, conn, secio_conn, buffer](
+                           outcome::result<void> read_res) {
+                         SECIO_OUTCOME_VOID_TRY(read_res, conn, cb)
+                         if (*buffer != self->propose_message_.rand) {
+                           return cb(Error::INITIAL_PACKET_VERIFICATION_FAILED);
+                         }
+                         SL_TRACE(self->log_, "connection initialized");
+                         cb(secio_conn);
+                       });
                 });
         });
   }

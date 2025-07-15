@@ -8,7 +8,6 @@
 
 #include <cassert>
 
-#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/muxer/yamux/yamux_frame.hpp>
 #include <qtils/option_take.hpp>
 

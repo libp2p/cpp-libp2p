@@ -50,7 +50,7 @@ namespace libp2p::protocol {
 
     void read();
 
-    void readCompleted(outcome::result<size_t> r);
+    void readCompleted(outcome::result<void> r);
 
     void close();
 

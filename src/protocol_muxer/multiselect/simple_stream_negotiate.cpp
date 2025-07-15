@@ -6,7 +6,7 @@
 
 #include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
 
-#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/read.hpp>
 #include <libp2p/basic/write.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
@@ -43,7 +43,7 @@ namespace libp2p::protocol_muxer::multiselect {
     void onLastBytesRead(StreamPtr stream,
                          const Callback &cb,
                          const Buffers &buffers,
-                         outcome::result<size_t> res) {
+                         outcome::result<void> res) {
       if (!res) {
         return failed(stream, cb, res.error());
       }
@@ -53,13 +53,9 @@ namespace libp2p::protocol_muxer::multiselect {
     void onFirstBytesRead(StreamPtr stream,
                           Callback cb,
                           std::shared_ptr<Buffers> buffers,
-                          outcome::result<size_t> res) {
+                          outcome::result<void> res) {
       if (!res) {
         return failed(stream, cb, res.error());
-      }
-
-      if (res.value() != kMaxVarintSize) {
-        return failed(stream, cb, ProtocolMuxer::Error::INTERNAL_ERROR);
       }
 
       auto total_sz = buffers->written.size();
@@ -77,11 +73,11 @@ namespace libp2p::protocol_muxer::multiselect {
       // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
       span = span.subspan(kMaxVarintSize, remaining_bytes);
 
-      readReturnSize(
+      libp2p::read(
           stream,
           span,
           [stream = stream, cb = std::move(cb), buffers = std::move(buffers)](
-              outcome::result<size_t> res) mutable {
+              outcome::result<void> res) mutable {
             onLastBytesRead(std::move(stream), cb, *buffers, res);
           });
     }
@@ -97,11 +93,11 @@ namespace libp2p::protocol_muxer::multiselect {
       BytesOut span(buffers->read);
       span = span.first(kMaxVarintSize);
 
-      readReturnSize(
+      libp2p::read(
           stream,
           span,
           [stream = stream, cb = std::move(cb), buffers = std::move(buffers)](
-              outcome::result<size_t> res) mutable {
+              outcome::result<void> res) mutable {
             onFirstBytesRead(stream, std::move(cb), std::move(buffers), res);
           });
     }
