@@ -7,7 +7,7 @@
 #include <libp2p/protocol_muxer/multiselect/simple_stream_negotiate.hpp>
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
@@ -89,13 +89,9 @@ namespace libp2p::protocol_muxer::multiselect {
     void onPacketWritten(StreamPtr stream,
                          Callback cb,
                          std::shared_ptr<Buffers> buffers,
-                         outcome::result<size_t> res) {
+                         outcome::result<void> res) {
       if (!res) {
         return failed(stream, cb, res.error());
-      }
-
-      if (res.value() != buffers->written.size()) {
-        return failed(stream, cb, ProtocolMuxer::Error::INTERNAL_ERROR);
       }
 
       BytesOut span(buffers->read);
@@ -131,14 +127,13 @@ namespace libp2p::protocol_muxer::multiselect {
 
     BytesIn span(buffers->written);
 
-    writeReturnSize(
-        stream,
-        span,
-        [stream = stream, cb = std::move(cb), buffers = std::move(buffers)](
-            outcome::result<size_t> res) mutable {
-          onPacketWritten(
-              std::move(stream), std::move(cb), std::move(buffers), res);
-        });
+    write(stream,
+          span,
+          [stream = stream, cb = std::move(cb), buffers = std::move(buffers)](
+              outcome::result<void> res) mutable {
+            onPacketWritten(
+                std::move(stream), std::move(cb), std::move(buffers), res);
+          });
   }
 
 }  // namespace libp2p::protocol_muxer::multiselect

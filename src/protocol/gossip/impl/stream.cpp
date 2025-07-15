@@ -10,7 +10,7 @@
 
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/varint_reader.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/write.hpp>
 
 #include "message_parser.hpp"
 #include "peer_context.hpp"
@@ -158,16 +158,15 @@ namespace libp2p::protocol::gossip {
 
     TRACE("writing {} bytes to {}:{}", writing_bytes_, peer_->str, stream_id_);
 
-    BytesIn span{*buffer};
-    writeReturnSize(
+    libp2p::write(
         stream_,
-        span,
-        [self_wptr = weak_from_this(), this, buffer = std::move(buffer)](
-            outcome::result<size_t> result) {
-          if (self_wptr.expired() || closed_) {
+        *buffer,
+        [weak_self{weak_from_this()}, buffer](outcome::result<void> result) {
+          auto self = weak_self.lock();
+          if (not self) {
             return;
           }
-          onMessageWritten(result);
+          self->onMessageWritten(result);
         });
 
     if (timeout_ > std::chrono::milliseconds::zero()) {
@@ -182,7 +181,10 @@ namespace libp2p::protocol::gossip {
     }
   }
 
-  void Stream::onMessageWritten(outcome::result<size_t> res) {
+  void Stream::onMessageWritten(outcome::result<void> res) {
+    if (closed_) {
+      return;
+    }
     if (writing_bytes_ == 0) {
       return;
     }
@@ -192,12 +194,7 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
-    TRACE("written {} bytes to {}:{}", res.value(), peer_->str, stream_id_);
-
-    if (writing_bytes_ != res.value()) {
-      feedback_(peer_, Error::MESSAGE_WRITE_ERROR);
-      return;
-    }
+    TRACE("written {} bytes to {}:{}", writing_bytes_, peer_->str, stream_id_);
 
     endWrite();
 

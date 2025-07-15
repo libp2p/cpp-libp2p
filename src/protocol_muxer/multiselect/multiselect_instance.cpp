@@ -11,7 +11,7 @@
 
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/scheduler.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/common/trace.hpp>
 #include <libp2p/protocol_muxer/multiselect/serializing.hpp>
 #include <libp2p/protocol_muxer/protocol_muxer.hpp>
@@ -144,23 +144,20 @@ namespace libp2p::protocol_muxer::multiselect {
       return;
     }
 
-    auto span = BytesIn(*packet);
-
-    writeReturnSize(connection_,
-                    span,
-                    [wptr = weak_from_this(),
-                     round = current_round_,
-                     packet = std::move(packet)](outcome::result<size_t> res) {
-                      auto self = wptr.lock();
-                      if (self && self->current_round_ == round) {
-                        self->onDataWritten(res);
-                      }
-                    });
+    write(connection_,
+          *packet,
+          [wptr = weak_from_this(), round = current_round_, packet](
+              outcome::result<void> res) {
+            auto self = wptr.lock();
+            if (self && self->current_round_ == round) {
+              self->onDataWritten(res);
+            }
+          });
 
     is_writing_ = true;
   }
 
-  void MultiselectInstance::onDataWritten(outcome::result<size_t> res) {
+  void MultiselectInstance::onDataWritten(outcome::result<void> res) {
     is_writing_ = false;
 
     if (!res) {

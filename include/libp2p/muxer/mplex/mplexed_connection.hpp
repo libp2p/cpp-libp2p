@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include <libp2p/basic/cb.hpp>
 #include <libp2p/connection/capable_connection.hpp>
 #include <libp2p/log/logger.hpp>
 #include <libp2p/muxer/mplex/mplex_stream.hpp>
@@ -74,7 +75,7 @@ namespace libp2p::connection {
    private:
     struct WriteData {
       Bytes data;
-      WriteCallbackFunc cb;
+      CbOutcomeVoid cb;
     };
     std::queue<WriteData> write_queue_;
     bool is_writing_ = false;
@@ -92,7 +93,7 @@ namespace libp2p::connection {
     /**
      * Called, when write is complete
      */
-    void onWriteCompleted(outcome::result<size_t> write_res);
+    void onWriteCompleted(outcome::result<void> write_res);
 
     /**
      * Read next frame from the connection

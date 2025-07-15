@@ -11,12 +11,13 @@
 
 #include <boost/beast.hpp>
 
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/injector/kademlia_injector.hpp>
 #include <libp2p/log/configurator.hpp>
 #include <libp2p/log/sublogger.hpp>
 #include <libp2p/multi/content_identifier_codec.hpp>
+#include <qtils/bytestr.hpp>
 
 using libp2p::common::operator""_unhex;
 
@@ -69,10 +70,10 @@ class Session : public std::enable_shared_from_this<Session> {
       return false;
     }
 
-    libp2p::writeReturnSize(
+    libp2p::write(
         stream_,
         *buffer,
-        [self = shared_from_this(), buffer](outcome::result<size_t> result) {
+        [self = shared_from_this(), buffer](outcome::result<void> result) {
           if (not result) {
             self->close();
             std::cout << self->stream_->remotePeerId().value().toBase58()
@@ -80,8 +81,7 @@ class Session : public std::enable_shared_from_this<Session> {
             return;
           }
           std::cout << self->stream_->remotePeerId().value().toBase58() << " < "
-                    << std::string(buffer->begin(),
-                                   buffer->begin() + result.value());
+                    << qtils::byte2str(*buffer);
           std::cout.flush();
         });
     return true;

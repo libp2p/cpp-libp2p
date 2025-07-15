@@ -11,7 +11,7 @@
 #include <boost/di/extension/scopes/shared.hpp>
 
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/injector/host_injector.hpp>
 
 #define TRACE_ENABLED 1
@@ -188,14 +188,15 @@ namespace libp2p::regression {
         stats_.put(Stats::FATAL_ERROR);
         return behavior_(*this);
       }
-      writeReturnSize(stream,
-                      *write_buf_,
-                      [wptr = weak_from_this(), buf = write_buf_](auto res) {
-                        auto self = wptr.lock();
-                        if (self) {
-                          self->onWrite(res);
-                        }
-                      });
+      libp2p::write(stream,
+                    *write_buf_,
+                    [wptr = weak_from_this(),
+                     buf = write_buf_](outcome::result<void> res) {
+                      auto self = wptr.lock();
+                      if (self) {
+                        self->onWrite(res);
+                      }
+                    });
     }
 
     void stop() {
@@ -278,12 +279,12 @@ namespace libp2p::regression {
       behavior_(*this);
     }
 
-    void onWrite(outcome::result<size_t> res) {
-      if (!res || res.value() != write_buf_->size()) {
+    void onWrite(outcome::result<void> res) {
+      if (not res.has_value()) {
         TRACE("({}): write error", stats_.node_id);
         stats_.put(Stats::WRITE_FAILURE);
       } else {
-        TRACE("({}): written {} bytes", stats_.node_id, res.value());
+        TRACE("({}): written {} bytes", stats_.node_id, write_buf_->size());
         stats_.put(Stats::WRITE);
       }
       behavior_(*this);

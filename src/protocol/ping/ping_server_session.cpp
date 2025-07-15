@@ -8,7 +8,7 @@
 
 #include <boost/assert.hpp>
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/protocol/ping/common.hpp>
 
 namespace libp2p::protocol {
@@ -50,7 +50,7 @@ namespace libp2p::protocol {
       return;
     }
 
-    writeReturnSize(
+    libp2p::write(
         stream_, buffer_, [self{shared_from_this()}](auto &&write_res) {
           if (!write_res) {
             return;

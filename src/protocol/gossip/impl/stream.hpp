@@ -52,7 +52,7 @@ namespace libp2p::protocol::gossip {
     void onLengthRead(outcome::result<multi::UVarint> varint);
     void onMessageRead(outcome::result<size_t> res);
     void beginWrite(SharedBuffer buffer);
-    void onMessageWritten(outcome::result<size_t> res);
+    void onMessageWritten(outcome::result<void> res);
     void endWrite();
     void asyncPostError(Error error);
 

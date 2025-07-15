@@ -9,7 +9,7 @@
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
 #include <libp2p/basic/scheduler/scheduler_impl.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/common/literals.hpp>
 #include <libp2p/connection/stream.hpp>
 #include <libp2p/crypto/key_marshaller/key_marshaller_impl.hpp>
@@ -146,15 +146,11 @@ struct Server : public std::enable_shared_from_this<Server> {
 
       // 01-echo back read data
       buf->resize(read);
-      writeReturnSize(
-          stream,
-          *buf,
-          [buf, read, stream, this](outcome::result<size_t> rwrite) {
-            ASSERT_OUTCOME_SUCCESS(write, rwrite);
-            this->println("write ", write, " bytes");
+      libp2p::write(
+          stream, *buf, [buf, stream, this](outcome::result<void> rwrite) {
+            ASSERT_OUTCOME_SUCCESS(rwrite);
+            this->println("write ", buf->size(), " bytes");
             this->streamWrites++;
-            ASSERT_EQ(write, read);
-
             this->onStream(buf, stream);
           });
     });
@@ -244,27 +240,26 @@ struct Client : public std::enable_shared_from_this<Client> {
     }
 
     auto buf = randomBuffer();
-    writeReturnSize(
+    libp2p::write(
         stream,
         *buf,
-        [round, streamId, buf, stream, this](outcome::result<size_t> rwrite) {
-          ASSERT_OUTCOME_SUCCESS(write, rwrite);
-          this->println(streamId, " write ", write, " bytes");
+        [round, streamId, buf, stream, this](outcome::result<void> rwrite) {
+          ASSERT_OUTCOME_SUCCESS(rwrite);
+          this->println(streamId, " write ", buf->size(), " bytes");
           this->streamWrites++;
 
           auto readbuf = std::make_shared<std::vector<uint8_t>>();
-          readbuf->resize(write);
+          readbuf->resize(buf->size());
 
           readReturnSize(stream,
                          *readbuf,
-                         [round, streamId, write, buf, readbuf, stream, this](
+                         [round, streamId, buf, readbuf, stream, this](
                              outcome::result<size_t> rread) {
                            ASSERT_OUTCOME_SUCCESS(read, rread);
                            this->println(
                                streamId, " readSome ", read, " bytes");
                            this->streamReads++;
 
-                           ASSERT_EQ(write, read);
                            ASSERT_EQ(*buf, *readbuf);
 
                            this->onStream(streamId, round - 1, stream);

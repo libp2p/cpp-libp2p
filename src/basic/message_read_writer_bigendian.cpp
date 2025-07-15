@@ -12,8 +12,9 @@
 #include <boost/assert.hpp>
 #include <libp2p/basic/message_read_writer_error.hpp>
 #include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/common/byteutil.hpp>
+#include <libp2p/common/outcome_macro.hpp>
 
 namespace libp2p::basic {
   MessageReadWriterBigEndian::MessageReadWriterBigEndian(
@@ -57,14 +58,12 @@ namespace libp2p::basic {
     raw_buf.reserve(kLenMarkerSize + buffer.size());
     common::putUint32BE(raw_buf, buffer.size());
     raw_buf.insert(raw_buf.end(), buffer.begin(), buffer.end());
-    writeReturnSize(
-        conn_,
-        raw_buf,
-        [self{shared_from_this()}, cb{std::move(cb)}](auto &&result) {
-          if (not result) {
-            return cb(result.error());
-          }
-          cb(result.value() - self->kLenMarkerSize);
-        });
+    libp2p::write(conn_,
+                  raw_buf,
+                  [self{shared_from_this()},
+                   cb{std::move(cb)}](outcome::result<void> result) {
+                    IF_ERROR_CB_RETURN(result);
+                    cb(outcome::success());
+                  });
   }
 }  // namespace libp2p::basic
