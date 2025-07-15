@@ -51,8 +51,7 @@ namespace libp2p::basic {
         });
   }
 
-  void MessageReadWriterUvarint::write(BytesIn buffer,
-                                       Writer::WriteCallbackFunc cb) {
+  void MessageReadWriterUvarint::write(BytesIn buffer, CbOutcomeVoid cb) {
     auto varint_len = multi::UVarint{static_cast<uint64_t>(buffer.size())};
 
     auto msg_bytes = std::make_shared<std::vector<uint8_t>>();

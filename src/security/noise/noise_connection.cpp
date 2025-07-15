@@ -79,7 +79,7 @@ namespace libp2p::connection {
     // `InsecureReadWriter::write` doesn't leak `BytesIn` reference
     framer_->write(
         encrypted,
-        [in, cb{std::move(cb)}](outcome::result<size_t> result) mutable {
+        [in, cb{std::move(cb)}](outcome::result<void> result) mutable {
           IF_ERROR_CB_RETURN(result);
           cb(in.size());
         });

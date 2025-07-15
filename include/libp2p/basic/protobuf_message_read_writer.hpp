@@ -72,7 +72,7 @@ namespace libp2p::basic {
               typename = std::enable_if_t<
                   std::is_default_constructible<ProtoMsgType>::value>>
     void write(const ProtoMsgType &msg,
-               Writer::WriteCallbackFunc cb,
+               CbOutcomeVoid cb,
                const std::shared_ptr<std::vector<uint8_t>> &bytes = nullptr) {
       auto msg_bytes =
           std::make_shared<std::vector<uint8_t>>(msg.ByteSize(), 0);

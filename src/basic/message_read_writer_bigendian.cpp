@@ -47,8 +47,7 @@ namespace libp2p::basic {
         });
   }
 
-  void MessageReadWriterBigEndian::write(BytesIn buffer,
-                                         Writer::WriteCallbackFunc cb) {
+  void MessageReadWriterBigEndian::write(BytesIn buffer, CbOutcomeVoid cb) {
     if (buffer.empty()) {
       // TODO(107): Reentrancy
       return cb(MessageReadWriterError::BUFFER_IS_EMPTY);
