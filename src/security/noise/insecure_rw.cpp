@@ -38,8 +38,7 @@ namespace libp2p::security::noise {
     libp2p::read(connection_, *buffer_, std::move(read_cb));
   }
 
-  void InsecureReadWriter::write(BytesIn buffer,
-                                 basic::Writer::WriteCallbackFunc cb) {
+  void InsecureReadWriter::write(BytesIn buffer, CbOutcomeVoid cb) {
     if (buffer.size() > static_cast<int64_t>(kMaxMsgLen)) {
       return cb(std::errc::message_size);
     }
@@ -49,8 +48,9 @@ namespace libp2p::security::noise {
     outbuf_.insert(outbuf_.end(), buffer.begin(), buffer.end());
     auto write_cb = [self{shared_from_this()}, buffer, cb{std::move(cb)}](
                         outcome::result<void> result) {
+      std::ignore = buffer;
       IF_ERROR_CB_RETURN(result);
-      cb(buffer.size());
+      cb(outcome::success());
     };
     libp2p::write(connection_, outbuf_, std::move(write_cb));
   }

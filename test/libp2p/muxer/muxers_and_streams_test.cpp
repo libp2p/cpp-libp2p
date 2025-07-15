@@ -10,8 +10,8 @@
 #include <gtest/gtest.h>
 #include <boost/di/extension/scopes/shared.hpp>
 
-#include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/read.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/injector/host_injector.hpp>
 
 #define TRACE_ENABLED 1
@@ -141,16 +141,14 @@ namespace libp2p::regression {
 
     void connect(const peer::PeerInfo &connect_to) {
       start();
-      // clang-format off
-      host_->newStream(
-          connect_to,
-          {getProtocolId()},
-          [wptr = weak_from_this()] (auto rstream) {
-            auto self = wptr.lock();
-            if (self) {  self->onConnected(std::move(rstream)); }
-          }
-      );
-      // clang-format on
+      host_->newStream(connect_to,
+                       {getProtocolId()},
+                       [wptr = weak_from_this()](auto rstream) {
+                         auto self = wptr.lock();
+                         if (self) {
+                           self->onConnected(std::move(rstream));
+                         }
+                       });
     }
 
     void listen(const multi::Multiaddress &listen_to) {
@@ -173,16 +171,15 @@ namespace libp2p::regression {
         stats_.put(Stats::FATAL_ERROR);
         return behavior_(*this);
       }
-      // clang-format off
-      readReturnSize(
-          stream,
-          *read_buf_,
-          [wptr = weak_from_this(), buf = read_buf_] (auto res) {
-            auto self = wptr.lock();
-            if (self) {  self->onRead(res); }
-           }
-      );
-      //clang-format on
+      libp2p::read(stream,
+                   *read_buf_,
+                   [wptr = weak_from_this(),
+                    buf = read_buf_](outcome::result<void> res) {
+                     auto self = wptr.lock();
+                     if (self) {
+                       self->onRead(res);
+                     }
+                   });
     }
 
     void write(WhatStream what_stream = ANY_STREAM) {
@@ -192,31 +189,30 @@ namespace libp2p::regression {
         stats_.put(Stats::FATAL_ERROR);
         return behavior_(*this);
       }
-      // clang-format off
-      writeReturnSize(
-          stream,
-          *write_buf_,
-          [wptr = weak_from_this(), buf = write_buf_] (auto res) {
-            auto self = wptr.lock();
-            if (self) {  self->onWrite(res); }
-          }
-      );
-      //clang-format on
+      libp2p::write(stream,
+                    *write_buf_,
+                    [wptr = weak_from_this(),
+                     buf = write_buf_](outcome::result<void> res) {
+                      auto self = wptr.lock();
+                      if (self) {
+                        self->onWrite(res);
+                      }
+                    });
     }
 
     void stop() {
       if (accepted_stream_) {
         auto p = accepted_stream_->remotePeerId();
         if (p) {
-          host_->getNetwork().getConnectionManager()
-          .closeConnectionsToPeer(p.value());
+          host_->getNetwork().getConnectionManager().closeConnectionsToPeer(
+              p.value());
         }
       }
       if (connected_stream_) {
         auto p = connected_stream_->remotePeerId();
         if (p) {
-          host_->getNetwork().getConnectionManager()
-          .closeConnectionsToPeer(p.value());
+          host_->getNetwork().getConnectionManager().closeConnectionsToPeer(
+              p.value());
         }
       }
 
@@ -235,15 +231,14 @@ namespace libp2p::regression {
 
     void start() {
       if (!started_) {
-        // clang-format off
         host_->setProtocolHandler(
             {getProtocolId()},
-            [wptr = weak_from_this()] (StreamAndProtocol stream) {
+            [wptr = weak_from_this()](StreamAndProtocol stream) {
               auto self = wptr.lock();
-              if (self) { self->onAccepted(std::move(stream)); }
-            }
-        );
-        // clang-format on
+              if (self) {
+                self->onAccepted(std::move(stream));
+              }
+            });
 
         host_->start();
         started_ = true;
@@ -274,23 +269,23 @@ namespace libp2p::regression {
       behavior_(*this);
     }
 
-    void onRead(outcome::result<size_t> res) {
-      if (!res || res.value() != read_buf_->size()) {
+    void onRead(outcome::result<void> res) {
+      if (not res.has_value()) {
         TRACE("({}): read error", stats_.node_id);
         stats_.put(Stats::READ_FAILURE);
       } else {
-        TRACE("({}): read {} bytes", stats_.node_id, res.value());
+        TRACE("({}): read {} bytes", stats_.node_id, read_buf_->size());
         stats_.put(Stats::READ);
       }
       behavior_(*this);
     }
 
-    void onWrite(outcome::result<size_t> res) {
-      if (!res || res.value() != write_buf_->size()) {
+    void onWrite(outcome::result<void> res) {
+      if (not res.has_value()) {
         TRACE("({}): write error", stats_.node_id);
         stats_.put(Stats::WRITE_FAILURE);
       } else {
-        TRACE("({}): written {} bytes", stats_.node_id, res.value());
+        TRACE("({}): written {} bytes", stats_.node_id, write_buf_->size());
         stats_.put(Stats::WRITE);
       }
       behavior_(*this);

@@ -46,8 +46,7 @@ namespace libp2p::security::noise {
     outcome::result<std::vector<uint8_t>> generateHandshakePayload(
         const DHKey &keypair);
 
-    void sendHandshakeMessage(BytesIn payload,
-                              basic::Writer::WriteCallbackFunc cb);
+    void sendHandshakeMessage(BytesIn payload, CbOutcomeVoid cb);
 
     void readHandshakeMessage(basic::MessageReadWriter::ReadCallbackFunc cb);
 

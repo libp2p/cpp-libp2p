@@ -7,7 +7,6 @@
 #include <libp2p/security/plaintext/plaintext_connection.hpp>
 
 #include <boost/assert.hpp>
-#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 
 namespace libp2p::connection {
@@ -58,13 +57,11 @@ namespace libp2p::connection {
     return original_connection_->remoteMultiaddr();
   }
 
-  void PlaintextConnection::readSome(BytesOut in,
-                                     Reader::ReadCallbackFunc f) {
+  void PlaintextConnection::readSome(BytesOut in, Reader::ReadCallbackFunc f) {
     return original_connection_->readSome(in, std::move(f));
   };
 
-  void PlaintextConnection::writeSome(BytesIn in,
-                                      Writer::WriteCallbackFunc f) {
+  void PlaintextConnection::writeSome(BytesIn in, Writer::WriteCallbackFunc f) {
     return original_connection_->writeSome(in, std::move(f));
   }
 

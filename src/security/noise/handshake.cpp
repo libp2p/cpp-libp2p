@@ -9,6 +9,7 @@
 #include <libp2p/security/noise/handshake.hpp>
 
 #include <libp2p/common/byteutil.hpp>
+#include <libp2p/common/outcome_macro.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/security/noise/crypto/cipher_suite.hpp>
 #include <libp2p/security/noise/crypto/noise_ccp1305.hpp>
@@ -17,6 +18,12 @@
 #include <libp2p/security/noise/crypto/state.hpp>
 #include <libp2p/security/noise/handshake_message.hpp>
 #include <libp2p/security/noise/noise_connection.hpp>
+
+#define IF_ERROR_HSCB_RETURN(result)                       \
+  ({                                                       \
+    auto cb = [&](std::error_code ec) { self->hscb(ec); }; \
+    IF_ERROR_CB_RETURN(result);                            \
+  })
 
 #ifndef UNIQUE_NAME
 #define UNIQUE_NAME(base) base##__LINE__
@@ -108,18 +115,17 @@ namespace libp2p::security::noise {
     return noise_marshaller_->marshal(payload);
   }
 
-  void Handshake::sendHandshakeMessage(BytesIn payload,
-                                       basic::Writer::WriteCallbackFunc cb) {
+  void Handshake::sendHandshakeMessage(BytesIn payload, CbOutcomeVoid cb) {
     IO_OUTCOME_TRY(
         write_result, handshake_state_->writeMessage({}, payload), cb);
     auto write_cb = [self{shared_from_this()},
                      cb{std::move(cb)},
-                     wr{write_result}](outcome::result<size_t> result) {
-      IO_OUTCOME_TRY(bytes_written, result, cb);
+                     wr{write_result}](outcome::result<void> result) {
+      IF_ERROR_CB_RETURN(result);
       if (wr.cs1 and wr.cs2) {
         self->setCipherStates(wr.cs1, wr.cs2);
       }
-      cb(bytes_written);
+      cb(outcome::success());
     };
     rw_->write(write_result.data, write_cb);
   }
@@ -194,11 +200,9 @@ namespace libp2p::security::noise {
       SL_TRACE(log_, "outgoing connection. stage 0");
       sendHandshakeMessage(
           {},
-          [self{shared_from_this()}, payload{std::move(payload)}](auto result) {
-            IO_OUTCOME_TRY(bytes_written, result, self->hscb);
-            if (0 == bytes_written) {
-              return self->hscb(std::errc::bad_message);
-            }
+          [self{shared_from_this()},
+           payload{std::move(payload)}](outcome::result<void> result) {
+            IF_ERROR_HSCB_RETURN(result);
             //
             // Outgoing connection. Stage 1
             //
@@ -214,12 +218,12 @@ namespace libp2p::security::noise {
               // Outgoing connection. Stage 2
               //
               SL_TRACE(self->log_, "outgoing connection. stage 2");
-              self->sendHandshakeMessage(
-                  payload, [self, to_write(payload.size())](auto result) {
-                    IO_OUTCOME_TRY(bytes_written, result, self->hscb);
-                    unused(bytes_written);
-                    self->hscb(true);
-                  });
+              self->sendHandshakeMessage(payload,
+                                         [self, to_write(payload.size())](
+                                             outcome::result<void> result) {
+                                           IF_ERROR_HSCB_RETURN(result);
+                                           self->hscb(true);
+                                         });
             });
           });
     } else {
@@ -240,9 +244,9 @@ namespace libp2p::security::noise {
             //
             SL_TRACE(self->log_, "incoming connection. stage 1");
             self->sendHandshakeMessage(
-                payload, [self, to_write(payload.size())](auto result) {
-                  IO_OUTCOME_TRY(bytes_written, result, self->hscb);
-                  unused(bytes_written);
+                payload,
+                [self, to_write(payload.size())](outcome::result<void> result) {
+                  IF_ERROR_HSCB_RETURN(result);
                   //
                   // Incoming connection. Stage 2
                   //

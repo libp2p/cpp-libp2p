@@ -80,7 +80,7 @@ namespace libp2p::protocol {
      * @param written_bytes - how much bytes were written
      * @param stream with the other side
      */
-    void identifySent(outcome::result<size_t> written_bytes,
+    void identifySent(outcome::result<void> written_bytes,
                       const StreamSPtr &stream);
 
     /**

@@ -32,8 +32,7 @@ namespace libp2p::transport {
     std::ignore = close();
   }
 
-  void QuicConnection::readSome(BytesOut out,
-                                ReadCallbackFunc cb) {
+  void QuicConnection::readSome(BytesOut out, ReadCallbackFunc cb) {
     throw std::logic_error{"QuicConnection::readSome must not be called"};
   }
 
@@ -42,8 +41,7 @@ namespace libp2p::transport {
     post(*io_context_, [cb{std::move(cb)}, res] { cb(res); });
   }
 
-  void QuicConnection::writeSome(BytesIn in,
-                                 WriteCallbackFunc cb) {
+  void QuicConnection::writeSome(BytesIn in, WriteCallbackFunc cb) {
     throw std::logic_error{"QuicConnection::writeSome must not be called"};
   }
 

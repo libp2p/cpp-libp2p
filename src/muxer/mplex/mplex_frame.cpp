@@ -6,8 +6,9 @@
 
 #include <libp2p/muxer/mplex/mplex_frame.hpp>
 
-#include <libp2p/basic/read_return_size.hpp>
+#include <libp2p/basic/read.hpp>
 #include <libp2p/basic/varint_reader.hpp>
+#include <libp2p/common/outcome_macro.hpp>
 #include <libp2p/multi/uvarint.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
@@ -101,16 +102,13 @@ namespace libp2p::connection {
                 // read data
                 std::shared_ptr<Bytes> data =
                     std::make_shared<Bytes>(length, 0);
-                readReturnSize(reader,
-                               *data,
-                               [id_flag, data, cb{std::move(cb)}](
-                                   auto &&read_res) mutable {
-                                 if (!read_res) {
-                                   return cb(read_res.error());
-                                 }
-
-                                 cb(createFrame(id_flag, std::move(*data)));
-                               });
+                libp2p::read(reader,
+                             *data,
+                             [id_flag, data, cb{std::move(cb)}](
+                                 outcome::result<void> result) mutable {
+                               IF_ERROR_CB_RETURN(result);
+                               cb(createFrame(id_flag, std::move(*data)));
+                             });
               });
         });
   }

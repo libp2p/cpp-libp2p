@@ -9,8 +9,7 @@
 #include <algorithm>
 
 #include <boost/container_hash/hash.hpp>
-#include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 #define TRY_GET_CONNECTION(tmp)         \
@@ -124,7 +123,7 @@ namespace libp2p::connection {
           if (not self->write_queue_.empty()) {
             auto [in, cb] = self->write_queue_.front();
             self->write_queue_.pop_front();
-            writeReturnSize(self, in, cb);
+            self->writeSome(in, cb);
           }
         });
   }

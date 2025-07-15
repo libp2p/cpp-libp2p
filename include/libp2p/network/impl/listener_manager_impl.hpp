@@ -52,9 +52,9 @@ namespace libp2p::network {
    private:
     bool started = false;
 
-    // clang-format off
-    std::unordered_map<multi::Multiaddress, std::shared_ptr<transport::TransportListener>> listeners_;
-    // clang-format on
+    std::unordered_map<multi::Multiaddress,
+                       std::shared_ptr<transport::TransportListener>>
+        listeners_;
 
     std::shared_ptr<protocol_muxer::ProtocolMuxer> multiselect_;
     std::shared_ptr<network::Router> router_;

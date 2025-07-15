@@ -5,7 +5,6 @@
  */
 
 #include <lsquic.h>
-#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/transport/quic/connection.hpp>
 #include <libp2p/transport/quic/engine.hpp>
 #include <libp2p/transport/quic/error.hpp>
@@ -25,8 +24,7 @@ namespace libp2p::connection {
     reset();
   }
 
-  void QuicStream::readSome(BytesOut out,
-                            basic::Reader::ReadCallbackFunc cb) {
+  void QuicStream::readSome(BytesOut out, basic::Reader::ReadCallbackFunc cb) {
     outcome::result<size_t> r = QuicError::STREAM_CLOSED;
     if (not stream_ctx_) {
       return cb(r);
@@ -51,8 +49,7 @@ namespace libp2p::connection {
     conn_->deferReadCallback(res, std::move(cb));
   }
 
-  void QuicStream::writeSome(BytesIn in,
-                             basic::Writer::WriteCallbackFunc cb) {
+  void QuicStream::writeSome(BytesIn in, basic::Writer::WriteCallbackFunc cb) {
     outcome::result<size_t> r = QuicError::STREAM_CLOSED;
     if (not stream_ctx_) {
       return cb(r);

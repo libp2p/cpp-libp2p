@@ -7,8 +7,7 @@
 #include <libp2p/muxer/mplex/mplexed_connection.hpp>
 
 #include <boost/assert.hpp>
-#include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/basic/write_return_size.hpp>
+#include <libp2p/basic/write.hpp>
 #include <libp2p/muxer/mplex/mplex_frame.hpp>
 
 namespace libp2p::connection {
@@ -125,13 +124,11 @@ namespace libp2p::connection {
     return !is_active_ || connection_->isClosed();
   }
 
-  void MplexedConnection::readSome(BytesOut out,
-                                   ReadCallbackFunc cb) {
+  void MplexedConnection::readSome(BytesOut out, ReadCallbackFunc cb) {
     connection_->readSome(out, std::move(cb));
   }
 
-  void MplexedConnection::writeSome(BytesIn in,
-                                    WriteCallbackFunc cb) {
+  void MplexedConnection::writeSome(BytesIn in, WriteCallbackFunc cb) {
     connection_->writeSome(in, std::move(cb));
   }
 
@@ -165,19 +162,20 @@ namespace libp2p::connection {
 
     is_writing_ = true;
     const auto &write_data = write_queue_.front();
-    return writeReturnSize(
-        connection_, write_data.data, [self{shared_from_this()}](auto &&res) {
-          self->onWriteCompleted(std::forward<decltype(res)>(res));
-        });
+    libp2p::write(connection_,
+                  write_data.data,
+                  [self{shared_from_this()}](outcome::result<void> result) {
+                    self->onWriteCompleted(result);
+                  });
   }
 
-  void MplexedConnection::onWriteCompleted(outcome::result<size_t> write_res) {
+  void MplexedConnection::onWriteCompleted(outcome::result<void> write_res) {
     if (!write_res) {
       log_->error("data write failed: {}", write_res.error());
     }
-
-    write_queue_.front().cb(std::forward<decltype(write_res)>(write_res));
+    auto item = std::exchange(write_queue_.front(), {});
     write_queue_.pop();
+    item.cb(write_res);
     doWrite();
   }
 

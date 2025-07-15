@@ -96,13 +96,13 @@ namespace libp2p::protocol {
     rw->write<identify::pb::Identify>(
         msg,
         [self{shared_from_this()},
-         stream = std::move(stream)](auto &&res) mutable {
-          self->identifySent(std::forward<decltype(res)>(res), stream);
+         stream = std::move(stream)](outcome::result<void> result) mutable {
+          self->identifySent(result, stream);
         });
   }
 
   void IdentifyMessageProcessor::identifySent(
-      outcome::result<size_t> written_bytes, const StreamSPtr &stream) {
+      outcome::result<void> written_bytes, const StreamSPtr &stream) {
     auto [peer_id, peer_addr] = detail::getPeerIdentity(stream);
     if (!written_bytes) {
       log_->error("cannot write identify message to stream to peer {}, {}: {}",

@@ -8,6 +8,7 @@
 
 #include <memory>
 
+#include <libp2p/basic/cb.hpp>
 #include <libp2p/basic/readwriter.hpp>
 
 namespace libp2p::basic {
@@ -36,6 +37,6 @@ namespace libp2p::basic {
      * @param cb is called when the message is written or an error happened.
      * Quantity of bytes written is passed as an argument in case of success
      */
-    virtual void write(BytesIn buffer, Writer::WriteCallbackFunc cb) = 0;
+    virtual void write(BytesIn buffer, CbOutcomeVoid cb) = 0;
   };
 }  // namespace libp2p::basic

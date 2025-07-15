@@ -6,7 +6,6 @@
 
 #include <libp2p/security/noise/noise_connection.hpp>
 
-#include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/outcome_macro.hpp>
 #include <libp2p/crypto/x25519_provider/x25519_provider_impl.hpp>
 #include <libp2p/security/noise/crypto/interfaces.hpp>
@@ -79,7 +78,7 @@ namespace libp2p::connection {
     // `InsecureReadWriter::write` doesn't leak `BytesIn` reference
     framer_->write(
         encrypted,
-        [in, cb{std::move(cb)}](outcome::result<size_t> result) mutable {
+        [in, cb{std::move(cb)}](outcome::result<void> result) mutable {
           IF_ERROR_CB_RETURN(result);
           cb(in.size());
         });
