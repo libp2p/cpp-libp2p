@@ -125,13 +125,11 @@ namespace libp2p::connection {
     return !is_active_ || connection_->isClosed();
   }
 
-  void MplexedConnection::readSome(BytesOut out,
-                                   ReadCallbackFunc cb) {
+  void MplexedConnection::readSome(BytesOut out, ReadCallbackFunc cb) {
     connection_->readSome(out, std::move(cb));
   }
 
-  void MplexedConnection::writeSome(BytesIn in,
-                                    WriteCallbackFunc cb) {
+  void MplexedConnection::writeSome(BytesIn in, WriteCallbackFunc cb) {
     connection_->writeSome(in, std::move(cb));
   }
 

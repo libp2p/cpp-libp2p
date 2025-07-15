@@ -56,7 +56,7 @@ namespace libp2p::connection {
   };
 
   void LoopbackStream::adjustWindowSize(uint32_t new_size,
-                                        VoidResultHandlerFunc cb){};
+                                        VoidResultHandlerFunc cb) {};
 
   outcome::result<bool> LoopbackStream::isInitiator() const {
     return outcome::success(false);
@@ -88,8 +88,9 @@ namespace libp2p::connection {
       return deferWriteCallback(Error::STREAM_INVALID_ARGUMENT, std::move(cb));
     }
 
-    if (boost::asio::buffer_copy(buffer_.prepare(in.size()),
-                                 boost::asio::const_buffer(in.data(), in.size()))
+    if (boost::asio::buffer_copy(
+            buffer_.prepare(in.size()),
+            boost::asio::const_buffer(in.data(), in.size()))
         != in.size()) {
       return deferWriteCallback(Error::STREAM_INTERNAL_ERROR, std::move(cb));
     }
@@ -121,9 +122,8 @@ namespace libp2p::connection {
 
     // this lambda checks, if there's enough data in our read buffer, and gives
     // it to the caller, if so
-    auto read_lambda = [self{shared_from_this()},
-                        cb{std::move(cb)},
-                        out](outcome::result<size_t> res) mutable {
+    auto read_lambda = [self{shared_from_this()}, cb{std::move(cb)}, out](
+                           outcome::result<size_t> res) mutable {
       if (!res) {
         self->data_notified_ = true;
         self->deferReadCallback(res.as_failure(), std::move(cb));

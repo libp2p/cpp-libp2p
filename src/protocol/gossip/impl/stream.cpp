@@ -48,18 +48,15 @@ namespace libp2p::protocol::gossip {
 
     TRACE("reading length from {}:{}", peer_->str, stream_id_);
 
-    // clang-format off
     libp2p::basic::VarintReader::readVarint(
         stream_,
-        [self_wptr = weak_from_this(), this]
-            (outcome::result<multi::UVarint> varint) {
+        [self_wptr = weak_from_this(),
+         this](outcome::result<multi::UVarint> varint) {
           if (self_wptr.expired()) {
             return;
           }
           onLengthRead(std::move(varint));
-        }
-    );
-    // clang-format on
+        });
 
     reading_ = true;
   }
@@ -161,21 +158,17 @@ namespace libp2p::protocol::gossip {
 
     TRACE("writing {} bytes to {}:{}", writing_bytes_, peer_->str, stream_id_);
 
-    // clang-format off
     BytesIn span{*buffer};
     writeReturnSize(
         stream_,
         span,
-        [self_wptr = weak_from_this(), this, buffer = std::move(buffer)]
-            (outcome::result<size_t> result)
-        {
+        [self_wptr = weak_from_this(), this, buffer = std::move(buffer)](
+            outcome::result<size_t> result) {
           if (self_wptr.expired() || closed_) {
             return;
           }
           onMessageWritten(result);
-        }
-    );
-    // clang-format on
+        });
 
     if (timeout_ > std::chrono::milliseconds::zero()) {
       timeout_handle_ = scheduler_.scheduleWithHandle(

@@ -146,20 +146,19 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
     EXPECT_FALSE(conn->isInitiator());
 
     auto buf = std::make_shared<std::vector<uint8_t>>(kSize, 0);
-    conn->readSome(
-        *buf, [&counter, conn, buf, context](auto &&res) {
-          ASSERT_OUTCOME_SUCCESS(res);
+    conn->readSome(*buf, [&counter, conn, buf, context](auto &&res) {
+      ASSERT_OUTCOME_SUCCESS(res);
 
-          libp2p::writeReturnSize(
-              conn, *buf, [&counter, conn, buf, context](auto &&res) {
-                ASSERT_OUTCOME_SUCCESS(res);
-                EXPECT_EQ(res.value(), buf->size());
-                counter++;
-                if (counter >= kClients) {
-                  context->stop();
-                }
-              });
-        });
+      libp2p::writeReturnSize(
+          conn, *buf, [&counter, conn, buf, context](auto &&res) {
+            ASSERT_OUTCOME_SUCCESS(res);
+            EXPECT_EQ(res.value(), buf->size());
+            counter++;
+            if (counter >= kClients) {
+              context->stop();
+            }
+          });
+    });
   });
 
   ASSERT_TRUE(listener);

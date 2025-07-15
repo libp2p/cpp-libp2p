@@ -81,13 +81,11 @@ namespace libp2p::connection {
       return real_->remoteMultiaddr();
     };
 
-    void readSome(BytesOut in,
-                  Reader::ReadCallbackFunc f) override {
+    void readSome(BytesOut in, Reader::ReadCallbackFunc f) override {
       return real_->readSome(in, f);
     };
 
-    void writeSome(BytesIn in,
-                   Writer::WriteCallbackFunc f) override {
+    void writeSome(BytesIn in, Writer::WriteCallbackFunc f) override {
       return real_->writeSome(in, f);
     }
 

@@ -127,38 +127,37 @@ struct Server : public std::enable_shared_from_this<Server> {
 
     println("onStream executed");
 
-    stream->readSome(
-        *buf, [buf, stream, this](outcome::result<size_t> rread) {
-          if (!rread) {
-            if (rread.error() == RawConnection::Error::CONNECTION_CLOSED_BY_PEER
-                || rread.error() == Stream::Error::STREAM_RESET_BY_HOST) {
-              return;
-            }
-            this->println(fmt::format("readSome error: {}", rread.error()));
-          }
+    stream->readSome(*buf, [buf, stream, this](outcome::result<size_t> rread) {
+      if (!rread) {
+        if (rread.error() == RawConnection::Error::CONNECTION_CLOSED_BY_PEER
+            || rread.error() == Stream::Error::STREAM_RESET_BY_HOST) {
+          return;
+        }
+        this->println(fmt::format("readSome error: {}", rread.error()));
+      }
 
-          ASSERT_OUTCOME_SUCCESS(read, rread);
+      ASSERT_OUTCOME_SUCCESS(read, rread);
 
-          this->println("readSome ", read, " bytes");
-          if (read == 0) {
-            return;
-          }
-          this->streamReads++;
+      this->println("readSome ", read, " bytes");
+      if (read == 0) {
+        return;
+      }
+      this->streamReads++;
 
-          // 01-echo back read data
-          buf->resize(read);
-          writeReturnSize(
-              stream,
-              *buf,
-              [buf, read, stream, this](outcome::result<size_t> rwrite) {
-                ASSERT_OUTCOME_SUCCESS(write, rwrite);
-                this->println("write ", write, " bytes");
-                this->streamWrites++;
-                ASSERT_EQ(write, read);
+      // 01-echo back read data
+      buf->resize(read);
+      writeReturnSize(
+          stream,
+          *buf,
+          [buf, read, stream, this](outcome::result<size_t> rwrite) {
+            ASSERT_OUTCOME_SUCCESS(write, rwrite);
+            this->println("write ", write, " bytes");
+            this->streamWrites++;
+            ASSERT_EQ(write, read);
 
-                this->onStream(buf, stream);
-              });
-        });
+            this->onStream(buf, stream);
+          });
+    });
   }
 
   void listen(const Multiaddress &ma) {
