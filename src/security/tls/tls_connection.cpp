@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "tls_connection.hpp"
-
 #include <libp2p/basic/read_return_size.hpp>
 #include <libp2p/common/asio_buffer.hpp>
+#include <libp2p/security/tls/tls_connection.hpp>
 #include <libp2p/security/tls/tls_details.hpp>
 
 namespace libp2p::connection {
@@ -139,8 +138,7 @@ namespace libp2p::connection {
     };
   }
 
-  void TlsConnection::readSome(BytesOut out,
-                               Reader::ReadCallbackFunc cb) {
+  void TlsConnection::readSome(BytesOut out, Reader::ReadCallbackFunc cb) {
     SL_TRACE(log(), "reading some up to {} bytes", out.size());
     socket_.async_read_some(asioBuffer(out),
                             closeOnError(*this, std::move(cb)));
@@ -151,8 +149,7 @@ namespace libp2p::connection {
     original_connection_->deferReadCallback(res, std::move(cb));
   }
 
-  void TlsConnection::writeSome(BytesIn in,
-                                Writer::WriteCallbackFunc cb) {
+  void TlsConnection::writeSome(BytesIn in, Writer::WriteCallbackFunc cb) {
     SL_TRACE(log(), "writing some up to {} bytes", in.size());
     socket_.async_write_some(asioBuffer(in),
                              closeOnError(*this, std::move(cb)));

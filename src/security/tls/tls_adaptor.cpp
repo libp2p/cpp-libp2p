@@ -10,8 +10,7 @@
 #include <libp2p/security/tls/ssl_context.hpp>
 #include <libp2p/security/tls/tls_details.hpp>
 #include <libp2p/security/tls/tls_errors.hpp>
-
-#include "tls_connection.hpp"
+#include <libp2p/security/tls/tls_connection.hpp>
 
 namespace libp2p::security {
 
