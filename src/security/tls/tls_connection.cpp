@@ -4,9 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "tls_connection.hpp"
-
 #include <libp2p/common/asio_buffer.hpp>
+#include <libp2p/security/tls/tls_connection.hpp>
 #include <libp2p/security/tls/tls_details.hpp>
 
 namespace libp2p::connection {
