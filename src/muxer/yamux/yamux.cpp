@@ -8,12 +8,14 @@
 
 #include <libp2p/log/logger.hpp>
 #include <libp2p/muxer/yamux/yamuxed_connection.hpp>
+#include <libp2p/muxer/yamux/hardware_tracker.hpp>
 
 namespace libp2p::muxer {
   Yamux::Yamux(MuxedConnectionConfig config,
                std::shared_ptr<basic::Scheduler> scheduler,
                std::shared_ptr<network::ConnectionManager> cmgr)
       : config_{config}, scheduler_{std::move(scheduler)} {
+    connection::HardwareSharedPtrTracker::getInstance().enable();
     assert(scheduler_);
     if (cmgr) {
       std::weak_ptr<network::ConnectionManager> w(cmgr);
@@ -43,7 +45,11 @@ namespace libp2p::muxer {
           "inactive connection passed to muxer: {}", res.error());
       return cb(res.error());
     }
-    cb(std::make_shared<connection::YamuxedConnection>(
-        std::move(conn), scheduler_, close_cb_, config_));
+    
+    auto yamux_connection = std::make_shared<connection::YamuxedConnection>(
+        std::move(conn), scheduler_, close_cb_, config_);
+    connection::trackNextYamuxedConnection(yamux_connection);
+    
+    cb(yamux_connection);
   }
 }  // namespace libp2p::muxer
