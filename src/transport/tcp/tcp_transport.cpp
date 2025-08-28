@@ -21,8 +21,7 @@ namespace libp2p::transport {
     auto &[info, layers] = r.value();
     auto conn = std::make_shared<TcpConnection>(*context_, layers);
     auto connect =
-        [=,
-         self{shared_from_this()},
+        [self{shared_from_this()},
          handler{std::move(handler)},
          layers = std::move(layers)](
             outcome::result<boost::asio::ip::tcp::resolver::results_type>
