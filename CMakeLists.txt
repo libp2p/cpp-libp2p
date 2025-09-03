@@ -1,5 +1,15 @@
 cmake_minimum_required(VERSION 3.12)
 
+# Set CMake policies to handle compatibility with older dependencies
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.27")
+  cmake_policy(SET CMP0144 NEW)
+endif()
+
+# Set policy to handle older CMake requirements in dependencies
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.5")
+  cmake_policy(SET CMP0000 NEW)
+endif()
+
 if (PACKAGE_MANAGER)
   if(NOT PACKAGE_MANAGER MATCHES "^(hunter|vcpkg)$")
     message(FATAL_ERROR "PACKAGE_MANAGER must be set to 'hunter', 'vcpkg' or isn't set")
@@ -15,10 +25,6 @@ else ()
   endif ()
 endif ()
 message(STATUS "Selected package manager: ${PACKAGE_MANAGER}")
-
-if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.27")
-  cmake_policy(SET CMP0144 NEW)
-endif()
 
 find_program(CCACHE_FOUND ccache)
 if (CCACHE_FOUND)
