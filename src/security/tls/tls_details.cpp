@@ -179,7 +179,7 @@ namespace libp2p::security::tls_details {
 
       return crypto::ed25519::Ed25519ProviderImpl{}
           // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-          .sign(BytesIn(buf, msg_len), pk_data)
+          .sign(BytesIn(buf.data(), msg_len), pk_data)
           .value();
     }
 

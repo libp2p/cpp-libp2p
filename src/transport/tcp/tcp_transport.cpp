@@ -23,7 +23,11 @@ namespace libp2p::transport {
     auto connect =
         [self{shared_from_this()},
          handler{std::move(handler)},
-         layers = std::move(layers)](
+         layers = std::move(layers),
+         conn,
+         address,
+         remoteId,
+         mux_config_ = mux_config_](
             outcome::result<boost::asio::ip::tcp::resolver::results_type>
                 r) mutable {
           if (not r) {
@@ -31,7 +35,7 @@ namespace libp2p::transport {
           }
           conn->connect(
               r.value(),
-              [=, handler{std::move(handler)}, layers = std::move(layers)](
+              [=, handler{std::move(handler)}, layers = std::move(layers), &conn, &address, &remoteId](
                   auto ec, auto &e) mutable {
                 if (ec) {
                   std::ignore = conn->close();
