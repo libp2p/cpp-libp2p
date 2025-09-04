@@ -167,7 +167,7 @@ namespace libp2p::security::tls_details {
 
       std::vector<uint8_t> buf(msg_len);
       memcpy(buf.data(), sign_prefix.data(), sign_prefix.size());
-      memcpy(buf.data() + sign_prefix.size(),
+      memcpy(buf.data() + sign_prefix.size(),  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
              cert_pub_key.data(),
              cert_pub_key.size());
 
@@ -404,11 +404,11 @@ namespace libp2p::security::tls_details {
       size_t msg_len = prefix_size + len;
       std::vector<uint8_t> buf(msg_len);
       memcpy(buf.data(), sign_prefix.data(), prefix_size);
-      uint8_t *b = buf.data() + prefix_size;
-      i2d_PUBKEY(cert_pubkey, &b);
+      uint8_t *buf_ptr = buf.data() + prefix_size;  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      i2d_PUBKEY(cert_pubkey, &buf_ptr);
 
       auto verify_res = crypto::ed25519::Ed25519ProviderImpl{}.verify(
-          BytesIn(buf.data(), buf.data() + msg_len),
+          BytesIn(buf.data(), buf.data() + msg_len),  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
           signature,
           ed25519pkey);
 
