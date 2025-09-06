@@ -36,10 +36,10 @@ namespace libp2p::storage {
     }
 
     /// Reads extended sqlite3 error code
-    int getErrorCode();
+    int getErrorCode() const;
 
     /// Returns human-readable representation of an error
-    std::string getErrorMessage();
+    std::string getErrorMessage() const;
 
     /**
      * Store prepared statement
@@ -119,7 +119,7 @@ namespace libp2p::storage {
     }
 
     /// Returns the number of rows modified
-    int countChanges();
+    int countChanges() const;
 
     ::sqlite::database db_;
     std::string db_file_;

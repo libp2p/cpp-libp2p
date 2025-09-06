@@ -47,7 +47,7 @@ namespace libp2p::storage {
     return statements_[handle];
   }
 
-  int SQLite::countChanges() {
+  int SQLite::countChanges() const {
     return sqlite3_changes(db_.connection().get());
   }
 }  // namespace libp2p::storage
