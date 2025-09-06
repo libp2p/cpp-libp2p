@@ -61,6 +61,7 @@ namespace libp2p::storage {
      * @param st_handle - statement identifier
      * @param args - command arguments
      * @return number of rows affected, -1 in case of error
+     * @throws std::invalid_argument if statement handle is invalid
      */
     template <typename... Args>
     inline int execCommand(StatementHandle st_handle, const Args &...args) {
@@ -69,11 +70,14 @@ namespace libp2p::storage {
         bindArgs(st, args...);
         st.execute();
         return countChanges();
-      } catch (const std::runtime_error &e) {
+      } catch (const std::invalid_argument &e) {
         // getStatement can receive invalid handle
-        log_->error(e.what());
+        log_->error("Invalid statement handle: {}", e.what());
+        throw; // Re-throw invalid_argument as it's a programming error
+      } catch (const std::runtime_error &e) {
+        log_->error("Runtime error during command execution: {}", e.what());
       } catch (...) {
-        log_->error(getErrorMessage());
+        log_->error("Unknown error during command execution: {}", getErrorMessage());
       }
       return -1;
     }
@@ -86,6 +90,7 @@ namespace libp2p::storage {
      * @param sink - query response consumer
      * @param args - query arguments
      * @return true when query was successfully executed, otherwise - false
+     * @throws std::invalid_argument if statement handle is invalid
      */
     template <typename Sink, typename... Args>
     inline bool execQuery(StatementHandle st_handle,
@@ -96,11 +101,14 @@ namespace libp2p::storage {
         bindArgs(st, args...);
         st >> sink;
         return true;
-      } catch (const std::runtime_error &e) {
+      } catch (const std::invalid_argument &e) {
         // getStatement can receive invalid handle
-        log_->error(e.what());
+        log_->error("Invalid statement handle: {}", e.what());
+        throw; // Re-throw invalid_argument as it's a programming error
+      } catch (const std::runtime_error &e) {
+        log_->error("Runtime error during query execution: {}", e.what());
       } catch (...) {
-        log_->error(getErrorMessage());
+        log_->error("Unknown error during query execution: {}", getErrorMessage());
       }
       return false;
     }
@@ -120,6 +128,12 @@ namespace libp2p::storage {
 
     /// Returns the number of rows modified
     int countChanges() const;
+
+    /// Returns the database file path
+    const std::string &getDatabaseFile() const;
+
+    /// Returns the number of prepared statements
+    size_t getStatementCount() const;
 
     ::sqlite::database db_;
     std::string db_file_;

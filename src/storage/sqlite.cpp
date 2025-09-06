@@ -42,12 +42,23 @@ namespace libp2p::storage {
   SQLite::database_binder &SQLite::getStatement(
       SQLite::StatementHandle handle) {
     if (handle >= statements_.size()) {
-      throw std::runtime_error("SQLite: statement does not exist");
+      throw std::invalid_argument("SQLite: statement handle " + 
+                                 std::to_string(handle) + 
+                                 " does not exist (max: " + 
+                                 std::to_string(statements_.size() - 1) + ")");
     }
     return statements_[handle];
   }
 
   int SQLite::countChanges() const {
     return sqlite3_changes(db_.connection().get());
+  }
+
+  const std::string &SQLite::getDatabaseFile() const {
+    return db_file_;
+  }
+
+  size_t SQLite::getStatementCount() const {
+    return statements_.size();
   }
 }  // namespace libp2p::storage
