@@ -13,11 +13,18 @@
 
 namespace libp2p::basic {
 
+  /// A thread-safe write queue for managing data transmission with flow control
+  /// 
+  /// This class provides:
+  /// - Bounded queue with configurable size limits
+  /// - Partial message transmission support
+  /// - Callback-based completion notification
+  /// - Automatic error handling for overflow conditions
   class WriteQueue {
    public:
     using DataRef = BytesIn;
 
-    static constexpr size_t kDefaultSizeLimit = 64 * 1024 * 1024;
+    static constexpr size_t kDefaultSizeLimit = 64 * 1024 * 1024;  // 64MB default limit
 
     explicit WriteQueue(size_t size_limit = kDefaultSizeLimit)
         : size_limit_(size_limit) {}

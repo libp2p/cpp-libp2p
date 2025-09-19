@@ -204,6 +204,8 @@ namespace libp2p::peer {
 
   std::unordered_set<PeerId> InmemAddressRepository::getPeers() const {
     std::unordered_set<PeerId> peers;
+    peers.reserve(db_.size());
+    
     for (const auto &it : db_) {
       peers.insert(it.first);
     }

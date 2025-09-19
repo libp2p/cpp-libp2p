@@ -68,9 +68,15 @@ namespace libp2p::network {
   std::vector<ConnectionManager::ConnectionSPtr>
   ConnectionManagerImpl::getConnections() const {
     std::vector<ConnectionSPtr> out;
-    out.reserve(connections_.size());
+    
+    // Pre-allocate space for better performance
+    size_t total_connections = 0;
+    for (const auto &entry : connections_) {
+      total_connections += entry.second.size();
+    }
+    out.reserve(total_connections);
 
-    for (auto &&entry : connections_) {
+    for (const auto &entry : connections_) {
       for (const auto &conn : entry.second) {
         if (not conn->isClosed()) {
           out.emplace_back(conn);

@@ -8,12 +8,21 @@
 
 #include <vector>
 
+#ifdef SQLITE_ENABLED
 #include <sqlite_modern_cpp.h>
 #include <libp2p/log/logger.hpp>
+#endif
 
 namespace libp2p::storage {
 
+#ifdef SQLITE_ENABLED
   /// C++ handy interface for SQLite based on SQLiteModernCpp
+  /// 
+  /// This class provides a modern C++ wrapper around SQLite with support for:
+  /// - Prepared statements with handle-based management
+  /// - Comprehensive error handling and logging
+  /// - RAII-style resource management
+  /// - Thread-safe operations (when SQLite is compiled with threading support)
   class SQLite {
    public:
     using StatementHandle = size_t;
@@ -69,15 +78,19 @@ namespace libp2p::storage {
         auto &st = getStatement(st_handle);
         bindArgs(st, args...);
         st.execute();
-        return countChanges();
+        const auto changes = countChanges();
+        log_->debug("Command executed successfully, {} rows affected", changes);
+        return changes;
       } catch (const std::invalid_argument &e) {
         // getStatement can receive invalid handle
-        log_->error("Invalid statement handle: {}", e.what());
+        log_->error("Invalid statement handle {}: {}", st_handle, e.what());
         throw; // Re-throw invalid_argument as it's a programming error
       } catch (const std::runtime_error &e) {
-        log_->error("Runtime error during command execution: {}", e.what());
+        log_->error("Runtime error during command execution (handle {}): {} - SQLite error: {}", 
+                   st_handle, e.what(), getErrorMessage());
       } catch (...) {
-        log_->error("Unknown error during command execution: {}", getErrorMessage());
+        log_->error("Unknown error during command execution (handle {}): {}", 
+                   st_handle, getErrorMessage());
       }
       return -1;
     }
@@ -100,15 +113,18 @@ namespace libp2p::storage {
         auto &st = getStatement(st_handle);
         bindArgs(st, args...);
         st >> sink;
+        log_->debug("Query executed successfully (handle {})", st_handle);
         return true;
       } catch (const std::invalid_argument &e) {
         // getStatement can receive invalid handle
-        log_->error("Invalid statement handle: {}", e.what());
+        log_->error("Invalid statement handle {}: {}", st_handle, e.what());
         throw; // Re-throw invalid_argument as it's a programming error
       } catch (const std::runtime_error &e) {
-        log_->error("Runtime error during query execution: {}", e.what());
+        log_->error("Runtime error during query execution (handle {}): {} - SQLite error: {}", 
+                   st_handle, e.what(), getErrorMessage());
       } catch (...) {
-        log_->error("Unknown error during query execution: {}", getErrorMessage());
+        log_->error("Unknown error during query execution (handle {}): {}", 
+                   st_handle, getErrorMessage());
       }
       return false;
     }
@@ -141,5 +157,6 @@ namespace libp2p::storage {
 
     std::vector<database_binder> statements_;
   };
+#endif  // SQLITE_ENABLED
 
 }  // namespace libp2p::storage
