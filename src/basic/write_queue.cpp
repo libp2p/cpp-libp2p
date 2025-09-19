@@ -21,8 +21,21 @@ namespace libp2p::basic {
   void WriteQueue::enqueue(DataRef data, Writer::WriteCallbackFunc cb) {
     auto data_sz = static_cast<size_t>(data.size());
 
-    assert(data_sz > 0);
-    assert(canEnqueue(data_sz));
+    if (data_sz == 0) {
+      // Call callback immediately for empty data
+      if (cb) {
+        cb(outcome::success());
+      }
+      return;
+    }
+    
+    if (!canEnqueue(data_sz)) {
+      // Call callback with error for overflow
+      if (cb) {
+        cb(outcome::failure(std::make_error_code(std::errc::no_buffer_space)));
+      }
+      return;
+    }
 
     total_unsent_size_ += data_sz;
     queue_.push_back({data, 0, 0, data_sz, std::move(cb)});

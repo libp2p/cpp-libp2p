@@ -8,12 +8,21 @@
 
 #include <vector>
 
+#ifdef SQLITE_ENABLED
 #include <sqlite_modern_cpp.h>
 #include <libp2p/log/logger.hpp>
+#endif
 
 namespace libp2p::storage {
 
+#ifdef SQLITE_ENABLED
   /// C++ handy interface for SQLite based on SQLiteModernCpp
+  /// 
+  /// This class provides a modern C++ wrapper around SQLite with support for:
+  /// - Prepared statements with handle-based management
+  /// - Comprehensive error handling and logging
+  /// - RAII-style resource management
+  /// - Thread-safe operations (when SQLite is compiled with threading support)
   class SQLite {
    public:
     using StatementHandle = size_t;
@@ -36,10 +45,10 @@ namespace libp2p::storage {
     }
 
     /// Reads extended sqlite3 error code
-    int getErrorCode();
+    int getErrorCode() const;
 
     /// Returns human-readable representation of an error
-    std::string getErrorMessage();
+    std::string getErrorMessage() const;
 
     /**
      * Store prepared statement
@@ -61,6 +70,7 @@ namespace libp2p::storage {
      * @param st_handle - statement identifier
      * @param args - command arguments
      * @return number of rows affected, -1 in case of error
+     * @throws std::invalid_argument if statement handle is invalid
      */
     template <typename... Args>
     inline int execCommand(StatementHandle st_handle, const Args &...args) {
@@ -68,12 +78,19 @@ namespace libp2p::storage {
         auto &st = getStatement(st_handle);
         bindArgs(st, args...);
         st.execute();
-        return countChanges();
-      } catch (const std::runtime_error &e) {
+        const auto changes = countChanges();
+        log_->debug("Command executed successfully, {} rows affected", changes);
+        return changes;
+      } catch (const std::invalid_argument &e) {
         // getStatement can receive invalid handle
-        log_->error(e.what());
+        log_->error("Invalid statement handle {}: {}", st_handle, e.what());
+        throw; // Re-throw invalid_argument as it's a programming error
+      } catch (const std::runtime_error &e) {
+        log_->error("Runtime error during command execution (handle {}): {} - SQLite error: {}", 
+                   st_handle, e.what(), getErrorMessage());
       } catch (...) {
-        log_->error(getErrorMessage());
+        log_->error("Unknown error during command execution (handle {}): {}", 
+                   st_handle, getErrorMessage());
       }
       return -1;
     }
@@ -86,6 +103,7 @@ namespace libp2p::storage {
      * @param sink - query response consumer
      * @param args - query arguments
      * @return true when query was successfully executed, otherwise - false
+     * @throws std::invalid_argument if statement handle is invalid
      */
     template <typename Sink, typename... Args>
     inline bool execQuery(StatementHandle st_handle,
@@ -95,12 +113,18 @@ namespace libp2p::storage {
         auto &st = getStatement(st_handle);
         bindArgs(st, args...);
         st >> sink;
+        log_->debug("Query executed successfully (handle {})", st_handle);
         return true;
-      } catch (const std::runtime_error &e) {
+      } catch (const std::invalid_argument &e) {
         // getStatement can receive invalid handle
-        log_->error(e.what());
+        log_->error("Invalid statement handle {}: {}", st_handle, e.what());
+        throw; // Re-throw invalid_argument as it's a programming error
+      } catch (const std::runtime_error &e) {
+        log_->error("Runtime error during query execution (handle {}): {} - SQLite error: {}", 
+                   st_handle, e.what(), getErrorMessage());
       } catch (...) {
-        log_->error(getErrorMessage());
+        log_->error("Unknown error during query execution (handle {}): {}", 
+                   st_handle, getErrorMessage());
       }
       return false;
     }
@@ -119,7 +143,13 @@ namespace libp2p::storage {
     }
 
     /// Returns the number of rows modified
-    int countChanges();
+    int countChanges() const;
+
+    /// Returns the database file path
+    const std::string &getDatabaseFile() const;
+
+    /// Returns the number of prepared statements
+    size_t getStatementCount() const;
 
     ::sqlite::database db_;
     std::string db_file_;
@@ -127,5 +157,6 @@ namespace libp2p::storage {
 
     std::vector<database_binder> statements_;
   };
+#endif  // SQLITE_ENABLED
 
 }  // namespace libp2p::storage

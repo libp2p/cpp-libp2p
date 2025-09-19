@@ -122,7 +122,11 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang|Clang|GNU)$")
   add_flag(-Werror-reorder)          # field '$1' will be initialized after field '$2'
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # using Visual Studio C++
-  # TODO(warchant): add flags https://github.com/lefticus/cppbestpractices/blob/master/02-Use_the_Tools_Available.md#msvc
+  add_flag(/W4)                    # Enable all warnings
+  add_flag(/WX)                    # Treat warnings as errors
+  add_flag(/permissive-)           # Disable non-conforming code
+  add_flag(/Zc:__cplusplus)        # Enable correct __cplusplus macro
+  add_flag(/std:c++20)             # Use C++20 standard
 endif ()
 
 if (CLANG_TIDY)

@@ -170,15 +170,57 @@ namespace libp2p::crypto::validator {
 
   outcome::result<void> KeyValidatorImpl::validateEcdsa(
       const PrivateKey &key) const {
-    // TODO(xDimon): Check if it possible to validate ECDSA key by some way.
-    //  issue: https://github.com/libp2p/cpp-libp2p/issues/103
+    // Basic ECDSA private key validation
+    // ECDSA private keys are typically 32 bytes for P-256, 48 bytes for P-384, 66 bytes for P-521
+    if (key.data.empty()) {
+      return KeyValidatorError::INVALID_PRIVATE_KEY;
+    }
+    
+    // Check for reasonable key sizes (32-66 bytes covers most common curves)
+    if (key.data.size() < 32 || key.data.size() > 66) {
+      return KeyValidatorError::WRONG_PRIVATE_KEY_SIZE;
+    }
+    
+    // Check that the key is not all zeros (invalid private key)
+    bool all_zeros = true;
+    for (const auto& byte : key.data) {
+      if (byte != 0) {
+        all_zeros = false;
+        break;
+      }
+    }
+    if (all_zeros) {
+      return KeyValidatorError::INVALID_PRIVATE_KEY;
+    }
+    
     return outcome::success();
   }
 
   outcome::result<void> KeyValidatorImpl::validateEcdsa(
       const PublicKey &key) const {
-    // TODO(xDimon): Check if it possible to validate ECDSA key by some way.
-    //  issue: https://github.com/libp2p/cpp-libp2p/issues/103
+    // Basic ECDSA public key validation
+    if (key.data.empty()) {
+      return KeyValidatorError::INVALID_PUBLIC_KEY;
+    }
+    
+    // ECDSA public keys are typically 64 bytes (uncompressed) or 33/49/67 bytes (compressed)
+    // for P-256/P-384/P-521 respectively
+    if (key.data.size() < 33 || key.data.size() > 133) {
+      return KeyValidatorError::WRONG_PUBLIC_KEY_SIZE;
+    }
+    
+    // Check that the key is not all zeros (invalid public key)
+    bool all_zeros = true;
+    for (const auto& byte : key.data) {
+      if (byte != 0) {
+        all_zeros = false;
+        break;
+      }
+    }
+    if (all_zeros) {
+      return KeyValidatorError::INVALID_PUBLIC_KEY;
+    }
+    
     return outcome::success();
   }
 
