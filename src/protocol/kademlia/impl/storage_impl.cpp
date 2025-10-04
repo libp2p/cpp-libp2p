@@ -117,4 +117,22 @@ namespace libp2p::protocol::kademlia {
         },
         config_.storageRefreshInterval);
   }
+
+  std::vector<std::pair<Key, Value>> StorageImpl::getAllRecords() const {
+    std::vector<std::pair<Key, Value>> records;
+    auto now = scheduler_->now();
+    
+    // Iterate through all records and get their values from backend
+    for (const auto& record : *table_) {
+      // Only include non-expired records
+      if (record.expire_time > now) {
+        auto value_result = backend_->getValue(record.key);
+        if (value_result) {
+          records.emplace_back(record.key, value_result.value());
+        }
+      }
+    }
+    
+    return records;
+  }
 }  // namespace libp2p::protocol::kademlia

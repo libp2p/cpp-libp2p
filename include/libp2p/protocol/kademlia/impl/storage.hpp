@@ -25,6 +25,10 @@ namespace libp2p::protocol::kademlia {
 
     /// @returns true if it has value corresponding to given @param key.
     virtual bool hasValue(const Key &key) const = 0;
+
+    /// Get all stored records for periodic operations
+    /// @return vector of stored records
+    virtual std::vector<std::pair<Key, Value>> getAllRecords() const = 0;
   };
 
 }  // namespace libp2p::protocol::kademlia

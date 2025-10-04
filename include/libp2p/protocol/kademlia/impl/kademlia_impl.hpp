@@ -84,6 +84,22 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Session> openSession(
         std::shared_ptr<connection::Stream> stream) override;
 
+    /// Set replication interval
+    /// @param interval - replication interval
+    void setReplicationInterval(std::chrono::seconds interval) override;
+
+    /// Set republishing interval
+    /// @param interval - republishing interval
+    void setRepublishingInterval(std::chrono::seconds interval) override;
+
+    /// Enable/disable periodic replication
+    /// @param enabled - whether to enable replication
+    void setReplicationEnabled(bool enabled) override;
+
+    /// Enable/disable periodic republishing
+    /// @param enabled - whether to enable republishing
+    void setRepublishingEnabled(bool enabled) override;
+
    private:
     void onPutValue(const std::shared_ptr<Session> &session, Message &&msg);
     void onGetValue(const std::shared_ptr<Session> &session, Message &&msg);
@@ -144,6 +160,26 @@ namespace libp2p::protocol::kademlia {
       size_t iteration = 0;
       basic::Scheduler::Handle handle{};
     } random_walking_;
+
+    // Periodic replication and republishing
+    basic::Scheduler::Handle replication_timer_;
+    basic::Scheduler::Handle republishing_timer_;
+    
+    // Mutable configuration for runtime changes
+    mutable std::chrono::seconds replication_interval_;
+    mutable std::chrono::seconds republishing_interval_;
+    mutable bool replication_enabled_;
+    mutable bool republishing_enabled_;
+
+    // Periodic operation callbacks
+    void onReplicationTimer();
+    void onRepublishingTimer();
+    void performReplication();
+    void performRepublishing();
+
+    // Helper methods for periodic operations
+    std::vector<PeerId> getClosestPeers(const Key& key, size_t count);
+    void replicateRecord(const Key& key, const Value& value, bool extend_expiration);
 
     log::SubLogger log_;
   };
