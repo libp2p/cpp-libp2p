@@ -120,6 +120,33 @@ namespace libp2p::protocol::kademlia {
     if (config_.randomWalk.enabled) {
       randomWalk();
     }
+
+    // Initialize mutable configuration
+    replication_interval_ = config_.periodicReplication.interval;
+    republishing_interval_ = config_.periodicRepublishing.interval;
+    replication_enabled_ = config_.periodicReplication.enabled;
+    republishing_enabled_ = config_.periodicRepublishing.enabled;
+
+    // start periodic replication and republishing
+    if (replication_enabled_) {
+      replication_timer_ = scheduler_->scheduleWithHandle(
+          [weak_self{weak_from_this()}] { 
+            auto self = weak_self.lock();
+            if (self) {
+              self->onReplicationTimer();
+            }
+          }, replication_interval_);
+    }
+
+    if (republishing_enabled_) {
+      republishing_timer_ = scheduler_->scheduleWithHandle(
+          [weak_self{weak_from_this()}] { 
+            auto self = weak_self.lock();
+            if (self) {
+              self->onRepublishingTimer();
+            }
+          }, republishing_interval_);
+    }
   }
 
   outcome::result<void> KademliaImpl::bootstrap() {
@@ -646,6 +673,148 @@ namespace libp2p::protocol::kademlia {
                                               peer_routing_table_,
                                               std::move(key),
                                               std::move(handler));
+  }
+
+  void KademliaImpl::setReplicationInterval(std::chrono::seconds interval) {
+    replication_interval_ = interval;
+    if (replication_timer_) {
+      replication_timer_.reset();
+    }
+    if (replication_enabled_) {
+      replication_timer_ = scheduler_->scheduleWithHandle(
+          [weak_self{weak_from_this()}] { 
+            auto self = weak_self.lock();
+            if (self) {
+              self->onReplicationTimer();
+            }
+          }, interval);
+    }
+  }
+
+  void KademliaImpl::setRepublishingInterval(std::chrono::seconds interval) {
+    republishing_interval_ = interval;
+    if (republishing_timer_) {
+      republishing_timer_.reset();
+    }
+    if (republishing_enabled_) {
+      republishing_timer_ = scheduler_->scheduleWithHandle(
+          [weak_self{weak_from_this()}] { 
+            auto self = weak_self.lock();
+            if (self) {
+              self->onRepublishingTimer();
+            }
+          }, interval);
+    }
+  }
+
+  void KademliaImpl::setReplicationEnabled(bool enabled) {
+    replication_enabled_ = enabled;
+    if (enabled) {
+      setReplicationInterval(replication_interval_);
+    } else if (replication_timer_) {
+      replication_timer_.reset();
+    }
+  }
+
+  void KademliaImpl::setRepublishingEnabled(bool enabled) {
+    republishing_enabled_ = enabled;
+    if (enabled) {
+      setRepublishingInterval(republishing_interval_);
+    } else if (republishing_timer_) {
+      republishing_timer_.reset();
+    }
+  }
+
+  void KademliaImpl::onReplicationTimer() {
+    performReplication();
+    // Schedule next replication
+    if (replication_enabled_) {
+      replication_timer_ = scheduler_->scheduleWithHandle(
+          [weak_self{weak_from_this()}] { 
+            auto self = weak_self.lock();
+            if (self) {
+              self->onReplicationTimer();
+            }
+          }, replication_interval_);
+    }
+  }
+
+  void KademliaImpl::onRepublishingTimer() {
+    performRepublishing();
+    // Schedule next republishing
+    if (republishing_enabled_) {
+      republishing_timer_ = scheduler_->scheduleWithHandle(
+          [weak_self{weak_from_this()}] { 
+            auto self = weak_self.lock();
+            if (self) {
+              self->onRepublishingTimer();
+            }
+          }, republishing_interval_);
+    }
+  }
+
+  void KademliaImpl::performReplication() {
+    log_.debug("Performing periodic replication");
+    
+    try {
+      auto records = storage_->getAllRecords();
+      for (const auto& [key, value] : records) {
+        replicateRecord(key, value, false); // false = don't extend expiration
+      }
+    } catch (const std::exception& e) {
+      log_.error("Error during replication: {}", e.what());
+    }
+  }
+
+  void KademliaImpl::performRepublishing() {
+    log_.debug("Performing periodic republishing");
+    
+    try {
+      auto records = storage_->getAllRecords();
+      for (const auto& [key, value] : records) {
+        replicateRecord(key, value, true); // true = extend expiration
+      }
+    } catch (const std::exception& e) {
+      log_.error("Error during republishing: {}", e.what());
+    }
+  }
+
+  std::vector<PeerId> KademliaImpl::getClosestPeers(const Key& key, size_t count) {
+    std::vector<PeerId> closest_peers;
+    
+    // Get peers from peer routing table
+    HashedKey hashed_key(key);
+    auto peers = peer_routing_table_->getNearestPeers(hashed_key.hash, count);
+    
+    for (const auto& peer : peers) {
+      if (peer != self_id_) { // Don't include self
+        closest_peers.push_back(peer);
+      }
+    }
+    
+    return closest_peers;
+  }
+
+  void KademliaImpl::replicateRecord(const Key& key, const Value& value, bool extend_expiration) {
+    auto closest_peers = getClosestPeers(key, 
+        extend_expiration ? config_.periodicRepublishing.peers_per_cycle 
+                          : config_.periodicReplication.peers_per_cycle);
+    
+    if (closest_peers.empty()) {
+      log_.debug("No peers available for replication/republishing of key: {}", 
+                 multi::detail::encodeBase58(key));
+      return;
+    }
+
+    // Create and start put value executor
+    auto executor = createPutValueExecutor(key, value, closest_peers);
+    if (executor) {
+      std::ignore = executor->start();
+      log_.debug("Started {} for key: {} to {} peers", 
+                 extend_expiration ? "republishing" : "replication",
+                 multi::detail::encodeBase58(key), 
+                 closest_peers.size());
+    }
   }
 
 }  // namespace libp2p::protocol::kademlia

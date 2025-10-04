@@ -65,6 +65,8 @@ namespace libp2p::protocol::kademlia {
 
     bool hasValue(const Key &key) const override;
 
+    std::vector<std::pair<Key, Value>> getAllRecords() const override;
+
    private:
     void onRefreshTimer();
     void setTimerRefresh();
