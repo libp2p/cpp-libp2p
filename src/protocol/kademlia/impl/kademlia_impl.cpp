@@ -748,6 +748,15 @@ namespace libp2p::protocol::kademlia {
   }
 
   void KademliaImpl::replicateRecord(const Key& key, const Value& value, bool extend_expiration) {
+    // If republishing, extend local expiration by putting the value back to storage
+    if (extend_expiration) {
+      auto put_res = storage_->putValue(key, value);
+      if (!put_res) {
+        log_.warn("Republish: failed to extend expiration for key: {}: {}",
+                  multi::detail::encodeBase58(key), put_res.error());
+      }
+    }
+
     auto closest_peers = getClosestPeers(key, 
         extend_expiration ? config_.periodicRepublishing.peers_per_cycle 
                           : config_.periodicReplication.peers_per_cycle);
