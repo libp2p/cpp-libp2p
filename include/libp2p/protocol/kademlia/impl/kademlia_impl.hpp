@@ -84,6 +84,8 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Session> openSession(
         std::shared_ptr<connection::Stream> stream) override;
 
+    // Periodic behavior is driven by configuration only
+
    private:
     void onPutValue(const std::shared_ptr<Session> &session, Message &&msg);
     void onGetValue(const std::shared_ptr<Session> &session, Message &&msg);
@@ -144,6 +146,22 @@ namespace libp2p::protocol::kademlia {
       size_t iteration = 0;
       basic::Scheduler::Handle handle{};
     } random_walking_;
+
+    // Periodic replication and republishing
+    basic::Scheduler::Handle replication_timer_;
+    basic::Scheduler::Handle republishing_timer_;
+
+    // Periodic operation callbacks
+    void setReplicationTimer();
+    void setRepublishingTimer();
+    void onReplicationTimer();
+    void onRepublishingTimer();
+    void performReplication();
+    void performRepublishing();
+
+    // Helper methods for periodic operations
+    std::vector<PeerId> getClosestPeers(const Key& key, size_t count);
+    void replicateRecord(const Key& key, const Value& value, bool extend_expiration);
 
     log::SubLogger log_;
   };

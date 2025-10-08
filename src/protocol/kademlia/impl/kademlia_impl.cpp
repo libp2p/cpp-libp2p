@@ -120,6 +120,10 @@ namespace libp2p::protocol::kademlia {
     if (config_.randomWalk.enabled) {
       randomWalk();
     }
+
+    // start periodic replication and republishing
+    setReplicationTimer();
+    setRepublishingTimer();
   }
 
   outcome::result<void> KademliaImpl::bootstrap() {
@@ -646,6 +650,113 @@ namespace libp2p::protocol::kademlia {
                                               peer_routing_table_,
                                               std::move(key),
                                               std::move(handler));
+  }
+
+  // Periodic behavior is driven by configuration only; no runtime setters
+
+  void KademliaImpl::setReplicationTimer() {
+    if (not config_.periodicReplication.enabled) {
+      return;
+    }
+    replication_timer_ = scheduler_->scheduleWithHandle(
+        [weak_self{weak_from_this()}] {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
+          }
+          self->setReplicationTimer();
+          self->onReplicationTimer();
+        },
+        config_.periodicReplication.interval);
+  }
+
+  void KademliaImpl::setRepublishingTimer() {
+    if (not config_.periodicRepublishing.enabled) {
+      return;
+    }
+    republishing_timer_ = scheduler_->scheduleWithHandle(
+        [weak_self{weak_from_this()}] {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
+          }
+          self->setRepublishingTimer();
+          self->onRepublishingTimer();
+        },
+        config_.periodicRepublishing.interval);
+  }
+
+  void KademliaImpl::onReplicationTimer() {
+    performReplication();
+  }
+
+  void KademliaImpl::onRepublishingTimer() {
+    performRepublishing();
+  }
+
+  void KademliaImpl::performReplication() {
+    log_.debug("Performing periodic replication");
+
+    auto records = storage_->getAllRecords();
+    for (const auto& [key, value]: records) {
+      replicateRecord(key, value, false);  // false = don't extend expiration
+    }
+  }
+
+  void KademliaImpl::performRepublishing() {
+    log_.debug("Performing periodic republishing");
+
+    auto records = storage_->getAllRecords();
+    for (const auto& [key, value] : records) {
+      replicateRecord(key, value, true);  // true = extend expiration
+    }
+  }
+
+  std::vector<PeerId> KademliaImpl::getClosestPeers(const Key& key, size_t count) {
+    std::vector<PeerId> closest_peers;
+    
+    // Get peers from peer routing table
+    HashedKey hashed_key(key);
+    auto peers = peer_routing_table_->getNearestPeers(hashed_key.hash, count);
+    
+    for (const auto& peer : peers) {
+      if (peer != self_id_) { // Don't include self
+        closest_peers.push_back(peer);
+      }
+    }
+    
+    return closest_peers;
+  }
+
+  void KademliaImpl::replicateRecord(const Key& key, const Value& value, bool extend_expiration) {
+    // If republishing, extend local expiration by putting the value back to storage
+    if (extend_expiration) {
+      auto put_res = storage_->putValue(key, value);
+      if (!put_res) {
+        log_.warn("Republish: failed to extend expiration for key: {}: {}",
+                  multi::detail::encodeBase58(key), put_res.error());
+      }
+    }
+
+    auto closest_peers = getClosestPeers(key, 
+        extend_expiration ? config_.periodicRepublishing.peers_per_cycle 
+                          : config_.periodicReplication.peers_per_cycle);
+    
+    if (closest_peers.empty()) {
+      log_.debug("No peers available for replication/republishing of key: {}", 
+                 multi::detail::encodeBase58(key));
+      return;
+    }
+
+    // Create and start put value executor
+    auto executor = createPutValueExecutor(key, value, closest_peers);
+    if (executor) {
+      std::ignore = executor->start();
+      log_.debug("Started {} for key: {} to {} peers", 
+                 extend_expiration ? "republishing" : "replication",
+                 multi::detail::encodeBase58(key), 
+                 closest_peers.size());
+    }
   }
 
 }  // namespace libp2p::protocol::kademlia

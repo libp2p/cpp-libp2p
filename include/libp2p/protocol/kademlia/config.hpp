@@ -47,6 +47,44 @@ namespace libp2p::protocol::kademlia {
        */
       std::chrono::seconds delay = 10s;
     };
+
+    struct PeriodicReplication {
+      /**
+       * True if periodic replication is enabled
+       */
+      bool enabled = true;
+
+      /**
+       * Interval for periodic replication
+       * @note Default: 1h
+       */
+      std::chrono::seconds interval = 1h;
+
+      /**
+       * Number of peers to replicate to per cycle
+       * @note Default: 3 (subset of K_VALUE)
+       */
+      size_t peers_per_cycle = 3;
+    };
+
+    struct PeriodicRepublishing {
+      /**
+       * True if periodic republishing is enabled
+       */
+      bool enabled = true;
+
+      /**
+       * Interval for periodic republishing
+       * @note Default: 24h
+       */
+      std::chrono::seconds interval = 24h;
+
+      /**
+       * Number of peers to republish to per cycle
+       * @note Default: 6 (subset of K_VALUE)
+       */
+      size_t peers_per_cycle = 6;
+    };
   }  // namespace
 
   class Config {
@@ -145,6 +183,16 @@ namespace libp2p::protocol::kademlia {
      * Random walk config
      */
     RandomWalk randomWalk{};
+
+    /**
+     * Periodic replication config
+     */
+    PeriodicReplication periodicReplication{};
+
+    /**
+     * Periodic republishing config
+     */
+    PeriodicRepublishing periodicRepublishing{};
 
     // https://github.com/libp2p/rust-libp2p/blob/c6cf7fec6913aa590622aeea16709fce6e9c99a5/protocols/kad/src/query/peers/closest.rs#L110-L120
     size_t query_initial_peers = K_VALUE;
