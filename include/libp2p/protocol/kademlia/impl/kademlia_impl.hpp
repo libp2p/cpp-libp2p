@@ -152,6 +152,8 @@ namespace libp2p::protocol::kademlia {
     basic::Scheduler::Handle republishing_timer_;
 
     // Periodic operation callbacks
+    void setReplicationTimer();
+    void setRepublishingTimer();
     void onReplicationTimer();
     void onRepublishingTimer();
     void performReplication();

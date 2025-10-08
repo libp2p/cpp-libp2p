@@ -1,3 +1,34 @@
+  void KademliaImpl::setReplicationTimer() {
+    if (not config_.periodicReplication.enabled) {
+      return;
+    }
+    replication_timer_ = scheduler_->scheduleWithHandle(
+        [weak_self{weak_from_this()}] {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
+          }
+          self->setReplicationTimer();
+          self->onReplicationTimer();
+        },
+        config_.periodicReplication.interval);
+  }
+
+  void KademliaImpl::setRepublishingTimer() {
+    if (not config_.periodicRepublishing.enabled) {
+      return;
+    }
+    republishing_timer_ = scheduler_->scheduleWithHandle(
+        [weak_self{weak_from_this()}] {
+          auto self = weak_self.lock();
+          if (not self) {
+            return;
+          }
+          self->setRepublishingTimer();
+          self->onRepublishingTimer();
+        },
+        config_.periodicRepublishing.interval);
+  }
 /**
  * Copyright Quadrivium LLC
  * All Rights Reserved
@@ -122,25 +153,8 @@ namespace libp2p::protocol::kademlia {
     }
 
     // start periodic replication and republishing
-    if (config_.periodicReplication.enabled) {
-      replication_timer_ = scheduler_->scheduleWithHandle(
-          [weak_self{weak_from_this()}] { 
-            auto self = weak_self.lock();
-            if (self) {
-              self->onReplicationTimer();
-            }
-          }, config_.periodicReplication.interval);
-    }
-
-    if (config_.periodicRepublishing.enabled) {
-      republishing_timer_ = scheduler_->scheduleWithHandle(
-          [weak_self{weak_from_this()}] { 
-            auto self = weak_self.lock();
-            if (self) {
-              self->onRepublishingTimer();
-            }
-          }, config_.periodicRepublishing.interval);
-    }
+    setReplicationTimer();
+    setRepublishingTimer();
   }
 
   outcome::result<void> KademliaImpl::bootstrap() {
