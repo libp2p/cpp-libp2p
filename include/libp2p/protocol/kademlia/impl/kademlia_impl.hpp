@@ -164,12 +164,6 @@ namespace libp2p::protocol::kademlia {
     // Periodic replication and republishing
     basic::Scheduler::Handle replication_timer_;
     basic::Scheduler::Handle republishing_timer_;
-    
-    // Mutable configuration for runtime changes
-    mutable std::chrono::seconds replication_interval_;
-    mutable std::chrono::seconds republishing_interval_;
-    mutable bool replication_enabled_;
-    mutable bool republishing_enabled_;
 
     // Periodic operation callbacks
     void onReplicationTimer();

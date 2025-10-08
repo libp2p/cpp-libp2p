@@ -121,31 +121,25 @@ namespace libp2p::protocol::kademlia {
       randomWalk();
     }
 
-    // Initialize mutable configuration
-    replication_interval_ = config_.periodicReplication.interval;
-    republishing_interval_ = config_.periodicRepublishing.interval;
-    replication_enabled_ = config_.periodicReplication.enabled;
-    republishing_enabled_ = config_.periodicRepublishing.enabled;
-
     // start periodic replication and republishing
-    if (replication_enabled_) {
+    if (config_.periodicReplication.enabled) {
       replication_timer_ = scheduler_->scheduleWithHandle(
           [weak_self{weak_from_this()}] { 
             auto self = weak_self.lock();
             if (self) {
               self->onReplicationTimer();
             }
-          }, replication_interval_);
+          }, config_.periodicReplication.interval);
     }
 
-    if (republishing_enabled_) {
+    if (config_.periodicRepublishing.enabled) {
       republishing_timer_ = scheduler_->scheduleWithHandle(
           [weak_self{weak_from_this()}] { 
             auto self = weak_self.lock();
             if (self) {
               self->onRepublishingTimer();
             }
-          }, republishing_interval_);
+          }, config_.periodicRepublishing.interval);
     }
   }
 
@@ -676,11 +670,10 @@ namespace libp2p::protocol::kademlia {
   }
 
   void KademliaImpl::setReplicationInterval(std::chrono::seconds interval) {
-    replication_interval_ = interval;
     if (replication_timer_) {
       replication_timer_.reset();
     }
-    if (replication_enabled_) {
+    if (config_.periodicReplication.enabled) {
       replication_timer_ = scheduler_->scheduleWithHandle(
           [weak_self{weak_from_this()}] { 
             auto self = weak_self.lock();
@@ -692,11 +685,10 @@ namespace libp2p::protocol::kademlia {
   }
 
   void KademliaImpl::setRepublishingInterval(std::chrono::seconds interval) {
-    republishing_interval_ = interval;
     if (republishing_timer_) {
       republishing_timer_.reset();
     }
-    if (republishing_enabled_) {
+    if (config_.periodicRepublishing.enabled) {
       republishing_timer_ = scheduler_->scheduleWithHandle(
           [weak_self{weak_from_this()}] { 
             auto self = weak_self.lock();
@@ -708,18 +700,16 @@ namespace libp2p::protocol::kademlia {
   }
 
   void KademliaImpl::setReplicationEnabled(bool enabled) {
-    replication_enabled_ = enabled;
     if (enabled) {
-      setReplicationInterval(replication_interval_);
+      setReplicationInterval(config_.periodicReplication.interval);
     } else if (replication_timer_) {
       replication_timer_.reset();
     }
   }
 
   void KademliaImpl::setRepublishingEnabled(bool enabled) {
-    republishing_enabled_ = enabled;
     if (enabled) {
-      setRepublishingInterval(republishing_interval_);
+      setRepublishingInterval(config_.periodicRepublishing.interval);
     } else if (republishing_timer_) {
       republishing_timer_.reset();
     }
@@ -728,28 +718,28 @@ namespace libp2p::protocol::kademlia {
   void KademliaImpl::onReplicationTimer() {
     performReplication();
     // Schedule next replication
-    if (replication_enabled_) {
+    if (config_.periodicReplication.enabled) {
       replication_timer_ = scheduler_->scheduleWithHandle(
           [weak_self{weak_from_this()}] { 
             auto self = weak_self.lock();
             if (self) {
               self->onReplicationTimer();
             }
-          }, replication_interval_);
+          }, config_.periodicReplication.interval);
     }
   }
 
   void KademliaImpl::onRepublishingTimer() {
     performRepublishing();
     // Schedule next republishing
-    if (republishing_enabled_) {
+    if (config_.periodicRepublishing.enabled) {
       republishing_timer_ = scheduler_->scheduleWithHandle(
           [weak_self{weak_from_this()}] { 
             auto self = weak_self.lock();
             if (self) {
               self->onRepublishingTimer();
             }
-          }, republishing_interval_);
+          }, config_.periodicRepublishing.interval);
     }
   }
 
