@@ -669,51 +669,7 @@ namespace libp2p::protocol::kademlia {
                                               std::move(handler));
   }
 
-  void KademliaImpl::setReplicationInterval(std::chrono::seconds interval) {
-    if (replication_timer_) {
-      replication_timer_.reset();
-    }
-    if (config_.periodicReplication.enabled) {
-      replication_timer_ = scheduler_->scheduleWithHandle(
-          [weak_self{weak_from_this()}] { 
-            auto self = weak_self.lock();
-            if (self) {
-              self->onReplicationTimer();
-            }
-          }, interval);
-    }
-  }
-
-  void KademliaImpl::setRepublishingInterval(std::chrono::seconds interval) {
-    if (republishing_timer_) {
-      republishing_timer_.reset();
-    }
-    if (config_.periodicRepublishing.enabled) {
-      republishing_timer_ = scheduler_->scheduleWithHandle(
-          [weak_self{weak_from_this()}] { 
-            auto self = weak_self.lock();
-            if (self) {
-              self->onRepublishingTimer();
-            }
-          }, interval);
-    }
-  }
-
-  void KademliaImpl::setReplicationEnabled(bool enabled) {
-    if (enabled) {
-      setReplicationInterval(config_.periodicReplication.interval);
-    } else if (replication_timer_) {
-      replication_timer_.reset();
-    }
-  }
-
-  void KademliaImpl::setRepublishingEnabled(bool enabled) {
-    if (enabled) {
-      setRepublishingInterval(config_.periodicRepublishing.interval);
-    } else if (republishing_timer_) {
-      republishing_timer_.reset();
-    }
-  }
+  // Periodic behavior is driven by configuration only; no runtime setters
 
   void KademliaImpl::onReplicationTimer() {
     performReplication();

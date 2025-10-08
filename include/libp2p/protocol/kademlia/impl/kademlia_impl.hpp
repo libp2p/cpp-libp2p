@@ -84,21 +84,7 @@ namespace libp2p::protocol::kademlia {
     std::shared_ptr<Session> openSession(
         std::shared_ptr<connection::Stream> stream) override;
 
-    /// Set replication interval
-    /// @param interval - replication interval
-    void setReplicationInterval(std::chrono::seconds interval) override;
-
-    /// Set republishing interval
-    /// @param interval - republishing interval
-    void setRepublishingInterval(std::chrono::seconds interval) override;
-
-    /// Enable/disable periodic replication
-    /// @param enabled - whether to enable replication
-    void setReplicationEnabled(bool enabled) override;
-
-    /// Enable/disable periodic republishing
-    /// @param enabled - whether to enable republishing
-    void setRepublishingEnabled(bool enabled) override;
+    // Periodic behavior is driven by configuration only
 
    private:
     void onPutValue(const std::shared_ptr<Session> &session, Message &&msg);
