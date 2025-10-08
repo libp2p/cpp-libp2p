@@ -701,27 +701,19 @@ namespace libp2p::protocol::kademlia {
 
   void KademliaImpl::performReplication() {
     log_.debug("Performing periodic replication");
-    
-    try {
-      auto records = storage_->getAllRecords();
-      for (const auto& [key, value] : records) {
-        replicateRecord(key, value, false); // false = don't extend expiration
-      }
-    } catch (const std::exception& e) {
-      log_.error("Error during replication: {}", e.what());
+
+    auto records = storage_->getAllRecords();
+    for (const auto& [key, value]: records) {
+      replicateRecord(key, value, false);  // false = don't extend expiration
     }
   }
 
   void KademliaImpl::performRepublishing() {
     log_.debug("Performing periodic republishing");
-    
-    try {
-      auto records = storage_->getAllRecords();
-      for (const auto& [key, value] : records) {
-        replicateRecord(key, value, true); // true = extend expiration
-      }
-    } catch (const std::exception& e) {
-      log_.error("Error during republishing: {}", e.what());
+
+    auto records = storage_->getAllRecords();
+    for (const auto& [key, value] : records) {
+      replicateRecord(key, value, true);  // true = extend expiration
     }
   }
 
