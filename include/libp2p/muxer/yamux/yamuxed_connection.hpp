@@ -79,7 +79,11 @@ namespace libp2p::connection {
     void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
    private:
-    using Streams = std::unordered_map<StreamId, std::shared_ptr<YamuxStream>>;
+    using Streams = std::unordered_map<StreamId, std::weak_ptr<YamuxStream>>;
+    // Keep strong references for streams that were just created and not yet
+    // handed over to user handlers to prevent premature destruction.
+    using PendingStreams =
+        std::unordered_map<StreamId, std::shared_ptr<YamuxStream>>;
 
     using PendingOutboundStreams =
         std::unordered_map<StreamId, StreamHandlerFunc>;
@@ -176,7 +180,6 @@ namespace libp2p::connection {
     /// Expire timer callback
     void onExpireTimer();
 
-    void setTimerCleanup();
     void setTimerPing();
 
     /// Copy of config
@@ -207,6 +210,7 @@ namespace libp2p::connection {
 
     /// Active streams
     Streams streams_;
+    PendingStreams pending_streams_;
 
     /// Streams just created. Need to call handlers after all
     /// data is processed. StreamHandlerFunc is null for inbound streams
@@ -223,9 +227,6 @@ namespace libp2p::connection {
 
     /// Timer handle for pings
     basic::Scheduler::Handle ping_handle_;
-
-    /// Cleanup for detached streams
-    basic::Scheduler::Handle cleanup_handle_;
 
     /// Timer handle for auto closing if inactive
     basic::Scheduler::Handle inactivity_handle_;
