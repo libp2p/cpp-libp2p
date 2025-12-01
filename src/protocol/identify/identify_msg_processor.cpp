@@ -448,13 +448,14 @@ namespace libp2p::protocol {
       log_->warn("cannot validate signedPeerRecord: no remote peer ID in stream");
       return {};
     }
-    auto remote_peer_id = stream_peer_id_res.value();
+    [[maybe_unused]] auto remote_peer_id = stream_peer_id_res.value();
 
     // TODO: Implement full peer record envelope parsing and validation
     // according to libp2p peer record specification.
     // For now, we reject all signedPeerRecords to prevent the vulnerability
     // where malicious peers could inject third-party signed records.
     // This is a security fix to prevent address poisoning attacks.
+    // remote_peer_id will be used when full validation is implemented.
 
     log_->warn(
         "peer {} sent signedPeerRecord, but full validation is not yet "
