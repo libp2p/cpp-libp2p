@@ -450,8 +450,8 @@ namespace libp2p::protocol {
     }
     [[maybe_unused]] auto remote_peer_id = stream_peer_id_res.value();
 
-    // TODO: Implement full peer record envelope parsing and validation
-    // according to libp2p peer record specification.
+    // TODO(identify-signed-peer-record): Implement full peer record envelope
+    // parsing and validation according to libp2p peer record specification.
     // For now, we reject all signedPeerRecords to prevent the vulnerability
     // where malicious peers could inject third-party signed records.
     // This is a security fix to prevent address poisoning attacks.
