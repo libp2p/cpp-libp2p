@@ -35,7 +35,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::multi, Multihash::Error, e) {
 namespace libp2p::multi {
 
   Multihash::Multihash(HashType type, BytesIn hash)
-      : data_(std::make_shared<const Data>(type, hash)) {}
+      : data_(std::make_shared<Data>(type, hash)) {}
 
   namespace {
     template <typename Buffer>
@@ -132,7 +132,16 @@ namespace libp2p::multi {
     return fmt::format("{:X}", data().bytes);
   }
 
-  const Bytes &Multihash::toBuffer() const {
+  const Bytes &Multihash::toBuffer() const & {
+    return data().bytes;
+  }
+
+  Bytes Multihash::toBuffer() && {
+    if (data_ && data_.use_count() == 1) {
+      auto data = std::move(data_);
+      data_ = nullptr;
+      return std::move(data->bytes);
+    }
     return data().bytes;
   }
 

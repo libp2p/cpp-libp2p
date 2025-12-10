@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <memory>
 #include <utility>
 
 #include <libp2p/common/types.hpp>
@@ -85,7 +86,13 @@ namespace libp2p::multi {
     /**
      * @return a buffer with the multihash, including its type, length and hash
      */
-    const Buffer &toBuffer() const;
+    const Buffer &toBuffer() const &;
+
+    /**
+     * @return a buffer with the multihash, including its type, length and hash
+     *         (moved out of a temporary when unique)
+     */
+    Buffer toBuffer() &&;
 
     /**
      * @return Pre-calculated hash for std containers
@@ -129,7 +136,7 @@ namespace libp2p::multi {
 
     const Data &data() const;
 
-    std::shared_ptr<const Data> data_;
+    std::shared_ptr<Data> data_;
   };
 
 }  // namespace libp2p::multi
