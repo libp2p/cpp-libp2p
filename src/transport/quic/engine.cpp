@@ -45,6 +45,7 @@ namespace libp2p::transport::lsquic {
 
     lsquic_engine_settings settings{};
     lsquic_engine_init_settings(&settings, flags);
+    settings.es_versions = 1 << LSQVER_I001;
     settings.es_init_max_stream_data_bidi_remote =
         mux_config.maximum_window_size;
     settings.es_init_max_stream_data_bidi_local =
