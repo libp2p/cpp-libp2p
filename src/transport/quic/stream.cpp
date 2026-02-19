@@ -62,11 +62,31 @@ namespace libp2p::connection {
     if (not stream_ctx_) {
       return cb(r);
     }
-    auto n = lsquic_stream_write(stream_ctx_->ls_stream, in.data(), in.size());
-    if (n > 0 and lsquic_stream_flush(stream_ctx_->ls_stream) == 0) {
-      r = n;
+    if (stream_ctx_->writing) {
+      throw std::logic_error{"QuicStream::writeSome already in progress"};
     }
-    stream_ctx_->engine->process();
+    // Missing from `lsquic_stream_write` documentation comment.
+    // Return value 0 means buffer is full.
+    // Call `lsquic_stream_wantwrite` and wait for `stream_if.on_write`
+    // callback, before calling `lsquic_stream_write` again.
+    auto n = lsquic_stream_write(stream_ctx_->ls_stream, in.data(), in.size());
+    if (n == 0) {
+      stream_ctx_->writing.emplace(
+          [weak_self{weak_from_this()}, in, cb{std::move(cb)}]() mutable {
+            auto self = weak_self.lock();
+            if (not self) {
+              cb(QuicError::STREAM_CLOSED);
+              return;
+            }
+            self->writeSome(in, std::move(cb));
+          });
+      lsquic_stream_wantwrite(stream_ctx_->ls_stream, 1);
+      return;
+    }
+    if (n > 0) {
+      r = n;
+      stream_ctx_->engine->wantFlush(stream_ctx_);
+    }
     deferReadCallback(r, std::move(cb));
   }
 

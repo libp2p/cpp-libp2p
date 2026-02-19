@@ -19,6 +19,8 @@ namespace libp2p::transport::lsquic {
 namespace libp2p::connection {
   class QuicStream : public Stream,
                      public std::enable_shared_from_this<QuicStream> {
+    friend libp2p::transport::lsquic::Engine;
+
    public:
     QuicStream(std::shared_ptr<transport::QuicConnection> conn,
                transport::lsquic::StreamCtx *stream_ctx,

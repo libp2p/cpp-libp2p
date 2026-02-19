@@ -76,6 +76,8 @@ namespace libp2p::transport::lsquic {
     lsquic_stream_t *ls_stream;
     std::weak_ptr<QuicStream> stream{};
     std::optional<std::function<void()>> reading{};
+    std::optional<std::function<void()>> writing{};
+    bool want_flush = false;
   };
 
   using OnAccept = std::function<void(std::shared_ptr<QuicConnection>)>;
@@ -112,6 +114,7 @@ namespace libp2p::transport::lsquic {
       on_accept_ = std::move(cb);
     }
     void wantProcess();
+    void wantFlush(StreamCtx *stream_ctx);
 
    private:
     void process();
@@ -128,6 +131,7 @@ namespace libp2p::transport::lsquic {
     lsquic_engine_t *engine_ = nullptr;
     OnAccept on_accept_;
     bool started_ = false;
+    std::deque<std::weak_ptr<connection::QuicStream>> want_flush_;
     bool want_process_ = false;
     std::optional<Connecting> connecting_;
     struct Reading {
