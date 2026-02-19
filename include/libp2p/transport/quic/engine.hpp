@@ -75,14 +75,7 @@ namespace libp2p::transport::lsquic {
     Engine *engine;
     lsquic_stream_t *ls_stream;
     std::weak_ptr<QuicStream> stream{};
-    /**
-     * Stream read operation arguments.
-     */
-    struct Reading {
-      BytesOut out;
-      std::function<void(outcome::result<size_t>)> cb;
-    };
-    std::optional<Reading> reading{};
+    std::optional<std::function<void()>> reading{};
   };
 
   using OnAccept = std::function<void(std::shared_ptr<QuicConnection>)>;

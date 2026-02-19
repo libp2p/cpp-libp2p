@@ -34,7 +34,15 @@ namespace libp2p::connection {
     }
     auto n = lsquic_stream_read(stream_ctx_->ls_stream, out.data(), out.size());
     if (n == -1 and errno == EWOULDBLOCK) {
-      stream_ctx_->reading.emplace(StreamCtx::Reading{out, std::move(cb)});
+      stream_ctx_->reading.emplace(
+          [weak_self{weak_from_this()}, out, cb{std::move(cb)}]() mutable {
+            auto self = weak_self.lock();
+            if (not self) {
+              cb(QuicError::STREAM_CLOSED);
+              return;
+            }
+            self->readSome(out, std::move(cb));
+          });
       lsquic_stream_wantread(stream_ctx_->ls_stream, 1);
       return;
     }
