@@ -257,7 +257,7 @@ namespace libp2p::transport::lsquic {
     if (auto op = qtils::optionTake(connecting_)) {
       op->cb(QuicError::CANT_CREATE_CONNECTION);
     }
-    process();
+    wantProcess();
   }
 
   outcome::result<std::shared_ptr<QuicStream>> Engine::newStream(
@@ -277,7 +277,20 @@ namespace libp2p::transport::lsquic {
     return stream;
   }
 
+  void Engine::wantProcess() {
+    if (want_process_) {
+      return;
+    }
+    want_process_ = true;
+    boost::asio::post(*io_context_, [weak_self{weak_from_this()}] {
+      if (auto self = weak_self.lock()) {
+        self->process();
+      }
+    });
+  }
+
   void Engine::process() {
+    want_process_ = false;
     lsquic_engine_process_conns(engine_);
     int us = 0;
     if (not lsquic_engine_earliest_adv_tick(engine_, &us)) {

@@ -111,9 +111,10 @@ namespace libp2p::transport::lsquic {
     void onAccept(OnAccept cb) {
       on_accept_ = std::move(cb);
     }
-    void process();
+    void wantProcess();
 
    private:
+    void process();
     void readLoop();
 
     std::shared_ptr<boost::asio::io_context> io_context_;
@@ -127,6 +128,7 @@ namespace libp2p::transport::lsquic {
     lsquic_engine_t *engine_ = nullptr;
     OnAccept on_accept_;
     bool started_ = false;
+    bool want_process_ = false;
     std::optional<Connecting> connecting_;
     struct Reading {
       static constexpr size_t kMaxUdpPacketSize = 64 << 10;
