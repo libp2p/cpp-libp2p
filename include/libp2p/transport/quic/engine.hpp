@@ -9,6 +9,7 @@
 #include <lsquic.h>
 #include <boost/asio/ip/udp.hpp>
 #include <boost/asio/steady_timer.hpp>
+#include <deque>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <memory>
