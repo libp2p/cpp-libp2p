@@ -186,3 +186,41 @@ TEST_F(InmemAddressRepository_Test, GetPeers) {
   auto s = db->getPeers();
   EXPECT_EQ(s.size(), 2);
 }
+
+/**
+ * @given address repository
+ * @when addAddresses/upsertAddresses with ttl::kPermanent
+ * @then addresses are stored and not evicted by collectGarbage
+ */
+TEST_F(InmemAddressRepository_Test, PermanentTtlNoOverflow) {
+  ASSERT_OUTCOME_SUCCESS(
+      db->addAddresses(p1, std::vector<Multiaddress>{ma1, ma2}, ttl::kPermanent));
+  ASSERT_OUTCOME_SUCCESS(
+      db->upsertAddresses(p2, std::vector<Multiaddress>{ma3}, ttl::kPermanent));
+
+  ASSERT_OUTCOME_SUCCESS(v1, db->getAddresses(p1));
+  ASSERT_OUTCOME_SUCCESS(v2, db->getAddresses(p2));
+  EXPECT_EQ(v1.size(), 2);
+  EXPECT_EQ(v2.size(), 1);
+
+  collectGarbage();
+  ASSERT_OUTCOME_SUCCESS(a1, db->getAddresses(p1));
+  ASSERT_OUTCOME_SUCCESS(a2, db->getAddresses(p2));
+  EXPECT_EQ(a1.size(), 2);
+  EXPECT_EQ(a2.size(), 1);
+  EXPECT_FALSE(a1.empty());
+  EXPECT_FALSE(a2.empty());
+}
+
+TEST_F(InmemAddressRepository_Test, LargeTtlClampedToMax) {
+  using namespace std::chrono;
+  auto large_ttl = milliseconds::max() - milliseconds(1);
+
+  ASSERT_OUTCOME_SUCCESS(
+      db->addAddresses(p1, std::vector<Multiaddress>{ma1}, large_ttl));
+
+  collectGarbage();
+
+  ASSERT_OUTCOME_SUCCESS(v, db->getAddresses(p1));
+  EXPECT_EQ(v.size(), 1);
+}

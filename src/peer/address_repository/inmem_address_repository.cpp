@@ -67,6 +67,14 @@ namespace libp2p::peer {
   Clock::time_point InmemAddressRepository::calculateExpirationTime(
       const Milliseconds &ttl) const {
     static const auto max_time = Clock::time_point::max();
+    // permanent TTLs use milliseconds::max() as a sentinel
+    // doing arithmetic with that value (e.g. now + ttl or max_time - ttl)
+    // can overflow chrono durations and cause undefined behaviour
+    // instead of touching the sentinel in time math, map it directly to
+    // time_point::max() to mean "never expires"
+    if (ttl == ttl::kPermanent) {
+      return max_time;
+    }
     const auto now = Clock::now();
     if (now >= max_time - ttl) {
       return max_time;
