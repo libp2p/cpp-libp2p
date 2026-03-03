@@ -45,6 +45,7 @@ namespace libp2p::transport::lsquic {
 
     lsquic_engine_settings settings{};
     lsquic_engine_init_settings(&settings, flags);
+    settings.es_versions = 1 << LSQVER_I001;
     settings.es_init_max_stream_data_bidi_remote =
         mux_config.maximum_window_size;
     settings.es_init_max_stream_data_bidi_local =
@@ -58,10 +59,10 @@ namespace libp2p::transport::lsquic {
 
     static lsquic_stream_if stream_if{};
     stream_if.on_new_conn = +[](void *void_self, lsquic_conn_t *conn) {
-      auto self = static_cast<Engine *>(void_self);
+      auto *self = static_cast<Engine *>(void_self);
       auto op = qtils::optionTake(self->connecting_);
       // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-      auto conn_ctx = new ConnCtx{self, conn, std::move(op)};
+      auto *conn_ctx = new ConnCtx{self, conn, std::move(op)};
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       auto _conn_ctx = reinterpret_cast<lsquic_conn_ctx_t *>(conn_ctx);
       lsquic_conn_set_ctx(conn, _conn_ctx);
@@ -72,7 +73,7 @@ namespace libp2p::transport::lsquic {
     };
     stream_if.on_conn_closed = +[](lsquic_conn_t *conn) {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      auto conn_ctx = reinterpret_cast<ConnCtx *>(lsquic_conn_get_ctx(conn));
+      auto *conn_ctx = reinterpret_cast<ConnCtx *>(lsquic_conn_get_ctx(conn));
       if (auto op = qtils::optionTake(conn_ctx->connecting)) {
         op->cb(QuicError::CONN_CLOSED);
       }
@@ -85,7 +86,7 @@ namespace libp2p::transport::lsquic {
     };
     stream_if.on_hsk_done = +[](lsquic_conn_t *conn, lsquic_hsk_status status) {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      auto conn_ctx = reinterpret_cast<ConnCtx *>(lsquic_conn_get_ctx(conn));
+      auto *conn_ctx = reinterpret_cast<ConnCtx *>(lsquic_conn_get_ctx(conn));
       auto self = conn_ctx->engine;
       auto ok = status == LSQ_HSK_OK or status == LSQ_HSK_RESUMED_OK;
       auto op = qtils::optionTake(conn_ctx->connecting);
@@ -122,12 +123,12 @@ namespace libp2p::transport::lsquic {
       }
     };
     stream_if.on_new_stream = +[](void *void_self, lsquic_stream_t *stream) {
-      auto self = static_cast<Engine *>(void_self);
+      auto *self = static_cast<Engine *>(void_self);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      auto conn_ctx = reinterpret_cast<ConnCtx *>(
+      auto *conn_ctx = reinterpret_cast<ConnCtx *>(
           lsquic_conn_get_ctx(lsquic_stream_conn(stream)));
       // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-      auto stream_ctx = new StreamCtx{self, stream};
+      auto *stream_ctx = new StreamCtx{self, stream};
       if (auto conn = conn_ctx->conn.lock()) {
         auto stream = std::make_shared<QuicStream>(
             conn, stream_ctx, conn_ctx->new_stream.has_value());
@@ -146,12 +147,15 @@ namespace libp2p::transport::lsquic {
     stream_if.on_close =
         +[](lsquic_stream_t *stream, lsquic_stream_ctx_t *_stream_ctx) {
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          auto stream_ctx = reinterpret_cast<StreamCtx *>(_stream_ctx);
-          if (auto op = qtils::optionTake(stream_ctx->reading)) {
-            op->cb(QuicError::STREAM_CLOSED);
-          }
+          auto *stream_ctx = reinterpret_cast<StreamCtx *>(_stream_ctx);
           if (auto stream = stream_ctx->stream.lock()) {
             stream->onClose();
+          }
+          if (auto reading = qtils::optionTake(stream_ctx->reading)) {
+            reading.value()();
+          }
+          if (auto writing = qtils::optionTake(stream_ctx->writing)) {
+            writing.value()();
           }
           // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
           delete stream_ctx;
@@ -160,15 +164,19 @@ namespace libp2p::transport::lsquic {
         +[](lsquic_stream_t *stream, lsquic_stream_ctx_t *_stream_ctx) {
           lsquic_stream_wantread(stream, 0);
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          auto stream_ctx = reinterpret_cast<StreamCtx *>(_stream_ctx);
-          auto op = qtils::optionTake(stream_ctx->reading).value();
-          auto n = lsquic_stream_read(stream, op.out.data(), op.out.size());
-          outcome::result<size_t> r = QuicError::STREAM_CLOSED;
-          if (n > 0) {
-            r = n;
+          auto *stream_ctx = reinterpret_cast<StreamCtx *>(_stream_ctx);
+          if (auto reading = qtils::optionTake(stream_ctx->reading)) {
+            reading.value()();
           }
-          post(*stream_ctx->engine->io_context_,
-               [cb{std::move(op.cb)}, r] { cb(r); });
+        };
+    stream_if.on_write =
+        +[](lsquic_stream_t *stream, lsquic_stream_ctx_t *_stream_ctx) {
+          lsquic_stream_wantwrite(stream, 0);
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          auto *stream_ctx = reinterpret_cast<StreamCtx *>(_stream_ctx);
+          if (auto writing = qtils::optionTake(stream_ctx->writing)) {
+            writing.value()();
+          }
         };
 
     lsquic_engine_api api{};
@@ -179,7 +187,7 @@ namespace libp2p::transport::lsquic {
     api.ea_packets_out = +[](void *void_self,
                              const lsquic_out_spec *out_spec,
                              unsigned n_packets_out) {
-      auto self = static_cast<Engine *>(void_self);
+      auto *self = static_cast<Engine *>(void_self);
       // https://github.com/cbodley/nexus/blob/d1d8486f713fd089917331239d755932c7c8ed8e/src/socket.cc#L218
       int r = 0;
       for (auto &spec : std::span{out_spec, n_packets_out}) {
@@ -216,7 +224,7 @@ namespace libp2p::transport::lsquic {
     };
     api.ea_packets_out_ctx = this;
     api.ea_get_ssl_ctx = +[](void *void_self, const sockaddr *) {
-      auto self = static_cast<Engine *>(void_self);
+      auto *self = static_cast<Engine *>(void_self);
       return self->ssl_context_->native_handle();
     };
 
@@ -261,7 +269,7 @@ namespace libp2p::transport::lsquic {
     if (auto op = qtils::optionTake(connecting_)) {
       op->cb(QuicError::CANT_CREATE_CONNECTION);
     }
-    process();
+    wantProcess();
   }
 
   outcome::result<std::shared_ptr<QuicStream>> Engine::newStream(
@@ -281,7 +289,47 @@ namespace libp2p::transport::lsquic {
     return stream;
   }
 
+  void Engine::wantProcess() {
+    if (want_process_) {
+      return;
+    }
+    want_process_ = true;
+    boost::asio::post(*io_context_, [weak_self{weak_from_this()}] {
+      if (auto self = weak_self.lock()) {
+        self->process();
+      }
+    });
+  }
+
+  void Engine::wantFlush(StreamCtx *stream_ctx) {
+    if (stream_ctx->want_flush) {
+      return;
+    }
+    stream_ctx->want_flush = true;
+    if (stream_ctx->stream.expired()) {
+      return;
+    }
+    want_flush_.emplace_back(stream_ctx->stream);
+    wantProcess();
+  }
+
   void Engine::process() {
+    want_process_ = false;
+    auto want_flush = std::exchange(want_flush_, {});
+    for (auto &weak_stream : want_flush) {
+      auto stream = weak_stream.lock();
+      if (not stream) {
+        continue;
+      }
+      if (stream->stream_ctx_ == nullptr) {
+        continue;
+      }
+      if (stream->stream_ctx_->ls_stream == nullptr) {
+        continue;
+      }
+      stream->stream_ctx_->want_flush = false;
+      lsquic_stream_flush(stream->stream_ctx_->ls_stream);
+    }
     lsquic_engine_process_conns(engine_);
     int us = 0;
     if (not lsquic_engine_earliest_adv_tick(engine_, &us)) {

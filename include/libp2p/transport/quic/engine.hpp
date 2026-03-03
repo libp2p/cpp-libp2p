@@ -9,6 +9,7 @@
 #include <lsquic.h>
 #include <boost/asio/ip/udp.hpp>
 #include <boost/asio/steady_timer.hpp>
+#include <deque>
 #include <libp2p/multi/multiaddress.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <memory>
@@ -75,14 +76,9 @@ namespace libp2p::transport::lsquic {
     Engine *engine;
     lsquic_stream_t *ls_stream;
     std::weak_ptr<QuicStream> stream{};
-    /**
-     * Stream read operation arguments.
-     */
-    struct Reading {
-      BytesOut out;
-      std::function<void(outcome::result<size_t>)> cb;
-    };
-    std::optional<Reading> reading{};
+    std::optional<std::function<void()>> reading{};
+    std::optional<std::function<void()>> writing{};
+    bool want_flush = false;
   };
 
   using OnAccept = std::function<void(std::shared_ptr<QuicConnection>)>;
@@ -118,9 +114,11 @@ namespace libp2p::transport::lsquic {
     void onAccept(OnAccept cb) {
       on_accept_ = std::move(cb);
     }
-    void process();
+    void wantProcess();
+    void wantFlush(StreamCtx *stream_ctx);
 
    private:
+    void process();
     void readLoop();
 
     std::shared_ptr<boost::asio::io_context> io_context_;
@@ -134,6 +132,8 @@ namespace libp2p::transport::lsquic {
     lsquic_engine_t *engine_ = nullptr;
     OnAccept on_accept_;
     bool started_ = false;
+    std::deque<std::weak_ptr<connection::QuicStream>> want_flush_;
+    bool want_process_ = false;
     std::optional<Connecting> connecting_;
     struct Reading {
       static constexpr size_t kMaxUdpPacketSize = 64 << 10;
