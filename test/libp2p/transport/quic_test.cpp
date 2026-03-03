@@ -9,7 +9,6 @@
 #include <libp2p/basic/read.hpp>
 #include <libp2p/basic/write.hpp>
 #include <libp2p/injector/host_injector.hpp>
-#include <qtils/bytestr.hpp>
 
 #include "testutil/prepare_loggers.hpp"
 
@@ -19,8 +18,6 @@ using libp2p::Multiaddress;
 using libp2p::StreamAndProtocol;
 using libp2p::StreamAndProtocolOrError;
 using libp2p::connection::Stream;
-using qtils::byte2str;
-using qtils::str2byte;
 
 auto makeInjector(std::shared_ptr<io_context> io) {
   return libp2p::injector::makeHostInjector<
@@ -54,7 +51,9 @@ struct Peer {
 TEST(Quic, Test) {
   testutil::prepareLoggers();
   std::string protocol = "/test";
-  std::string_view req{"request"}, res{"response"};
+  const size_t size = 1 << 20;
+  libp2p::Bytes req(size, 'a'), res(size, 'b');
+
   auto io = std::make_shared<io_context>();
   auto run = [&] {
     io->restart();
@@ -94,16 +93,16 @@ TEST(Quic, Test) {
   }
 
   wait_count = 2;
-  qtils::Bytes req_out(req.size());
-  libp2p::write(client.stream, str2byte(req), RW_CB);
+  libp2p::Bytes req_out(req.size());
+  libp2p::write(client.stream, req, RW_CB);
   libp2p::read(server.stream, req_out, RW_CB);
   run();
-  EXPECT_EQ(byte2str(req_out), req);
+  EXPECT_EQ(req_out, req);
 
   wait_count = 2;
-  qtils::Bytes res_out(res.size());
+  libp2p::Bytes res_out(res.size());
   libp2p::read(client.stream, res_out, RW_CB);
-  libp2p::write(server.stream, str2byte(res), RW_CB);
+  libp2p::write(server.stream, res, RW_CB);
   run();
-  EXPECT_EQ(byte2str(res_out), res);
+  EXPECT_EQ(res_out, res);
 }
