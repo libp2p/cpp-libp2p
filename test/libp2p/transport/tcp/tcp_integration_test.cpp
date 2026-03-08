@@ -18,6 +18,7 @@
 #include "mock/libp2p/transport/upgrader_mock.hpp"
 #include "testutil/gmock_actions.hpp"
 #include "testutil/libp2p/peer.hpp"
+#include "testutil/libp2p/random.hpp"
 #include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p::transport;
@@ -175,10 +176,7 @@ TEST(TCP, SingleListenerCanAcceptManyClients) {
         auto conn = expectConnectionValid(rconn);
 
         auto readback = std::make_shared<Bytes>(kSize, 0);
-        auto buf = std::make_shared<Bytes>(kSize, 0);
-        std::generate(buf->begin(), buf->end(), []() {
-          return rand();  // NOLINT
-        });
+        auto buf = std::make_shared<Bytes>(testutil::randomBytes(kSize));
 
         EXPECT_TRUE(conn->isInitiator());
 
@@ -335,10 +333,7 @@ TEST(TCP, OneTransportServerHandlesManyClients) {
         auto conn = expectConnectionValid(rconn);
 
         auto readback = std::make_shared<Bytes>(kSize, 0);
-        auto buf = std::make_shared<Bytes>(kSize, 0);
-        std::generate(buf->begin(), buf->end(), []() {
-          return rand();  // NOLINT
-        });
+        auto buf = std::make_shared<Bytes>(testutil::randomBytes(kSize));
 
         EXPECT_TRUE(conn->isInitiator());
 

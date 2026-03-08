@@ -5,14 +5,12 @@
  */
 
 #include <testutil/libp2p/peer.hpp>
+#include <testutil/libp2p/random.hpp>
 
 namespace testutil {
 
   PeerId randomPeerId() {
-    std::vector<uint8_t> rand_key(32, 0);
-    for (auto i = 0u; i < 32u; i++) {
-      rand_key[i] = (rand() & 0xffu);  // NOLINT
-    }
+    auto rand_key = randomBytes(32);
     return PeerId::fromPublicKey(libp2p::crypto::ProtobufKey{rand_key}).value();
   }
 
