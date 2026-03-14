@@ -660,7 +660,7 @@ namespace libp2p::connection {
 
     is_writing_ = false;
 
-    if (not write_queue_.empty()) {
+    if (!write_queue_.empty()) {
       auto next_packet = std::move(write_queue_.front());
       write_queue_.pop_front();
       doWrite(std::move(next_packet));
@@ -723,10 +723,10 @@ namespace libp2p::connection {
     cleanup_handle_ = scheduler_->scheduleWithHandle(
         [weak_self{weak_from_this()}] {
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
-          if (not self->started_) {
+          if (!self->started_) {
             return;
           }
           std::vector<StreamId> abandoned;
@@ -751,14 +751,14 @@ namespace libp2p::connection {
     ping_handle_ = scheduler_->scheduleWithHandle(
         [weak_self{weak_from_this()}] {
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
-          if (not self->started_) {
+          if (!self->started_) {
             return;
           }
           // dont send pings if something is being written
-          if (not self->is_writing_) {
+          if (!self->is_writing_) {
             self->enqueue(pingOutMsg(++self->ping_counter_));
             SL_TRACE(log(), "written ping message #{}", self->ping_counter_);
           }

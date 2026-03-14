@@ -111,7 +111,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   void PutValueExecutor::onConnected(StreamAndProtocolOrError stream_res) {
-    if (not stream_res) {
+    if (!stream_res) {
       --requests_in_progress_;
 
       log_.debug("cannot connect to peer: {}; active {}, in queue {}",

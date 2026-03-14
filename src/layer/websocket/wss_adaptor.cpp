@@ -43,7 +43,7 @@ namespace libp2p::layer {
   void WssAdaptor::upgradeInbound(
       std::shared_ptr<connection::LayerConnection> conn,
       LayerAdaptor::LayerConnCallbackFunc cb) const {
-    if (not server_certificate_.context) {
+    if (!server_certificate_.context) {
       return cb(std::errc::address_family_not_supported);
     }
     auto ssl = std::make_shared<connection::SslConnection>(

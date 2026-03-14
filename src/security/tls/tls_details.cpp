@@ -58,7 +58,7 @@ namespace libp2p::security::tls_details {
     bool seen = false;
     for (int i = 0; i < X509_get_ext_count(cert); i++) {
       auto *ext = X509_get_ext(cert, i);
-      if (not X509_EXTENSION_get_critical(ext)) {
+      if (!X509_EXTENSION_get_critical(ext)) {
         continue;
       }
       if (X509_supported_extension(ext)) {

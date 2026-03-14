@@ -160,7 +160,7 @@ namespace libp2p::injector {
    */
   inline auto useWssPem(std::string_view pem) {
     layer::WssCertificate cert;
-    if (not pem.empty()) {
+    if (!pem.empty()) {
       if (auto cert_res = layer::WssCertificate::make(pem)) {
         cert = std::move(cert_res.value());
       } else {

@@ -107,7 +107,7 @@ namespace libp2p::multi {
     }
 
     std::string proto_str = '/' + std::string(p->name);
-    if (not address.empty()) {
+    if (!address.empty()) {
       proto_str += '/';
       proto_str += address;
     }

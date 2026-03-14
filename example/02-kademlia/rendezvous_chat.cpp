@@ -49,7 +49,7 @@ class Session : public std::enable_shared_from_this<Session> {
     stream_->readSome(
         *incoming_,
         [self = shared_from_this()](outcome::result<size_t> result) {
-          if (not result) {
+          if (!result) {
             self->close();
             std::cout << self->stream_->remotePeerId().value().toBase58()
                       << " - closed at reading" << std::endl;
@@ -74,7 +74,7 @@ class Session : public std::enable_shared_from_this<Session> {
         stream_,
         *buffer,
         [self = shared_from_this(), buffer](outcome::result<void> result) {
-          if (not result) {
+          if (!result) {
             self->close();
             std::cout << self->stream_->remotePeerId().value().toBase58()
                       << " - closed at writting" << std::endl;
@@ -128,7 +128,7 @@ void handleIncomingStream(libp2p::StreamAndProtocol stream_and_protocol) {
 }
 
 void handleOutgoingStream(libp2p::StreamAndProtocolOrError stream_res) {
-  if (not stream_res) {
+  if (!stream_res) {
     fmt::println(
         std::cerr, " ! outgoing connection failed: {}", stream_res.error());
     return;
@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
           // Additional logging config for application
           logger_config));
   auto r = logging_system->configure();
-  if (not r.message.empty()) {
+  if (!r.message.empty()) {
     (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
   }
   if (r.has_error) {
@@ -295,7 +295,7 @@ int main(int argc, char *argv[]) {
             scheduler.schedule(std::function{find_providers},
                                kademlia_config.randomWalk.interval);
 
-            if (not res) {
+            if (!res) {
               fmt::println(std::cerr, "Cannot find providers: {}", res.error());
               return;
             }
@@ -317,7 +317,7 @@ int main(int argc, char *argv[]) {
 
     post(*io, [&] {
       auto listen = host->listen(ma);
-      if (not listen) {
+      if (!listen) {
         fmt::println(std::cerr,
                      "Cannot listen address {}. Error: {}",
                      ma.getStringAddress(),

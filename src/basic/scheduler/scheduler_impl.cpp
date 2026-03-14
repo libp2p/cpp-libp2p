@@ -20,7 +20,7 @@ namespace libp2p::basic {
       Callback &&cb,
       std::chrono::milliseconds delay_from_now,
       bool make_handle) {
-    if (not cb) {
+    if (!cb) {
       throw std::logic_error{"SchedulerImpl::scheduleImpl empty cb arg"};
     }
 
@@ -28,11 +28,11 @@ namespace libp2p::basic {
     if (Time::zero() < delay_from_now) {
       abs = backend_->now() + delay_from_now;
     }
-    if (not make_handle) {
+    if (!make_handle) {
       backend_->post(
           [weak_self{weak_from_this()}, cb{std::move(cb)}, abs]() mutable {
             auto self = weak_self.lock();
-            if (not self) {
+            if (!self) {
               return;
             }
             self->callbacks_.emplace(abs, std::move(cb));
@@ -45,7 +45,7 @@ namespace libp2p::basic {
     backend_->post(
         [weak_self{weak_from_this()}, abs, cancel{std::move(cancel)}] {
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
           if (cancel->cancelled.test()) {
@@ -57,26 +57,26 @@ namespace libp2p::basic {
     return cancelFn(
         [weak_self{weak_from_this()}, weak_cancel{std::move(weak_cancel)}] {
           auto cancel = weak_cancel.lock();
-          if (not cancel) {
+          if (!cancel) {
             return;
           }
           if (cancel->cancelled.test_and_set()) {
             return;
           }
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
           self->backend_->post([weak_self, weak_cancel] {
             auto cancel = weak_cancel.lock();
-            if (not cancel) {
+            if (!cancel) {
               return;
             }
-            if (not cancel->it) {
+            if (!cancel->it) {
               return;
             }
             auto self = weak_self.lock();
-            if (not self) {
+            if (!self) {
               return;
             }
             self->callbacks_.erase(*cancel->it);

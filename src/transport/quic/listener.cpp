@@ -53,7 +53,7 @@ namespace libp2p::transport {
   }
 
   outcome::result<Multiaddress> QuicListener::getListenMultiaddr() const {
-    if (not server_) {
+    if (!server_) {
       return std::errc::not_connected;
     }
     return server_->local();

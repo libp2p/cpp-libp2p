@@ -82,7 +82,7 @@ namespace libp2p::protocol::kademlia {
 
   void AddProviderExecutor::done() {
     bool x = false;
-    if (not done_.compare_exchange_strong(x, true)) {
+    if (!done_.compare_exchange_strong(x, true)) {
       return;
     }
 
@@ -158,7 +158,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   void AddProviderExecutor::onConnected(StreamAndProtocolOrError stream_res) {
-    if (not stream_res) {
+    if (!stream_res) {
       --requests_in_progress_;
 
       log_.debug("cannot connect to peer: {}; done {}, active {}, in queue {}",

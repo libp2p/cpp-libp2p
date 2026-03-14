@@ -91,7 +91,7 @@ namespace libp2p::protocol::kademlia {
     cleanup_timer_ = scheduler_.scheduleWithHandle(
         [weak_self{weak_from_this()}] {
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
           self->onCleanupTimer();

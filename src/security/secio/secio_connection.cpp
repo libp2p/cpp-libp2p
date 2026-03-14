@@ -191,7 +191,7 @@ namespace libp2p::connection {
       return;
     }
 
-    if (not user_data_buffer_.empty()) {
+    if (!user_data_buffer_.empty()) {
       size_t to_read{std::min(user_data_buffer_.size(), out.size())};
       popUserData(out, to_read);
       SL_TRACE(log_, "Successfully read {} bytes", to_read);

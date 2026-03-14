@@ -128,7 +128,7 @@ namespace libp2p::transport::detail {
     auto v = ma.getProtocolsWithValues();
     auto it = v.begin();
     OUTCOME_TRY(addr, readTcpOrUdp(it, v.end()));
-    if (not addr.udp) {
+    if (!addr.udp) {
       return std::errc::protocol_not_supported;
     }
     if (it == v.end()) {
@@ -185,7 +185,7 @@ namespace libp2p::transport::detail {
       const boost::asio::ip::tcp::endpoint &endpoint,
       const ProtoAddrVec &layers) {
     OUTCOME_TRY(s, toMultiaddr(endpoint));
-    if (not layers.empty()) {
+    if (!layers.empty()) {
       auto &protocol = layers.at(0).first.code;
       if (protocol == P::WS) {
         s += "/ws";

@@ -52,7 +52,7 @@ namespace libp2p::crypto::hmac {
   }
 
   outcome::result<void> HmacProviderCtrImpl::write(BytesIn data) {
-    if (not initialized_) {
+    if (!initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
     if (1 != HMAC_Update(hmac_ctx_, data.data(), data.size())) {
@@ -62,7 +62,7 @@ namespace libp2p::crypto::hmac {
   }
 
   outcome::result<void> HmacProviderCtrImpl::digestOut(BytesOut out) const {
-    if (not initialized_) {
+    if (!initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
     if (out.size() != digestSize()) {

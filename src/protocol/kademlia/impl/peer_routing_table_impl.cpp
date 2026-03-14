@@ -135,7 +135,7 @@ namespace libp2p::protocol::kademlia {
 
   void PeerRoutingTableImpl::remove(const peer::PeerId &peer_id) {
     auto bucket_index = getBucketIndex(NodeId{peer_id});
-    if (not bucket_index) {
+    if (!bucket_index) {
       return;
     }
     auto &bucket = buckets_.at(*bucket_index);
@@ -168,11 +168,11 @@ namespace libp2p::protocol::kademlia {
         }
       }
     }
-    if (not done()) {
+    if (!done()) {
       append(0);
     }
     for (size_t i = 1; i < 256 and not done(); ++i) {
-      if (not bit(i)) {
+      if (!bit(i)) {
         append(i);
       }
     }
@@ -204,7 +204,7 @@ namespace libp2p::protocol::kademlia {
                                                      bool is_permanent,
                                                      bool is_connected) {
     auto bucket_index = getBucketIndex(NodeId{pid});
-    if (not bucket_index) {
+    if (!bucket_index) {
       return true;
     }
     auto &bucket = buckets_.at(*bucket_index);

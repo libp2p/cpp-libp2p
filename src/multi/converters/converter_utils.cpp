@@ -191,7 +191,7 @@ namespace libp2p::multi::converters {
     };
     auto uvar = [&]() -> outcome::result<uint64_t> {
       auto var = UVarint::create(bytes);
-      if (not var) {
+      if (!var) {
         return ConversionError::INVALID_ADDRESS;
       }
       bytes = bytes.subspan(var->size());

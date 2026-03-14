@@ -71,7 +71,7 @@ namespace libp2p::protocol::kademlia {
     serialized_request_ = std::make_shared<std::vector<uint8_t>>();
 
     boost::optional<peer::PeerInfo> self_announce;
-    if (not config_.passiveMode) {
+    if (!config_.passiveMode) {
       self_announce = host_->getPeerInfo();
     }
 
@@ -99,7 +99,7 @@ namespace libp2p::protocol::kademlia {
 
   void FindProvidersExecutor::done() {
     bool x = false;
-    if (not done_.compare_exchange_strong(x, true)) {
+    if (!done_.compare_exchange_strong(x, true)) {
       return;
     }
 
@@ -183,7 +183,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   void FindProvidersExecutor::onConnected(StreamAndProtocolOrError stream_res) {
-    if (not stream_res) {
+    if (!stream_res) {
       --requests_in_progress_;
 
       log_.debug("cannot connect to peer: {}; active {}, in queue {}",
@@ -232,7 +232,7 @@ namespace libp2p::protocol::kademlia {
     });
 
     // Check if gotten some message
-    if (not msg_res) {
+    if (!msg_res) {
       log_.warn("Result from {} is failed: {}; active {}, in queue {}",
                 session->stream()->remotePeerId().value().toBase58(),
                 msg_res.error(),
@@ -243,7 +243,7 @@ namespace libp2p::protocol::kademlia {
     auto &msg = msg_res.value();
 
     // Skip inappropriate messages
-    if (not match(msg)) {
+    if (!match(msg)) {
       BOOST_UNREACHABLE_RETURN();
     }
 
@@ -273,7 +273,7 @@ namespace libp2p::protocol::kademlia {
                 std::span(peer.info.addresses.data(),
                           peer.info.addresses.size()),
                 peer::ttl::kDay);
-        if (not add_addr_res) {
+        if (!add_addr_res) {
           continue;
         }
 
@@ -302,7 +302,7 @@ namespace libp2p::protocol::kademlia {
                 std::span(peer.info.addresses.data(),
                           peer.info.addresses.size()),
                 peer::ttl::kDay);
-        if (not add_addr_res) {
+        if (!add_addr_res) {
           continue;
         }
 

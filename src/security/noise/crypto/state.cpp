@@ -154,7 +154,7 @@ namespace libp2p::security::noise {
 
   outcome::result<Bytes> SymmetricState::encryptAndHash(BytesIn precompiled_out,
                                                         BytesIn plaintext) {
-    if (not has_key_) {
+    if (!has_key_) {
       Bytes result(precompiled_out.size() + plaintext.size());
       OUTCOME_TRY(mixHash(plaintext));
       std::copy_n(
@@ -180,7 +180,7 @@ namespace libp2p::security::noise {
 
   outcome::result<Bytes> SymmetricState::decryptAndHash(BytesIn precompiled_out,
                                                         BytesIn ciphertext) {
-    if (not has_key_) {
+    if (!has_key_) {
       Bytes result(precompiled_out.size() + ciphertext.size());
       OUTCOME_TRY(mixHash(ciphertext));
       std::copy_n(
@@ -298,7 +298,7 @@ namespace libp2p::security::noise {
       preshared_key_placement = config.preshared_key_placement_.value();
     }
     std::string psk_modifier;
-    if (not preshared_key_.empty()) {
+    if (!preshared_key_.empty()) {
       if (32 != preshared_key_.size()) {
         return Error::WRONG_PRESHARED_KEY_SIZE;
       }
@@ -328,16 +328,16 @@ namespace libp2p::security::noise {
         OUTCOME_TRY(symmetric_state_->mixHash(local_static_kp_.pub));
       } else if (is_initiator_ and MessagePattern::E == m) {
         OUTCOME_TRY(symmetric_state_->mixHash(local_ephemeral_kp_.pub));
-      } else if (not is_initiator_ and MessagePattern::S == m) {
+      } else if (!is_initiator_ and MessagePattern::S == m) {
         OUTCOME_TRY(symmetric_state_->mixHash(remote_static_pubkey_));
-      } else if (not is_initiator_ and MessagePattern::E == m) {
+      } else if (!is_initiator_ and MessagePattern::E == m) {
         OUTCOME_TRY(symmetric_state_->mixHash(remote_ephemeral_pubkey_));
       }
     }
     for (const auto &m : config.pattern_.responderPreMessages) {
-      if (not is_initiator_ and MessagePattern::S == m) {
+      if (!is_initiator_ and MessagePattern::S == m) {
         OUTCOME_TRY(symmetric_state_->mixHash(local_static_kp_.pub));
-      } else if (not is_initiator_ and MessagePattern::E == m) {
+      } else if (!is_initiator_ and MessagePattern::E == m) {
         OUTCOME_TRY(symmetric_state_->mixHash(local_ephemeral_kp_.pub));
       } else if (is_initiator_ and MessagePattern::S == m) {
         OUTCOME_TRY(symmetric_state_->mixHash(remote_static_pubkey_));
@@ -352,7 +352,7 @@ namespace libp2p::security::noise {
   outcome::result<HandshakeState::MessagingResult> HandshakeState::writeMessage(
       BytesIn precompiled_out, BytesIn payload) {
     OUTCOME_TRY(isInitialized());
-    if (not should_write_) {
+    if (!should_write_) {
       return Error::UNEXPECTED_WRITE_CALL;
     }
     if (message_idx_ > static_cast<int64_t>(message_patterns_.size()) - 1) {
@@ -409,7 +409,7 @@ namespace libp2p::security::noise {
                local_ephemeral_kp_.pub.begin(),
                local_ephemeral_kp_.pub.end());
     OUTCOME_TRY(symmetric_state_->mixHash(local_ephemeral_kp_.pub));
-    if (not preshared_key_.empty()) {
+    if (!preshared_key_.empty()) {
       OUTCOME_TRY(symmetric_state_->mixKey(local_ephemeral_kp_.pub));
     }
     return outcome::success();
@@ -538,7 +538,7 @@ namespace libp2p::security::noise {
     remote_ephemeral_pubkey_ =
         Bytes{message.begin(), message.begin() + expected};
     OUTCOME_TRY(symmetric_state_->mixHash(remote_ephemeral_pubkey_));
-    if (not preshared_key_.empty()) {
+    if (!preshared_key_.empty()) {
       OUTCOME_TRY(symmetric_state_->mixKey(remote_ephemeral_pubkey_));
     }
     Bytes(message.begin() + expected, message.end()).swap(message);
@@ -553,7 +553,7 @@ namespace libp2p::security::noise {
     if (static_cast<int64_t>(message.size()) < expected) {
       return Error::MESSAGE_TOO_SHORT;
     }
-    if (not remote_static_pubkey_.empty()) {
+    if (!remote_static_pubkey_.empty()) {
       return Error::REMOTE_KEY_ALREADY_SET;
     }
     auto decrypted = symmetric_state_->decryptAndHash(

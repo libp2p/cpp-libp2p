@@ -68,7 +68,7 @@ namespace libp2p::network {
     auto &&ctx = ctx_found->second;
 
     if (ctx.addr_queue.empty()) {
-      if (not ctx.dialled) {
+      if (!ctx.dialled) {
         completeDial(peer_id, std::errc::address_family_not_supported);
         return;
       }
