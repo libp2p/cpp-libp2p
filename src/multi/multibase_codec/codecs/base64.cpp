@@ -67,7 +67,7 @@ namespace {
   };
 
   /// Returns max bytes needed to decode a base64 string
-  inline std::size_t constexpr decodedSize(std::size_t n) {
+  inline constexpr std::size_t decodedSize(std::size_t n) {
     return n / 4 * 3;  // requires n&3==0, smaller
   }
 

@@ -48,8 +48,8 @@ namespace libp2p::event {
       template <typename ExpectedEvent>
       std::enable_if_t<
           std::is_same_v<std::decay_t<ThisEvent>, std::decay_t<ExpectedEvent>>,
-          Signal<ExpectedEvent>>
-          &getSignal() {
+          Signal<ExpectedEvent>> &
+      getSignal() {
         return signal_;
       }
 
@@ -61,8 +61,8 @@ namespace libp2p::event {
       template <typename ExpectedEvent>
       std::enable_if_t<
           !std::is_same_v<std::decay_t<ThisEvent>, std::decay_t<ExpectedEvent>>,
-          Signal<ExpectedEvent>>
-          &getSignal() {
+          Signal<ExpectedEvent>> &
+      getSignal() {
         return Base::template getSignal<ExpectedEvent>();
       }
 

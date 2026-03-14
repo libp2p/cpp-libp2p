@@ -21,11 +21,15 @@
       })();                                                          \
       return count;                                                  \
     }                                                                \
-    Libp2pMetricsInstanceCount(const type *) { ++count(); }          \
+    Libp2pMetricsInstanceCount(const type *) {                       \
+      ++count();                                                     \
+    }                                                                \
     Libp2pMetricsInstanceCount(const Libp2pMetricsInstanceCount &) { \
       ++count();                                                     \
     }                                                                \
-    ~Libp2pMetricsInstanceCount() { --count(); }                     \
+    ~Libp2pMetricsInstanceCount() {                                  \
+      --count();                                                     \
+    }                                                                \
   } libp2p_metrics_instance_count {                                  \
     this                                                             \
   }

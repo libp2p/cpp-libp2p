@@ -83,7 +83,8 @@ TEST_F(TcpListenerTest, DoubleClose) {
   EXPECT_CALL(cb, Call(_)).WillOnce(Invoke([](CapConnResult c) {
     if (!c) {
       if (!c) {
-        ASSERT_EQ(c.error().value(), (int)boost::asio::error::operation_aborted);
+        ASSERT_EQ(c.error().value(),
+                  (int)boost::asio::error::operation_aborted);
       } else {
         ADD_FAILURE();
       }

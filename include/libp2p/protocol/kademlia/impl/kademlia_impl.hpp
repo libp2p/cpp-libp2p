@@ -160,8 +160,10 @@ namespace libp2p::protocol::kademlia {
     void performRepublishing();
 
     // Helper methods for periodic operations
-    std::vector<PeerId> getClosestPeers(const Key& key, size_t count);
-    void replicateRecord(const Key& key, const Value& value, bool extend_expiration);
+    std::vector<PeerId> getClosestPeers(const Key &key, size_t count);
+    void replicateRecord(const Key &key,
+                         const Value &value,
+                         bool extend_expiration);
 
     log::SubLogger log_;
   };
