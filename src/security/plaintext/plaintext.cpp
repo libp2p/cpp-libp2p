@@ -44,7 +44,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, Plaintext::Error, e) {
   using E = libp2p::security::Plaintext::Error;
   switch (e) {
     case E::EXCHANGE_SEND_ERROR:
-      return "Error occured while sending Exchange message to the peer";
+      return "Error occurred while sending Exchange message to the peer";
     case E::EXCHANGE_RECEIVE_ERROR:
       return "Error occurred while receiving Exchange message to the peer";
     case E::INVALID_PEER_ID:
