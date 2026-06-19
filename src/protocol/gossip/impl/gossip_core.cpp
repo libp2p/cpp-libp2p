@@ -26,13 +26,15 @@ namespace libp2p::protocol::gossip {
       std::shared_ptr<peer::IdentityManager> idmgr,
       std::shared_ptr<crypto::CryptoProvider> crypto_provider,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
-      Config config) {
+      Config config,
+      RPCLimits limits) {
     return std::make_shared<GossipCore>(std::move(config),
                                         std::move(scheduler),
                                         std::move(host),
                                         std::move(idmgr),
                                         std::move(crypto_provider),
-                                        std::move(key_marshaller));
+                                        std::move(key_marshaller),
+                                        std::move(limits));
   }
 
   // clang-format off
@@ -41,8 +43,10 @@ namespace libp2p::protocol::gossip {
                          std::shared_ptr<Host> host,
                          std::shared_ptr<peer::IdentityManager> idmgr,
                          std::shared_ptr<crypto::CryptoProvider> crypto_provider,
-                         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller)
+                         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
+                         RPCLimits limits)
       : config_(std::move(config)),
+        limits_(std::move(limits)),
         create_message_id_([](const Bytes &from, const Bytes &seq,
                               const Bytes &data){
           return createMessageId(from, seq, data);
@@ -62,7 +66,7 @@ namespace libp2p::protocol::gossip {
               onLocalSubscriptionChanged(subscribe, topic);
             }
         )),
-        msg_seq_(scheduler_->now().count()),
+  msg_seq_(scheduler_->now().count()),
         log_("gossip", "Gossip", local_peer_id_.toBase58().substr(46)) {}
   // clang-format on
 
@@ -100,7 +104,8 @@ namespace libp2p::protocol::gossip {
         shared_from_this(),
         [this](bool connected, const PeerContextPtr &ctx) {
           onPeerConnection(connected, ctx);
-        }
+        },
+        std::make_shared<RPCLimits>(limits_)
     );
     // clang-format on
 

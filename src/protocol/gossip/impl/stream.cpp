@@ -12,11 +12,12 @@
 #include <libp2p/basic/varint_reader.hpp>
 #include <libp2p/basic/write.hpp>
 
-#include "message_parser.hpp"
 #include "peer_context.hpp"
 
 #define TRACE_ENABLED 0
 #include <libp2p/common/trace.hpp>
+
+#include "message_parser.hpp"
 
 namespace libp2p::protocol::gossip {
 
@@ -26,7 +27,8 @@ namespace libp2p::protocol::gossip {
                  const Feedback &feedback,
                  MessageReceiver &msg_receiver,
                  std::shared_ptr<connection::Stream> stream,
-                 PeerContextPtr peer)
+                 PeerContextPtr peer,
+                 std::shared_ptr<RPCLimits> limits)
       : stream_id_(stream_id),
         timeout_(config.rw_timeout_msec),
         scheduler_(scheduler),
@@ -35,6 +37,7 @@ namespace libp2p::protocol::gossip {
         msg_receiver_(msg_receiver),
         stream_(std::move(stream)),
         peer_(std::move(peer)),
+        limits_(std::move(limits)),
         read_buffer_(std::make_shared<std::vector<uint8_t>>()) {
     assert(feedback_);
     assert(stream_);
@@ -109,7 +112,7 @@ namespace libp2p::protocol::gossip {
           peer_->str,
           stream_id_);
 
-    MessageParser parser;
+    MessageParser parser{limits_};
     if (!parser.parse(*read_buffer_)) {
       feedback_(peer_, Error::MESSAGE_PARSE_ERROR);
       return;

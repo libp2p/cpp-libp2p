@@ -36,7 +36,6 @@ namespace libp2p {
 }  // namespace libp2p
 
 namespace libp2p::protocol::gossip {
-
   /// Gossip pub-sub protocol config
   struct Config {
     /// Network density factors for gossip meshes
@@ -91,6 +90,26 @@ namespace libp2p::protocol::gossip {
 
     /// Sign published messages
     bool sign_messages = false;
+  };
+
+  /// RPC limits to control message processing
+  struct RPCLimits {
+    /// Maximum subscriptions that will be processed in a single message and the
+    /// rest will be ignored
+    size_t max_subscriptions = 5000;
+
+    /// Maximum messages that will be processed in a single message and the rest
+    /// will be ignored
+    size_t max_ihave_messages = 5000;
+    size_t max_iwant_messages = 5000;
+    size_t max_graft_messages = 5000;
+    size_t max_prune_messages = 5000;
+
+    /// Maximum message ids that will be processed in a single message and the
+    /// rest will be ignored
+    size_t max_ihave_message_ids = 5000;
+    size_t max_iwant_message_ids = 5000;
+    size_t max_prune_peer_infos = 16;
   };
 
   using TopicId = std::string;
@@ -157,6 +176,7 @@ namespace libp2p::protocol::gossip {
       std::shared_ptr<peer::IdentityManager> idmgr,
       std::shared_ptr<crypto::CryptoProvider> crypto_provider,
       std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
-      Config config = Config{});
+      Config config = Config{},
+      RPCLimits limits = RPCLimits{});
 
 }  // namespace libp2p::protocol::gossip

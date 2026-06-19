@@ -36,7 +36,8 @@ namespace libp2p::protocol::gossip {
                  std::shared_ptr<basic::Scheduler> scheduler,
                  std::shared_ptr<Host> host,
                  std::shared_ptr<MessageReceiver> msg_receiver,
-                 ConnectionStatusFeedback on_connected);
+                 ConnectionStatusFeedback on_connected,
+                 std::shared_ptr<RPCLimits> limits);
 
     ~Connectivity() override;
 
@@ -106,6 +107,7 @@ namespace libp2p::protocol::gossip {
     ConnectionStatusFeedback connected_cb_;
     Stream::Feedback on_stream_event_;
     bool started_ = false;
+    std::shared_ptr<RPCLimits> limits_;
 
     /// All known peers
     PeerSet all_peers_;
