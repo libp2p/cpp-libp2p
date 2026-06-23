@@ -30,14 +30,12 @@ namespace libp2p::protocol::gossip {
                              std::shared_ptr<basic::Scheduler> scheduler,
                              std::shared_ptr<Host> host,
                              std::shared_ptr<MessageReceiver> msg_receiver,
-                             ConnectionStatusFeedback on_connected,
-                             std::shared_ptr<RPCLimits> limits)
+                             ConnectionStatusFeedback on_connected)
       : config_(std::move(config)),
         scheduler_(std::move(scheduler)),
         host_(std::move(host)),
         msg_receiver_(std::move(msg_receiver)),
         connected_cb_(std::move(on_connected)),
-        limits_(std::move(limits)),
         log_("gossip",
              "Connectivity",
              host_->getPeerInfo().id.toBase58().substr(46)) {}
@@ -193,8 +191,7 @@ namespace libp2p::protocol::gossip {
                                                   on_stream_event_,
                                                   *msg_receiver_,
                                                   std::move(stream),
-                                                  ctx,
-                                                  limits_);
+                                                  ctx);
 
     gossip_stream->read();
 
@@ -311,8 +308,7 @@ namespace libp2p::protocol::gossip {
                                                   on_stream_event_,
                                                   *msg_receiver_,
                                                   std::move(stream),
-                                                  ctx,
-                                                  limits_);
+                                                  ctx);
 
     gossip_stream->read();
 

@@ -36,8 +36,7 @@ namespace libp2p::protocol::gossip {
            const Feedback &feedback,
            MessageReceiver &msg_receiver,
            std::shared_ptr<connection::Stream> stream,
-           PeerContextPtr peer,
-           std::shared_ptr<RPCLimits> limits);
+           PeerContextPtr peer);
 
     /// Begins reading messages from stream
     void read();
@@ -58,6 +57,7 @@ namespace libp2p::protocol::gossip {
     void asyncPostError(Error error);
 
     [[maybe_unused]] const size_t stream_id_;
+    const Config &config_;
     const Time timeout_;
     basic::Scheduler &scheduler_;
     const size_t max_message_size_;
@@ -65,7 +65,6 @@ namespace libp2p::protocol::gossip {
     MessageReceiver &msg_receiver_;
     std::shared_ptr<connection::Stream> stream_;
     PeerContextPtr peer_;
-    std::shared_ptr<RPCLimits> limits_;
 
     std::deque<SharedBuffer> pending_buffers_;
 

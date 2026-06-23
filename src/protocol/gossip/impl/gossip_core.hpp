@@ -40,8 +40,7 @@ namespace libp2p::protocol::gossip {
         std::shared_ptr<Host> host,
         std::shared_ptr<peer::IdentityManager> idmgr,
         std::shared_ptr<crypto::CryptoProvider> crypto_provider,
-        std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller,
-        RPCLimits limits);
+        std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
     ~GossipCore() override = default;
 
@@ -90,9 +89,6 @@ namespace libp2p::protocol::gossip {
 
     /// Configuration parameters
     const Config config_;
-
-    /// RPC Parsing limits
-    const RPCLimits limits_;
 
     /// Message ID function
     MessageIdFn create_message_id_;
