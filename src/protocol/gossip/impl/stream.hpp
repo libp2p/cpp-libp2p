@@ -57,6 +57,7 @@ namespace libp2p::protocol::gossip {
     void asyncPostError(Error error);
 
     [[maybe_unused]] const size_t stream_id_;
+    const Config &config_;
     const Time timeout_;
     basic::Scheduler &scheduler_;
     const size_t max_message_size_;
