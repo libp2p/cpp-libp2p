@@ -65,6 +65,22 @@ namespace libp2p::connection {
     assert(write_queue_limit >= maximum_window_size_);
   }
 
+  YamuxStream::~YamuxStream() {
+    // Clean up resources immediately when stream is destroyed
+    if (!isClosed()) {
+      // Stream is being destroyed while still active, need to clean up
+      SL_DEBUG(log(), "YamuxStream {} destroyed while active, cleaning up", stream_id_);
+      
+      // Close the stream properly
+      doClose(Error::STREAM_CLOSED_BY_HOST);
+      
+      // Note: We don't call feedback_.resetStream() here because the connection
+      // might have already removed this stream from its streams_ map, and calling
+      // resetStream could cause issues. The connection will handle cleanup
+      // when it detects the weak_ptr has expired.
+    }
+  }
+
   void YamuxStream::readSome(BytesOut out, ReadCallbackFunc cb) {
     doRead(out, std::move(cb));
   }
@@ -307,7 +323,6 @@ namespace libp2p::connection {
 
   void YamuxStream::doClose(std::error_code ec) {
     // ensure lifetime of this object during doClose
-    auto self = shared_from_this();
 
     std::optional<FinallyReading> finally_reading;
     if (auto reading = qtils::optionTake(reading_)) {

@@ -46,7 +46,7 @@ namespace libp2p::connection {
     YamuxStream &operator=(const YamuxStream &other) = delete;
     YamuxStream(YamuxStream &&other) = delete;
     YamuxStream &operator=(YamuxStream &&other) = delete;
-    ~YamuxStream() override = default;
+    ~YamuxStream() override;
 
     YamuxStream(std::shared_ptr<connection::SecureConnection> connection,
                 YamuxStreamFeedback &feedback,
