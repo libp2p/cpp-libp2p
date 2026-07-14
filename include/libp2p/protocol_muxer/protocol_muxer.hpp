@@ -22,7 +22,7 @@ namespace libp2p::protocol_muxer {
       // cannot negotiate protocol
       NEGOTIATION_FAILED = 1,
 
-      // error occured on this host's side
+      // error occurred on this host's side
       INTERNAL_ERROR,
 
       // remote peer violated protocol

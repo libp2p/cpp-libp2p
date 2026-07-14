@@ -8,6 +8,8 @@
 
 #include "common.hpp"
 
+#include <libp2p/protocol/gossip/gossip.hpp>
+
 namespace pubsub::pb {
   // protobuf message forward declaration
   class RPC;
@@ -20,7 +22,7 @@ namespace libp2p::protocol::gossip {
   /// Protobuf message parser.
   class MessageParser {
    public:
-    MessageParser();
+    MessageParser(std::shared_ptr<RPCLimits> limits);
 
     ~MessageParser();
 
@@ -33,6 +35,8 @@ namespace libp2p::protocol::gossip {
    private:
     /// Parsed protobuf message
     std::unique_ptr<pubsub::pb::RPC> pb_msg_;
+    /// Initialised RPC Limits
+    std::shared_ptr<RPCLimits> limits_;
   };
 
 }  // namespace libp2p::protocol::gossip

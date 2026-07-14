@@ -12,6 +12,8 @@
 
 #include <generated/protocol/gossip/protobuf/rpc.pb.h>
 
+#include "peer_context.hpp"
+
 namespace libp2p::protocol::gossip {
 
   namespace {
@@ -23,7 +25,8 @@ namespace libp2p::protocol::gossip {
 
   // need to define default ctor/dtor here in translation unit due to unique_ptr
   // to type which is incomplete in header
-  MessageParser::MessageParser() = default;
+  MessageParser::MessageParser(std::shared_ptr<RPCLimits> limits)
+      : limits_(std::move(limits)) {}
   MessageParser::~MessageParser() = default;
 
   bool MessageParser::parse(BytesIn bytes) {
@@ -42,49 +45,91 @@ namespace libp2p::protocol::gossip {
       return;
     }
 
+    size_t curr_subscriptions = 0;
+
     for (const auto &s : pb_msg_->subscriptions()) {
       if (!s.has_subscribe() || !s.has_topicid()) {
         continue;
       }
+
+      if (curr_subscriptions == limits_->max_subscriptions) {
+        break;
+      }
       receiver.onSubscription(from, s.subscribe(), s.topicid());
+
+      curr_subscriptions++;
     }
 
     if (pb_msg_->has_control()) {
       const auto &c = pb_msg_->control();
+      size_t curr_ihave_messages = 0;
+      size_t curr_iwant_messages = 0;
+      size_t curr_graft_messages = 0;
+      size_t curr_prune_messages = 0;
 
       for (const auto &h : c.ihave()) {
+        if (curr_ihave_messages == limits_->max_ihave_messages) {
+          break;
+        }
+        size_t curr_ihave_message_ids = 0;
         if (!h.has_topicid() || h.messageids_size() == 0) {
           continue;
         }
         const TopicId &topic = h.topicid();
         for (const auto &msg_id : h.messageids()) {
+          if (curr_ihave_message_ids == limits_->max_ihave_message_ids) {
+            break;
+          }
           if (msg_id.empty()) {
             continue;
           }
           receiver.onIHave(from, topic, fromString(msg_id));
+
+          curr_ihave_message_ids++;
         }
+
+        curr_ihave_messages++;
       }
 
       for (const auto &w : c.iwant()) {
+        if (curr_iwant_messages == limits_->max_iwant_messages) {
+          break;
+        }
+        size_t curr_iwant_message_ids = 0;
         if (w.messageids_size() == 0) {
           continue;
         }
         for (const auto &msg_id : w.messageids()) {
+          if (curr_iwant_message_ids == limits_->max_iwant_message_ids) {
+            break;
+          }
           if (msg_id.empty()) {
             continue;
           }
           receiver.onIWant(from, fromString(msg_id));
+
+          curr_iwant_message_ids++;
         }
+        curr_iwant_messages++;
       }
 
       for (const auto &gr : c.graft()) {
+        if (curr_graft_messages == limits_->max_graft_messages) {
+          break;
+        }
         if (!gr.has_topicid()) {
           continue;
         }
         receiver.onGraft(from, gr.topicid());
+
+        curr_graft_messages++;
       }
 
       for (const auto &pr : c.prune()) {
+        if (curr_prune_messages == limits_->max_prune_messages) {
+          break;
+        }
+        size_t curr_prune_peer_infos = 0;
         if (!pr.has_topicid()) {
           continue;
         }
@@ -95,13 +140,20 @@ namespace libp2p::protocol::gossip {
         log()->debug(
             "prune backoff={}, {} peers", backoff_time, pr.peers_size());
         for (const auto &peer : pr.peers()) {
+          if (curr_prune_peer_infos == limits_->max_prune_peer_infos) {
+            break;
+          }
           // TODO(artem): meshsub 1.1.0 + signed peer records NYI
 
           log()->debug("peer id size={}, signed peer record size={}",
                        peer.peerid().size(),
                        peer.signedpeerrecord().size());
+
+          curr_prune_peer_infos++;
         }
         receiver.onPrune(from, pr.topicid(), backoff_time);
+
+        curr_prune_messages++;
       }
     }
 
