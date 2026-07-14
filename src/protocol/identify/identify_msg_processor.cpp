@@ -201,10 +201,38 @@ namespace libp2p::protocol {
       consumeObservedAddresses(msg.observedaddr(), peer_id, stream);
     }
 
+    // Check for signedPeerRecord first - if present and valid, use its addresses
+    // Otherwise fall back to listenAddrs
     std::vector<std::string> addresses;
-    for (const auto &addr : msg.listenaddrs()) {
-      addresses.push_back(addr);
+    bool has_valid_signed_record = false;
+
+    if (msg.has_signedpeerrecord()) {
+      auto signed_record_addresses =
+          consumeSignedPeerRecord(msg.signedpeerrecord(), peer_id, stream);
+      if (!signed_record_addresses.empty()) {
+        // Valid signed peer record found - use its addresses
+        has_valid_signed_record = true;
+        for (const auto &addr : signed_record_addresses) {
+          addresses.push_back(fromMultiaddrToString(addr));
+        }
+      } else {
+        // signedPeerRecord was present but validation failed
+        log_->warn("peer {} sent invalid signedPeerRecord, rejecting addresses",
+                   peer_id.toBase58());
+        // Don't accept addresses from listenAddrs either if signedPeerRecord
+        // validation failed - this prevents address injection attacks
+        signal_identify_received_(peer_id);
+        return;
+      }
     }
+
+    // If no signedPeerRecord or it was missing, use listenAddrs
+    if (!has_valid_signed_record) {
+      for (const auto &addr : msg.listenaddrs()) {
+        addresses.push_back(addr);
+      }
+    }
+
     consumeListenAddresses(addresses, peer_id);
 
     signal_identify_received_(peer_id);
@@ -396,5 +424,47 @@ namespace libp2p::protocol {
                   peer_id.toBase58(),
                   upsert_res.error());
     }
+  }
+
+  std::vector<multi::Multiaddress>
+  IdentifyMessageProcessor::consumeSignedPeerRecord(
+      const std::string &signed_peer_record_bytes,
+      const peer::PeerId &peer_id,
+      const StreamSPtr &stream) {
+    // Security fix: Validate signedPeerRecord to prevent address injection
+    // attacks. According to libp2p spec, a signed peer record envelope must:
+    // 1. Have a valid envelope signature
+    // 2. Contain a public key that derives a PeerId equal to remotePeerId
+    // 3. Contain a PeerRecord with peerId matching the derived PeerId
+    // Only if all checks pass should we accept the certified addresses.
+
+    if (signed_peer_record_bytes.empty()) {
+      log_->warn("peer {} sent empty signedPeerRecord", peer_id.toBase58());
+      return {};
+    }
+
+    auto stream_peer_id_res = stream->remotePeerId();
+    if (!stream_peer_id_res) {
+      log_->warn("cannot validate signedPeerRecord: no remote peer ID in stream");
+      return {};
+    }
+    [[maybe_unused]] auto remote_peer_id = stream_peer_id_res.value();
+
+    // TODO(identify-signed-peer-record): Implement full peer record envelope
+    // parsing and validation according to libp2p peer record specification.
+    // For now, we reject all signedPeerRecords to prevent the vulnerability
+    // where malicious peers could inject third-party signed records.
+    // This is a security fix to prevent address poisoning attacks.
+    // remote_peer_id will be used when full validation is implemented.
+
+    log_->warn(
+        "peer {} sent signedPeerRecord, but full validation is not yet "
+        "implemented. Rejecting to prevent address injection attacks. "
+        "Full peer record envelope parsing needs to be implemented.",
+        peer_id.toBase58());
+
+    // Return empty vector to indicate validation failed
+    // The caller will reject addresses if validation fails
+    return {};
   }
 }  // namespace libp2p::protocol

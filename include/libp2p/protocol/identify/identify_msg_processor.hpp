@@ -130,6 +130,18 @@ namespace libp2p::protocol {
     void consumeListenAddresses(std::span<const std::string> addresses_strings,
                                 const peer::PeerId &peer_id);
 
+    /**
+     * Validate and consume signed peer record from Identify message
+     * @param signed_peer_record_bytes - raw bytes of the signed peer record envelope
+     * @param peer_id - ID of the peer that sent the message
+     * @param stream - stream over which the message was received
+     * @return validated addresses from the signed peer record, or empty if validation fails
+     */
+    std::vector<multi::Multiaddress> consumeSignedPeerRecord(
+        const std::string &signed_peer_record_bytes,
+        const peer::PeerId &peer_id,
+        const StreamSPtr &stream);
+
     Host &host_;
     network::ConnectionManager &conn_manager_;
     peer::IdentityManager &identity_manager_;

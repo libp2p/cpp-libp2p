@@ -35,6 +35,10 @@ message Identify {
   // protocols are the services this node is running
   repeated string protocols = 3;
 
+  // signedPeerRecord is a signed peer record envelope containing certified
+  // addresses. If present, must be validated before accepting addresses.
+  optional bytes signedPeerRecord = 8;
+
   // a delta update is incompatible with everything else. If this field is
   // included, none of the others can appear.
   optional Delta delta = 7;
