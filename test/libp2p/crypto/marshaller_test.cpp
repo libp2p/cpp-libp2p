@@ -11,6 +11,7 @@
 #include <libp2p/crypto/common.hpp>
 #include <libp2p/crypto/protobuf/protobuf_key.hpp>
 #include "mock/libp2p/crypto/key_validator_mock.hpp"
+#include "testutil/libp2p/random.hpp"
 
 using Buffer = std::vector<uint8_t>;
 using libp2p::crypto::Key;
@@ -34,9 +35,7 @@ struct KeyCase {
 };
 
 Buffer randomBuffer(size_t size) {
-  Buffer buf(size, 0);
-  std::generate_n(buf.begin(), size, []() { return rand() & 0xff; });
-  return buf;
+  return testutil::randomBytes(size);
 }
 
 class Pubkey : public testing::TestWithParam<KeyCase<PublicKey>> {

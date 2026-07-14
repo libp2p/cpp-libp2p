@@ -6,11 +6,13 @@
 #include <gtest/gtest.h>
 #include <libp2p/protocol/kademlia/impl/peer_routing_table_impl.hpp>
 #include <qtils/test/outcome.hpp>
+#include <random>
 #include <unordered_set>
 
 #include <libp2p/common/literals.hpp>
 #include "mock/libp2p/peer/identity_manager_mock.hpp"
 #include "testutil/libp2p/peer.hpp"
+#include "testutil/libp2p/random.hpp"
 #include "testutil/prepare_loggers.hpp"
 
 using namespace libp2p;
@@ -50,8 +52,6 @@ bool hasPeer(A &peerset, PeerId &peer) {
 }
 
 TEST_F(PeerRoutingTableTest, BusWorks) {
-  srand(0);  // to make test deterministic
-
   auto &addCh = bus_->getChannel<event::protocol::kademlia::PeerAddedChannel>();
   auto &remCh =
       bus_->getChannel<event::protocol::kademlia::PeerRemovedChannel>();
@@ -85,8 +85,6 @@ TEST_F(PeerRoutingTableTest, BusWorks) {
  * https://sourcegraph.com/github.com/libp2p/go-libp2p-kbucket@HEAD/-/blob/table_test.go#L168
  */
 TEST_F(PeerRoutingTableTest, FindMultiple) {
-  srand(0);  // to make test deterministic
-
   std::vector<PeerId> peers;
   std::generate_n(std::back_inserter(peers), 18, testutil::randomPeerId);
 
@@ -106,7 +104,6 @@ TEST_F(PeerRoutingTableTest, FindMultiple) {
  */
 TEST_F(PeerRoutingTableTest, RecyclingTest) {
   config_->maxBucketSize = 1;
-  srand(0);  // to make test deterministic
   auto &addCh = bus_->getChannel<event::protocol::kademlia::PeerAddedChannel>();
   auto &remCh =
       bus_->getChannel<event::protocol::kademlia::PeerRemovedChannel>();
@@ -125,7 +122,7 @@ TEST_F(PeerRoutingTableTest, RecyclingTest) {
   std::vector<PeerId> peers;
 
   // Generate peers for first bucket, in count more than bucket capacity
-  for (int i = 0; i < 3; ++i) {
+  while (peers.size() != 3) {
     auto peer_id = testutil::randomPeerId();
     NodeId node_id(peer_id);
     if (node_id.commonPrefixLen(NodeId(self_id)) == 0) {
@@ -163,7 +160,6 @@ TEST_F(PeerRoutingTableTest, RecyclingTest) {
 
 TEST_F(PeerRoutingTableTest, PreferLongLivedPeers) {
   config_->maxBucketSize = 2;
-  srand(0);  // to make test deterministic
   auto &addCh = bus_->getChannel<event::protocol::kademlia::PeerAddedChannel>();
   auto &remCh =
       bus_->getChannel<event::protocol::kademlia::PeerRemovedChannel>();
@@ -210,7 +206,6 @@ TEST_F(PeerRoutingTableTest, PreferLongLivedPeers) {
 
 TEST_F(PeerRoutingTableTest, EldestRecycledIfNotPermanent) {
   config_->maxBucketSize = 3;
-  srand(0);  // to make test deterministic
 
   std::vector<PeerId> peers;
 
@@ -239,7 +234,6 @@ TEST_F(PeerRoutingTableTest, EldestRecycledIfNotPermanent) {
 
 TEST_F(PeerRoutingTableTest, EldestPrefferedIfPermanent) {
   config_->maxBucketSize = 3;
-  srand(0);  // to make test deterministic
 
   std::vector<PeerId> peers;
 
@@ -272,14 +266,15 @@ TEST_F(PeerRoutingTableTest, EldestPrefferedIfPermanent) {
  */
 TEST_F(PeerRoutingTableTest, Update) {
   config_->maxBucketSize = 10;
-  srand(0);  // to make test deterministic
 
   std::vector<PeerId> peers;
   std::generate_n(std::back_inserter(peers), 100, testutil::randomPeerId);
 
+  std::uniform_int_distribution<size_t> dist(0, peers.size() - 1);
+  auto& rng = testutil::getTestRng();
   // 10000 random updates among 100 existing peers
   for (int i = 0; i < 10000; i++) {
-    int index = rand() % peers.size();
+    size_t index = dist(rng);
     [[maybe_unused]] auto result = table_->update(peers[index], false);
   }
 
@@ -300,7 +295,6 @@ TEST_F(PeerRoutingTableTest, Update) {
  */
 TEST_F(PeerRoutingTableTest, Find) {
   config_->maxBucketSize = 10;
-  srand(0);  // to make test deterministic
 
   const auto nPeers = 5;
 
