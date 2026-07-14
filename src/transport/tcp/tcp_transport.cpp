@@ -15,7 +15,7 @@ namespace libp2p::transport {
                           multi::Multiaddress address,
                           TransportAdaptor::HandlerFunc handler) {
     auto r = detail::asTcp(address);
-    if (not r) {
+    if (!r) {
       return handler(r.error());
     }
     auto &[info, layers] = r.value();
@@ -27,7 +27,7 @@ namespace libp2p::transport {
          layers = std::move(layers)](
             outcome::result<boost::asio::ip::tcp::resolver::results_type>
                 r) mutable {
-          if (not r) {
+          if (!r) {
             return handler(r.error());
           }
           conn->connect(

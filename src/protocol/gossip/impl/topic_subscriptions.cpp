@@ -41,7 +41,7 @@ namespace libp2p::protocol::gossip {
         log_(log) {}
 
   bool TopicSubscriptions::empty() const {
-    return (not self_subscribed_)
+    return (!self_subscribed_)
         && (fanout_period_ends_ == std::chrono::milliseconds::zero())
         && subscribed_peers_.empty() && mesh_peers_.empty();
   }

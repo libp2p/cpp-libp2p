@@ -57,11 +57,11 @@ namespace libp2p::basic {
      * @return true if no more events scheduled
      */
     bool empty() const {
-      return deferred_callbacks_.empty() and not timer_expires_;
+      return deferred_callbacks_.empty() and !timer_expires_;
     }
 
     void run() {
-      while (not empty()) {
+      while (!empty()) {
         shiftToTimer();
       }
     }

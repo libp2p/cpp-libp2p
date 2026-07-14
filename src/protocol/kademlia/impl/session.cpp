@@ -32,12 +32,12 @@ namespace libp2p::protocol::kademlia {
     framing_->read([self{shared_from_this()}, on_read{std::move(on_read)}](
                        basic::MessageReadWriter::ReadCallback r) {
       self->timer_.reset();
-      if (not r) {
+      if (!r) {
         on_read(r.error());
         return;
       }
       Message msg;
-      if (not msg.deserialize(*r.value())) {
+      if (!msg.deserialize(*r.value())) {
         on_read(Error::MESSAGE_DESERIALIZE_ERROR);
         return;
       }
@@ -54,7 +54,7 @@ namespace libp2p::protocol::kademlia {
                    on_write{std::move(on_write)},
                    buf](outcome::result<void> r) {
                     self->timer_.reset();
-                    if (not r) {
+                    if (!r) {
                       on_write(r.error());
                       return;
                     }
@@ -67,10 +67,10 @@ namespace libp2p::protocol::kademlia {
           weak_session_host{std::move(weak_session_host)}](
              outcome::result<Message> r) {
       auto session_host = weak_session_host.lock();
-      if (not session_host) {
+      if (!session_host) {
         return;
       }
-      if (not r) {
+      if (!r) {
         return;
       }
       session_host->onMessage(self, std::move(r.value()));
@@ -80,7 +80,7 @@ namespace libp2p::protocol::kademlia {
   void Session::read(std::shared_ptr<ResponseHandler> response_handler) {
     read([self{shared_from_this()},
           response_handler](outcome::result<Message> r) {
-      if (r and not response_handler->match(r.value())) {
+      if (r and !response_handler->match(r.value())) {
         r = Error::UNEXPECTED_MESSAGE_TYPE;
       }
       response_handler->onResult(self, std::move(r));
@@ -90,14 +90,14 @@ namespace libp2p::protocol::kademlia {
   void Session::write(const Message &msg,
                       std::weak_ptr<SessionHost> weak_session_host) {
     Bytes pb;
-    if (not msg.serialize(pb)) {
+    if (!msg.serialize(pb)) {
       return;
     }
     write(pb,
           [self{shared_from_this()},
            weak_session_host{std::move(weak_session_host)}](
               outcome::result<void> r) {
-            if (not r) {
+            if (!r) {
               return;
             }
             self->read(weak_session_host);
@@ -109,7 +109,7 @@ namespace libp2p::protocol::kademlia {
     write(
         frame,
         [self{shared_from_this()}, response_handler](outcome::result<void> r) {
-          if (not r) {
+          if (!r) {
             response_handler->onResult(self, r.error());
             return;
           }
@@ -126,13 +126,13 @@ namespace libp2p::protocol::kademlia {
       return;
     }
     auto scheduler = scheduler_.lock();
-    if (not scheduler) {
+    if (!scheduler) {
       return;
     }
     timer_ = scheduler->scheduleWithHandle(
         [weak_self = weak_from_this()] {
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
           self->stream_->reset();

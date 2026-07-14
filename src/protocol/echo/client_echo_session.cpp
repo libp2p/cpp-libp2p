@@ -75,7 +75,7 @@ namespace libp2p::protocol {
       if (ec_) {
         then(*ec_);
       } else {
-        if (not std::equal(
+        if (!std::equal(
                 recv_buf_.begin(), recv_buf_.end(), buf_.begin(), buf_.end())) {
           log::createLogger("Echo")->error(
               "ClientEchoSession: send and receive buffers mismatch");

@@ -26,7 +26,7 @@ namespace libp2p::network {
     std::vector<ConnectionSPtr> out;
     out.reserve(it->second.size());
     for (const auto &conn : it->second) {
-      if (not conn->isClosed()) {
+      if (!conn->isClosed()) {
         out.emplace_back(conn);
       }
     }
@@ -72,7 +72,7 @@ namespace libp2p::network {
     size_t total_connections = 0;
     for (const auto &entry : connections_) {
       for (const auto &conn : entry.second) {
-        if (not conn->isClosed()) {
+        if (!conn->isClosed()) {
           ++total_connections;
         }
       }
@@ -81,7 +81,7 @@ namespace libp2p::network {
 
     for (const auto &entry : connections_) {
       for (const auto &conn : entry.second) {
-        if (not conn->isClosed()) {
+        if (!conn->isClosed()) {
           out.emplace_back(conn);
         }
       }

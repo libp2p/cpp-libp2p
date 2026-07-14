@@ -36,7 +36,7 @@ namespace libp2p {
           }
           // write remaining bytes
           auto writer = weak.lock();
-          if (not writer) {
+          if (!writer) {
             return cb(make_error_code(boost::asio::error::operation_aborted));
           }
           write(writer, in.subspan(n), std::move(cb));

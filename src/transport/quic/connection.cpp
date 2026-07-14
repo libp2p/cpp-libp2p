@@ -51,7 +51,7 @@ namespace libp2p::transport {
   }
 
   bool QuicConnection::isClosed() const {
-    return not conn_ctx_;
+    return !conn_ctx_;
   }
 
   outcome::result<void> QuicConnection::close() {
@@ -95,7 +95,7 @@ namespace libp2p::transport {
 
   outcome::result<std::shared_ptr<libp2p::connection::Stream>>
   QuicConnection::newStream() {
-    if (not conn_ctx_) {
+    if (!conn_ctx_) {
       return QuicError::CONN_CLOSED;
     }
     OUTCOME_TRY(stream, conn_ctx_->engine->newStream(conn_ctx_));

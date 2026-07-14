@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
           // Additional logging config for application
           logger_config));
   auto r = logging_system->configure();
-  if (not r.message.empty()) {
+  if (!r.message.empty()) {
     (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
   }
   if (r.has_error) {

@@ -39,7 +39,7 @@ namespace libp2p::connection {
   }
 
   void WsConnection::stop() {
-    if (not started_) {
+    if (!started_) {
       log_->error("already stopped (double stop)");
       return;
     }

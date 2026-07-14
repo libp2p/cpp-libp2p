@@ -28,6 +28,7 @@ namespace libp2p::protocol::gossip {
                  std::shared_ptr<connection::Stream> stream,
                  PeerContextPtr peer)
       : stream_id_(stream_id),
+        config_{config},
         timeout_(config.rw_timeout_msec),
         scheduler_(scheduler),
         max_message_size_(config.max_message_size),
@@ -109,7 +110,7 @@ namespace libp2p::protocol::gossip {
           peer_->str,
           stream_id_);
 
-    MessageParser parser;
+    MessageParser parser{config_.rpc_limits};
     if (!parser.parse(*read_buffer_)) {
       feedback_(peer_, Error::MESSAGE_PARSE_ERROR);
       return;
@@ -161,7 +162,7 @@ namespace libp2p::protocol::gossip {
         *buffer,
         [weak_self{weak_from_this()}, buffer](outcome::result<void> result) {
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
           self->onMessageWritten(result);

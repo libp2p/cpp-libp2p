@@ -63,7 +63,7 @@ namespace libp2p::protocol::kademlia {
   };
 
   void PutValueExecutor::spawn() {
-    while (started_ and not done_ and addressees_idx_ < addressees_.size()
+    while (started_ and !done_ and addressees_idx_ < addressees_.size()
            and requests_in_progress_ < config_.requestConcurency) {
       auto &peer_id = addressees_[addressees_idx_++];
       auto peer_info = host_->getPeerRepository().getPeerInfo(peer_id);
@@ -111,7 +111,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   void PutValueExecutor::onConnected(StreamAndProtocolOrError stream_res) {
-    if (not stream_res) {
+    if (!stream_res) {
       --requests_in_progress_;
 
       log_.debug("cannot connect to peer: {}; active {}, in queue {}",
