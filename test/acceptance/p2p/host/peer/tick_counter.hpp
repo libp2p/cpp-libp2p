@@ -29,8 +29,7 @@ struct TickCounter {
     auto actual_count = ticks_count.load();
     ASSERT_EQ(actual_count, required_count)  // NOLINT
         << "sending messages from <" << ci << "> client to <" << si
-        << "> server "
-        << "required messages count <" << required_count
+        << "> server " << "required messages count <" << required_count
         << ">count doesn't match actual count <" << actual_count << ">";
   }
 

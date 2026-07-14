@@ -59,9 +59,12 @@ struct InmemAddressRepository_Test : public ::testing::Test {
 
 TEST_F(InmemAddressRepository_Test, GarbageCollection) {
   // @given address repository that has 2 peers, and some addresses
-  ASSERT_OUTCOME_SUCCESS(db->addAddresses(p1, std::vector<Multiaddress>{ma1, ma2}, 10ms));
-  ASSERT_OUTCOME_SUCCESS(db->addAddresses(p1, std::vector<Multiaddress>{ma3, ma4}, 1000ms));
-  ASSERT_OUTCOME_SUCCESS(db->upsertAddresses(p2, std::vector<Multiaddress>{ma4}, 10ms));
+  ASSERT_OUTCOME_SUCCESS(
+      db->addAddresses(p1, std::vector<Multiaddress>{ma1, ma2}, 10ms));
+  ASSERT_OUTCOME_SUCCESS(
+      db->addAddresses(p1, std::vector<Multiaddress>{ma3, ma4}, 1000ms));
+  ASSERT_OUTCOME_SUCCESS(
+      db->upsertAddresses(p2, std::vector<Multiaddress>{ma4}, 10ms));
 
   // @when no collectGarbage is called
   {
@@ -135,8 +138,10 @@ TEST_F(InmemAddressRepository_Test, GarbageCollection) {
  * @then ttl is updated, ma1 is not evicted
  */
 TEST_F(InmemAddressRepository_Test, UpdateAddress) {
-  ASSERT_OUTCOME_SUCCESS(db->addAddresses(p1, std::vector<Multiaddress>{ma1}, 10ms));
-  ASSERT_OUTCOME_SUCCESS(db->upsertAddresses(p1, std::vector<Multiaddress>{ma1}, 1000ms));
+  ASSERT_OUTCOME_SUCCESS(
+      db->addAddresses(p1, std::vector<Multiaddress>{ma1}, 10ms));
+  ASSERT_OUTCOME_SUCCESS(
+      db->upsertAddresses(p1, std::vector<Multiaddress>{ma1}, 1000ms));
 
   {
     ASSERT_OUTCOME_SUCCESS(v, db->getAddresses(p1));
@@ -157,8 +162,10 @@ TEST_F(InmemAddressRepository_Test, UpdateAddress) {
  * @then ttl of ma1 is not updated, ma1 is evicted. ma2 is inserted.
  */
 TEST_F(InmemAddressRepository_Test, InsertAddress) {
-  ASSERT_OUTCOME_SUCCESS(db->addAddresses(p1, std::vector<Multiaddress>{ma1}, 10ms));
-  ASSERT_OUTCOME_SUCCESS(db->upsertAddresses(p1, std::vector<Multiaddress>{ma2}, 1000ms));
+  ASSERT_OUTCOME_SUCCESS(
+      db->addAddresses(p1, std::vector<Multiaddress>{ma1}, 10ms));
+  ASSERT_OUTCOME_SUCCESS(
+      db->upsertAddresses(p1, std::vector<Multiaddress>{ma2}, 1000ms));
 
   {
     ASSERT_OUTCOME_SUCCESS(v, db->getAddresses(p1));

@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include <unistd.h>
 #include <array>
 #include <functional>
 #include <map>
 #include <string_view>
-#include <unistd.h>
 
 namespace libp2p::multi {
 
@@ -58,8 +58,8 @@ namespace libp2p::multi {
       // https://github.com/multiformats/rust-multiaddr/blob/3c7e813c3b1fdd4187a9ca9ff67e10af0e79231d/src/protocol.rs#L50-L53
       X_PARITY_WS = 4770,
       X_PARITY_WSS = 4780,
-    // Range for private use: 0x300000 – 0x3FFFFF
-    // Debug section
+      // Range for private use: 0x300000 – 0x3FFFFF
+      // Debug section
       _DUMMY_PROTO_1 = 0x3DEAD1,
       _DUMMY_PROTO_2 = 0x3DEAD2,
       _DUMMY_PROTO_3 = 0x3DEAD3,
@@ -161,7 +161,7 @@ namespace libp2p::multi {
         {Protocol::Code::P2P_CIRCUIT, 0, "p2p-circuit"},
         {Protocol::Code::X_PARITY_WS, Protocol::kVarLen, "x-parity-ws"},
         {Protocol::Code::X_PARITY_WSS, Protocol::kVarLen, "x-parity-wss"},
-// Debug section
+        // Debug section
         {Protocol::Code::_DUMMY_PROTO_1, 0, "_dummy_proto_1"},
         {Protocol::Code::_DUMMY_PROTO_2, 0, "_dummy_proto_2"},
         {Protocol::Code::_DUMMY_PROTO_3, Protocol::kVarLen, "_dummy_proto_3"},
