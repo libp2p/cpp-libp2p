@@ -39,7 +39,7 @@ namespace libp2p::transport::lsquic {
     lsquicInit();
 
     auto flags = 0;
-    if (not client) {
+    if (!client) {
       flags |= LSENG_SERVER;
     }
 
@@ -66,7 +66,7 @@ namespace libp2p::transport::lsquic {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       auto _conn_ctx = reinterpret_cast<lsquic_conn_ctx_t *>(conn_ctx);
       lsquic_conn_set_ctx(conn, _conn_ctx);
-      if (not op) {
+      if (!op) {
         stream_if.on_hsk_done(conn, LSQ_HSK_OK);
       }
       return _conn_ctx;
@@ -91,7 +91,7 @@ namespace libp2p::transport::lsquic {
       auto ok = status == LSQ_HSK_OK or status == LSQ_HSK_RESUMED_OK;
       auto op = qtils::optionTake(conn_ctx->connecting);
       auto res = [&]() -> outcome::result<std::shared_ptr<QuicConnection>> {
-        if (not ok) {
+        if (!ok) {
           return QuicError::HANDSHAKE_FAILED;
         }
         auto cert = SSL_get_peer_certificate(lsquic_conn_ssl(conn));
@@ -113,7 +113,7 @@ namespace libp2p::transport::lsquic {
         conn_ctx->conn = conn;
         return conn;
       }();
-      if (not res) {
+      if (!res) {
         lsquic_conn_close(conn);
       }
       if (op) {
@@ -205,7 +205,7 @@ namespace libp2p::transport::lsquic {
             auto cb = [weak_self{self->weak_from_this()}](
                           boost::system::error_code ec) {
               auto self = weak_self.lock();
-              if (not self) {
+              if (!self) {
                 return;
               }
               if (ec) {
@@ -229,7 +229,7 @@ namespace libp2p::transport::lsquic {
     };
 
     engine_ = lsquic_engine_new(flags, &api);
-    if (not engine_) {
+    if (!engine_) {
       throw std::logic_error{"lsquic_engine_new"};
     }
   }
@@ -283,7 +283,7 @@ namespace libp2p::transport::lsquic {
     conn_ctx->new_stream.emplace();
     lsquic_conn_make_stream(conn_ctx->ls_conn);
     auto stream = qtils::optionTake(conn_ctx->new_stream).value();
-    if (not stream) {
+    if (!stream) {
       return QuicError::CANT_OPEN_STREAM;
     }
     return stream;
@@ -318,7 +318,7 @@ namespace libp2p::transport::lsquic {
     auto want_flush = std::exchange(want_flush_, {});
     for (auto &weak_stream : want_flush) {
       auto stream = weak_stream.lock();
-      if (not stream) {
+      if (!stream) {
         continue;
       }
       if (stream->stream_ctx_ == nullptr) {
@@ -332,13 +332,13 @@ namespace libp2p::transport::lsquic {
     }
     lsquic_engine_process_conns(engine_);
     int us = 0;
-    if (not lsquic_engine_earliest_adv_tick(engine_, &us)) {
+    if (!lsquic_engine_earliest_adv_tick(engine_, &us)) {
       return;
     }
     timer_.expires_after(std::chrono::microseconds{us});
     auto cb = [weak_self{weak_from_this()}](boost::system::error_code ec) {
       auto self = weak_self.lock();
-      if (not self) {
+      if (!self) {
         return;
       }
       if (ec) {
@@ -364,7 +364,7 @@ namespace libp2p::transport::lsquic {
           auto cb =
               [weak_self{weak_from_this()}](boost::system::error_code ec) {
                 auto self = weak_self.lock();
-                if (not self) {
+                if (!self) {
                   return;
                 }
                 if (ec) {

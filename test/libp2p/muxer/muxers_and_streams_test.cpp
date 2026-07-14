@@ -270,7 +270,7 @@ namespace libp2p::regression {
     }
 
     void onRead(outcome::result<void> res) {
-      if (not res.has_value()) {
+      if (!res.has_value()) {
         TRACE("({}): read error", stats_.node_id);
         stats_.put(Stats::READ_FAILURE);
       } else {
@@ -281,7 +281,7 @@ namespace libp2p::regression {
     }
 
     void onWrite(outcome::result<void> res) {
-      if (not res.has_value()) {
+      if (!res.has_value()) {
         TRACE("({}): write error", stats_.node_id);
         stats_.put(Stats::WRITE_FAILURE);
       } else {

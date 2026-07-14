@@ -36,7 +36,7 @@ namespace libp2p {
           }
           // read remaining bytes
           auto reader = weak.lock();
-          if (not reader) {
+          if (!reader) {
             return cb(make_error_code(boost::asio::error::operation_aborted));
           }
           read(reader, out.subspan(n), std::move(cb));

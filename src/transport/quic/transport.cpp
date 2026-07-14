@@ -32,7 +32,7 @@ namespace libp2p::transport {
                            Multiaddress address,
                            TransportAdaptor::HandlerFunc cb) {
     auto r = detail::asQuic(address);
-    if (not r) {
+    if (!r) {
       return cb(r.error());
     }
     auto &info = r.value();
@@ -41,10 +41,10 @@ namespace libp2p::transport {
             outcome::result<boost::asio::ip::udp::resolver::results_type>
                 r) mutable {
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
-          if (not r) {
+          if (!r) {
             return cb(r.error());
           }
           auto remote = r.value().begin()->endpoint();
@@ -55,7 +55,7 @@ namespace libp2p::transport {
               peer,
               [cb{std::move(cb)}](
                   outcome::result<std::shared_ptr<QuicConnection>> r) {
-                if (not r) {
+                if (!r) {
                   return cb(r.error());
                 }
                 cb(r.value());

@@ -42,7 +42,7 @@ namespace libp2p::protocol {
   }
 
   void PingClientSession::write() {
-    if (not is_started_ or closed_ or stream_->isClosedForWrite()) {
+    if (!is_started_ or closed_ or stream_->isClosedForWrite()) {
       return;
     }
 
@@ -73,7 +73,7 @@ namespace libp2p::protocol {
   }
 
   void PingClientSession::read() {
-    if (not is_started_ or closed_ or stream_->isClosedForRead()) {
+    if (!is_started_ or closed_ or stream_->isClosedForRead()) {
       return;
     }
 

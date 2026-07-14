@@ -36,7 +36,7 @@ namespace libp2p::basic {
   }
 
   void ManualSchedulerBackend::callDeferred() {
-    while (not deferred_callbacks_.empty()) {
+    while (!deferred_callbacks_.empty()) {
       auto cb = std::move(deferred_callbacks_.front());
       deferred_callbacks_.pop_front();
       cb();

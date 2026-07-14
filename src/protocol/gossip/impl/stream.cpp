@@ -162,7 +162,7 @@ namespace libp2p::protocol::gossip {
         *buffer,
         [weak_self{weak_from_this()}, buffer](outcome::result<void> result) {
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
           self->onMessageWritten(result);

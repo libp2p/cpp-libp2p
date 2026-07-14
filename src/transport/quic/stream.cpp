@@ -26,7 +26,7 @@ namespace libp2p::connection {
 
   void QuicStream::readSome(BytesOut out, basic::Reader::ReadCallbackFunc cb) {
     outcome::result<size_t> r = QuicError::STREAM_CLOSED;
-    if (not stream_ctx_) {
+    if (!stream_ctx_) {
       return cb(r);
     }
     if (stream_ctx_->reading) {
@@ -37,7 +37,7 @@ namespace libp2p::connection {
       stream_ctx_->reading.emplace(
           [weak_self{weak_from_this()}, out, cb{std::move(cb)}]() mutable {
             auto self = weak_self.lock();
-            if (not self) {
+            if (!self) {
               cb(QuicError::STREAM_CLOSED);
               return;
             }
@@ -59,7 +59,7 @@ namespace libp2p::connection {
 
   void QuicStream::writeSome(BytesIn in, basic::Writer::WriteCallbackFunc cb) {
     outcome::result<size_t> r = QuicError::STREAM_CLOSED;
-    if (not stream_ctx_) {
+    if (!stream_ctx_) {
       return cb(r);
     }
     if (stream_ctx_->writing) {
@@ -74,7 +74,7 @@ namespace libp2p::connection {
       stream_ctx_->writing.emplace(
           [weak_self{weak_from_this()}, in, cb{std::move(cb)}]() mutable {
             auto self = weak_self.lock();
-            if (not self) {
+            if (!self) {
               cb(QuicError::STREAM_CLOSED);
               return;
             }
@@ -108,7 +108,7 @@ namespace libp2p::connection {
   }
 
   void QuicStream::close(Stream::VoidResultHandlerFunc cb) {
-    if (not stream_ctx_) {
+    if (!stream_ctx_) {
       return cb(outcome::success());
     }
     lsquic_stream_shutdown(stream_ctx_->ls_stream, 1);
@@ -116,7 +116,7 @@ namespace libp2p::connection {
   }
 
   void QuicStream::reset() {
-    if (not stream_ctx_) {
+    if (!stream_ctx_) {
       return;
     }
     lsquic_stream_close(stream_ctx_->ls_stream);

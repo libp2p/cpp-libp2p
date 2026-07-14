@@ -85,8 +85,8 @@ namespace {
 namespace libp2p::security::secio {
   Dialer::Dialer(std::shared_ptr<connection::LayerConnection> connection)
       : rw{std::make_shared<libp2p::basic::ProtobufMessageReadWriter>(
-          std::make_shared<libp2p::basic::MessageReadWriterBigEndian>(
-              std::move(connection)))} {}
+            std::make_shared<libp2p::basic::MessageReadWriterBigEndian>(
+                std::move(connection)))} {}
 
   void Dialer::storeLocalPeerProposalBytes(
       const std::shared_ptr<std::vector<uint8_t>> &bytes) {
@@ -158,7 +158,7 @@ namespace libp2p::security::secio {
 
   outcome::result<crypto::Buffer> Dialer::generateSharedSecret(
       crypto::Buffer remote_ephemeral_public_key) const {
-    if (not ekey_pair_) {
+    if (!ekey_pair_) {
       return Error::INTERNAL_FAILURE;
     }
     OUTCOME_TRY(shared_secret,

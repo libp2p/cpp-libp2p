@@ -171,7 +171,7 @@ namespace libp2p::security::noise {
         signature_correct,
         crypto_provider_->verify(
             to_verify, handy_payload.identity_sig, handy_payload.identity_key));
-    if (not signature_correct) {
+    if (!signature_correct) {
       SL_TRACE(log_, "Remote peer's payload signature verification failed");
       return std::errc::owner_dead;
     }
@@ -272,11 +272,11 @@ namespace libp2p::security::noise {
       log_->error("handshake failed, {}", secured.error());
       return connection_cb_(secured.error());
     }
-    if (not secured.value()) {
+    if (!secured.value()) {
       log_->error("handshake failed for unknown reason");
       return connection_cb_(std::errc::io_error);
     }
-    if (not remote_peer_pubkey_) {
+    if (!remote_peer_pubkey_) {
       log_->error("Remote peer static pubkey remains unknown");
       return connection_cb_(std::errc::connection_aborted);
     }

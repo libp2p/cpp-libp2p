@@ -21,7 +21,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<void> Sha256::write(BytesIn data) {
-    if (not initialized_) {
+    if (!initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
     if (1 != SHA256_Update(&ctx_, data.data(), data.size())) {
@@ -31,7 +31,7 @@ namespace libp2p::crypto {
   }
 
   outcome::result<void> Sha256::digestOut(BytesOut out) const {
-    if (not initialized_) {
+    if (!initialized_) {
       return HmacProviderError::FAILED_INITIALIZE_CONTEXT;
     }
     if (out.size() != digestSize()) {

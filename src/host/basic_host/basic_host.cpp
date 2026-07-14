@@ -72,7 +72,7 @@ namespace libp2p::host {
           }
         }
       }
-      if (not is_good_addr) {
+      if (!is_good_addr) {
         i = unique_addresses.erase(i);
       } else {
         ++i;

@@ -110,7 +110,7 @@ namespace libp2p::protocol::kademlia {
     refresh_timer_ = scheduler_->scheduleWithHandle(
         [weak_self{weak_from_this()}] {
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
           self->onRefreshTimer();
@@ -121,9 +121,9 @@ namespace libp2p::protocol::kademlia {
   std::vector<std::pair<Key, Value>> StorageImpl::getAllRecords() const {
     std::vector<std::pair<Key, Value>> records;
     auto now = scheduler_->now();
-    
+
     // Iterate through all records and get their values from backend
-    for (const auto& record : *table_) {
+    for (const auto &record : *table_) {
       // Only include non-expired records
       if (record.expire_time > now) {
         auto value_result = backend_->getValue(record.key);
@@ -132,7 +132,7 @@ namespace libp2p::protocol::kademlia {
         }
       }
     }
-    
+
     return records;
   }
 }  // namespace libp2p::protocol::kademlia

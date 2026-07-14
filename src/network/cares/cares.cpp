@@ -73,7 +73,7 @@ namespace libp2p::network::c_ares {
   Ares::Ares() {
     bool expected{false};
     bool first_init = initialized_.compare_exchange_strong(expected, true);
-    if (not first_init) {
+    if (!first_init) {
       // atomic change failed, thus it was already initialized
       SL_DEBUG(log(), "C-ares library got initialized more than once");
     } else if (auto status = ::ares_library_init(ARES_LIB_INIT_ALL);
@@ -98,7 +98,7 @@ namespace libp2p::network::c_ares {
       const std::string &uri,
       const std::weak_ptr<boost::asio::io_context> &io_context,
       Ares::TxtCallback callback) {
-    if (not initialized_.load()) {
+    if (!initialized_.load()) {
       SL_DEBUG(
           log(),
           "Unable to execute DNS TXT request to {} due to c-ares library is "
@@ -198,7 +198,7 @@ namespace libp2p::network::c_ares {
   void Ares::waitAresChannel(::ares_channel channel) {
     while (true) {
       struct timeval *tvp{nullptr};  // NOLINT
-      struct timeval tv {};
+      struct timeval tv{};
       fd_set read_fds;
       fd_set write_fds;
       int nfds{0};  // NOLINT

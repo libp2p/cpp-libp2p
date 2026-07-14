@@ -123,12 +123,12 @@ namespace libp2p::protocol::kademlia {
       assign_record(record.value(), pb_msg.record());
     }
     auto closer_res = assign_peers(closer_peers, pb_msg.closerpeers());
-    if (not closer_res) {
+    if (!closer_res) {
       error_message_ = fmt::format("Bad closer peers: {}", closer_res.error());
       return false;
     }
     auto provider_res = assign_peers(provider_peers, pb_msg.providerpeers());
-    if (not provider_res) {
+    if (!provider_res) {
       error_message_ =
           fmt::format("Bad provider peers: {}", provider_res.error());
       return false;

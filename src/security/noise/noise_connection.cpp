@@ -46,7 +46,7 @@ namespace libp2p::connection {
 
   void NoiseConnection::readSome(BytesOut out,
                                  libp2p::basic::Reader::ReadCallbackFunc cb) {
-    if (not frame_buffer_->empty()) {
+    if (!frame_buffer_->empty()) {
       auto n{std::min(out.size(), frame_buffer_->size())};
       auto begin{frame_buffer_->begin()};
       auto end{begin + static_cast<int64_t>(n)};

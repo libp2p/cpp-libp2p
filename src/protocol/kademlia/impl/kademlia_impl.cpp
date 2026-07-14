@@ -58,7 +58,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   void KademliaImpl::start() {
-    BOOST_ASSERT(not started_);
+    BOOST_ASSERT(!started_);
     if (started_) {
       return;
     }
@@ -109,7 +109,7 @@ namespace libp2p::protocol::kademlia {
             .getChannel<event::network::OnPeerDisconnectedChannel>()
             .subscribe([weak_self{weak_from_this()}](const PeerId &peer) {
               auto self = weak_self.lock();
-              if (not self) {
+              if (!self) {
                 return;
               }
               std::ignore =
@@ -142,7 +142,7 @@ namespace libp2p::protocol::kademlia {
                    const outcome::result<PeerInfo> &,
                    std::vector<PeerId> succeeded_peers) {
                  auto self = weak_self.lock();
-                 if (not self) {
+                 if (!self) {
                    return;
                  }
                  std::ignore = self->createPutValueExecutor(
@@ -181,7 +181,7 @@ namespace libp2p::protocol::kademlia {
 
     content_routing_table_->addProvider(key, self_id_);
 
-    if (not need_notify) {
+    if (!need_notify) {
       return outcome::success();
     }
 
@@ -196,7 +196,7 @@ namespace libp2p::protocol::kademlia {
 
     // Try to find locally
     auto providers = content_routing_table_->getProvidersFor(key, limit);
-    if (not providers.empty()) {
+    if (!providers.empty()) {
       if (limit > 0 && providers.size() > limit) {
         std::vector<PeerInfo> result;
         result.reserve(limit);
@@ -254,7 +254,7 @@ namespace libp2p::protocol::kademlia {
             peer_info.id,
             std::span(peer_info.addresses.data(), peer_info.addresses.size()),
             permanent ? peer::ttl::kPermanent : peer::ttl::kDay);
-    if (not upsert_res) {
+    if (!upsert_res) {
       log_.debug("{} was skipped at addind to peer routing table: {}",
                  peer_info.id.toBase58(),
                  upsert_res.error());
@@ -263,7 +263,7 @@ namespace libp2p::protocol::kademlia {
 
     auto update_res =
         peer_routing_table_->update(peer_info.id, permanent, is_connected);
-    if (not update_res) {
+    if (!update_res) {
       log_.debug("{} was not added to peer routing table: {}",
                  peer_info.id.toBase58(),
                  update_res.error());
@@ -286,7 +286,7 @@ namespace libp2p::protocol::kademlia {
 
     // Try to find locally
     auto peer_info = host_->getPeerRepository().getPeerInfo(peer_id);
-    if (not peer_info.addresses.empty()) {
+    if (!peer_info.addresses.empty()) {
       scheduler_->schedule(
           [handler = std::move(handler), peer_info = std::move(peer_info)] {
             handler(peer_info, {});
@@ -330,7 +330,7 @@ namespace libp2p::protocol::kademlia {
 
   void KademliaImpl::onPutValue(const std::shared_ptr<Session> &session,
                                 Message &&msg) {
-    if (not msg.record) {
+    if (!msg.record) {
       log_.warn("incoming PutValue failed: no record in message");
       return;
     }
@@ -339,7 +339,7 @@ namespace libp2p::protocol::kademlia {
     log_.debug("MSG: PutValue ({})", multi::detail::encodeBase58(key));
 
     auto validation_res = validator_->validate(key, value);
-    if (not validation_res) {
+    if (!validation_res) {
       log_.warn("incoming PutValue failed: {}", validation_res.error());
       return;
     }
@@ -364,7 +364,7 @@ namespace libp2p::protocol::kademlia {
     log_.debug("MSG: GetValue ({})", multi::detail::encodeBase58(msg.key));
 
     if (auto providers = content_routing_table_->getProvidersFor(msg.key);
-        not providers.empty()) {
+        !providers.empty()) {
       std::vector<Message::Peer> peers;
       peers.reserve(config_.closerPeerCount);
 
@@ -395,7 +395,7 @@ namespace libp2p::protocol::kademlia {
 
   void KademliaImpl::onAddProvider(const std::shared_ptr<Session> &session,
                                    Message &&msg) {
-    if (not msg.provider_peers) {
+    if (!msg.provider_peers) {
       log_.warn("AddProvider failed: no provider_peers im message");
       return;
     }
@@ -426,7 +426,7 @@ namespace libp2p::protocol::kademlia {
     auto peer_ids = content_routing_table_->getProvidersFor(
         msg.key, config_.closerPeerCount * 2);
 
-    if (not peer_ids.empty()) {
+    if (!peer_ids.empty()) {
       std::vector<Message::Peer> peers;
       peers.reserve(config_.closerPeerCount);
 
@@ -442,7 +442,7 @@ namespace libp2p::protocol::kademlia {
         }
       }
 
-      if (not peers.empty()) {
+      if (!peers.empty()) {
         msg.provider_peers = std::move(peers);
       }
     }
@@ -450,7 +450,7 @@ namespace libp2p::protocol::kademlia {
     peer_ids = peer_routing_table_->getNearestPeers(
         NodeId::hash(msg.key), config_.closerPeerCount * 2);
 
-    if (not peer_ids.empty()) {
+    if (!peer_ids.empty()) {
       std::vector<Message::Peer> peers;
       peers.reserve(config_.closerPeerCount);
 
@@ -466,7 +466,7 @@ namespace libp2p::protocol::kademlia {
         }
       }
 
-      if (not peers.empty()) {
+      if (!peers.empty()) {
         msg.closer_peers = std::move(peers);
       }
     }
@@ -516,7 +516,7 @@ namespace libp2p::protocol::kademlia {
       }
     }
 
-    if (not peers.empty()) {
+    if (!peers.empty()) {
       msg.closer_peers = std::move(peers);
     }
 
@@ -655,13 +655,13 @@ namespace libp2p::protocol::kademlia {
   // Periodic behavior is driven by configuration only; no runtime setters
 
   void KademliaImpl::setReplicationTimer() {
-    if (not config_.periodicReplication.enabled) {
+    if (!config_.periodicReplication.enabled) {
       return;
     }
     replication_timer_ = scheduler_->scheduleWithHandle(
         [weak_self{weak_from_this()}] {
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
           self->setReplicationTimer();
@@ -671,13 +671,13 @@ namespace libp2p::protocol::kademlia {
   }
 
   void KademliaImpl::setRepublishingTimer() {
-    if (not config_.periodicRepublishing.enabled) {
+    if (!config_.periodicRepublishing.enabled) {
       return;
     }
     republishing_timer_ = scheduler_->scheduleWithHandle(
         [weak_self{weak_from_this()}] {
           auto self = weak_self.lock();
-          if (not self) {
+          if (!self) {
             return;
           }
           self->setRepublishingTimer();
@@ -698,7 +698,7 @@ namespace libp2p::protocol::kademlia {
     log_.debug("Performing periodic replication");
 
     auto records = storage_->getAllRecords();
-    for (const auto& [key, value]: records) {
+    for (const auto &[key, value] : records) {
       replicateRecord(key, value, false);  // false = don't extend expiration
     }
   }
@@ -707,43 +707,49 @@ namespace libp2p::protocol::kademlia {
     log_.debug("Performing periodic republishing");
 
     auto records = storage_->getAllRecords();
-    for (const auto& [key, value] : records) {
+    for (const auto &[key, value] : records) {
       replicateRecord(key, value, true);  // true = extend expiration
     }
   }
 
-  std::vector<PeerId> KademliaImpl::getClosestPeers(const Key& key, size_t count) {
+  std::vector<PeerId> KademliaImpl::getClosestPeers(const Key &key,
+                                                    size_t count) {
     std::vector<PeerId> closest_peers;
-    
+
     // Get peers from peer routing table
     HashedKey hashed_key(key);
     auto peers = peer_routing_table_->getNearestPeers(hashed_key.hash, count);
-    
-    for (const auto& peer : peers) {
-      if (peer != self_id_) { // Don't include self
+
+    for (const auto &peer : peers) {
+      if (peer != self_id_) {  // Don't include self
         closest_peers.push_back(peer);
       }
     }
-    
+
     return closest_peers;
   }
 
-  void KademliaImpl::replicateRecord(const Key& key, const Value& value, bool extend_expiration) {
-    // If republishing, extend local expiration by putting the value back to storage
+  void KademliaImpl::replicateRecord(const Key &key,
+                                     const Value &value,
+                                     bool extend_expiration) {
+    // If republishing, extend local expiration by putting the value back to
+    // storage
     if (extend_expiration) {
       auto put_res = storage_->putValue(key, value);
       if (!put_res) {
         log_.warn("Republish: failed to extend expiration for key: {}: {}",
-                  multi::detail::encodeBase58(key), put_res.error());
+                  multi::detail::encodeBase58(key),
+                  put_res.error());
       }
     }
 
-    auto closest_peers = getClosestPeers(key, 
-        extend_expiration ? config_.periodicRepublishing.peers_per_cycle 
+    auto closest_peers = getClosestPeers(
+        key,
+        extend_expiration ? config_.periodicRepublishing.peers_per_cycle
                           : config_.periodicReplication.peers_per_cycle);
-    
+
     if (closest_peers.empty()) {
-      log_.debug("No peers available for replication/republishing of key: {}", 
+      log_.debug("No peers available for replication/republishing of key: {}",
                  multi::detail::encodeBase58(key));
       return;
     }
@@ -752,9 +758,9 @@ namespace libp2p::protocol::kademlia {
     auto executor = createPutValueExecutor(key, value, closest_peers);
     if (executor) {
       std::ignore = executor->start();
-      log_.debug("Started {} for key: {} to {} peers", 
+      log_.debug("Started {} for key: {} to {} peers",
                  extend_expiration ? "republishing" : "replication",
-                 multi::detail::encodeBase58(key), 
+                 multi::detail::encodeBase58(key),
                  closest_peers.size());
     }
   }
