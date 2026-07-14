@@ -11,7 +11,7 @@
 namespace libp2p::peer {
 
   InmemKeyRepository::InmemKeyRepository()
-      : kp_(std::make_shared<std::unordered_set<crypto::KeyPair>>()){};
+      : kp_(std::make_shared<std::unordered_set<crypto::KeyPair>>()) {};
 
   void InmemKeyRepository::clear(const PeerId &p) {
     auto it1 = pub_.find(p);

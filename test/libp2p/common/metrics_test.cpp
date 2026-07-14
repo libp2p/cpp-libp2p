@@ -57,7 +57,9 @@ TEST(MetricsInstance, AddOne) {
  * @then Foo removed from metrics
  */
 TEST(MetricsInstance, RemoveOne) {
-  { Foo foo; }
+  {
+    Foo foo;
+  }
   expectFoo({});
 }
 
