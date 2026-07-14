@@ -59,7 +59,7 @@ inline std::string percentDecode(std::string_view str) {
     return std::nullopt;
   };
   std::string out;
-  while (not str.empty()) {
+  while (!str.empty()) {
     if (str[0] == '%' and str.size() >= 3) {
       auto x1 = f(str[1]), x2 = f(str[2]);
       if (x1 and x2) {
@@ -202,7 +202,7 @@ namespace libp2p::multi::converters {
       return read(n);
     };
     std::string results;
-    while (not bytes.empty()) {
+    while (!bytes.empty()) {
       OUTCOME_TRY(protocol_num, uvar());
       const Protocol *protocol =
           ProtocolList::get(static_cast<Protocol::Code>(protocol_num));

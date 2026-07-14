@@ -309,7 +309,7 @@ int main(int argc, char *argv[]) {
 
     std::function<void()> provide = [&, content_id] {
       [[maybe_unused]] auto res =
-          kademlia->provide(content_id, not kademlia_config.passiveMode);
+          kademlia->provide(content_id, !kademlia_config.passiveMode);
 
       scheduler.schedule(std::function{provide},
                          kademlia_config.randomWalk.interval);

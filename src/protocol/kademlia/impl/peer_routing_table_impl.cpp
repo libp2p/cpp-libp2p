@@ -74,7 +74,7 @@ namespace libp2p::protocol::kademlia {
 
     for (auto it = peers_.rbegin(); it != peers_.rend(); ++it) {
       // https://github.com/libp2p/rust-libp2p/blob/3837e33cd4c40ae703138e6aed6f6c9d52928a80/protocols/kad/src/kbucket/bucket.rs#L310-L366
-      if (it->is_replaceable and not it->is_connected) {
+      if (it->is_replaceable and !it->is_connected) {
         result = std::move(it->peer_id);
         peers_.erase((++it).base());
         break;
@@ -161,7 +161,7 @@ namespace libp2p::protocol::kademlia {
     if (bucket_index) {
       if (auto i = *bucket_index) {
         append(i);
-        for (--i; i != 0 and not done(); --i) {
+        for (--i; i != 0 and !done(); --i) {
           if (bit(i)) {
             append(i);
           }
@@ -171,7 +171,7 @@ namespace libp2p::protocol::kademlia {
     if (!done()) {
       append(0);
     }
-    for (size_t i = 1; i < 256 and not done(); ++i) {
+    for (size_t i = 1; i < 256 and !done(); ++i) {
       if (!bit(i)) {
         append(i);
       }
@@ -219,13 +219,13 @@ namespace libp2p::protocol::kademlia {
     }
 
     if (bucket.size() < config_.maxBucketSize) {
-      bucket.emplaceToFront(pid, not is_permanent, is_connected);
+      bucket.emplaceToFront(pid, !is_permanent, is_connected);
       bus_->getChannel<event::protocol::kademlia::PeerAddedChannel>().publish(
           pid);
       return true;
     }
 
-    return replacePeer(bucket, pid, not is_permanent, is_connected, *bus_);
+    return replacePeer(bucket, pid, !is_permanent, is_connected, *bus_);
   }
 
   size_t PeerRoutingTableImpl::size() const {

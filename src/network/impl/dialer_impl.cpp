@@ -94,7 +94,7 @@ namespace libp2p::network {
                   self->log_,
                   "State inconsistency - uninteresting dial result for peer {}",
                   peer_id.toBase58());
-              if (result.has_value() and not result.value()->isClosed()) {
+              if (result.has_value() and !result.value()->isClosed()) {
                 auto close_res = result.value()->close();
                 BOOST_ASSERT(close_res);
               }
@@ -119,7 +119,7 @@ namespace libp2p::network {
           }
           // closing the connection when dialer and connection requester
           // callback no more exist
-          if (result.has_value() and not result.value()->isClosed()) {
+          if (result.has_value() and !result.value()->isClosed()) {
             auto close_res = result.value()->close();
             BOOST_ASSERT(close_res);
           }

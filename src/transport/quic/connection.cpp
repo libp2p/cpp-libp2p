@@ -51,7 +51,7 @@ namespace libp2p::transport {
   }
 
   bool QuicConnection::isClosed() const {
-    return not conn_ctx_;
+    return !conn_ctx_;
   }
 
   outcome::result<void> QuicConnection::close() {

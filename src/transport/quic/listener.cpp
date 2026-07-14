@@ -60,7 +60,7 @@ namespace libp2p::transport {
   }
 
   bool QuicListener::isClosed() const {
-    return not server_;
+    return !server_;
   }
 
   outcome::result<void> QuicListener::close() {

@@ -86,7 +86,7 @@ namespace libp2p::basic {
 
   void SchedulerImpl::pulse() {
     callReady(Time::zero());
-    while (not callbacks_.empty()) {
+    while (!callbacks_.empty()) {
       auto now = backend_->now();
       if (callReady(now) != 0) {
         continue;
@@ -103,7 +103,7 @@ namespace libp2p::basic {
 
   size_t SchedulerImpl::callReady(Time now) {
     size_t removed = 0;
-    while (not callbacks_.empty() and callbacks_.begin()->first <= now) {
+    while (!callbacks_.empty() and callbacks_.begin()->first <= now) {
       auto node = callbacks_.extract(callbacks_.begin());
       ++removed;
       if (auto cb = std::get_if<Callback>(&node.mapped())) {

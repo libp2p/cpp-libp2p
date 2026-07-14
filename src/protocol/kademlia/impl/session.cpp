@@ -80,7 +80,7 @@ namespace libp2p::protocol::kademlia {
   void Session::read(std::shared_ptr<ResponseHandler> response_handler) {
     read([self{shared_from_this()},
           response_handler](outcome::result<Message> r) {
-      if (r and not response_handler->match(r.value())) {
+      if (r and !response_handler->match(r.value())) {
         r = Error::UNEXPECTED_MESSAGE_TYPE;
       }
       response_handler->onResult(self, std::move(r));

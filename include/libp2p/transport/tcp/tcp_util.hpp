@@ -72,7 +72,7 @@ namespace libp2p::transport::detail {
     template <typename T>
     outcome::result<T> as(bool udp) const {
       auto ip = std::get_if<boost::asio::ip::address>(&this->ip);
-      if (this->udp != udp or not ip) {
+      if (this->udp != udp or !ip) {
         return std::errc::protocol_not_supported;
       }
       return T{*ip, port};

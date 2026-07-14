@@ -96,7 +96,7 @@ namespace libp2p::protocol::kademlia {
 
     auto self_peer_id = host_->getId();
 
-    while (started_ and not done_ and not queue_.empty()
+    while (started_ and !done_ and !queue_.empty()
            and requests_in_progress_ < config_.requestConcurency
            and requests_succeed_ < config_.closerPeerCount) {
       auto peer_id = *queue_.top();

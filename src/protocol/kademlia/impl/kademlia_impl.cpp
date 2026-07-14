@@ -58,7 +58,7 @@ namespace libp2p::protocol::kademlia {
   }
 
   void KademliaImpl::start() {
-    BOOST_ASSERT(not started_);
+    BOOST_ASSERT(!started_);
     if (started_) {
       return;
     }
@@ -364,7 +364,7 @@ namespace libp2p::protocol::kademlia {
     log_.debug("MSG: GetValue ({})", multi::detail::encodeBase58(msg.key));
 
     if (auto providers = content_routing_table_->getProvidersFor(msg.key);
-        not providers.empty()) {
+        !providers.empty()) {
       std::vector<Message::Peer> peers;
       peers.reserve(config_.closerPeerCount);
 
