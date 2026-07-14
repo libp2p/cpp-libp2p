@@ -150,7 +150,7 @@ namespace libp2p::transport {
           }
           bool expected = false;
           if (!self->connection_phase_done_.compare_exchange_strong(expected,
-                                                                       true)) {
+                                                                    true)) {
             BOOST_ASSERT(expected);
             // connection phase already done - means that user's callback was
             // already called by timer expiration so we are closing socket if

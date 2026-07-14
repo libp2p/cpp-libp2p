@@ -86,8 +86,7 @@ namespace libp2p::log {
    private:
     template <typename T>
     auto makePrefix(std::string_view prefix, T instance) {
-      if constexpr (std::is_pointer_v<T>
-                    and !std::is_same_v<T, const char *>) {
+      if constexpr (std::is_pointer_v<T> and !std::is_same_v<T, const char *>) {
         auto ptr_as_int = reinterpret_cast<std::intptr_t>(instance);  // NOLINT
         return fmt::format("{}({:x}): ", prefix, ptr_as_int);
       } else if constexpr (std::is_integral_v<T> and sizeof(T) > 1) {

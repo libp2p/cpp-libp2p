@@ -698,7 +698,7 @@ namespace libp2p::protocol::kademlia {
     log_.debug("Performing periodic replication");
 
     auto records = storage_->getAllRecords();
-    for (const auto& [key, value]: records) {
+    for (const auto &[key, value] : records) {
       replicateRecord(key, value, false);  // false = don't extend expiration
     }
   }
@@ -707,43 +707,49 @@ namespace libp2p::protocol::kademlia {
     log_.debug("Performing periodic republishing");
 
     auto records = storage_->getAllRecords();
-    for (const auto& [key, value] : records) {
+    for (const auto &[key, value] : records) {
       replicateRecord(key, value, true);  // true = extend expiration
     }
   }
 
-  std::vector<PeerId> KademliaImpl::getClosestPeers(const Key& key, size_t count) {
+  std::vector<PeerId> KademliaImpl::getClosestPeers(const Key &key,
+                                                    size_t count) {
     std::vector<PeerId> closest_peers;
-    
+
     // Get peers from peer routing table
     HashedKey hashed_key(key);
     auto peers = peer_routing_table_->getNearestPeers(hashed_key.hash, count);
-    
-    for (const auto& peer : peers) {
-      if (peer != self_id_) { // Don't include self
+
+    for (const auto &peer : peers) {
+      if (peer != self_id_) {  // Don't include self
         closest_peers.push_back(peer);
       }
     }
-    
+
     return closest_peers;
   }
 
-  void KademliaImpl::replicateRecord(const Key& key, const Value& value, bool extend_expiration) {
-    // If republishing, extend local expiration by putting the value back to storage
+  void KademliaImpl::replicateRecord(const Key &key,
+                                     const Value &value,
+                                     bool extend_expiration) {
+    // If republishing, extend local expiration by putting the value back to
+    // storage
     if (extend_expiration) {
       auto put_res = storage_->putValue(key, value);
       if (!put_res) {
         log_.warn("Republish: failed to extend expiration for key: {}: {}",
-                  multi::detail::encodeBase58(key), put_res.error());
+                  multi::detail::encodeBase58(key),
+                  put_res.error());
       }
     }
 
-    auto closest_peers = getClosestPeers(key, 
-        extend_expiration ? config_.periodicRepublishing.peers_per_cycle 
+    auto closest_peers = getClosestPeers(
+        key,
+        extend_expiration ? config_.periodicRepublishing.peers_per_cycle
                           : config_.periodicReplication.peers_per_cycle);
-    
+
     if (closest_peers.empty()) {
-      log_.debug("No peers available for replication/republishing of key: {}", 
+      log_.debug("No peers available for replication/republishing of key: {}",
                  multi::detail::encodeBase58(key));
       return;
     }
@@ -752,9 +758,9 @@ namespace libp2p::protocol::kademlia {
     auto executor = createPutValueExecutor(key, value, closest_peers);
     if (executor) {
       std::ignore = executor->start();
-      log_.debug("Started {} for key: {} to {} peers", 
+      log_.debug("Started {} for key: {} to {} peers",
                  extend_expiration ? "republishing" : "replication",
-                 multi::detail::encodeBase58(key), 
+                 multi::detail::encodeBase58(key),
                  closest_peers.size());
     }
   }

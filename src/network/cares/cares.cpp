@@ -198,7 +198,7 @@ namespace libp2p::network::c_ares {
   void Ares::waitAresChannel(::ares_channel channel) {
     while (true) {
       struct timeval *tvp{nullptr};  // NOLINT
-      struct timeval tv {};
+      struct timeval tv{};
       fd_set read_fds;
       fd_set write_fds;
       int nfds{0};  // NOLINT
