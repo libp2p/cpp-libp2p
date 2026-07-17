@@ -50,8 +50,12 @@ namespace libp2p::multi {
     return bytes_;
   }
 
-  const std::vector<uint8_t> &UVarint::toVector() const {
+  const std::vector<uint8_t> &UVarint::toVector() const & {
     return bytes_;
+  }
+
+  std::vector<uint8_t> UVarint::toVector() && {
+    return std::move(bytes_);
   }
 
   size_t UVarint::size() const {

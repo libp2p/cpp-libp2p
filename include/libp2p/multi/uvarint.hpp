@@ -55,7 +55,8 @@ namespace libp2p::multi {
     /// Disable to return span to inner data of temporary object
     BytesIn toBytes() const && = delete;
 
-    const std::vector<uint8_t> &toVector() const;
+    const std::vector<uint8_t> &toVector() const &;
+    std::vector<uint8_t> toVector() &&;
 
     /**
      * Assigns the varint to an unsigned integer, encoding the latter
