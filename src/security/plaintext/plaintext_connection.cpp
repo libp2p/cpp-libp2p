@@ -24,6 +24,16 @@ namespace libp2p::connection {
     BOOST_ASSERT(key_marshaller_);
   }
 
+  PollOutcome<size_t> PlaintextConnection::pollReadSome(PollWaker waker,
+                                                        BytesOut buffer) {
+    return original_connection_->pollReadSome(waker, buffer);
+  }
+
+  PollOutcome<size_t> PlaintextConnection::pollWriteSome(PollWaker waker,
+                                                         BytesIn buffer) {
+    return original_connection_->pollWriteSome(waker, buffer);
+  }
+
   outcome::result<peer::PeerId> PlaintextConnection::localPeer() const {
     auto proto_local_key_res = key_marshaller_->marshal(local_);
     if (!proto_local_key_res) {
@@ -55,34 +65,6 @@ namespace libp2p::connection {
 
   outcome::result<multi::Multiaddress> PlaintextConnection::remoteMultiaddr() {
     return original_connection_->remoteMultiaddr();
-  }
-
-  void PlaintextConnection::read(BytesOut in,
-                                 size_t bytes,
-                                 Reader::ReadCallbackFunc f) {
-    return original_connection_->read(in, bytes, std::move(f));
-  };
-
-  void PlaintextConnection::readSome(BytesOut in,
-                                     size_t bytes,
-                                     Reader::ReadCallbackFunc f) {
-    return original_connection_->readSome(in, bytes, std::move(f));
-  };
-
-  void PlaintextConnection::writeSome(BytesIn in,
-                                      size_t bytes,
-                                      Writer::WriteCallbackFunc f) {
-    return original_connection_->writeSome(in, bytes, std::move(f));
-  }
-
-  void PlaintextConnection::deferReadCallback(outcome::result<size_t> res,
-                                              ReadCallbackFunc cb) {
-    original_connection_->deferReadCallback(res, std::move(cb));
-  }
-
-  void PlaintextConnection::deferWriteCallback(std::error_code ec,
-                                               WriteCallbackFunc cb) {
-    original_connection_->deferWriteCallback(ec, std::move(cb));
   }
 
   bool PlaintextConnection::isClosed() const {

@@ -16,6 +16,10 @@ namespace libp2p::basic {
   class ProtobufMessageReadWriter;
 }
 
+namespace libp2p::security::plaintext {
+  class HandshakePoll;
+}  // namespace libp2p::security::plaintext
+
 namespace libp2p::security {
   /**
    * Implementation of security adaptor, which creates plaintext connection.
@@ -54,18 +58,11 @@ namespace libp2p::security {
                         SecConnCallbackFunc cb) override;
 
    private:
-    using MaybePeerId = boost::optional<peer::PeerId>;
+    using MaybePeerId = std::optional<peer::PeerId>;
 
-    void sendExchangeMsg(
-        const std::shared_ptr<connection::LayerConnection> &conn,
-        const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
-        SecConnCallbackFunc cb) const;
-
-    void receiveExchangeMsg(
-        const std::shared_ptr<connection::LayerConnection> &conn,
-        const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
-        const MaybePeerId &p,
-        SecConnCallbackFunc cb) const;
+    void doHandshake(std::shared_ptr<connection::LayerConnection> &&conn,
+                     MaybePeerId peer_id,
+                     SecConnCallbackFunc &&cb);
 
     // the callback passed to an async read call in receiveExchangeMsg
     void readCallback(const std::shared_ptr<connection::LayerConnection> &conn,

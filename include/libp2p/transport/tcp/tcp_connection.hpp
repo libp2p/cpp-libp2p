@@ -61,16 +61,11 @@ namespace libp2p::transport {
                  ConnectCallbackFunc cb,
                  std::chrono::milliseconds timeout);
 
-    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
+    // Reader
+    PollOutcome<size_t> pollReadSome(PollWaker waker, BytesOut buffer) override;
 
-    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
-
-    void deferReadCallback(outcome::result<size_t> res,
-                           ReadCallbackFunc cb) override;
-
-    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
-
-    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
+    // Writer
+    PollOutcome<size_t> pollWriteSome(PollWaker waker, BytesIn buffer) override;
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
 

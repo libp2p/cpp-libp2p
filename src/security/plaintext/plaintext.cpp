@@ -9,10 +9,13 @@
 #include <functional>
 
 #include <generated/security/plaintext/protobuf/plaintext.pb.h>
-#include <libp2p/basic/protobuf_message_read_writer.hpp>
+#include <libp2p/basic/poll_spawn.hpp>
+#include <libp2p/basic/varint_frame.hpp>
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/security/error.hpp>
 #include <libp2p/security/plaintext/plaintext_connection.hpp>
+#include <qtils/option_take.hpp>
+#include <qtils/protobuf.hpp>
 
 #if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC diagnostic ignored "-Wparentheses"
@@ -78,9 +81,7 @@ namespace libp2p::security {
       std::shared_ptr<connection::LayerConnection> inbound,
       SecConnCallbackFunc cb) {
     SL_DEBUG(log_, "securing inbound connection");
-    auto rw = std::make_shared<basic::ProtobufMessageReadWriter>(inbound);
-    sendExchangeMsg(inbound, rw, cb);
-    receiveExchangeMsg(inbound, rw, boost::none, cb);
+    doHandshake(std::move(inbound), std::nullopt, std::move(cb));
   }
 
   void Plaintext::secureOutbound(
@@ -88,36 +89,68 @@ namespace libp2p::security {
       const peer::PeerId &p,
       SecConnCallbackFunc cb) {
     SL_DEBUG(log_, "securing outbound connection");
-    auto rw = std::make_shared<basic::ProtobufMessageReadWriter>(outbound);
-    sendExchangeMsg(outbound, rw, cb);
-    receiveExchangeMsg(outbound, rw, p, cb);
+    doHandshake(std::move(outbound), p, std::move(cb));
   }
 
-  void Plaintext::sendExchangeMsg(
-      const std::shared_ptr<connection::LayerConnection> &conn,
-      const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
-      SecConnCallbackFunc cb) const {
+  void Plaintext::doHandshake(
+      std::shared_ptr<connection::LayerConnection> &&conn,
+      MaybePeerId peer_id,
+      SecConnCallbackFunc &&cb) {
     plaintext::ExchangeMessage exchange_msg{
         .pubkey = idmgr_->getKeyPair().publicKey, .peer_id = idmgr_->getId()};
-
-    // TODO(107): Reentrancy
-
     PLAINTEXT_OUTCOME_TRY(
         proto_exchange_msg, marshaller_->handyToProto(exchange_msg), conn, cb)
-
-    rw->write<plaintext::protobuf::Exchange>(
-        proto_exchange_msg,
-        [self{shared_from_this()}, cb{std::move(cb)}, conn](auto &&res) {
-          if (res.has_error()) {
-            self->closeConnection(conn, Error::EXCHANGE_SEND_ERROR);
-            return cb(Error::EXCHANGE_SEND_ERROR);
+    struct ReadPending {
+      Bytes buffer;
+      ReadVarintFrame poll;
+    };
+    struct ReadDone {
+      std::optional<plaintext::ExchangeMessage> handshake;
+    };
+    pollSpawn([weak_self{weak_from_this()},
+               conn,
+               cb{std::make_optional(std::move(cb))},
+               read{std::variant<ReadPending, ReadDone>{}},
+               write_buffer{qtils::protobuf::encode(proto_exchange_msg)},
+               write_poll{WriteVarintFrame{}}](PollWaker waker) mutable {
+      auto self = weak_self.lock();
+      if (not self) {
+        return;
+      }
+      if (not cb.has_value()) {
+        return;
+      }
+      if (auto *read_pending = std::get_if<ReadPending>(&read)) {
+        auto read_ok_poll =
+            read_pending->poll.poll(waker, *conn, read_pending->buffer);
+        if (read_ok_poll.isReady()) {
+          ReadDone read_done;
+          if (read_ok_poll.ready().has_value()) {
+            // TODO
           }
-        });
+        }
+      }
+      if (read_ok_poll.isReady()) {
+        // PARSE AND VALIDATE
+      }
+      auto write_ok_poll = write_poll.poll(waker, *conn, write_buffer);
+      // re
+      if (write_ok_poll.isReady() and read_ok_poll.isReady()) {
+      }
+      // TODO: weak self or stream
+      // poll1, poll2, both ready]
+      // auto write_ok_poll=;
+      if (POLL_TRY(poll.poll(waker, *conn, frame))) {
+        cb();
+      } else {
+        closeConnection(conn, Error::EXCHANGE_SEND_ERROR);
+        cb(Error::EXCHANGE_SEND_ERROR);
+      }
+    });
   }
 
   void Plaintext::receiveExchangeMsg(
       const std::shared_ptr<connection::LayerConnection> &conn,
-      const std::shared_ptr<basic::ProtobufMessageReadWriter> &rw,
       const MaybePeerId &p,
       SecConnCallbackFunc cb) const {
     auto remote_peer_exchange_bytes = std::make_shared<std::vector<uint8_t>>();

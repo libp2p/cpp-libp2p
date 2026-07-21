@@ -21,7 +21,11 @@ namespace libp2p::connection {
         crypto::PublicKey remotePubkey,
         std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
-    ~PlaintextConnection() override = default;
+    // Reader
+    PollOutcome<size_t> pollReadSome(PollWaker waker, BytesOut buffer) override;
+
+    // Writer
+    PollOutcome<size_t> pollWriteSome(PollWaker waker, BytesIn buffer) override;
 
     outcome::result<peer::PeerId> localPeer() const override;
 
@@ -34,17 +38,6 @@ namespace libp2p::connection {
     outcome::result<multi::Multiaddress> localMultiaddr() override;
 
     outcome::result<multi::Multiaddress> remoteMultiaddr() override;
-
-    void read(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
-
-    void readSome(BytesOut out, size_t bytes, ReadCallbackFunc cb) override;
-
-    void deferReadCallback(outcome::result<size_t> res,
-                           ReadCallbackFunc cb) override;
-
-    void writeSome(BytesIn in, size_t bytes, WriteCallbackFunc cb) override;
-
-    void deferWriteCallback(std::error_code ec, WriteCallbackFunc cb) override;
 
     bool isClosed() const override;
 

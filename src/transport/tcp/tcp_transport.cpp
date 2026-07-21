@@ -21,19 +21,24 @@ namespace libp2p::transport {
     auto &[info, layers] = r.value();
     auto conn = std::make_shared<TcpConnection>(*context_, layers);
     auto connect =
-        [=,
-         self{shared_from_this()},
+        [self{shared_from_this()},
+         remoteId,
+         address,
          handler{std::move(handler)},
-         layers = std::move(layers)](
-            outcome::result<boost::asio::ip::tcp::resolver::results_type>
-                r) mutable {
+         layers{std::move(layers)},
+         conn](outcome::result<boost::asio::ip::tcp::resolver::results_type>
+                   r) mutable {
           if (not r) {
             return handler(r.error());
           }
           conn->connect(
               r.value(),
-              [=, handler{std::move(handler)}, layers = std::move(layers)](
-                  auto ec, auto &e) mutable {
+              [self,
+               remoteId,
+               address,
+               handler{std::move(handler)},
+               layers{std::move(layers)},
+               conn](auto ec, auto &e) mutable {
                 if (ec) {
                   std::ignore = conn->close();
                   return handler(ec);
@@ -47,7 +52,7 @@ namespace libp2p::transport {
 
                 session->upgradeOutbound(address, remoteId);
               },
-              mux_config_.dial_timeout);
+              self->mux_config_.dial_timeout);
         };
     resolve(resolver_, info, std::move(connect));
   }

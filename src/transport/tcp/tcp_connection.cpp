@@ -6,8 +6,6 @@
 
 #include <libp2p/transport/tcp/tcp_connection.hpp>
 
-#include <libp2p/basic/read_return_size.hpp>
-#include <libp2p/common/ambigous_size.hpp>
 #include <libp2p/common/asio_buffer.hpp>
 #include <libp2p/transport/tcp/bytes_counter.hpp>
 #include <libp2p/transport/tcp/tcp_util.hpp>
@@ -23,6 +21,24 @@ namespace libp2p::transport {
       return *logger;
     }
   }  // namespace
+
+  inline PollOutcome<size_t> asioReadWrite(const auto &f) {
+    boost::system::error_code ec;
+    while (true) {
+      auto n = f(ec);
+      if (ec == boost::asio::error::interrupted) {
+        continue;
+      }
+      if (ec == boost::asio::error::would_block
+          or ec == boost::asio::error::try_again) {
+        return PollPending{};
+      }
+      if (ec) {
+        return ec;
+      }
+      return n;
+    }
+  }
 
   TcpConnection::TcpConnection(boost::asio::io_context &ctx,
                                ProtoAddrVec layers,
@@ -172,42 +188,38 @@ namespace libp2p::transport {
         });
   }
 
-  void TcpConnection::read(BytesOut out,
-                           size_t bytes,
-                           TcpConnection::ReadCallbackFunc cb) {
-    ambigousSize(out, bytes);
-    TRACE("{} read {}", debug_str_, bytes);
-    readReturnSize(shared_from_this(), out, std::move(cb));
+  PollOutcome<size_t> TcpConnection::pollReadSome(PollWaker waker,
+                                                  BytesOut buffer) {
+    auto n_ok_poll = asioReadWrite([&](boost::system::error_code ec) {
+      return socket_.read_some(asioBuffer(buffer), ec);
+    });
+    if (n_ok_poll.isReady()) {
+      if (auto &n_ok = n_ok_poll.ready()) {
+        ByteCounter::getInstance().incrementBytesRead(*n_ok);
+      }
+    } else {
+      socket_.async_wait(
+          socket_.wait_read,
+          [waker{std::move(waker)}](boost::system::error_code) { waker(); });
+    }
+    return n_ok_poll;
   }
 
-  void TcpConnection::readSome(BytesOut out,
-                               size_t bytes,
-                               TcpConnection::ReadCallbackFunc cb) {
-    ByteCounter::getInstance().incrementBytesRead(bytes);
-    ambigousSize(out, bytes);
-    TRACE("{} read some up to {}", debug_str_, bytes);
-    socket_.async_read_some(asioBuffer(out),
-                            closeOnError(*this, std::move(cb)));
-  }
-
-  void TcpConnection::writeSome(BytesIn in,
-                                size_t bytes,
-                                TcpConnection::WriteCallbackFunc cb) {
-    ByteCounter::getInstance().incrementBytesWritten(bytes);
-    ambigousSize(in, bytes);
-    TRACE("{} write some up to {}", debug_str_, bytes);
-    socket_.async_write_some(asioBuffer(in),
-                             closeOnError(*this, std::move(cb)));
-  }
-
-  void TcpConnection::deferReadCallback(outcome::result<size_t> res,
-                                        ReadCallbackFunc cb) {
-    boost::asio::post(context_, [res, cb{std::move(cb)}] { cb(res); });
-  }
-
-  void TcpConnection::deferWriteCallback(std::error_code ec,
-                                         WriteCallbackFunc cb) {
-    boost::asio::post(context_, [ec, cb{std::move(cb)}] { cb(ec); });
+  PollOutcome<size_t> TcpConnection::pollWriteSome(PollWaker waker,
+                                                   BytesIn buffer) {
+    auto n_ok_poll = asioReadWrite([&](boost::system::error_code ec) {
+      return socket_.write_some(asioBuffer(buffer), ec);
+    });
+    if (n_ok_poll.isReady()) {
+      if (auto &n_ok = n_ok_poll.ready()) {
+        ByteCounter::getInstance().incrementBytesWritten(*n_ok);
+      }
+    } else {
+      socket_.async_wait(
+          socket_.wait_write,
+          [waker{std::move(waker)}](boost::system::error_code) { waker(); });
+    }
+    return n_ok_poll;
   }
 
   outcome::result<void> TcpConnection::saveMultiaddresses() {
