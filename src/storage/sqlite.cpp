@@ -22,12 +22,12 @@ namespace libp2p::storage {
     }
   }
 
-  int SQLite::getErrorCode() {
+  int SQLite::getErrorCode() const {
     return sqlite3_extended_errcode(db_.connection().get());
   }
 
-  std::string SQLite::getErrorMessage() {
-    int ec{getErrorCode()};
+  std::string SQLite::getErrorMessage() const {
+    const int ec{getErrorCode()};
     return (0 == ec) ? std::string()
                      : std::string(sqlite3_errstr(ec)) + ": "
                            + sqlite3_errmsg(db_.connection().get());
