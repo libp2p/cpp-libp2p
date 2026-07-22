@@ -165,9 +165,9 @@ namespace libp2p::security::tls_details {
       constexpr size_t prefix_size = sign_prefix.size();
       size_t msg_len = prefix_size + cert_pub_key.size();
 
-      uint8_t buf[msg_len];  // NOLINT
-      memcpy(buf, sign_prefix.data(), sign_prefix.size());
-      memcpy(buf + sign_prefix.size(),  // NOLINT
+      std::vector<uint8_t> buf(msg_len);
+      memcpy(buf.data(), sign_prefix.data(), sign_prefix.size());
+      memcpy(buf.data() + sign_prefix.size(),  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
              cert_pub_key.data(),
              cert_pub_key.size());
 
@@ -179,7 +179,7 @@ namespace libp2p::security::tls_details {
 
       return crypto::ed25519::Ed25519ProviderImpl{}
           // NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions)
-          .sign(BytesIn(buf, msg_len), pk_data)
+          .sign(BytesIn(buf.data(), msg_len), pk_data)
           .value();
     }
 
@@ -203,8 +203,8 @@ namespace libp2p::security::tls_details {
     void assignSerial(X509 *cert) {
       BIGNUM *bn = BN_new();
       CLEANUP_PTR(bn, BN_free);
-      if (BN_pseudo_rand(bn, 64, 0, 0) == 0) {
-        throw std::runtime_error("BN_pseudo_rand failed");
+      if (BN_rand(bn, 64, 0, 0) == 0) {
+        throw std::runtime_error("BN_rand failed");
       }
 
       ASN1_INTEGER *rand_int = ASN1_INTEGER_new();
@@ -402,13 +402,13 @@ namespace libp2p::security::tls_details {
       constexpr size_t prefix_size = sign_prefix.size();
 
       size_t msg_len = prefix_size + len;
-      uint8_t buf[msg_len];  // NOLINT
-      memcpy(buf, sign_prefix.data(), prefix_size);
-      uint8_t *b = buf + prefix_size;  // NOLINT
-      i2d_PUBKEY(cert_pubkey, &b);
+      std::vector<uint8_t> buf(msg_len);
+      memcpy(buf.data(), sign_prefix.data(), prefix_size);
+      uint8_t *buf_ptr = buf.data() + prefix_size;  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      i2d_PUBKEY(cert_pubkey, &buf_ptr);
 
       auto verify_res = crypto::ed25519::Ed25519ProviderImpl{}.verify(
-          BytesIn(buf, buf + msg_len),  // NOLINT
+          BytesIn(buf.data(), buf.data() + msg_len),  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
           signature,
           ed25519pkey);
 
