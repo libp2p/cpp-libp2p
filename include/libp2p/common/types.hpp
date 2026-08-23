@@ -34,7 +34,7 @@ namespace libp2p {
 
   template <class T>
   concept SpanOfBytes = std::is_same_v<std::decay_t<T>, BytesIn>
-                     or std::is_same_v<std::decay_t<T>, BytesIn>;
+                     or std::is_same_v<std::decay_t<T>, BytesOut>;
 
   inline bool operator==(const SpanOfBytes auto &lhs,
                          const SpanOfBytes auto &rhs) {

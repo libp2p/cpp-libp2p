@@ -94,7 +94,7 @@ namespace libp2p::basic {
      * @param cb callback
      * @param delay_from_now time interval, zero for deferring
      * @param make_handle if true, then active Handle is returned
-     * @return actie or empty Handle, depending on make_handle argument
+     * @return active or empty Handle, depending on make_handle argument
      */
     virtual Handle scheduleImpl(Callback &&cb,
                                 std::chrono::milliseconds delay_from_now,
