@@ -61,7 +61,7 @@ namespace libp2p::connection {
     if (is_reset_) {
       return cb(Error::STREAM_RESET_BY_PEER);
     }
-    if (!is_readable_) {
+    if (!is_readable_ && read_buffer_.size() == 0) {
       return cb(Error::STREAM_NOT_READABLE);
     }
     if (out.empty()) {
@@ -218,14 +218,6 @@ namespace libp2p::connection {
 
   outcome::result<void> MplexStream::commitData(BytesIn data,
                                                 size_t data_size) {
-    if (data_size == 0) {
-      is_reset_ = true;
-      if (reading_.has_value()) {
-        readDone(Error::STREAM_RESET_BY_HOST);
-      }
-      return Error::STREAM_RESET_BY_HOST;
-    }
-
     if (data_size > receive_window_size_) {
       // we have received more data, than we can handle
       reset();
@@ -247,6 +239,14 @@ namespace libp2p::connection {
 
     return outcome::success();
   }
+
+  void MplexStream::onConnectionClosed() {
+    is_readable_ = false;
+    if (reading_.has_value() && !readTry()) {
+      readDone(Error::STREAM_RESET_BY_HOST);
+    }
+  }
+
 }  // namespace libp2p::connection
 
 size_t std::hash<libp2p::connection::MplexStream::StreamId>::operator()(

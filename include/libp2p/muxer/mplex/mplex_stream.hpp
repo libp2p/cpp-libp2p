@@ -126,6 +126,11 @@ namespace libp2p::connection {
      * @param data_size - size of the received data
      */
     outcome::result<void> commitData(BytesIn data, size_t data_size);
+
+    /**
+     * Called by underlying connection to notify about closed connection
+     */
+    void onConnectionClosed();
   };
 }  // namespace libp2p::connection
 
