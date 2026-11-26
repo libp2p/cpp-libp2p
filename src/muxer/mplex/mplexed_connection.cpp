@@ -326,8 +326,7 @@ namespace libp2p::connection {
 
   void MplexedConnection::closeSession() {
     for (auto &[_, stream] : streams_) {
-      // all that stuff to be refactored
-      (void)stream->commitData(BytesIn{}, 0);
+      stream->onConnectionClosed();
     }
 
     auto close_res = close();

@@ -4,8 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <atomic>
+#include <chrono>
 #include <cstdlib>
 #include <iosfwd>
+#include <thread>
 
 #include <gtest/gtest.h>
 #include <boost/di/extension/scopes/shared.hpp>
@@ -217,6 +220,14 @@ namespace libp2p::regression {
       }
 
       host_->stop();
+    }
+
+    std::shared_ptr<Bytes> readBuf() {
+      return read_buf_;
+    }
+
+    std::shared_ptr<Bytes> writeBuf() {
+      return write_buf_;
     }
 
    private:
@@ -516,6 +527,109 @@ void testOutboundConnectionAcceptsStreams(InjectorArgs &&...args) {
   }
 }
 
+template <typename... InjectorArgs>
+void testStreamIsReadableAfterConnectionClosed(InjectorArgs &&...args) {
+  using namespace libp2p::regression;  // NOLINT
+  constexpr size_t kServerId = 0;
+  constexpr size_t kClientId = 1;
+
+  enum class Steps { Initial = 0, ClientWrote, ServerRead };
+  std::atomic<Steps> step = Steps::Initial;
+
+  auto waitStep = [&step](Steps requiredStep,
+                          std::chrono::seconds time =
+                              std::chrono::seconds(1)) -> bool {
+    auto start = std::chrono::system_clock::now();
+    while (step.load() != requiredStep
+           && std::chrono::system_clock::now() - start < time) {
+      std::this_thread::yield();
+    }
+    return step.load() == requiredStep;
+  };
+
+  std::shared_ptr<boost::asio::io_context> io;
+  std::shared_ptr<Node> client;
+  std::shared_ptr<Node> server;
+
+  Node::Behavior server_behavior = [&](Node &node) {
+    auto stats = node.getStats();
+    TRACE("Server event: {}", stats.lastEvent());
+    switch (stats.lastEvent()) {
+      case Stats::READ:
+      case Stats::READ_FAILURE: {
+        step = Steps::ServerRead;
+        break;
+      }
+      default:
+        break;
+    }
+  };
+
+  Node::Behavior client_behavior = [&](Node &node) {
+    auto stats = node.getStats();
+    TRACE("Client event: {}", stats.lastEvent());
+    switch (stats.lastEvent()) {
+      case Stats::CONNECTED:
+        return node.write();
+      case Stats::WRITE:
+        node.stop();
+        step = Steps::ClientWrote;
+        break;
+      default:
+        break;
+    }
+  };
+
+  auto listen_to =
+      libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40001").value();
+
+  io = std::make_shared<boost::asio::io_context>();
+
+  server = std::make_shared<Node>(kServerId,
+                                  false,
+                                  server_behavior,
+                                  io,
+                                  std::forward<decltype(args)>(args)...);
+  client = std::make_shared<Node>(kClientId,
+                                  false,
+                                  client_behavior,
+                                  io,
+                                  std::forward<decltype(args)>(args)...);
+
+  post(*io, [&]() {
+    server->listen(listen_to);
+    libp2p::peer::PeerInfo peer_info{server->getId(), {listen_to}};
+    client->connect(peer_info);
+  });
+  auto f = std::async(std::launch::async, [&]() { runEventLoop(io); });
+
+  EXPECT_TRUE(waitStep(Steps::ClientWrote));
+  EXPECT_EQ(server->getStats().lastEvent(), Stats::ACCEPTED);
+  std::this_thread::sleep_for(
+      std::chrono::seconds(1));  // wait connection on server to be closed
+
+  server->read();
+
+  EXPECT_TRUE(waitStep(Steps::ServerRead));
+  EXPECT_EQ(server->getStats().lastEvent(), Stats::READ);
+  auto writtenBuf = client->writeBuf();
+  EXPECT_TRUE(writtenBuf);
+  auto readBuf = server->readBuf();
+  EXPECT_TRUE(readBuf);
+  if (writtenBuf && readBuf) {
+    EXPECT_EQ(*writtenBuf, *readBuf);
+  }
+
+  io->stop();
+
+  if (server) {
+    server->stop();
+  }
+  if (client) {
+    client->stop();
+  }
+}
+
 TEST(StreamsRegression, YamuxStreamsGetNotifiedAboutEOF) {
   testStreamsGetNotifiedAboutEOF(
       false,
@@ -585,6 +699,18 @@ TEST(StreamsRegression, YamuxNoiseStreamsGetNotifiedAboutEOFJumboMsg) {
       boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
           .to<libp2p::muxer::Yamux>()[boost::di::override],
       libp2p::injector::useSecurityAdaptors<libp2p::security::Noise>());
+}
+
+TEST(StreamsRegression, YamuxStreamIsReadableAfterConnectionClosed) {
+  testStreamIsReadableAfterConnectionClosed(
+      boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
+          .to<libp2p::muxer::Yamux>()[boost::di::override]);
+}
+
+TEST(StreamsRegression, MplexStreamIsReadableAfterConnectionClosed) {
+  testStreamIsReadableAfterConnectionClosed(
+      boost::di::bind<libp2p::muxer::MuxerAdaptor *[]>()
+          .to<libp2p::muxer::Mplex>()[boost::di::override]);
 }
 
 int main(int argc, char *argv[]) {

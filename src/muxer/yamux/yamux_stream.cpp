@@ -302,10 +302,10 @@ namespace libp2p::connection {
   }
 
   void YamuxStream::closedByConnection(std::error_code ec) {
-    doClose(std::move(ec));
+    doClose(std::move(ec), true);
   }
 
-  void YamuxStream::doClose(std::error_code ec) {
+  void YamuxStream::doClose(std::error_code ec, bool keepInternalBuffer) {
     // ensure lifetime of this object during doClose
     auto self = shared_from_this();
 
@@ -323,7 +323,9 @@ namespace libp2p::connection {
     is_readable_ = false;
     is_writable_ = false;
 
-    internal_read_buffer_.clear();
+    if (!keepInternalBuffer) {
+      internal_read_buffer_.clear();
+    }
 
     auto write_callbacks = write_queue_.getAllCallbacks();
 

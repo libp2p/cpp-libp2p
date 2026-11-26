@@ -116,7 +116,7 @@ namespace libp2p::connection {
     };
 
     /// Performs close-related cleanup and notifications
-    void doClose(std::error_code ec);
+    void doClose(std::error_code ec, bool keepInternalBuffer = false);
 
     /// Called by read*() functions
     void doRead(BytesOut out, ReadCallbackFunc cb);
